@@ -30,6 +30,7 @@ define(function (require) {
 
 
     var Class = require('../../../class'),
+        PubSub = require('../../../util/PubSub'),
         ANNOTATION_DETAILS_CLASS = 'annotation-details',
         ANNOTATION_DETAILS_CONTENT_CLASS = "annotation-details-content",
         ANNOTATION_DETAILS_AGGREGATE_CLASS = "annotation-details-aggregate",
@@ -41,6 +42,7 @@ define(function (require) {
         ANNOTATION_INDEX_CLASS = "annotation-carousel-ui-text-index",
         createRootElement,
         createContentElement,
+        appendAndCenterDetails,
         AnnotationDetails;
 
 
@@ -51,6 +53,19 @@ define(function (require) {
 
     createContentElement = function() {
         return $('<div class="'+ANNOTATION_DETAILS_CONTENT_CLASS+'"></div>');
+    };
+
+    appendAndCenterDetails = function( $details, $annotations ) {
+        // append now so later measurements are valid
+        $annotations.append( $details );
+        // make details draggable and resizable
+        $details.draggable().resizable({
+            minHeight: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).height(),
+            minWidth: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).width()
+        });
+        // center details
+        $details.css('margin-left', -$details.width() / 2);
+        return $details;
     };
 
 
@@ -74,16 +89,16 @@ define(function (require) {
             return null;
         },
 
-        registerLayer: function( layerState ) {
-            this.layerState = layerState;
-        },
-
         createWriteDetails: function( annotation, $annotations ) {
+            var $details;
             this.destroyDetails();
-            return createRootElement()
+            $details = createRootElement()
                        .append( createContentElement()
                            .append( this.createWriteDetailsImpl( annotation ) ) )
                        .append( this.createCloseButton() );
+
+            // append and center the details panel
+            return appendAndCenterDetails( $details, $annotations );
         },
 
         createDisplayDetails: function( annotations, $annotations ) {
@@ -97,42 +112,37 @@ define(function (require) {
             // if more than one annotation, create carousel ui
             if ( annotations.length > 1 ) {
                 $details.addClass( ANNOTATION_DETAILS_AGGREGATE_CLASS );
-                $details.append( this.createCarouselUI( annotations ) );
+                $details.append( this.createCarouselUI( $details, annotations ) );
             }
 
-            // append now so later measurements are valid
-            $annotations.append( $details );
-
-            // make details draggable and resizable
-            $details.draggable().resizable({
-                minHeight: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).height(),
-                minWidth: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).width()
-            });
-
-            return $details;
+            // append and center the details panel
+            return appendAndCenterDetails( $details, $annotations );
         },
 
-        createEditDetails: function( annotation ) {
+        createEditDetails: function( annotation, $annotations ) {
+            var $details;
             this.destroyDetails();
-            return createRootElement()
+            $details = createRootElement()
                        .append( createContentElement()
                            .append( this.createEditDetailsImpl( annotation ) ) )
                        .append( this.createCloseButton() );
+
+            // append and center the details panel
+            return appendAndCenterDetails( $details, $annotations );
         },
 
         createCloseButton: function() {
-
             var that = this,
                 $closeButton = $('<div class="'+ANNOTATION_DETAILS_CLOSE_BUTTON_CLASS+'"></div>');
             $closeButton.click( function() {
-                that.layerState.set('click', null );
+                PubSub.publish( that.parent.getChannel(), { field: 'click', value: null } );
                 that.destroyDetails();
                 event.stopPropagation();
             });
             return $closeButton;
         },
 
-        createCarouselUI: function( annotations ) {
+        createCarouselUI: function( $details, annotations ) {
 
             var that = this,
                 $carousel,
@@ -157,6 +167,8 @@ define(function (require) {
                     $( '.'+ANNOTATION_DETAILS_CONTENT_CLASS ).html( that.createDisplayDetailsImpl( annotations[index] ) );
                     // update index text
                     $indexText.text( indexText() );
+                    // re-center details
+                    $details.css('margin-left', -$details.width() / 2);
                     // prevent event from propagating
                     event.stopPropagation();
                 };

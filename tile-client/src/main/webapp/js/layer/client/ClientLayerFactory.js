@@ -37,9 +37,10 @@ define( function (require) {
 	    loadedModules = {},
 	    ClientLayerFactory;
 
-
+    /**
+     * Load a single module via RequireJS and return a jQuery deferred.
+     */
     loadModule = function( path, module ) {
-
         var deferred = $.Deferred();
         require( [path+module], function( Module ) {
             loadedModules[ module ] = Module;
@@ -48,15 +49,19 @@ define( function (require) {
         return deferred;
     };
 
-
+    /**
+     * Load all modules required for the client layer, storing the deferreds
+     * in the loadedModules object.
+     */
     loadAllModules = function( layerJSON ) {
 
         var renderer,
-            renderers,
+            details,
             deferreds = [],
             deferred,
-            i, j;
+            i;
 
+        // recursively parse the details spec and load all content components
         function loadDetails( details ) {
             var k;
             if ( details ) {
@@ -80,39 +85,42 @@ define( function (require) {
             }
         }
 
-        for (i=0; i<layerJSON.length; i++) {
-
-            renderers = layerJSON[i].renderers;
-            for (j=0; j<renderers.length; j++) {
-
-                renderer = renderers[j];
-                if ( !loadedModules[ renderer.type ] ) {
-                    // only load each module once
-                    deferred = loadModule( "./renderers/", renderer.type );
-                    // temporarily store deferred here, so later if duplicate is found, we can grab it
-                    loadedModules[ renderer.type ] = deferred;
-                    deferreds.push( deferred );
-                } else {
-                    // add deferred or module here, if it is a deferred we will wait on it
-                    // if it isn't, $.when will ignore it
-                    deferreds.push( loadedModules[ renderer.type ] );
-                }
+        function loadRenderer( renderer ) {
+            if ( !loadedModules[ renderer.type ] ) {
+                // only load each module once
+                deferred = loadModule( "./renderers/", renderer.type );
+                // temporarily store deferred here, so later if duplicate is found, we can grab it
+                loadedModules[ renderer.type ] = deferred;
+                deferreds.push( deferred );
+            } else {
+                // add deferred or module here, if it is a deferred we will wait on it
+                // if it isn't, $.when will ignore it
+                deferreds.push( loadedModules[ renderer.type ] );
             }
+        }
 
-            loadDetails( layerJSON[i].details );
+        for (i=0; i<layerJSON.views.length; i++) {
+            renderer = layerJSON.views[i].renderer;
+            details = layerJSON.views[i].details;
+            loadRenderer( renderer );
+            loadDetails( details );
         }
         return deferreds;
     };
 
-
+    /**
+     * Instantiate and returnthe details and renderers for each view from
+     * the layer specification object.
+     */
     assembleViews = function( layerJSON, map ) {
 
-        var layerId,
-            renderers,
-            details,
+        var rendererSpec,
             renderer,
+            detailsSpec,
+            details,
+            view,
             views = [],
-            i, j;
+            i;
 
         function assembleDetails( details ) {
             var result = null, k;
@@ -125,25 +133,21 @@ define( function (require) {
                     }
                 }
             }
-
             return result;
         }
 
-        for (i=0; i<layerJSON.length; i++) {
-
-            layerId = layerJSON[i].layer;
-            renderers = layerJSON[i].renderers;
-            details = assembleDetails( layerJSON[i].details );
-
-            for (j=0; j<renderers.length; j++) {
-
-                renderer = renderers[j];
-                renderer.spec.details = details;
-                views.push({
-                    id: layerId,
-                    renderer: new loadedModules[ renderer.type ]( map, renderer.spec )
-                });
-            }
+        for (i=0; i<layerJSON.views.length; i++) {
+            view = layerJSON.views[i];
+            detailsSpec = view.details;
+            details = assembleDetails( detailsSpec );
+            rendererSpec = view.renderer;
+            rendererSpec.spec.details = details;
+            renderer = new loadedModules[ rendererSpec.type ]( map, rendererSpec.spec );
+            views.push({
+                id: view.layer,
+                details: details,
+                renderer: renderer
+            });
         }
         return views;
     };

@@ -237,7 +237,7 @@ define(function (require) {
 
         hexGreyscale: function( hex ) {
             var rgb = this.hexToRgb( hex ),
-                avg = ( rgb.r * 0.21 + rgb.g * 0.72 + rgb.b * 0.07 ) / 3;
+                avg = ( rgb.r * 0.21 + rgb.g * 0.72 + rgb.b * 0.07 );
             return this.rgbToHex({
                 r: avg,
                 g: avg,

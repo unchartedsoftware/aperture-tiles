@@ -27,13 +27,7 @@
 
 /**
  * Implements a panel that creates a set of controls to change the visual settings
- * of each layer in the system.  The panel works with a map of LayerState objects that
- * are populated externally.  The control set consists of a check box to control overall
- * visibility, a slider to control opacity, a range slider to set a value filter, buttons
- * to control layer ordering, and a linked settings panel that allows for ramp parameters
- * to be adjusted.  Note that setting a ramp type or function to null will result in the
- * filter control being hidden.
- *
+ * of each layer in the system.
  * This class follows the Separable Model pattern used by Swing widgets in Java, where
  * the controller and view are collapsed into a single class.
  */
@@ -42,6 +36,7 @@ define(function (require) {
 
     var Class = require('../class'),
         Util = require('../util/Util'),
+        PubSub = require('../util/PubSub'),
         AxisUtil = require('../map/AxisUtil'),
         TOOLTIP_SETTINGS_BUTTON = "Open filter settings menu",
         TOOLTIP_SETTINGS_BACK_BUTTON = "Return to layer controls menu",
@@ -66,7 +61,7 @@ define(function (require) {
         OPACITY_RESOLUTION,
         FILTER_RESOLUTION,
         replaceChildren,
-        makeLayerStateObserver,
+        makeLayerControlsSubscriber,
         replaceLayers,
         sortLayers;
 
@@ -141,16 +136,16 @@ define(function (require) {
      * Creates and returns a jquery element object for the settings menu button.
      *
      * @param {Object} $layerControlsContainer - The layer controls container element.
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @param {Object} layer - The layer object.
+     * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createSettingsButton = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
+    createSettingsButton = function( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization ) {
 
         var $settingsButton = $('<button class="layer-controls-button">settings</button>');
         // set callback
         $settingsButton.click(function () {
-            showLayerSettings( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization );
+            showLayerSettings( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization );
         });
         // set tooltip
         Util.enableTooltip( $settingsButton,
@@ -162,25 +157,25 @@ define(function (require) {
     /**
      * Creates and returns a jquery element object for the layer visibility toggle box.
      *
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @param {Object} layer - The layer object
+     * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createVisibilityButton = function( layerState, controlsMapping ) {
+    createVisibilityButton = function( layer, controlsMapping ) {
 
         var $toggleDiv = $('<div class="layer-toggle"></div>'),
-            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layerState.get( 'uuid' ) + '">')
-                             .add($('<label for="layer-toggle-box-' + layerState.get( 'uuid' ) + '"></label>'));
+            $toggleBox = $('<input type="checkbox" checked="checked" id="layer-toggle-box-' + layer.uuid + '">')
+                             .add($('<label for="layer-toggle-box-' + layer.uuid + '"></label>'));
 
         $toggleDiv.append( $toggleBox );
         // Initialize the button from the model and register event handler.
-        $toggleBox.prop("checked", layerState.get('enabled'));
+        $toggleBox.prop("checked", layer.getVisibility() );
         // set click callback
         $toggleBox.click(function () {
             var value = $toggleBox.prop("checked");
-            layerState.set( 'enabled', value );
-            if (layerState.get( 'domain' ) === "client") {
-                layerState.set( 'carouselEnabled', value );
+            layer.setVisibility( value );
+            if (layer.domain === "client") {
+                layer.setCarouselEnabled( value );
             }
         });
         // set tooltip
@@ -217,27 +212,23 @@ define(function (require) {
     /**
      * Creates and returns a jquery element object for the layer opacity slider bar.
      *
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @param {Object} layer - The layer object.
+     * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createOpacitySlider = function( layerState, controlsMapping ) {
+    createOpacitySlider = function( layer, controlsMapping ) {
 
-        var sliderClass = ( layerState.get( 'domain' ) === 'server' ) ? "opacity-slider" : "base-opacity-slider",
+        var sliderClass = ( layer.domain === 'server' ) ? "opacity-slider" : "base-opacity-slider",
             $opacitySliderContainer = $('<div class="' + sliderClass + '"></div>'),
             $opacitySliderLabel = $('<div class="slider-label">Opacity</div>'),
             $opacitySlider = $('<div class="opacity-slider-bar"></div>').slider({
                 range: "min",
                 min: 0,
                 max: OPACITY_RESOLUTION,
-                value: layerState.get('opacity') * OPACITY_RESOLUTION,
-                change: function( event, ui ) {
-                    var value = ui.value / OPACITY_RESOLUTION;
-                    layerState.set( 'opacity', value );
-                },
+                value: layer.getOpacity() * OPACITY_RESOLUTION,
                 slide: function( event, ui ) {
                     var value = ui.value / OPACITY_RESOLUTION;
-                    layerState.set( 'opacity', value );
+                    layer.setOpacity( value );
                     createSliderHoverLabel( $opacitySlider.find(".ui-slider-handle"), value );
                 },
                 start: function( event, ui ) {
@@ -270,13 +261,13 @@ define(function (require) {
     /**
      * Creates and returns a jquery element object for the layer ramp filter slider bar.
      *
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @param {Object} layer - The layer object.
+     * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createFilterSlider = function( layerState, controlsMapping ) {
+    createFilterSlider = function( layer, controlsMapping ) {
 
-        var filterRange = layerState.get('filterRange'),
+        var filterRange = layer.getFilterRange(),
             $filterSliderContainer = $('<div class="filter-slider"></div>'),
             $filterLabel = $('<div class="slider-label">Filter</div>'),
             $filterSlider = $('<div style="background:rgba(0,0,0,0);"></div>'),
@@ -286,8 +277,8 @@ define(function (require) {
         // converts filter value from [0, 1] to actual ramp value based on ramp function
         function convertValueToRange( normalizedValue ) {
 
-            var rampFunc = layerState.get('rampFunction'),
-                minMax = layerState.get( 'rampMinMax' ),
+            var rampFunc = layer.getRampFunction(),
+                minMax = layer.getRampMinMax(),
                 range = minMax[1] - minMax[0],
                 val;
 
@@ -317,8 +308,11 @@ define(function (require) {
             max: FILTER_RESOLUTION,
             values: filterRange,
             change: function( event, ui ) {
-                var values = ui.values;
-                layerState.set( 'filterRange', [values[0] , values[1]]);
+                var values = ui.values,
+                    previousValues = $filterSlider.slider( 'value' );
+                if ( values[0] !== previousValues[0] || values[1] !== previousValues[1] ) {
+                    layer.setFilterRange( [values[0] , values[1]] );
+                }
             },
             slide: function( event, ui ) {
                 var handleIndex = $(ui.handle).index() - 1,
@@ -357,10 +351,10 @@ define(function (require) {
         $filterSliderImg.css({"background": "none"});
 
         // Set the ramp image
-        $filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
+        $filterSliderImg.css({'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
         //create the filter axis
         $filterAxis = $('<div class="filter-axis"></div>');
-        $filterAxis.append( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
+        $filterAxis.append( createFilterAxisContent( layer.getRampMinMax(), layer.getRampFunction() ) );
 
         $filterSliderContainer.append( $filterSlider );
         $filterSliderContainer.append( $filterAxis );
@@ -460,14 +454,14 @@ define(function (require) {
      * @param {Object} sortedLayers - All layers, sorted by z-index, highest first.
      * @param {Object} $layerControlsContainer - The layer controls container element.
      * @param {Object} $layerControlsRoot - The layer controls root element for the particular layer.
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} layerStateMap - The layerstate map for all layers keyed by layer id.
-     * @param {Object} controlsMap - The entire control map for all layerstate objects to their associated control elements.
+     * @param {Object} layer - The layer object.
+     * @param {Object} layersByUuid - The layers by uuid.
+     * @param {Object} controlsMap - The entire control map for all objects to their associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layerState, layerStateMap, controlsMap ) {
+    addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layer, layersByUuid, controlsMap ) {
 
-        var controlsMapping = controlsMap[ layerState.get( 'uuid' ) ];
+        var controlsMapping = controlsMap[ layer.uuid ];
 
         $layerControlRoot.draggable({
             "revert": function(valid) {
@@ -489,7 +483,7 @@ define(function (require) {
         });
 
         $layerControlRoot.droppable({
-            "accept": ".layer-controls-"+layerState.get( 'domain' ),
+            "accept": ".layer-controls-"+layer.domain,
             "hoverClass": "layer-drag-hover",
             "drop": function(event, ui) {
 
@@ -497,8 +491,8 @@ define(function (require) {
                     $droppedLayerRoot = $(this),
                     dragId = $draggedLayerRoot.attr("id").substr(15),
                     dropId = this.id.substr(15),
-                    dragLayerState = layerStateMap[ dragId ],
-                    dropLayerState = layerStateMap[ dropId ],
+                    dragLayer = layersByUuid[ dragId ],
+                    dropLayer = layersByUuid[ dropId ],
                     controlsMapping = controlsMap[dragId],
                     dragStartPosition = controlsMapping.startPosition,
                     dropStartPosition = $droppedLayerRoot.position(),
@@ -525,12 +519,12 @@ define(function (require) {
                     left: dragStartPosition.left - dropStartPosition.left
                 })).done( function () {
                     // once animation is complete, re-do the html
-                    replaceLayers( sortedLayers, $layerControlsContainer, controlsMap, layerStateMap );
+                    replaceLayers( sortedLayers, $layerControlsContainer, controlsMap, layersByUuid );
                 });
                 // swap z-indexes
-                otherZ = dropLayerState.get('zIndex');
-                dropLayerState.set( 'zIndex', dragLayerState.get('zIndex') );
-                dragLayerState.set( 'zIndex', otherZ );
+                otherZ = dropLayer.getZIndex();
+                dropLayer.setZIndex( dragLayer.getZIndex() );
+                dragLayer.setZIndex( otherZ );
             }
         });
     };
@@ -539,11 +533,11 @@ define(function (require) {
      * Creates and returns a jquery element object for the layer ramp filter slider bar.
      *
      * @param {JQuery} $layerContent - The containing jquery element for the respective layer.
-     * @param {Object} layerState - The layerstate object for the respective layer.
-     * @param {Object} controlsMapping - The control mapping from the layerstate layer id to the associated control elements.
+     * @param {Object} layer - The layer object.
+     * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createBaseLayerButtons = function( $layerContent, layerState, controlsMapping ) {
+    createBaseLayerButtons = function( $layerContent, layer, controlsMapping ) {
 
         var $baseLayerButtonSet = $('<div class="baselayer-fieldset"></div>'),
             $radioButton,
@@ -554,14 +548,13 @@ define(function (require) {
 
         function onClick() {
             var index = parseInt( $(this).val(), 10 );
-            layerState.set( 'previousBaseLayerIndex', layerState.get('baseLayerIndex') );
-            layerState.set( 'baseLayerIndex', index );
+            layer.setBaseLayerIndex( index );
         }
 
-        for (i=0; i<layerState.BASE_LAYERS.length; i++) {
+        for (i=0; i<layer.BASE_LAYERS.length; i++) {
 
-            baseLayer = layerState.BASE_LAYERS[i];
-            isActiveBaseLayer = ( i === layerState.get('baseLayerIndex') );
+            baseLayer = layer.BASE_LAYERS[i];
+            isActiveBaseLayer = ( i === layer.getBaseLayerIndex() );
 
             // if active baselayer is blank, hide content
             if ( baseLayer.type === "BlankBase" && isActiveBaseLayer ) {
@@ -590,23 +583,24 @@ define(function (require) {
     /**
      * Adds a new set of layer controls to the panel.
      *
-     * @param {Array} sortedLayers - The sorted array of layer states.
+     * @param {Array} sortedLayers - The sorted array of layers.
      * @param {Integer} index - The index of the layer to be added to the controls panel.
      * @param {JQuery } $layerControlsContainer - The parent element in the document tree to add the controls to.
      * @param {Object} controlsMap - Maps layers to the sets of controls associated with them.
+     * @param {Object} layersByUuid - Layers by uuid.
      */
-    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
-        var layerState = sortedLayers[index],
-            uuid = layerState.get( 'uuid' ),
-            name = layerState.get( 'name' ) || layerState.get( 'id' ),
-            domain = layerState.get( 'domain' ),
+    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization ) {
+        var layer = sortedLayers[index],
+            uuid = layer.uuid,
+            name = layer.name || layer.id,
+            domain = layer.domain,
             $layerControlRoot,
             $layerControlTitleBar,
             $layerContent,
             controlsMapping;
 
         controlsMap[uuid] = {};
-        layerStateMap[uuid] = layerState;
+        layersByUuid[uuid] = layer;
         controlsMapping = controlsMap[uuid];
 
         // create layer root
@@ -614,7 +608,7 @@ define(function (require) {
         $layerControlsContainer.append( $layerControlRoot );
         controlsMapping.layerRoot = $layerControlRoot;
         // add layer dragging / dropping callbacks to swap layer z-index
-        addLayerDragCallbacks( sortedLayers, $layerControlsContainer, $layerControlRoot, layerState, layerStateMap, controlsMap );
+        addLayerDragCallbacks( sortedLayers, $layerControlsContainer, $layerControlRoot, layer, layersByUuid, controlsMap );
 
         // create title div
         $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + name + '</span></div>');
@@ -627,26 +621,26 @@ define(function (require) {
 
         // create settings button, only for server layers
         if ( domain === 'server' ) {
-            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) );
+            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization ) );
         }
 
         // add visibility toggle box
-        $layerContent.append( createVisibilityButton( layerState, controlsMapping ) );
+        $layerContent.append( createVisibilityButton( layer, controlsMapping ) );
 
         // add opacity slider
-        $layerContent.append( createOpacitySlider( layerState, controlsMapping ) );
+        $layerContent.append( createOpacitySlider( layer, controlsMapping ) );
 
         if ( domain === 'server' ) {
             // add filter slider
-            $layerContent.append( createFilterSlider( layerState, controlsMapping ) );
+            $layerContent.append( createFilterSlider( layer, controlsMapping ) );
         }
 
         // clear floats
         $layerContent.append( '<div style="clear:both"></div>' );
 
         //add base layer radio buttons when this layer is the base layer
-        if( domain === "base" && layerState.BASE_LAYERS.length > 1 ) {
-            $layerControlTitleBar.append( createBaseLayerButtons( $layerContent, layerState, controlsMapping) );
+        if( domain === "base" && layer.BASE_LAYERS.length > 1 ) {
+            $layerControlTitleBar.append( createBaseLayerButtons( $layerContent, layer, controlsMapping) );
             // clear floats
             $layerControlTitleBar.append( '<div style="clear:both"></div>' );
         }
@@ -657,9 +651,9 @@ define(function (require) {
      * Displays a settings panel for a layer.
      *
      * @param {object} $layerControlsContainer - The parent node to attach the layer panel to.
-     * @param {object} layerState - The layer state model the panel will read from and update.
+     * @param {object} layer - The layer object.
      */
-    showLayerSettings = function( $layerControlsContainer, $layerContent, layerState, controlsMapping, settingsCustomization ) {
+    showLayerSettings = function( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization ) {
 
         var $settingsContainer,
             $settingsTitleBar,
@@ -686,7 +680,7 @@ define(function (require) {
         // create title div
         $settingsTitleBar = $('<div class="settings-title"></div>');
         // add title span to div
-        $settingsTitleBar.append($('<span class="layer-labels">' + layerState.get( 'name' ) + '</span>'));
+        $settingsTitleBar.append($('<span class="layer-labels">' + layer.name + '</span>'));
         $settingsContainer.append($settingsTitleBar);
 
         // create content div
@@ -716,12 +710,12 @@ define(function (require) {
         $rampTypes.append($leftSpan);
         $rampTypes.append($rightSpan);
 
-        for (i=0; i<layerState.RAMP_TYPES.length; i++) {
+        for (i=0; i<layer.RAMP_TYPES.length; i++) {
             // for each ramp type
-            name = layerState.RAMP_TYPES[i].name;
-            id = layerState.RAMP_TYPES[i].id;
+            name = layer.RAMP_TYPES[i].name;
+            id = layer.RAMP_TYPES[i].id;
             // add half types to left, and half to right
-            span = (i < layerState.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
+            span = (i < layer.RAMP_TYPES.length/2) ? $leftSpan : $rightSpan;
             $settingValue = $('<div class="settings-values"></div>')
                                 .append($('<input type="radio" name="ramp-types" value="' + id + '" id="'+id+'">')
                                     .add($('<label for="' + id + '">' + name + '</label>') ) );
@@ -734,10 +728,11 @@ define(function (require) {
 
         // Update model on button changes
         $rampTypes.change( function () {
-            layerState.set( 'rampType', $(this).find('input[name="ramp-types"]:checked').val() );
+            var value = $(this).find('input[name="ramp-types"]:checked').val();
+            layer.setRampType( value );
         });
 
-        $rampTypes.find('input[name="ramp-types"][value="' + layerState.get('rampType') + '"]').prop('checked', true);
+        $rampTypes.find('input[name="ramp-types"][value="' + layer.getRampType() + '"]').prop('checked', true);
 
         // Add the ramp function radio buttons
         $rampFunctions = $('<div class="settings-ramp-functions"/>');
@@ -745,9 +740,9 @@ define(function (require) {
 
         $settingsContent.append($rampFunctions);
 
-        for (i=0; i<layerState.RAMP_FUNCTIONS.length; i++) {
-            name = layerState.RAMP_FUNCTIONS[i].name;
-            id = layerState.RAMP_FUNCTIONS[i].id;
+        for (i=0; i<layer.RAMP_FUNCTIONS.length; i++) {
+            name = layer.RAMP_FUNCTIONS[i].name;
+            id = layer.RAMP_FUNCTIONS[i].id;
             $settingValue = $('<div class="settings-values"></div>')
                                 .append($('<input type="radio" name="ramp-functions" value="' + id + '" id="'+id+'">')
                                     .add($('<label for="' + id + '">' + name + '</label>') ) );
@@ -759,10 +754,11 @@ define(function (require) {
         }
 
         $rampFunctions.change( function () {
-            layerState.set( 'rampFunction', $(this).find('input[name="ramp-functions"]:checked').val());
+            var value = $(this).find('input[name="ramp-functions"]:checked').val();
+            layer.setRampFunction( value );
         });
 
-        $rampFunctions.find('input[name="ramp-functions"][value="' + layerState.get('rampFunction') + '"]').prop('checked', true);
+        $rampFunctions.find('input[name="ramp-functions"][value="' + layer.getRampFunction() + '"]').prop('checked', true);
 
 
         $coarsenessSettings = $('<div class="settings-coarseness"/>');
@@ -784,14 +780,15 @@ define(function (require) {
         }
 
         $coarsenessSettings.change( function () {
-            layerState.set( 'coarseness', $(this).find('input[name="coarseness-values"]:checked').val());
+            var value = $(this).find('input[name="coarseness-values"]:checked').val();
+            layer.setCoarseness( value );
         });
 
-        $coarsenessSettings.find('input[name="coarseness-values"][value="' + layerState.get('coarseness') + '"]').prop('checked', true);
+        $coarsenessSettings.find('input[name="coarseness-values"][value="' + layer.getCoarseness() + '"]').prop('checked', true);
 
         // if settings customization is provided, add it
         if ( settingsCustomization ) {
-            $settingsContent.append( settingsCustomization( layerState ) );
+            $settingsContent.append( settingsCustomization( layer ) );
         }
 
         replaceChildren($layerControlsContainer, $settingsContainer);
@@ -800,48 +797,50 @@ define(function (require) {
     /**
      * Creates an observer to handle layer state changes, and update the controls based on them.
      */
-    makeLayerStateObserver = function (layerState, controlsMap, layerStates, $layersControlListRoot) {
-        return function (fieldName) {
+    makeLayerControlsSubscriber = function ( layer, layers, controlsMap, $layersControlListRoot) {
+        return function ( message, path ) {
 
-            var controlsMapping = controlsMap[ layerState.get( 'uuid' ) ],
-                baseLayer, previousBaseLayer, i;
+            var field = message.field,
+                value = message.value,
+                controlsMapping = controlsMap[ layer.uuid ],
+                baseLayer, previousBaseLayer, i, theme;
 
-            switch (fieldName) {
+            switch ( field ) {
 
                 case "enabled":
 
-                    controlsMapping.enabledCheckbox.prop("checked", layerState.get('enabled'));
+                    controlsMapping.enabledCheckbox.prop( "checked", value );
                     break;
 
                 case "opacity":
 
-                     controlsMapping.opacitySlider.slider("option", "value", layerState.get('opacity') * OPACITY_RESOLUTION);
+                     controlsMapping.opacitySlider.slider( "value", value * OPACITY_RESOLUTION );
                      break;
 
                 case "rampFunction":
 
-                    controlsMapping.filterAxis.html( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
+                    controlsMapping.filterAxis.html( createFilterAxisContent( layer.getRampMinMax(), value ) );
                     break;
 
                 case "filterRange":
 
-                     controlsMapping.filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
+                     controlsMapping.filterSliderImg.css( {'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
                      break;
 
                 case "rampImageUrl":
 
-                    controlsMapping.filterSliderImg.css({'background': 'url(' + layerState.get('rampImageUrl') + ')', 'background-size': 'contain'});
+                    controlsMapping.filterSliderImg.css( {'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
                     break;
 
                 case "rampMinMax":
 
-                    controlsMapping.filterAxis.html( createFilterAxisContent( layerState.get('rampMinMax'), layerState.get('rampFunction') ) );
+                    controlsMapping.filterAxis.html( createFilterAxisContent( layer.getRampMinMax(), layer.getRampFunction() ) );
                     break;
 
                 case "baseLayerIndex":
 
-                    baseLayer = layerState.BASE_LAYERS[ layerState.get('baseLayerIndex') ];
-                    previousBaseLayer = layerState.BASE_LAYERS[ layerState.get('previousBaseLayerIndex') ];
+                    baseLayer = layer.BASE_LAYERS[ value ];
+                    previousBaseLayer = layer.BASE_LAYERS[ layer.getPreviousBaseLayerIndex() ];
 
                     // if the switching from blank baselayer to TMS / Google, animate the
                     // hiding / showing of the opacity bar
@@ -859,25 +858,26 @@ define(function (require) {
                     }
 
                     // change theme for all layers
-                    for (i=0; i<layerStates.length; i++) {
-                        layerStates[i].set( "theme", baseLayer.theme );
+                    for ( i=0; i<layers.length; i++ ) {
+                        if ( layers[i].domain === "server" ) {
+                            layers[i].setTheme( $("body").hasClass("light-theme")? 'light' : 'dark' );
+                        }
                     }
-
                     break;
             }
         };
     };
 
     /**
-     * Replace the existing layer controls with new ones derived from the set of LayerState objects.  All the
+     * Replace the existing layer controls with new ones derived from the set of layer objects.  All the
      * new control references will be stored in the controlsMap for later access.
      *
-     * @param {object} layerStates - An array map of LayerState objects.
+     * @param {object} layers - An array map of layer objects.
      * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
      */
-    replaceLayers = function ( layerStates, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization ) {
-        var sortedLayerStates = sortLayers( layerStates ),
+    replaceLayers = function ( layers, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization ) {
+        var sortedLayers = sortLayers( layers ),
             i, key;
 
         // empty the container
@@ -893,8 +893,8 @@ define(function (require) {
         }
 
         // Add layers - this will update the controls list.
-        for (i = 0; i < sortedLayerStates.length; i += 1) {
-            addLayer( sortedLayerStates, i, $layerControlsContainer, controlsMap, layerStateMap, settingsCustomization );
+        for (i = 0; i < sortedLayers.length; i += 1) {
+            addLayer( sortedLayers, i, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization );
         }
 
         // append a spacer element at the bottom, padding causes jitter in overlay animation
@@ -905,15 +905,15 @@ define(function (require) {
      * Converts the layer state map into an array and then sorts it based layer
      * z indices.
      *
-     * @param layerStates - An array of LayerState objects.
-     * @returns {Array} - An array of LayerState objects sorted highest to lowest by z index.
+     * @param layers - An array of layer objects.
+     * @returns {Array} - An array of layer objects sorted highest to lowest by z index.
      */
-    sortLayers = function (layerStates) {
+    sortLayers = function ( layers ) {
 
-        var arrayCopy = layerStates.concat();
+        var arrayCopy = layers.concat();
 
         arrayCopy.sort( function (a, b) {
-            return b.zIndex - a.zIndex;
+            return b.getZIndex() - a.getZIndex();
         });
         return arrayCopy;
     };
@@ -926,31 +926,30 @@ define(function (require) {
 
         /**
          * Initializes the layer controls by modifying the DOM tree, and registering
-         * callbacks against the LayerState obj
+         * callbacks against the layer object
          *
          * @param controlsId - The DOM element id used as the container for the controls panel elements.
-         * @param layerStates - The list of layers the layer controls reflect and modify.
+         * @param layers - The array of layers objects.
          */
-        init: function ( controlsId, layerStates, settingsCustomization ) {
+        init: function ( controlsId, layers, settingsCustomization ) {
 
             var i;
 
             // "Private" vars
             this.controlsMap = {};
-            this.layerStateMap = {};
+            this.layersByUuid = {};
 
             // find the container
             this.$layerControlsRoot = $('#'+controlsId);
 
             // Add layers visuals and register listeners against the model
-            replaceLayers( layerStates, this.$layerControlsRoot, this.controlsMap, this.layerStateMap, settingsCustomization );
+            replaceLayers( layers, this.$layerControlsRoot, this.controlsMap, this.layersByUuid, settingsCustomization );
 
-            for (i=0; i<layerStates.length; i++) {
-
-                layerStates[i].addListener( makeLayerStateObserver(
-                    layerStates[i],
+            for (i=0; i<layers.length; i++) {
+                PubSub.subscribe( layers[i].getChannel(),makeLayerControlsSubscriber(
+                    layers[i],
+                    layers,
                     this.controlsMap,
-                    layerStates,
                     this.$layerControlsContainer
                 ));
             }

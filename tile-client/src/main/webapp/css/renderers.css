@@ -94,6 +94,9 @@
 .text-score-label {
     position: relative;
 	white-space: nowrap;
+	max-width: 200px;
+	overflow:hidden;
+	text-overflow: ellipsis;
 	z-index: 1;
 }
 

@@ -32,15 +32,11 @@ require(['./ApertureConfig',
          './map/Map',
          './layer/LayerService',
          './layer/LayerControls',
-         './layer/base/BaseLayerMediator',
          './layer/server/ServerLayerFactory',
-         './layer/server/ServerLayerMediator',
          './layer/client/ClientLayerFactory',
-         './layer/client/ClientLayerMediator',
          './layer/client/CarouselControls',
          './layer/annotation/AnnotationService',
-         './layer/annotation/AnnotationLayerFactory',
-         './layer/annotation/AnnotationLayerMediator'
+         './layer/annotation/AnnotationLayerFactory'
         ],
 
         function (configureAperture,
@@ -51,26 +47,24 @@ require(['./ApertureConfig',
                   Map,
                   LayerService,
                   LayerControls,
-                  BaseLayerMediator,
                   ServerLayerFactory,
-                  ServerLayerMediator,
                   ClientLayerFactory,
-                  ClientLayerMediator,
                   CarouselControls,
                   AnnotationService,
-                  AnnotationLayerFactory,
-                  AnnotationLayerMediator) {
+                  AnnotationLayerFactory) {
 
 	        "use strict";
 
 	        var apertureConfigFile = "data/aperture-config.json",
 	            cloneObject,
 	            getLayers,
+	            getServerLayers,
+	            getClientLayers,
+	            groupClientLayers,
+	            groupClientLayerViews,
 	            getAnnotationLayers,
 	            getURLParameter,
-	            groupClientLayers,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
-
 
 	        getURLParameter = function (key) {
 		        var url = window.location.search.substring(1),
@@ -89,13 +83,11 @@ require(['./ApertureConfig',
 
 	        cloneObject = function (base) {
 		        var result, key;
-
 		        if ($.isArray(base)) {
 			        result = [];
 		        } else {
 			        result = {};
 		        }
-
 		        for (key in base) {
 			        if (base.hasOwnProperty(key)) {
 				        if ("object" === typeof(base[key])) {
@@ -109,9 +101,34 @@ require(['./ApertureConfig',
 		        return result;
 	        };
 
-	        groupClientLayers = function( clientLayers ) {
+	        groupClientLayerViews = function( subLayers ) {
+	            var spec = {},
+	                subLayer, i, j;
+	            // set base spec from first declared client layer
+                spec.domain = subLayers[0].domain;
+                spec.name = subLayers[0].name;
+                spec.opacity = subLayers[0].opacity;
+                spec.enabled = subLayers[0].enabled;
+                spec.views = [];
+	            for ( i=0; i<subLayers.length; i++ ) {
+	                subLayer = subLayers[i];
+	                for ( j=0; j<subLayer.renderers.length; j++ ) {
+                        spec.views.push({
+                            layer : subLayer.layer,
+                            renderer : subLayer.renderers[j],
+                            details : subLayer.details
+                        });
+	                }
+	            }
+                return spec;
+            };
 
-                var layer, layerName, i, layersByName = {}, layersByOrder = [];
+	        groupClientLayers = function( clientLayers ) {
+                var layer, layerName,
+                    layersByName = {}, layersByOrder = [],
+                    layerSpecs = [],
+                    i;
+                // group client layers by name while maintaining order in config file
                 for ( i=0; i<clientLayers.length; i++ ) {
                     layer = clientLayers[i];
                     layerName = layer.name;
@@ -121,59 +138,66 @@ require(['./ApertureConfig',
                     }
                     layersByName[ layerName ].push( layer );
                 }
-                return layersByOrder;
+                // iterate over individual client layers and assemble view specs
+                for ( i=0; i<layersByOrder.length; i++ ) {
+                    layerSpecs.push( groupClientLayerViews( layersByOrder[i] ) );
+                }
+                return layerSpecs;
             };
 
-	        // Get the layers from a layer tree that match a given filter and 
-	        // pertain to a given domain.
-	        getLayers = function (domain, rootNode, filterFcn) {
-		        // Filter function to filter out all layers not in the desired 
-		        // domain (server or client)
-		        var domainFilterFcn = function (domain) {
-			        return function (layer) {
-				        var accepted = false;
-				        if (filterFcn(layer)) {
-					        layer.renderers.forEach(function (renderer, index, renderers) {
-						        if (domain === renderer.domain) {
-							        accepted = true;
-							        return;
-						        }
-					        });
-				        }
-				        return accepted;
-			        };
-		        };
-
-		        // Run our filter, and on the returned nodes, return a renderer 
-		        // configuration appropriate to that domain.
-		        return LayerService.filterLeafLayers(
-			        rootNode,
-			        domainFilterFcn(domain)
-		        ).map(function (layer, index, layersList) {
-			        // For now, just use the first appropriate configuration we find.
-			        var config;
-
-			        layer.renderers.forEach(function (renderer, index, renderers) {
-				        if (domain === renderer.domain) {
-					        config = cloneObject(renderer);
-					        if (layer.data.transformer) {
-					            config.transformer = cloneObject(layer.data.transformer);
-					        }
-					        config.layer = layer.id;
-					        config.name = layer.name;
-					        return;
-				        }
-			        });
-
-			        return config;
-		        });
+	        getLayers = function( rootNode, filter, domain ) {
+	            var layers = LayerService.filterLeafLayers( rootNode ),
+                    layer, configurations = [], config, renderer,
+                    i, j;
+                for (i=0; i<layers.length; i++) {
+                    layer = layers[i];
+                    // filter layer based on function
+                    if ( filter( layer ) ) {
+                        for ( j=0; j<layer.renderers.length; j++ ) {
+                            renderer = layer.renderers[j];
+                            // if renderer matches domain
+                            if ( renderer.domain === domain ) {
+                                // we only needed certain parts of the spec objects
+                                config = cloneObject( renderer );
+                                if (layer.data.transformer) {
+                                    config.transformer = cloneObject( layer.data.transformer );
+                                }
+                                config.layer = layer.id;
+                                config.name = layer.name;
+                                configurations.push( config );
+                            }
+                        }
+                    }
+                }
+                return configurations;
 	        };
 
-	        getAnnotationLayers = function( allLayers, filter ) {
-		        var i, validLayers =[];
-		        for (i=0; i<allLayers.length; i++) {
+	        getServerLayers = function( rootNode, filter ) {
+	            var layers = getLayers( rootNode, filter, 'server' ),
+	                zIndex = 1, i;
+	            for ( i=0; i<layers.length; i++ ) {
+	                layers[i].zIndex = zIndex++;
+	            }
+	            return layers;
+            };
 
+            getClientLayers = function( rootNode, filter ) {
+                var layers = getLayers( rootNode, filter, 'client' ),
+                    zIndex = 1000, i;
+                // group client layers based on common name
+                layers = groupClientLayers( layers );
+                for ( i=0; i<layers.length; i++ ) {
+                    layers[i].zIndex = zIndex++;
+                }
+                return layers;
+            };
+
+	        getAnnotationLayers = function( allLayers, filter ) {
+		        var i, validLayers =[],
+		            zIndex = 500;
+		        for (i=0; i<allLayers.length; i++) {
 			        if ( filter( allLayers[i] ) ) {
+			            allLayers[i].zIndex = zIndex++;
 				        validLayers.push( allLayers[i] );
 			        }
 		        }
@@ -207,8 +231,8 @@ require(['./ApertureConfig',
 		        layersDeferred = LayerService.requestLayers();
 		        annotationsDeferred = AnnotationService.requestLayers();
 
-		        $.when(mapsDeferred, layersDeferred, annotationsDeferred).done(
-			        function (maps, layers, annotationLayers) {
+		        $.when (mapsDeferred, layersDeferred, annotationsDeferred ).done(
+			        function ( maps, layers, annotationLayers ) {
 				        // For now, just use the first map
 				        var currentMap,
 				            mapConfig,
@@ -223,10 +247,6 @@ require(['./ApertureConfig',
 				            clientLayerFactory,
 				            serverLayerFactory,
 				            annotationLayerFactory,
-				            baseLayerMediator,
-				            clientLayerMediator,
-				            serverLayerMediator,
-				            annotationLayerMediator,
                             clientLayerDeferreds,
                             serverLayerDeferreds,
                             annotationLayerDeferreds;
@@ -278,51 +298,44 @@ require(['./ApertureConfig',
 				        // of the layer tree that match that pyramid.
 				        // Eventually, we should let the user choose among them.
 				        filter = function (layer) {
-					        return PyramidFactory.pyramidsEqual(mapPyramid, layer.pyramid);
+					        return PyramidFactory.pyramidsEqual( mapPyramid, layer.pyramid );
 				        };
 
-				        clientLayers = groupClientLayers( getLayers( "client", layers, filter ) );
-				        serverLayers = getLayers( "server", layers, filter );
+				        clientLayers = getClientLayers( layers, filter );
+				        serverLayers = getServerLayers( layers, filter );
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
 
 				        if (UICustomization.customizeLayers) {
 					        UICustomization.customizeLayers(layers);
 				        }
 
-                        baseLayerMediator = new BaseLayerMediator();
-                        baseLayerMediator.registerLayers( worldMap );
-
-                        clientLayerMediator = new ClientLayerMediator();
-                        serverLayerMediator = new ServerLayerMediator();
-                        annotationLayerMediator = new AnnotationLayerMediator();
-
                         clientLayerFactory = new ClientLayerFactory();
                         serverLayerFactory = new ServerLayerFactory();
                         annotationLayerFactory = new AnnotationLayerFactory();
 
 				        // Create client, server and annotation layers
-				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap, clientLayerMediator );
-				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap, serverLayerMediator );
-                        annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap, annotationLayerMediator );
+				        clientLayerDeferreds = clientLayerFactory.createLayers( clientLayers, worldMap );
+				        serverLayerDeferreds = serverLayerFactory.createLayers( serverLayers, worldMap );
+                        annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap );
 
                         $.when( clientLayerDeferreds, serverLayerDeferreds, annotationLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
 
-                            var sharedStates = [];
+                            var layers = [];
 
                             // customize layers
-                            if (UICustomization.customizeLayers) {
+                            if ( UICustomization.customizeLayers ) {
                                 UICustomization.customizeLayers( clientLayers, serverLayers, annotationLayers );
                             }
 
-                            $.merge( sharedStates, baseLayerMediator.getLayerStates() );
-                            $.merge( sharedStates, clientLayerMediator.getLayerStates() );
-                            $.merge( sharedStates, serverLayerMediator.getLayerStates() );
-                            $.merge( sharedStates, annotationLayerMediator.getLayerStates() );
-
+                            // merge all layers into single array
+                            $.merge( layers, [ worldMap ] );
+                            $.merge( layers, clientLayers );
+                            $.merge( layers, serverLayers );
+                            $.merge( layers, annotationLayers );
                             // create layer controls
-                            new LayerControls( 'layer-controls-content', sharedStates, UICustomization.customizeSettings ).noop();
+                            new LayerControls( 'layer-controls-content', layers, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
-                            new CarouselControls( clientLayerMediator.getLayerStates(), worldMap ).noop();
+                            new CarouselControls( clientLayers, worldMap ).noop();
                         });
 
 			        }

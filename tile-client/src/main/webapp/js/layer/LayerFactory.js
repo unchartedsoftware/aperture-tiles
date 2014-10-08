@@ -42,7 +42,7 @@ define( function (require) {
         ClassName: "LayerFactory",
 
 
-        createLayers: function( layerJSON, map, layerMediator ) {
+        createLayers: function( layerJSON, map ) {
             var layerDeferreds = [],
                 factoryDeferred = $.Deferred(),
                 i;
@@ -54,8 +54,6 @@ define( function (require) {
             $.when.apply( $, layerDeferreds ).done( function() {
                 // when all individual layer deferreds are resolved
                 var layers = Array.prototype.slice.call( arguments, 0 );
-                // register with layer mediator
-                layerMediator.registerLayers( layers );
                 // resolve the factory deferred
                 factoryDeferred.resolve( layers );
             });

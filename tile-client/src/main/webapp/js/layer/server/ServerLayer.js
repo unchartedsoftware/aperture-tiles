@@ -33,7 +33,60 @@ define(function (require) {
 
     var Layer = require('../Layer'),
         LayerService = require('../LayerService'),
+        PubSub = require('../../util/PubSub'),
+        requestRampImage,
+        getLevelMinMax,
         ServerLayer;
+
+
+
+    /**
+     * Request colour ramp image from server.
+     *
+     * @param {Object} layer - The layer object.
+     * @param {Object} layerInfo - The layer meta data object.
+     * @param {Object} level - The current map zoom level.
+     */
+    requestRampImage = function ( layer, layerInfo, level ) {
+
+        var legendData = {
+                layer: layer.id,  // layer id
+                id: layerInfo.id, // config uuid
+                level: level,
+                width: 128,
+                height: 1,
+                orientation: "horizontal"
+            };
+
+        aperture.io.rest('/legend',
+                         'POST',
+                         function (legendString, status) {
+                            layer.setRampImageUrl( legendString );
+                         },
+                         {
+                             postData: legendData,
+                             contentType: 'application/json'
+                         });
+
+    };
+
+    /**
+     * Returns the layers min and max values for the given zoom level.
+     *
+     * @param {Object} layer - The layer object.
+     * @return {Array} a two component array of the min and max values for the level.
+     */
+    getLevelMinMax = function( layer ) {
+        var zoomLevel = layer.map.getZoom(),
+            coarseness = layer.getLayerSpec().coarseness,
+            adjustedZoom = zoomLevel - (coarseness-1),
+            meta =  layer.getLayerInfo().meta,
+            minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[adjustedZoom])),
+            maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[adjustedZoom])),
+            min = minArray ? ($.isArray(minArray) ? minArray[adjustedZoom] : minArray.minimum) : 0,
+            max = maxArray ? ($.isArray(maxArray) ? maxArray[adjustedZoom] : maxArray.maximum) : 0;
+        return [ parseFloat(min), parseFloat(max) ];
+    };
 
 
 
@@ -41,8 +94,53 @@ define(function (require) {
         ClassName: "ServerLayer",
 
 
+        /**
+         * Valid ramp type strings.
+         */
+        RAMP_TYPES: [
+             {id: "spectral", name: "Spectral"},
+             {id: "hot", name: "Hot"},
+             {id: "neutral", name: "Neutral"},
+             {id: "cool", name: "Cool"},
+             {id: "flat", name: "Flat"}
+        ],
+
+
+        /**
+         * Valid ramp function strings.
+         */
+        RAMP_FUNCTIONS: [
+            {id: "linear", name: "Linear"},
+            {id: "log10", name: "Log 10"}
+        ],
+
+
         init: function ( spec, map ) {
+
+            var that = this;
+
+            // set reasonable defaults
+            spec.renderer.opacity  = spec.renderer.opacity || 1.0;
+            spec.renderer.enabled = ( spec.renderer.enabled !== undefined ) ? spec.renderer.enabled : true;
+            spec.renderer.ramp = spec.renderer.ramp || "ware";
+            spec.transform.name = spec.transform.name || 'linear';
+            spec.legendrange = spec.legendrange || [0,100];
+            spec.transformer = spec.transformer || {};
+            spec.transformer.type = spec.transformer.type || "generic";
+            spec.transformer.data = spec.transformer.data || {};
+            spec.coarseness = ( spec.coarseness !== undefined ) ?  spec.coarseness : 1;
+
+            // cal base constructor
             this._super( spec, map );
+
+            // update ramp min/max on zoom
+            this.map.on("zoomend", function() {
+                if ( that.layer ) {
+                    that.setRampMinMax( getLevelMinMax( that ) );
+                }
+            });
+
+            this.hasBeenConfigured = false;
         },
 
 
@@ -52,7 +150,16 @@ define(function (require) {
         setOpacity: function ( opacity ) {
             if (this.layer) {
                 this.layer.olLayer_.setOpacity( opacity );
+                PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
             }
+        },
+
+
+        /**
+         *  Get layer opacity
+         */
+        getOpacity: function() {
+            return this.layer.olLayer_.opacity;
         },
 
 
@@ -62,7 +169,16 @@ define(function (require) {
         setVisibility: function ( visibility ) {
             if (this.layer) {
                 this.layer.olLayer_.setVisibility( visibility );
+                PubSub.publish( this.getChannel(), { field: 'visibility', value: visibility });
             }
+        },
+
+
+        /**
+         * Get layer visibility
+         */
+        getVisibility: function() {
+            return this.layer.olLayer_.getVisibility();
         },
 
 
@@ -74,8 +190,7 @@ define(function (require) {
          * @param {function} callback - The callback function when the configure request returns, used to request new
          *                              ramp image
          */
-        setRampType: function ( rampType, callback ) {
-
+        setRampType: function ( rampType ) {
             var that = this;
             if ( !this.layerSpec.renderer ) {
                 this.layerSpec.renderer = {ramp: rampType};
@@ -83,9 +198,16 @@ define(function (require) {
                 this.layerSpec.renderer.ramp = rampType;
             }
             this.configure( function() {
-                callback();
-                that.update();
+                // once configuration is received that the server has been re-configured, request new image
+                requestRampImage( that, that.getLayerInfo(), that.map.getZoom() );
             });
+        },
+
+        /**
+         *  Get ramp type for layer
+         */
+        getRampType: function() {
+            return this.layerSpec.renderer.ramp;
         },
 
         /**
@@ -96,8 +218,7 @@ define(function (require) {
          * @param {function} callback - The callback function when the configure request returns, used to request new
          *                              ramp image
          */
-        setTheme: function ( theme, callback ) {
-
+        setTheme: function ( theme ) {
             var that = this;
             if ( !this.layerSpec.renderer ) {
                 this.layerSpec.renderer = {theme: theme};
@@ -105,10 +226,52 @@ define(function (require) {
                 this.layerSpec.renderer.theme = theme;
             }
             this.configure( function() {
-                callback();
-                that.update();
+                // once configuration is received that the server has been re-configured, request new image
+                requestRampImage( that, that.getLayerInfo(), that.map.getZoom() );
             });
         },
+        
+        /**
+         * Get the current theme for the layer
+         */
+        getTheme: function() {
+        	return this.layerSpec.renderer && this.layerSpec.renderer.theme;
+        },
+        
+        
+        /**
+         * Sets the ramps current min and max
+         */
+        setRampMinMax: function( minMax ) {
+            this.rampMinMax = minMax;
+            PubSub.publish( this.getChannel(), { field: 'rampMinMax', value: minMax });
+        },
+
+
+        /**
+         * Get the ramps current min and max for the zoom level
+         */
+        getRampMinMax: function() {
+            return this.rampMinMax;
+        },
+
+
+        /**
+         * Update the ramps URL string
+         */
+        setRampImageUrl: function ( url ) {
+            this.rampImageUrl = url;
+            PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
+        },
+
+
+        /**
+         * Get the current ramps URL string
+         */
+        getRampImageUrl: function() {
+            return this.rampImageUrl;
+        },
+
 
         /**
          * Updates the ramp function associated with the layer.  Results in a POST
@@ -122,7 +285,16 @@ define(function (require) {
             } else {
                 this.layerSpec.transform.name = rampFunction;
             }
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
+            PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
+        },
+
+
+        /**
+         * Get the current ramps function
+         */
+        getRampFunction: function() {
+            return this.layerSpec.transform.name;
         },
 
 
@@ -134,7 +306,16 @@ define(function (require) {
          */
         setFilterRange: function ( filterRange ) {
             this.layerSpec.legendrange = filterRange;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
+            PubSub.publish( this.getChannel(), { field: 'filterRange', value: filterRange });
+        },
+
+
+        /**
+         * Get the current ramp filter range from 0 to 100
+         */
+        getFilterRange: function() {
+            return this.layerSpec.legendrange;
         },
 
 
@@ -143,27 +324,81 @@ define(function (require) {
          */
         setZIndex: function ( zIndex ) {
             this.map.setLayerIndex( this.layer.olLayer_, zIndex );
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
 
+        /**
+         * Get the layers zIndex
+         */
+        getZIndex: function () {
+            return this.map.getLayerIndex( this.layer.olLayer_ );
+        },
+
+
+        /**
+         * Set the layers transformer type
+         */
         setTransformerType: function ( transformerType ) {
             this.layerSpec.transformer.type = transformerType;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
+            PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
         },
 
 
+        /**
+         * Get the layers transformer type
+         */
+        getTransformerType: function () {
+            return this.layerSpec.transformer.type;
+        },
+
+
+        /**
+         * Set the transformer data arguments
+         */
         setTransformerData: function ( transformerData ) {
             this.layerSpec.transformer.data = transformerData;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
+            PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
         },
 
 
+        /**
+         * Get the transformer data arguments
+         */
+        getTransformerData: function () {
+            return this.layerSpec.transformer.data;
+        },
+
+
+        /**
+         * Set the layer coarseness
+         */
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
-            this.configure( $.proxy( this.update, this ) );
+            this.configure();
+            this.setRampMinMax( getLevelMinMax( this ) );
+            PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 
 
+        /**
+         * Get the layer coarseness
+         */
+        getCoarseness: function() {
+            return this.layerSpec.coarseness;
+        },
+
+
+        /**
+         * Configure the layer, this involves sending the layer specification
+         * object to the server in a POST request. The server will respond with
+         * a meta data object containing the layers configuration uuid. If a previous
+         * uuid exists, the server will automatically send an unconfigure request to
+         * free the previous configuration. On the first request response, set default
+         * layer properties such as opacity, zIndex, coarseness, and visiblity.
+         */
         configure: function( callback ) {
 
             var that = this;
@@ -178,9 +413,19 @@ define(function (require) {
                     }
                     // set layer info
                     that.layerInfo = layerInfo;
+                    that.update();
+                    // on first configure, set client-side layer properties
+                    if ( that.hasBeenConfigured === false ) {
+                        requestRampImage( that, that.getLayerInfo(), 0 );
+                        that.setZIndex( that.layerSpec.zIndex );
+                        that.setVisibility( that.layerSpec.renderer.enabled );
+                        that.setCoarseness( that.layerSpec.coarseness );
+                        that.hasBeenConfigured = true;
+                    }
                 }
-
-                callback( layerInfo, statusInfo );
+                if ( callback ) {
+                    callback( layerInfo, statusInfo );
+                }
             });
         },
 
