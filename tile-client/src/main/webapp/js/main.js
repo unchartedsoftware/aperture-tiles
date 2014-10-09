@@ -256,8 +256,8 @@ require(['./ApertureConfig',
 
 					        // ... first, create the panel
 					        mapsOverlay = new OverlayButton({
-                                id:'maps',
-                                header: 'Maps',
+                                id:'views',
+                                header: 'Views',
                                 content: ''
                             });
 
@@ -265,14 +265,14 @@ require(['./ApertureConfig',
                             for (i=0; i<maps.length; ++i) {
                                 mapButton = $('<a/>').attr({
                                     'href': '?map='+i,
-	                                'class': 'maps-link'
+	                                'class': 'views-link'
                                 });
                                 mapButton.append(maps[i].description+'<br>');
                                 mapsOverlay.getContentElement().append( mapButton );
                             }
 				        } else {
 					        // Only one map. Remove the maps div.
-					        $("#maps").remove();
+					        $("#views").remove();
 				        }
 
 				        // Initialize our map...

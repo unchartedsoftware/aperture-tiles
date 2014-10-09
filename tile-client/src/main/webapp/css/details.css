@@ -36,6 +36,8 @@
 	position:relative;
 	padding: 5px 10px 5px 10px;
 	vertical-align: middle;
+	overflow:hidden;
+	text-overflow: ellipsis;
 }
 
 .light-theme .details-on-demand-title {

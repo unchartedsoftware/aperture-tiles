@@ -860,7 +860,7 @@ define(function (require) {
                     // change theme for all layers
                     for ( i=0; i<layers.length; i++ ) {
                         if ( layers[i].domain === "server" ) {
-                            layers[i].invertRampType();
+                            layers[i].updateTheme();
                         }
                     }
                     break;
@@ -883,7 +883,7 @@ define(function (require) {
         // empty the container
         $layerControlsContainer.empty();
 
-        $layerControlsContainer.append( '<div class="layer-controls-buffer"></div>');
+        //$layerControlsContainer.append( '<div class="layer-controls-buffer"></div>');
 
         // Clear out any existing the controls map
         for (key in controlsMap) {
@@ -898,7 +898,7 @@ define(function (require) {
         }
 
         // append a spacer element at the bottom, padding causes jitter in overlay animation
-        $layerControlsContainer.append( '<div class="layer-controls-buffer"></div>');
+        //$layerControlsContainer.append( '<div class="layer-controls-buffer"></div>');
     };
 
     /**

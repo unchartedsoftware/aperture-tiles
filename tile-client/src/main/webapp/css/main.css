@@ -12,21 +12,10 @@ h1 {
 
 body {
     margin: 0;
-    font-family: Verdana, Arial, sans-serif;
+	font-family: Helvetica, Arial, sans-serif;
     background-color: black;
     color: #7E7E7E;
     overflow:hidden;
-    /*
-    text-shadow:
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000,
-       1px  0   0 #000,
-      -1px  0   0 #000,
-       0    1px 0 #000,
-       0   -1px 0 #000;
-    */
     -webkit-touch-callout: none;
       -webkit-user-select: none;
        -khtml-user-select: none;
@@ -43,7 +32,7 @@ body {
 
 .light-theme select {
   border: 1px solid #fff;
-  background-color: #ccc;
+  background-color: #eee;
   color: #000;
 }
 

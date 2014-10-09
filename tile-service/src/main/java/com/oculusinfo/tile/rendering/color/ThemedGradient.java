@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2014 Oculus Info Inc.
+/**
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -10,10 +10,10 @@
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- *
+
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,41 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.color.impl;
+package com.oculusinfo.tile.rendering.color;
 
 import java.awt.Color;
-
-import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.color.ColorRampParameter;
+import java.util.List;
 
 /**
- * Creates a single flat colour with no gradients at all.
- * Always returns the initial colour.
- * 
- * @author cregnier
+ * @author djonker
  *
  */
-public class FlatColorRamp implements ColorRamp {
+public interface ThemedGradient {
 
-	protected ColorRampParameter params;
-	private int col;
-	
+	/**
+	 * @return a set of colors represent a gradient.
+	 */
+	public List<Color> getColors();
 	
 	/**
-	 * Creates the ramp for the given colour and opacity. 
-	 * @param opacity
-	 * 	The opacity level from 0-255.
-	 * @param rgbCol
-	 * 	The rgb colour.
+	 * @return the name of the theme
 	 */
-	public FlatColorRamp (Color color, double opacity) {
-	    int alpha = (int) Math.floor(255*opacity) & 0xff;
-		this.col = (alpha << 24) | (color.getRGB() & 0xffffff);	//merge the opacity and rgb together into argb
-	}
-
-	@Override
-	public int getRGB(double scale) {
-		return col;
-	}
-	
+	public String getTheme();
 }

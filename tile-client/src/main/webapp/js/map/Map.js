@@ -249,11 +249,13 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
+        getTheme: function() {
+        	return $("body").hasClass("light-theme")? 'light' : 'dark';
+        },
 
         getBaseLayerIndex: function() {
             return this.baseLayerIndex;
         },
-
 
         getPreviousBaseLayerIndex: function() {
             return this.previousBaseLayerIndex;

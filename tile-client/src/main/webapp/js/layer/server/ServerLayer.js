@@ -98,14 +98,11 @@ define(function (require) {
          * Valid ramp type strings.
          */
         RAMP_TYPES: [
-            {id: "ware", name: "Luminance"},
-            {id: "inv-ware", name: "Inverse Luminance"},
-            {id: "br", name: "Blue/Red"},
-            {id: "inv-br", name: "Inverse Blue/Red"},
-            {id: "grey", name: "Grey"},
-            {id: "inv-grey", name: "Inverse Grey"},
-            {id: "flat", name: "Flat"},
-            {id: "single-gradient", name: "Single Gradient"}
+             {id: "spectral", name: "Spectral"},
+             {id: "hot", name: "Hot"},
+             {id: "neutral", name: "Neutral"},
+             {id: "cool", name: "Cool"},
+             {id: "flat", name: "Flat"}
         ],
 
 
@@ -125,7 +122,8 @@ define(function (require) {
             // set reasonable defaults
             spec.renderer.opacity  = spec.renderer.opacity || 1.0;
             spec.renderer.enabled = ( spec.renderer.enabled !== undefined ) ? spec.renderer.enabled : true;
-            spec.renderer.ramp = spec.renderer.ramp || "ware";
+            spec.renderer.ramp = spec.renderer.ramp || "spectral";
+            spec.renderer.theme = spec.renderer.theme || map.getTheme();
             spec.transform.name = spec.transform.name || 'linear';
             spec.legendrange = spec.legendrange || [0,100];
             spec.transformer = spec.transformer || {};
@@ -214,17 +212,35 @@ define(function (require) {
         },
 
         /**
-         * invert the ramp type, this is to be used when themes switch
+         * Updates the theme associated with the layer.  Results in a POST
+         * to the server.
+         *
+         * @param {string} theme - The new theme for the layer.
+         * @param {function} callback - The callback function when the configure request returns, used to request new
+         *                              ramp image
          */
-        invertRampType: function() {
-            // default to inv-ware
-            // TODO: switch to complimentary ramp, else, maintain current ramp
-            if ( $("body").hasClass("light-theme") ) {
-                this.setRampType('inv-ware');
+        updateTheme: function () {
+        	var theme = this.map.getTheme(),
+            	that = this;
+        	
+            if ( !this.layerSpec.renderer ) {
+                this.layerSpec.renderer = {theme: theme};
             } else {
-                this.setRampType('ware');
+                this.layerSpec.renderer.theme = theme;
             }
+            this.configure( function() {
+                // once configuration is received that the server has been re-configured, request new image
+                requestRampImage( that, that.getLayerInfo(), that.map.getZoom() );
+            });
         },
+        
+        /**
+         * Get the current theme for the layer
+         */
+        getTheme: function() {
+        	return this.layerSpec.renderer && this.layerSpec.renderer.theme;
+        },
+
 
         /**
          * Sets the ramps current min and max
