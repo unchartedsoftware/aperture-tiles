@@ -1,9 +1,7 @@
 @charset "UTF-8";
 
 #description {
-	position: fixed;
-	right: 10px;
-	top: 10px;
+	position: relative;
 }
 
 .light-theme #description {
@@ -75,6 +73,92 @@
 }
 
 .dark-theme #description input { 
+    -webkit-filter: invert(100%);
+    -moz-filter: invert(100%);
+}
+
+
+
+
+
+
+
+
+
+
+#description2 {
+	position: relative;
+}
+
+.light-theme #description2 {
+	border: 1px solid #fff;
+}
+
+.dark-theme #description2 {
+	border: 1px solid #333;
+}
+
+#description2-header {
+	position: relative;   
+	height: 32px;
+	width: 120px;
+	vertical-align: middle;
+    text-align:center;
+	line-height: 32px;
+}
+
+.light-theme #description2-header {
+	background-color: #9c9c9c;
+	color: #fff;
+}
+
+.dark-theme #description2-header {
+	background-color: #222;
+    color: #D3D3D3;
+}
+
+.light-theme #description2-header:hover {
+	background-color: #888;
+	color: #fff;
+}
+
+.dark-theme #description2-header:hover {
+ 	color: #FFFFFF;
+}
+
+#description2-content {
+	position: relative;	
+	width: 612px;
+	font-size: 11pt;
+	-webkit-user-select: initial;
+	-khtml-user-select: initial;
+	-moz-user-select: initial;
+	-ms-user-select: initial;
+	user-select: initial;
+}
+
+.light-theme #description2-content {
+	background-color: #fff;
+    color: #000;
+}
+
+.dark-theme #description2-content {
+	background-color: #111;
+	color: #D3D3D3;
+}
+
+#description2 input {
+    cursor:pointer;
+    position:relative;
+    width: 18px;
+    height: 18px;
+    bottom: -4px;   
+}
+
+.light-theme #description2 input {
+}
+
+.dark-theme #description2 input { 
     -webkit-filter: invert(100%);
     -moz-filter: invert(100%);
 }

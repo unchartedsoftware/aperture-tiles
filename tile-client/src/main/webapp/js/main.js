@@ -27,6 +27,7 @@
 require(['./ApertureConfig',
          './customization',
          './ui/OverlayButton',
+         './util/Util',
          './binning/PyramidFactory',
          './map/MapService',
          './map/Map',
@@ -36,12 +37,12 @@ require(['./ApertureConfig',
          './layer/client/ClientLayerFactory',
          './layer/client/CarouselControls',
          './layer/annotation/AnnotationService',
-         './layer/annotation/AnnotationLayerFactory'
-        ],
+         './layer/annotation/AnnotationLayerFactory'],
 
         function (configureAperture,
                   UICustomization,
                   OverlayButton,
+                  Util,
                   PyramidFactory,
                   MapService,
                   Map,
@@ -56,50 +57,13 @@ require(['./ApertureConfig',
 	        "use strict";
 
 	        var apertureConfigFile = "data/aperture-config.json",
-	            cloneObject,
 	            getLayers,
 	            getServerLayers,
 	            getClientLayers,
 	            groupClientLayers,
 	            groupClientLayerViews,
 	            getAnnotationLayers,
-	            getURLParameter,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
-
-	        getURLParameter = function (key) {
-		        var url = window.location.search.substring(1),
-		            urlVars = url.split('&'),
-		            i, varKey,
-		            result = 0;
-		        for (i=0; i<urlVars.length; ++i) {
-			        varKey = urlVars[i].split('=');
-			        if (key === varKey[0]) {
-				        result = varKey[1];
-				        break;
-			        }
-		        }
-		        return result;
-	        };
-
-	        cloneObject = function (base) {
-		        var result, key;
-		        if ($.isArray(base)) {
-			        result = [];
-		        } else {
-			        result = {};
-		        }
-		        for (key in base) {
-			        if (base.hasOwnProperty(key)) {
-				        if ("object" === typeof(base[key])) {
-					        result[key] = cloneObject(base[key]);
-				        } else {
-					        result[key] = base[key];
-				        }
-			        }
-		        }
-
-		        return result;
-	        };
 
 	        groupClientLayerViews = function( subLayers ) {
 	            var spec = {},
@@ -158,9 +122,9 @@ require(['./ApertureConfig',
                             // if renderer matches domain
                             if ( renderer.domain === domain ) {
                                 // we only needed certain parts of the spec objects
-                                config = cloneObject( renderer );
+                                config = _.cloneDeep( renderer );
                                 if (layer.data.transformer) {
-                                    config.transformer = cloneObject( layer.data.transformer );
+                                    config.transformer = _.cloneDeep( layer.data.transformer );
                                 }
                                 config.layer = layer.id;
                                 config.name = layer.name;
@@ -205,19 +169,24 @@ require(['./ApertureConfig',
 	        };
 
 	        // Create description element
-	        $.get("description.html", function (descriptionHtml) {
+	        $.get("description.html", function( descriptionHtml ) {
 		        // create the overlay container
 		        new OverlayButton({
 		            id:'description',
                     header: 'Description',
-                    content: descriptionHtml
+                    content: descriptionHtml,
+                    horizontalPosition: 'right',
+                    verticalPosition: 'top'
 		        }).getContentElement().append(''); // jslint...
 	        });
 
+            // create layer controls
             new OverlayButton({
                 id:'layer-controls',
                 header: 'Controls',
-                content: ''
+                content: '',
+                horizontalPosition: 'right',
+                verticalPosition: 'bottom'
             }).getContentElement().append(''); // jslint...
 
 	        // Load all our UI configuration data before trying to bring up the ui
@@ -235,11 +204,13 @@ require(['./ApertureConfig',
 			        function ( maps, layers, annotationLayers ) {
 				        // For now, just use the first map
 				        var currentMap,
+				            currentBaseLayer,
+				            addBaseLayerToURL,
 				            mapConfig,
 				            worldMap,
-				            mapPyramid,
-				            mapsOverlay,
-				            mapButton,
+				            viewsOverlay,
+				            viewLink,
+				            viewEntry,
 				            i,
 				            filter,
 				            clientLayers,
@@ -251,63 +222,69 @@ require(['./ApertureConfig',
                             serverLayerDeferreds,
                             annotationLayerDeferreds;
 
-				        // Initialize our map choice panel
+				        // Initialize our view choice panel
 				        if (maps.length > 1) {
 
 					        // ... first, create the panel
-					        mapsOverlay = new OverlayButton({
+					        viewsOverlay = new OverlayButton({
                                 id:'views',
                                 header: 'Views',
-                                content: ''
+                                content: '',
+                                horizontalPosition: 'right',
+                                verticalPosition: 'bottom'
                             });
+
+                            addBaseLayerToURL = function() {
+                                var href = $(this).attr('href');
+                                $(this).attr('href', href + "&baselayer="+worldMap.getBaseLayerIndex() );
+                            };
 
                             // ... Next, insert contents
                             for (i=0; i<maps.length; ++i) {
-                                mapButton = $('<a/>').attr({
+                                viewLink = $('<a/>').attr({
                                     'href': '?map='+i,
 	                                'class': 'views-link'
                                 });
-                                mapButton.append(maps[i].description+'<br>');
-                                mapsOverlay.getContentElement().append( mapButton );
+
+                                // on click, inject the base layer index
+                                viewLink.click( addBaseLayerToURL );
+
+                                viewEntry = $('<div class="views-entry" style="text-align:center;"></div>').append( viewLink );
+                                viewLink.append(maps[i].description+'<br>' );
+                                viewsOverlay.getContentElement().append( viewEntry );
                             }
-				        } else {
-					        // Only one map. Remove the maps div.
-					        $("#views").remove();
 				        }
 
-				        // Initialize our map...
-				        currentMap = getURLParameter('map');
+				        // read map and base layer index parameters from url, if present
+				        currentMap = Util.getURLParameter('map');
+				        currentBaseLayer = Util.getURLParameter('baselayer');
+
 				        if ( !currentMap || !maps[currentMap] ) {
 					        currentMap = 0;
 				        }
 
 				        mapConfig = maps[currentMap];
 
-				        worldMap = new Map("map", mapConfig);   // create map
-				        worldMap.setAxisSpecs( MapService.getAxisConfig(mapConfig) ); // set axes
+                        mapConfig.MapConfig.baseLayerIndex = ( currentBaseLayer !== undefined ) ? currentBaseLayer : 0;
+
+				        worldMap = new Map( "map", mapConfig );   // create map
 
 				        // ... perform any project-specific map customizations ...
-				        if (UICustomization.customizeMap) {
-					        UICustomization.customizeMap(worldMap);
+				        if ( UICustomization.customizeMap ) {
+					        UICustomization.customizeMap( worldMap );
 				        }
-				        // ... and request relevant data layers
-				        mapPyramid = mapConfig.PyramidConfig;
 
 				        // TODO: Make it so we can pass the pyramid up to the server
 				        // in the layers request, and have it return only portions
 				        // of the layer tree that match that pyramid.
 				        // Eventually, we should let the user choose among them.
 				        filter = function (layer) {
-					        return PyramidFactory.pyramidsEqual( mapPyramid, layer.pyramid );
+					        return PyramidFactory.pyramidsEqual( mapConfig.PyramidConfig, layer.pyramid );
 				        };
 
 				        clientLayers = getClientLayers( layers, filter );
 				        serverLayers = getServerLayers( layers, filter );
                         annotationLayers = getAnnotationLayers( annotationLayers, filter );
-
-				        if (UICustomization.customizeLayers) {
-					        UICustomization.customizeLayers(layers);
-				        }
 
                         clientLayerFactory = new ClientLayerFactory();
                         serverLayerFactory = new ServerLayerFactory();
@@ -319,14 +296,11 @@ require(['./ApertureConfig',
                         annotationLayerDeferreds = annotationLayerFactory.createLayers( annotationLayers, worldMap );
 
                         $.when( clientLayerDeferreds, serverLayerDeferreds, annotationLayerDeferreds ).done( function( clientLayers, serverLayers, annotationLayers ) {
-
                             var layers = [];
-
                             // customize layers
                             if ( UICustomization.customizeLayers ) {
                                 UICustomization.customizeLayers( clientLayers, serverLayers, annotationLayers );
                             }
-
                             // merge all layers into single array
                             $.merge( layers, [ worldMap ] );
                             $.merge( layers, clientLayers );
