@@ -81,19 +81,13 @@ define(function (require) {
                 return;
             }
 
-            /*
-            if ( !$.contains( document, $elem[0] ) ) {
-                console.error("DOM element must be attached for jScrollPanels to work correctly");
-            }
-            */
-
             // add scroll panel to element
             $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0 });
             // if parent is resizeable, set callback to change scrollbar size
             if ( $parent && !$parent.resizable("option","disabled") ) {
                 $parent.on("resize", function() {
                     // update scroll panel on parent resize
-                    $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0 });
+                    $elem.data('jsp').reinitialise();
                 });
             }
         },
@@ -109,17 +103,17 @@ define(function (require) {
          */
         enableEventPropagation: function( elem, events ) {
 
-            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
+            var domElement = ( elem instanceof jQuery ) ? elem[0] : elem,
                 i;
 
             function propagateEvent( event ) {
-                var newEvent = new event.constructor(event.type, event),
+                var newEvent = new event.constructor( event.type, event ),
                     $elem,
                     before,
                     below;
 
-                $elem = $( elem );
-                before =  $elem.css( 'pointer-events' );
+                $elem = $( event.currentTarget );
+                before = $elem.css( 'pointer-events' );
                 $elem.css( 'pointer-events', 'none' );
                 below = document.elementFromPoint( event.clientX, event.clientY );
                 if ( below ) {
@@ -128,9 +122,9 @@ define(function (require) {
                 $elem.css( 'pointer-events', before );
             }
 
-            $( domElement ).addClass('propagate');
+            $( domElement ).addClass( 'propagate' );
 
-            if (!events) {
+            if ( !events ) {
                 domElement.onmousedown = propagateEvent;
                 domElement.onmouseup = propagateEvent;
                 domElement.onmousemove = propagateEvent;
@@ -151,7 +145,7 @@ define(function (require) {
 
             var domElement = (elem instanceof jQuery) ? elem[0] : elem,
                 i;
-            if (!events) {
+            if ( !events ) {
                 domElement.onmousedown = null;
                 domElement.onmouseup = null;
                 domElement.onmousemove = null;
@@ -277,6 +271,15 @@ define(function (require) {
                 rgb.b += rgbs[i].b * percentages[i];
             }
             return this.rgbToHex( rgb );
+        },
+
+
+         parseMalformedJson: function( jsonString ) {
+            // replace ( and ) with [ and ]
+            var squared = jsonString.replace( /\(/g, '[' ).replace( /\)/g, ']'),
+                // ensure all attributes are quoted in ""
+                quoted = squared.replace(/([a-zA-Z0-9]+)(:)/g,'"$1"$2');
+            return JSON.parse( quoted );
         }
 
     };

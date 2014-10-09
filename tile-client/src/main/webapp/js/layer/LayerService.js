@@ -31,11 +31,14 @@
 define(function (require) {
     "use strict";
 
-    var LayerService,
+    var Util = require('../util/Util'),
+        LayerService,
         visitLayers,
+        parseMetaMinMaxJson,
+        parseLevelsMinMax,
         layersDeferred;
 
-    visitLayers = function (layers, fcn) {
+    visitLayers = function( layers, fcn ) {
         var i;
         if ($.isArray(layers)) {
             for (i=0; i < layers.length; ++i) {
@@ -47,6 +50,41 @@ define(function (require) {
                 visitLayers(layers.children, fcn);
             }
         }
+    };
+
+
+    /**
+     * Parse a given meta data layers min and max json strings,
+     * they are currently stored as malformed json strings, so
+     * they require some massaging.
+     */
+    parseMetaMinMaxJson = function( meta ) {
+        var min = {}, max = {};
+        if ( meta && ( ( meta.max && meta.max.maximum ) || meta.maximum ) ) {
+            max = Util.parseMalformedJson( meta.maximum || meta.max.maximum );
+        }
+        if ( meta && ( ( meta.min && meta.min.minimum ) || meta.minimum ) ) {
+            min = Util.parseMalformedJson( meta.minimum || meta.min.minimum );
+        }
+        return {
+            min: $.isArray( min ) ? min[0] : min,
+            max: $.isArray( max ) ? max[0] : max
+        };
+    };
+
+    /**
+     * Meta data minimum and maximums are stored as malformed json
+     * strings, but are usually access at a high frequency ( multiple times per tile ).
+     * this parses them all and stores them as actual objects.
+     */
+    parseLevelsMinMax = function( layerInfo ) {
+        var meta = layerInfo.meta, key;
+        for ( key in meta ) {
+            if ( meta.hasOwnProperty( key ) ) {
+                meta[key].minMax = parseMetaMinMaxJson( meta[key] );
+            }
+        }
+        return meta;
     };
 
     LayerService = {
@@ -89,7 +127,11 @@ define(function (require) {
 
             aperture.io.rest('/layer',
                              'POST',
-                             callback,
+                             function( layerInfo, statusInfo ) {
+                                // parse min/max meta data json string
+                                layerInfo.meta.minMax = parseLevelsMinMax( layerInfo );
+                                callback( layerInfo, statusInfo );
+                             },
                              {
                                  postData: {
                                      request: "configure",

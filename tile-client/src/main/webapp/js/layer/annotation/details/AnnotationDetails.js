@@ -61,7 +61,10 @@ define(function (require) {
         // make details draggable and resizable
         $details.draggable().resizable({
             minHeight: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).height(),
-            minWidth: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).width()
+            minWidth: $details.find("."+ANNOTATION_DETAILS_CONTENT_CLASS).width(),
+            stop: function( event, ui ) {
+                $details.data( 'hasBeenResized', true );
+            }
         });
         // center details
         $details.css('margin-left', -$details.width() / 2);
@@ -167,8 +170,10 @@ define(function (require) {
                     $( '.'+ANNOTATION_DETAILS_CONTENT_CLASS ).html( that.createDisplayDetailsImpl( annotations[index] ) );
                     // update index text
                     $indexText.text( indexText() );
-                    // re-center details
-                    $details.css('margin-left', -$details.width() / 2);
+                    // re-center details, but only if it hasn't been resized
+                    if ( $details.data( 'hasBeenResized' ) !== true ) {
+                        $details.css('margin-left', -$details.width() / 2);
+                    }
                     // prevent event from propagating
                     event.stopPropagation();
                 };

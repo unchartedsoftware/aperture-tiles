@@ -406,7 +406,7 @@ define(function (require) {
                         requestRampImage( that, that.getLayerInfo(), 0 );
                         that.setZIndex( that.layerSpec.zIndex );
                         that.setVisibility( that.layerSpec.renderer.enabled );
-                        that.setCoarseness( that.layerSpec.coarseness );
+                        that.setRampMinMax( getLevelMinMax( that ) );
                         that.hasBeenConfigured = true;
                     }
                 }

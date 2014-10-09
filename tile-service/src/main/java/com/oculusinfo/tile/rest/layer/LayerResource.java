@@ -189,7 +189,7 @@ public class LayerResource extends ApertureServerResource {
                     // If we have to skip images per tile, it's not a huge deal
                     LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
                 } catch (IllegalArgumentException e) {
-                    LOGGER.warn("Renderer configuration not recognized.");
+                    LOGGER.info("Renderer configuration not recognized.");
                 }
 
                 return new JsonRepresentation(result);
