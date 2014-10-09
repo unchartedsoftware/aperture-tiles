@@ -385,8 +385,10 @@ define(function (require) {
                     // pass parent layer (this) along with meta data to the renderer / details
                     view.renderer.parent = that;
                     view.renderer.meta = layerInfos[ view.id ].meta;
-                    view.details.parent = that;
-                    view.details.meta = layerInfos[ view.id ].meta;
+                    if ( view.details ) {
+                        view.details.parent = that;
+                        view.details.meta = layerInfos[ view.id ].meta;
+                    }
                     // subscribe renderer to pubsub AFTER it has its parent reference
                     view.renderer.subscribeRenderer();
                     that.hasBeenConfigured = true;
