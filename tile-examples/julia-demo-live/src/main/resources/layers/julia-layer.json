@@ -61,7 +61,7 @@
 					"domain": "server",
 					"renderer": {
 						"type": "heatmap",
-						"ramp": "ware",
+						"ramp": "spectral",
 						"opacity": 0.85
 					},
 					"transform": {
@@ -94,7 +94,7 @@
 					"domain": "server",
 					"renderer": {
 						"type": "heatmap",
-						"ramp": "ware",
+						"ramp": "spectral",
 						"opacity": 0.85
 					},
 					"transform": {

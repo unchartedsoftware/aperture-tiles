@@ -445,7 +445,7 @@ define(function (require) {
 
         var tilesInMemory = this.getTilesInMemory( layerId ),
             services = serviceRegistry[ layerId ],
-            service,
+            service, tilesWithData = [],
             i;
 
         if ( !services ) {
@@ -483,7 +483,14 @@ define(function (require) {
             }
         }
 
-        return tilesInMemory;
+        _.forEach( tilesInMemory, function( value ) {
+            if ( value.length > 0 ) {
+                tilesWithData.push( value[0] );
+            }
+
+        });
+
+        return tilesWithData;
     };
 
     return TileService;

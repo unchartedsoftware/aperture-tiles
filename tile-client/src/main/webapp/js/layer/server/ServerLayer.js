@@ -122,7 +122,7 @@ define(function (require) {
             // set reasonable defaults
             spec.renderer.opacity  = spec.renderer.opacity || 1.0;
             spec.renderer.enabled = ( spec.renderer.enabled !== undefined ) ? spec.renderer.enabled : true;
-            spec.renderer.ramp = spec.renderer.ramp || "ware";
+            spec.renderer.ramp = spec.renderer.ramp || "spectral";
             spec.renderer.theme = spec.renderer.theme || map.getTheme();
             spec.transform.name = spec.transform.name || 'linear';
             spec.legendrange = spec.legendrange || [0,100];
@@ -240,20 +240,7 @@ define(function (require) {
         getTheme: function() {
         	return this.layerSpec.renderer && this.layerSpec.renderer.theme;
         },
-        
-        
-        /**
-         * invert the ramp type, this is to be used when themes switch
-         */
-        invertRampType: function() {
-            // default to inv-ware
-            // TODO: switch to complimentary ramp, else, maintain current ramp
-            if ( $("body").hasClass("light-theme") ) {
-                this.setRampType('inv-ware');
-            } else {
-                this.setRampType('ware');
-            }
-        },
+
 
         /**
          * Sets the ramps current min and max
