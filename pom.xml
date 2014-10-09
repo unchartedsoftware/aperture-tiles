@@ -125,28 +125,6 @@
     </plugins>
   </build>
 
-  <profiles>
-    <!-- Java 8 Doclint fix courtesy of http://stackoverflow.com/questions/15886209/maven-is-not-working-in-java-8-when-javadoc-tags-are-incomplete -->
-    <profile>
-      <id>doclint-java8-disable</id>
-      <activation>
-        <!-- will only activate for Java 8 builds - won't break Java 7 -->
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <configuration>
-              <additionalparam>-Xdoclint:none</additionalparam>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
   <modules>
     <module>annotation-service</module>
     <module>geometric-utilities</module>
