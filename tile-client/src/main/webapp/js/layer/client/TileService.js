@@ -419,17 +419,18 @@ define(function (require) {
     TileService.getTilesInMemory = function( layerId ) {
         var services = serviceRegistry[ layerId ],
             tiles = {},
-            i, key;
+            i;
+
+        function assignData( data, key ) {
+            tiles[key] = data;
+        }
+
         if ( !services ) {
             return [];
         }
         // get all tile data in a single array
         for ( i=0; i<services.length; i++ ) {
-            for ( key in services[i].data ) {
-                if ( services[i].data.hasOwnProperty( key ) ) {
-                    tiles[key] = services[i].data;
-                }
-            }
+            _.forIn( services[i].data, assignData );
         }
         return tiles;
     };
