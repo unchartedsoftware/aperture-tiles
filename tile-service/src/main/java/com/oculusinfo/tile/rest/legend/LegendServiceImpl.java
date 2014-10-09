@@ -146,7 +146,7 @@ public class LegendServiceImpl implements LegendService {
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error attempting to get legend - mis-configured layer");
 		} catch (IllegalArgumentException e) {
-            LOGGER.warn("Renderer configuration not recognized.");
+            LOGGER.info("Renderer configuration not recognized.");
         }
 		return bi;
 	}
