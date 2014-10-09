@@ -138,13 +138,13 @@ trait TileAnalytic[T] extends Analytic[T] {
 
 	/**
 	 * Convert a value to a property map to be inserted into metadata.
-     * 
-     * The default behavior is simply to map the analytic name to the value.
-     * 
-     * Overriding this will the other functions in this trait to be made 
-     * irrelevant; we should probably break it up into a TileAnalytic with 
-     * only this function (unimplemented), and a StandardTileAnalytic with 
-     * the rest
+	 * 
+	 * The default behavior is simply to map the analytic name to the value.
+	 * 
+	 * Overriding this will the other functions in this trait to be made 
+	 * irrelevant; we should probably break it up into a TileAnalytic with 
+	 * only this function (unimplemented), and a StandardTileAnalytic with 
+	 * the rest
 	 */
 	def toMap (value: T): Map[String, Object] =
 		Map(name -> valueToString(value))
@@ -246,8 +246,8 @@ trait AnalysisDescription[RT, AT] {
 }
 
 case class MetaDataAccumulatorInfo[AT] (name: String,
-                                         test: TileIndex => Boolean,
-                                         accumulator: Accumulator[AT]) {}
+                                        test: TileIndex => Boolean,
+                                        accumulator: Accumulator[AT]) {}
 
 /**
  * A standard analysis description parent class for descriptions of a single, 
@@ -392,7 +392,11 @@ class SumDoubleAnalytic extends Analytic[Double] {
 }
 
 class MinimumDoubleAnalytic extends Analytic[Double] {
-	def aggregate (a: Double, b: Double): Double = a min b
+	def aggregate (a: Double, b: Double): Double =
+		if (a.isNaN) b
+		else if (b.isNaN) a
+		else a min b
+
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.MaxValue
 }
@@ -401,7 +405,11 @@ class MinimumDoubleTileAnalytic extends MinimumDoubleAnalytic with TileAnalytic[
 }
 
 class MaximumDoubleAnalytic extends Analytic[Double] {
-	def aggregate (a: Double, b: Double): Double = a max b
+	def aggregate (a: Double, b: Double): Double =
+		if (a.isNaN) b
+		else if (b.isNaN) a
+		else a max b
+
 	def defaultProcessedValue: Double = 0.0
 	def defaultUnprocessedValue: Double = Double.MinValue
 }
@@ -430,7 +438,8 @@ trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] 
  * using mean, it is suggested they derive directly from this BinningAnalytic, and
  * map the output of finish into metadata rather than the raw (Double,Int) value.
  */
-class MeanDoubleBinningAnalytic
+class MeanDoubleBinningAnalytic (emptyValue: Double = JavaDouble.NaN,
+                                 minCount: Int = 1)
 		extends Analytic[(Double, Int)]
 		with BinningAnalytic[(Double, Int), JavaDouble]
 {
@@ -440,8 +449,8 @@ class MeanDoubleBinningAnalytic
 	def defaultUnprocessedValue: (Double, Int) = (0.0, 0)
 	def finish (value: (Double, Int)): JavaDouble = {
 		val (total, count) = value
-		if (0 == count) {
-			JavaDouble.NaN
+		if (count < minCount) {
+			emptyValue
 		} else {
 			new JavaDouble(total/count)
 		}
@@ -670,10 +679,10 @@ object IPv4Analytics extends Serializable {
 		// Figure out how many significant bits they have in common
 		val significant = 0xffffffffL & ~(llAddr ^ urAddr)
 		// That is the number of blocks
-		val block = 32 - 
+		val block = 32 -
 			(for (i <- 0 to 32) yield (i, ((1L << i) & significant) != 0))
-				.find(_._2)
-				.getOrElse((32, false))._1
+			.find(_._2)
+			.getOrElse((32, false))._1
 		// And apply that to either to get the common address
 		val addr = longToIPArray(llAddr & significant)
 		ipArrayToString(addr)+"/"+block
