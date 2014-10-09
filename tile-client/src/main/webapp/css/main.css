@@ -12,7 +12,7 @@ h1 {
 
 body {
     margin: 0;
-    font-family: Verdana, Arial, sans-serif;
+	font-family: Helvetica, Arial, sans-serif;
     background-color: black;
     color: #7E7E7E;
     overflow:hidden;

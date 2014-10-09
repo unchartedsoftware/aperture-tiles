@@ -24,7 +24,7 @@
 }
 
 .light-theme .axis-header {
-    background: #ccc;
+	background: #fff;
 }
 
 .dark-theme .axis-header {
@@ -103,7 +103,7 @@
 }
 
 .light-theme .axis-content {
-    background: #ddd;
+	background-color: #fff;
 }
 
 .dark-theme .axis-content {

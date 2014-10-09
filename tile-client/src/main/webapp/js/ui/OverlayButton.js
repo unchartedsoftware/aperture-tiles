@@ -56,8 +56,8 @@ define(function (require) {
 
             this.$container = $('#'+this.id);
             this.$container.addClass('overlay-container');
-            this.$header = $('<div id="' + this.id + '-header" class="overlay-header">'+spec.header+'</div>');
-            this.$content = $('<div id="' + this.id + '-content" class="overlay-content">'+spec.content+'</div>');
+            this.$header = $('<div id="' + this.id + '-header" class="' +this.id+ '-header overlay-header">'+spec.header+'</div>');
+            this.$content = $('<div id="' + this.id + '-content" class="' +this.id+ '-content overlay-content">'+spec.content+'</div>');
 
             this.$container.append(this.$header);
             this.$container.append(this.$content);
