@@ -1,8 +1,11 @@
 @charset "UTF-8";
 
-.overlay-container {
-
+.dark-theme .overlay-container {
     box-shadow: 0px 5px 10px #000;
+}
+
+.light-theme .overlay-container {
+	box-shadow: 0px 5px 10px #999;
 }
 
 .overlay-header {

@@ -25,8 +25,8 @@
     }
 
 .light-theme #layer-controls-header {
-    background-color: #ccc;
-    color: #000;
+	background-color: #9c9c9c;
+	color: #fff;
 }
 
 .dark-theme #layer-controls-header {
@@ -35,7 +35,8 @@
 }
 
 .light-theme #layer-controls-header:hover {
-    color: #222;
+	background-color: #888;
+	color: #fff;
 }
 
 .dark-theme #layer-controls-header:hover {
@@ -49,7 +50,7 @@
 }
 
 .light-theme #layer-controls-content {
-    background-color: #ddd;
+	background-color: #fff;
     color: #000;
 }
 
@@ -64,16 +65,23 @@
 }
 
 .layer-labels {
-    font-size: 12px;
+	font-size: 11pt;
     text-align: left;
 }
 
 .layer-controls-layer {
     position:relative;
+	padding-top: 5px;
+	border-bottom: 1px dotted;
+}
+
+.layer-controls-layer:last-child {
+	border-bottom: none;
 }
 
 .light-theme .layer-controls-layer {
-    background-color: #ddd;
+	border-color: #ddd;
+	background: none;
 }
 
 .dark-theme .layer-controls-layer {
@@ -89,13 +97,11 @@
 }
 
 .layer-controls-layer:active {
-
     cursor:pointer;
 }
 
 .layer-title {
     position: relative;
-    padding-bottom: 5px;
 }
 
 .layer-content {
@@ -240,7 +246,7 @@
 .filter-slider {
     width: calc(70% - 47px);
     display: inline-block;
-    padding-right: 15px;
+    padding-right: 20px;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -256,7 +262,8 @@
 }
 
 .baselayer-fieldset {
-    float:right;
+	font-size: 11pt;
+	float:right;
     margin-right: 20px;
 }
 
@@ -266,12 +273,12 @@
     right:0px;
     top:10px;
     font-size: 12px;
+	border: 2px solid;
 }
 
 .light-theme .layer-controls-button {
-    border: 1px solid #fff;
-    background-color: #ccc;
-
+    border: 1px solid #ddd;
+    background-color: #ddd;
 }
 
 .dark-theme .layer-controls-button { 

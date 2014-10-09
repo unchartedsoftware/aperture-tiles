@@ -24,8 +24,8 @@
 }
 
 .light-theme #description-header {
-	background-color: #ccc;
-    color: #000;
+	background-color: #9c9c9c;
+	color: #fff;
 }
 
 .dark-theme #description-header {
@@ -34,7 +34,8 @@
 }
 
 .light-theme #description-header:hover {
-    color: #222;
+	background-color: #888;
+	color: #fff;
 }
 
 .dark-theme #description-header:hover {
@@ -44,7 +45,7 @@
 #description-content {
 	position: relative;	
 	width: 612px;
-	font-size: 10pt;
+	font-size: 11pt;
 	-webkit-user-select: initial;
 	-khtml-user-select: initial;
 	-moz-user-select: initial;
@@ -53,7 +54,7 @@
 }
 
 .light-theme #description-content {
-	background-color: #ddd;
+	background-color: #fff;
     color: #000;
 }
 
