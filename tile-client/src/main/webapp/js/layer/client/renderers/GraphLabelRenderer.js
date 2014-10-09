@@ -31,6 +31,9 @@ define(function (require) {
 
     var Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
+        MAX_FONT_SIZE = 22,
+        MIN_FONT_SIZE = 12,
+        FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
         GraphNodeRenderer;
 
 
@@ -136,16 +139,10 @@ define(function (require) {
                 totalNodes,
                 percent,
                 weight,
-                squared,
-                quoted,
-                obj,
                 i, j;
 
             function getFontSize( count, totalCount ) {
-                var MAX_FONT_SIZE = 22,
-                    MIN_FONT_SIZE = 12,
-                    FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                    percentage = ( count / totalCount ) || 0,
+                var percentage = ( count / totalCount ) || 0,
                     size = ( percentage * FONT_RANGE  ) +  MIN_FONT_SIZE;
                 return Math.min( Math.max( size, MIN_FONT_SIZE ), MAX_FONT_SIZE );
             }
@@ -154,10 +151,7 @@ define(function (require) {
                 return str.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
             }
 
-            squared = meta.max.maximum.replace( /\(/g, '[' ).replace( /\)/g, ']');
-            quoted = squared.replace(/([a-zA-Z0-9]+)(:)/g,'"$1"$2');
-            obj = JSON.parse( quoted );
-            totalNodes = obj.communities[0].numNodes / 2;
+            totalNodes = meta.minMax.max.communities[0].numNodes / 2;
 
             for (i=0; i<values.length; i++) {
 

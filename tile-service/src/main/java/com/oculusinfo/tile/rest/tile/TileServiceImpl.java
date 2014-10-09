@@ -86,7 +86,7 @@ public class TileServiceImpl implements TileService {
 		} catch (ConfigurationException e) {
 			_logger.warn("No renderer specified for tile request. "+ e.getMessage());
 		} catch (IllegalArgumentException e) {
-            _logger.warn("Renderer configuration not recognized. "+ e.getMessage());
+            _logger.info("Renderer configuration not recognized.");
         }
 
 		if (bi == null){
@@ -123,7 +123,7 @@ public class TileServiceImpl implements TileService {
 		} catch (IOException | JSONException | ConfigurationException e) {
 			_logger.warn("Exception getting tile for {}", index, e);
 		}  catch (IllegalArgumentException e) {
-            _logger.warn("Renderer configuration not recognized.");
+            _logger.info("Renderer configuration not recognized.");
         }
 		return null;
 	}

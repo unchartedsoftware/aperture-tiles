@@ -81,6 +81,7 @@ define(function (require) {
             this.views = views;
             this.renderersByTile = {};
             this.defaultViewIndex = 0;
+            this.hasBeenConfigured = false;
             this.click = null;
             this.hover = null;
 
@@ -381,11 +382,14 @@ define(function (require) {
                 for (i=0; i<that.views.length; i++) {
                     view = that.views[i];
                     view.service = new TileService( layerInfos[ view.id ], that.map.getPyramid() );
-                    // pass parent layer (this) along with meta data to the renderer
+                    // pass parent layer (this) along with meta data to the renderer / details
                     view.renderer.parent = that;
                     view.renderer.meta = layerInfos[ view.id ].meta;
+                    view.details.parent = that;
+                    view.details.meta = layerInfos[ view.id ].meta;
                     // subscribe renderer to pubsub AFTER it has its parent reference
                     view.renderer.subscribeRenderer();
+                    that.hasBeenConfigured = true;
                 }
                 // attach callback now
                 that.map.on('move', $.proxy(that.update, that));
@@ -407,6 +411,10 @@ define(function (require) {
                 rendererIndex,
                 tilesByRenderer = [],
                 tileViewBounds, i;
+
+            if ( !this.hasBeenConfigured || !this.getVisibility() ) {
+                return;
+            }
 
             for (i=0; i<this.views.length; ++i) {
                 tilesByRenderer[i] = [];

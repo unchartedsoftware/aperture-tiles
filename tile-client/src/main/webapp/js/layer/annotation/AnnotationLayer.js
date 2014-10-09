@@ -196,6 +196,7 @@ define(function (require) {
         setVisibility: function( visible ) {
             this.visibility = visible;
             this.renderer.setVisibility( visible );
+            this.update(); // pull missing tiles
             PubSub.publish( this.getChannel(), { field: 'enabled', value: visible });
         },
 
@@ -347,7 +348,7 @@ define(function (require) {
                 defunctTiles = {},
                 i, tile, tilekey;
 
-            if ( !this.layerInfo || !this.layerSpec.accessibility.read ) {
+            if ( !this.layerInfo || !this.layerSpec.accessibility.read || this.getVisibility() === false ) {
                 return;
             }
 
