@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 .overlay-container {
-    margin: 0 10px 10px 10px;
+    margin-bottom: 10px;
 }
 
 .light-theme .overlay-container {
@@ -26,13 +26,13 @@
 
 #bottom-left-overlay-quadrant {
     position:fixed;
-    bottom: 42px;
+    bottom: 32px;
     left: 10px;
 }
 
 #bottom-right-overlay-quadrant {
     position:fixed;
-    bottom: 42px;
+    bottom: 32px;
     right: 10px;
 }
 
