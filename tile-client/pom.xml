@@ -72,7 +72,7 @@
 							</excludes>
 							<options>
 								<!-- Predefined constants. Others can be defined in file directives -->
-								<predef>jQuery, $, aperture, require, define</predef>
+								<predef>jQuery, $, aperture, require, define, _</predef>
 								<browser>true</browser>
 								<!-- allows use of the 'continue' statement -->
 								<continue>true</continue>
