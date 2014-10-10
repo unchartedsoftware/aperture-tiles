@@ -231,7 +231,11 @@
     position:relative;
     width: 18px;
     height: 18px;
-    bottom: -4px;   
+    bottom: -5px;
+}
+
+#layer-controls label {
+    pointer-events:none;
 }
 
 .light-theme #layer-controls input {
@@ -357,6 +361,7 @@
 }
 
 .settings-values {
+    position:relative;
     min-width:120px;
     font: 12px Arial;
     margin: 2px 2px 2px 2px;
