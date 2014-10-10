@@ -78,12 +78,14 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *      The type of graph data to use for tile generation.  Set to "nodes" to generate tiles of a graph's
  *      nodes [default], or set to "edges" to generate tiles of a graph's edges.
  *      
+ *  oculus.binning.graph.edges.type.index
+ *      The column number of a boolean specifying each edge as an inter-community edge (=1) or an intra-community edge (=0)
+ *      
  *  oculus.binning.graph.edges.type
  *      The type of edges to use for tile generation (for hierarchically clustered data only).  Set to "all"
  *      to generate tiles using all edges in a graph dataset [default].  Set to "inter" to only use inter-community
- *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the last column
- *      of the edge data is assumed to be a boolean (int of 0 or 1), identifying 0=intra-community edge,
- *      and 1=inter-community edge.
+ *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the
+ *      'edges.type.index' column (above) is used to determine which raw edges to use for tile generation.
  *      
  *  oculus.binning.line.level.threshold
  *  	Level threshold to determine whether to use 'point' vs 'tile' based line segment binning

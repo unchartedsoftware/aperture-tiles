@@ -25,12 +25,21 @@
 package com.oculusinfo.tilegen.graph.analytics;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+
 import com.oculusinfo.binning.util.Pair;
 
 // A class for stored a graph community object.  Used for Graph Analytics.
 
 public class GraphCommunity implements Serializable {
 	private static final long serialVersionUID = 1L;	//NOTE:  using default serialVersion ID
+	
+	private static int MAX_EDGES = 10;		// max number of both inter and intra community 
+											//	edges to keep per record.	
 
 	private int _hierLevel;					// hierarchy level of community	
 	private long _id;						// ID of community
@@ -46,6 +55,9 @@ public class GraphCommunity implements Serializable {
 	private Pair<Double, Double> _parentCoords;	// x,y coords of centre of parent community
 	private double _parentRadius;			// radius of parent community
 	
+	private List<GraphEdge> _interEdges;	// inter-community edges connected to this node 
+	private List<GraphEdge> _intraEdges;	// intra-community edges connected to this node 
+	
 	//---- Constructor
 	GraphCommunity(int hierLevel,
 					long id,
@@ -57,7 +69,9 @@ public class GraphCommunity implements Serializable {
 					boolean bIsPrimaryNode,
 					long parentID,
 					Pair<Double, Double> parentCoords,
-					double parentRadius) {
+					double parentRadius,
+					List<GraphEdge> interEdges,
+					List<GraphEdge> intraEdges) {
 		
 		_hierLevel = hierLevel;
 		_id = id;
@@ -70,7 +84,31 @@ public class GraphCommunity implements Serializable {
 		_parentID = parentID;
 		_parentCoords = parentCoords;
 		_parentRadius = parentRadius;
+				
+		if (interEdges == null) {
+			_interEdges = new ArrayList<GraphEdge>();
+		}
+		else {
+			if (interEdges.size() > MAX_EDGES) {
+				throw new IllegalArgumentException("Number of inter-community edges in list must be <= " + MAX_EDGES);
+			}
+			_interEdges = interEdges;
+		}
+		
+		if (intraEdges == null) {
+			_intraEdges = new ArrayList<GraphEdge>();
+		}
+		else {
+			if (intraEdges.size() > MAX_EDGES) {
+				throw new IllegalArgumentException("Number of intra-community edges in list must be <= " + MAX_EDGES);
+			}
+			_intraEdges = intraEdges;
+		}
 	}
+	
+	public static void setMaxEdges(int max) {
+		MAX_EDGES = max;
+	}	
 	
 	public int getHierLevel() {
 		return _hierLevel;
@@ -116,6 +154,116 @@ public class GraphCommunity implements Serializable {
 		return _parentRadius;
 	}
 	
+	public List<GraphEdge> getInterEdges() {
+		return _interEdges;
+	}
+	
+	public List<GraphEdge> getIntraEdges() {
+		return _intraEdges;
+	}
+	
+	
+	private static void addEdgeInPlace(LinkedList<GraphEdge> accumulatedEdges, GraphEdge newEdge) {
+		ListIterator<GraphEdge> i = accumulatedEdges.listIterator();
+		int size = 0;
+		while (true) {
+			if (i.hasNext()) {
+				GraphEdge next = i.next();
+				size++;
+
+				// Rank edges based on weight
+				if (next.getWeight() < newEdge.getWeight()) {
+					
+					// Insert the new edge if has higher weight
+					i.previous();
+					i.add(newEdge);
+					size++;
+					i.next();
+					
+					if (!i.hasNext() && size == MAX_EDGES+1) {	// already at end of list but is 1 element too big
+						i.remove();
+						--size;
+					}
+					else {
+						// ... and trim the list to MAX_EDGES elements
+						while (i.hasNext() && size < MAX_EDGES) {
+							i.next();
+							++size;
+						}
+						while (i.hasNext()) {
+							i.next();
+							i.remove();
+						}
+					}
+
+					return;
+				}
+			} else {
+				if (size < MAX_EDGES) {
+					i.add(newEdge);
+				}
+				return;
+			}
+		}
+	}
+
+	private static void addEdgesInPlace(LinkedList<GraphEdge> accumulatedEdges, List<GraphEdge> newEdges) {
+		for (GraphEdge newEdge : newEdges) {
+			addEdgeInPlace(accumulatedEdges, newEdge);
+		}
+	}
+
+	/**
+	 * Add an inter-community edge to an existing community, summing counts as needed, and keeping
+	 * the MAX_EDGES largest edges.
+	 */
+	public void addInterEdgeToCommunity(GraphEdge newEdge) {
+		
+		LinkedList<GraphEdge> accumulatedEdges = new LinkedList<>(_interEdges);
+		addEdgeInPlace(accumulatedEdges, newEdge);
+		_interEdges = accumulatedEdges;	
+	}
+	
+	/**
+	 * Add an intra-community edge to an existing community, summing counts as needed, and keeping
+	 * the MAX_EDGES largest edges.
+	 */
+	public void addIntraEdgeToCommunity(GraphEdge newEdge) {
+		
+		LinkedList<GraphEdge> accumulatedEdges = new LinkedList<>(_intraEdges);
+		addEdgeInPlace(accumulatedEdges, newEdge);
+		_intraEdges = accumulatedEdges;	
+	}
+
+	private List<GraphEdge> minOfEdgeLists(GraphEdge accumulatedMin, List<GraphEdge> newMin) {
+		long dstID = accumulatedMin.getDstID();
+		double x = accumulatedMin.getDstCoords().getFirst();
+		double y = accumulatedMin.getDstCoords().getSecond();
+		long weight = accumulatedMin.getWeight();
+		for (int i = 0; i < newMin.size(); ++i) {
+			dstID = Math.min(dstID, newMin.get(i).getDstID());
+			x = Math.min(x, newMin.get(i).getDstCoords().getFirst());
+			y = Math.min(y, newMin.get(i).getDstCoords().getSecond());
+			weight = Math.min(weight, newMin.get(i).getWeight());
+		}
+		return Arrays.asList(new GraphEdge(dstID, x, y, weight));
+	}
+	
+
+	private List<GraphEdge> maxOfEdgeLists(GraphEdge accumulatedMax, List<GraphEdge> newMax) {
+		long dstID = accumulatedMax.getDstID();
+		double x = accumulatedMax.getDstCoords().getFirst();
+		double y = accumulatedMax.getDstCoords().getSecond();
+		long weight = accumulatedMax.getWeight();
+		for (int i = 0; i < newMax.size(); ++i) {
+			dstID = Math.max(dstID, newMax.get(i).getDstID());
+			x = Math.max(x, newMax.get(i).getDstCoords().getFirst());
+			y = Math.max(y, newMax.get(i).getDstCoords().getSecond());
+			weight = Math.max(weight, newMax.get(i).getWeight());
+		}
+		return Arrays.asList(new GraphEdge(dstID, x, y, weight));
+	}	
+	
 	//---- min attribute values between two communities
 	public void minInPlace(GraphCommunity b) {
 		
@@ -135,6 +283,8 @@ public class GraphCommunity implements Serializable {
 		_parentID = Math.min(this.getParentID(), b.getParentID());
 		_parentCoords = new Pair<Double, Double>(px,py);
 		_parentRadius = Math.min(this.getParentRadius(), b.getParentRadius());
+		_interEdges = minOfEdgeLists(this.getInterEdges().get(0), b.getInterEdges());
+		_intraEdges = minOfEdgeLists(this.getIntraEdges().get(0), b.getIntraEdges());
 	}
 
 	//---- max attribute values between two communities
@@ -156,6 +306,8 @@ public class GraphCommunity implements Serializable {
 		_parentID = Math.max(this.getParentID(), b.getParentID());
 		_parentCoords = new Pair<Double, Double>(px,py);
 		_parentRadius = Math.max(this.getParentRadius(), b.getParentRadius());
+		_interEdges = maxOfEdgeLists(this.getInterEdges().get(0), b.getInterEdges());
+		_intraEdges = maxOfEdgeLists(this.getIntraEdges().get(0), b.getIntraEdges());		
 	}	
 		
 	@Override
@@ -201,9 +353,35 @@ public class GraphCommunity implements Serializable {
 		}
 		else if ((this.getParentRadius() != that.getParentRadius())) {
 			return false;
-		}		
+		}
+		else if (!listsEqual(this.getInterEdges(), that.getInterEdges())) {
+			return false;
+		}
+		else if (!listsEqual(this.getIntraEdges(), that.getIntraEdges())) {
+			return false;
+		}
 		else {
 			return true;
 		}
+	}
+	
+	private static boolean objectsEqual(Object a, Object b) {
+		if (null == a)
+			return null == b;
+		return a.equals(b);
+	}
+	
+	private static <T> boolean listsEqual(List<T> a, List<T> b) {
+		if (null == a)
+			return null == b;
+		if (null == b)
+			return false;
+		if (a.size() != b.size())
+			return false;
+		for (int i = 0; i < a.size(); ++i) {
+			if (!objectsEqual(a.get(i), b.get(i)))
+				return false;
+		}
+		return true;
 	}
 }

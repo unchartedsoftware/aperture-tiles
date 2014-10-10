@@ -330,7 +330,7 @@ class HierarchicFDLayout extends Serializable {
 			// nodeAttributes are of format ((x, y, radius, numInternalNodes), parentCircle)
 			val srcCoords = (et.srcAttr._1, et.srcAttr._2)
 			val dstCoords = (et.dstAttr._1, et.dstAttr._2)
-			val interCommunityEdge = if ((et.srcAttr._4 == et.dstAttr._4) || bIsMaxLevel)  0 else 1	// is this an inter-community edge (same parentID for src and dst)
+			val interCommunityEdge = if ((et.srcAttr._4 != et.dstAttr._4) || bIsMaxLevel) 1 else 0	// is this an inter-community edge (same parentID for src and dst)
 			
 			("edge\t" + srcID + "\t" + srcCoords._1 + "\t" + srcCoords._2 + "\t" + dstID + "\t" + dstCoords._1 + "\t" + dstCoords._2 + "\t" + et.attr + "\t" + interCommunityEdge)
 		})
