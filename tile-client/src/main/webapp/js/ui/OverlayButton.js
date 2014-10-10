@@ -87,12 +87,16 @@ define(function (require) {
 
             openOverlay = function () {
 
-                var deltaWidth;
+                var deltaWidth,
+                    previousOverflow;
 
                 // measure elements
                 that.inactiveWidth = that.$header.outerWidth();
                 that.activeWidth = that.$content.outerWidth();
 
+                previousOverflow = that.$content.css('overflow');
+                that.$content.css('overflow', 'hidden');
+                that.$content.children().css('opacity', 0);
                 deltaWidth = that.activeWidth - that.inactiveWidth;
 
                  // disable click until animation is complete
@@ -104,6 +108,10 @@ define(function (require) {
                     {
                         complete: function() {
                             // open content
+
+                            that.$content.children().animate({
+                                opacity: 1
+                            }, DURATION );
                             that.$content.animate({
                                 height: 'toggle'
                             },
@@ -111,6 +119,7 @@ define(function (require) {
                                 complete: function() {
                                     // re-enable click, but switch to close callback
                                     that.$header.click( closeOverlay );
+                                    that.$content.css( 'overflow', previousOverflow );
                                 },
                                 duration: DURATION
                             });
@@ -124,6 +133,10 @@ define(function (require) {
                 var deltaWidth = that.activeWidth - that.inactiveWidth;
                 // disable click until animation is complete
                 that.$header.off('click');
+                that.$content.children().css('opacity', 1);
+                that.$content.children().animate({
+                    opacity: 0
+                }, DURATION );
                 that.$content.animate({
                         height: 'toggle'
                     },
