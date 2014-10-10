@@ -146,6 +146,11 @@ define(function (require) {
                     radius = this.map.getViewportPixelFromCoord( community[spec.node.radius], 0 ).x - this.map.getViewportPixelFromCoord( 0, 0 ).x;
                     radius *= 2;
                     radius -= 1;
+                    
+                    if (radius < 2) {
+                    	continue;
+                    }
+                    
                     offset = {
                         x : pos.x - tilePos.x,
                         y : pos.y - tilePos.y
