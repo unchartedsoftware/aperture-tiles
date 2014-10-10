@@ -101,7 +101,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			IValueTransformer t = config.produce(IValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
-			
+
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 
@@ -115,39 +115,39 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			List<TileData<Double>> tileDatas = null;
 
 			// Get the coarseness-scaled true tile index
-			TileIndex scaleLevelIndex = null; 
+			TileIndex scaleLevelIndex = null;
 			// need to get the tile data for the level of the base level minus the courseness
 			for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
 				scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel,
 				                                (int)Math.floor(index.getX() / coarsenessFactor),
-				                                (int)Math.floor(index.getY() / coarsenessFactor));				
-				
+				                                (int)Math.floor(index.getY() / coarsenessFactor));
+
 				tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
 					//we got data for this level so use it
 					break;
 				}
 			}
-			
+
 			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
 				LOGGER.info("Missing tile " + index + " for layer " + layer);
 				return null;
 			}
-			
+
 			TileData<Double> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
-			
+
 			//calculate the tile tree multiplier to go between tiles at each level.
 			//this is also the number of x/y tiles in the base level for every tile in the scaled level
 			int tileTreeMultiplier = (int)Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
-			
-			int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier; 
+
+			int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier;
 
 			//the y tiles are backwards, so we need to shift the order around by reversing the counting direction
 			int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
-			
+
 			//figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
 			int xBinStart = (int)Math.floor(xBins * (((double)(index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
 			int xBinEnd = (int)Math.floor(xBins * (((double)(index.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
@@ -169,18 +169,18 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 					double binCount = data.getBin(tx + xBinStart, ty + yBinStart);
 					double transformedValue = t.transform(binCount);
+					// Clamp to [0,1], values out of range get ramp end values
+					transformedValue = Math.max(Math.min(transformedValue, 1), 0);
 					int rgb;
-					if (binCount > 0
-					    && transformedValue >= scaledLevelMinFreq
-					    && transformedValue <= scaledLevelMaxFreq) {
 
+					if (binCount > 0) {
                         double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
 						rgb = colorRamp.getRGB( ( transformedValue - scaledLevelMinFreq ) * factor );
 					} else {
 						rgb = COLOR_BLANK.getRGB();
 					}
 
-					//'draw' out the scaled 'pixel' 
+					//'draw' out the scaled 'pixel'
 					for (int ix = minX; ix < maxX; ++ix) {
 						for (int iy = minY; iy < maxY; ++iy) {
 							int i = iy*bi.getWidth() + ix;
