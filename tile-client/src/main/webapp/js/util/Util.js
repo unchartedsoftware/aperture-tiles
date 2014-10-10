@@ -84,7 +84,7 @@ define(function (require) {
             // add scroll panel to element
             $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0 });
             // if parent is resizeable, set callback to change scrollbar size
-            if ( $parent && !$parent.resizable("option","disabled") ) {
+            if ( $parent && !$parent.is('.ui-resizable') ) {
                 $parent.on("resize", function() {
                     // update scroll panel on parent resize
                     $elem.data('jsp').reinitialise();

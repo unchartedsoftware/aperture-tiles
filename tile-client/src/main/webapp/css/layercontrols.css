@@ -363,6 +363,9 @@
     min-width:120px;
     font: 12px Arial;
     margin: 2px 2px 2px 2px;
+    overflow:hidden;
+    white-space: nowrap;
+    text-overflow:ellipsis;
 }
 
 .filter-axis {
