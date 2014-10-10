@@ -50,12 +50,35 @@ define(function (require) {
 
             var that = this,
                 openOverlay,
-                closeOverlay;
+                closeOverlay,
+                vertical = spec.verticalPosition.toLowerCase() || 'bottom',
+                horizontal = spec.horizontalPosition.toLowerCase() || 'right',
+                quadrantId,
+                $quadrantContainer;
+
+            // get quadrant id
+            quadrantId = vertical +'-'+ horizontal +'-overlay-quadrant';
+
+            // get quadrant element
+            $quadrantContainer = $( '#'+quadrantId );
+
+            // if doesn't exist, create it
+            if ( $quadrantContainer.length === 0 ) {
+                $quadrantContainer = $('<div id="'+quadrantId+'"></div>' );
+                $('body').append( $quadrantContainer );
+            }
 
             this.id = spec.id;
+            this.$container = $('<div id="'+this.id+'" style="float:'+ horizontal+'; clear:'+horizontal+';"></div>' );
 
-            this.$container = $('#'+this.id);
+            if ( vertical === "bottom" ) {
+                $quadrantContainer.prepend( this.$container );
+            } else {
+                $quadrantContainer.append( this.$container );
+            }
+
             this.$container.addClass('overlay-container');
+
             this.$header = $('<div id="' + this.id + '-header" class="' +this.id+ '-header overlay-header">'+spec.header+'</div>');
             this.$content = $('<div id="' + this.id + '-content" class="' +this.id+ '-content overlay-content">'+spec.content+'</div>');
 

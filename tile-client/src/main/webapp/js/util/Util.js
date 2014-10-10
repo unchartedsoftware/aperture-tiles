@@ -280,6 +280,22 @@ define(function (require) {
                 // ensure all attributes are quoted in ""
                 quoted = squared.replace(/([a-zA-Z0-9]+)(:)/g,'"$1"$2');
             return JSON.parse( quoted );
+        },
+
+
+        getURLParameter: function (key) {
+            var url = window.location.search.substring(1),
+                urlVars = url.split('&'),
+                i, varKey,
+                result = 0;
+            for (i=0; i<urlVars.length; ++i) {
+                varKey = urlVars[i].split('=');
+                if (key === varKey[0]) {
+                    result = varKey[1];
+                    break;
+                }
+            }
+            return result;
         }
 
     };

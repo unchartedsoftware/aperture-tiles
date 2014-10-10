@@ -1,10 +1,7 @@
 @charset "UTF-8";
 
 #views {
-	position: fixed;
-	border: 1px solid #333333;
-	left: 10px;
-	top: 10px;
+	position: relative;
 }
 
 .light-theme #views {
@@ -46,7 +43,7 @@
 	position: relative;
 	background-color: #111;
 	color: #D3D3D3;
-	width: 306px;
+	width: 612px;
 	font-size: 10pt;
 }
 
@@ -58,6 +55,12 @@
 .dark-theme #views-content {
 	background-color: #111;
 	color: #D3D3D3;
+}
+
+.views-entry {
+	text-align:center;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 .light-theme .views-link {

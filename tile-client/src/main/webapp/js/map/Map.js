@@ -50,7 +50,10 @@ define(function (require) {
 
 		init: function (id, spec) {
 
-            var that = this;
+            var mapConfig = spec.MapConfig,
+                pyramidConfig = spec.PyramidConfig,
+                axisConfig = spec.AxisConfig,
+                that = this;
 
             this.id = id;
             this.uuid = Util.generateUuid();
@@ -59,7 +62,7 @@ define(function (require) {
             this.$map = $( "#" + this.id );
             this.axes = [];
             this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
-            this.baseLayers = ( $.isArray( spec.MapConfig.baseLayer ) ) ? spec.MapConfig.baseLayer : [spec.MapConfig.baseLayer];
+            this.baseLayers = ( $.isArray( mapConfig.baseLayer ) ) ? mapConfig.baseLayer : [mapConfig.baseLayer];
             this.BASE_LAYERS = this.baseLayers;
 
             if ( this.baseLayers.length === 0 ) {
@@ -78,10 +81,10 @@ define(function (require) {
             }
 
             // Set the map configuration
-            spec.MapConfig.baseLayer = {}; // default to no base layer
+            mapConfig.baseLayer = {}; // default to no base layer
 			aperture.config.provide({
 				'aperture.map' : {
-					'defaultMapConfig' : spec.MapConfig
+					'defaultMapConfig' : mapConfig
 				}
 			});
 
@@ -101,7 +104,7 @@ define(function (require) {
             this.setZIndex( -1 );
             this.setVisibility( true );
             this.setOpacity( 1.0 );
-			this.setBaseLayerIndex( 0 );
+			this.setBaseLayerIndex( mapConfig.baseLayerIndex !== undefined ? parseInt( mapConfig.baseLayerIndex, 10 ) : 0 );
 
             // create div root layer
             this.createRoot();
@@ -123,11 +126,13 @@ define(function (require) {
 			// Trigger the initial resize event to resize everything
 			$(window).resize();
 
-			if(spec.MapConfig.zoomTo) {
-                this.map.zoomTo( spec.MapConfig.zoomTo[0],
-                                 spec.MapConfig.zoomTo[1],
-                                 spec.MapConfig.zoomTo[2] );
+			if( mapConfig.zoomTo ) {
+                this.map.zoomTo( mapConfig.zoomTo[0],
+                                 mapConfig.zoomTo[1],
+                                 mapConfig.zoomTo[2] );
             }
+
+            this.setAxisSpecs( axisConfig, pyramidConfig );
 		},
 
 
@@ -304,14 +309,49 @@ define(function (require) {
         },
 
 
-		setAxisSpecs: function (axes) {
+		setAxisSpecs: function ( axisConfig, pyramidConfig ) {
 
-			var i, spec;
+			var axes,
+			    i;
+
+			function parseAxisConfig( axisConfig, pyramidConfig ) {
+                var i;
+                if ( !axisConfig.boundsConfigured ) {
+                    // bounds haven't been copied to the axes from the pyramid; copy them.
+                    axisConfig.boundsConfigured = true;
+                    for (i=0; i<axisConfig.length; i++) {
+                        // TEMPORARY, eventually these bounds wont be needed, the axis will generate
+                        // the increments solely based off the Map.pyramid
+                        if ( pyramidConfig.type === "AreaOfInterest") {
+                            if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
+                                axisConfig[i].min = pyramidConfig.minX;
+                                axisConfig[i].max = pyramidConfig.maxX;
+                            } else {
+                                axisConfig[i].min = pyramidConfig.minY;
+                                axisConfig[i].max = pyramidConfig.maxY;
+                            }
+                        } else {
+                            // web mercator
+                            if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
+                                axisConfig[i].min = -180.0;
+                                axisConfig[i].max = 180.0;
+                            } else {
+                                axisConfig[i].min = -85.05;
+                                axisConfig[i].max = 85.05;
+                            }
+                        }
+                    }
+                }
+                return axisConfig;
+            }
+
+            // add bounds information if missing
+            axes = parseAxisConfig( axisConfig, pyramidConfig );
+
 			for (i=0; i< axes.length; i++) {
-				spec = axes[i];
-				spec.mapId = this.id;
-				spec.map = this;
-				this.axes.push( new Axis(spec) );
+				axes[i].mapId = this.id;
+				axes[i].map = this;
+				this.axes.push( new Axis( axes[i] ) );
 			}
 			// set content dim after so that max out of all is used
             for (i=0; i< this.axes.length; i++) {

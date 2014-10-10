@@ -1,9 +1,7 @@
 @charset "UTF-8";
 
 #description {
-	position: fixed;
-	right: 10px;
-	top: 10px;
+	position: relative;
 }
 
 .light-theme #description {

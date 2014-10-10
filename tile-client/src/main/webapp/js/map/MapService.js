@@ -49,45 +49,6 @@ define(function (require) {
                                  {});
             }
             return mapDeferred;
-		},
-
-		getAxisConfig: function (mapConfig) {
-			var axisConfig, pyramidConfig, i;
-
-			axisConfig = mapConfig.AxisConfig;
-			if (!axisConfig.boundsConfigured) {
-				// bounds haven't been copied to the axes from the pyramid; copy them.
-				axisConfig.boundsConfigured = true;
-				pyramidConfig = mapConfig.PyramidConfig;
-
-                for (i=0; i<axisConfig.length; i++) {
-                    // TEMPORARY, eventually these bounds wont be needed, the axis will generate
-                    // the increments solely based off the Map.pyramid
-                    if ( pyramidConfig.type === "AreaOfInterest") {
-                        if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
-                            axisConfig[i].min = pyramidConfig.minX;
-                            axisConfig[i].max = pyramidConfig.maxX;
-                        } else {
-                            axisConfig[i].min = pyramidConfig.minY;
-                            axisConfig[i].max = pyramidConfig.maxY;
-                        }
-                    } else {
-                        // web mercator
-                        if (axisConfig[i].position === 'top' || axisConfig[i].position === 'bottom' ) {
-                            axisConfig[i].min = -180.0;
-                            axisConfig[i].max = 180.0;
-                        } else {
-                            axisConfig[i].min = -85.05;
-                            axisConfig[i].max = 85.05;
-                        }
-                    }
-
-                }
-			}
-
-			return axisConfig;
 		}
-
-
 	};
 });
