@@ -15,7 +15,7 @@
 #top-left-overlay-quadrant {
     position:fixed;
     top: 10px;
-    left: 10px;
+    left: 42px;
 }
 
 #top-right-overlay-quadrant {
@@ -27,7 +27,7 @@
 #bottom-left-overlay-quadrant {
     position:fixed;
     bottom: 32px;
-    left: 10px;
+    left: 42px;
 }
 
 #bottom-right-overlay-quadrant {
