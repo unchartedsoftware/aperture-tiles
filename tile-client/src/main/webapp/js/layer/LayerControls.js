@@ -65,6 +65,7 @@ define(function (require) {
         makeLayerControlsSubscriber,
         convertSliderValueToFilterValue,
         convertFilterValueToSliderValue,
+        updateFilterSliderHandles,
         replaceLayers,
         sortLayers;
 
@@ -109,10 +110,21 @@ define(function (require) {
         if ( rampFunc === "log10" ) {
             val = checkLogInput( minMax[1] );
         } else {
-            val = range / filterValue - minMax[0];
+            val = ( ( filterValue - minMax[0] ) / range );
         }
         return val;
     };
+
+
+    updateFilterSliderHandles = function( layer, filterSlider ) {
+        if ( layer.getLayerSpec().preservelegendrange[0] === true ) {
+            filterSlider.slider( "values", 0, convertFilterValueToSliderValue( layer, layer.getFilterValues()[0] ) * FILTER_RESOLUTION );
+        }
+        if ( layer.getLayerSpec().preservelegendrange[1] === true ) {
+            filterSlider.slider( "values", 1, convertFilterValueToSliderValue( layer, layer.getFilterValues()[1] ) * FILTER_RESOLUTION );
+        }
+    };
+
 
     /**
      * Replaces node's children and returns the replaced for storage. Fades out old content,
@@ -160,7 +172,7 @@ define(function (require) {
             container.children().animate( {"opacity":1}, 100 )
                 .promise()
                     .done( function() {
-                          container.css( "height", "100%" );
+                        container.css( "height", "100%" );
                     });
         }
 
@@ -399,6 +411,10 @@ define(function (require) {
                 removeSliderHoverLabel( $(elem) );
             });
         });
+
+        // initialize filter values
+        layer.setFilterValues( convertSliderValueToFilterValue( layer, layer.getFilterRange()[0] / FILTER_RESOLUTION ),
+                               convertSliderValueToFilterValue( layer, layer.getFilterRange()[1] / FILTER_RESOLUTION ) );
 
         // set tooltip
         Util.enableTooltip( $filterSlider,
@@ -851,7 +867,7 @@ define(function (require) {
             $settingsContent.append( settingsCustomization( layer ) );
         }
 
-        replaceChildren($layerControlsContainer, $settingsContainer);
+        replaceChildren( $layerControlsContainer, $settingsContainer );
     };
 
     /**
@@ -880,6 +896,7 @@ define(function (require) {
                 case "rampFunction":
 
                     controlsMapping.filterAxis.html( createFilterAxisContent( layer.getRampMinMax(), value ) );
+                    updateFilterSliderHandles( layer, controlsMapping.filterSlider );
                     break;
 
                 case "filterRange":
@@ -895,12 +912,7 @@ define(function (require) {
                 case "rampMinMax":
 
                     controlsMapping.filterAxis.html( createFilterAxisContent( layer.getRampMinMax(), layer.getRampFunction() ) );
-                    if ( layer.getLayerSpec().preservelegendrange[0] === true ) {
-                        controlsMapping.filterSlider.slider( "values", 0, convertFilterValueToSliderValue( layer, layer.getFilterValues()[0] ) * FILTER_RESOLUTION );
-                    }
-                    if ( layer.getLayerSpec().preservelegendrange[1] === true ) {
-                        controlsMapping.filterSlider.slider( "values", 1, convertFilterValueToSliderValue( layer, layer.getFilterValues()[1] ) * FILTER_RESOLUTION );
-                    }
+                    updateFilterSliderHandles( layer, controlsMapping.filterSlider );
                     break;
 
                 case "baseLayerIndex":
@@ -994,10 +1006,10 @@ define(function (require) {
          * Initializes the layer controls by modifying the DOM tree, and registering
          * callbacks against the layer object
          *
-         * @param controlsId - The DOM element id used as the container for the controls panel elements.
+         * @param controlsContent - The DOM element used as the container for the controls panel elements.
          * @param layers - The array of layers objects.
          */
-        init: function ( controlsId, layers, settingsCustomization ) {
+        init: function ( controlsContent, layers, settingsCustomization ) {
 
             var i;
 
@@ -1006,7 +1018,7 @@ define(function (require) {
             this.layersByUuid = {};
 
             // find the container
-            this.$layerControlsRoot = $('#'+controlsId);
+            this.$layerControlsRoot = controlsContent;
 
             // Add layers visuals and register listeners against the model
             replaceLayers( layers, this.$layerControlsRoot, this.controlsMap, this.layersByUuid, settingsCustomization );
