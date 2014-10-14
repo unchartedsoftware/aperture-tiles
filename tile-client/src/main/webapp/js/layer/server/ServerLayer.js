@@ -130,6 +130,7 @@ define(function (require) {
             spec.transformer.type = spec.transformer.type || "generic";
             spec.transformer.data = spec.transformer.data || {};
             spec.coarseness = ( spec.coarseness !== undefined ) ?  spec.coarseness : 1;
+            spec.preservelegendrange = spec.preservelegendrange || [ false, false ];
 
             // cal base constructor
             this._super( spec, map );
@@ -323,6 +324,26 @@ define(function (require) {
 
 
         /**
+         * Updates the filter values for the layer.  Results in a POST to the server.
+         *
+         * @param {Array} filterRange - A two element array with values in the range levelMin and levelMax,
+         * where the first element is the min range, and the second is the max range.
+         */
+        setFilterValues: function ( min, max ) {
+            this.filterValues = [ min, max ];
+            PubSub.publish( this.getChannel(), { field: 'filterValues', value: [ min, max ] });
+        },
+
+
+        /**
+         * Get the current ramp filter values from levelMin and levelMax
+         */
+        getFilterValues: function() {
+            return this.filterValues || this.getRampMinMax();
+        },
+
+
+        /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
         setZIndex: function ( zIndex ) {
@@ -380,8 +401,8 @@ define(function (require) {
          */
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
-            this.configure();
             this.setRampMinMax( getLevelMinMax( this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 

@@ -52,6 +52,7 @@ define(function (require) {
         createSettingsButton,
         createVisibilityButton,
         createSliderHoverLabel,
+        removeSliderHoverLabel,
         createOpacitySlider,
         createFilterSlider,
         createFilterAxisContent,
@@ -62,12 +63,56 @@ define(function (require) {
         FILTER_RESOLUTION,
         replaceChildren,
         makeLayerControlsSubscriber,
+        convertSliderValueToFilterValue,
+        convertFilterValueToSliderValue,
         replaceLayers,
         sortLayers;
 
     // constant initialization
     OPACITY_RESOLUTION = 100.0;
     FILTER_RESOLUTION = 100.0;
+
+    // converts slider value from [0, 1] to actual filter ramp value based on ramp function
+    convertSliderValueToFilterValue = function( layer, normalizedValue ) {
+        var rampFunc = layer.getRampFunction(),
+            minMax = layer.getRampMinMax(),
+            range = minMax[1] - minMax[0],
+            val;
+        function log10(val) {
+            return Math.log(val) / Math.LN10;
+        }
+        function checkLogInput( value ) {
+            return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) * normalizedValue );
+        }
+        //iterate over the inner labels
+        if ( rampFunc === "log10" ) {
+            val = checkLogInput( minMax[1] );
+        } else {
+            val = normalizedValue * range + minMax[0];
+        }
+        return val;
+    };
+
+    // converts actual filter ramp value to slider value between [0, 1] based on ramp function
+    convertFilterValueToSliderValue = function( layer, filterValue ) {
+        var rampFunc = layer.getRampFunction(),
+            minMax = layer.getRampMinMax(),
+            range = minMax[1] - minMax[0],
+            val;
+        function log10(val) {
+            return Math.log(val) / Math.LN10;
+        }
+        function checkLogInput( value ) {
+            return ( filterValue === 0 || filterValue === 1 ) ? 0 : log10( filterValue ) / log10( value );
+        }
+        //iterate over the inner labels
+        if ( rampFunc === "log10" ) {
+            val = checkLogInput( minMax[1] );
+        } else {
+            val = range / filterValue - minMax[0];
+        }
+        return val;
+    };
 
     /**
      * Replaces node's children and returns the replaced for storage. Fades out old content,
@@ -202,11 +247,24 @@ define(function (require) {
                      +    '<div class="slider-value-hover-label">'+ AxisUtil.formatText( value, unitSpec ) +'</div>'
                      + '</div>');
         // remove previous label if it exists
-        $this.find('.slider-value-hover').stop().remove();
+        $this.find('.slider-value-hover').finish().remove();
         // add new label
         $this.append( $label );
         // reposition to be centred above cursor
         $label.css( {"margin-top": -$label.outerHeight()*1.2, "margin-left": -$label.outerWidth()/2 } );
+    };
+
+    removeSliderHoverLabel = function( $this ) {
+        $this.find('.slider-value-hover').animate({
+                opacity: 0
+            },
+            {
+                complete: function() {
+                    $this.find('.slider-value-hover').remove();
+                },
+                duration: 800
+            }
+        );
     };
 
     /**
@@ -233,20 +291,15 @@ define(function (require) {
                 },
                 start: function( event, ui ) {
                     createSliderHoverLabel( $opacitySlider.find(".ui-slider-handle"), ui.value / OPACITY_RESOLUTION );
-                },
-                stop: function( event, ui ) {
-                    $('.slider-value-hover').animate({
-                            opacity: 0
-                        },
-                        {
-                            complete: function() {
-                                $('.slider-value-hover').remove();
-                            },
-                            duration: 800
-                        }
-                    );
                 }
              });
+
+        $opacitySlider.find(".ui-slider-handle").mouseover( function() {
+            createSliderHoverLabel( $(this), layer.getOpacity() );
+        });
+        $opacitySlider.find(".ui-slider-handle").mouseout( function() {
+            removeSliderHoverLabel( $(this) );
+        });
 
         // set tooltip
         Util.enableTooltip( $opacitySlider,
@@ -274,32 +327,6 @@ define(function (require) {
             $filterSliderImg,
             $filterAxis;
 
-        // converts filter value from [0, 1] to actual ramp value based on ramp function
-        function convertValueToRange( normalizedValue ) {
-
-            var rampFunc = layer.getRampFunction(),
-                minMax = layer.getRampMinMax(),
-                range = minMax[1] - minMax[0],
-                val;
-
-            function log10(val) {
-                return Math.log(val) / Math.LN10;
-            }
-
-            function checkLogInput( value ) {
-                return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) * normalizedValue );
-            }
-
-            //iterate over the inner labels
-            if ( rampFunc === "log10" ) {
-                val = checkLogInput( minMax[1] );
-            } else {
-                val = normalizedValue * range + minMax[0];
-            }
-
-            return val;
-        }
-
         $filterSliderContainer.append( $filterLabel );
 
         $filterSlider.slider({
@@ -317,32 +344,41 @@ define(function (require) {
             slide: function( event, ui ) {
                 var handleIndex = $(ui.handle).index() - 1,
                     values = ui.values,
-                    value = convertValueToRange( values[ handleIndex ] / FILTER_RESOLUTION );
+                    value = convertSliderValueToFilterValue( layer, values[ handleIndex ] / FILTER_RESOLUTION );
                 createSliderHoverLabel( $( $filterSlider[0].children[ 1 + handleIndex ] ), value );
+                layer.setFilterValues( convertSliderValueToFilterValue( layer, values[0] / FILTER_RESOLUTION ),
+                                       convertSliderValueToFilterValue( layer, values[1] / FILTER_RESOLUTION ) );
             },
             start: function( event, ui ) {
                 var handleIndex = $(ui.handle).index() - 1,
                     values = ui.values,
-                    value = convertValueToRange( values[ handleIndex ] / FILTER_RESOLUTION );
+                    value = convertSliderValueToFilterValue( layer, values[ handleIndex ] / FILTER_RESOLUTION );
                 createSliderHoverLabel( $( $filterSlider[0].children[ 1 + handleIndex ] ), value );
-            },
-            stop: function( event, ui ) {
-                $('.slider-value-hover').animate({
-                        opacity: 0
-                    },
-                    {
-                        complete: function() {
-                            $('.slider-value-hover').remove();
-                        },
-                        duration: 800
-                    }
-                );
             }
+        });
+
+        $filterSlider.find('.ui-slider-handle').each( function( index, elem ) {
+            $(elem).dblclick( function() {
+                if ( layer.getLayerSpec().preservelegendrange[index] === true ) {
+                    $(elem).removeClass('sticky');
+                    layer.getLayerSpec().preservelegendrange[index] = false;
+                } else {
+                    $(elem).addClass('sticky');
+                    layer.getLayerSpec().preservelegendrange[index] = true;
+                }
+            });
+            $(elem).mouseover( function() {
+                var value = convertSliderValueToFilterValue( layer, layer.getFilterRange()[index] / FILTER_RESOLUTION );
+                createSliderHoverLabel( $(elem), value );
+            });
+            $(elem).mouseout( function() {
+                removeSliderHoverLabel( $(elem) );
+            });
         });
 
         // set tooltip
         Util.enableTooltip( $filterSlider,
-                         TOOLTIP_FILTER_SLIDER );
+                            TOOLTIP_FILTER_SLIDER );
 
         $filterSliderImg = $filterSlider.find(".ui-slider-range");
         $filterSliderImg.addClass("filter-slider-img");
@@ -835,6 +871,12 @@ define(function (require) {
                 case "rampMinMax":
 
                     controlsMapping.filterAxis.html( createFilterAxisContent( layer.getRampMinMax(), layer.getRampFunction() ) );
+                    if ( layer.getLayerSpec().preservelegendrange[0] === true ) {
+                        controlsMapping.filterSlider.slider( "values", 0, convertFilterValueToSliderValue( layer, layer.getFilterValues()[0] ) * FILTER_RESOLUTION );
+                    }
+                    if ( layer.getLayerSpec().preservelegendrange[1] === true ) {
+                        controlsMapping.filterSlider.slider( "values", 1, convertFilterValueToSliderValue( layer, layer.getFilterValues()[1] ) * FILTER_RESOLUTION );
+                    }
                     break;
 
                 case "baseLayerIndex":
