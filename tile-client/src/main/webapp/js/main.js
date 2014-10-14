@@ -63,6 +63,7 @@ require(['./ApertureConfig',
 	            groupClientLayers,
 	            groupClientLayerViews,
 	            getAnnotationLayers,
+	            layerControlsContent,
 	            mapsDeferred, layersDeferred, annotationsDeferred;
 
 	        groupClientLayerViews = function( subLayers ) {
@@ -181,13 +182,13 @@ require(['./ApertureConfig',
 	        });
 
             // create layer controls
-            new OverlayButton({
+            layerControlsContent = new OverlayButton({
                 id:'layer-controls',
                 header: 'Controls',
                 content: '',
                 horizontalPosition: 'right',
                 verticalPosition: 'bottom'
-            }).getContentElement().append(''); // jslint...
+            }).getContentElement();
 
 	        // Load all our UI configuration data before trying to bring up the ui
 	        $.get( apertureConfigFile, function( apertureConfig ) {
@@ -307,7 +308,7 @@ require(['./ApertureConfig',
                             $.merge( layers, serverLayers );
                             $.merge( layers, annotationLayers );
                             // create layer controls
-                            new LayerControls( 'layer-controls-content', layers, UICustomization.customizeSettings ).noop();
+                            new LayerControls( layerControlsContent, layers, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
                             new CarouselControls( clientLayers, worldMap ).noop();
                         });
