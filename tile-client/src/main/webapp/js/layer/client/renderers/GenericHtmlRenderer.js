@@ -407,7 +407,6 @@ define(function (require) {
                 $details.css( { left:position.x, top:position.y } );
                 map.getRootElement().append( $details );
                 Util.enableEventPropagation( $details, ['onmouseup'] );
-                Util.enableScrollBars( $details.find('.details-text-box'), $details );
                 this.centreForDetails( data );
             }
 

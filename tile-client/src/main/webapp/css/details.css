@@ -15,7 +15,7 @@
 }
 
 .light-theme .details-on-demand {
-	background-color: #ccc;
+	background-color: #9c9c9c;
 	border: 1px solid #fff;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .light-theme .details-on-demand-title {
-	color : #000;
+	color : #fff;
 }
 
 .dark-theme .details-on-demand-title {	
@@ -100,7 +100,7 @@
 }
 
 .light-theme .details-chart {
-	background-color: #ddd;
+	background-color: #fff;
 }
 
 .dark-theme .details-chart {	
@@ -228,38 +228,30 @@
 .details-bar-hover {
 	position:absolute;
 	padding: 5px 10px 5px 10px;	
-	box-shadow: 0px 5px 15px #000;
 	margin-top: -24px;
 	z-index: 1;
 	pointer-events:none;
 }
 
 .light-theme .details-bar-hover {
-	background-color: #ddd;
-	border: 1px solid #fff;
+	background-color: #fff;
+	border: 1px solid #ddd;	
+	box-shadow: 0px 5px 15px #999;
 }
 
 .dark-theme .details-bar-hover {	
 	background-color: #222222;
-	border: 1px solid #333333;
+	border: 1px solid #333333;	
+	box-shadow: 0px 5px 15px #000;
 }
 
 .details-bar-hover-label {
 	white-space: pre;
 	font-size: 12px;
-	text-shadow:
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000,
-       1px  0   0 #000,
-      -1px  0   0 #000,
-       0    1px 0 #000,
-       0   -1px 0 #000;
 }
 
 .light-theme .details-bar-hover-label {
-	color: #fff;
+	color: #000;
 }
 
 .dark-theme .details-bar-hover-label {	

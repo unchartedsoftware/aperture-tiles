@@ -75,24 +75,6 @@ define(function (require) {
         },
 
 
-        enableScrollBars: function( $elem, $parent ) {
-
-            if ( $elem.length === 0 ) {
-                return;
-            }
-
-            // add scroll panel to element
-            $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0, verticalDragMinHeight: 32, horizontalDragMinWidth: 32 });
-            // if parent is resizeable, set callback to change scrollbar size
-            if ( $parent ) {
-                $parent.on("resize", function() {
-                    // update scroll panel on parent resize
-                    $elem.data('jsp').reinitialise();
-                });
-            }
-        },
-
-
         disableTooltip: function( $elem ) {
             $elem.tooltip('disable');
         },

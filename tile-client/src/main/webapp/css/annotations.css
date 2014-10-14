@@ -74,18 +74,19 @@
 .annotation-details {
     position:absolute;
     z-index: 2001;
-    box-shadow: 0px 5px 15px #000;
     height: 196px;
 }
 
 .light-theme .annotation-details {
-    background-color:#ccc;   
+    background-color:#fff;   
     border: 1px solid #fff;
+    box-shadow: 0px 5px 15px #999;
 }
 
 .dark-theme .annotation-details {
     background-color:#111111;   
-    border: 1px solid #333333;
+    border: 1px solid #333333;  
+    box-shadow: 0px 5px 15px #000;
 }
 
 .annotation-details-content {
@@ -95,7 +96,7 @@
 }
 
 .light-theme .annotation-details-content {
-    background-color: #ddd;
+    background-color: #fff;
 }
 
 .dark-theme .annotation-details-content {
@@ -118,8 +119,8 @@
 }
 
 .light-theme .annotation-details-head {
-    background-color: #ccc;
-    color: #000;
+    background-color: #9c9c9c;
+    color: #fff;
 }
 
 .dark-theme .annotation-details-head {
@@ -139,7 +140,7 @@
 }
 
 .light-theme .annotation-details-body {
-    background-color: #ddd;
+    background-color: #fff;
 }
 
 .dark-theme .annotation-details-body {   

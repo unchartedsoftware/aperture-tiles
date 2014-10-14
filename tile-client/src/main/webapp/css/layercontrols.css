@@ -45,6 +45,8 @@
     position: relative;  
     width: 612px;
     font-size: 12px;
+    max-height: 300px;
+    overflow: auto;
 }
 
 .light-theme #layer-controls-content {
