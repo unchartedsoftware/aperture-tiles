@@ -143,11 +143,12 @@
     z-index: 1;
     pointer-events:none;
     z-index: 100;
+    font-weight:normal;
 }
 
 .light-theme .slider-value-hover {
-    background-color: #ddd;
-    border: 1px solid #fff;
+    background-color: #eee;
+    border: 1px solid #ddd;
     box-shadow: 0px 5px 15px #999;
 }
 
