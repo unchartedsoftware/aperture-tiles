@@ -386,6 +386,7 @@
 	top: -4px;
     width: 100%;
     left: 0;
+    pointer-events:none;
 }
 
 .filter-axis-tick-major, .filter-axis-tick-minor{

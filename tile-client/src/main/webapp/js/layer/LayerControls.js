@@ -291,6 +291,15 @@ define(function (require) {
                 },
                 start: function( event, ui ) {
                     createSliderHoverLabel( $opacitySlider.find(".ui-slider-handle"), ui.value / OPACITY_RESOLUTION );
+                },
+                stop: function( event, ui ) {
+                    var $handle = $opacitySlider.find(".ui-slider-handle");
+                    if ( !$handle.is(':hover') ) {
+                        // normally this label is removed on mouse out, in the case that
+                        // the user has moused out while dragging, this will cause the label to
+                        // be removed
+                        removeSliderHoverLabel( $handle );
+                    }
                 }
              });
 
@@ -336,8 +345,9 @@ define(function (require) {
             values: filterRange,
             change: function( event, ui ) {
                 var values = ui.values,
-                    previousValues = $filterSlider.slider( 'value' );
+                    previousValues = layer.getFilterRange();
                 if ( values[0] !== previousValues[0] || values[1] !== previousValues[1] ) {
+                    // prevent re-configuration on click / dblclick
                     layer.setFilterRange( [values[0] , values[1]] );
                 }
             },
@@ -354,17 +364,31 @@ define(function (require) {
                     values = ui.values,
                     value = convertSliderValueToFilterValue( layer, values[ handleIndex ] / FILTER_RESOLUTION );
                 createSliderHoverLabel( $( $filterSlider[0].children[ 1 + handleIndex ] ), value );
+            },
+            stop: function( event, ui ) {
+                var handleIndex = $(ui.handle).index() - 1,
+                    $handle = $( $filterSlider[0].children[ 1 + handleIndex ] );
+                if ( !$handle.is(':hover') ) {
+                    // normally this label is removed on mouse out, in the case that
+                    // the user has moused out while dragging, this will cause the label to
+                    // be removed
+                    removeSliderHoverLabel( $handle );
+                }
             }
         });
 
         $filterSlider.find('.ui-slider-handle').each( function( index, elem ) {
+            // set initial style
+            if ( layer.isFilterValueLocked( index ) === true ) {
+                $(elem).addClass('sticky');
+            }
             $(elem).dblclick( function() {
-                if ( layer.getLayerSpec().preservelegendrange[index] === true ) {
+                if ( layer.isFilterValueLocked( index ) === true ) {
                     $(elem).removeClass('sticky');
-                    layer.getLayerSpec().preservelegendrange[index] = false;
+                    layer.setFilterValueLocking( index, false );
                 } else {
                     $(elem).addClass('sticky');
-                    layer.getLayerSpec().preservelegendrange[index] = true;
+                    layer.setFilterValueLocking( index, true );
                 }
             });
             $(elem).mouseover( function() {

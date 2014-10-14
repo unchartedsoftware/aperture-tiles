@@ -343,6 +343,15 @@ define(function (require) {
         },
 
 
+        isFilterValueLocked: function( index ) {
+            return this.getLayerSpec().preservelegendrange[ index ];
+        },
+
+
+        setFilterValueLocking: function( index, value ) {
+            this.getLayerSpec().preservelegendrange[ index ] = value;
+        },
+
         /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
