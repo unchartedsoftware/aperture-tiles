@@ -226,6 +226,16 @@
     cursor:pointer;
 }
 
+.light-theme #layer-controls .sticky {
+    background-color: #bbb;
+    border: 1px solid #aaa;
+}
+
+.dark-theme #layer-controls .sticky { 
+    background-color: #444;
+    border: 1px solid #555;
+}
+
 #layer-controls input {
     cursor:pointer;
     position:relative;

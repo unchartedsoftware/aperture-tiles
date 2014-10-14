@@ -130,6 +130,7 @@ define(function (require) {
             spec.transformer.type = spec.transformer.type || "generic";
             spec.transformer.data = spec.transformer.data || {};
             spec.coarseness = ( spec.coarseness !== undefined ) ?  spec.coarseness : 1;
+            spec.preservelegendrange = spec.preservelegendrange || [ false, false ];
 
             // cal base constructor
             this._super( spec, map );
@@ -400,8 +401,8 @@ define(function (require) {
          */
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
-            this.configure();
             this.setRampMinMax( getLevelMinMax( this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 
