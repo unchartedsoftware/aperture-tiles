@@ -50,12 +50,35 @@ define(function (require) {
 
             var that = this,
                 openOverlay,
-                closeOverlay;
+                closeOverlay,
+                vertical = spec.verticalPosition.toLowerCase() || 'bottom',
+                horizontal = spec.horizontalPosition.toLowerCase() || 'right',
+                quadrantId,
+                $quadrantContainer;
+
+            // get quadrant id
+            quadrantId = vertical +'-'+ horizontal +'-overlay-quadrant';
+
+            // get quadrant element
+            $quadrantContainer = $( '#'+quadrantId );
+
+            // if doesn't exist, create it
+            if ( $quadrantContainer.length === 0 ) {
+                $quadrantContainer = $('<div id="'+quadrantId+'"></div>' );
+                $('body').append( $quadrantContainer );
+            }
 
             this.id = spec.id;
+            this.$container = $('<div id="'+this.id+'" style="float:'+ horizontal+'; clear:'+horizontal+';"></div>' );
 
-            this.$container = $('#'+this.id);
+            if ( vertical === "bottom" ) {
+                $quadrantContainer.prepend( this.$container );
+            } else {
+                $quadrantContainer.append( this.$container );
+            }
+
             this.$container.addClass('overlay-container');
+
             this.$header = $('<div id="' + this.id + '-header" class="' +this.id+ '-header overlay-header">'+spec.header+'</div>');
             this.$content = $('<div id="' + this.id + '-content" class="' +this.id+ '-content overlay-content">'+spec.content+'</div>');
 
@@ -64,12 +87,16 @@ define(function (require) {
 
             openOverlay = function () {
 
-                var deltaWidth;
+                var deltaWidth,
+                    previousOverflow;
 
                 // measure elements
                 that.inactiveWidth = that.$header.outerWidth();
                 that.activeWidth = that.$content.outerWidth();
 
+                previousOverflow = that.$content.css('overflow');
+                that.$content.css('overflow', 'hidden');
+                that.$content.children().css('opacity', 0);
                 deltaWidth = that.activeWidth - that.inactiveWidth;
 
                  // disable click until animation is complete
@@ -81,6 +108,10 @@ define(function (require) {
                     {
                         complete: function() {
                             // open content
+
+                            that.$content.children().animate({
+                                opacity: 1
+                            }, DURATION );
                             that.$content.animate({
                                 height: 'toggle'
                             },
@@ -88,6 +119,7 @@ define(function (require) {
                                 complete: function() {
                                     // re-enable click, but switch to close callback
                                     that.$header.click( closeOverlay );
+                                    that.$content.css( 'overflow', previousOverflow );
                                 },
                                 duration: DURATION
                             });
@@ -101,6 +133,10 @@ define(function (require) {
                 var deltaWidth = that.activeWidth - that.inactiveWidth;
                 // disable click until animation is complete
                 that.$header.off('click');
+                that.$content.children().css('opacity', 1);
+                that.$content.children().animate({
+                    opacity: 0
+                }, DURATION );
                 that.$content.animate({
                         height: 'toggle'
                     },

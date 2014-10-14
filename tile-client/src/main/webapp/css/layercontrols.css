@@ -1,10 +1,8 @@
 @charset "UTF-8";
 
 #layer-controls {
+    position: relative;
 	z-index: 2002;
-    position: fixed;
-    right: 10px;
-    bottom: 42px;
 }
 
 .light-theme #layer-controls {
@@ -106,7 +104,6 @@
 
 .layer-title {
     position: relative;
-    max-height: 18px;
 }
 
 .layer-content {
@@ -234,7 +231,11 @@
     position:relative;
     width: 18px;
     height: 18px;
-    bottom: -4px;   
+    bottom: -5px;
+}
+
+#layer-controls label {
+    pointer-events:none;
 }
 
 .light-theme #layer-controls input {
@@ -360,9 +361,13 @@
 }
 
 .settings-values {
+    position:relative;
     min-width:120px;
     font: 12px Arial;
     margin: 2px 2px 2px 2px;
+    overflow:hidden;
+    white-space: nowrap;
+    text-overflow:ellipsis;
 }
 
 .filter-axis {

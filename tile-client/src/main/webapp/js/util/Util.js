@@ -82,9 +82,9 @@ define(function (require) {
             }
 
             // add scroll panel to element
-            $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0 });
+            $elem.jScrollPane({ verticalGutter: 0, horizontalGutter: 0, verticalDragMinHeight: 32, horizontalDragMinWidth: 32 });
             // if parent is resizeable, set callback to change scrollbar size
-            if ( $parent && !$parent.resizable("option","disabled") ) {
+            if ( $parent ) {
                 $parent.on("resize", function() {
                     // update scroll panel on parent resize
                     $elem.data('jsp').reinitialise();
@@ -280,6 +280,22 @@ define(function (require) {
                 // ensure all attributes are quoted in ""
                 quoted = squared.replace(/([a-zA-Z0-9]+)(:)/g,'"$1"$2');
             return JSON.parse( quoted );
+        },
+
+
+        getURLParameter: function (key) {
+            var url = window.location.search.substring(1),
+                urlVars = url.split('&'),
+                i, varKey,
+                result = 0;
+            for (i=0; i<urlVars.length; ++i) {
+                varKey = urlVars[i].split('=');
+                if (key === varKey[0]) {
+                    result = varKey[1];
+                    break;
+                }
+            }
+            return result;
         }
 
     };

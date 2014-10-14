@@ -1,9 +1,7 @@
 @charset "UTF-8";
 
 #description {
-	position: fixed;
-	right: 10px;
-	top: 10px;
+	position: relative;
 }
 
 .light-theme #description {
@@ -68,7 +66,11 @@
     position:relative;
     width: 18px;
     height: 18px;
-    bottom: -4px;   
+    bottom: -5px;
+}
+
+#description label {
+    pointer-events:none;
 }
 
 .light-theme #description input {

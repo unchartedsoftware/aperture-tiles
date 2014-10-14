@@ -64,7 +64,7 @@ define( function (require) {
         // recursively parse the details spec and load all content components
         function loadDetails( details ) {
             var k;
-            if ( details ) {
+            if ( details && !$.isEmptyObject( details ) ) {
                 if ( !loadedModules[ details.type ] ) {
                     // only load each module once
                     deferred = loadModule( "./details/", details.type );
