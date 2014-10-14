@@ -143,11 +143,12 @@
     z-index: 1;
     pointer-events:none;
     z-index: 100;
+    font-weight:normal;
 }
 
 .light-theme .slider-value-hover {
-    background-color: #ddd;
-    border: 1px solid #fff;
+    background-color: #eee;
+    border: 1px solid #ddd;
     box-shadow: 0px 5px 15px #999;
 }
 
@@ -224,6 +225,16 @@
 
 #layer-controls .ui-slider-handle:hover {
     cursor:pointer;
+}
+
+.light-theme #layer-controls .sticky {
+    background-color: #bbb;
+    border: 1px solid #aaa;
+}
+
+.dark-theme #layer-controls .sticky { 
+    background-color: #444;
+    border: 1px solid #555;
 }
 
 #layer-controls input {
@@ -375,6 +386,7 @@
 	top: -4px;
     width: 100%;
     left: 0;
+    pointer-events:none;
 }
 
 .filter-axis-tick-major, .filter-axis-tick-minor{
