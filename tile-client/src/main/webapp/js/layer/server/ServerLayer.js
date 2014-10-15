@@ -421,7 +421,7 @@ define(function (require) {
                     if ( that.hasBeenConfigured === false ) {
                         requestRampImage( that, that.getLayerInfo(), 0 );
                         that.setZIndex( that.layerSpec.zIndex );
-                        that.setOpacity( that.layerSpec.opacity );
+                        that.setOpacity( that.layerSpec.renderer.opacity );
                         that.setVisibility( that.layerSpec.renderer.enabled );
                         that.setRampMinMax( getLevelMinMax( that ) );
                         that.hasBeenConfigured = true;
