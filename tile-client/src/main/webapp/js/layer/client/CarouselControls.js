@@ -48,6 +48,8 @@ define(function (require) {
         TOOLTIP_CHEVRON_RIGHT = "Next rendering",
         TOOLTIP_CHEVRON_LEFT = "Previous rendering",
         TOOLTIP_INDEX_DOT = "Rendering by index",
+        resetCarousel,
+        makeClientLayersSubscriber,
         makeLayerSubscriber,
         repositionCarousel,
         createChevrons,
@@ -80,6 +82,51 @@ define(function (require) {
     };
 
 
+    resetCarousel = function( $carousel, layers ) {
+
+        var layerIndex,
+            maxZ = 0,
+            i;
+
+        // if a layer is disabled, ensure carousel appears
+        // on top most carouselEnabled client layer
+        for ( i=0; i<layers.length; i++ ) {
+            if ( layers[i].getVisibility() &&
+                 layers[i].getNumViews() > 1 &&
+                 layers[i].getZIndex() > maxZ ) {
+                layerIndex = i;
+                maxZ = layers[i].getZIndex();
+            }
+            // set all false
+            layers[i].setCarouselEnabled( false );
+        }
+
+        if ( layerIndex !== undefined ) {
+            layers[layerIndex].setCarouselEnabled( true );
+        } else {
+            $carousel.empty().css('visibility', 'hidden');
+        }
+    };
+
+
+    makeClientLayersSubscriber = function ( map, $carousel, controlMap, layers ) {
+        return function ( message, path ) {
+
+            var field = message.field;
+
+            switch ( field ) {
+
+                case "enabled":
+                    resetCarousel( $carousel, layers );
+                    break;
+
+                case "zIndex":
+                    resetCarousel( $carousel, layers );
+                    break;
+            }
+        };
+    };
+
     /**
      * Creates a subscriber to handle published carousel related layer state changes,
      * and update the controls based on them.
@@ -103,8 +150,6 @@ define(function (require) {
 
                 case "carouselEnabled":
 
-                    // empty carousel
-                    $carousel.empty().css('visibility', 'hidden');
                     if ( value === true ) {
                         // create carousel UI
                         $carousel.css('visibility', 'visible');
@@ -118,7 +163,7 @@ define(function (require) {
 
     updateDotIndices = function( controlMap, layer ) {
 
-        var tilekey = layer.getTileFocus(),
+        var tilekey = layer.map.getTileFocus(),
             count = controlMap.dots.length,
             index = layer.getTileViewIndex( tilekey ) || 0,
             i;
@@ -139,8 +184,7 @@ define(function (require) {
         function generateCallbacks( chevron, inc ) {
 
             Util.dragSensitiveClick(chevron, function() {
-
-                var tilekey = layer.getTileFocus(),
+                var tilekey = layer.map.getTileFocus(),
                     prevIndex = layer.getTileViewIndex( tilekey ) || 0,
                     mod = function (m, n) {
                         return ((m % n) + n) % n;
@@ -190,7 +234,7 @@ define(function (require) {
 
         function generateCallbacks( dot, index ) {
             Util.dragSensitiveClick(dot, function() {
-                layer.setTileViewIndex( layer.getTileFocus(), index );
+                layer.setTileViewIndex( layer.map.getTileFocus(), index );
                 updateDotIndices( controlMap, layer );
             });
         }
@@ -240,6 +284,8 @@ define(function (require) {
          */
         init: function ( layers, map ) {
 
+            var i;
+
             if ( layers.length < 1 ) {
                 return;
             }
@@ -247,11 +293,14 @@ define(function (require) {
             this.controlMap = {};
             this.$carousel = $('<div class="' + CAROUSEL_CLASS +'"></div>');
 
-            // TODO: implement a system for only enabling carousel for top most client layer
-            if ( layers[0].getNumViews() > 1 ) {
-                PubSub.subscribe( layers[0].getChannel(), makeLayerSubscriber( map, this.$carousel, this.controlMap, layers[0] ) );
-                layers[0].setCarouselEnabled( true );
+            for ( i=0; i<layers.length; i++ ) {
+                if ( layers[i].getNumViews() > 1 ) {
+                    PubSub.subscribe( layers[i].getChannel(), makeLayerSubscriber( map, this.$carousel, this.controlMap, layers[i] ) );
+                }
             }
+            PubSub.subscribe( 'layer.client', makeClientLayersSubscriber( map, this.$carousel, this.controlMap, layers ) );
+
+            resetCarousel( this.$carousel, layers );
         },
 
         noop: function() {

@@ -122,7 +122,7 @@ define(function (require) {
             var that = this;
 
             // set reasonable defaults
-            spec.renderer.opacity  = spec.renderer.opacity || 1.0;
+            spec.renderer.opacity = ( spec.renderer.opacity !== undefined ) ? spec.renderer.opacity : 1.0;
             spec.renderer.enabled = ( spec.renderer.enabled !== undefined ) ? spec.renderer.enabled : true;
             spec.renderer.ramp = spec.renderer.ramp || "spectral";
             spec.renderer.theme = spec.renderer.theme || map.getTheme();
@@ -132,6 +132,7 @@ define(function (require) {
             spec.transformer.type = spec.transformer.type || "generic";
             spec.transformer.data = spec.transformer.data || {};
             spec.coarseness = ( spec.coarseness !== undefined ) ?  spec.coarseness : 1;
+            spec.preservelegendrange = spec.preservelegendrange || [ false, false ];
 
             // cal base constructor
             this._super( spec, map );
@@ -325,6 +326,35 @@ define(function (require) {
 
 
         /**
+         * Updates the filter values for the layer.  Results in a POST to the server.
+         *
+         * @param {Array} filterRange - A two element array with values in the range levelMin and levelMax,
+         * where the first element is the min range, and the second is the max range.
+         */
+        setFilterValues: function ( min, max ) {
+            this.filterValues = [ min, max ];
+            PubSub.publish( this.getChannel(), { field: 'filterValues', value: [ min, max ] });
+        },
+
+
+        /**
+         * Get the current ramp filter values from levelMin and levelMax
+         */
+        getFilterValues: function() {
+            return this.filterValues || this.getRampMinMax();
+        },
+
+
+        isFilterValueLocked: function( index ) {
+            return this.getLayerSpec().preservelegendrange[ index ];
+        },
+
+
+        setFilterValueLocking: function( index, value ) {
+            this.getLayerSpec().preservelegendrange[ index ] = value;
+        },
+
+        /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
         setZIndex: function ( zIndex ) {
@@ -382,8 +412,8 @@ define(function (require) {
          */
         setCoarseness: function( coarseness ) {
             this.layerSpec.coarseness = coarseness;
-            this.configure();
             this.setRampMinMax( getLevelMinMax( this ) );
+            this.configure();
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 
@@ -423,6 +453,7 @@ define(function (require) {
                     if ( that.hasBeenConfigured === false ) {
                         requestRampImage( that, that.getLayerInfo(), 0 );
                         that.setZIndex( that.layerSpec.zIndex );
+                        that.setOpacity( that.layerSpec.renderer.opacity );
                         that.setVisibility( that.layerSpec.renderer.enabled );
                         that.setRampMinMax( getLevelMinMax( that ) );
                         that.hasBeenConfigured = true;

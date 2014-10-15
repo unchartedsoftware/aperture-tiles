@@ -104,6 +104,7 @@ define(function (require) {
             var that = this;
 
             this._super( spec, map );
+            this.domain = 'annotation';
             this.renderer = renderer;
             this.details = details;
 

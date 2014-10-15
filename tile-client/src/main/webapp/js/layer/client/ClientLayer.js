@@ -34,7 +34,6 @@ define(function (require) {
         LayerService = require('../LayerService'),
         TileService = require('./TileService'),
         makeRedrawFunc,
-        updateTileFocus,
         ClientLayer;
 
 
@@ -49,32 +48,35 @@ define(function (require) {
     };
 
 
-    updateTileFocus = function ( layer, x, y ) {
-        var tilekey = layer.map.getTileKeyFromViewportPixel( x, y );
-        if ( tilekey !== layer.getTileFocus() ) {
-            // only update tilefocus if it actually changes
-            layer.setTileFocus( tilekey );
-        }
-    };
-
-
 
     ClientLayer = Layer.extend({
 
 
         init: function ( spec, views, map ) {
 
-            var that = this,
-                previousMouse = {};
+            var that = this;
+
+            function concatIds( views ) {
+                var ids = {},
+                    id = '',
+                    i;
+                for ( i=0; i<views.length; i++ ) {
+                    if ( !ids[ views[i].layer ] ) {
+                        id += ( id.length > 0 ) ? '|' + views[i].layer : views[i].layer;
+                        ids[ views[i].layer ] = true;
+                    }
+                }
+                return id;
+            }
 
             // set reasonable defaults
             spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
             spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
 
-            this.id = spec.layer;
+            this.id = concatIds( spec.views );
             this.uuid = Util.generateUuid();
             this.domain = 'client';
-            this.name = spec.name || spec.views[0].id;
+            this.name = spec.name || this.id;
             this.map = map;
             this.layerSpec = spec;
             this.layerInfo = {};
@@ -88,16 +90,6 @@ define(function (require) {
             // clear click state if map is clicked
             this.map.on( 'click', function() {
                 that.setClick( null );
-            });
-
-            // set tile focus callbacks
-            this.map.on('mousemove', function(event) {
-                updateTileFocus( that, event.xy.x, event.xy.y );
-                previousMouse.x = event.xy.x;
-                previousMouse.y = event.xy.y;
-            });
-            this.map.on('zoomend', function(event) {
-                updateTileFocus( that, previousMouse.x, previousMouse.y );
             });
 
             this.setZIndex( spec.zIndex );
@@ -203,6 +195,7 @@ define(function (require) {
             for (i=0; i<this.views.length; i++) {
                 this.views[i].renderer.setVisibility( visible );
             }
+            this.update();  // pull missing tiles
             PubSub.publish( this.getChannel(), { field: 'enabled', value: visible });
         },
 
@@ -233,33 +226,6 @@ define(function (require) {
          */
         getZIndex: function() {
             return this.zIndex;
-        },
-
-
-        /**
-         * Set the layers tile focus, identifying which tile the user is currently
-         * hovering over.
-         */
-        setTileFocus: function( tilekey ) {
-            this.previousTileFocus = this.tileFocus;
-            this.tileFocus = tilekey;
-            PubSub.publish( this.getChannel(), { field: 'tileFocus', value: tilekey });
-        },
-
-
-        /**
-         * Get the layers tile focus.
-         */
-        getTileFocus: function() {
-            return this.tileFocus;
-        },
-
-
-        /**
-         * Get the layers previous tile focus.
-         */
-        getPreviousTileFocus: function() {
-            return this.previousTileFocus;
         },
 
 
