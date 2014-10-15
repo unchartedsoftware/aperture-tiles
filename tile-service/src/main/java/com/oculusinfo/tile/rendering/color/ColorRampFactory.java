@@ -137,6 +137,10 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 			ramp = SteppedGradientColorRamp.hot(islight);
 		} else if (rampType.equalsIgnoreCase("cool")){
 			ramp = SteppedGradientColorRamp.cool(islight);
+		} else if (rampType.equalsIgnoreCase("polar")){
+			ramp = SteppedGradientColorRamp.polar(islight);
+		} else if (rampType.equalsIgnoreCase("valence")){
+			ramp = SteppedGradientColorRamp.valence(islight);
 			
 		// LEGACY BLUE / RED
 		} else if (rampType.equalsIgnoreCase("br")){
