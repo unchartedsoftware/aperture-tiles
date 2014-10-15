@@ -120,7 +120,7 @@ define(function (require) {
             var that = this;
 
             // set reasonable defaults
-            spec.renderer.opacity  = spec.renderer.opacity || 1.0;
+            spec.renderer.opacity = ( spec.renderer.opacity !== undefined ) ? spec.renderer.opacity : 1.0;
             spec.renderer.enabled = ( spec.renderer.enabled !== undefined ) ? spec.renderer.enabled : true;
             spec.renderer.ramp = spec.renderer.ramp || "spectral";
             spec.renderer.theme = spec.renderer.theme || map.getTheme();
@@ -451,6 +451,7 @@ define(function (require) {
                     if ( that.hasBeenConfigured === false ) {
                         requestRampImage( that, that.getLayerInfo(), 0 );
                         that.setZIndex( that.layerSpec.zIndex );
+                        that.setOpacity( that.layerSpec.renderer.opacity );
                         that.setVisibility( that.layerSpec.renderer.enabled );
                         that.setRampMinMax( getLevelMinMax( that ) );
                         that.hasBeenConfigured = true;
