@@ -100,8 +100,10 @@ define(function (require) {
         RAMP_TYPES: [
              {id: "spectral", name: "Spectral"},
              {id: "hot", name: "Hot"},
+             {id: "polar", name: "Polar"},
              {id: "neutral", name: "Neutral"},
              {id: "cool", name: "Cool"},
+             {id: "valence", name: "Valence"},
              {id: "flat", name: "Flat"}
         ],
 
