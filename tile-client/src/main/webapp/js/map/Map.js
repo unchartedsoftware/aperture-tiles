@@ -120,6 +120,8 @@ define(function (require) {
 			// initialize previous zoom
             this.previousZoom = this.map.getZoom();
 
+            this.setTileFocusCallbacks();
+
             // set resize callback
             $(window).resize( $.proxy(this.updateSize, this) );
 
@@ -134,6 +136,55 @@ define(function (require) {
 
             this.setAxisSpecs( axisConfig, pyramidConfig );
 		},
+
+
+		setTileFocusCallbacks: function() {
+            var that = this,
+                previousMouse = {};
+            function updateTileFocus( layer, x, y ) {
+                var tilekey = that.getTileKeyFromViewportPixel( x, y );
+                if ( tilekey !== that.getTileFocus() ) {
+                    // only update tilefocus if it actually changes
+                    that.setTileFocus( tilekey );
+                }
+            }
+		    // set tile focus callbacks
+            this.on('mousemove', function(event) {
+                updateTileFocus( that, event.xy.x, event.xy.y );
+                previousMouse.x = event.xy.x;
+                previousMouse.y = event.xy.y;
+            });
+            this.on('zoomend', function(event) {
+                updateTileFocus( that, previousMouse.x, previousMouse.y );
+            });
+		},
+
+
+		/**
+         * Set the layers tile focus, identifying which tile the user is currently
+         * hovering over.
+         */
+        setTileFocus: function( tilekey ) {
+            this.previousTileFocus = this.tileFocus;
+            this.tileFocus = tilekey;
+            PubSub.publish( 'layer', { field: 'tileFocus', value: tilekey });
+        },
+
+
+        /**
+         * Get the layers tile focus.
+         */
+        getTileFocus: function() {
+            return this.tileFocus;
+        },
+
+
+        /**
+         * Get the layers previous tile focus.
+         */
+        getPreviousTileFocus: function() {
+            return this.previousTileFocus;
+        },
 
 
         createRoot: function() {

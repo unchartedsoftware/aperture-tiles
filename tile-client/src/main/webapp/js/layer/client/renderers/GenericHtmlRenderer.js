@@ -326,7 +326,7 @@ define(function (require) {
             var idKey = this.spec.idKey,
                 click = {
                     value : value,
-                    tilekey : this.parent.getTileFocus()
+                    tilekey : this.parent.map.getTileFocus()
                 };
             click[idKey] = value[idKey];
             this.parent.setClick( click );
