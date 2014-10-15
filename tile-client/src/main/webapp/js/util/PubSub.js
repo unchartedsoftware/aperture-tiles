@@ -26,9 +26,36 @@
 
 /*
     A hierarchical publish and subscribe object. Channels consist of strings, sub-channels
-    are separated with a period ('.'). Publishing to a parent channel will propagate the message
-    to all existing sub-channels.
+    are separated with a period ('.'). Publishing to a target channel will propagate the message
+    breadth first as follows:
+        1) from the root of the hierarchy to the target channel,
+        2) from the target channel to all existing sub-channels
+
+    Ex. Hierarchy:
+
+            a -> [ a.a, a.ab ] -> [ a.a.a, a.a.b, a.a.c ]
+
+        Publishing to a.a will publish to
+
+            1) from root to target
+
+                a -> a.a
+
+            2) from target to all sub-channels
+
+                a.a -> a.a.a -> a.a.b -> a.a.c
+
+        Publishing to a.a.c will publish
+
+            1) from root to target
+
+                a -> a.a -> a.a.c
+
+            2) from target to all sub-channels
+
+                a.a.c -> null
 */
+
 define(function (require) {
 
     "use strict";
@@ -75,8 +102,9 @@ define(function (require) {
             var paths = channelPath.split('.'),
                 children,
                 subscribers,
-                queue,
+                queue = [],
                 path, i, sub,
+                leafChannel,
                 channel = this.channels || {
                     subscribers : [],
                     children : {}
@@ -89,12 +117,24 @@ define(function (require) {
                     return;
                 }
                 channel = channel.children[ path ];
+                queue.push( channel );
             }
-            
-            // initialize publishing queue
-            queue = [ channel ];
 
-            // breadth first publishing
+            leafChannel = queue.pop();
+
+            // breadth first publishing from root to target
+            while ( queue.length > 0 ) {
+                channel = queue.shift();
+                subscribers = channel.subscribers;
+                // publish to current channel
+                for ( i=0; i<subscribers.length; i++ ) {
+                    subscribers[i]( message, channelPath );
+                }
+            }
+
+            queue = [ leafChannel ];
+
+            // breadth first publishing from target to all children
             while ( queue.length > 0 ) {
                 channel = queue.shift();
                 subscribers = channel.subscribers;
@@ -103,7 +143,7 @@ define(function (require) {
                 for ( i=0; i<subscribers.length; i++ ) {
                     subscribers[i]( message, channelPath );
                 }
-                // queue up children
+                // queue up children for leaf channel
                 for ( sub in children ) {
                     if ( children.hasOwnProperty( sub ) ) {
                         queue.push( children[ sub ] );

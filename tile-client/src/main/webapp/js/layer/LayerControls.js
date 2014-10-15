@@ -231,9 +231,6 @@ define(function (require) {
         $toggleBox.click(function () {
             var value = $toggleBox.prop("checked");
             layer.setVisibility( value );
-            if (layer.domain === "client") {
-                layer.setCarouselEnabled( value );
-            }
         });
         // set tooltip
         Util.enableTooltip( $toggleBox,
