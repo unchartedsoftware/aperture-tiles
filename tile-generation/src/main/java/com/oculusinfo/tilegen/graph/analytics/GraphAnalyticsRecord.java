@@ -42,9 +42,9 @@ public class GraphAnalyticsRecord implements Serializable {
 	 */
 	private static final long serialVersionUID = -7929675167195806162L;
 
-	private static int MAX_COMMUNITIES = 25;			// max number of communities to keep per record.
-	
-	private int _numCommunities;
+	private static int MAX_COMMUNITIES = 25;	// Max number of communities to keep analytics of 
+												//    per record.
+	private int _numCommunities;				// Total number of communities in a given tile
 	private List<GraphCommunity> _communities;
 	
 	//---- Constructor
