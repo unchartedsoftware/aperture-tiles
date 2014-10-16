@@ -34,6 +34,9 @@ import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord;
 import com.oculusinfo.tilegen.graph.analytics.GraphCommunity;
 
+/**
+ * Unit tests for Graph Analytics (i.e. GraphAnalyticsRecord and GraphCommunity objects)
+ */
 public class GraphAnalyticsTests {
 
 	// sample graph community record

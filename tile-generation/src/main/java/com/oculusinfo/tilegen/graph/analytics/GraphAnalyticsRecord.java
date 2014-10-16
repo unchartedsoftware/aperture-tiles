@@ -36,6 +36,12 @@ import java.util.ListIterator;
 
 import com.oculusinfo.binning.util.Pair;
 
+/**
+ * Class for a record for graph analytics.  Used for custom tile generation for graph analytics.
+ * For example, each graph analytics tile contains info about one GraphAnalyticsRecord.  In this case, 
+ * a GraphAnalticsRecord aggregates information for up to MAX_COMMUNITIES of the largest graph communities 
+ * in a given tile, whereas _numCommunities is the total number of communities in a given tile. 
+ */
 public class GraphAnalyticsRecord implements Serializable {
 	/**
 	 * 

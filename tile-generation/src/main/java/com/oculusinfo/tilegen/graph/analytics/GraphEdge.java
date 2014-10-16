@@ -27,8 +27,10 @@ package com.oculusinfo.tilegen.graph.analytics;
 import java.io.Serializable;
 import com.oculusinfo.binning.util.Pair;
 
-//---- For storing info about a graph edge.  Used for Graph Analytics.
-
+/**
+ * Class for a storing a graph edge object.  Used by GraphCommunity for graph 
+ * analytics tile generation.  Contains info about an edge's endpoints and weight.
+ */
 public class GraphEdge implements Serializable {
 	/**
 	 * 

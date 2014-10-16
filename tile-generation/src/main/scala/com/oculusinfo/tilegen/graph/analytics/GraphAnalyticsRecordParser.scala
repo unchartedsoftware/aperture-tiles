@@ -35,6 +35,9 @@ import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import org.apache.spark.graphx._
 
+/**
+ * Class for parsing raw graph community and edge data for Graph Analytics tile generation.
+ */
 object GraphAnalyticsRecordParser {
 }
 
