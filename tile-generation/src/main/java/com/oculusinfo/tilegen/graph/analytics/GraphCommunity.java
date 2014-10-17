@@ -33,11 +33,14 @@ import java.util.ListIterator;
 
 import com.oculusinfo.binning.util.Pair;
 
+
 /**
  * Class for a storing a graph community object.  Used by GraphAnalyticsRecord for graph 
  * analytics tile generation.  Contains info about a graph community's size, location, ID,
  * generic metadata, its parent graph community (if applicable), as well as the MAX_EDGES highest
  * weighted inter-community and intra-community edges connected to the graph community.
+ * 
+ * Edge info is stored in lists of GraphEdge objects, ranked by weight (highest to lowest).
  */
 public class GraphCommunity implements Serializable {	
 	/**
