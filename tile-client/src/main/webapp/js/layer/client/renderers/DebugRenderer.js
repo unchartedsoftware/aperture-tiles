@@ -72,7 +72,7 @@ define(function (require) {
             // instantiate html debug layer
             this.nodeLayer.addLayer( new HtmlLayer({
                 html: function () {
-                    return '<div>' + this.tilekey + '</div>';
+                      return '<div class="aperture-tile" style="border-left: 1px solid rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.5);"><div>' + this.tilekey + '</div></div>';
                 },
                 css: {
                     position: 'relative',

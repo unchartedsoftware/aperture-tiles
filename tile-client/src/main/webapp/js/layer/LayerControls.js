@@ -73,7 +73,8 @@ define(function (require) {
     OPACITY_RESOLUTION = 100.0;
     FILTER_RESOLUTION = 100.0;
 
-    // converts slider value from [0, 1] to actual filter ramp value based on ramp function
+
+    // converts linear slider value from [0, 1] to actual filter ramp value based on ramp function
     convertSliderValueToFilterValue = function( layer, normalizedValue ) {
         var rampFunc = layer.getRampFunction(),
             minMax = layer.getRampMinMax(),
@@ -85,7 +86,6 @@ define(function (require) {
         function checkLogInput( value ) {
             return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) * normalizedValue );
         }
-        //iterate over the inner labels
         if ( rampFunc === "log10" ) {
             val = checkLogInput( minMax[1] );
         } else {
@@ -94,7 +94,8 @@ define(function (require) {
         return val;
     };
 
-    // converts actual filter ramp value to slider value between [0, 1] based on ramp function
+
+    // converts actual filter ramp value to the linear slider value between [0, 1] based on ramp function
     convertFilterValueToSliderValue = function( layer, filterValue ) {
         var rampFunc = layer.getRampFunction(),
             minMax = layer.getRampMinMax(),
@@ -106,7 +107,6 @@ define(function (require) {
         function checkLogInput( value ) {
             return ( filterValue === 0 || filterValue === 1 ) ? 0 : log10( filterValue ) / log10( value );
         }
-        //iterate over the inner labels
         if ( rampFunc === "log10" ) {
             val = checkLogInput( minMax[1] );
         } else {
