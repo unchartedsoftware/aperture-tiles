@@ -30,25 +30,34 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
+import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
 import org.apache.avro.file.CodecFactory;
 
+import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
 import com.oculusinfo.binning.util.Pair
 
+import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.BinningAnalytic
 import com.oculusinfo.tilegen.tiling.CategoryValueAnalytic
 import com.oculusinfo.tilegen.tiling.CategoryValueBinningAnalytic
+import com.oculusinfo.tilegen.tiling.CustomGlobalMetadata
 import com.oculusinfo.tilegen.tiling.StandardDoubleBinningAnalytic
 import com.oculusinfo.tilegen.tiling.SumLogDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.MeanDoubleBinningAnalytic
 import com.oculusinfo.tilegen.tiling.MinimumDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.MinimumDoubleArrayTileAnalytic
 import com.oculusinfo.tilegen.tiling.MaximumDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.MaximumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
 import com.oculusinfo.tilegen.tiling.SumDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.SumDoubleArrayAnalytic
 import com.oculusinfo.tilegen.tiling.StandardDoubleArrayBinningAnalytic
@@ -90,25 +99,6 @@ object CSVValueExtractor {
 	}
 }
 
-trait ValueExtractorFactory {
-	def getFieldType (field: String, properties: PropertiesWrapper): String =
-		properties.getString("oculus.binning.parsing."+field+".fieldType",
-		                     "The type of the "+field+" field",
-		                     Some(if ("constant" == field || "zero" == field) "constant"
-		                          else "double")).toLowerCase
-
-	def getPropertyType (field: String, properties: PropertiesWrapper): String =
-		properties.getString("oculus.binning.parsing."+field+".propertyType",
-		                     "The type of the "+field+" field",
-		                     Some(if ("constant" == field || "zero" == field) "constant"
-		                          else "")).toLowerCase
-
-	def handles (field: Option[String], fields: Option[String],
-	             properties: PropertiesWrapper): Boolean
-	def constructValueExtractor (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _]
-}
-
-
 abstract class CSVValueExtractor[PT: ClassTag, BT]
 		extends ValueDescription[BT]
 		with Serializable
@@ -129,6 +119,30 @@ abstract class CSVValueExtractor[PT: ClassTag, BT]
 	def calculateValue (fieldValues: Map[String, Any]): PT
 
 	def getBinningAnalytic: BinningAnalytic[PT, BT]
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[BT], _]]
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, PT), _]]
+}
+
+
+
+trait ValueExtractorFactory {
+	def getFieldType (field: String, properties: PropertiesWrapper): String =
+		properties.getString("oculus.binning.parsing."+field+".fieldType",
+		                     "The type of the "+field+" field",
+		                     Some(if ("constant" == field || "zero" == field) "constant"
+		                          else "double")).toLowerCase
+
+	def getPropertyType (field: String, properties: PropertiesWrapper): String =
+		properties.getString("oculus.binning.parsing."+field+".propertyType",
+		                     "The type of the "+field+" field",
+		                     Some(if ("constant" == field || "zero" == field) "constant"
+		                          else "")).toLowerCase
+
+	def handles (field: Option[String], fields: Option[String],
+	             properties: PropertiesWrapper): Boolean
+	def constructValueExtractor (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _]
 }
 
 
@@ -149,6 +163,18 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] =
 		new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
+		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
+		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
+		                                                           new MinimumDoubleTileAnalytic),
+		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
+		                                                           new MaximumDoubleTileAnalytic))
+	}
+
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Double), _]] =
+		Seq[AnalysisDescription[(_, Double), _]]()
 }
 
 
@@ -211,13 +237,25 @@ class FieldValueExtractor (fieldName: String,
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] = binningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
+		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
+		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
+		                                                           new MinimumDoubleTileAnalytic),
+		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
+		                                                           new MaximumDoubleTileAnalytic))
+	}
+
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Double), _]] =
+		Seq[AnalysisDescription[(_, Double), _]]()
 }
 
 
 
 class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
 	def handles (field: Option[String], fields: Option[String],
-	                      properties: PropertiesWrapper): Boolean =
+	             properties: PropertiesWrapper): Boolean =
 		field match {
 			case Some(fieldName) => {
 				def matches (fieldType: String): Boolean =
@@ -231,14 +269,31 @@ class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
 			case _ => false
 		}
 
-	def constructValueExtractor (field: String, properties: PropertiesWrapper) =
-		new MeanValueExtractor(field)
+	def constructValueExtractor (field: String, properties: PropertiesWrapper) = {
+		val emptyValue = properties.getDoubleOption(
+			"oculus.binning.parsing."+field+".emptyValue",
+			"The value to use for bins where there aren't enough data points to give a "+
+				"valid average")
+		val minCount = properties.getIntOption(
+			"oculus.binning.parsing."+field+".minCount",
+			"The minimum number of data points allowed to have a valid mean for this field")
+		new MeanValueExtractor(field, emptyValue, minCount)
+	}
 }
 
-class MeanValueExtractor (fieldName: String)
+class MeanValueExtractor (fieldName: String, emptyValue: Option[Double], minCount: Option[Int])
 		extends CSVValueExtractor[(Double, Int), JavaDouble]
 {
-	private val binningAnalytic = new MeanDoubleBinningAnalytic
+	private val binningAnalytic =
+		if (emptyValue.isDefined && minCount.isDefined) {
+			new MeanDoubleBinningAnalytic(emptyValue.get, minCount.get)
+		} else if (emptyValue.isDefined) {
+			new MeanDoubleBinningAnalytic(emptyValue = emptyValue.get)
+		} else if (minCount.isDefined) {
+			new MeanDoubleBinningAnalytic(minCount = minCount.get)
+		} else {
+			new MeanDoubleBinningAnalytic
+		}
 	def name: String = fieldName
 	def description: String = "The mean value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
@@ -248,6 +303,18 @@ class MeanValueExtractor (fieldName: String)
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[(Double, Int), JavaDouble] = binningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
+		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
+		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
+		                                                           new MinimumDoubleTileAnalytic),
+		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
+		                                                           new MaximumDoubleTileAnalytic))
+	}
+
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, (Double, Int)), _]] =
+		Seq[AnalysisDescription[(_, (Double, Int)), _]]()
 }
 
 
@@ -319,13 +386,19 @@ class StringValueExtractor (fieldName: String,
 		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] =
 		binningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JavaDouble]]], _]] =
+		Seq[AnalysisDescription[TileData[JavaList[Pair[String, JavaDouble]]], _]]()
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Map[String, Double]), _]] =
+		Seq[AnalysisDescription[(_, Map[String, Double]), _]]()
 }
 
 
 
 class SubstringValueExtractorFactory extends StringValueExtractorFactory {
 	override def handles (field: Option[String], fields: Option[String],
-	             properties: PropertiesWrapper): Boolean =
+	                      properties: PropertiesWrapper): Boolean =
 		field.isDefined && "substring" == getFieldType(field.get, properties)
 
 	override def constructValueExtractor (field: String, properties: PropertiesWrapper):
@@ -411,7 +484,14 @@ class SubstringValueExtractor (fieldName: String,
 	}
 	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =
 		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
-	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] = binningAnalytic
+	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] =
+		binningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JavaDouble]]], _]] =
+		Seq[AnalysisDescription[TileData[JavaList[Pair[String, JavaDouble]]], _]]()
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Map[String, Double]), _]] =
+		Seq[AnalysisDescription[(_, Map[String, Double]), _]]()
 }
 
 
@@ -439,6 +519,12 @@ class MultiFieldValueExtractor (fieldNames: Array[String])
 		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[Pair[String, JavaDouble]]] =
 		new CategoryValueBinningAnalytic(fieldNames)
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JavaDouble]]], _]] =
+		Seq[AnalysisDescription[TileData[JavaList[Pair[String, JavaDouble]]], _]]()
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Seq[Double]), _]] =
+		Seq[AnalysisDescription[(_, Seq[Double]), _]]()
 }
 
 
@@ -458,7 +544,7 @@ class SeriesValueExtractor (fieldNames: Array[String])
 		extends CSVValueExtractor[Seq[Double], JavaList[JavaDouble]]
 {
 	def name: String = "series"
-	def description: String = 
+	def description: String =
 		("The series of the fields "+
 			 (if (fieldNames.size > 3) fieldNames.take(3).mkString("(", ",", ")...")
 			  else fieldNames.mkString("(", ",", ")")))
@@ -469,6 +555,18 @@ class SeriesValueExtractor (fieldNames: Array[String])
 		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =
 		new SumDoubleArrayAnalytic with StandardDoubleArrayBinningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JavaDouble]], _]] = {
+		val convertFcn: JavaList[JavaDouble] => Seq[Double] = bt => {
+			for (b <- bt.asScala) yield b.asInstanceOf[Double]
+		}
+		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new MinimumDoubleArrayTileAnalytic),
+		    new AnalysisDescriptionTileWrapper(convertFcn, new MaximumDoubleArrayTileAnalytic),
+		    new CustomGlobalMetadata(Map[String, Object]("variables" -> fields.toSeq.asJava)))
+	}
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Seq[Double]), _]] =
+		Seq[AnalysisDescription[(_, Seq[Double]), _]]()
 }
 
 
@@ -481,7 +579,7 @@ class IndirectSeriesValueExtractorFactory extends ValueExtractorFactory {
 				val fieldNames = f.split(",")
 				(2 == fieldNames.length &&
 					 "keyname" == getFieldType(fieldNames(0), properties))
-            }
+			}
 		).getOrElse(false)
 	}
 
@@ -500,7 +598,7 @@ class IndirectSeriesValueExtractor (keyField: String,
 		extends CSVValueExtractor[Seq[Double], JavaList[JavaDouble]]
 {
 	def name: String = "IndirectSeries"
-	def description: String = 
+	def description: String =
 		("A series of values associated with certain keys, where key and "+
 			 "value each come from distinct columns.  Relevant keys are "+
 			 (if (validKeys.size > 3) validKeys.take(3).mkString("(", ",", ")...")
@@ -514,10 +612,21 @@ class IndirectSeriesValueExtractor (keyField: String,
 					if (fieldValue.isInstanceOf[Double]) fieldValue.asInstanceOf[Double]
 					else fieldValue.toString.toDouble
 				}
-			else 0.0
+				else 0.0
 		)
 	def getSerializer =
 		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =
 		new SumDoubleArrayAnalytic with StandardDoubleArrayBinningAnalytic
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JavaDouble]], _]] = {
+		val convertFcn: JavaList[JavaDouble] => Seq[Double] = bt => {
+			for (b <- bt.asScala) yield b.asInstanceOf[Double]
+		}
+		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new MinimumDoubleArrayTileAnalytic),
+		    new AnalysisDescriptionTileWrapper(convertFcn, new MaximumDoubleArrayTileAnalytic))
+	}
+
+	def getDataAnalytics: Seq[AnalysisDescription[(_, Seq[Double]), _]] =
+		Seq[AnalysisDescription[(_, Seq[Double]), _]]()
 }

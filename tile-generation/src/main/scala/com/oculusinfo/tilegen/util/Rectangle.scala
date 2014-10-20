@@ -53,8 +53,8 @@ class Rectangle [T: Ordering] (val minX: T, val maxX: T, val minY: T, val maxY: 
 	 * Determine if this rectangle contains the point specefied
 	 */
 	def contains (x: T, y: T): Boolean =
-		(ordering.lteq(minX, x) && ordering.lteq(x, maxX) &&
-			 ordering.lteq(minY, y) && ordering.lteq(y, maxY))
+		(ordering.lteq(minX, x) && ordering.lt(x, maxX) &&
+			 ordering.lteq(minY, y) && ordering.lt(y, maxY))
 
 	/**
 	 * Determine if this rectangle contains the rectangle specified

@@ -537,7 +537,7 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 		).filter(r =>
 			// Filter out unsuccessful parsings
 			r.isSuccess
-		).map(_.get).mapPartitions(iter =>
+		).map(_.get).mapPartitions((iter: Iterator[List[Any]]) =>
 			{
 				val extractor = new CSVFieldExtractor(localProperties)
 				// Determine which fields we need
@@ -687,4 +687,3 @@ class StreamingCSVDataset[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag, AT: Clas
 		}
 	}
 }
-
