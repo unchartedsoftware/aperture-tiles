@@ -9,6 +9,22 @@ Aperture Tile Demonstrations
 
 The following demos illustrate the utility of tile based visual analytics and the possibilities of create interactive visualization for big data.
 
+NYC Taxi Trip
+-------------
+
+This demo enables the exploration of data for 187 million NYC taxi trips taken between Jan 1, 2013 - Jan 3, 2014. Trip data can be viewed both on a [Google Maps](https://maps.google.com) base layer (using the latitude/longitude coordinates of the pick-up and drop-off locations) and in crossplot form (plotting various trip metadata attributes against each other).
+
+This demo illustrates:
+
+-   Seamless zoom and pan interaction on maps and crossplots
+-   Interactive HTML5 tile visualizations
+-   Server and client side rendering of tile visualizations
+-   Rich layer controls for interactive filtering of tile data and user color ramp selection
+-   Use of Aperture tiles for exploratory data analysis by plotting *all the data*
+
+[> Explore the NYC Taxi Trip demo](https://strata.oculusinfo.com/nyc-taxi/?map=6&baselayer=0)
+
+The source dataset for this demo was acquired from the NYC Taxi and Limousine Commission by [Chris Whong](http://chriswhong.com/open-data/foil_nyc_taxi/) through a Freedom of Information Law (FOIL) request. Each trip record contains latitude/longitude coordinates and timestamps for the pickup and drop-off locations, along with other stats related to the fare, tip and taxes.
 
 Tile-based Heatmap of Twitter Messages
 --------------------------------------
