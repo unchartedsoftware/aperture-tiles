@@ -255,7 +255,7 @@ class FieldValueExtractor (fieldName: String,
 
 class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
 	def handles (field: Option[String], fields: Option[String],
-	                      properties: PropertiesWrapper): Boolean =
+	             properties: PropertiesWrapper): Boolean =
 		field match {
 			case Some(fieldName) => {
 				def matches (fieldType: String): Boolean =
@@ -269,14 +269,31 @@ class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
 			case _ => false
 		}
 
-	def constructValueExtractor (field: String, properties: PropertiesWrapper) =
-		new MeanValueExtractor(field)
+	def constructValueExtractor (field: String, properties: PropertiesWrapper) = {
+		val emptyValue = properties.getDoubleOption(
+			"oculus.binning.parsing."+field+".emptyValue",
+			"The value to use for bins where there aren't enough data points to give a "+
+				"valid average")
+		val minCount = properties.getIntOption(
+			"oculus.binning.parsing."+field+".minCount",
+			"The minimum number of data points allowed to have a valid mean for this field")
+		new MeanValueExtractor(field, emptyValue, minCount)
+	}
 }
 
-class MeanValueExtractor (fieldName: String)
+class MeanValueExtractor (fieldName: String, emptyValue: Option[Double], minCount: Option[Int])
 		extends CSVValueExtractor[(Double, Int), JavaDouble]
 {
-	private val binningAnalytic = new MeanDoubleBinningAnalytic
+	private val binningAnalytic =
+		if (emptyValue.isDefined && minCount.isDefined) {
+			new MeanDoubleBinningAnalytic(emptyValue.get, minCount.get)
+		} else if (emptyValue.isDefined) {
+			new MeanDoubleBinningAnalytic(emptyValue = emptyValue.get)
+		} else if (minCount.isDefined) {
+			new MeanDoubleBinningAnalytic(minCount = minCount.get)
+		} else {
+			new MeanDoubleBinningAnalytic
+		}
 	def name: String = fieldName
 	def description: String = "The mean value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
@@ -381,7 +398,7 @@ class StringValueExtractor (fieldName: String,
 
 class SubstringValueExtractorFactory extends StringValueExtractorFactory {
 	override def handles (field: Option[String], fields: Option[String],
-	             properties: PropertiesWrapper): Boolean =
+	                      properties: PropertiesWrapper): Boolean =
 		field.isDefined && "substring" == getFieldType(field.get, properties)
 
 	override def constructValueExtractor (field: String, properties: PropertiesWrapper):
@@ -527,7 +544,7 @@ class SeriesValueExtractor (fieldNames: Array[String])
 		extends CSVValueExtractor[Seq[Double], JavaList[JavaDouble]]
 {
 	def name: String = "series"
-	def description: String = 
+	def description: String =
 		("The series of the fields "+
 			 (if (fieldNames.size > 3) fieldNames.take(3).mkString("(", ",", ")...")
 			  else fieldNames.mkString("(", ",", ")")))
@@ -562,7 +579,7 @@ class IndirectSeriesValueExtractorFactory extends ValueExtractorFactory {
 				val fieldNames = f.split(",")
 				(2 == fieldNames.length &&
 					 "keyname" == getFieldType(fieldNames(0), properties))
-            }
+			}
 		).getOrElse(false)
 	}
 
@@ -581,7 +598,7 @@ class IndirectSeriesValueExtractor (keyField: String,
 		extends CSVValueExtractor[Seq[Double], JavaList[JavaDouble]]
 {
 	def name: String = "IndirectSeries"
-	def description: String = 
+	def description: String =
 		("A series of values associated with certain keys, where key and "+
 			 "value each come from distinct columns.  Relevant keys are "+
 			 (if (validKeys.size > 3) validKeys.take(3).mkString("(", ",", ")...")
@@ -595,7 +612,7 @@ class IndirectSeriesValueExtractor (keyField: String,
 					if (fieldValue.isInstanceOf[Double]) fieldValue.asInstanceOf[Double]
 					else fieldValue.toString.toDouble
 				}
-			else 0.0
+				else 0.0
 		)
 	def getSerializer =
 		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())

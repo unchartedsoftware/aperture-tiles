@@ -68,12 +68,25 @@ class AnalyticsTestSuite extends FunSuite {
 	}
 
 	test("Standard Mean Double Binning Analytic") {
-		val analytic = new MeanDoubleBinningAnalytic
+		val analytic = new MeanDoubleBinningAnalytic()
 		assert((0.0, 0) === analytic.defaultProcessedValue)
 		assert((0.0, 0) === analytic.defaultUnprocessedValue)
 		assert((3.0, 5) === analytic.aggregate((1.9, 2), (1.1, 3)))
 		assert(0.6 === analytic.finish((3.0, 5)))
-		assert(JavaDouble.isNaN(analytic.finish((0.0, 0)))) 
+		assert(JavaDouble.isNaN(analytic.finish((0.0, 0))))
+	}
+
+	test("Standard Mean Double Binning Analytic - default value") {
+		val analytic0 = new MeanDoubleBinningAnalytic(emptyValue=0.0)
+		assert(0.0 == analytic0.finish((1.0, 0)))
+		val analytic1 = new MeanDoubleBinningAnalytic(emptyValue=1.0)
+		assert(1.0 == analytic1.finish((1.0, 0)))
+	}
+
+	test("Standard Mean Double Binning Analytic - minimum count") {
+		val analytic = new MeanDoubleBinningAnalytic(minCount=4)
+		assert(analytic.finish((3.0, 3)).isNaN)
+		assert(1.0 === analytic.finish((4.0, 4)))
 	}
 
 	test("Standard Double Tile Analytic") {
@@ -94,6 +107,20 @@ class AnalyticsTestSuite extends FunSuite {
 		val analytic = new MaximumDoubleAnalytic
 		assert(2.0 === analytic.aggregate(new JavaDouble(1.0),
 		                                  new JavaDouble(2.0)).doubleValue)
+	}
+
+	test("Minimum/Maximum Double Analytics ignore NaN") {
+		val sampleTile = new TileData[JavaDouble](new TileIndex(0, 0, 0, 4, 4), JavaDouble.NaN)
+		sampleTile.setBin(0, 0, 1.0)
+		sampleTile.setBin(1, 1, 2.0)
+		sampleTile.setBin(2, 2, 3.0)
+		sampleTile.setBin(3, 3, 4.0)
+		val maxConvert = AnalysisDescriptionTileWrapper.acrossTile((d: JavaDouble) => d.doubleValue,
+		                                                           new MaximumDoubleTileAnalytic)
+		assert(4.0 === maxConvert(sampleTile))
+		val minConvert = AnalysisDescriptionTileWrapper.acrossTile((d: JavaDouble) => d.doubleValue,
+		                                                           new MinimumDoubleTileAnalytic)
+		assert(1.0 === minConvert(sampleTile))
 	}
 
 	test("Standard Double Array Analytic") {
