@@ -56,7 +56,7 @@ import com.oculusinfo.binning.util.Pair
  * 
  * It also encapsulates some simple knowledge of default values.
  * 
- * @param T The type of value this analytic processes or aggregates.
+ * @tparam T The type of value this analytic processes or aggregates.
  */
 trait Analytic[T] extends Serializable
 {
@@ -99,11 +99,11 @@ trait Analytic[T] extends Serializable
  * needs to record total number and running sum, but only writes a single 
  * number)
  * 
- * @param PROCESSING_TYPE An intermediate type used to store data
- *                        needed to produce the result type when the
- *                        analytic is complete.
- * @param RESULT_TYPE The final type of value to be written out as the
- *                    results of this analytic.
+ * @tparam PROCESSING_TYPE An intermediate type used to store data
+ *                         needed to produce the result type when the
+ *                         analytic is complete.
+ * @tparam RESULT_TYPE The final type of value to be written out as the
+ *                     results of this analytic.
  */
 trait BinningAnalytic[PROCESSING_TYPE, RESULT_TYPE] extends Analytic[PROCESSING_TYPE] {
 	/**
@@ -120,6 +120,8 @@ trait BinningAnalytic[PROCESSING_TYPE, RESULT_TYPE] extends Analytic[PROCESSING_
  * converted, tile analytics all convert their values to strings for writing to 
  * metadata, and therefore don't need an explicit final form type; this 
  * conversion is inherent in the valueToString method.
+ * 
+ * @tparam T The type of value this analytic processes or aggregates.
  */
 trait TileAnalytic[T] extends Analytic[T] {
 	/**
@@ -181,9 +183,12 @@ class ComposedTileAnalytic[T1, T2]
 /**
  * An accumulator that accumulates a TileAnalytic across multiple tiles
  * 
- * @param analytic
+ * @param analytic An analytic defining an aggregation function to be used to 
+ *                 accumulate values
  * @param filter A filter to be used with this accumulator to define in which 
  *               tiles it is insterested
+ * 
+ * @tparam T The type of value to be accumulated
  */
 class AnalyticAccumulatorParam[T] (analytic: Analytic[T]) extends AccumulatorParam[T] {
 	// AccumulatorParam implementation
@@ -191,19 +196,6 @@ class AnalyticAccumulatorParam[T] (analytic: Analytic[T]) extends AccumulatorPar
 	def addInPlace (a: T, b: T): T = analytic.aggregate(a, b)
 }
 
-object AnalysisDescription {
-	def getStandardLevelMetadataMap (name: String, min: Int, max: Int):
-			Map[String, TileIndex => Boolean] =
-	{
-		getGlobalOnlyMetadataMap(name) ++
-		(for (level <- min to max) yield
-			 (level+"."+name -> ((t: TileIndex) => level == t.getLevel)))
-	}
-
-	def getGlobalOnlyMetadataMap (name: String) :
-			Map[String, TileIndex => Boolean] =
-		Map("global."+name -> ((t: TileIndex) => true))
-}
 
 
 
@@ -221,9 +213,25 @@ object AnalysisDescription {
  * across the data set.</li>
  * </ol>
  * 
- * @param RT The raw type of data on which this analysis takes place
- * @parma AT The type of data 
+ * @tparam RT The raw type of data on which this analysis takes place
+ * @tparma AT The type of data collected by this analysis, to be aggregated and
+ *            stored.  In an AnalyticDescription, the result of analyzing a 
+ *            single record of type RT is a single record of type AT, and this 
+ *            analysis is captured by the convert method.
  */
+object AnalysisDescription {
+	def getStandardLevelMetadataMap (name: String, min: Int, max: Int):
+			Map[String, TileIndex => Boolean] =
+	{
+		getGlobalOnlyMetadataMap(name) ++
+		(for (level <- min to max) yield
+			 (level+"."+name -> ((t: TileIndex) => level == t.getLevel)))
+	}
+
+	def getGlobalOnlyMetadataMap (name: String) :
+			Map[String, TileIndex => Boolean] =
+		Map("global."+name -> ((t: TileIndex) => true))
+}
 trait AnalysisDescription[RT, AT] {
 	val analysisTypeTag: ClassTag[AT]
 	def convert: RT => AT
@@ -245,13 +253,21 @@ trait AnalysisDescription[RT, AT] {
 		addAccumulator(sc, "global", (test: TileIndex) => true)
 }
 
+/**
+ * A small, simple data class to store what an analysis description needs to 
+ * remember about a single cross-dataset accumulator of its analysis.
+ * 
+ * @tparam AT The analysis type being accumulated
+ */
 case class MetaDataAccumulatorInfo[AT] (name: String,
-                                         test: TileIndex => Boolean,
-                                         accumulator: Accumulator[AT]) {}
+                                        test: TileIndex => Boolean,
+                                        accumulator: Accumulator[AT]) {}
 
 /**
  * A standard analysis description parent class for descriptions of a single, 
- * monolithic analysis.
+ * monolithic analysis (as opposed to a composite analysis).
+ * 
+ * See AnalysisDescription for descriptions of the generic type parameters.
  */
 class MonolithicAnalysisDescription[RT, AT: ClassTag]
 	(convertParam: RT => AT,
@@ -302,6 +318,8 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 /**
  * A description of a single analysis which is not aggregated into the global 
  * metadata, but only exists on tiles
+ * 
+ * See AnalysisDescription for descriptions of the generic type parameters.
  */
 class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
 	(convertParam: RT => AT,
@@ -322,6 +340,8 @@ class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
  * 
  * If we actually need more than one analytic, we combine them into
  * one using this class.
+ * 
+ * See AnalysisDescription for descriptions of the generic type parameters.
  */
 class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 	(analysis1: AnalysisDescription[RT, AT1],
@@ -573,9 +593,9 @@ trait StandardDoubleArrayBinningAnalytic extends BinningAnalytic[Seq[Double],
 /**
  * Standard string score ordering
  * 
- * @param aggregationLimit A pair whose first element is the number of elements 
- *                         to keep when aggregating, and whose second element 
- *                         is a sorting function by which to sort them.
+ * @param aggregationLimit The number of elements to keep when aggregating
+ * @param order An optional function to specify the order of values.  If not 
+ *              given, the order will be random.
  */
 class StringScoreAnalytic
 	(aggregationLimit: Option[Int] = None,
@@ -600,6 +620,13 @@ class StringScoreAnalytic
 	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
 }
 
+/**
+ * Extends the standard string score analytic into a binning analytic.
+ * 
+ * @param aggregationLimit See StringScoreAnalytic
+ * @param order See StringScoreAnalytic
+ * @param storageLimit The maximum number of entries to store in each tile bin.
+ */
 class StandardStringScoreBinningAnalytic
 	(aggregationLimit: Option[Int] = None,
 	 order: Option[((String, Double), (String, Double)) => Boolean] = None,
@@ -622,7 +649,8 @@ class StandardStringScoreBinningAnalytic
 }
 
 trait StandardStringScoreTileAnalytic extends TileAnalytic[Map[String, Double]] {
-	override def valueToString (value: Map[String, Double]): String = value.map(p => "\""+p._1+"\":"+p._2).mkString("[", ",", "]")
+	override def valueToString (value: Map[String, Double]): String =
+		value.map(p => "\""+p._1+"\":"+p._2).mkString("[", ",", "]")
 }
 
 class CategoryValueAnalytic(categoryNames: Seq[String])
@@ -752,6 +780,9 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
 /**
  * A very simply tile analytic that just writes custom metadata directly to the tile set 
  * metadata, and no where else.
+ * 
+ * @tparam T The raw data type of input records.  Nothing in this analytic uses 
+ *           this type, it just must match the dataset.
  */
 class CustomGlobalMetadata[T] (customData: Map[String, Object])
 		extends AnalysisDescription[T, String] with Serializable
