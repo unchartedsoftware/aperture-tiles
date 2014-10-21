@@ -59,6 +59,25 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
 		GenericData.Array<GenericRecord> values = (GenericData.Array<GenericRecord>) entry.get("communities");
 		List<GraphCommunity> results = new ArrayList<>();
 		for (GenericRecord value: values) {
+			
+			List<GraphEdge> interEdges = new ArrayList<>();
+			GenericData.Array<GenericRecord> interEvalues = (GenericData.Array<GenericRecord>) value.get("interEdges");			
+			for (GenericRecord valE: interEvalues) {
+				interEdges.add(new GraphEdge((Long)valE.get("dstID"),
+											(Double)valE.get("dstX"), 
+											(Double)valE.get("dstY"),
+											(Long)valE.get("weight")));
+			}
+			
+			List<GraphEdge> intraEdges = new ArrayList<>();
+			GenericData.Array<GenericRecord> intraEvalues = (GenericData.Array<GenericRecord>) value.get("intraEdges");
+			for (GenericRecord valE: intraEvalues) {
+				intraEdges.add(new GraphEdge((Long)valE.get("dstID"),
+											(Double)valE.get("dstX"), 
+											(Double)valE.get("dstY"),
+											(Long)valE.get("weight")));
+			}
+			
 			results.add(new GraphCommunity((Integer)value.get("hierLevel"),
 											(Long)value.get("id"),
 	                                        new Pair<Double, Double>((Double)value.get("x"), (Double)value.get("y")),
@@ -69,7 +88,9 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
 	                                        (Boolean)value.get("isPrimaryNode"),
 	                                        (Long)value.get("parentID"),
 	                                        new Pair<Double, Double>((Double)value.get("parentX"), (Double)value.get("parentY")),
-	                                        (Double)value.get("parentR")));
+	                                        (Double)value.get("parentR"),
+	                                        interEdges,
+	                                        intraEdges));
 		}
 		return results;
 	}
@@ -99,7 +120,38 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
             elt.put("parentID", rawElt.getParentID());
             elt.put("parentX", rawElt.getParentCoords().getFirst());
             elt.put("parentY", rawElt.getParentCoords().getSecond());
-            elt.put("parentR", rawElt.getParentRadius());            
+            elt.put("parentR", rawElt.getParentRadius());
+            
+            Schema interEschema = eltSchema.getField("interEdges").schema().getElementType();
+            List<GenericRecord> interE = new ArrayList<>();
+            List<GraphEdge> interEdges = rawElt.getInterEdges();
+            for (int n=0; n < interEdges.size(); n++) {
+            	GenericRecord edge = new GenericData.Record(interEschema);
+            	GraphEdge rawEdge = interEdges.get(n);
+                edge.put("dstID", rawEdge.getDstID());
+                edge.put("dstX", rawEdge.getDstCoords().getFirst());
+                edge.put("dstY", rawEdge.getDstCoords().getSecond());
+                edge.put("weight", rawEdge.getWeight());
+            	
+            	interE.add(edge);
+            }
+            elt.put("interEdges", interE);
+            
+            Schema intraEschema = eltSchema.getField("intraEdges").schema().getElementType();
+            List<GenericRecord> intraE = new ArrayList<>();
+            List<GraphEdge> intraEdges = rawElt.getIntraEdges();
+            for (int n=0; n < intraEdges.size(); n++) {
+            	GenericRecord edge = new GenericData.Record(intraEschema);
+            	GraphEdge rawEdge = intraEdges.get(n);
+                edge.put("dstID", rawEdge.getDstID());
+                edge.put("dstX", rawEdge.getDstCoords().getFirst());
+                edge.put("dstY", rawEdge.getDstCoords().getSecond());
+                edge.put("weight", rawEdge.getWeight());
+            	
+            	intraE.add(edge);
+            }
+            elt.put("intraEdges", intraE); 
+            
             result.add(elt);
         }
         return result;

@@ -6,7 +6,7 @@
         {"name": "numCommunities",      "type": "int", "doc": "Total number of communities"},               
         {"name": "communities",
          "type": {"type": "array", "items":
-                  {"name": "recentEntry",
+                  {"name": "communityEntry",
                    "type": "record",
                    "fields": [
                        {"name": "hierLevel", "type": "int"},
@@ -21,7 +21,33 @@
                        {"name": "parentID", "type": "long"},
                        {"name": "parentX", "type": "double"},
                        {"name": "parentY", "type": "double"},
-                       {"name": "parentR", "type": "double"}
+                       {"name": "parentR", "type": "double"},
+                       {"name": "interEdges","type": 
+                       		{"type": "array", "items":
+								{"name": "interEdgeEntry",
+	                   				"type": "record",
+	                   				"fields": [
+	                       			{"name": "dstID", "type": "long"},
+	                       			{"name": "dstX", "type": "double"},
+	                       			{"name": "dstY", "type": "double"},
+	                       			{"name": "weight", "type": "long"}
+	                   				]
+                  				}
+                  			}
+                 		},
+                 		{"name": "intraEdges","type": 
+                 			{"type": "array", "items":
+								{"name": "intraEdgeEntry",
+	                   				"type": "record",
+	                   				"fields": [
+	                       			{"name": "dstID", "type": "long"},
+	                       			{"name": "dstX", "type": "double"},
+	                       			{"name": "dstY", "type": "double"},
+	                       			{"name": "weight", "type": "long"}
+	                   				]
+                  				}
+                  			}
+                 		}
                    ]
                   }
                  },
