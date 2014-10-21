@@ -48,13 +48,14 @@ import com.oculusinfo.binning.util.Pair;
  * data. It keeps track of detailed information for the most important graph
  * communities in a tile.
  * 
- * @param MAX_COMMUNITIES
+ * Description of member variables:
+ * 	MAX_COMMUNITIES
  *            The max number of communities to keep analytics info of per record
  * 
- * @param _numCommunities
+ * 	_numCommunities
  *            Total number of communities in a given tile
  * 
- * @param _communities
+ * 	_communities
  *            List of GraphCommunity objects for storing analytics info for a
  *            given graph community
  */
