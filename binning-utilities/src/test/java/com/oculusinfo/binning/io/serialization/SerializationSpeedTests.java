@@ -27,15 +27,13 @@ package com.oculusinfo.binning.io.serialization;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.avro.file.CodecFactory;
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
@@ -48,7 +46,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 /*
  * Some tests to help compare serialization speeds between various schemes
  */
-//@Ignore
+@Ignore
 public class SerializationSpeedTests {
 	private static final String VECTOR_DATA = "vector";
 	private static final String SCALAR_DATA = "scalar";
