@@ -6,11 +6,16 @@ if [ "a" == "a""$SPARK_HOME" ]; then
 	exit 1
 fi
 
-# Make sure SCALA_HOME is set
-if [ "a" == "a""$SCALA_HOME" ]; then
-	echo SCALA_HOME not set.  Please set SCALA_HOME environment variable and try again.
+if [ "a" == "a""$CLOUDERA_HOME" ]; then
+	echo CLOUDERA_HOME not set.  Please set CLOUDERA_HOME environment variable and try again.
 	exit 1
 fi
+
+# Make sure SCALA_HOME is set
+# if [ "a" == "a""$SCALA_HOME" ]; then
+# 	echo SCALA_HOME not set.  Please set SCALA_HOME environment variable and try again.
+# 	exit 1
+# fi
 
 function getJar {
 	scriptGroupId=$1
@@ -21,8 +26,16 @@ function getJar {
 	jardir=${repo}/${groupDir}/${scriptArtifactId}/${scriptVersion}
 	JAR=${jardir}/${scriptArtifactId}-${scriptVersion}.jar
 
+	# prepare jar for return
 	if [ ${OSTYPE} == "cygwin" ]; then
 		export JAR="$(cygpath -p -w "${JAR}")"
+	fi
+
+	# add jar to SPARK_CLASSPATH
+	if [ "a" == "a"${SPARK_CLASSPATH} ]; then
+		export SPARK_CLASSPATH=${JAR}
+	else
+		export SPARK_CLASSPATH=${SPARK_CLASSPATH}:${JAR}
 	fi
 }
 
@@ -45,19 +58,43 @@ function addSparkJar {
 	fi
 }
 
+function addClouderaJar {
+	jar=$1
+	if [ "a" == "a"${SPARK_CLASSPATH} ]; then
+		export SPARK_CLASSPATH=${CLOUDERA_HOME}/${jar}
+	else
+		export SPARK_CLASSPATH=${SPARK_CLASSPATH}:${CLOUDERA_HOME}/${jar}
+	fi
+
+	if [ "a" == "a"${SPARK_JARS} ]; then
+		export SPARK_JARS=${CLOUDERA_HOME}/${jar}
+	else
+		export SPARK_JARS=${SPARK_JARS},${CLOUDERA_HOME}/${jar}
+	fi
+}
+
 # Set up the list of extra jars needed
-# our own jars
-addSparkJar com.oculusinfo math-utilities ${project.version}
+# First, get our main jar
+getJar com.oculusinfo tile-generation ${project.version}
+export MAIN_JAR=${JAR}
+
+# The rest of our own jars
 addSparkJar com.oculusinfo binning-utilities ${project.version}
+addSparkJar com.oculusinfo math-utilities ${project.version}
 
 # framework-related jars
-addSparkJar org.apache.hbase hbase ${hbase-version}
-addSparkJar org.scala-lang scala-library ${scala-version}
+# addSparkJar org.apache.hbase hbase ${hbase-version}
+addClouderaJar hbase/lib/hbase-protocol-0.98.1-cdh5.1.3.jar
+addCLouderaJar hbase/lib/protobuf-java-2.5.0.jar
+# addSparkJar com.google.protobuf protobuf-java ${hadoop-protobuf-version}
+addClouderaJar hbase/lib/hbase-common-0.98.1-cdh5.1.3.jar
+addClouderaJar hbase/lib/hbase-client-0.98.1-cdh5.1.3.jar
+addClouderaJar hbase/lib/hbase-server-0.98.1-cdh5.1.3.jar
+addClouderaJar hbase/lib/htrace-core.jar
+# addSparkJar org.cloudera.htrace htrace-core 2.04
+# addSparkJar org.cloudera.htrace htrace-zipkin 2.01
 # json version is derived indirectly, can't be coded here.
 addSparkJar org.json json 20090211
-
-# Finally, get our main jar
-getJar com.oculusinfo tile-generation ${project.version}
 
 
 MAIN_CLASS=$1
@@ -65,8 +102,9 @@ shift
 
 echo Running Spark from $SPARK_HOME
 echo Running Spark with jars ${SPARK_JARS}
-echo Running spark with main jar ${JAR}
+echo Running Spark with main jar ${JAR}
 echo Running main class ${MAIN_CLASS}
+echo Running Spark with class path ${SPARK_CLASSPATH}
 
 
-${SPARK_HOME}/bin/spark-submit --jars ${SPARK_JARS} --class ${MAIN_CLASS} ${JAR} $*
+${SPARK_HOME}/bin/spark-submit --jars ${SPARK_JARS} --class ${MAIN_CLASS} ${MAIN_JAR} $*

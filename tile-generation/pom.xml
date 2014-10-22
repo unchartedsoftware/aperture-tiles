@@ -68,7 +68,7 @@
 		</dependency>
 
 		<!-- CDH4 HBASE dependencies  -->
-        <dependency>
+	        <!-- <dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase</artifactId>
 			<version>${hbase-version}</version>
@@ -86,69 +86,69 @@
 					<groupId>org.slf4j</groupId>
 				</exclusion>
 			</exclusions>
-		</dependency>
+		</dependency> -->
 
  
-<!-- CDH5 HBASE dependencies  -->
-   <!--<dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-client</artifactId>
-      <version>${hbase-version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>asm</artifactId>
-          <groupId>asm</groupId>
-        </exclusion>
-   <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
-   </exclusion>
-   <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-   </exclusion>
-      </exclusions>
-    </dependency>
+		<!-- CDH5 HBASE dependencies  -->
+		<dependency>
+			<groupId>org.apache.hbase</groupId>
+			<artifactId>hbase-client</artifactId>
+			<version>${hbase-version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>asm</artifactId>
+					<groupId>asm</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-log4j12</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
-      <version>${hbase-version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>asm</artifactId>
-          <groupId>asm</groupId>
-        </exclusion>
-   <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
-   </exclusion>
-   <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-   </exclusion>
-      </exclusions>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
-      <version>${hbase-version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>asm</artifactId>
-          <groupId>asm</groupId>
-        </exclusion>
-   <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
-   </exclusion>
-   <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-   </exclusion>
-      </exclusions>
-    </dependency>-->
+		<dependency>
+			<groupId>org.apache.hbase</groupId>
+			<artifactId>hbase-common</artifactId>
+			<version>${hbase-version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>asm</artifactId>
+					<groupId>asm</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-log4j12</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hbase</groupId>
+			<artifactId>hbase-server</artifactId>
+			<version>${hbase-version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>asm</artifactId>
+					<groupId>asm</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-log4j12</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
     		
 		<dependency>
 			<groupId>org.scala-lang</groupId>
