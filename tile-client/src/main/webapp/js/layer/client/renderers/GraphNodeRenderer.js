@@ -31,6 +31,7 @@ define(function (require) {
 
     var //Util = require('../../../util/Util'),
         GenericHtmlRenderer = require('./GenericHtmlRenderer'),
+        BORDER_WIDTH = 2,
         GraphNodeRenderer;
 
 
@@ -69,7 +70,7 @@ define(function (require) {
                     theme = subSpec.themes[ themeName ];
                     color = theme.color[0];
                     hoverColor = theme.hoverColor[0];
-                    outline = ( theme.outline ) ? 'border: 2px solid ' + theme.outline : '';
+                    outline = ( theme.outline ) ? 'border: '+BORDER_WIDTH+'px solid ' + theme.outline : '';
                     css += '.'+themeName + ' .' +className + '{background-color:'+color+'; '+outline+'; }';
                     css += '.'+themeName + ' .' +className + ':hover {background-color:'+hoverColor+'; '+outline+'; }';
                 }
@@ -85,7 +86,7 @@ define(function (require) {
 
             color = subSpec.color[0];
             hoverColor = subSpec.hoverColor[0];
-            outline = ( subSpec.outline ) ? 'border: 2px solid ' + subSpec.outline : '';
+            outline = ( subSpec.outline ) ? 'border: '+BORDER_WIDTH+'px solid ' + subSpec.outline : '';
 
             css += '.' +className + '{ background-color:'+color+'; '+outline+'; }';
             css += '.' +className + ':hover { background-color:'+hoverColor+'; '+outline+'; }';
@@ -129,7 +130,7 @@ define(function (require) {
                 tilekey = data.tilekey,
                 value, community, className,
                 tilePos = this.map.getTopLeftViewportPixelForTile( tilekey ),
-                pos, offset, parentPos, parentOffset, radius, parentRadius,
+                pos, offset, parentPos, parentOffset, radius, diameter, parentRadius, parentDiameter,
                 $html = $([]),
                 $node,
                 i, j;
@@ -144,8 +145,7 @@ define(function (require) {
                     community = value.communities[j];
                     pos = this.map.getViewportPixelFromCoord( community[spec.node.x], community[spec.node.y] );
                     radius = this.map.getViewportPixelFromCoord( community[spec.node.radius], 0 ).x - this.map.getViewportPixelFromCoord( 0, 0 ).x;
-                    radius *= 2;
-                    radius -= 1;
+                    diameter = radius*2;
                     
                     if (radius < 2) {
                     	continue;
@@ -158,8 +158,7 @@ define(function (require) {
 
                     parentPos = this.map.getViewportPixelFromCoord( community[spec.parentNode.x], community[spec.parentNode.y] );
                     parentRadius = this.map.getViewportPixelFromCoord( community[spec.parentNode.radius], 0 ).x - this.map.getViewportPixelFromCoord( 0, 0 ).x;
-                    parentRadius *= 2;
-                    parentRadius -= 1;
+                    parentDiameter = parentRadius * 2;
                     parentOffset = {
                         x : parentPos.x - tilePos.x,
                         y : parentPos.y - tilePos.y
@@ -172,22 +171,22 @@ define(function (require) {
                     }
 
                     $node = $( '<div class="'+className+'" style="'
-                          + 'height:'+radius+'px;'
-                          + 'width:'+radius+'px;'
-                          + 'border-radius:'+radius+'px;'
-                          + 'left:'+(offset.x - radius/2)+'px;'
-                          + 'top:'+(offset.y - radius/2)+'px;'
+                          + 'height:'+diameter+'px;'
+                          + 'width:'+diameter+'px;'
+                          + 'border-radius:'+diameter+'px;'
+                          + 'left:'+(offset.x - radius - BORDER_WIDTH)+'px;'
+                          + 'top:'+(offset.y - radius - BORDER_WIDTH)+'px;'
                           + '"></div>' );
 
                     $html = $html.add( $node );
 
                     if ( community[spec.criticalNode.flag] ) {
                         $html = $html.add( '<div class="community-parent-node" style="'
-                             + 'height:'+parentRadius+'px;'
-                             + 'width:'+parentRadius+'px;'
-                             + 'border-radius:'+parentRadius+'px;'
-                             + 'left:'+(parentOffset.x - parentRadius/2)+'px;'
-                             + 'top:'+(parentOffset.y - parentRadius/2)+'px;'
+                             + 'height:'+parentDiameter+'px;'
+                             + 'width:'+parentDiameter+'px;'
+                             + 'border-radius:'+parentDiameter+'px;'
+                             + 'left:'+(parentOffset.x - parentRadius - BORDER_WIDTH)+'px;'
+                             + 'top:'+(parentOffset.y - parentRadius - BORDER_WIDTH)+'px;'
                              + '"></div>' );
                     }
                 }
