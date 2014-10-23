@@ -376,31 +376,7 @@ public class GraphAnalyticsTests {
 		Assert.assertEquals(c, GraphAnalyticsRecord.addRecords(a, b));
     }
 */
-    //---- Check string conversion
-/*    @Test
-    public void testStringConversion () {
-		GraphCommunity community_a = new GraphCommunity(_hierLevel, 
-				123L, 
-				new Pair<Double, Double>(1.2, 3.4),
-				0.8,
-				4,
-				33,
-				"abc\t\"\"\\\"\\\\\"\\\\\\\"\tdef",
-				false,
-				_parentID,
-				_parentCoords,
-				_parentRadius,
-				_interEdges,
-				_intraEdges);
-    		
-    	GraphAnalyticsRecord a = new GraphAnalyticsRecord(1, Arrays.asList(community_a));
 
-        String as = a.toString();
-        GraphAnalyticsRecord b = GraphAnalyticsRecord.fromString(as);
-        Assert.assertEquals(a, b);
-
-    }	
-*/		
 	//---- Min of two records
     @Test
     public void testMin() {
