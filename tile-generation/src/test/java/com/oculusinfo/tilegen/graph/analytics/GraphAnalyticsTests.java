@@ -377,7 +377,7 @@ public class GraphAnalyticsTests {
     }
 */
     //---- Check string conversion
-    @Test
+/*    @Test
     public void testStringConversion () {
 		GraphCommunity community_a = new GraphCommunity(_hierLevel, 
 				123L, 
@@ -400,7 +400,7 @@ public class GraphAnalyticsTests {
         Assert.assertEquals(a, b);
 
     }	
-		
+*/		
 	//---- Min of two records
     @Test
     public void testMin() {
