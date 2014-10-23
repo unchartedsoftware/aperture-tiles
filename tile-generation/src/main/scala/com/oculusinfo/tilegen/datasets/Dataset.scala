@@ -301,12 +301,17 @@ object DatasetFactory {
 	                                              levels: Seq[Seq[Int]],
 	                                              properties: CSVRecordPropertiesWrapper):
 			CSVDataset[IT, PT, _, _, BT] = {
-		val dataAnalytic =
-			CSVDataAnalyticExtractor.fromProperties(properties,
-			                                        indexer.indexTypeTag,
-			                                        valuer.valueTypeTag)
-		val tileAnalytic =
-			CSVTileAnalyticExtractor.fromProperties(sc, properties, indexer, valuer, levels)
+		val indexDataAnalytics =
+			indexer.getDataAnalytics.asInstanceOf[Seq[AnalysisDescription[(IT, PT), _]]]
+		val valueDataAnalytics =
+			valuer.getDataAnalytics.asInstanceOf[Seq[AnalysisDescription[(IT, PT), _]]]
+		val dataAnalyticDescs = indexDataAnalytics ++ valueDataAnalytics
+		val dataAnalytic = CSVDataAnalyticExtractor.consolidate(properties, dataAnalyticDescs)
+
+		val tileAnalyticDescs: Seq[AnalysisDescription[TileData[BT], _]] =
+			(indexer.getTileAnalytics.asInstanceOf[Seq[AnalysisDescription[TileData[BT], _]]] ++
+				 valuer.getTileAnalytics.asInstanceOf[Seq[AnalysisDescription[TileData[BT], _]]])
+		val tileAnalytic = CSVTileAnalyticExtractor.consolidate(properties, tileAnalyticDescs)
 
 		addGenericAnalytics(sc, cacheRaw, cacheFilterable, cacheProcessed,
 		                    indexer, valuer, tileWidth, tileHeight, levels, properties,

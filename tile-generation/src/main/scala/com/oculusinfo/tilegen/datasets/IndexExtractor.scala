@@ -31,8 +31,12 @@ import java.text.SimpleDateFormat
 
 import scala.reflect.ClassTag
 
-import com.oculusinfo.tilegen.tiling.IndexScheme
+import com.oculusinfo.binning.TileData
+
+import com.oculusinfo.tilegen.tiling.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import com.oculusinfo.tilegen.tiling.IndexScheme
+import com.oculusinfo.tilegen.tiling.IPv4Analytics
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 import com.oculusinfo.tilegen.tiling.TimeRangeCartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.TimeIndexScheme
@@ -120,8 +124,8 @@ object CSVIndexExtractor {
 		}
 	}
 }
-abstract class CSVIndexExtractor[T: ClassTag] extends Serializable {
-	val indexTypeTag = implicitly[ClassTag[T]]
+abstract class CSVIndexExtractor[IT: ClassTag] extends Serializable {
+	val indexTypeTag = implicitly[ClassTag[IT]]
 
 	// The fields this extractor needs
 	def fields: Array[String]
@@ -135,19 +139,25 @@ abstract class CSVIndexExtractor[T: ClassTag] extends Serializable {
 
 	// The index scheme the binner needs to know what to do with the index
 	// values we generate
-	def indexScheme: IndexScheme[T]
+	def indexScheme: IndexScheme[IT]
 	
 	// Get the index value from the field values
-	def calculateIndex (fieldValues: Map[String, Any]): T
+	def calculateIndex (fieldValues: Map[String, Any]): IT
 
 	// Indicate if the index implies a density strip
 	def isDensityStrip: Boolean
+
+	// List any tile analytics automatically associated with this index extractor
+	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]]
+
+	// List any data analytics automatically associated with this index extractor
+	def getDataAnalytics: Seq[AnalysisDescription[(IT, _), _]]
 }
 
-abstract class TimeRangeCSVIndexExtractor[T: ClassTag] extends CSVIndexExtractor[T] {
+abstract class TimeRangeCSVIndexExtractor[IT: ClassTag] extends CSVIndexExtractor[IT] {
 	// The time based index scheme the binner needs to know what to do with the index
 	// values we generate
-	def timeIndexScheme: TimeIndexScheme[T]
+	def timeIndexScheme: TimeIndexScheme[IT]
 	
 	def msPerTimeRange: Double
 }
@@ -164,6 +174,8 @@ class CartesianIndexExtractor(xVar: String, yVar: String)
 	def calculateIndex (fieldValues: Map[String, Any]): (Double, Double) =
 		(fieldValues(xVar).asInstanceOf[Double], fieldValues(yVar).asInstanceOf[Double])
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] = Seq()
+	def getDataAnalytics: Seq[AnalysisDescription[((Double, Double), _), _]] = Seq()
 }
 
 class LineSegmentIndexExtractor
@@ -182,6 +194,8 @@ class LineSegmentIndexExtractor
 		 fieldValues(xVar2).asInstanceOf[Double],
 		 fieldValues(yVar2).asInstanceOf[Double])
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] = Seq()
+	def getDataAnalytics: Seq[AnalysisDescription[((Double, Double, Double, Double), _), _]] = Seq()
 }
 
 class IPv4IndexExtractor (ipField: String) extends CSVIndexExtractor[Array[Byte]] {
@@ -204,6 +218,11 @@ class IPv4IndexExtractor (ipField: String) extends CSVIndexExtractor[Array[Byte]
 		      ((address & 0xff)).toByte)
 	}
 	val isDensityStrip = false
+	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] =
+		Seq(IPv4Analytics.getCIDRBlockAnalysis[BT](),
+		    IPv4Analytics.getMinIPAddressAnalysis[BT](),
+		    IPv4Analytics.getMaxIPAddressAnalysis[BT]())
+	def getDataAnalytics: Seq[AnalysisDescription[(Array[Byte], _), _]] = Seq()
 }
 
 class TimeRangeCartesianIndexExtractor
@@ -230,4 +249,6 @@ class TimeRangeCartesianIndexExtractor
 		 fieldValues(xVar).asInstanceOf[Double],
 		 fieldValues(yVar).asInstanceOf[Double])
 	def isDensityStrip = yVar == CSVDatasetBase.ZERO_STR
+	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] = Seq()
+	def getDataAnalytics: Seq[AnalysisDescription[((Double, Double, Double), _), _]] = Seq()
 }

@@ -31,3 +31,11 @@
     background-color: #222;
     border: 1px solid #000;
 }
+
+.light-theme ::-webkit-scrollbar-corner {
+    background-color: #eee;
+}
+
+.dark-theme ::-webkit-scrollbar-corner {
+    background-color: #111;
+}

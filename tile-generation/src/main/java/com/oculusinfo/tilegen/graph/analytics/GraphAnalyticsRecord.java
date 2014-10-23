@@ -36,14 +36,40 @@ import java.util.ListIterator;
 
 import com.oculusinfo.binning.util.Pair;
 
+/**
+ * Class for a record for graph analytics. Used for custom tile generation for
+ * graph analytics. For example, each graph analytics tile contains info about
+ * one GraphAnalyticsRecord. In this case, a GraphAnalticsRecord aggregates
+ * information for up to MAX_COMMUNITIES of the largest graph communities in a
+ * given tile, whereas _numCommunities is the total number of communities in a
+ * given tile.
+ * 
+ * This class is used by GraphAnalyticsRecordParser to parse raw graph community
+ * data. It keeps track of detailed information for the most important graph
+ * communities in a tile.
+ * 
+ * Description of member variables:
+ * 	MAX_COMMUNITIES
+ *            The max number of communities to keep analytics info of per record
+ * 
+ * 	_numCommunities
+ *            Total number of communities in a given tile
+ * 
+ * 	_communities
+ *            List of GraphCommunity objects for storing analytics info for a
+ *            given graph community
+ */
 public class GraphAnalyticsRecord implements Serializable {
-	private static final long serialVersionUID = 1L;	//NOTE:  using default serialVersion ID
-	
-	private static final int MAX_COMMUNITIES = 25;		// max number of communities to keep per record.
-														// TODO -- should this be configurable as a bd parameter?
-	private int _numCommunities;
-	private List<GraphCommunity> _communities;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7929675167195806162L;
 
+	private static int MAX_COMMUNITIES = 25;	// Max number of communities to keep analytics of 
+												//    per record.
+	private int _numCommunities;				// Total number of communities in a given tile
+	private List<GraphCommunity> _communities;
+	
 	//---- Constructor
 	public GraphAnalyticsRecord(int numCommunities, List<GraphCommunity> communities) {	
 		
@@ -63,6 +89,10 @@ public class GraphAnalyticsRecord implements Serializable {
 		}
 	}
 	
+	public static void setMaxCommunities(int max) {
+		MAX_COMMUNITIES = max;
+	}	
+	
 	public int getNumCommunities() {
 		return _numCommunities;
 	}	
@@ -81,7 +111,6 @@ public class GraphAnalyticsRecord implements Serializable {
 //	public int hashCode() {
 //		return (getHash(_topic));
 //	}
-	
 
 	@Override
 	public boolean equals(Object obj) {
@@ -196,6 +225,8 @@ public class GraphAnalyticsRecord implements Serializable {
 				+ "\"communities\": [");
 		for (int i = 0; i < _communities.size(); ++i) {
 			GraphCommunity node = _communities.get(i);
+			List<GraphEdge> interEdges = node.getInterEdges();
+			List<GraphEdge> intraEdges = node.getIntraEdges();
 					
 			if (i > 0)
 				result += ", ";
@@ -209,7 +240,33 @@ public class GraphAnalyticsRecord implements Serializable {
 						 + "\"isPrimaryNode\": " + node.isPrimaryNode() + ", "
 						 + "\"parentID\": " + node.getParentID() + ", "
 						 + "\"parentCoords\": [" + node.getParentCoords().getFirst() + ", " + node.getParentCoords().getSecond() + "], "
-						 + "\"parentRadius\": " + node.getParentRadius() + "}";
+						 + "\"parentRadius\": " + node.getParentRadius() + ", ";
+			
+			result += "\"interEdges\": [";
+			if (node.getInterEdges() != null) {
+				for (int n = 0; n < node.getInterEdges().size(); n++) {
+					GraphEdge edge = node.getInterEdges().get(n);
+					if (n > 0)
+						result += ", ";
+					result += "{\"dstID\": " + edge.getDstID() + ", "
+							 + "\"dstCoords\": [" + edge.getDstCoords().getFirst() + ", " + edge.getDstCoords().getSecond() + "], "
+							 + "\"weight\": " + edge.getWeight() + "}";
+				}
+			}
+			result += "], \"intraEdges\": [";
+			
+			if (node.getIntraEdges() != null) {
+				
+				for (int n = 0; n < node.getIntraEdges().size(); n++) {
+					GraphEdge edge = node.getIntraEdges().get(n);
+					if (n > 0)
+						result += ", ";
+					result += "{\"dstID\": " + edge.getDstID() + ", "
+							 + "\"dstCoords\": [" + edge.getDstCoords().getFirst() + ", " + edge.getDstCoords().getSecond() + "], "
+							 + "\"weight\": " + edge.getWeight() + "}";
+				}
+			}
+			result += "]}";
 		}
 		result += "]}";
 		return result;
@@ -285,8 +342,62 @@ public class GraphAnalyticsRecord implements Serializable {
 			double parentY = Double.parseDouble(value.substring(0, end));			
 			
 			value = eat(value.substring(end), "], \"parentRadius\": ");
-			end = value.indexOf("}");
-			double parentRadius = Double.parseDouble(value.substring(0, end));				
+			end = value.indexOf(", ");
+			double parentRadius = Double.parseDouble(value.substring(0, end));
+			
+			value = eat(value.substring(end), ", \"interEdges\": [");
+			List<GraphEdge> interEdges = new ArrayList<>();
+			
+			while (value.startsWith("{")) {
+				value = eat(value, "{\"dstID\": ");
+				end = value.indexOf(", ");
+				long dstID = Long.parseLong(value.substring(0, end));
+				
+				value = eat(value.substring(end), ", \"dstCoords\": [");
+				end = value.indexOf(",");
+				double dstX = Double.parseDouble(value.substring(0, end));
+				value = eat(value.substring(end), ", ");
+				end = value.indexOf("], ");
+				double dstY = Double.parseDouble(value.substring(0, end));
+							
+				value = eat(value.substring(end), "], \"weight\": ");
+				end = value.indexOf("}");
+				long weight = Long.parseLong(value.substring(0, end));			
+				
+				GraphEdge currentEdge = new GraphEdge(dstID, dstX, dstY, weight);
+				interEdges.add(currentEdge);	// add currentEdge to the list
+				
+				value = value.substring(end + 1);
+				if (value.startsWith(", "))
+					value = eat(value, ", ");
+			}
+			
+			value = eat(value.substring(end-1), "], \"intraEdges\": [");
+			List<GraphEdge> intraEdges = new ArrayList<>();
+			
+			while (value.startsWith("{")) {
+				value = eat(value, "{\"dstID\": ");
+				end = value.indexOf(", ");
+				long dstID = Long.parseLong(value.substring(0, end));
+				
+				value = eat(value.substring(end), ", \"dstCoords\": [");
+				end = value.indexOf(",");
+				double dstX = Double.parseDouble(value.substring(0, end));
+				value = eat(value.substring(end), ", ");
+				end = value.indexOf("], ");
+				double dstY = Double.parseDouble(value.substring(0, end));
+							
+				value = eat(value.substring(end), "], \"weight\": ");
+				end = value.indexOf("}");
+				long weight = Long.parseLong(value.substring(0, end));			
+				
+				GraphEdge currentEdge = new GraphEdge(dstID, dstX, dstY, weight);
+				intraEdges.add(currentEdge);	// add currentEdge to the list
+				
+				value = value.substring(end + 1);
+				if (value.startsWith(", "))
+					value = eat(value, ", ");
+			}			
 
 			GraphCommunity currentCommunity = new GraphCommunity(
 						hierLevel,
@@ -299,7 +410,9 @@ public class GraphAnalyticsRecord implements Serializable {
 						bIsPrimaryNode,
 						parentID,
 						new Pair<Double, Double>(parentX, parentY),
-						parentRadius
+						parentRadius,
+						interEdges,
+						intraEdges
 					);
 			
 			communities.add(currentCommunity);	// add currentCommunity to the list
@@ -436,6 +549,7 @@ public class GraphAnalyticsRecord implements Serializable {
 			return null;
 
 		int minNumCommunities = Integer.MAX_VALUE;
+		List<GraphEdge> minEdgeList = Arrays.asList(new GraphEdge(Long.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE, Long.MAX_VALUE));
 		GraphCommunity minCommunity = new GraphCommunity(Integer.MAX_VALUE,
 														Long.MAX_VALUE,
 														new Pair<Double, Double>(Double.MAX_VALUE, Double.MAX_VALUE),
@@ -446,7 +560,9 @@ public class GraphAnalyticsRecord implements Serializable {
 														false,
 														Long.MAX_VALUE,
 														new Pair<Double, Double>(Double.MAX_VALUE, Double.MAX_VALUE),
-														Double.MAX_VALUE);
+														Double.MAX_VALUE,
+														minEdgeList,
+														minEdgeList);
 
 		for (GraphAnalyticsRecord record : records) {
 			if (null != record) {
@@ -476,6 +592,7 @@ public class GraphAnalyticsRecord implements Serializable {
 			return null;
 
 		int maxNumCommunities = 0;
+		List<GraphEdge> maxEdgeList = Arrays.asList(new GraphEdge(Long.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE, Long.MIN_VALUE));
 		GraphCommunity maxCommunity = new GraphCommunity(Integer.MIN_VALUE,
 														Long.MIN_VALUE,
 														new Pair<Double, Double>(Double.MIN_VALUE, Double.MIN_VALUE),
@@ -486,7 +603,9 @@ public class GraphAnalyticsRecord implements Serializable {
 														false,
 														Long.MIN_VALUE,
 														new Pair<Double, Double>(Double.MIN_VALUE, Double.MIN_VALUE),
-														Double.MIN_VALUE);
+														Double.MIN_VALUE,
+														maxEdgeList,
+														maxEdgeList);
 
 		for (GraphAnalyticsRecord record : records) {
 			if (null != record) {
@@ -497,4 +616,3 @@ public class GraphAnalyticsRecord implements Serializable {
 		return new GraphAnalyticsRecord(maxNumCommunities, Arrays.asList(maxCommunity));
 	}
 }
-

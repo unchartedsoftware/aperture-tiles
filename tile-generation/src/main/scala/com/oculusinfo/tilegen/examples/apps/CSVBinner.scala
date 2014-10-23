@@ -33,6 +33,7 @@ import java.util.Properties
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
+import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
@@ -103,7 +104,8 @@ object CSVBinner {
 	                   PT: ClassTag,
 	                   DT: ClassTag,
 	                   AT: ClassTag,
-	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	                   BT] (sc: SparkContext,
+	                        dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
@@ -115,9 +117,21 @@ object CSVBinner {
 		println("\tTile analytics: "+tileAnalytics)
 		println("\tData analytics: "+dataAnalytics)
 
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
 		dataset.getLevels.map(levels =>
 			{
 				println("\tProcessing levels "+levels)
+
+				// Add level accumulators for all analytics for these levels (for now at least)
+				tileAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+
 				val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 					rdd =>
 				{
@@ -150,12 +164,13 @@ object CSVBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
+	                                               dataset: Dataset[IT, PT, DT, AT, BT],
 	                                               tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.indexTypeTag,
-		                                dataset.binTypeTag,
-		                                dataset.dataAnalysisTypeTag,
-		                                dataset.tileAnalysisTypeTag)
+		processDataset(sc, dataset, tileIO)(dataset.indexTypeTag,
+		                                    dataset.binTypeTag,
+		                                    dataset.dataAnalysisTypeTag,
+		                                    dataset.tileAnalysisTypeTag)
 
 	
 	def main (args: Array[String]): Unit = {
@@ -195,7 +210,7 @@ object CSVBinner {
 			// multiple runs more efficient
 			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
 				props.setProperty("oculus.binning.caching.processed", "true")
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props), tileIO)
+			processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

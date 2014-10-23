@@ -78,12 +78,14 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *      The type of graph data to use for tile generation.  Set to "nodes" to generate tiles of a graph's
  *      nodes [default], or set to "edges" to generate tiles of a graph's edges.
  *      
+ *  oculus.binning.graph.edges.type.index
+ *      The column number of a boolean specifying each edge as an inter-community edge (=1) or an intra-community edge (=0)
+ *      
  *  oculus.binning.graph.edges.type
  *      The type of edges to use for tile generation (for hierarchically clustered data only).  Set to "all"
  *      to generate tiles using all edges in a graph dataset [default].  Set to "inter" to only use inter-community
- *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the last column
- *      of the edge data is assumed to be a boolean (int of 0 or 1), identifying 0=intra-community edge,
- *      and 1=inter-community edge.
+ *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the
+ *      'edges.type.index' column (above) is used to determine which raw edges to use for tile generation.
  *      
  *  oculus.binning.line.level.threshold
  *  	Level threshold to determine whether to use 'point' vs 'tile' based line segment binning
@@ -242,14 +244,29 @@ object CSVGraphBinner {
 	                   PT: ClassTag,
 	                   DT: ClassTag,
 	                   AT: ClassTag,
-	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	                   BT] (sc: SparkContext,
+	                        dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO): Unit = {
+		val tileAnalytics = dataset.getTileAnalytics
+		val dataAnalytics = dataset.getDataAnalytics
+
+		// Add global accumulators to analytics
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
 
 		if (_graphDataType == "edges") {
 			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins, _bDrawLineEnds)
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
+					// Add level accumulators for all analytics for these levels (for now at least)
+					tileAnalytics.map(analytic =>
+						levels.map(level => analytic.addLevelAccumulator(sc, level))
+					)
+					dataAnalytics.map(analytic =>
+						levels.map(level => analytic.addLevelAccumulator(sc, level))
+					)
+
 					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 						rdd =>
 					{
@@ -258,8 +275,8 @@ object CSVGraphBinner {
 						val tiles = binner.processDataByLevel(rdd,
 						                                      dataset.getIndexScheme,
 						                                      dataset.getBinningAnalytic,
-						                                      dataset.getTileAnalytics,
-						                                      dataset.getDataAnalytics,
+						                                      tileAnalytics,
+						                                      dataAnalytics,
 						                                      dataset.getTilePyramid,
 						                                      levels,
 						                                      dataset.getNumXBins,
@@ -272,8 +289,8 @@ object CSVGraphBinner {
 						                    dataset.getName,
 						                    tiles,
 						                    dataset.getValueScheme,
-						                    dataset.getTileAnalytics,
-						                    dataset.getDataAnalytics,
+						                    tileAnalytics,
+						                    dataAnalytics,
 						                    dataset.getName,
 						                    dataset.getDescription)
 					}
@@ -286,14 +303,22 @@ object CSVGraphBinner {
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
+					// Add level accumulators for all analytics for these levels (for now at least)
+					tileAnalytics.map(analytic =>
+						levels.map(level => analytic.addLevelAccumulator(sc, level))
+					)
+					dataAnalytics.map(analytic =>
+						levels.map(level => analytic.addLevelAccumulator(sc, level))
+					)
+
 					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 						rdd =>
 					{
 						val tiles = binner.processDataByLevel(rdd,
 						                                      dataset.getIndexScheme,
 						                                      dataset.getBinningAnalytic,
-						                                      dataset.getTileAnalytics,
-						                                      dataset.getDataAnalytics,
+						                                      tileAnalytics,
+						                                      dataAnalytics,
 						                                      dataset.getTilePyramid,
 						                                      levels,
 						                                      dataset.getNumXBins,
@@ -304,8 +329,8 @@ object CSVGraphBinner {
 						                    dataset.getName,
 						                    tiles,
 						                    dataset.getValueScheme,
-						                    dataset.getTileAnalytics,
-						                    dataset.getDataAnalytics,
+						                    tileAnalytics,
+						                    dataAnalytics,
 						                    dataset.getName,
 						                    dataset.getDescription)
 					}
@@ -319,12 +344,13 @@ object CSVGraphBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (dataset: Dataset[IT, PT, DT, AT, BT],
+	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
+	                                               dataset: Dataset[IT, PT, DT, AT, BT],
 	                                               tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.indexTypeTag,
-		                                dataset.binTypeTag,
-		                                dataset.dataAnalysisTypeTag,
-		                                dataset.tileAnalysisTypeTag)
+		processDataset(sc, dataset, tileIO)(dataset.indexTypeTag,
+		                                    dataset.binTypeTag,
+		                                    dataset.dataAnalysisTypeTag,
+		                                    dataset.tileAnalysisTypeTag)
 
 
 	def main (args: Array[String]): Unit = {
@@ -399,7 +425,7 @@ object CSVGraphBinner {
 					props.setProperty("oculus.binning.caching.processed", "true")
 
 				// regular tile generation
-				processDatasetGeneric(DatasetFactory.createDataset(sc, props), tileIO)
+				processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props), tileIO)
 			}
 			else {
 				// hierarchical-based tile generation
@@ -445,7 +471,8 @@ object CSVGraphBinner {
 					if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
 						props.setProperty("oculus.binning.caching.processed", "true")
 					// perform tile generation
-					processDatasetGeneric(DatasetFactory.createDataset(sc, props),
+					processDatasetGeneric(sc,
+					                      DatasetFactory.createDataset(sc, props),
 					                      tileIO)
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")

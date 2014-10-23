@@ -359,7 +359,7 @@ define(function (require) {
                             tilekey: tilekey,
                             longitude: binRect.minX, // top left of tile
                             latitude: binRect.maxY,
-                            values: tileData.values[binNum].value,
+                            values: ( tileData.values[binNum] ) ? tileData.values[binNum].value : [],
                             meta: tileData.meta
                         };
                         results.push( binData );

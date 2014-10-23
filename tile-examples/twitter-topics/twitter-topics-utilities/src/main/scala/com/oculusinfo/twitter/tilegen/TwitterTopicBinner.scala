@@ -91,22 +91,12 @@ object TwitterTopicBinner {
 		val minAnalysis:
 				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
 				                    List[TwitterDemoTopicRecord]] =
-			new TwitterTopicListAnalysis(
-				sc, new TwitterMinRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.min" -> ((index: TileIndex) => true))
-			)
+			new TwitterTopicListAnalysis(new TwitterMinRecordAnalytic)
 
 		val maxAnalysis:
 				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
 				                    List[TwitterDemoTopicRecord]] =
-			new TwitterTopicListAnalysis(
-				sc, new TwitterMaxRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.max" -> ((index: TileIndex) => true))
-			)
+			new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
 
 		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
 		                                              (List[TwitterDemoTopicRecord],
@@ -183,12 +173,26 @@ object TwitterTopicBinner {
 		binner.debug = true
 		val tilePyramid = new WebMercatorTilePyramid
 
+		// Add global analytic accumulators
+		val sc = rawData.context
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
 		levelSets.foreach(levelSet =>
 			{
 				println()
 				println()
 				println()
 				println("Starting binning levels "+levelSet.mkString("[", ",", "]")+" at "+new Date())
+
+				// Add whole-level analytic accumulators for these levels
+				tileAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+
+				// Do actual binning
 				val taskStart = System.currentTimeMillis
 				val tiles = binner.processDataByLevel(data,
 				                                      new CartesianIndexScheme,
