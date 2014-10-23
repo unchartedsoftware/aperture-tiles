@@ -45,12 +45,11 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 		super(compressionCodec, new TypeDescriptor(List.class, elementTypeDescription));
 	}
 
+	private Schema _entrySchema;
+	
 	abstract protected String getEntrySchemaFile ();
 	abstract protected T getEntryValue (GenericRecord entry);
 	abstract protected void setEntryValue (GenericRecord avroEntry, T rawEntry) throws IOException;
-
-	private Schema _entrySchema = null;
-	private Schema _recordSchema = null;
 	
 	@Override
 	protected String getRecordSchemaFile () {
@@ -59,17 +58,18 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 
 	protected Schema getEntrySchema () throws IOException {
 		if (_entrySchema == null) {
-				_entrySchema = new AvroSchemaComposer().addResource(getEntrySchemaFile()).resolved();
+				_entrySchema = createEntrySchema();
 		}
-		return _entrySchema; 
+		return _entrySchema;
+	}
+	
+	protected Schema createEntrySchema() throws IOException {
+		return new AvroSchemaComposer().addResource(getEntrySchemaFile()).resolved();
 	}
 	
 	@Override
-	protected Schema getRecordSchema() throws IOException {
-		if (_recordSchema == null) {
-			_recordSchema = new AvroSchemaComposer().add(getEntrySchema()).addResource(getRecordSchemaFile()).resolved(); 
-		}
-		return _recordSchema;
+	protected Schema createRecordSchema() throws IOException {
+		return new AvroSchemaComposer().add(getEntrySchema()).addResource(getRecordSchemaFile()).resolved();
 	}
 		
 	@SuppressWarnings("unchecked")
@@ -88,7 +88,7 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 		List<GenericRecord> avroValues = new ArrayList<GenericRecord>();
 
 		for (T value: values) {
-			GenericRecord avroValue = new GenericData.Record(_entrySchema);
+			GenericRecord avroValue = new GenericData.Record(getEntrySchema());
 			setEntryValue(avroValue, value);
 			avroValues.add(avroValue);
 		}

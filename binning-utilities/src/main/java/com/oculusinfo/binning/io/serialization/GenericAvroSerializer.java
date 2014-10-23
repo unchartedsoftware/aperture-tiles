@@ -52,6 +52,9 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 5775555328063499845L;
 
 
+	private Schema _tileSchema = null;
+	private Schema _recordSchema = null;
+
 	private CodecFactory _compressionCodec;
 	private TypeDescriptor _typeDescription;
 	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
@@ -68,12 +71,27 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	}
     
 	protected Schema getRecordSchema () throws IOException {
+		if (_recordSchema == null) {
+			_recordSchema = createRecordSchema();
+		}
+		return _recordSchema;
+	}
+	
+	protected Schema createRecordSchema() throws IOException {
 		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
 	}
+	
 	protected Schema getTileSchema () throws IOException {
+		if (_tileSchema == null) {
+			_tileSchema = createTileSchema();
+		}
+		return _tileSchema;
+	}
+	
+	protected Schema createTileSchema() throws IOException {
 		return new AvroSchemaComposer().add(getRecordSchema()).addResource("tile.avsc").resolved();
 	}
-
+	
 	@Override
 	public TypeDescriptor getBinTypeDescription () {
 		return _typeDescription;
