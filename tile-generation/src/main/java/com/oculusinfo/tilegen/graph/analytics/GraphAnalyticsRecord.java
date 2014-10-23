@@ -101,16 +101,16 @@ public class GraphAnalyticsRecord implements Serializable {
 		return _communities;
 	}
 	
-//	private int getHash(Object obj) {	//TODO do we need these?
-//		if (null == obj)
-//			return 0;
-//		return obj.hashCode();
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		return (getHash(_topic));
-//	}
+	private int getHash(Object obj) {	//TODO do we need these?
+		if (null == obj)
+			return 0;
+		return obj.hashCode();
+	}
+
+	@Override
+	public int hashCode() {
+		return (getHash(_communities));
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -219,7 +219,7 @@ public class GraphAnalyticsRecord implements Serializable {
 		}
 	}
 
-	@Override
+/*	@Override
 	public String toString() {
 		String result = ("{\"numCommunities\": " + _numCommunities + ", "
 				+ "\"communities\": [");
@@ -271,7 +271,7 @@ public class GraphAnalyticsRecord implements Serializable {
 		result += "]}";
 		return result;
 	}
-
+*/
 //	private static String eatIntList(String from, List<Integer> result) {
 //		int nextComma = from.indexOf(",");
 //		int nextBracket = from.indexOf("]");
@@ -286,7 +286,7 @@ public class GraphAnalyticsRecord implements Serializable {
 //		return from.substring(nextBracket);
 //	}
 
-	public static GraphAnalyticsRecord fromString(String value) {
+/*	public static GraphAnalyticsRecord fromString(String value) {
 		value = eat(value, "{\"numCommunities\": ");
 		int end = value.indexOf(",");
 		int numCommunities = Integer.parseInt(value.substring(0, end));
@@ -424,7 +424,7 @@ public class GraphAnalyticsRecord implements Serializable {
 
 		return new GraphAnalyticsRecord(numCommunities, communities);
 	}
-	
+*/	
 //	private static void addInPlace(List<GraphCommunity> accumulatedSum,
 //			List<GraphCommunity> newAddend) {
 //		for (int i = 0; i < newAddend.size(); ++i) {
