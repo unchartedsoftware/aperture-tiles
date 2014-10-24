@@ -98,7 +98,7 @@ public class LegendServiceImpl implements LegendService {
 				for (int i = 0; i < width; i++){
 					double v = ((double)(i+1)/(double)width) * levelMax;
 					int colorInt = colorRamp.getRGB(t.transform(v));		
-					g.setColor(new Color(colorInt));
+					g.setColor(new Color(colorInt, true));
 					g.drawLine(i, 0, i, height);
 				}
 			} else {
@@ -110,7 +110,7 @@ public class LegendServiceImpl implements LegendService {
 				for(int i = 0; i <= barHeight; i++){
 					double v = ((double)(i+1)/(double)barHeight) * levelMax;
 					int colorInt = colorRamp.getRGB(t.transform(v));		
-					g.setColor(new Color(colorInt));
+					g.setColor(new Color(colorInt, true));
 					int y = barHeight-i+barYOffset;
 					g.drawLine(barXOffset, y, width, y);
 				}

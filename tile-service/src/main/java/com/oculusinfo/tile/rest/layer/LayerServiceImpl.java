@@ -114,7 +114,11 @@ public class LayerServiceImpl implements LayerService {
 			JSONObject metadata = _metaDataCache.get(layerId);
 			if (metadata == null){
 				String s = pyramidIO.readMetaData(layerId);
-
+				
+				if (s == null) {
+					throw new JSONException("Missing metadata.");
+				}
+				
 				metadata = new JSONObject(s);
 				_metaDataCache.put(layerId, metadata);
 			}

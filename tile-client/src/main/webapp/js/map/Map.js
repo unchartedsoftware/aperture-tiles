@@ -103,7 +103,7 @@ define(function (require) {
             // set basic map properties
             this.setZIndex( -1 );
             this.setVisibility( true );
-            this.setOpacity( 1.0 );
+            this.setOpacity( spec.MapConfig.opacity || 1.0 );
 			this.setBaseLayerIndex( mapConfig.baseLayerIndex !== undefined ? parseInt( mapConfig.baseLayerIndex, 10 ) : 0 );
 
             // create div root layer
