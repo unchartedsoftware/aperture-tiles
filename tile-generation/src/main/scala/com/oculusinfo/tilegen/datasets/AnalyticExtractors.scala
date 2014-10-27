@@ -46,10 +46,6 @@ import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
 import com.oculusinfo.tilegen.tiling.analytics.IPv4Analytics
-import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleArrayTileAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 

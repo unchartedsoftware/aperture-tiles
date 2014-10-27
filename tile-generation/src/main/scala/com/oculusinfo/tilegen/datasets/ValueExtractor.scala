@@ -29,39 +29,31 @@ package com.oculusinfo.tilegen.datasets
 
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
-
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
-
-import org.apache.avro.file.CodecFactory;
-
+import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
 import com.oculusinfo.binning.util.Pair
-
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.CategoryValueAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.CategoryValueBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
-import com.oculusinfo.tilegen.tiling.analytics.StandardDoubleBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.SumLogDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MeanDoubleBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleTileAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.SumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.SumDoubleArrayAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMaxAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMinAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericSumAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMeanAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.StandardDoubleArrayBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.StandardStringScoreBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.SumDoubleArrayAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
@@ -161,15 +153,14 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 	def calculateValue (fieldValues: Map[String, Any]): Double = 1.0
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
-	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] =
-		new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] = new NumericSumAnalytic[Double, JavaDouble]()
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
 		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new MinimumDoubleTileAnalytic),
+		                                                           new NumericMinAnalytic[Double, JavaDouble]()),
 		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new MaximumDoubleTileAnalytic))
+		                                                           new NumericMaxAnalytic[Double, JavaDouble]()))
 	}
 
 
@@ -205,20 +196,13 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 			                     "The way to aggregate the value field when binning",
 			                     Some("add"))
 
-		val binningAnalytic = if ("log" == fieldAggregation) {
-			val base =
-				properties.getDouble("oculus.binning.parsing." + field
-					                     + ".fieldBase",
-				                     "The base to use when taking value the "+
-					                     "logarithm of values.  Default is e.",
-				                     Some(math.exp(1.0)))
-			new SumLogDoubleAnalytic(base) with StandardDoubleBinningAnalytic
-		} else if ("min" == fieldAggregation)
-			new MinimumDoubleAnalytic with StandardDoubleBinningAnalytic
-		else if ("max" == fieldAggregation)
-			new MaximumDoubleAnalytic with StandardDoubleBinningAnalytic
-		else
-			new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+		val binningAnalytic =
+			if ("min" == fieldAggregation)
+				new NumericMinAnalytic[Double, JavaDouble]()
+			else if ("max" == fieldAggregation)
+				new NumericMaxAnalytic[Double, JavaDouble]()
+			else
+				new NumericSumAnalytic[Double, JavaDouble]()
 
 		new FieldValueExtractor(field, binningAnalytic);
 	}
@@ -241,9 +225,9 @@ class FieldValueExtractor (fieldName: String,
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
 		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new MinimumDoubleTileAnalytic),
+		                                                           new NumericMinAnalytic[Double, JavaDouble]()),
 		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new MaximumDoubleTileAnalytic))
+		                                                           new NumericMaxAnalytic[Double, JavaDouble]()))
 	}
 
 
@@ -286,13 +270,13 @@ class MeanValueExtractor (fieldName: String, emptyValue: Option[Double], minCoun
 {
 	private val binningAnalytic =
 		if (emptyValue.isDefined && minCount.isDefined) {
-			new MeanDoubleBinningAnalytic(emptyValue.get, minCount.get)
+			new NumericMeanAnalytic[Double](emptyValue.get, minCount.get)
 		} else if (emptyValue.isDefined) {
-			new MeanDoubleBinningAnalytic(emptyValue = emptyValue.get)
+			new NumericMeanAnalytic[Double](emptyValue = emptyValue.get)
 		} else if (minCount.isDefined) {
-			new MeanDoubleBinningAnalytic(minCount = minCount.get)
+			new NumericMeanAnalytic[Double](minCount = minCount.get)
 		} else {
-			new MeanDoubleBinningAnalytic
+			new NumericMeanAnalytic[Double]()
 		}
 	def name: String = fieldName
 	def description: String = "The mean value of field "+fieldName
@@ -307,9 +291,9 @@ class MeanValueExtractor (fieldName: String, emptyValue: Option[Double], minCoun
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
 		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new MinimumDoubleTileAnalytic),
+		                                                           new NumericMinAnalytic[Double, JavaDouble]()),
 		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new MaximumDoubleTileAnalytic))
+		                                                           new NumericMaxAnalytic[Double, JavaDouble]()))
 	}
 
 
