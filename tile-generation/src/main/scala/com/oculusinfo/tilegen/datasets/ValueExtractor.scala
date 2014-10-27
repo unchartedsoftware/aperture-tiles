@@ -43,25 +43,25 @@ import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
 import com.oculusinfo.binning.util.Pair
 
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
-import com.oculusinfo.tilegen.tiling.BinningAnalytic
-import com.oculusinfo.tilegen.tiling.CategoryValueAnalytic
-import com.oculusinfo.tilegen.tiling.CategoryValueBinningAnalytic
-import com.oculusinfo.tilegen.tiling.CustomGlobalMetadata
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinningAnalytic
-import com.oculusinfo.tilegen.tiling.SumLogDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.MeanDoubleBinningAnalytic
-import com.oculusinfo.tilegen.tiling.MinimumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MinimumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.SumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.SumDoubleArrayAnalytic
-import com.oculusinfo.tilegen.tiling.StandardDoubleArrayBinningAnalytic
-import com.oculusinfo.tilegen.tiling.StandardStringScoreBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.CategoryValueAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.CategoryValueBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
+import com.oculusinfo.tilegen.tiling.analytics.StandardDoubleBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.SumLogDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MeanDoubleBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.SumDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.SumDoubleArrayAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.StandardDoubleArrayBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.StandardStringScoreBinningAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 

@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.tilegen.tiling
+package com.oculusinfo.tilegen.tiling.analytics
 
 
 import java.lang.{Double => JavaDouble}
@@ -36,8 +36,9 @@ import org.scalatest.FunSuite
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.ipArrayToString
+import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.longToIPArray
+import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 
 
 

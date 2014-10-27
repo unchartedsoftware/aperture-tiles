@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.tilegen.tiling
+package com.oculusinfo.tilegen.tiling.analytics
 
 
 
@@ -148,7 +148,7 @@ trait TileAnalytic[T] extends Analytic[T] {
 	 * only this function (unimplemented), and a StandardTileAnalytic with 
 	 * the rest
 	 */
-	def toMap (value: T): Map[String, Object] =
+	def toMap (value: T): Map[String, Any] =
 		Map(name -> valueToString(value))
 
 	override def toString = "["+name+"]"
@@ -173,7 +173,7 @@ class ComposedTileAnalytic[T1, T2]
 		(val1.defaultProcessedValue, val2.defaultProcessedValue)
 	def defaultUnprocessedValue: (T1, T2) =
 		(val1.defaultUnprocessedValue, val2.defaultUnprocessedValue)
-	override def toMap (value: (T1, T2)): Map[String, Object] =
+	override def toMap (value: (T1, T2)): Map[String, Any] =
 		val1.toMap(value._1) ++ val2.toMap(value._2)
 	override def toString = "["+val1+" + "+val2+"]"
 }
@@ -240,7 +240,7 @@ trait AnalysisDescription[RT, AT] {
 	def accumulate (tile: TileIndex, data: AT): Unit
 	// Get accumulatoed metadata info in a form that can be applied
 	// directly to metadata.
-	def toMap: Map[String, Object]
+	def toMap: Map[String, Any]
 	// Apply accumulated metadata info to actual metadata
 	def applyTo (metaData: PyramidMetaData): Unit
 
@@ -287,7 +287,7 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				info._2.accumulator += data
 		)
 
-	def toMap: Map[String, Object] = accumulatorInfos.map(info =>
+	def toMap: Map[String, Any] = accumulatorInfos.map(info =>
 		analytic.toMap(info._2.accumulator.value).map{case (k, v) => (info._2.name+"."+k, v)}
 	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
 
@@ -360,7 +360,7 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.accumulate(tile, data._1)
 		analysis2.accumulate(tile, data._2)
 	}
-	def toMap: Map[String, Object] = analysis1.toMap ++ analysis2.toMap
+	def toMap: Map[String, Any] = analysis1.toMap ++ analysis2.toMap
 	def applyTo (metaData: PyramidMetaData): Unit = {
 		analysis1.applyTo(metaData)
 		analysis2.applyTo(metaData)
@@ -694,7 +694,7 @@ class CategoryValueBinningAnalytic(categoryNames: Seq[String])
  * This analytic stores the CIDR block represented by a given tile.
  */
 object IPv4Analytics extends Serializable {
-	import IPv4ZCurveIndexScheme._
+	import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme._
 
 	private val EPSILON = 1E-10
 	def getCIDRBlock (pyramid: TilePyramid)(tile: TileData[_]): String = {
@@ -784,7 +784,7 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 	def name: String = "VariableSeries"
-	override def toMap (value: String): Map[String, Object] = Map[String, String]()
+	override def toMap (value: String): Map[String, Any] = Map[String, String]()
 }
 /**
  * A very simply tile analytic that just writes custom metadata directly to the tile set 
@@ -801,7 +801,7 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 	def analytic: TileAnalytic[String] = new CustomMetadataAnalytic
 	def accumulate (tile: TileIndex, data: String): Unit = {}
 	// This is used to apply the analytic to tiles; we don't want anything to happen there
-	def toMap: Map[String, Object] = Map[String, Object]()
+	def toMap: Map[String, Any] = Map[String, Any]()
 	// This is used to apply the analytic to metadata; here's where we want stuff used.
 	def applyTo (metaData: PyramidMetaData): Unit =
 		customData.map{case (key, value) =>

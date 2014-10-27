@@ -42,8 +42,8 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 
 import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.tilegen.tiling.SumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.SumDoubleAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.StandardDoubleBinningAnalytic
 
 
 

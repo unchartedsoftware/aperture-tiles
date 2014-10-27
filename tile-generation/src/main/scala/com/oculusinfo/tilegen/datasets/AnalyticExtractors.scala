@@ -41,15 +41,15 @@ import org.apache.spark.SparkContext
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
-import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
-import com.oculusinfo.tilegen.tiling.CustomGlobalMetadata
-import com.oculusinfo.tilegen.tiling.IPv4Analytics
-import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MinimumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
+import com.oculusinfo.tilegen.tiling.analytics.IPv4Analytics
+import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleArrayTileAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 

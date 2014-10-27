@@ -41,7 +41,7 @@ import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.TileData
 
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 
 
 class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {

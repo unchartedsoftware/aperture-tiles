@@ -43,10 +43,10 @@ import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
-import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MonolithicAnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.MonolithicAnalysisDescription
 
 
 

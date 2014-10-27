@@ -33,10 +33,10 @@ import scala.reflect.ClassTag
 
 import com.oculusinfo.binning.TileData
 
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.tiling.IPv4Analytics
+import com.oculusinfo.tilegen.tiling.analytics.IPv4Analytics
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 import com.oculusinfo.tilegen.tiling.TimeRangeCartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.TimeIndexScheme
