@@ -33,6 +33,18 @@ import com.oculusinfo.binning.util.Pair
 
 
 
+/**
+ * The simplest of numeric analytics, this takes in numbers and spits out their 
+ * sum.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * @tparam T The numeric type of data of which to tak ethe maximum.
+ * @tparam JT The numeric type to which to convert the data when writing to 
+ *            bins (typically a java version of the same numeric type).
+ */
 class NumericSumAnalytic[T, JT] (analyticName: String = "sum")(implicit numeric: SimpleNumeric[T],
                                                                converter: ScalaJavaTypePair[T, JT])
 		extends Analytic[T]
@@ -46,6 +58,18 @@ class NumericSumAnalytic[T, JT] (analyticName: String = "sum")(implicit numeric:
 	def finish (value: T): JT = converter.asJava(value)
 }
 
+/**
+ * The simplest of numeric analytics, this takes in numbers and spits out their 
+ * maximum.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * @tparam T The numeric type of data of which to tak ethe maximum.
+ * @tparam JT The numeric type to which to convert the data when writing to 
+ *            bins (typically a java version of the same numeric type).
+ */
 class NumericMaxAnalytic[T, JT] (analyticName: String = "maximum")(implicit numeric: SimpleNumeric[T],
                                                                    converter: ScalaJavaTypePair[T, JT])
 		extends Analytic[T]
@@ -62,6 +86,24 @@ class NumericMaxAnalytic[T, JT] (analyticName: String = "maximum")(implicit nume
 	def finish (value: T): JT = converter.asJava(value)
 }
 
+/**
+ * This class takes in numbers and some piece of data associate with the 
+ * number (the "payload"), and spits out the maximum of its input numbers, as 
+ * well as the payload associated with that maximum.
+ * 
+ * For example, the payload could be the location of the datum, and the result
+ * would be the maximum value of the data in the data set, as well as the 
+ * location at which that maximum occured.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * @tparam T The numeric type of data of which to tak ethe maximum.
+ * @tparam JT The numeric type to which to convert the data when writing to 
+ *            bins (typically a java version of the same numeric type).
+ * @tparam PT The type of the payload attached to the numeric data.
+ */
 class NumericMaxWithPayloadAnalytic[T, JT <: Serializable, PT <: Serializable] (analyticName: String = "maximum")(
 	implicit numeric: SimpleNumeric[T],
 	converter: ScalaJavaTypePair[T, JT])
@@ -79,6 +121,18 @@ class NumericMaxWithPayloadAnalytic[T, JT <: Serializable, PT <: Serializable] (
 	def finish (value: (T, PT)): Pair[JT, PT] = new Pair[JT, PT](converter.asJava(value._1), value._2)
 }
 
+/**
+ * The simplest of numeric analytics, this takes in numbers and spits out their 
+ * minimum.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * @tparam T The numeric type of data of which to tak ethe maximum.
+ * @tparam JT The numeric type to which to convert the data when writing to 
+ *            bins (typically a java version of the same numeric type).
+ */
 class NumericMinAnalytic[T, JT] (analyticName: String = "minimum")(implicit numeric: SimpleNumeric[T],
                                                                    converter: ScalaJavaTypePair[T, JT])
 		extends Analytic[T]
@@ -95,6 +149,24 @@ class NumericMinAnalytic[T, JT] (analyticName: String = "minimum")(implicit nume
 	def finish (value: T): JT = converter.asJava(value)
 }
 
+/**
+ * This class takes in numbers and some piece of data associate with the 
+ * number (the "payload"), and spits out the minimum of its input numbers, as 
+ * well as the payload associated with that minimum.
+ * 
+ * For example, the payload could be the location of the datum, and the result
+ * would be the minimum value of the data in the data set, as well as the 
+ * location at which that minimum occured.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * @tparam T The numeric type of data of which to tak ethe maximum.
+ * @tparam JT The numeric type to which to convert the data when writing to 
+ *            bins (typically a java version of the same numeric type).
+ * @tparam PT The type of the payload attached to the numeric data.
+ */
 class NumericMinWithPayloadAnalytic[T, JT <: Serializable, PT <: Serializable] (analyticName: String = "minimum")(
 	implicit numeric: SimpleNumeric[T],
 	converter: ScalaJavaTypePair[T, JT])
@@ -112,6 +184,20 @@ class NumericMinWithPayloadAnalytic[T, JT <: Serializable, PT <: Serializable] (
 	def finish (value: (T, PT)): Pair[JT, PT] = new Pair[JT, PT](converter.asJava(value._1), value._2)
 }
 
+/**
+ * This analytic calculates the average (mean) value of some quantity across a 
+ * data set.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * As a bin analytic, the mean is calculated and inserted in the bin.  As a tile 
+ * analytic, both mean and total count are inserted into any relevant metadata.
+ * 
+ * @tparam T The numeric type of the raw data.  The output will be a Java 
+ *           Double, no matter what numeric input type is given.
+ */
 class NumericMeanAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
                               minCount: Int = 1,
                               analyticName: String = "")(implicit numeric: SimpleNumeric[T])
@@ -137,6 +223,21 @@ class NumericMeanAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
 		Map(statName("count") -> value._2, statName("mean") -> finish(value))
 }
 
+/**
+ * This analytic calculates the average (mean) value and standard deviation of 
+ * some quantity across a data set.
+ * 
+ * This class is, for the moment, both a tile and a bin analytic; this means it 
+ * needs the initialization parameters of both.  I've tried to make this as easy 
+ * as possible, but I may revisit this at some point and break them appart.
+ * 
+ * As a bin analytic, the mean and standard deviation are calculated and 
+ * inserted in the bin as a pair.  As a tile analytic, mean, standard deviation,
+ * and total count are inserted into any relevant metadata.
+ * 
+ * @tparam T The numeric type of the raw data.  The output will be a pair of 
+ *           Java Doubles, no matter what numeric input type is given.
+ */
 class NumericStatsAnalysis[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
                                minCount: Int = 1,
                                analyticName: String = "")(implicit numeric: SimpleNumeric[T])
