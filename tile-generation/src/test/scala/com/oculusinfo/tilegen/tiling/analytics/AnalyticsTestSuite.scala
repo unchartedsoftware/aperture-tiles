@@ -26,9 +26,6 @@
 package com.oculusinfo.tilegen.tiling.analytics
 
 
-import java.lang.{Double => JavaDouble}
-import java.util.{List => JavaList}
-
 import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
@@ -43,60 +40,6 @@ import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 
 
 class AnalyticsTestSuite extends FunSuite {
-	def toJava (l: List[Double]) = l.map(new JavaDouble(_)).asJava
-
-	def assertSeqsEqual[T] (a: Seq[T], b: Seq[T]): Unit = {
-		assert(a.size === b.size)
-		for (n <- 0 until a.size) assert(a(n) === b(n))
-	}
-
-	def assertListsEqual[T] (a: JavaList[T], b: JavaList[T]): Unit = {
-		assert(a.size === b.size)
-		for (n <- 0 until a.size) assert(a.get(n) === b.get(n))
-	}
-
-
-	test("Standard Double Array Analytic") {
-		val aBase = List(1.0, 2.0, 3.0, 4.0)
-		val a = toJava(aBase)
-		val bBase = List(5.0, 4.0, 3.0, 2.0, 1.0)
-		val b = toJava(bBase)
-
-		val analytic = new SumDoubleArrayAnalytic
-		assertSeqsEqual(analytic.aggregate(aBase, bBase),
-		                List(6.0, 6.0, 6.0, 6.0, 1.0))
-	}
-	
-	test("Standard Double Array Tile Analytic") {
-		val aBase = List(1.0, 2.0, 3.0, 4.0)
-		val a = toJava(aBase)
-		val bBase = List(5.0, 4.0, 3.0, 2.0, 1.0)
-		val b = toJava(bBase)
-
-		val analytic = new SumDoubleArrayAnalytic with StandardDoubleArrayTileAnalytic {
-			def name="test"
-		}
-		assert("[4.1,3.2,2.3,1.4]" === analytic.valueToString(List(4.1, 3.2, 2.3, 1.4)))
-	}
-
-	test("Minimum Double Array Analytic") {
-		val a = List(1.0, 2.0, 3.0, 4.0)
-		val b = List(5.0, 4.0, 3.0, 2.0, 1.0)
-
-		val analytic = new MinimumDoubleArrayAnalytic
-		assert(analytic.aggregate(analytic.defaultUnprocessedValue, analytic.aggregate(a, b)) ===
-			       Seq(1.0, 2.0, 3.0, 2.0, 1.0))
-	}
-
-	test("Maximum Double Array Analytic") {
-		val a = List(1.0, 2.0, 3.0, 4.0)
-		val b = List(5.0, 4.0, 3.0, 2.0, 1.0)
-
-		val analytic = new MaximumDoubleArrayAnalytic
-		assert(analytic.aggregate(analytic.defaultUnprocessedValue, analytic.aggregate(a, b)) ===
-			       Seq(5.0, 4.0, 3.0, 4.0, 1.0))
-	}
-
 	test("String Score Analytic") {
 		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
 		val b = Map("a" -> 5.0, "b" -> 4.0, "c" -> 3.0, "d" -> 2.0, "e" -> 1.0)

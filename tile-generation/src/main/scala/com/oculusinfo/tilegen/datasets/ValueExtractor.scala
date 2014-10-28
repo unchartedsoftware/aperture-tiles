@@ -41,19 +41,16 @@ import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSer
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.ArrayAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.CategoryValueAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.CategoryValueBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
-import com.oculusinfo.tilegen.tiling.analytics.MinimumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.MaximumDoubleArrayTileAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericMaxAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericMinAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericMeanAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.StandardDoubleArrayBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.StandardStringScoreBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.SumDoubleArrayAnalytic
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
@@ -538,14 +535,16 @@ class SeriesValueExtractor (fieldNames: Array[String])
 	def getSerializer =
 		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =
-		new SumDoubleArrayAnalytic with StandardDoubleArrayBinningAnalytic
+		new ArrayAnalytic(new NumericSumAnalytic[Double, JavaDouble]())
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JavaDouble]], _]] = {
 		val convertFcn: JavaList[JavaDouble] => Seq[Double] = bt => {
 			for (b <- bt.asScala) yield b.asInstanceOf[Double]
 		}
-		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new MinimumDoubleArrayTileAnalytic),
-		    new AnalysisDescriptionTileWrapper(convertFcn, new MaximumDoubleArrayTileAnalytic),
+		Seq(new AnalysisDescriptionTileWrapper(convertFcn,
+		                                       new ArrayAnalytic(new NumericMinAnalytic[Double, JavaDouble]())),
+		    new AnalysisDescriptionTileWrapper(convertFcn,
+		                                       new ArrayAnalytic(new NumericMaxAnalytic[Double, JavaDouble]())),
 		    new CustomGlobalMetadata(Map[String, Object]("variables" -> fields.toSeq.asJava)))
 	}
 
@@ -601,14 +600,16 @@ class IndirectSeriesValueExtractor (keyField: String,
 	def getSerializer =
 		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =
-		new SumDoubleArrayAnalytic with StandardDoubleArrayBinningAnalytic
+		new ArrayAnalytic(new NumericSumAnalytic[Double, JavaDouble])
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JavaDouble]], _]] = {
 		val convertFcn: JavaList[JavaDouble] => Seq[Double] = bt => {
 			for (b <- bt.asScala) yield b.asInstanceOf[Double]
 		}
-		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new MinimumDoubleArrayTileAnalytic),
-		    new AnalysisDescriptionTileWrapper(convertFcn, new MaximumDoubleArrayTileAnalytic))
+		Seq(new AnalysisDescriptionTileWrapper(convertFcn,
+		                                       new ArrayAnalytic(new NumericMinAnalytic[Double, JavaDouble]())),
+		    new AnalysisDescriptionTileWrapper(convertFcn,
+		                                       new ArrayAnalytic(new NumericMaxAnalytic[Double, JavaDouble]())))
 	}
 
 	def getDataAnalytics: Seq[AnalysisDescription[(_, Seq[Double]), _]] =
