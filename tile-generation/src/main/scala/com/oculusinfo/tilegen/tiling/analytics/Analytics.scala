@@ -286,7 +286,7 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 
 	def toMap: Map[String, Any] = accumulatorInfos.map(info =>
 		analytic.toMap(info._2.accumulator.value).map{case (k, v) => (info._2.name+"."+k, v)}
-	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
+	).reduceOption(_ ++ _).getOrElse(Map[String, Any]())
 
 	def applyTo (metaData: PyramidMetaData): Unit = {
 		toMap.foreach{case (key, value) =>

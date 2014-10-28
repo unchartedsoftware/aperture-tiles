@@ -83,7 +83,6 @@ class ArrayAnalytic[PT, RT] (elementAnalytic: Analytic[PT] with BinningAnalytic[
 				result.put(eltResult)
 			}
 		)
-		val foo = result.toString
-		Map(name -> result.toString)
+		Map(name -> result)
 	}
 }
