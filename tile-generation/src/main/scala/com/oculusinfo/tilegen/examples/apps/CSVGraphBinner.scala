@@ -60,6 +60,9 @@ import com.oculusinfo.tilegen.tiling.RDDLineBinner
 import com.oculusinfo.tilegen.tiling.SqliteTileIO
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import scala.reflect.ClassTag
+import com.oculusinfo.binning.BinIndex
+import com.oculusinfo.tilegen.util.EndPointsToLine
 
 
 /**
@@ -101,8 +104,8 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
  *  
  *  oculus.binning.line.drawends
  *  	Boolean = false by default. If = true, then any line segments longer than max.bins will have 
- *   	only pixels within max.bins/2 of an endpoint drawn instead of the whole line segment 
- *    	being discarded.
+ *   	only pixels within 1 tile-length of an endpoint drawn instead of the whole line segment 
+ *    	being discarded.  Also, line segments will be faded out as they get farther away from an endpoint 
  *      
  *  oculus.binning.hierarchical.clusters
  *  	To configure tile generation of hierarchical clustered data.  Set to false [default] for 'regular'
@@ -256,6 +259,10 @@ object CSVGraphBinner {
 
 		if (_graphDataType == "edges") {
 			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins, _bDrawLineEnds)
+			
+			val lenThres = if (_bDrawLineEnds) _lineMaxBins else Int.MaxValue
+			val lineDrawer = new EndPointsToLine(lenThres, dataset.getNumXBins, dataset.getNumYBins) 
+			
 			binner.debug = true
 			dataset.getLevels.map(levels =>
 				{
@@ -270,6 +277,26 @@ object CSVGraphBinner {
 					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 						rdd =>
 					{
+						
+						// Assign generic line drawing function for either drawing straight lines or arcs
+						// (to be passed into processDataByLevel func)
+						val calcLinePixels = if (dataset.binTypeTag == scala.reflect.classTag[Double])	{
+							// PT is type Double, so assign line drawing func (using hard-casting)
+							val lineDrawFcn = if (_bLinesAsArcs)	
+											  	lineDrawer.endpointsToArcBins
+											  else
+												lineDrawer.endpointsToLineBins
+							lineDrawFcn.asInstanceOf[(BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]]
+						}
+						else {
+							// PT is not type Double, so don't draw lines.  Simply pass-through endpoints.
+							val passTroughFcn: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
+							(start, end, PT) => {
+								IndexedSeq((start, PT), (end, PT))
+							}
+							passTroughFcn
+						}	
+						
 						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
 						
 						val tiles = binner.processDataByLevel(rdd,
@@ -282,6 +309,7 @@ object CSVGraphBinner {
 						                                      dataset.getNumXBins,
 						                                      dataset.getNumYBins,
 						                                      dataset.getConsolidationPartitions,
+						                                      calcLinePixels,
 						                                      dataset.isDensityStrip,
 						                                      bUsePointBinner,
 						                                      _bLinesAsArcs)
