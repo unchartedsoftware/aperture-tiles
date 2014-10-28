@@ -34,6 +34,8 @@ import java.util.{List => JavaList}
 import scala.reflect.ClassTag
 
 import org.apache.spark.rdd.RDD
+import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.io.Text
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
@@ -82,11 +84,17 @@ object TwitterTopicBinner {
 
 		val tileIO = TileIO.fromArguments(argParser)
 
-		val rawData = if (0 == partitions) {
-			sc.textFile(source)
-		} else {
-			sc.textFile(source, partitions)
-		}
+		val files = source.split(",")
+
+        val rawData = files.map { file =>
+                println( file )
+                sc.newAPIHadoopFile( file,
+                                     classOf[EmptiableTextInputFormat],
+                                     classOf[LongWritable],
+                                     classOf[Text],
+                                     sc.hadoopConfiguration )
+                                .map( p => p._2.toString )
+        }.reduce( _ union _ )
 
 		val minAnalysis:
 				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
