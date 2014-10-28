@@ -30,6 +30,15 @@ import com.oculusinfo.binning.util.Pair;
 /**
  * Class for a storing a graph edge object.  Used by GraphCommunity for graph 
  * analytics tile generation.  Contains info about an edge's endpoints and weight.
+ * 
+ * @param dstID		destination node ID for this edge
+ * 
+ * @param dstX		x coord of destination node
+ * 
+ * @param dstY		y coord of destination node
+ * 
+ * @param weight	edge weight
+ * 
  */
 public class GraphEdge implements Serializable {
 	/**

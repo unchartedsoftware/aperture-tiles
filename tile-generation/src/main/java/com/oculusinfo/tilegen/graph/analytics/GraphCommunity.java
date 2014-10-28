@@ -41,6 +41,46 @@ import com.oculusinfo.binning.util.Pair;
  * weighted inter-community and intra-community edges connected to the graph community.
  * 
  * Edge info is stored in lists of GraphEdge objects, ranked by weight (highest to lowest).
+ * 
+ * @param hierLevel
+ *         	Hierarchy level of community
+ * 
+ * @param id
+ *      	ID of community
+ *            
+ * @param coords
+ *  		x,y coords of centre of community
+ *  
+ * @param radius
+ *  		radius of community
+ *  
+ * @param degree
+ *  		degree of community
+ *  
+ * @param numNodes
+ * 			number of internal raw nodes in this community
+ * 
+ * @param metadata
+ * 			community metdata
+ * 
+ * @param bIsPrimaryNode
+ * 			bool whether or not this community is the 'primary node' within its parent community
+ * 			(if so, the parent community is labelled with the ID and metadata of this primary community)
+ * 
+ * @param parentID
+ * 			ID of parent community
+ * 
+ * @param parentCoords
+ * 			x,y coords of centre of parent community
+ * 
+ * @param parentRadius
+ * 			radius of parent community
+ * 
+ * @param interEdges
+ * 			list of up to MAX_EDGES highest weighted inter-community edges connected to this node (highest to lowest)
+ * 
+ * @param intraEdges
+ * 			list of up to MAX_EDGES highest weighted intra-community edges connected to this node (highest to lowest)
  */
 public class GraphCommunity implements Serializable {	
 	/**
