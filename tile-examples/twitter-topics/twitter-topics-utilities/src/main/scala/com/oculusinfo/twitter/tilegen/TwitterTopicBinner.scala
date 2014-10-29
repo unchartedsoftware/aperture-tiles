@@ -34,9 +34,9 @@ import java.util.{List => JavaList}
 import scala.reflect.ClassTag
 
 import org.apache.spark.rdd.RDD
+import scala.util.Try
 
 import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
 import com.oculusinfo.tilegen.spark.MavenReference
@@ -47,7 +47,6 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.util.ArgumentParser
-
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 
 
@@ -70,9 +69,6 @@ object TwitterTopicBinner {
 		val levelSets = argParser.getString("levels",
 		                                    "The level sets (;-separated) of ,-separated levels to bin.")
 			.split(";").map(_.split(",").map(_.toInt))
-		val levelBounds = levelSets.map(_.map(a => (a, a))
-			                                .reduce((a, b) => (a._1 min b._1, a._2 max b._2)))
-			.reduce((a, b) => (a._1 min b._1, a._2 max b._2))
 
 		val pyramidId = argParser.getString("id", "An ID by which to identify the finished pyramid.")
 		val pyramidName = argParser.getString("name", "A name with which to label the finished pyramid").replace("_", " ")
@@ -82,11 +78,20 @@ object TwitterTopicBinner {
 
 		val tileIO = TileIO.fromArguments(argParser)
 
-		val rawData = if (0 == partitions) {
-			sc.textFile(source)
-		} else {
-			sc.textFile(source, partitions)
-		}
+		val files = source.split(",")
+		// For each file, attempt create an RDD, then immediately force an
+		// exception in the case it does not exist. Union all RDDs together.
+		val rawData = files.map { file =>
+		    Try({
+		        var tmp = if (0 == partitions) {
+		            sc.textFile( file )
+		        } else {
+		            sc.textFile( file , partitions)
+		        }
+		        tmp.partitions // force exception if file does not exist
+		        tmp
+		    }).getOrElse( sc.emptyRDD )
+		}.reduce(_ union _)
 
 		val minAnalysis:
 				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
