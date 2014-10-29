@@ -30,9 +30,6 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Double => JavaDouble}
 import java.util.Properties
 
-import org.apache.hadoop.io.LongWritable
-import org.apache.hadoop.io.Text
-
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
@@ -56,7 +53,6 @@ import com.oculusinfo.tilegen.tiling.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.BinningAnalytic
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.tilegen.input.EmptiableTextInputFormat
 
 
 /**
@@ -252,23 +248,20 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 	/**
 	 * Actually retrieve the data.
 	 * This can be overridden if the data is not a simple file or set of files,
-	 * but normally shouldn't be touched.
+	 * but normally shouldn't be touched. 
 	 */
 	def getData (sc: SparkContext): RDD[String] =
-
-		getDataFiles.map(sc.newAPIHadoopFile( _, 
-									 classOf[EmptiableTextInputFormat],
-                                     classOf[LongWritable],
-                                     classOf[Text],
-                                     sc.hadoopConfiguration).map( p => p._2.toString )
-		).reduce(_ union _)
-		/*
-		if (getIdealPartitions.isDefined) {
-			getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
-		} else {
-			getDataFiles.map(sc.textFile(_)).reduce(_ union _)
-		}
-		*/
+		getDataFiles.map{ file =>
+		  Try({
+		    var tmp = if ( getIdealPartitions.isDefined ) {
+		      sc.textFile( file, getIdealPartitions.get )
+		    } else {
+		      sc.textFile( file )
+		    }
+		    tmp.partitions // force exception if file does not exist
+		    tmp
+		  }).getOrElse( sc.emptyRDD )
+		}.reduce(_ union _)
 }
 
 
