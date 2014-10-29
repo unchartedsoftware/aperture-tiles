@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.twitter.tilegen;
+package com.oculusinfo.tilegen.input;
 
 import java.io.IOException;
 import java.util.Collections;

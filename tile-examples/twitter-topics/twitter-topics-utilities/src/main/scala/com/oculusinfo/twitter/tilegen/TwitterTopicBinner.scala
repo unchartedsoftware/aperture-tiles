@@ -49,7 +49,7 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.util.ArgumentParser
-
+import com.oculusinfo.tilegen.input.EmptiableTextInputFormat
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 
 
@@ -72,9 +72,6 @@ object TwitterTopicBinner {
 		val levelSets = argParser.getString("levels",
 		                                    "The level sets (;-separated) of ,-separated levels to bin.")
 			.split(";").map(_.split(",").map(_.toInt))
-		val levelBounds = levelSets.map(_.map(a => (a, a))
-			                                .reduce((a, b) => (a._1 min b._1, a._2 max b._2)))
-			.reduce((a, b) => (a._1 min b._1, a._2 max b._2))
 
 		val pyramidId = argParser.getString("id", "An ID by which to identify the finished pyramid.")
 		val pyramidName = argParser.getString("name", "A name with which to label the finished pyramid").replace("_", " ")
