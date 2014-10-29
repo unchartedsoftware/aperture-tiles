@@ -79,6 +79,8 @@ object TwitterTopicBinner {
 		val tileIO = TileIO.fromArguments(argParser)
 
 		val files = source.split(",")
+		// For each file, attempt create an RDD, then immediately force an
+		// exception in the case it does not exist. Union all RDDs together.
 		val rawData = files.map { file =>
 		    Try({
 		        var tmp = if (0 == partitions) {

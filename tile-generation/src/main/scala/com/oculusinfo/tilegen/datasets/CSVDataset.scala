@@ -251,6 +251,8 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 	 * but normally shouldn't be touched. 
 	 */
 	def getData (sc: SparkContext): RDD[String] =
+		// For each file, attempt create an RDD, then immediately force an
+		// exception in the case it does not exist. Union all RDDs together.
 		getDataFiles.map{ file =>
 		  Try({
 		    var tmp = if ( getIdealPartitions.isDefined ) {
