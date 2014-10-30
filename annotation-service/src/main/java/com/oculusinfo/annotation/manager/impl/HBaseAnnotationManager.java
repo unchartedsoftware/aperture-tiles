@@ -67,8 +67,8 @@ public class HBaseAnnotationManager implements AnnotationManager {
 	 */
 	public HBaseAnnotationManager(	String layer,
 	                                String zookeeperQuorum,
-                                    String zookeeperPort, 
-                                    String hbaseMaster) {
+	                                String zookeeperPort,
+	                                String hbaseMaster) {
 		
 		try {
 			_dataIO = new HBaseAnnotationIO( zookeeperQuorum,
