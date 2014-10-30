@@ -36,11 +36,36 @@ import java.util.List;
  */
 public interface AnnotationManager {
 	
+	/**
+	 * Initialize the data store to write to
+	 */
 	public void initializeForWrite() throws IOException;
 	
+	/**
+	 * Write the collection of annotations to the data store
+	 * 
+	 * @param annotations
+	 *            This is a list of AnnotationData objects to write into the data store
+	 */
 	public void writeAnnotations(List<AnnotationData<?>> annotations) throws IOException;
 	
+	/**
+	 * Remove the collection of annotations from the data store
+	 * 
+	 * @param dataIndices
+	 *            This is a list of Pairs that contain the timestamp(String) and UUID(Long) that correspond to 
+	 *            the annotations to be removed from the data store
+	 */
 	public void removeAnnotations(Iterable<Pair<String,Long>> dataIndices) throws IOException;	
 	
+	/**
+	 * Read a collection of annotations from the data store based on the indices passed in
+	 * 
+	 * @param dataIndices
+	 *            This is a list of Pairs that contain the timestamp(String) and UUID(Long) that correspond to 
+	 *            the annotations to be read from the data store 
+	 * 
+	 * @return a list of AnnotationData objects retrieved from the data store based on the indices passed in
+	 */
 	public List<AnnotationData<?>> readAnnotations(Iterable<Pair<String,Long>> dataIndices) throws IOException;
 }

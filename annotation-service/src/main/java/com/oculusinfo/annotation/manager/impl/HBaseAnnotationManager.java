@@ -34,31 +34,73 @@ import com.oculusinfo.annotation.manager.AnnotationManager;
 import com.oculusinfo.binning.util.Pair;
 import java.io.IOException;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
+/**
+ * 	This class implements the AnnotationManager interface for use with an HBase data store
+ */
 public class HBaseAnnotationManager implements AnnotationManager {
+	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseAnnotationManager.class);
 	
 	private String _layer = null;	
 	private AnnotationIO _dataIO = null;
 	private AnnotationSerializer _dataSerializer = null;
 	
 	
-	public HBaseAnnotationManager(	String layer, 
-									String zookeeperQuorum,  
-									String zookeeperPort, 
-									String hbaseMaster) {
+	/**
+	 * Constructor - initializes internal members as needed to write annotations
+	 *               into HBase
+	 * 
+	 * @param layer
+	 *            layer/table to be used for annotation operations within the HBase data store
+	 *            
+	 * @param zookeeperQuorum
+	 *            An HBase configuration parameter, this should match the similar value in hbase-site.xml
+	 *            
+	 * @param zookeeperPort
+	 *            An HBase configuration parameter, this should match the similar value in hbase-site.xml
+	 *
+	 * @param hbaseMaster
+	 *            An HBase configuration parameter, this should match the similar value in hbase-site.xml   
+	 *
+	 */
+	public HBaseAnnotationManager(	String layer,
+	                                String zookeeperQuorum,
+                                    String zookeeperPort, 
+                                    String hbaseMaster) {
 		
 		try {
 			_dataIO = new HBaseAnnotationIO( zookeeperQuorum,
-											 zookeeperPort,
-											 hbaseMaster );
+			                                 zookeeperPort,
+			                                 hbaseMaster );
 		} catch (Exception e) {    		
-			System.out.println("Error: " + e.getMessage());			
+			LOGGER.error("Error creating internal HBase IO member", e);
 		}
 		_dataSerializer = new JSONAnnotationDataSerializer();
 		_layer = layer;
 	}
 	
+	
+	/**
+	 * Initialize the HBase layer/table for writing.
+	 */
+	@Override
+	public void initializeForWrite() throws IOException {
+		try {  	
+			_dataIO.initializeForWrite(_layer);	
+		} catch (Exception e) {   		
+			LOGGER.error("Error trying to initialize HBase table", e);
+		} 		
+	}
+	
+	
+	/**
+	 * Write the collection of annotations to HBase
+	 * 
+	 * @param annotations
+	 *            This is a list of AnnotationData objects to write into HBase
+	 */
 	@Override
 	public void writeAnnotations(List<AnnotationData<?>> annotations) throws IOException {
 		try {  
@@ -66,10 +108,37 @@ public class HBaseAnnotationManager implements AnnotationManager {
 				_dataIO.writeData(_layer, _dataSerializer, annotations );
 			}
 		} catch (Exception e) {   		
-			System.out.println("Error: " + e.getMessage());			
+			LOGGER.error("Error trying to write annotations to HBase", e);
 		} 
 	}	
 	
+	
+	/**
+	 * Remove the collection of annotations from HBase
+	 * 
+	 * @param dataIndices
+	 *            This is a list of Pairs that contain the timestamp(String) and UUID(Long) that correspond to 
+	 *            the annotations to be removed from HBase
+	 */
+	@Override
+    public void removeAnnotations(Iterable<Pair<String,Long>> dataIndices) throws IOException {
+		try {  	
+			_dataIO.removeData( _layer, dataIndices );	
+		} catch (Exception e) {   		
+			LOGGER.error("Error trying to remove annotations from HBase", e);
+		} 		
+	}
+	
+	
+	/**
+	 * Read a collection of annotations from HBase based on the indices passed in
+	 * 
+	 * @param dataIndices
+	 *            This is a list of Pairs that contain the timestamp(String) and UUID(Long) that correspond to 
+	 *            the annotations to be read in
+	 * 
+	 * @return a list of AnnotationData objects retrieved from HBase based on the indices passed in
+	 */
 	@Override
 	public List<AnnotationData<?>> readAnnotations(Iterable<Pair<String,Long>> dataIndices) throws IOException {
 		
@@ -78,28 +147,10 @@ public class HBaseAnnotationManager implements AnnotationManager {
 		try {  	
 			results = _dataIO.readData( _layer, _dataSerializer, dataIndices );	
 		} catch (Exception e) {   		
-			System.out.println("Error: " + e.getMessage());			
+			LOGGER.error("Error trying to read annotations from HBase", e);
 		} 
 		
 		return results;
 	}	
-	
-	@Override
-    public void removeAnnotations(Iterable<Pair<String,Long>> dataIndices) throws IOException {
-		try {  	
-			_dataIO.removeData( _layer, dataIndices );	
-		} catch (Exception e) {   		
-			System.out.println("Error: " + e.getMessage());			
-		} 		
-	}
-
-	@Override
-	public void initializeForWrite() throws IOException {
-		try {  	
-			_dataIO.initializeForWrite(_layer);	
-		} catch (Exception e) {   		
-			System.out.println("Error: " + e.getMessage());			
-		} 		
-	}
 
 }
