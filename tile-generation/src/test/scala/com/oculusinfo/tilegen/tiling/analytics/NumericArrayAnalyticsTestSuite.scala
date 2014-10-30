@@ -48,7 +48,7 @@ class NumericArrayAnalyticsTestSuite extends FunSuite {
 		val bBase = List(5.0, 4.0, 3.0, 2.0, 1.0)
 		val b = toJava(bBase)
 
-		val analytic = new ArrayAnalytic(new NumericSumAnalytic[Double, JavaDouble]())
+		val analytic = new ArrayAnalytic(new NumericSumAnalytic[Double]())
 		assertSeqsEqual(analytic.aggregate(aBase, bBase),
 		                List(6.0, 6.0, 6.0, 6.0, 1.0))
 	}
@@ -59,15 +59,15 @@ class NumericArrayAnalyticsTestSuite extends FunSuite {
 		val bBase = List(5.0, 4.0, 3.0, 2.0, 1.0)
 		val b = toJava(bBase)
 
-		val analytic = new ArrayAnalytic(new NumericSumAnalytic[Double, JavaDouble](), Some("test"))
-		assert("[4.1,3.2,2.3,1.4]" === analytic.valueToString(List(4.1, 3.2, 2.3, 1.4)))
+		val analytic = new ArrayTileAnalytic[Double](new NumericSumTileAnalytic[Double](), Some("test"))
+		assert("[4.1,3.2,2.3,1.4]" === analytic.valueToString(Seq(4.1, 3.2, 2.3, 1.4)))
 	}
 
 	test("Minimum Double Array Analytic") {
 		val a = List(1.0, 2.0, 3.0, 4.0)
 		val b = List(5.0, 4.0, 3.0, 2.0, 1.0)
 
-		val analytic = new ArrayAnalytic(new NumericMinAnalytic[Double, JavaDouble]())
+		val analytic = new ArrayAnalytic(new NumericMinAnalytic[Double]())
 		assert(analytic.aggregate(analytic.defaultUnprocessedValue, analytic.aggregate(a, b)) ===
 			       Seq(1.0, 2.0, 3.0, 2.0, 1.0))
 	}
@@ -76,7 +76,7 @@ class NumericArrayAnalyticsTestSuite extends FunSuite {
 		val a = List(1.0, 2.0, 3.0, 4.0)
 		val b = List(5.0, 4.0, 3.0, 2.0, 1.0)
 
-		val analytic = new ArrayAnalytic(new NumericMaxAnalytic[Double, JavaDouble]())
+		val analytic = new ArrayAnalytic(new NumericMaxAnalytic[Double]())
 		assert(analytic.aggregate(analytic.defaultUnprocessedValue, analytic.aggregate(a, b)) ===
 			       Seq(5.0, 4.0, 3.0, 4.0, 1.0))
 	}

@@ -48,13 +48,7 @@ import org.json.JSONObject
  *            in {@link BinningAnalytic}.  Note that for tile analyics, this 
  *            conversion still takes place, it is simply taken further.
  */
-class ArrayAnalytic[PT, RT] (elementAnalytic: Analytic[PT] with BinningAnalytic[PT, RT] with TileAnalytic[PT],
-                             analyticName: Option[String] = None)
-		extends Analytic[Seq[PT]]
-		with BinningAnalytic[Seq[PT], JavaList[RT]]
-		with TileAnalytic[Seq[PT]]
-{
-	def name = analyticName.getOrElse(elementAnalytic.name+" array")
+class ArrayAnalytic[PT] (elementAnalytic: Analytic[PT]) extends Analytic[Seq[PT]] {
 	def aggregate (a: Seq[PT], b: Seq[PT]): Seq[PT] = {
 		val alen = a.length
 		val blen = b.length
@@ -69,8 +63,20 @@ class ArrayAnalytic[PT, RT] (elementAnalytic: Analytic[PT] with BinningAnalytic[
 	}
 	def defaultProcessedValue: Seq[PT] = Seq[PT]()
 	def defaultUnprocessedValue: Seq[PT] = Seq[PT]()
+}
+class ArrayBinningAnalytic[PT, RT] (elementAnalytic: BinningAnalytic[PT, RT])
+		extends ArrayAnalytic[PT](elementAnalytic)
+		with BinningAnalytic[Seq[PT], JavaList[RT]]
+{
 	def finish (value: Seq[PT]): JavaList[RT] =
 		value.map(elt => elementAnalytic.finish(elt)).asJava
+}
+class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
+                             analyticName: Option[String] = None)
+		extends ArrayAnalytic[PT](elementAnalytic)
+		with TileAnalytic[Seq[PT]]
+{
+	def name = analyticName.getOrElse(elementAnalytic.name+" array")
 	override def valueToString (value: Seq[PT]): String = value.mkString("[", ",", "]")
 	override def toMap (value: Seq[PT]): Map[String, Any] = {
 		val result = new JSONArray

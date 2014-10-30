@@ -42,7 +42,7 @@ import scala.util.Try
 
 class InSituAnalyticTestSuite extends FunSuite with SharedSparkContext {
     test("Array tile analytic output") {
-        val analytic = new ArrayAnalytic(new NumericSumAnalytic[Int, JavaInt]("inner"), Some("outer"))
+        val analytic = new ArrayTileAnalytic[Int](new NumericSumTileAnalytic[Int]("inner"), Some("outer"))
         val analyticDesc = new MonolithicAnalysisDescription(((i: Int) => Seq(i)), analytic)
         
         analyticDesc.addGlobalAccumulator(sc)

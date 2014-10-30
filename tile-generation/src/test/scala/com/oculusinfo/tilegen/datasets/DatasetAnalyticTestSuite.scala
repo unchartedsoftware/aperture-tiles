@@ -45,8 +45,8 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.analytics.MonolithicAnalysisDescription
-import com.oculusinfo.tilegen.tiling.analytics.NumericMaxAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMinAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMaxTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMinTileAnalytic
 
 
 
@@ -173,9 +173,9 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 }
 
 class TestTileAnalytic
-		extends AnalysisDescriptionTileWrapper[JavaDouble, Double] (
+		extends AnalysisDescriptionTileWrapper[Double, Double] (
 	v => v*v,
-	new NumericMaxAnalytic[Double, JavaDouble]("tile test"))
+	new NumericMaxTileAnalytic[Double]("tile test"))
 {}
 
 class TestDataAnalytic
@@ -184,5 +184,5 @@ class TestDataAnalytic
 		val result = ((v._2._1+1)*(v._2._1+1))
 		result
 	},
-	new NumericMinAnalytic[Double, JavaDouble]("data test"))
+	new NumericMinTileAnalytic[Double]("data test"))
 {}

@@ -27,6 +27,7 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 
 
+import java.io.{Serializable => JavaSerializable}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
@@ -39,22 +40,28 @@ import com.oculusinfo.binning.util.Pair
 /**
  * Standard string score ordering
  * 
- * @param aggregationLimit The number of elements to keep when aggregating
+ * @baseAnalytic An analytic used to aggregate scores
+ * @param aggregationLimit An optional number of elements to keep when 
+ *                         aggregating.  If None, all elements are kept.
  * @param order An optional function to specify the order of values.  If not 
  *              given, the order will be random.
+ * @tparam The type of the score value
  */
-class StringScoreAnalytic
-	(aggregationLimit: Option[Int] = None,
-	 order: Option[((String, Double), (String, Double)) => Boolean] = None)
-		extends Analytic[Map[String, Double]]
+class StringScoreAnalytic[T]
+	(baseAnalytic: Analytic[T],
+	 aggregationLimit: Option[Int] = None,
+	 order: Option[((String, T), (String, T)) => Boolean] = None)
+		extends Analytic[Map[String, T]]
 {
-	def aggregate (a: Map[String, Double],
-	               b: Map[String, Double]): Map[String, Double] = {
+	def aggregate (a: Map[String, T], b: Map[String, T]): Map[String, T] = {
 		val combination =
 			(a.keySet union b.keySet).map(key =>
-				key -> (a.getOrElse(key, 0.0) + b.getOrElse(key, 0.0))
+				// Should always have one or the other, since we took the union 
+				// of keysets, so the error case where we try to reduce an 
+				// empty list shouldn't happen
+				key -> List(a.get(key), b.get(key)).flatten.reduce(baseAnalytic.aggregate(_, _))
 			)
-		val sorted: Iterable[(String, Double)] = order.map(fcn =>
+		val sorted: Iterable[(String, T)] = order.map(fcn =>
 			combination.toList.sortWith(fcn)
 		).getOrElse(combination)
 
@@ -62,31 +69,36 @@ class StringScoreAnalytic
 			sorted.take(limit)
 		).getOrElse(sorted).toMap
 	}
-	def defaultProcessedValue: Map[String, Double] = Map[String, Double]()
-	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
+	def defaultProcessedValue: Map[String, T] = Map[String, T]()
+	def defaultUnprocessedValue: Map[String, T] = Map[String, T]()
 }
 
 /**
  * Extends the standard string score analytic into a binning analytic.
  * 
+ * @param baseAnalytic See StringScoreAnalytic
  * @param aggregationLimit See StringScoreAnalytic
  * @param order See StringScoreAnalytic
- * @param storageLimit The maximum number of entries to store in each tile bin.
+ * @param storageLimit An optional maximum number of entries to store in each
+ *                     tile bin. If not given, all values are stored.
+ * @tparam T See StringScoreAnalytic
+ * @tparam JT The type as which the score is to be written to bins.
  */
-class StandardStringScoreBinningAnalytic
-	(aggregationLimit: Option[Int] = None,
-	 order: Option[((String, Double), (String, Double)) => Boolean] = None,
+class StringScoreBinningAnalytic[T, JT <: JavaSerializable]
+	(baseAnalytic: BinningAnalytic[T, JT],
+	 aggregationLimit: Option[Int] = None,
+	 order: Option[((String, T), (String, T)) => Boolean] = None,
 	 storageLimit: Option[Int] = None)
-		extends StringScoreAnalytic(aggregationLimit, order)
-		with BinningAnalytic[Map[String, Double],
-		                     JavaList[Pair[String, JavaDouble]]]
+		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
+		with BinningAnalytic[Map[String, T],
+		                     JavaList[Pair[String, JT]]]
 {
-	def finish (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] = {
+	def finish (value: Map[String, T]): JavaList[Pair[String, JT]] = {
 		val valueSeq =
 			order
 				.map(fcn => value.toSeq.sortWith(fcn))
 				.getOrElse(value.toSeq)
-				.map(p => new Pair(p._1, new JavaDouble(p._2)))
+				.map(p => new Pair[String, JT](p._1, baseAnalytic.finish(p._2)))
 		storageLimit
 			.map(valueSeq.take(_))
 			.getOrElse(valueSeq)
@@ -94,36 +106,84 @@ class StandardStringScoreBinningAnalytic
 	}
 }
 
-trait StandardStringScoreTileAnalytic extends TileAnalytic[Map[String, Double]] {
-	override def valueToString (value: Map[String, Double]): String =
-		value.map(p => "\""+p._1+"\":"+p._2).mkString("[", ",", "]")
+/**
+ * Extends the standard string score analytic into a tile analytic.
+ * 
+ * @param analyticName The name by which the analytic value should be known in 
+ *                     metadata
+ * @param baseAnalytic See StringScoreAnalytic
+ * @param aggregationLimit See StringScoreAnalytic
+ * @param order See StringScoreAnalytic
+ * @tparam T See StringScoreAnalytic
+ */
+class StringScoreTileAnalytic[T] (analyticName: Option[String],
+                                  baseAnalytic: TileAnalytic[T],
+                                  aggregationLimit: Option[Int] = None,
+                                  order: Option[((String, T), (String, T)) => Boolean] = None)
+		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
+		with TileAnalytic[Map[String, T]]
+{
+	def name = analyticName.getOrElse(baseAnalytic.name)
+	override def valueToString (value: Map[String, T]): String =
+		value.map(p => "\""+p._1+"\":"+baseAnalytic.valueToString(p._2)).mkString("[", ",", "]")
+	override def toMap (value: Map[String, T]): Map[String, Any] =
+		value.map{case (k1, v1) =>
+			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
+		}.flatten.toMap
 }
 
-class CategoryValueAnalytic(categoryNames: Seq[String])
-		extends Analytic[Seq[Double]]
+/**
+ * Similar to a StringScoreAnalytic, but this analytic tracks fixed, rather 
+ * than arbitrary, categories.
+ * 
+ * @param categoryNames The names of the fixed categories this analytic will 
+ *                      track
+ * @param baseAnalytic An analytic used to process the scores associated with 
+ *                     each category.
+ * @tparam T The type of the score associated with each category
+ */
+class CategoryValueAnalytic[T] (categoryNames: Seq[String], baseAnalytic: Analytic[T])
+		extends Analytic[Seq[T]]
 {
-	def aggregate (a: Seq[Double], b: Seq[Double]): Seq[Double] =
-		Range(0, a.length max b.length).map(i =>
-			{
-				def getOrElse(value: Seq[Double], index: Int, default: Double): Double =
-					value.applyOrElse(index, (n: Int) => default)
-				getOrElse(a, i, 0.0) + getOrElse(b, i, 0.0)
-			}
-		)
-	def defaultProcessedValue: Seq[Double] = Seq[Double]()
-	def defaultUnprocessedValue: Seq[Double] = Seq[Double]()
+	def aggregate (a: Seq[T], b: Seq[T]): Seq[T] =
+		a.zipAll(b, baseAnalytic.defaultUnprocessedValue, baseAnalytic.defaultUnprocessedValue)
+			.map{case (aa, bb) => baseAnalytic.aggregate(aa, bb)}
+	def defaultProcessedValue: Seq[T] = Seq[T]()
+	def defaultUnprocessedValue: Seq[T] = Seq[T]()
 }
-class CategoryValueBinningAnalytic(categoryNames: Seq[String])
-		extends CategoryValueAnalytic(categoryNames)
-		with BinningAnalytic[Seq[Double],
-		                     JavaList[Pair[String, JavaDouble]]]
+/**
+ * Extends the standard category value analytic into a binning analytic.
+ * 
+ * @param categoryNames {@see CategoryValueAnalytic}
+ * @param baseAnalytic {@see CategoryValueAnalytic}
+ * @tparam T {@see CategoryValueAnalytic}
+ * @tparam JT The type as which the score is to be written to bins.
+ */
+class CategoryValueBinningAnalytic[T, JT <: JavaSerializable] (categoryNames: Seq[String], baseAnalytic: BinningAnalytic[T, JT])
+		extends CategoryValueAnalytic[T](categoryNames, baseAnalytic)
+		with BinningAnalytic[Seq[T], JavaList[Pair[String, JT]]]
 {
-	def finish (value: Seq[Double]): JavaList[Pair[String, JavaDouble]] = {
-		Range(0, value.length min categoryNames.length).map(i =>
-			new Pair[String, JavaDouble](categoryNames(i), value(i))
-		).toSeq.asJava
-	}
+	def finish (value: Seq[T]): JavaList[Pair[String, JT]] =
+		categoryNames.zip(value).map{case (c, v) =>
+			new Pair[String, JT](c, baseAnalytic.finish(v))
+		}.toSeq.asJava
 }
+
+class CategoryValueTileAnalytic[T] (analyticName: Option[String],
+                                    categoryNames: Seq[String],
+                                    baseAnalytic: TileAnalytic[T])
+		extends CategoryValueAnalytic[T](categoryNames, baseAnalytic)
+		with TileAnalytic[Seq[T]]
+{
+	def name = analyticName.getOrElse(baseAnalytic.name)
+	override def valueToString (value: Seq[T]): String =
+		value.map(baseAnalytic.valueToString(_)).mkString("[", ",", "]")
+	override def toMap (value: Seq[T]): Map[String, Any] =
+		categoryNames.zip(value).map{case (k1, v1) => 
+			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
+		}.flatten.toMap
+}
+
 
 class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
 	def name = analyticName
@@ -131,4 +191,3 @@ class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 }
-

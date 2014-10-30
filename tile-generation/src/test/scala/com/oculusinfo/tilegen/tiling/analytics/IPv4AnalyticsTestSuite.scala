@@ -26,41 +26,22 @@
 package com.oculusinfo.tilegen.tiling.analytics
 
 
+
+import java.lang.{Double => JavaDouble}
+
 import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TileData
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.ipArrayToString
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.longToIPArray
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 
 
 
-class AnalyticsTestSuite extends FunSuite {
-	test("String Score Analytic") {
-		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
-		val b = Map("a" -> 5.0, "b" -> 4.0, "c" -> 3.0, "d" -> 2.0, "e" -> 1.0)
-
-		val analytic = new StringScoreAnalytic
-		assert(Map("a" -> 6.0, "b" -> 6.0, "c" -> 6.0, "d" -> 6.0, "e" -> 1.0) ===
-			       analytic.aggregate(a, b))
-	}
-
-	test("String Score Tile Analytic") {
-		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
-		val b = Map("a" -> 5.0, "b" -> 4.0, "c" -> 3.0, "d" -> 2.0, "e" -> 1.0)
-
-		val analytic = new StringScoreAnalytic with StandardStringScoreTileAnalytic {
-			def name = "test"
-		}
-		println("value: \""+analytic.valueToString(a)+"\"")
-		assert("[\"a\":1.0,\"b\":2.0,\"c\":3.0,\"d\":4.0]" === analytic.valueToString(a))
-	}
-
-
+class IPv4AnalyticsTestSuite extends FunSuite {
 	// IP Testing
 	// Here are the corners of levels 0 through 3, by IP address, tab-delimited (paste into excel for ease of use):
 	//		ab.ff.ff.ff		af.ff.ff.ff		bb.ff.ff.ff		bf.ff.ff.ff		eb.ff.ff.ff		ef.ff.ff.ff		fb.ff.ff.ff		ff.ff.ff.ff
@@ -217,37 +198,5 @@ class AnalyticsTestSuite extends FunSuite {
 				assert(maxes(4*x+32*y+3+24) === "%02x.%02x.%02x.%02x".format(maxIP(0), maxIP(1), maxIP(2), maxIP(3)))
 			}
 		}
-
-	}
-
-	test("String score processing limits") {
-		val a1 = new StringScoreAnalytic(Some(5), Some(_._2 < _._2))
-		val a2 = new StringScoreAnalytic(Some(5), Some(_._2 > _._2))
-
-		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
-		val b = Map("c" -> 1.0, "d" -> 2.0, "e" -> 5.0, "f" -> 0.0)
-
-		assert(Map("f" -> 0.0, "a" -> 1.0, "b" -> 2.0, "c" -> 4.0, "e" -> 5.0)
-			       === a1.aggregate(a, b))
-		assert(Map("a" -> 1.0, "b" -> 2.0, "c" -> 4.0, "e" -> 5.0, "d" -> 6.0)
-			       === a2.aggregate(a, b))
-	}
-
-	test("String score storage limits") {
-		val ba1 = new StandardStringScoreBinningAnalytic(Some(5),
-		                                                 Some(_._2 < _._2),
-		                                                 Some(3))
-		val ba2 = new StandardStringScoreBinningAnalytic(Some(5),
-		                                                 Some(_._2 > _._2),
-		                                                 Some(3))
-
-		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
-
-		assert(List(("a", 1.0), ("b", 2.0), ("c", 3.0)) ===
-			       ba1.finish(a).asScala
-			       .map(p => (p.getFirst, p.getSecond.doubleValue)))
-		assert(List(("d", 4.0), ("c", 3.0), ("b", 2.0)) ===
-			       ba2.finish(a).asScala
-			       .map(p => (p.getFirst, p.getSecond.doubleValue)))
 	}
 }

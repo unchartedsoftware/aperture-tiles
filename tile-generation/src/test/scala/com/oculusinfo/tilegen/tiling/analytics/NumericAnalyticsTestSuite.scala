@@ -61,7 +61,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	// Full tests on each type for the summation analytic
 	test("Standard Integer Analytic") {
 		// check base
-		val analytic = new NumericSumAnalytic[Int, JavaInt]()
+		val analytic = new NumericSumTileAnalytic[Int]()
 		assert(0 === analytic.defaultProcessedValue)
 		assert(0 === analytic.defaultUnprocessedValue)
 		assert(3 === analytic.aggregate(1, 2))
@@ -73,7 +73,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 
 	test("Standard Long Analytic") {
 		// check base
-		val analytic = new NumericSumAnalytic[Long, JavaLong]()
+		val analytic = new NumericSumTileAnalytic[Long]()
 		assert(0l === analytic.defaultProcessedValue)
 		assert(0l === analytic.defaultUnprocessedValue)
 		assert(3l === analytic.aggregate(1l, 2l))
@@ -85,7 +85,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 
 	test("Standard Float Analytic") {
 		// check base
-		val analytic = new NumericSumAnalytic[Float, JavaFloat]()
+		val analytic = new NumericSumTileAnalytic[Float]()
 		assert(0.0f === analytic.defaultProcessedValue)
 		assert(0.0f === analytic.defaultUnprocessedValue)
 		assert(3.0f === analytic.aggregate(1.0f, 2.0f))
@@ -97,7 +97,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 
 	test("Standard Double Analytic") {
 		// check base
-		val analytic = new NumericSumAnalytic[Double, JavaDouble]()
+		val analytic = new NumericSumTileAnalytic[Double]()
 		assert(0.0 === analytic.defaultProcessedValue)
 		assert(0.0 === analytic.defaultUnprocessedValue)
 		assert(3.0 === analytic.aggregate(1.0, 2.0))
@@ -113,7 +113,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	// Having testing the summation analytic fully for each type, we just do
 	// type checking on non-Int types for other analytics
 	test("Minimum Int Analytic") {
-		val analytic = new NumericMinAnalytic[Int, JavaInt]()
+		val analytic = new NumericMinAnalytic[Int]()
 		assert(1 === analytic.aggregate(1, 2))
 		assert(1 === analytic.aggregate(2, 1))
 
@@ -128,7 +128,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		sampleTile.setBin(3, 3, 4.0)
 
 		val minConvert = AnalysisDescriptionTileWrapper.acrossTile((d: JavaDouble) => d.doubleValue,
-		                                                           new NumericMinAnalytic[Double, JavaDouble]())
+		                                                           new NumericMinTileAnalytic[Double]())
 		assert(1.0 === minConvert(sampleTile))
 	}
 
@@ -141,19 +141,19 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	//	}
 
 	test("Minimum Long Analytic") {
-		assert(new NumericMinAnalytic[Long, JavaLong]().aggregate(1L, 2L).isInstanceOf[Long])
+		assert(new NumericMinAnalytic[Long]().aggregate(1L, 2L).isInstanceOf[Long])
 	}
 
 	test("Minimum Float Analytic") {
-		assert(new NumericMinAnalytic[Float, JavaFloat]().aggregate(1.1f, 2.2f).isInstanceOf[Float])
+		assert(new NumericMinAnalytic[Float]().aggregate(1.1f, 2.2f).isInstanceOf[Float])
 	}
 
 	test("Minimum Double Analytic") {
-		assert(new NumericMinAnalytic[Double, JavaDouble]().aggregate(1.2, 2.4).isInstanceOf[Double])
+		assert(new NumericMinAnalytic[Double]().aggregate(1.2, 2.4).isInstanceOf[Double])
 	}
 
 	test("Maximum Int Analytic") {
-		val analytic = new NumericMaxAnalytic[Int, JavaInt]()
+		val analytic = new NumericMaxAnalytic[Int]()
 		assert(2 === analytic.aggregate(1, 2))
 		assert(2 === analytic.aggregate(2, 1))
 
@@ -167,7 +167,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		sampleTile.setBin(2, 2, 3.0)
 		sampleTile.setBin(3, 3, 4.0)
 		val maxConvert = AnalysisDescriptionTileWrapper.acrossTile((d: JavaDouble) => d.doubleValue,
-		                                                           new NumericMaxAnalytic[Double, JavaDouble]())
+		                                                           new NumericMaxTileAnalytic[Double]())
 		assert(4.0 === maxConvert(sampleTile))
 	}
 
@@ -180,21 +180,21 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	//	}
 
 	test("Maximum Long Analytic") {
-		assert(new NumericMaxAnalytic[Long, JavaLong]().aggregate(1L, 2L).isInstanceOf[Long])
+		assert(new NumericMaxAnalytic[Long]().aggregate(1L, 2L).isInstanceOf[Long])
 	}
 
 	test("Maximum Float Analytic") {
-		assert(new NumericMaxAnalytic[Float, JavaFloat]().aggregate(1.1f, 2.2f).isInstanceOf[Float])
+		assert(new NumericMaxAnalytic[Float]().aggregate(1.1f, 2.2f).isInstanceOf[Float])
 	}
 
 	test("Maximum Double Analytic") {
-		assert(new NumericMaxAnalytic[Double, JavaDouble]().aggregate(1.2, 2.4).isInstanceOf[Double])
+		assert(new NumericMaxAnalytic[Double]().aggregate(1.2, 2.4).isInstanceOf[Double])
 	}
 
 
 	test("Standard Mean Int Binning Analytic") {
 		// Test normal values
-		val analytic = new NumericMeanAnalytic[Int]()
+		val analytic = new NumericMeanBinningAnalytic[Int]()
 		assert((0, 0) === analytic.defaultProcessedValue)
 		assert((0, 0) === analytic.defaultUnprocessedValue)
 		assert((3, 5) === analytic.aggregate((2, 2), (1, 3)))
@@ -203,13 +203,13 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(JavaDouble.isNaN(analytic.finish((0, 0))))
 
 		// Test default values
-		val analyticDef1 = new NumericMeanAnalytic[Int](emptyValue=1)
+		val analyticDef1 = new NumericMeanBinningAnalytic[Int](emptyValue=1)
 		assert(1 == analyticDef1.finish((3, 0)))
-		val analyticDef2 = new NumericMeanAnalytic[Int](emptyValue=3)
+		val analyticDef2 = new NumericMeanBinningAnalytic[Int](emptyValue=3)
 		assert(3 == analyticDef2.finish((1, 0)))
 
 		// Test minimum count
-		val analyticCount1 = new NumericMeanAnalytic[Int](minCount=4)
+		val analyticCount1 = new NumericMeanBinningAnalytic[Int](minCount=4)
 		assert(analyticCount1.finish((3, 3)).isNaN)
 		assert(1.25 === analyticCount1.finish((5, 4)))
 	}
