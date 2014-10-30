@@ -1,7 +1,29 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
+ * http://www.oculusinfo.com/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package com.oculusinfo.annotation.manager.impl;
 
-import java.io.IOException;
-import java.util.List;
 
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
@@ -10,20 +32,21 @@ import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.manager.AnnotationManager;
 import com.oculusinfo.binning.util.Pair;
+import java.io.IOException;
+import java.util.List;
 
 
 public class HBaseAnnotationManager implements AnnotationManager {
 	
-	private String _layer = null;	// _layer is equivalent to layer for Cyber
-	
+	private String _layer = null;	
 	private AnnotationIO _dataIO = null;
 	private AnnotationSerializer _dataSerializer = null;
+	
 	
 	public HBaseAnnotationManager(	String layer, 
 									String zookeeperQuorum,  
 									String zookeeperPort, 
 									String hbaseMaster) {
-		_layer = layer;
 		
 		try {
 			_dataIO = new HBaseAnnotationIO( zookeeperQuorum,
@@ -33,6 +56,7 @@ public class HBaseAnnotationManager implements AnnotationManager {
 			System.out.println("Error: " + e.getMessage());			
 		}
 		_dataSerializer = new JSONAnnotationDataSerializer();
+		_layer = layer;
 	}
 	
 	@Override
