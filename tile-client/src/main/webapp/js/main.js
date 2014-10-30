@@ -137,33 +137,48 @@ require(['./ApertureConfig',
                 return configurations;
 	        };
 
+            /**
+             * Iterate through server layers, and append zIndex to
+             * mirror the top-down ordering set in the config file.
+             */
 	        getServerLayers = function( rootNode, filter ) {
-	            var layers = getLayers( rootNode, filter, 'server' ),
-	                zIndex = 1, i;
+	            var Z_INDEX_OFFSET = 1,
+	                layers = getLayers( rootNode, filter, 'server' ),
+	                i;
 	            for ( i=0; i<layers.length; i++ ) {
-	                layers[i].zIndex = zIndex++;
+	                layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
 	            }
 	            return layers;
             };
 
+            /**
+             * Iterate through client layers, and append zIndex to
+             * mirror the top-down ordering set in the config file.
+             */
             getClientLayers = function( rootNode, filter ) {
-                var layers = getLayers( rootNode, filter, 'client' ),
-                    zIndex = 1000, i;
+                var Z_INDEX_OFFSET = 1000,
+                    layers = getLayers( rootNode, filter, 'client' ),
+                    i;
                 // group client layers based on common name
                 layers = groupClientLayers( layers );
                 for ( i=0; i<layers.length; i++ ) {
-                    layers[i].zIndex = zIndex++;
+                    layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
                 }
                 return layers;
             };
 
-	        getAnnotationLayers = function( allLayers, filter ) {
-		        var i, validLayers =[],
-		            zIndex = 500;
-		        for (i=0; i<allLayers.length; i++) {
-			        if ( filter( allLayers[i] ) ) {
-			            allLayers[i].zIndex = zIndex++;
-				        validLayers.push( allLayers[i] );
+            /**
+             * Iterate through annotation layers, and append zIndex to
+             * mirror the top-down ordering set in the config file.
+             */
+	        getAnnotationLayers = function( layers, filter ) {
+		        var Z_INDEX_OFFSET = 500,
+                    validLayers =[],
+		            i;
+		        for (i=0; i<layers.length; i++) {
+			        if ( filter( layers[i] ) ) {
+			            layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
+				        validLayers.push( layers[i] );
 			        }
 		        }
 		        return validLayers;
@@ -307,6 +322,7 @@ require(['./ApertureConfig',
                             $.merge( layers, clientLayers );
                             $.merge( layers, serverLayers );
                             $.merge( layers, annotationLayers );
+
                             // create layer controls
                             new LayerControls( layerControlsContent, layers, UICustomization.customizeSettings ).noop();
                             // create the carousel controls
