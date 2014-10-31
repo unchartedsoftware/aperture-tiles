@@ -50,8 +50,8 @@ class BooleanAnalytic (add: (Boolean, Boolean) => Boolean) extends Analytic[Opti
 	def aggregate (a: Option[Boolean], b: Option[Boolean]) =
 		if (a.isDefined && b.isDefined) Some(add(a.get, b.get))
 		else if (a.isDefined) a
-	    else if (b.isDefined) b
-	    else None
+		else if (b.isDefined) b
+		else None
 	def defaultProcessedValue: Option[Boolean] = None
 	def defaultUnprocessedValue: Option[Boolean] = None
 }
@@ -139,5 +139,5 @@ class BitSetTileAnalytic (analyticName: String, add: (Boolean, Boolean) => Boole
 	override def valueToString (value: BitSet): String =
 		value.mkString("[", ", ", "]")
 	override def toMap (value: BitSet): Map[String, Any] =
-		Map(name -> value.toArray.map(_.box))
+		Map(name -> value.toArray.map(Int.box(_)))
 }
