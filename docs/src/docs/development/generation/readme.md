@@ -74,9 +74,9 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 - **Cluster Computing**:
 	- *Apache Spark* version 0.9.0 or greater (version 1.0.0 recommended).
       
-	  NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.
+        NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.
 	  
-	- *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version
+    - *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version
 
 ### <a name="spark-config"></a>Apache Spark Configuration
 
@@ -87,12 +87,7 @@ To configure Apache Spark for your installed version of Hadoop, perform one of t
 
 #### <a name="spark-script"></a>spark-run Script
 
-The Tile Generator distribution package and the Aperture Tiles source code each contain a **spark-run** script designed to help you build your own tiles:
-
-- Tile Generator (<em>bin/<wbr><strong>spark-run.sh</strong></em>)
-- Aperture Tiles Source Code (<em>aperture-tiles/<wbr>tile-generation/<wbr>scripts/<wbr>spark-run</em>)
-
-Note that this script only exists in the source code *after* you build Aperture Tiles, as it requires tile generation JAR files to be in your local maven repository. Therefore, to use this script from the source code, you must first run the following command:
+The Aperture Tiles source code contains a **spark-run** script (in <em>tile-generation/<wbr>scripts/<wbr>spark-run</em>) designed to help you build your tiles. This script only exists in the source code *after* you build Aperture Tiles, as it requires tile generation JAR files to be in your local maven repository. Therefore, to use this script, you must first run the following command:
 
 ```bash
 mvn install
@@ -138,13 +133,11 @@ spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter/
 dataset-base.bd /data/twitter/dataset.lon.lat.bd
 ```
 
-Where the `-d` switch specifies the Base properties file path, and each subsequent file path specifies a Tiling properties file.
-
-During the tiling job, the CSVBinner creates a collection of AVRO tile data files in the location (HBase or local file system) specified in the Base properties file. The following sections describe the configurable components of the Base properties and Tiling properties files. For a list of sample properties files in the Aperture Tiles source code, see the [Examples](#examples) section.
+Where the `-d` switch specifies the base properties file path, and each subsequent file path specifies a tiling properties file.
 
 ### <a name="base-properties"></a>Base Properties Files
 
-The Base properties file describes the tiling job, the systems on which it will run and the general characteristics of the source data. The following properties must be defined in the base properties file:
+The base properties file describes the tiling job, the systems on which it will run and the general characteristics of the source data. The following properties must be defined in the file:
 
 - [Spark Connection](#spark-connection)
 - [Tile Storage](#tile-storage)
@@ -160,19 +153,19 @@ The Spark connection properties define the location of the Spark installation th
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>spark</b>
+					spark
 				</dt>
 				<dd>Location of the Spark master.  Use <em>local</em> for standalone Spark.
    Defaults to <em>local</em>.</dd>
 				
 				<dt>
-					<b>sparkhome</b>
+					sparkhome
 				</dt>
 				<dd>Location of Spark in the remote location (or on the local machine if using 
    standalone). Defaults to the value of the environment variable, <em>SPARK_HOME</em>.</dd>
    
 				<dt>
-					<b>user</b> (Optional)
+					user (Optional)
 				</dt>
 				<dd>Username passed to the Spark job title. Defaults to the username of the 
    current user.</dd>
@@ -183,14 +176,14 @@ The Spark connection properties define the location of the Spark installation th
 
 #### <a name="tile-storage"></a>Tile Storage
 
-The tile storage properties indicate whether the tile set created from your source data should be stored in HBase on a local file system:
+The tile storage properties indicate whether the tile set created from your source data should be stored in HBase on your local file system:
 
 <div class="details props">
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>oculus.tileio.type</b>
+					oculus.tileio.type
 				</dt>
 				<dd>
 					Location to which tiles are written:
@@ -203,12 +196,12 @@ The tile storage properties indicate whether the tile set created from your sour
 				</dd>
 				
 				<dt>
-					<b>sparkhome</b>
+					sparkhome
 				</dt>
 				<dd>Location of Spark in the remote location (or on the local machine if using standalone). Defaults to the value of the environment variable, <em>SPARK_HOME</em>.</dd>
    
 				<dt>
-					<b>user</b> (Optional)
+					user (Optional)
 				</dt>
 				<dd>Username passed to the Spark job title. Defaults to the username of the current user.</dd>
 			</dl>
@@ -225,17 +218,17 @@ If you chose to store your tile set in HBase (i.e., **oculus.tileio.type** is se
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>hbase.zookeeper.quorum</b>
+					hbase.zookeeper.quorum
 				</dt>
 				<dd>Zookeeper quorum location needed to connect to HBase.</dd>
 				
 				<dt>
-					<b>hbase.zookeeper.port</b>
+					hbase.zookeeper.port
 				</dt>
 				<dd>Port through which to connect to zookeeper.</dd>
    
 				<dt>
-					<b>hbase.master</b>
+					hbase.master
 				</dt>
 				<dd>Location of the HBase master to which to write tiles.</dd>
 			</dl>
@@ -245,37 +238,37 @@ If you chose to store your tile set in HBase (i.e., **oculus.tileio.type** is se
 
 #### <a name="source-data"></a>Source Data
 
-The Source Data properties describe the raw data set to be tiled:
+The Source Data properties describe the raw data from which you want to create tiles:
 
 <div class="details props">
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>oculus.binning.source.location</b>
+					oculus.binning.source.location
 				</dt>
 				<dd>Path (local file system or HDFS) to the source data file or files to be tiled.</dd>
 				
 				<dt>
-					<b>oculus.binning.prefix</b>
+					oculus.binning.prefix
 				</dt>
 				<dd>Prefix to be added to the name of every pyramid location. Used to separate this tile generation from previous runs. If not present, no prefix is used.</dd>
    
 				<dt>
-					<b>oculus.binning.parsing.separator</b>
+					oculus.binning.parsing.separator
 				</dt>
 				<dd>Character or string used as a separator between columns in the input data files. Default is a tab.</dd>
    
 				<dt>
-					<b>oculus.binning.parsing.&lt;field&gt;.index</b>
+					oculus.binning.parsing.&lt;field&gt;.index
 				</dt>
 				<dd>Column number of the described field in the input data files. This field is mandatory for every field type to be used.</dd>
    
 				<dt>
-					<b>oculus.binning.parsing.&lt;field&gt;.fieldType</b>
+					oculus.binning.parsing.&lt;field&gt;.fieldType
 				</dt>
 				<dd>Type of value expected in the column specified by:
-				<br>oculus.binning.parsing.&lt;field&gt;.index.
+				<br><strong>oculus.binning.parsing.&lt;field&gt;.index</strong>.
 				
 				<br><br>By default columns are treated as containing real, double-precision values. Other possible types are:
    
@@ -290,7 +283,7 @@ The Source Data properties describe the raw data set to be tiled:
 					<dd>Contains double-precision integers</dd>
 					
 					<dt>date</dt>
-					<dd>Contains dates. Dates are parsed and transformed into milliseconds since the standard Java start date (using SimpleDateFormatter). The default format is yyMMddHHmm, but this can be overridden using the	oculus.binning.parsing.&lt;field&gt;.dateFormat property.</dd>
+					<dd>Contains dates. Dates are parsed and transformed into milliseconds since the standard Java start date (using SimpleDateFormatter). The default format is <em>yyMMddHHmm</em>, but this can be overridden using the <strong>oculus.binning.parsing.&lt;field&gt;.dateFormat</strong> property.</dd>
 			
 					<dt>propertyMap</dt>
 					<dd>Contains property maps. All of the following properties must be	present	to read the property:
@@ -313,17 +306,17 @@ The Source Data properties describe the raw data set to be tiled:
 				</dd>
 				
 				<dt>
-					<b>oculus.binning.parsing.&lt;field&gt;.fieldScaling</b>
+					oculus.binning.parsing.&lt;field&gt;.fieldScaling
 				</dt>
 				<dd>How field values should be scaled. The default leaves values as they are. Other possibilities are:				
 					<dl>
 						<dt>log</dt>
-						<dd>take the log of the value (oculus.binning.parsing.&lt;field&gt;.fieldBase is used, just as with fieldAggregation)</dd>
+						<dd>take the log of the value (<strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong> is used, just as with fieldAggregation)</dd>
 					</dl>
 				</dd>
 				
 				<dt>
-					<b>oculus.binning.parsing.&lt;field&gt;.fieldAggregation</b>
+					oculus.binning.parsing.&lt;field&gt;.fieldAggregation
 				</dt>
 				<dd>Method of aggregation used on values of the X field. Describes how values from multiple data points in the same bin should be aggregated together to create a single value for the bin.
 
@@ -337,7 +330,7 @@ The Source Data properties describe the raw data set to be tiled:
 					<dd>Find the maximum value</dd>
 					
 					<dt>log</dt>
-					<dd>Treat the number as a logarithmic value; aggregation of a and b is log_base(base^a+base^b). Base is taken from property oculus.binning.parsing.&lt;field&gt;.fieldBase, and defaults to e.</dd>
+					<dd>Treat the number as a logarithmic value; aggregation of a and b is log_base(base^a+base^b). Base is taken from property <strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong>, and defaults to <em>e</em>.</dd>
 				</dd>
 			</dl>
 		</ul>
@@ -346,22 +339,21 @@ The Source Data properties describe the raw data set to be tiled:
 
 ###<a name="tiling-properties"></a>Tiling Properties Files
 
-The Tiling properties files define the tiling job parameters for each layer in your visual analytic, such as which fields to bin on and how values are binned:
+The tiling properties files define the tiling job parameters for each layer in your visual analytic, such as which fields to bin on and how values are binned:
 
 <div class="details props">
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>oculus.binning.name</b>
+					oculus.binning.name
 				</dt>
 				<dd>Name (path) of the output data tile set pyramid. If you are writing to a file system, use a relative path instead of an absolute path. If you are writing to HBase, this is used as a table name. This name is also written to the tile set metadata and used as a plot label.</dd>
 				
 				<dt>
-					<b>oculus.binning.projection</b>
+					oculus.binning.projection
 				</dt>
 				<dd>Type of projection to use when binning data. Possible values are:
-				
 					<dl>
 						<dt>EPSG:4326</dt>
 						<dd>Bin linearly over the whole range of values found (default)</dd>
@@ -372,68 +364,57 @@ The Tiling properties files define the tiling job parameters for each layer in y
 				</dd>
    
    				<dt>
-   					<b>oculus.binning.projection.autobounds</b>
+   					oculus.binning.projection.autobounds
    				</dt>
-	
 				<dd>
-					Indicates whether the tiling job should set the minimum and maximum
-					bounds automatically (true) or whether you will specify them manually
-					(false). Default is true.
+					Indicates whether the tiling job should set the minimum and maximum	bounds automatically (true) or whether you will specify them manually (false). Default is true.
 				</dd>
 	
 				<dt>
-					<b>oculus.binning.projection.minx</b>
+					oculus.binning.projection.minx
 				</dt>
-				
 				<dd>
-					If the oculus.binning.projection.autobounds value is set to false, this
-					field indicates the lowest value that will be displayed on the x-axis.
+					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the lowest value that will be displayed on the x-axis.
 				</dd>
 	
 				<dt>
-					<b>oculus.binning.projection.maxx</b>
+					oculus.binning.projection.maxx
 				</dt>
-				
 				<dd>
-					If the oculus.binning.projection.autobounds value is set to false, this
-					field indicates the highest value that will be displayed on the x-axis.
+					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the highest value that will be displayed on the x-axis.
 				</dd>
 	
 				<dt>
-					<b>oculus.binning.projection.miny</b>
+					oculus.binning.projection.miny
 				</dt>
-				
 				<dd>
-					If the oculus.binning.projection.autobounds value is set to false, this
-					field indicates the lowest value that will be displayed on the y-axis.
+					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the lowest value that will be displayed on the y-axis.
 				</dd>
 	
 				<dt>
-					<b>oculus.binning.projection.maxy</b>
+					oculus.binning.projection.maxy
 				</dt>
-				
 				<dd>
-					If the oculus.binning.projection.autobounds value is set to false, this
-					field indicates the highest value that will be displayed on the y-axis.
+					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the highest value that will be displayed on the y-axis.
 				</dd>
    				
 				<dt>
-					<b>oculus.binning.xField</b>
+					oculus.binning.xField
 				</dt>
 				<dd>Field to use as the X axis value.</dd>
-				
+
 				<dt>
-					<b>oculus.binning.yField</b>
+					oculus.binning.yField
 				</dt>
 				<dd>Field to use as the Y axis value. Defaults to none.</dd>
 				
 				<dt>
-					<b>oculus.binning.valueField</b>
+					oculus.binning.valueField
 				</dt>
 				<dd>Field to use as the bin value. Default counts entries only.</dd>
 				
 				<dt>
-					<b>oculus.binning.levels.&lt;order&gt;</b>
+					oculus.binning.levels.&lt;order&gt;
 				</dt>
 				<dd>Array property. For example, if you want to generate tile zoom levels in three groups, you should include:
 					<ul>
@@ -441,23 +422,25 @@ The Tiling properties files define the tiling job parameters for each layer in y
 						<li>oculus.binning.levels.1
 						<li>oculus.binning.levels.2
 					</ul>
-				Each is a description of the zoom levels to bin simultaneously in that group - a comma-separated list of individual integers, or ranges of integers (described as start-end). So "0-3,5" would mean levels 0, 1, 2, 3, and 5. If there are multiple level sets, the parsing of the raw data is only done once, and is cached for use with each level set. This property is mandatory, and has no default.
+					
+					<p>Each group is a description of the zoom levels to bin simultaneously - a comma-separated list of individual integers, or ranges of integers (described as start-end). For examples, "0-3,5" means levels 0, 1, 2, 3, and 5. If there are multiple level sets, the raw data is parsed once and cached for use with each level set. This property is mandatory, and has no default.</p>
 				
-				Which levels you should bin together depends largely on the size of your cluster and on the size of your data. 
+					<p>Which levels you should bin together depends both on the size of your cluster and data.</p>
    
-   				Each binning job has an overhead cost and a tiling cost. Generally, the
-   				overhead cost is the dominant factor below level 8 and irrelevant above that.
-   				Tiling all levels below this point will save the overhead cost reducing tile generation time. Above this
-   				level, you risk job failure due to out of memory errors if you try to simultaneously bin multiple levels due to the large number of tiles generated at lower levels.
-   				Our typical use case has:
-				- binning.level.0=0-8
-				- binning.level.1=9
-				- binning.level.2=10
-				- etc.
+					<p>Each binning job has an overhead cost and a tiling cost. Generally, the			overhead cost is the dominant factor below level 8 and irrelevant above that. Tiling all levels below this point will save the overhead cost and reduce tile generation time. Above this level, you risk job failure out of memory errors if you try to simultaneously bin multiple levels due to the large number of tiles generated at lower levels.</p>
+				
+					<p>Our typical use case has:</p>
+				
+					<ul>
+						<li>binning.level.0=0-8</li>
+						<li>binning.level.1=9</li>
+						<li>binning.level.2=10</li>
+						<li>etc.</li>
+					</ul>
 				</dd>
 				
 				<dt>
-					<b>oculus.binning.consolidationPartitions</b>
+					oculus.binning.consolidationPartitions
 				</dt>
 				<dd>The number of partitions into which to consolidate data when binning. If not included, Spark automatically selects the number of partitions.</dd>
 				
@@ -466,17 +449,17 @@ The Tiling properties files define the tiling job parameters for each layer in y
 	</div>
 </div>
 
-###<a name="examples"></a>Properties File Examples
+###<a name="examples"></a>Example Properties Files
 
-Several example properties files can be found in the <em>aperture-tiles/<wbr>tile-generation/<wbr>data</em> directory.
+Several example properties files can be found in the <em>tile-generation/<wbr>data</em> directory.
 
-- **twitter-local-base.bd** is an example Base properties file for a source dataset (of ID, time, latitude and longitude) where:
+- **twitter-local-base.bd** is a base properties file for a source dataset (of ID, time, latitude and longitude) where:
 	- Raw data is stored in the local file system
 	- Tiles are output to the local file system
-- **twitter-hdfs-base.bd** is an example Base properties file for the same source dataset where:
+- **twitter-hdfs-base.bd** is a base properties file for the same source dataset where:
 	- Raw data is stored in HDFS
 	- Tiles are output to HBase
-- **twitter-lon-lat.bd** is an example Tiling properties file that, in conjunction with either of the base files above, defines a tile set of longitude and latitude data aggregated at 10 levels (0-9).
+- **twitter-lon-lat.bd** is a tiling properties file that, in conjunction with either of the base files above, defines a tile set of longitude and latitude data aggregated at 10 levels (0-9).
 
 ## <a name="custom-tiling"></a>Custom Tiling Jobs
 
@@ -506,8 +489,8 @@ The first step in creating custom code for the tile generation process is to dec
 
 The Binning Analytic is used throughout the tiling process. It should define:
 
-- The data formats used during the tiling job, of which there are two [types](#data-types): a processing type and a binning type.
-- How individual data records in a bin are [aggregated](#data-aggregation)
+- The [data types](#data-types) used during the tiling job, of which there are two formats: a processing type and a binning type.
+- The method of [aggregation](#data-aggregation) for joining individual data records in a bin
  
 See the following file for an example of a custom Bin Analytic: <em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/<wbr><strong>TwitterTopicBinningAnalytic.scala</strong></em>
 
@@ -516,12 +499,12 @@ See the following file for an example of a custom Bin Analytic: <em>/tile-exampl
 During a tiling job, the Binning Analytic uses two types of data:
 
 - A **processing type**, which is used when processing the tiles and aggregating them together. It should contain all the information needed for calculations performed during the job. The processing type allows you to keep information that may be needed for aggregation, but not needed once the tile is complete.
-- A **binning type**, which is the final form written to the tiles. 
+- A **binning type**, which is the final form written to the tile bins.
 
 For example, to record an average, the two types might be used as follows:
 
-- The processing type would include the number of records and the sum of their values, both of which would be continuously updated as new records are examined
-- The binning type would simply be the average (the final processing type sum divided by the total number of records)
+1. The processing type would include the count of records and the sum of their values, both of which would be continuously updated as new records are examined.
+2. The binning type would simply be the average, or the final processing type sum divided by the total count of records.
 
 A code example is shown in line 41 of **TwitterTopicBinningAnalytic.scala**:
 
@@ -531,6 +514,8 @@ extends BinningAnalytic[Map[String, TwitterDemoTopicRecord],
 ```
 
 Here the processing type is a *map* used to add all similar Twitter message topic records together, while the binning type is a *list* containing only the topics with the highest counts.
+
+###### Transformation
 
 The Binning Analytic should also describe how to convert the processing type into the binning type. In **TwitterTopicBinningAnalytic.scala**, this is accomplished with a **finish** function (lines 65-66):
 
