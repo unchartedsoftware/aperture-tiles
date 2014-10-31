@@ -27,7 +27,7 @@
 /*global OpenLayers */
 
 /**
- * Performs cusomizations on the main window.
+ * Performs customizations on the main window.
  *
  * Default implementation is a no-op.
  */
