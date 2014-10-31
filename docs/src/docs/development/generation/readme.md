@@ -9,31 +9,63 @@ layout: submenu
 Tile Generation
 ===============
 
-Using a distributed framework built on the Apache Spark engine, Aperture Tiles enables you to create a set of visual tiles that summarize and aggregate your large-scale data at various levels in a pyramid structure. 
+Using a distributed framework built on the Apache Spark engine, Aperture Tiles enables you to create a set of data tiles that can be used summarize and aggregate your large-scale data at various levels in a interactive, pyramid-style visualization. The following sections describe how you can generate a tile pyramid from your raw data by using tools built in to the Aperture Tiles source code or creating your own custom generation code.
 
-At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to 4<sup>z</sup> tiles, where z is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row wise across the base map or plot, starting at the lower left. Each tile summarizes the data it comprises.
+## Understanding the Tile Pyramid Hierarchy
 
-<img src="../../../img/tile-layout.png" class="screenshot" alt="Tile Layout" />
+At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to <em>4<sup>z</sup></em> tiles, where *z* is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row-wise across the base map or plot, starting at the lower left. Each tile summarizes the data in the region of the base map/plot to which it corresponds.
 
-Each tile is an AVRO record object containing an array of bins (typically 256 x 256). Each bin contains an aggregation of all the data points that fall within it.
+Individual tiles are [Avro](http://avro.apache.org/) record objects partitioned into a variable number of bins (typically 256 x 256 for heatmaps). Each bin contains an aggregation of all the data points in the region of the base map/plot to which it corresponds.
 
-<img src="../../../img/tile-grid.png" class="screenshot" alt="Tile Grid" />
+<img src="../../../img/tile-pyramid-hierarchy.png" class="screenshot" alt="Tile Pyramid" />
 
-The process of creating a set of AVRO tiles from your raw source data is called a tiling job. The tiles created by a job can be served and browsed in any modern Web browser.
+## <a name="tile-gen-process"></a>Tile Generation Process
 
-You can transform your source data into a set of AVRO tiles using:
+The process of generating a set of AVRO tiles from your raw source data is called a tiling job. The tiles created by a job can be served and browsed in any modern Web browser.
 
-- The [**CSVBinner**](#csvbinner), which is a built-in tool that can produce tiles that aggregate numeric data by summation or take the minimum or maximum value.
-- The [**RDDBinner**](#custom-tiling), which consists of a set of APIs for creating custom tile-based analytics on non-numeric or non-delimited data. See the Twitter Topics demo (<em>tile-examples/<wbr>twitter-topics</em>) for an example of an example implementation for a data set requiring custom tiling.
-- **Third-party tools**, provided they adhere to the Aperture Tiles AVRO schema. Basic schema files are in the Aperture Tiles source code (<em>binning-utilities/<wbr>src/<wbr>main/<wbr>resources</em>). Note that this approach is not discussed below.
+As shown in the following diagram, the tile generation process has five main stages:
+
+1. **Raw Data Parsing**
+    - *Purpose*: Pass in your raw data and parse its structure. For standard tiling jobs, parsing the raw data is the main task; the rest of the applicable stages are kicked off automatically.
+2. **Bin Analytics**
+    - *Purpose*: Create summaries per tile that are partitioned into bins.
+    - *Extracts*: Intermediate values from the records in your raw data (e.g., a count of values and their sum)
+	- *Maps To*: One tile bin
+	- *Aggregates*: All the values in each bin (e.g., divide the sum by the count to get the mean value)
+    - *Outputs*: Final value written to each bin (e.g., the mean value)
+	- *Example Use*: Create heatmaps distributed across each of the zoom levels in your geographic map or cross-plot tile pyramid
+3. **Data Analytics** (*Optional*)
+    - *Extracts*: Intermediate values from the records in your raw data
+	- *Maps To*: One tile
+	- *Aggregates*: All the values mapped to each tile (e.g., determine the maximum individual raw data value)
+    - *Outputs*: Tile metadata values
+	- *Example Use*: Create custom tile overlay analytics. Not part of the standard tile generation process.
+4. **Tile Analytics** (*Optional*)
+    - *Extracts*: Additional data tile data
+	- *Maps To*: One tile
+	- *Outputs*: Tile metadata values
+	- *Example Use*: Analyze completed tiles and store information to tile metadata (e.g., extract the minimum and maximum bin values, which are used to apply color ramps)
+5. **Tile Creation** 
+    - *Purpose*: Assembles the values generated by the various analytics into a tile pyramid, first in memory and then to HBase or the local file system
+	- *Outputs*: Completed tile pyramid
+
+<a href="diagram.html" class="screenshot"><img src="../../../img/tile-gen-process-thumb.png" alt=""></a>
+
+You can execute the tile generation process on your source data in any of the following manners:
+
+- [**Standard tiling jobs**](#csvbinner) use the CSVBinner, a built-in tool that can produce tiles that aggregate numeric data by summation or take the minimum or maximum value. The CSVBinner automates the steps in the tile generation process; all you need to provide is a set of properties files that describe the source data to analyze and the job options to pass in.
+- [**Custom tiling jobs**](#custom-tiling) use a set of RDDBinner APIs for creating custom tile-based analytics on non-numeric or non-delimited data. Depending on your implementation, you will need to create custom code for some or all of the tile generation stages. See the Twitter Topics demo (<em>tile-examples/<wbr>twitter-topics</em>) for an example implementation of a data set requiring custom tiling.
+- **Third-party tiling jobs** use other tools, provided they adhere to the Aperture Tiles AVRO schema. Basic schema files are in the Aperture Tiles source code (<em>binning-utilities/<wbr>src/<wbr>main/<wbr>resources</em>). Note that this approach is not discussed below.
 
 Before you run a tiling job, make sure you meet all of the prerequisites listed in the following section.
 
 ## <a name="prerequisites"></a>Prerequisites
 
+Aperture Tiles uses a distributed framework built on the Apache Spark engine to generate AVRO tiles. Before you run a tiling job, you must install and configure Apache Spark and its related prerequisites as described in the following sections.
+
 ### <a name="third-party-tools"></a>Third-Party Tools
 
-See the [Installation documentation](../installation) for full details on the required third-party tools.
+See the [Installation](../installation/#prerequisites) topic for full details on required third-party tools.
 
 - **Languages**:
 	<p>
@@ -86,12 +118,18 @@ The script simplifies the process of running Spark jobs by including all the nec
 	</div>
 </div>
 
-## <a name="csvbinner"></a>CSVBinner
+## <a name="csvbinner"></a>Standard Tiling Jobs
 
-The Aperture Tiles source code contains a CSVBinner tool designed to process your numeric, character-separated (e.g., CSV) tabular data and generate a set of tiles. To define the tile set you want to create, you must edit two types of properties files and pass them to the CSVBinner:
+A standard Aperture Tiles tiling job uses the CSVBinner tool in the source code to process your numeric, character-separated (e.g., CSV) tabular data and generate a set of tiles. To define the tile set you want to create, you must edit two types of properties files and pass them to the CSVBinner:
 
-- A [Base properties file](#base-properties), which describes the general characteristics of the data
-- [Tiling properties files](#tiling-properties), each of which describes the specific attributes you want to tile
+- A [base properties](#base-properties) file, which describes the general characteristics of the data
+- [Tiling properties](#tiling-properties) files, each of which describes the specific attributes you want to tile
+
+During the tiling job, the CSVBinner creates a collection of AVRO tile data files in the location (HBase or local file system) specified in the base properties file.
+
+The following sections describe how to execute the CSVBinner and edit the configurable components of the base properties and tiling properties files. For a list of sample properties files in the Aperture Tiles source code, see the [Examples](#examples) section.
+
+### Executing the CSVBinner
 
 To execute the CSVBinner and run a tiling job, use the **spark-run** script and pass in the names of the properties files you want to use. For example:
 
@@ -440,20 +478,20 @@ Several example properties files can be found in the <em>aperture-tiles/<wbr>til
 	- Tiles are output to HBase
 - **twitter-lon-lat.bd** is an example Tiling properties file that, in conjunction with either of the base files above, defines a tile set of longitude and latitude data aggregated at 10 levels (0-9).
 
-## <a name="custom-tiling"></a>Custom Tiling
+## <a name="custom-tiling"></a>Custom Tiling Jobs
 
 If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and create a tile set. In general, creating custom tile generation code involves the following processes:
 
-- [Defining Your Data Structure](#define-data-structure), which includes the following components:
+- [Defining Your Data Structure](#define-data-structure), which includes some components of the Bin Analytics and Tile Creation stages of the [tile generation process](#tile-gen-process):
 	- Structure of your source data while it is being processed by the tiling job and while it is being written to the AVRO tile set
-	- Aggregation methods used to combine multiple records from your source data that fall in the same tile set bin
+	- Aggregation methods used to combine multiple records from your source data that fall in the same tile bin
 	- Methods of reading and writing to the tile set
-- [Binning Your Data](#binning-your-data), which includes the following components:
+- [Binning Your Data](#binning-your-data), which includes the remaining components of the Bin Analytics and Tile Creation stages of the [tile generation process](#tile-gen-process):
 	- Method of parsing your source data into the AVRO tile set structure you defined
 	- Transformation of your source data into the AVRO tile set
 	- Storage of the AVRO tile set to your preferred location
 
-Once you have created the required components to perform each process, you should run your custom Binner. The Binner will create a set of AVRO tiles that you will use in your Aperture Tiles visual analytic.
+Once you have created the required components to perform each process, you should run your custom binner. The binner will create the AVRO tile set you will use in your Aperture Tiles visual analytic.
 
 An example of custom code written for tile generation can be found in the Twitter Topics project (<em>tile-examples/<wbr>twitter-topics/</em>), which displays a Twitter message heatmap and aggregates the top words mentioned in tweets for each tile and bin.
 
