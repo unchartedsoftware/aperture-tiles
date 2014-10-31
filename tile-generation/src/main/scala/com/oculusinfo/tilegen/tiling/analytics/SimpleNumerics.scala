@@ -40,8 +40,15 @@ import java.lang.{Double => JavaDouble}
  * http://www.azavea.com/blogs/labs/2011/06/scalas-numeric-type-class-pt-1/
  * http://www.azavea.com/blogs/labs/2011/06/scalas-numeric-type-class-pt-2/
  * https://github.com/azavea/numeric/blob/master/src/main/scala/com/azavea/math/Numeric.scala
+ * 
+ * This is supposed to be faster with @specialized, but my test (in 
+ * SimpleNumericSpeedTestSuite) don't show any improvement.  I'll do more 
+ * thorough testing later, but for now, except that we have a few extra pieces
+ * (like minValue, maxValue, and isNaN), it appears we could just use normal
+ * scala numerics - NDK
  */
-trait SimpleNumeric[@specialized(Int, Long, Float, Double) A] extends SimpleConvertableFrom[A] with SimpleConvertableTo[A] with Serializable {
+// trait SimpleNumeric[@specialized(Int, Long, Float, Double) A] extends SimpleConvertableFrom[A] with SimpleConvertableTo[A] with Serializable {
+trait SimpleNumeric[A] extends SimpleConvertableFrom[A] with SimpleConvertableTo[A] with Serializable {
 	/** Absolute value */
 	def abs (a: A): A
 	/** Addition */
@@ -84,7 +91,8 @@ object SimpleNumeric {
 	implicit object FloatIsSimpleNumeric extends FloatIsSimpleNumeric
 	implicit object DoubleIsSimpleNumeric extends DoubleIsSimpleNumeric
 
-	def numeric[@specialized(Int, Long, Float, Double) A: SimpleNumeric]:SimpleNumeric[A] = implicitly[SimpleNumeric[A]]
+	// def numeric[@specialized(Int, Long, Float, Double) A: SimpleNumeric]:SimpleNumeric[A] = implicitly[SimpleNumeric[A]]
+	def numeric[A: SimpleNumeric]:SimpleNumeric[A] = implicitly[SimpleNumeric[A]]
 }
 
 
