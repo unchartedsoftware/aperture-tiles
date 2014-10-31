@@ -34,7 +34,7 @@ define(function (require) {
         OverlayButton;
 
     getMaxContentHeight = function() {
-        return $(window).height() / 3;
+        return  Math.floor( $(window).height() / 2 );
     };
 
     OverlayButton = Class.extend({
@@ -117,7 +117,7 @@ define(function (require) {
                                 opacity: 1
                             }, DURATION );
 
-                            if ( contentHeight > maxHeight ) {
+                            if ( contentHeight >= maxHeight ) {
                                 // set timeout to override jquery setting overflow to hidden during
                                 // animation. This allows the scrollbar to appear instantly
                                 setTimeout( function() {
@@ -153,7 +153,7 @@ define(function (require) {
                     opacity: 0
                 }, DURATION );
 
-                if ( contentHeight > maxHeight ) {
+                if ( contentHeight >= maxHeight ) {
                     // set timeout to override jquery setting overflow to hidden during
                     // animation. This allows the scrollbar to appear instantly
                     setTimeout( function() {
