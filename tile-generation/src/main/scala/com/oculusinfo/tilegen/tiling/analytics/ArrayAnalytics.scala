@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 import java.util.{List => JavaList}
 import scala.collection.JavaConverters._
+
 import org.json.JSONArray
 import org.json.JSONObject
 
