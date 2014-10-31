@@ -563,30 +563,20 @@ def aggregate (a: Map[String, TwitterDemoTopicRecord],
 }
 ```
 
-#### <a name="custom-aggregation"></a>Custom Aggregation Methods
+###### <a name="custom-aggregation"></a>Custom Aggregation Methods
 
-Lines 91-109  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
+Lines 96-104  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
 ```scala
 val minAnalysis:
 		AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
-					 		List[TwitterDemoTopicRecord]] =
-	new TwitterTopicListAnalysis(
-		sc, new TwitterMinRecordAnalytic,
-		Range(levelBounds._1, levelBounds._2+1).map(level =>
-			(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
-		).toMap + ("global.min" -> ((index: TileIndex) => true))
-	)
+							List[TwitterDemoTopicRecord]] =
+	new TwitterTopicListAnalysis(new TwitterMinRecordAnalytic)
 
 val maxAnalysis:
 		AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
-		                    List[TwitterDemoTopicRecord]] =
-	new TwitterTopicListAnalysis(
-		sc, new TwitterMaxRecordAnalytic,
-		Range(levelBounds._1, levelBounds._2+1).map(level =>
-			(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
-		).toMap + ("global.max" -> ((index: TileIndex) => true))
-	)
+							List[TwitterDemoTopicRecord]] =
+	new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
 ```
 
 Standard Bin Analytics are available in: <em>tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>Analytics.scala</strong></em>
@@ -674,7 +664,7 @@ val data: RDD[((Double, Double), PROCESSING_TYPE)]
 
 Where **PROCESSING_TYPE** is the processing type from your [Binning Analytic](#binning-analytic).
 
-Lines 165 - 180 in **TwitterTopicBinner.scala** retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
+Lines 160 - 175 in **TwitterTopicBinner.scala** retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i =>
@@ -697,7 +687,7 @@ data.cache
 
 #### <a name="binning"></a>Binning
 
-Lines 193 - 201 of **TwitterTopicBinner.scala** transform the data into tiles:
+Lines 202 - 210 of **TwitterTopicBinner.scala** transform the data into tiles:
 
 ```scala
 val tiles = binner.processDataByLevel(data,
@@ -785,7 +775,7 @@ It accepts the following properties:
 
 #### <a name="writing-tiles"></a>Writing Tiles
 
-Lines 202 - 209 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
+Lines 211 - 218 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
 
 ```scala
 tileIO.writeTileSet(tilePyramid,
