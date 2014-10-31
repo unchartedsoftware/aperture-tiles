@@ -56,8 +56,8 @@ class StringScoreAnalytic[T]
 	def aggregate (a: Map[String, T], b: Map[String, T]): Map[String, T] = {
 		val combination =
 			(a.keySet union b.keySet).map(key =>
-				// Should always have one or the other, since we took the union 
-				// of keysets, so the error case where we try to reduce an 
+				// Should always have one or the other, since we took the union
+				// of keysets, so the error case where we try to reduce an
 				// empty list shouldn't happen
 				key -> List(a.get(key), b.get(key)).flatten.reduce(baseAnalytic.aggregate(_, _))
 			)
@@ -179,7 +179,7 @@ class CategoryValueTileAnalytic[T] (analyticName: Option[String],
 	override def valueToString (value: Seq[T]): String =
 		value.map(baseAnalytic.valueToString(_)).mkString("[", ",", "]")
 	override def toMap (value: Seq[T]): Map[String, Any] =
-		categoryNames.zip(value).map{case (k1, v1) => 
+		categoryNames.zip(value).map{case (k1, v1) =>
 			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
 		}.flatten.toMap
 }

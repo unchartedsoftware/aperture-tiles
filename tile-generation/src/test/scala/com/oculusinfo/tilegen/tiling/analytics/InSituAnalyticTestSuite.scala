@@ -41,40 +41,40 @@ import scala.util.Try
 
 
 class InSituAnalyticTestSuite extends FunSuite with SharedSparkContext {
-    test("Array tile analytic output") {
-        val analytic = new ArrayTileAnalytic[Int](new NumericSumTileAnalytic[Int]("inner"), Some("outer"))
-        val analyticDesc = new MonolithicAnalysisDescription(((i: Int) => Seq(i)), analytic)
-        
-        analyticDesc.addGlobalAccumulator(sc)
-        analyticDesc.addLevelAccumulator(sc, 0)
-        analyticDesc.addLevelAccumulator(sc, 1)
+	test("Array tile analytic output") {
+		val analytic = new ArrayTileAnalytic[Int](new NumericSumTileAnalytic[Int]("inner"), Some("outer"))
+		val analyticDesc = new MonolithicAnalysisDescription(((i: Int) => Seq(i)), analytic)
+		
+		analyticDesc.addGlobalAccumulator(sc)
+		analyticDesc.addLevelAccumulator(sc, 0)
+		analyticDesc.addLevelAccumulator(sc, 1)
 
-        analyticDesc.accumulate(new TileIndex(0, 0, 0, 4, 4), Seq(1, 0, 0, 0))
-        analyticDesc.accumulate(new TileIndex(0, 0, 0, 4, 4), Seq(1, 1, 0, 0))
-        analyticDesc.accumulate(new TileIndex(1, 0, 0, 4, 4), Seq(0, 1, 0, 0))
-        analyticDesc.accumulate(new TileIndex(1, 1, 0, 4, 4), Seq(0, 0, 1, 0))
-        analyticDesc.accumulate(new TileIndex(1, 0, 1, 4, 4), Seq(0, 0, 1, 1))
-        analyticDesc.accumulate(new TileIndex(1, 1, 1, 4, 4), Seq(0, 0, 0, 1))
-        val pyramid = new WebMercatorTilePyramid
-        val metaData = new PyramidMetaData("name", "description", 4, 4,
-                                           pyramid.getTileScheme(),
-                                           pyramid.getProjection(),
-                                           Seq(Int.box(0), Int.box(1)).asJava,
-                                           pyramid.getTileBounds(new TileIndex(0, 0, 0)),
-                                           null, null)
-        analyticDesc.applyTo(metaData)
+		analyticDesc.accumulate(new TileIndex(0, 0, 0, 4, 4), Seq(1, 0, 0, 0))
+		analyticDesc.accumulate(new TileIndex(0, 0, 0, 4, 4), Seq(1, 1, 0, 0))
+		analyticDesc.accumulate(new TileIndex(1, 0, 0, 4, 4), Seq(0, 1, 0, 0))
+		analyticDesc.accumulate(new TileIndex(1, 1, 0, 4, 4), Seq(0, 0, 1, 0))
+		analyticDesc.accumulate(new TileIndex(1, 0, 1, 4, 4), Seq(0, 0, 1, 1))
+		analyticDesc.accumulate(new TileIndex(1, 1, 1, 4, 4), Seq(0, 0, 0, 1))
+		val pyramid = new WebMercatorTilePyramid
+		val metaData = new PyramidMetaData("name", "description", 4, 4,
+		                                   pyramid.getTileScheme(),
+		                                   pyramid.getProjection(),
+		                                   Seq(Int.box(0), Int.box(1)).asJava,
+		                                   pyramid.getTileBounds(new TileIndex(0, 0, 0)),
+		                                   null, null)
+		analyticDesc.applyTo(metaData)
 
-        def getInnerValues (from: String): List[Int] = {
-          val json = new JSONObject(from).getJSONArray("outer")
-          Range(0, json.length()).map(n =>
-            json.getJSONObject(n).getInt("inner")
-            ).toList
-        }
-        val global = getInnerValues(metaData.getCustomMetaData("global"))
-        val level0= getInnerValues(metaData.getCustomMetaData("0"))
-        val level1 = getInnerValues(metaData.getCustomMetaData("1"))
-        assert(List(2, 2, 2, 2) === global)
-        assert(List(2, 1, 0, 0) === level0)
-        assert(List(0, 1, 2, 2) === level1)
-    }
+		def getInnerValues (from: String): List[Int] = {
+			val json = new JSONObject(from).getJSONArray("outer")
+			Range(0, json.length()).map(n =>
+				json.getJSONObject(n).getInt("inner")
+			).toList
+		}
+		val global = getInnerValues(metaData.getCustomMetaData("global"))
+		val level0= getInnerValues(metaData.getCustomMetaData("0"))
+		val level1 = getInnerValues(metaData.getCustomMetaData("1"))
+		assert(List(2, 2, 2, 2) === global)
+		assert(List(2, 1, 0, 0) === level0)
+		assert(List(0, 1, 2, 2) === level1)
+	}
 }
