@@ -7,84 +7,73 @@ layout: section
 Aperture Tile Demonstrations
 ============================
 
-The following demos illustrate the utility of tile based visual analytics and the possibilities of create interactive visualization for big data.
+The following demos illustrate the utility of tile-based visual analytics and the possibilities of interactive visualization for big data. These demos illustrate:
 
+-   Seamless zoom and pan interaction on maps and cross-plots
+-   Server-side and client-side rendering of tile visualizations
+-   Rich layer controls for interactive filtering of tile data and user color ramp selection
+-   Interactive HTML5 tile visualizations
+-   Multiple aggregation summaries at tile-level with tile carousels
+-   Integration with advanced analytics incorporated in generated tile data
+-   Use of Aperture tiles for exploratory data analysis by plotting *all the data*
+
+Tile-based Metrics of NYC Taxi Trip Data
+---------------------------------------
+
+This demo, which was presented at [Strata and Hadoop World 2014](http://strataconf.com/stratany2014), enables the exploration of data for 187 million NYC taxi trips taken between Jan 1, 2013 - Jan 3, 2014. 
+Trip data is displayed over a variety of metrics (both on a [Google Maps](https://maps.google.com) base layer and in cross-plot form) with the goal of answering the following questions:
+
+- Where is the best place to catch a cab?
+- How can a cab driver make the most money?
+
+Among the interesting patterns that the demo reveals are:
+
+- Passengers at JFK Airport tip approximately 5% less than passengers at LaGuardia
+- Downtown passengers tip less than midtown passengers
+- Downtown passengers travel further on average than midtown passengers
+- Average hourly wage expected by pickup location
+- Patterns in total fare vs. time (quiet Sundays, big snow storms, rate increases)
+
+The source dataset for this demo was acquired from the [NYC Taxi and Limousine Commission](http://www.nyc.gov/html/tlc/html/home/home.shtml) by [Chris Whong](http://chriswhong.com/open-data/foil_nyc_taxi/) through a Freedom of Information Law (FOIL) request. Each trip record contains latitude/longitude coordinates and timestamps for the pickup and drop-off locations, along with other stats related to the fare, tip and taxes.
+
+&gt; Explore the [NYC Taxi Trip demo](https://strata.oculusinfo.com/nyc-taxi/?map=6&baselayer=0)
 
 Tile-based Heatmap of Twitter Messages
 --------------------------------------
 
-This Aperture tile demo shows the scalability of map-oriented big data plots using heatmaps. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer.
+This demo shows the scalability of map-oriented big data plots using heatmaps. The application contains a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer.
 
-This demo illustrates:
-
--   Seamless zoom and pan interaction on maps
--   Server side rendering of tiled heatmaps
--   Rich layer controls for interactive filtering of tile data and user color ramp selection
-
-[> Explore the Twitter Heatmap demo](https://tiles.oculusinfo.com/twitter-heatmap/)
+&gt; Explore the [Twitter Heatmap demo](https://tiles.oculusinfo.com/twitter-heatmap/)
 
 Tile-based Topic Tracking in Twitter Messages
 ---------------------------------------------
 
-This Aperture tile demo shows map oriented tile applications using multiple layers of tile data and the use of tile carousels to flip through multiple per tile analytics. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region. These aggregate markers summarize and provide interactive visualizations that support analysis and integrate with advanced analytics. Client side rendering of tile data uses the [Aperture JS visualization framework library](http://aperturejs.com/).  In this demo, topics of interest are extracted from Twitter messages across South America.  Word clouds summarize the frequency of each topic in the tiles and histograms show trends.  Integrated [machine translation](https://translate.google.com/) converts from native language to english.
+This demo shows map-oriented tile applications using multiple layers of tile data and tile carousels to flip through multiple per-tile analytics. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region. These aggregate markers summarize and provide interactive visualizations that support analysis and integrate with advanced analytics. Client-side rendering of tile data uses the [ApertureJS visualization framework library](http://aperturejs.com/).  
 
-This demo illustrates:
+In this demo, topics of interest are extracted from Twitter messages across South America.  Word clouds summarize the frequency of each topic in the tiles, while histograms show trends.  Integrated [machine translation](https://translate.google.com/) converts from the native language in which tweets are written to English.
 
--   Seamless zoom and pan interaction on maps
--   Interactive HTML5 tile visualizations
--   Multiple aggregation summaries at tile-level with tile carousels
--   Server and client side rendering of tile visualizations
--   Integration with advanced analytics incorporated in generated tile data
-
-[> Explore the Twitter Topics demo](https://tiles.oculusinfo.com/twitter-topics/)
-
-The source code for this demo is provided in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project.
+&gt; Explore the [Twitter Topics demo](https://tiles.oculusinfo.com/twitter-topics/)
+<br>&gt; Access the source code in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project
 
 Tile-based Sentiment Analysis of Twitter Messages
 -------------------------------------------------
 
 This Aperture tile demo shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region summarizing the top topics discussed in the Twitter messages and the sentiment of the Tweet (positive, neutral and negative). Histograms of topics show sentiment trends.
 
-This demo illustrates:
-
--   Seamless zoom and pan interaction on maps
--   Interactive HTML5 tiles
--   Multiple aggregation summaries at tile-level with tile carousels
--   Server and client side rendering of tile visualizations
--   Integration with advanced analytics incorporated in generated tile data
-
-[> Explore the Twitter Sentiment demo](https://tiles.oculusinfo.com/twitter-sentiment/)
+&gt; Explore the [Twitter Sentiment demo](https://tiles.oculusinfo.com/twitter-sentiment/)
 
 Big Data Plots of Bitcoin for Exploratory Data Analysis
 -------------------------------------------------------
 
-This demo illustrates exploratory data analysis using cross-plots of dimensions of interest of large data for the purpose of characterizing and understanding its underlying distribution, data quality and gaps in values. [John Tukey](http://en.wikipedia.org/wiki/John_Tukey) emphasized examining the data before applying a specific model and attempting to harness its information. In this spirit, we have create a demo analyzing the well known digital currency [Bitcoin](http://bitcoin.org/). Using Aperture tiles a zoom and pan cross plot of time by bitcoin transaction amount was created. A heat map is applied to the data points to summarize frequency distribution. The plot makes apparent interesting structural properties of the data such as the "grinding down" of bitcoins through micro-transfers of pools of bitcoins.
+This demo enables exploratory data analysis of [Bitcoin](http://bitcoin.org/) transactions, a well-known digital currency. Using an interactive cross-plot of transaction amounts against time, Aperture Tiles aids the characterization and understanding of the underlying distribution, quality and gaps of the source data. 
+A heat map is applied to the data points to summarize frequency distribution, effectively highlighting interesting data structures, such as the "grinding down" of bitcoins through micro-transfers of pools of bitcoins.
 
-This demo illustrates:
-
--   Seamless zoom and pan interaction on cross-plots
--   Use of Aperture tiles for exploratory data analysis by plotting *all the data*
-
-[> Explore the Bitcoin demo](https://tiles.oculusinfo.com/bitcoin-demo/)
+&gt; Explore the [Bitcoin demo](https://tiles.oculusinfo.com/bitcoin-demo/)
 
 Julia Set Example
 -----------------
 
-This demo is used in the Quick Start guide to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
+This demo is used in the [Quick Start guide](../documentation/quickstart/) to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
 
-[> Explore the Julia Set demo](https://tiles.oculusinfo.com/julia-demo/)
-
-The source code for this demo is provided in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project.
-
-<div class="git">
-	<h2>Interested in Learning More?</h2>
-
-	<ul>
-		<li><a href="../tour/overview/">Tour</a>: Take our tour to learn more about Aperture Tiles.
-		<li><a href="../docs/quickstart/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
-		<ul>
-			<li><a href="../docs/quickstart/">Quick Start</a>: Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
-		</ul>
-		<li><a href="../download/">Download</a>: For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.
-	</ul>
-</div>
+&gt; Explore the [Julia Set demo](https://tiles.oculusinfo.com/julia-demo/)
+<br>&gt; Access the source code in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project
