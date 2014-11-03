@@ -14,9 +14,9 @@ A single annotation received from a GET request or submitted in a write, modify 
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
@@ -88,9 +88,9 @@ A collection of annotations from a single GET request. Contains all annotations 
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
@@ -133,9 +133,9 @@ An Annotation Certificate is comprised of the UUID and timestamp from a successf
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">

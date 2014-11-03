@@ -15,7 +15,7 @@ layout: submenu
 Returns an Annotation Tile for a specified filter configuration UUID, annotation layer, level and tile x and y.
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -61,9 +61,9 @@ Returns an Annotation Tile for a specified filter configuration UUID, annotation
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
@@ -144,7 +144,7 @@ Example output:
 Submits a new annotation to be written to the server. Upon success, a certificate is returned to the client. 
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -189,7 +189,7 @@ Submits a new annotation to be written to the server. Upon success, a certificat
 </div>
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Detail</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -293,7 +293,7 @@ Example output:
 Submits a modify request to the server. If the certificate in the annotation state is valid, the operation is processed and a new certificate is returned.
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -338,7 +338,7 @@ Submits a modify request to the server. If the certificate in the annotation sta
 </div>
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Detail</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -446,7 +446,7 @@ Example output:
 Submits a removal request to the server. If the certificate is valid, the operation will be processed and a success status will be returned.
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -491,7 +491,7 @@ Submits a removal request to the server. If the certificate is valid, the operat
 </div>
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Detail</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -584,7 +584,7 @@ Example output:
 Submits a new filter configuration. Upon success, returns a JSON object with the new filter UUID under the key “uuid”.
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -629,7 +629,7 @@ Submits a new filter configuration. Upon success, returns a JSON object with the
 </div>
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Detail</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -725,7 +725,7 @@ Example output:
 Requests the server to release a filter configuration from its memory.
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -770,7 +770,7 @@ Requests the server to release a filter configuration from its memory.
 </div>
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Detail</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -858,7 +858,7 @@ Example output:
 Requests all available annotation layer specifications held by the server.
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Summary</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -903,7 +903,7 @@ Requests all available annotation layer specifications held by the server.
 </div>
 
 <div class="props">
-	<h2 class="sectionTitle">Method Summary</h2>
+	<h3 class="sectionTitle">Method Detail</h3>
 		<nav>
 			<table class="summaryTable">
 				<thead>
@@ -983,7 +983,7 @@ Example output:
 ```
 
 <div class="git">
-	<h2>Interested in Learning More?</h2>
+	<h3>Interested in Learning More?</h3>
 
 	<ul>
 		<li><a href="../../../tour/overview/">Tour</a>: Take our tour to learn more about Aperture Tiles.
