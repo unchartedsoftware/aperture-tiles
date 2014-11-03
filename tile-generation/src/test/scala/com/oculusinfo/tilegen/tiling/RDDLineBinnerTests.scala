@@ -220,12 +220,11 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			new CountValueExtractor(),
 			pyramid,
 			None,
-			lineDrawer.endpointsToLineBins,
 			pyramidId,
 			tileIO,
 			List(List(1)),
+			lineDrawer.endpointsToLineBins,
 			xBins=256, yBins=256)
-		
 		tileIO
 	}
 	
