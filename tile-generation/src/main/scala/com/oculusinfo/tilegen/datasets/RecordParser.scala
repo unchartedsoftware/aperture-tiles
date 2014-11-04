@@ -102,6 +102,8 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 			parseValue(propValue, field, propType, null, dateFormats)
 		} else if ("string" == parseType || "substring" == parseType) {
 			value
+		} else if ("float" == parseType) {
+			value.toFloat
 		} else {
 			value.toDouble
 		}

@@ -52,11 +52,11 @@ class NumericSumAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analyti
  *            bins (typically a java version of the same numeric type).
  */
 class NumericSumBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
-                                        converter: ScalaJavaTypePair[T, JT])
+                                        converter: TypeConversion[T, JT])
 		extends NumericSumAnalytic[T]
 		with BinningAnalytic[T, JT]
 {
-	def finish (value: T): JT = converter.asJava(value)
+	def finish (value: T): JT = converter.forwards(value)
 }
 /**
  * {@see NumericSumAnalytic}
@@ -94,11 +94,11 @@ class NumericMaxAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analyti
  *            bins (typically a java version of the same numeric type).
  */
 class NumericMaxBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
-                                        converter: ScalaJavaTypePair[T, JT])
+                                        converter: TypeConversion[T, JT])
 		extends NumericMaxAnalytic[T]
 		with BinningAnalytic[T, JT]
 {
-	def finish (value: T): JT = converter.asJava(value)
+	def finish (value: T): JT = converter.forwards(value)
 }
 /**
  * {@see NumericMaxAnalytic}
@@ -147,11 +147,11 @@ class NumericMaxWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: Si
 class NumericMaxWithPayloadBinningAnalytic[T,
                                            JT <: Serializable,
                                            PT <: Serializable](implicit numeric: SimpleNumeric[T],
-                                                               converter: ScalaJavaTypePair[T, JT])
+                                                               converter: TypeConversion[T, JT])
 		extends NumericMaxWithPayloadAnalytic[T, PT]
 		with BinningAnalytic[(T, PT), Pair[JT, PT]]
 {
-	def finish (value: (T, PT)): Pair[JT, PT] = new Pair[JT, PT](converter.asJava(value._1), value._2)
+	def finish (value: (T, PT)): Pair[JT, PT] = new Pair[JT, PT](converter.forwards(value._1), value._2)
 }
 /**
  * {@see NumericMaxWithPayloadAnalytic}
@@ -192,11 +192,11 @@ class NumericMinAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analyti
  *            bins (typically a java version of the same numeric type).
  */
 class NumericMinBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
-                                        converter: ScalaJavaTypePair[T, JT])
+                                        converter: TypeConversion[T, JT])
 		extends NumericMinAnalytic[T]
 		with BinningAnalytic[T, JT]
 {
-	def finish (value: T): JT = converter.asJava(value)
+	def finish (value: T): JT = converter.forwards(value)
 }
 /**
  * {@see NumericMinAnalytic}
@@ -243,11 +243,11 @@ class NumericMinWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: Si
  * @tparam PT The type of the payload attached to the numeric data.
  */
 class NumericMinWithPayloadBinningAnalytic[T, JT <: Serializable, PT <: Serializable] (
-	implicit numeric: SimpleNumeric[T],	converter: ScalaJavaTypePair[T, JT])
+	implicit numeric: SimpleNumeric[T],	converter: TypeConversion[T, JT])
 		extends NumericMinWithPayloadAnalytic[T, PT]
 		with BinningAnalytic[(T, PT), Pair[JT, PT]]
 {
-	def finish (value: (T, PT)): Pair[JT, PT] = new Pair[JT, PT](converter.asJava(value._1), value._2)
+	def finish (value: (T, PT)): Pair[JT, PT] = new Pair[JT, PT](converter.forwards(value._1), value._2)
 }
 /**
  * {@see NumericMinWithPayloadAnalytic}

@@ -27,6 +27,9 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import java.lang.{Integer => JavaInt}
+import java.lang.{Long => JavaLong}
+import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 import scala.collection.JavaConverters._
@@ -35,6 +38,9 @@ import scala.util.{Try, Success, Failure}
 import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.LongAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.FloatAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
@@ -58,8 +64,9 @@ import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumTileAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericMeanBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.StringScoreBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.SimpleNumeric
+import com.oculusinfo.tilegen.tiling.analytics.TypeConversion
 import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.tilegen.tiling.analytics.StringScoreBinningAnalytic
 
 
 
@@ -92,7 +99,7 @@ object CSVValueExtractor {
 		factories
 			.find(_.handles(field, fields, properties))
 			.getOrElse(new DefaultValueExtractorFactory)
-			.constructValueExtractor(field.getOrElse(fields.getOrElse("")), properties)
+			.construct(field.getOrElse(fields.getOrElse("")), properties)
 	}
 }
 
@@ -124,22 +131,58 @@ abstract class CSVValueExtractor[PT: ClassTag, BT]
 
 
 
+/**
+ * A factory to construct a value extractor, with some general mixin functions 
+ * we use a lot in value extractor factories
+ */
 trait ValueExtractorFactory {
+	/** Get the stated type of a field specified by a set of properties */
 	def getFieldType (field: String, properties: PropertiesWrapper): String =
 		properties.getString("oculus.binning.parsing."+field+".fieldType",
 		                     "The type of the "+field+" field",
 		                     Some(if ("constant" == field || "zero" == field) "constant"
 		                          else "double")).toLowerCase
 
+	/** Get the stated sub-type of a property in a field specified by a set of properties */
 	def getPropertyType (field: String, properties: PropertiesWrapper): String =
 		properties.getString("oculus.binning.parsing."+field+".propertyType",
 		                     "The type of the "+field+" field",
 		                     Some(if ("constant" == field || "zero" == field) "constant"
 		                          else "")).toLowerCase
 
+	/** Get a standard codec factory from a set of properties */
+	def getCodecFactory (properties: PropertiesWrapper): CodecFactory =
+		properties.getString("oculus.binning.serialization.codecfactory",
+		                     "The standard codec factory to use when serializing this "+
+			                     "data set.  Possible values are null (no compression), "+
+			                     "deflate, snappy, and bzip2. Deflate takes an extra "+
+			                     "parameter of compressionLevel, specified by "+
+			                     "oculus.binning.serialization.codecfactory.deflatelevel. "+
+			                     "Only null and bzip2 support splitting of files by "+
+			                     "HDFS, though bzip2 is slow.  Default is bzip2.",
+		                     Some("bzip2")) match {
+			case "null" => CodecFactory.nullCodec()
+			case "deflate" => CodecFactory.deflateCodec(
+				properties.getInt("oculus.binning.serialization.codecfactory.deflateLevel",
+				                  "The level of deflation to be performed.  Values should be "+
+					                  "between 1 and 9.  Default is 4.",
+				                  Some(4))
+			)
+			case "snappy" => CodecFactory.snappyCodec()
+			case _ => CodecFactory.bzip2Codec()
+		}
+
+	/**
+	 * Indicates if this factory handles the case of the given field or fields 
+	 * in the given property set
+	 */
 	def handles (field: Option[String], fields: Option[String],
 	             properties: PropertiesWrapper): Boolean
-	def constructValueExtractor (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _]
+
+	/**
+	 * Actually construct the value extractor
+	 */
+	def construct (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _]
 }
 
 
@@ -147,7 +190,7 @@ trait ValueExtractorFactory {
 class DefaultValueExtractorFactory extends ValueExtractorFactory {
 	def handles (field: Option[String], fields: Option[String],
 	             properties: PropertiesWrapper): Boolean = true
-	def constructValueExtractor (field: String, properties: PropertiesWrapper) =
+	def construct (field: String, properties: PropertiesWrapper) =
 		new CountValueExtractor
 }
 
@@ -185,6 +228,7 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 						case "int" => true
 						case "long" => true
 						case "date" => true
+						case "float" => true
 						case "double" => true
 						case "propertyMap" => matches(getPropertyType(fieldName, properties))
 						case _ => false
@@ -194,50 +238,72 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 			case _ => false
 		}
 
-	def constructValueExtractor (field: String, properties: PropertiesWrapper) = {
+	def construct (field: String, properties: PropertiesWrapper) = {
 		val fieldAggregation =
 			properties.getString("oculus.binning.parsing." + field
 				                     + ".fieldAggregation",
 			                     "The way to aggregate the value field when binning",
 			                     Some("add"))
 
-		val binningAnalytic =
-			if ("min" == fieldAggregation)
-				new NumericMinBinningAnalytic[Double, JavaDouble]()
-			else if ("max" == fieldAggregation)
-				new NumericMaxBinningAnalytic[Double, JavaDouble]()
-			else
-				new NumericSumBinningAnalytic[Double, JavaDouble]()
+		val fieldType = getFieldType(field, properties)
+		val codecFactory = getCodecFactory(properties)
 
-		new FieldValueExtractor(field, binningAnalytic);
+		def constructBinningAnalytic[T, JT] ()(implicit numeric: SimpleNumeric[T],
+		                                       converter: TypeConversion[T, JT]) =
+			if ("min" == fieldAggregation) new NumericMinBinningAnalytic[T, JT]
+			else if ("max" == fieldAggregation) new NumericMaxBinningAnalytic[T, JT]
+			else new NumericSumBinningAnalytic[T, JT]
+
+		fieldType match {
+			case "int" =>
+				new FieldValueExtractor[Int, JavaInt](
+					field,
+					constructBinningAnalytic[Int, JavaInt](),
+					new IntegerAvroSerializer(codecFactory))
+			case "long" =>
+				new FieldValueExtractor[Long, JavaLong](
+					field,
+					constructBinningAnalytic[Long, JavaLong](),
+					new LongAvroSerializer(codecFactory))
+			case "float" =>
+				new FieldValueExtractor[Float, JavaFloat](
+					field,
+					constructBinningAnalytic[Float, JavaFloat](),
+					new FloatAvroSerializer(codecFactory))
+			case "double" =>
+				new FieldValueExtractor[Double, JavaDouble](
+					field,
+					constructBinningAnalytic[Double, JavaDouble](),
+					new DoubleAvroSerializer(codecFactory))
+		}
 	}
 }
 
-class FieldValueExtractor (fieldName: String,
-                           binningAnalytic: BinningAnalytic[Double, JavaDouble])
-		extends CSVValueExtractor[Double, JavaDouble]
+class FieldValueExtractor[T: ClassTag, JT] (
+	fieldName: String, binningAnalytic: BinningAnalytic[T, JT], serializer: TileSerializer[JT])(
+	implicit numeric: SimpleNumeric[T], converter: TypeConversion[T, JT])
+		extends CSVValueExtractor[T, JT]
 {
 	def name: String = fieldName
 	def description: String = "The aggregate value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
-	def calculateValue (fieldValues: Map[String, Any]): Double =
-		Try(fieldValues.get(fieldName).get.asInstanceOf[Double])
+	def calculateValue (fieldValues: Map[String, Any]): T =
+		Try(fieldValues.get(fieldName).get.asInstanceOf[T])
 			.getOrElse(binningAnalytic.defaultUnprocessedValue)
-	def getSerializer: TileSerializer[JavaDouble] =
-		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
-	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] = binningAnalytic
+	def getSerializer: TileSerializer[JT] = serializer
+	def getBinningAnalytic: BinningAnalytic[T, JT] = binningAnalytic
 
-	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
-		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
-		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new NumericMinTileAnalytic[Double]()),
-		    new AnalysisDescriptionTileWrapper[JavaDouble, Double](convertFcn,
-		                                                           new NumericMaxTileAnalytic[Double]()))
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JT], _]] = {
+		val convertFcn: JT => T = bt => converter.backwards(bt)
+		Seq(new AnalysisDescriptionTileWrapper[JT, T](convertFcn,
+		                                              new NumericMinTileAnalytic[T]()),
+		    new AnalysisDescriptionTileWrapper[JT, T](convertFcn,
+		                                              new NumericMaxTileAnalytic[T]()))
 	}
 
 
-	def getDataAnalytics: Seq[AnalysisDescription[(_, Double), _]] =
-		Seq[AnalysisDescription[(_, Double), _]]()
+	def getDataAnalytics: Seq[AnalysisDescription[(_, T), _]] =
+		Seq[AnalysisDescription[(_, T), _]]()
 }
 
 
@@ -258,7 +324,7 @@ class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
 			case _ => false
 		}
 
-	def constructValueExtractor (field: String, properties: PropertiesWrapper) = {
+	def construct (field: String, properties: PropertiesWrapper) = {
 		val emptyValue = properties.getDoubleOption(
 			"oculus.binning.parsing."+field+".emptyValue",
 			"The value to use for bins where there aren't enough data points to give a "+
@@ -351,7 +417,7 @@ class StringValueExtractorFactory extends ValueExtractorFactory {
 			case _ => None
 		}
 
-	def constructValueExtractor (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _] = {
+	def construct (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _] = {
 		val aggregationLimit = getAggregationLimit(field, properties)
 		val binLimit = getBinLimit(field, properties)
 		val order = getOrder(field, properties)
@@ -390,7 +456,7 @@ class SubstringValueExtractorFactory extends StringValueExtractorFactory {
 	                      properties: PropertiesWrapper): Boolean =
 		field.isDefined && "substring" == getFieldType(field.get, properties)
 
-	override def constructValueExtractor (field: String, properties: PropertiesWrapper):
+	override def construct (field: String, properties: PropertiesWrapper):
 			CSVValueExtractor[_, _] =
 	{
 		val aggregationLimit = getAggregationLimit(field, properties)
@@ -490,7 +556,7 @@ class MultiFieldValueExtractorFactory extends ValueExtractorFactory {
 	             properties: PropertiesWrapper): Boolean =
 		fields.isDefined
 
-	def constructValueExtractor (fields: String, properties: PropertiesWrapper) = {
+	def construct (fields: String, properties: PropertiesWrapper) = {
 		val fieldNames = fields.split(",")
 		new MultiFieldValueExtractor(fieldNames)
 	}
@@ -523,7 +589,7 @@ class SeriesValueExtractorFactory extends ValueExtractorFactory {
 	             properties: PropertiesWrapper): Boolean =
 		fields.isDefined
 
-	def constructValueExtractor (fields: String, properties: PropertiesWrapper) = {
+	def construct (fields: String, properties: PropertiesWrapper) = {
 		val fieldNames = fields.split(",")
 		new SeriesValueExtractor(fieldNames)
 	}
@@ -574,7 +640,7 @@ class IndirectSeriesValueExtractorFactory extends ValueExtractorFactory {
 		).getOrElse(false)
 	}
 
-	def constructValueExtractor (fields: String, properties: PropertiesWrapper) = {
+	def construct (fields: String, properties: PropertiesWrapper) = {
 		val fieldNames = fields.split(",")
 		val validKeys = properties.getSeqPropertyNames("oculus.binning.valueField.subFields")
 		new IndirectSeriesValueExtractor(fieldNames(0),
