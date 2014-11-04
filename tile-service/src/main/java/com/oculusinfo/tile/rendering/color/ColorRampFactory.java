@@ -48,17 +48,17 @@ import com.oculusinfo.tile.rendering.color.impl.SteppedGradientColorRamp;
 import com.oculusinfo.tile.rendering.color.impl.WareColorRamp;
 
 public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
-	public static final StringProperty           RAMP_TYPE = new StringProperty("ramp", "The desired type of color ramp", "ware"); 
-	public static final DoubleProperty           OPACITY   = new DoubleProperty("opacity", "The opacity with which a layer is displayed.", 1.0);
-	public static final StringProperty           COLOR1    = new StringProperty("from", "A standard HTML description of the primary color for this ramp.  Used by flat and single-gradient ramp types.", "0xffffff");
-	public static final IntegerProperty          ALPHA1    = new IntegerProperty("from-alpha", "The opacity (0-255) of the primary color for this ramp.  Used by single-gradient ramps only.  -1 to use the base opacity.", -1);
-	public static final StringProperty           COLOR2    = new StringProperty("to", "A standard HTML description of the secondary color for this ramp.  Used by single-gradient ramps only.", "0x000000");
-	public static final IntegerProperty          ALPHA2    = new IntegerProperty("to-alpha", "The opacity (0-255) of the secondary color for this ramp.  Used by single-gradient ramps only.  -1 to use the base opacity.", -1);
-	public static final DoubleProperty           HUE1      = new DoubleProperty("from", "The initial hue of a hue ramp (from 0.0 to 1.0).  Used only for hue ramps.", 0.0);
-	public static final DoubleProperty           HUE2      = new DoubleProperty("to", "The final hue of a hue ramp (from 0.0 to 1.0).  Used only for hue ramps.", 1.0);
 
-	public static final StringProperty           THEME     = new StringProperty("theme", "The active theme.", "dark");
-	public static final JSONArrayProperty        GRADIENTS = new JSONArrayProperty("gradients", "A set of themed gradient definitions.", "[]");
+	public static final StringProperty RAMP_TYPE = new StringProperty("ramp", "The desired type of color ramp", "ware");
+	public static final DoubleProperty OPACITY = new DoubleProperty("opacity", "The opacity with which a layer is displayed.", 1.0);
+	public static final StringProperty COLOR1 = new StringProperty("from", "A standard HTML description of the primary color for this ramp.  Used by flat and single-gradient ramp types.", "0xffffff");
+	public static final IntegerProperty ALPHA1 = new IntegerProperty("from-alpha", "The opacity (0-255) of the primary color for this ramp.  Used by single-gradient ramps only.  -1 to use the base opacity.", -1);
+	public static final StringProperty COLOR2 = new StringProperty("to", "A standard HTML description of the secondary color for this ramp.  Used by single-gradient ramps only.", "0x000000");
+	public static final IntegerProperty ALPHA2 = new IntegerProperty("to-alpha", "The opacity (0-255) of the secondary color for this ramp.  Used by single-gradient ramps only.  -1 to use the base opacity.", -1);
+	public static final DoubleProperty HUE1  = new DoubleProperty("from", "The initial hue of a hue ramp (from 0.0 to 1.0).  Used only for hue ramps.", 0.0);
+	public static final DoubleProperty HUE2 = new DoubleProperty("to", "The final hue of a hue ramp (from 0.0 to 1.0).  Used only for hue ramps.", 1.0);
+	public static final StringProperty THEME = new StringProperty("theme", "The active theme.", "dark");
+	public static final JSONArrayProperty GRADIENTS = new JSONArrayProperty("gradients", "A set of themed gradient definitions.", "[]");
 
 	
 	private List<ThemedGradientFactory> gradients = new ArrayList<ThemedGradientFactory>();
@@ -69,7 +69,6 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 
 		addProperty(RAMP_TYPE);
 		addProperty(OPACITY);
-		
 		addProperty(COLOR1);
 		addProperty(ALPHA1);
 		addProperty(COLOR2);

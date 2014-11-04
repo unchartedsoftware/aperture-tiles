@@ -50,49 +50,26 @@ public interface LayerService {
      * 
      * @return
      */
-    public List<LayerInfo> listLayers ();
-
-    /**
-     * Get the meta-data associated with the given layer (which must be listed
-     * by {@link #listLayers()})
-     */
-    public PyramidMetaData getMetaData (String layerId);
-
-    /**
-     * Configure a layer for rendering.
-     * 
-     * @param The ID of the layer to be configured
-     * @param configuration The configuration of the layer to set. This is layed
-     *            on top of the default configuration as returned by
-     *            {@link #listLayers()}, so for the most part, only properties
-     *            that are changed from the default need be listed. The one
-     *            exception is that, if there are more than one base renderer
-     *            configurations, the renderer type is used to tell which base
-     *            to override, so it must be specified.
-     * @return A unique UUID by which this configuration should be known.
-     */
-    public UUID configureLayer (String layerId, JSONObject configuration);
+    public List< JSONObject > getLayerConfigs();
 
     /**
      * For use by other services; the LayerResource doesn't serve this out.
-     * 
+     *
      * Gets a configuration object to be used when rendering a layer.
-     * 
+     *
      * @param layer The layer to be rendered
      * @param tile An index indicating the tile to be rendered. For most
      *            renderers, the only part of this that matters is the level,
      *            but there are a few exceptions. A null value indicates that
      *            any tile-specific pieces of the configuration may safely be
      *            ignored.
+     * @param requestParams Additional query parameters to override
      */
-    public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile, JSONObject requestParams);
+    public LayerConfiguration getLayerConfiguration( String layer, TileIndex tile, JSONObject requestParams );
 
     /**
-     * Indicates to the service that all users are done with a given
-     * configuration.
-     * 
-     * @param uuid
-     *            The id of the configuration that is no longer needed.
+     * Get the meta-data associated with the given layer (which must be listed
+     * by {@link #listLayers()})
      */
-    public void forgetConfiguration (UUID uuid);
+    public PyramidMetaData getMetaData (String layerId);
 }

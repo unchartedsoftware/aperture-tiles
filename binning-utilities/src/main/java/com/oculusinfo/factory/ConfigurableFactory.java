@@ -53,16 +53,19 @@ import org.slf4j.LoggerFactory;
 abstract public class ConfigurableFactory<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableFactory.class);
 
-
-
 	private String                        _name;
 	private Class<T>                      _factoryType;
+
 	private List<String>                  _rootPath;
+
+    private ConfigurableFactory<?>        _parent;
 	private List<ConfigurableFactory<?>>  _children;
+
+    private Set<ConfigurationProperty<?>> _properties;
+
 	private boolean                       _configured;
 	private JSONObject                    _configurationNode;
-	private Set<ConfigurationProperty<?>> _properties;
-	private ConfigurableFactory<?>        _parent;
+
     private boolean                       _isSingleton;
     private T                             _singletonProduct;
 
@@ -146,7 +149,7 @@ abstract public class ConfigurableFactory<T> {
         if (null != path) {
             rootPath.addAll(path);
         }
-        _rootPath = Collections.unmodifiableList(rootPath);
+        _rootPath = Collections.unmodifiableList( rootPath );
         _children = new ArrayList<>();
         _configured = false;
         _properties = new HashSet<>();
@@ -369,10 +372,10 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	public static JSONObject getLeafNode (JSONObject rootNode, List<String> path) {
 		JSONObject target = rootNode;
-		for (String pathElt: path) {
-			if (target.has(pathElt)) {
+		for (String subpath: path) {
+			if (target.has( subpath )) {
 				try {
-					target = target.getJSONObject(pathElt);
+					target = target.getJSONObject( subpath );
 				} catch (JSONException e) {
 					// Node is of the wrong type; default everything.
 					target = null;

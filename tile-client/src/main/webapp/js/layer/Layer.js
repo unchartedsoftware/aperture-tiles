@@ -44,7 +44,7 @@ define(function (require) {
 
         init: function ( spec, map ) {
 
-            this.id = spec.layer;
+            this.id = spec.source.layer;
             this.uuid = Util.generateUuid();
             this.name = spec.name || spec.layer;
             this.domain = spec.domain;

@@ -80,94 +80,81 @@ public class LegendResource extends ApertureServerResource {
 	}
 
 
-
+    /*
 	@Post("json")
-	public StringRepresentation getLegend(String jsonData) throws ResourceException {
+	public StringRepresentation getLegend( String jsonData ) throws ResourceException {
 
 		try {
+
 			JSONObject jsonObj = new JSONObject(jsonData);
-
-			String layer 		= jsonObj.getString("layer");
-			UUID uuid           = UUID.fromString(jsonObj.getString("id"));
-			int zoomLevel		= jsonObj.getInt("level");
-
+			String layer = jsonObj.getString("layer");
+			int zoomLevel = jsonObj.getInt("level");
 			int width = jsonObj.getInt("width");
 			int height = jsonObj.getInt("height");
-			boolean doAxis = false;
-			if (jsonObj.has("doAxis")){
-				doAxis = jsonObj.getBoolean("doAxis");
-			}
 			boolean renderHorizontally = false;
 			if (jsonObj.has("orientation")){
 				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
 			}
 
-			LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0), null);
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, new TileIndex(zoomLevel, 0, 0), null );
 
-			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			return generateEncodedImage( config, width, height, renderHorizontally );
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 			                            "Unable to create JSON object from supplied options string", e);
 		}
 	}
+	*/
 	
 	@Get
-	public Representation getLegend () throws ResourceException {
-		
-		// Get parameters from query
-		Form form = getRequest().getResourceRef().getQueryAsForm();
-		
+	public Representation getLegend() throws ResourceException {
 
-		String outputType   = form.getFirstValue("output", "uri");
-		String layer        = form.getFirstValue("layer").trim();
-        UUID uuid           = UUID.fromString(form.getFirstValue("id").trim());
-		String doAxisString = form.getFirstValue("doAxis", "false").trim();
-		String orientationString = form.getFirstValue("orientation", "vertical").trim();
+        // get layer
+        String layer = (String) getRequest().getAttributes().get("layer");
+
+		// get parameters from query
+		Form form = getRequest().getResourceRef().getQueryAsForm();
+		String outputType = form.getFirstValue("output", "uri");
+		String orientationString = form.getFirstValue("orientation", "horizontal").trim();
 
 		// get the root node ID from the form
-		int zoomLevel = 0;
-		int width = 50;
-		int height = 100;
-		boolean doAxis = false;
-		boolean renderHorizontally = false;
+		int width;
+		int height;
+		boolean renderHorizontally;
+
 		try {
-			doAxis = Boolean.parseBoolean(doAxisString);
+
 			renderHorizontally = orientationString.equalsIgnoreCase("horizontal");
-			zoomLevel = Integer.parseInt(form.getFirstValue("level").trim());
-			width = Integer.parseInt(form.getFirstValue("width").trim());
-			height = Integer.parseInt(form.getFirstValue("height").trim());
-			
+			width = Integer.parseInt(form.getFirstValue("width", "128").trim());
+			height = Integer.parseInt(form.getFirstValue("height", "1").trim());
+
 		} catch (NumberFormatException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 			                            "Unable to create Integer from supplied string. Check parameters.", e);
 		}
 
 		JSONObject requestParams = createRequestParamsObject(form);
-	    LayerConfiguration config = _layerService.getRenderingConfiguration(uuid, new TileIndex(zoomLevel, 0, 0), requestParams);
+	    LayerConfiguration config = _layerService.getLayerConfiguration( layer, null, requestParams );
 
+        setStatus(Status.SUCCESS_OK);
 		if(outputType.equalsIgnoreCase("uri")){
-			return generateEncodedImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			return generateEncodedImage( config, width, height, renderHorizontally );
 		} else { //(outputType.equalsIgnoreCase("png")){
-			return generateImage(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			return generateImage( config, width, height, renderHorizontally );
 		}
 	}
 
 	/**
-	 * @param transform
-	 * @param layer
-	 * @param zoomLevel
 	 * @param width
 	 * @param height
 	 * @return
 	 */
-	private ImageOutputRepresentation generateImage (LayerConfiguration config,
-	                                                 String layer,
-	                                                 int zoomLevel, int width,
+	private ImageOutputRepresentation generateImage( LayerConfiguration config,
+	                                                 int width,
 	                                                 int height,
-	                                                 boolean doAxis,
 	                                                 boolean renderHorizontally) {
 		try {
-			BufferedImage tile = _service.getLegend(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			BufferedImage tile = _service.getLegend( config, width, height, renderHorizontally );
 			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
 			
 			setStatus(Status.SUCCESS_CREATED);
@@ -180,22 +167,16 @@ public class LegendResource extends ApertureServerResource {
 	}
 
 	/**
-	 * @param transform
-	 * @param layer
-	 * @param zoomLevel
 	 * @param width
 	 * @param height
 	 * @return
 	 */
-	private StringRepresentation generateEncodedImage (LayerConfiguration config,
-	                                                   String layer,
-	                                                   int zoomLevel,
+	private StringRepresentation generateEncodedImage( LayerConfiguration config,
 	                                                   int width,
 	                                                   int height,
-	                                                   boolean doAxis,
 	                                                   boolean renderHorizontally) {
 		try {
-			BufferedImage tile = _service.getLegend(config, layer, zoomLevel, width, height, doAxis, renderHorizontally);
+			BufferedImage tile = _service.getLegend( config, width, height, renderHorizontally );
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(tile, "png", baos);
 			baos.flush();
@@ -205,9 +186,7 @@ public class LegendResource extends ApertureServerResource {
 			encodedImage = "data:image/png;base64," + URLEncoder.encode(encodedImage, "ISO-8859-1");
 			setStatus(Status.SUCCESS_CREATED);
 
-			StringRepresentation imageRep = new StringRepresentation(encodedImage);
-			
-			return imageRep;
+			return new StringRepresentation( encodedImage );
 			
 		} catch (IOException e) {
 			throw new ResourceException(Status.CONNECTOR_ERROR_INTERNAL,

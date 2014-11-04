@@ -144,7 +144,7 @@ define( function (require) {
             rendererSpec.spec.details = details;
             renderer = new loadedModules[ rendererSpec.type ]( map, rendererSpec.spec );
             views.push({
-                id: view.layer,
+                id: view.source,
                 details: details,
                 renderer: renderer
             });
@@ -174,11 +174,7 @@ define( function (require) {
                 views = assembleViews( layerJSON, map );
                 // create the layer
                 clientLayer = new ClientLayer( layerJSON, views, map );
-                // send configuration request
-                clientLayer.configure( function() {
-                    // resolve deferred
-                    clientLayerDeferred.resolve( clientLayer );
-                });
+                clientLayerDeferred.resolve( clientLayer );
             });
 
             return clientLayerDeferred;

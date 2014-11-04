@@ -66,14 +66,14 @@ public class TileServiceImpl implements TileService {
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
 	@Override
-	public BufferedImage getTileImage (UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
+	public BufferedImage getTileImage( String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query ) {
 		int width = 256;
 		int height = 256;
 		BufferedImage bi = null;
 
 		try {
-			LayerConfiguration config = _layerService.getRenderingConfiguration(id, index, query);
-    
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, index, query );
+
 			// Record image dimensions in case of error. 
 			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
@@ -94,8 +94,6 @@ public class TileServiceImpl implements TileService {
 			Graphics2D g = bi.createGraphics();
 			g.setColor(COLOR_BLANK);
 			g.fillRect(0, 0, 256, 256);
-			//g.setColor(Color.red);
-			//g.drawLine(1, 1, 254, 254);
 			g.dispose();
 		}
 
@@ -103,9 +101,9 @@ public class TileServiceImpl implements TileService {
 	}
 
 	@Override
-	public JSONObject getTileObject(UUID id, String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
+	public JSONObject getTileObject( String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
 		try {
-		    LayerConfiguration config = _layerService.getRenderingConfiguration(id, index, query);
+		    LayerConfiguration config = _layerService.getLayerConfiguration( layer, index, query );
 
 		    PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<?> serializer = config.produce(TileSerializer.class);

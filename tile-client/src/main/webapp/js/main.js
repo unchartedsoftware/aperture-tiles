@@ -57,95 +57,28 @@ require(['./ApertureConfig',
 	        "use strict";
 
 	        var apertureConfigFile = "data/aperture-config.json",
-	            getLayers,
+	            layerConfigFile = "data/layers-config.json",
+	            apertureDeferred = $.Deferred(),
+	            layerDeferred = $.Deferred(),
 	            getServerLayers,
 	            getClientLayers,
-	            groupClientLayers,
-	            groupClientLayerViews,
 	            getAnnotationLayers,
 	            layerControlsContent,
-	            mapsDeferred, layersDeferred, annotationsDeferred;
-
-	        groupClientLayerViews = function( subLayers ) {
-	            var spec = {},
-	                subLayer, i, j;
-	            // set base spec from first declared client layer
-                spec.domain = subLayers[0].domain;
-                spec.name = subLayers[0].name;
-                spec.opacity = subLayers[0].opacity;
-                spec.enabled = subLayers[0].enabled;
-                spec.views = [];
-	            for ( i=0; i<subLayers.length; i++ ) {
-	                subLayer = subLayers[i];
-	                for ( j=0; j<subLayer.renderers.length; j++ ) {
-                        spec.views.push({
-                            layer : subLayer.layer,
-                            renderer : subLayer.renderers[j],
-                            details : subLayer.details
-                        });
-	                }
-	            }
-                return spec;
-            };
-
-	        groupClientLayers = function( clientLayers ) {
-                var layer, layerName,
-                    layersByName = {}, layersByOrder = [],
-                    layerSpecs = [],
-                    i;
-                // group client layers by name while maintaining order in config file
-                for ( i=0; i<clientLayers.length; i++ ) {
-                    layer = clientLayers[i];
-                    layerName = layer.name;
-                    if ( layersByName[ layerName ] === undefined ) {
-                        layersByName[ layerName ] = [];
-                        layersByOrder.push( layersByName[ layerName ] );
-                    }
-                    layersByName[ layerName ].push( layer );
-                }
-                // iterate over individual client layers and assemble view specs
-                for ( i=0; i<layersByOrder.length; i++ ) {
-                    layerSpecs.push( groupClientLayerViews( layersByOrder[i] ) );
-                }
-                return layerSpecs;
-            };
-
-	        getLayers = function( rootNode, filter, domain ) {
-	            var layers = LayerService.filterLeafLayers( rootNode ),
-                    layer, configurations = [], config, renderer,
-                    i, j;
-                for (i=0; i<layers.length; i++) {
-                    layer = layers[i];
-                    // filter layer based on function
-                    if ( filter( layer ) ) {
-                        for ( j=0; j<layer.renderers.length; j++ ) {
-                            renderer = layer.renderers[j];
-                            // if renderer matches domain
-                            if ( renderer.domain === domain ) {
-                                // we only needed certain parts of the spec objects
-                                config = _.cloneDeep( renderer );
-                                if (layer.data.transformer) {
-                                    config.transformer = _.cloneDeep( layer.data.transformer );
-                                }
-                                config.layer = layer.id;
-                                config.name = layer.name;
-                                configurations.push( config );
-                            }
-                        }
-                    }
-                }
-                return configurations;
-	        };
+	            mapsDeferred,
+	            layersDeferred;
 
             /**
              * Iterate through server layers, and append zIndex to
              * mirror the top-down ordering set in the config file.
              */
-	        getServerLayers = function( rootNode, filter ) {
+	        getServerLayers = function( layerConfig, layerInfos ) {
 	            var Z_INDEX_OFFSET = 1,
-	                layers = getLayers( rootNode, filter, 'server' ),
+	                layers = layerConfig.layers.filter( function( elem ) {
+	                    return elem.domain === "server";
+	                }),
 	                i;
 	            for ( i=0; i<layers.length; i++ ) {
+	                layers[i].source = layerInfos[ layers[i].source ];
 	                layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
 	            }
 	            return layers;
@@ -155,14 +88,17 @@ require(['./ApertureConfig',
              * Iterate through client layers, and append zIndex to
              * mirror the top-down ordering set in the config file.
              */
-            getClientLayers = function( rootNode, filter ) {
+            getClientLayers = function( layerConfig, layerInfos ) {
                 var Z_INDEX_OFFSET = 1000,
-                    layers = getLayers( rootNode, filter, 'client' ),
-                    i;
-                // group client layers based on common name
-                layers = groupClientLayers( layers );
+                    layers = layerConfig.layers.filter( function( elem ) {
+	                    return elem.domain === "client";
+	                }),
+                    i, j;
                 for ( i=0; i<layers.length; i++ ) {
                     layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
+                    for ( j=0; j<layers[i].views.length; j++ ) {
+                        layers[i].views[j].source = layerInfos[ layers[i].views[j].source ];
+                    }
                 }
                 return layers;
             };
@@ -171,17 +107,17 @@ require(['./ApertureConfig',
              * Iterate through annotation layers, and append zIndex to
              * mirror the top-down ordering set in the config file.
              */
-	        getAnnotationLayers = function( layers, filter ) {
+	        getAnnotationLayers = function( layerConfig, layerInfos ) {
 		        var Z_INDEX_OFFSET = 500,
-                    validLayers =[],
+		            layers = layerConfig.layers.filter( function( elem ) {
+	                    return elem.domain === "annotation";
+	                }),
 		            i;
 		        for (i=0; i<layers.length; i++) {
-			        if ( filter( layers[i] ) ) {
-			            layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
-				        validLayers.push( layers[i] );
-			        }
+		            layers[i].source = layerInfos[ layers[i].source ];
+                    layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
 		        }
-		        return validLayers;
+		        return layers;
 	        };
 
 	        // Create description element
@@ -205,8 +141,15 @@ require(['./ApertureConfig',
                 verticalPosition: 'bottom'
             }).getContentElement();
 
-	        // Load all our UI configuration data before trying to bring up the ui
-	        $.get( apertureConfigFile, function( apertureConfig ) {
+            $.getJSON( apertureConfigFile, function( apertureConfig ) {
+                apertureDeferred.resolve( apertureConfig );
+            });
+
+            $.getJSON( layerConfigFile, function( layerConfig ) {
+                layerDeferred.resolve( layerConfig );
+            });
+
+            $.when( apertureDeferred, layerDeferred ).done( function( apertureConfig, layerConfig ) {
 
 		        // First off, configure aperture.
 		        configureAperture( apertureConfig );
@@ -214,10 +157,10 @@ require(['./ApertureConfig',
 		        // Get our list of maps and layers
 		        mapsDeferred = MapService.requestMaps();
 		        layersDeferred = LayerService.requestLayers();
-		        annotationsDeferred = AnnotationService.requestLayers();
 
-		        $.when (mapsDeferred, layersDeferred, annotationsDeferred ).done(
-			        function ( maps, layers, annotationLayers ) {
+		        $.when ( mapsDeferred, layersDeferred ).done(
+
+			        function ( maps, layers ) {
 				        // For now, just use the first map
 				        var currentMap,
 				            currentBaseLayer,
@@ -228,9 +171,9 @@ require(['./ApertureConfig',
 				            viewLink,
 				            viewEntry,
 				            i,
-				            filter,
 				            clientLayers,
 				            serverLayers,
+				            annotationLayers,
 				            clientLayerFactory,
 				            serverLayerFactory,
 				            annotationLayerFactory,
@@ -290,17 +233,9 @@ require(['./ApertureConfig',
 					        UICustomization.customizeMap( worldMap );
 				        }
 
-				        // TODO: Make it so we can pass the pyramid up to the server
-				        // in the layers request, and have it return only portions
-				        // of the layer tree that match that pyramid.
-				        // Eventually, we should let the user choose among them.
-				        filter = function (layer) {
-					        return PyramidFactory.pyramidsEqual( mapConfig.PyramidConfig, layer.pyramid );
-				        };
-
-				        clientLayers = getClientLayers( layers, filter );
-				        serverLayers = getServerLayers( layers, filter );
-                        annotationLayers = getAnnotationLayers( annotationLayers, filter );
+				        clientLayers = getClientLayers( layerConfig, layers );
+				        serverLayers = getServerLayers( layerConfig, layers );
+                        annotationLayers = getAnnotationLayers( layerConfig, layers );
 
                         clientLayerFactory = new ClientLayerFactory();
                         serverLayerFactory = new ServerLayerFactory();

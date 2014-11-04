@@ -25,6 +25,7 @@ package com.oculusinfo.tile.rest.layer;
 
 
 import com.google.inject.Inject;
+import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurationException;
@@ -147,13 +148,40 @@ public class LayerResource extends ApertureServerResource {
             requestType = requestType.toLowerCase();
 
             if ("list".equals(requestType)) {
+
                 // Layer list request
-                List<LayerInfo> layers = _service.listLayers();
-                JSONArray jsonLayers = new JSONArray();
+                List<JSONObject> layers = _service.getLayerConfigs();
+                JSONObject jsonLayers = new JSONObject();
                 for (int i=0; i<layers.size(); ++i) {
-                    jsonLayers.put(i, layers.get(i).getRawData());
+                    // clone layer config
+                    JSONObject layer = JsonUtilities.deepClone( layers.get( i ) );
+                    // get layer id
+                    String layerId = layer.getString( "layer" );
+                    // get host
+                    String host = getRequest().getResourceRef().getPath();
+                    host = host.substring( 0, host.lastIndexOf("layer") );
+                    // get layer metadata
+                    PyramidMetaData metaDataPyramid = _service.getMetaData( layerId );
+                    JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
+                    // try to add images per tile to meta
+                    try {
+                        LayerConfiguration config = _service.getLayerConfiguration( layerId, null, null );
+                        TileDataImageRenderer renderer = config.produce( TileDataImageRenderer.class );
+                        if (null != renderer) {
+                            metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
+                        }
+                    } catch (ConfigurationException e) {
+                        // If we have to skip images per tile, it's not a huge deal
+                        LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
+                    }
+                    layer.put("meta", metaData );
+
+                    layer.put("tms", host + "tile/");
+                    layer.put("apertureservice", "/tile/");
+                    jsonLayers.put( layerId, layer );
                 }
-                return new JsonRepresentation(jsonLayers);
+                return new JsonRepresentation( jsonLayers );
+
             } else if ("metadata".equals(requestType)) {
                 // Metadata request
                 String layer = arguments.getString("layer");
@@ -163,44 +191,9 @@ public class LayerResource extends ApertureServerResource {
                 } else {
                     return new JsonRepresentation(metaData.getRawData());
                 }
-            } else if ("configure".equals(requestType)) {
-                // Configuration request
-                String layerId = arguments.getString("layer");
-                JSONObject configuration = arguments.getJSONObject("configuration");
-                UUID uuid = _service.configureLayer(layerId, configuration);
-                String host = getRequest().getResourceRef().getPath();
-                host = host.substring(0, host.lastIndexOf("layer"));
-
-                // Figure out the number of images per tile
-                PyramidMetaData metaData = _service.getMetaData(layerId);
-
-                JSONObject result = JsonUtilities.deepClone(metaData.getRawData());
-                result.put("layer", layerId);
-                result.put("id", uuid);
-                result.put("tms", host + "tile/" + uuid.toString() + "/");
-                result.put("apertureservice", "/tile/" + uuid.toString() + "/");
-                try {
-                    LayerConfiguration config = _service.getRenderingConfiguration(uuid, null, null);
-                    TileDataImageRenderer renderer = config.produce(TileDataImageRenderer.class);
-                    if (null != renderer) {
-                        result.put("imagesPerTile", renderer.getNumberOfImagesPerTile(metaData));
-                    }
-                } catch (ConfigurationException e) {
-                    // If we have to skip images per tile, it's not a huge deal
-                    LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
-                } catch (IllegalArgumentException e) {
-                    LOGGER.info("Renderer configuration not recognized.");
-                }
-
-                return new JsonRepresentation(result);
-            } else if ("unconfigure".equals(requestType)) {
-                String uuidRep = arguments.getString("configuration");
-                UUID uuid = UUID.fromString(uuidRep);
-                _service.forgetConfiguration(uuid);
             } else {
                 throw new IllegalArgumentException("Illegal request type "+requestType);
             }
-            return null; // TODO: remove, placeholder until the above is done.
         } catch (JSONException e) {
             LOGGER.warn("Bad layers request: {}", jsonArguments, e);
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,

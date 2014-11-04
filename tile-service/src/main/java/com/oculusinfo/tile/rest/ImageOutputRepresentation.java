@@ -40,7 +40,7 @@ public class ImageOutputRepresentation extends OutputRepresentation {
 	
 	/**
 	 * @param mediaType
-	 * @param expectedSize
+	 * @param image
 	 */
 	public ImageOutputRepresentation(MediaType mediaType, BufferedImage image) {
 		super(mediaType);

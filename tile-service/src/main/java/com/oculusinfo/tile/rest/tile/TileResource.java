@@ -168,7 +168,6 @@ public class TileResource extends ApertureServerResource {
 		try {
 			// No alternate versions supported. But if we did:
 			//String version = (String) getRequest().getAttributes().get("version");
-			String id = (String) getRequest().getAttributes().get("id");
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
@@ -179,27 +178,21 @@ public class TileResource extends ApertureServerResource {
 			TileIndex index = new TileIndex(zoomLevel, x, y);
 			JSONObject queryParams = createQueryParamsObject(getRequest().getResourceRef().getQueryAsForm());
 
-
 			Collection<TileIndex> tileSet = parseTileSetDescription(getRequest().getResourceRef().getQueryAsForm());
 			if (null == tileSet) {
 				tileSet = new HashSet<>();
 			}
 			tileSet.add(index);
 
-			UUID uuid = null;
-			if( !"default".equals(id) ){ // Special indicator - no ID.
-				uuid = UUID.fromString(id);
-			}
-
 			String ext = (String) getRequest().getAttributes().get("ext");
 			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
-				BufferedImage tile = _service.getTileImage(uuid, layer, index, tileSet, queryParams);
+				BufferedImage tile = _service.getTileImage( layer, index, tileSet, queryParams );
 				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
 
-				setStatus(Status.SUCCESS_CREATED);
+				setStatus(Status.SUCCESS_OK);
 				return imageRep;
 			} else if (ResponseType.Tile.equals(extType.getResponseType())) {
 				// We return an object including the tile index ("index") and 
@@ -213,9 +206,9 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("xIndex", x);
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
-				result.put("tile", _service.getTileObject(uuid, layer, index, tileSet, queryParams));
+				result.put("tile", _service.getTileObject( layer, index, tileSet, queryParams ));
 
-				setStatus(Status.SUCCESS_CREATED);
+				setStatus(Status.SUCCESS_OK);
 				return new JsonRepresentation(result);
 			} else {
 				setStatus(Status.SERVER_ERROR_INTERNAL);

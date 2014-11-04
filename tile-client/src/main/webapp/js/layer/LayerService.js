@@ -33,25 +33,9 @@ define(function (require) {
 
     var Util = require('../util/Util'),
         LayerService,
-        visitLayers,
         parseMetaMinMaxJson,
         parseLevelsMinMax,
         layersDeferred;
-
-    visitLayers = function( layers, fcn ) {
-        var i;
-        if ($.isArray(layers)) {
-            for (i=0; i < layers.length; ++i) {
-                visitLayers(layers[i], fcn);
-            }
-        } else {
-            fcn(layers);
-            if (layers.children) {
-                visitLayers(layers.children, fcn);
-            }
-        }
-    };
-
 
     /**
      * Parse a given meta data layers min and max json strings,
@@ -100,6 +84,9 @@ define(function (require) {
                                  'POST',
                                  function (layers, status) {
 	                                 if (status.success) {
+	                                     _.forIn( layers, function( layer ) {
+	                                         layer.meta.minMax = parseLevelsMinMax( layer.meta );
+	                                     });
 		                                 layersDeferred.resolve(layers);
 	                                 } else {
 		                                 layersDeferred.fail(status);
@@ -114,79 +101,7 @@ define(function (require) {
                                 );
             }
 	        return layersDeferred;
-        },
-
-
-        /**
-         * Set up a configuration object on the server.
-         *
-         * @param layerSpec The layer specification object used to configure the server.
-         * @param callback  The callback function executed upon receiving the server result.
-         */
-        configureLayer: function( layerSpec, callback ) {
-
-            aperture.io.rest('/layer',
-                             'POST',
-                             function( layerInfo, statusInfo ) {
-                                // parse min/max meta data json string
-                                layerInfo.meta.minMax = parseLevelsMinMax( layerInfo );
-                                callback( layerInfo, statusInfo );
-                             },
-                             {
-                                 postData: {
-                                     request: "configure",
-                                     layer: layerSpec.layer,
-                                     configuration: layerSpec
-                                 },
-                                 contentType: 'application/json'
-                             });
-        },
-
-        /**
-         * Release a previous configuration from the server.
-         *
-         * @param layerInfo The layer information object containing the previous configurations uuid.
-         * @param callback  The callback function executed upon receiving the server result.
-         */
-        unconfigureLayer: function( layerInfo, callback ) {
-
-            aperture.io.rest('/layer',
-                             'POST',
-                             callback,
-                             {
-                                 postData: {
-                                     request: "unconfigure",
-                                     configuration: layerInfo.id
-                                 },
-                                 contentType: 'application/json'
-                             }
-                            );
-        },
-
-
-        /**
-         * Run through the given hierarchical layers object, retrieving only 
-         * leaf nodes, and filtering those leaf nodes based on an arbitrary 
-         * function.
-         *
-         * @param layers A hierarchical layers object, as returned to the
-         *               callback from {@link #requestLayers}.
-         * @param filterFcn A function that takes a leaf node and returns 
-         *                  true if it is wanted, and false if it isn't.  If
-         *                  the filterFcn is null, all leaves are returned.
-         */
-        filterLeafLayers: function (layers, filterFcn) {
-
-            var result = [];
-            visitLayers(layers, function (layer) {
-                if (!layer.children && (!filterFcn || filterFcn(layer))) {
-                    result.push(layer);
-                }
-            });
-
-            return result;
         }
-
     };
 
     return LayerService;

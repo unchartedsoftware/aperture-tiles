@@ -38,20 +38,20 @@ import java.util.List;
  *
  */
 public class ValueTransformerFactory extends ConfigurableFactory<IValueTransformer> {
-	public static final StringProperty TRANSFORM_NAME    = new StringProperty("name",
+	public static final StringProperty TRANSFORM_NAME    = new StringProperty("transform",
 		    "The type of transformation to apply to the data.",
 		    "linear",
 		    new String[] {"linear", "log10", "minmax", "half-sigmoid", "sigmoid"});
-	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("max",
+	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("transformMax",
 		    "The maximum value to allow in the input data, when using a minmax transformation",
 		    Double.MAX_VALUE);
-	public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("min",
+	public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("transformMin",
 		    "The minimum value to allow in the input data, when using a minmax transformation",
 		    Double.MIN_VALUE);
-	public static final DoubleProperty LAYER_MAXIMUM     = new DoubleProperty("layerMax",
+	public static final DoubleProperty LAYER_MAXIMUM = new DoubleProperty("transformLayerMax",
 		    "For use by the server only",
 		    Double.MAX_VALUE);
-	public static final DoubleProperty LAYER_MINIMUM     = new DoubleProperty("layerMin",
+	public static final DoubleProperty LAYER_MINIMUM = new DoubleProperty("transformLayerMin",
 		    "For use by the server only",
 		    Double.MIN_VALUE);
 

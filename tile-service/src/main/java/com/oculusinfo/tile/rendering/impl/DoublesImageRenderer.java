@@ -49,6 +49,7 @@ import java.util.List;
  * @author  dgray
  */
 public class DoublesImageRenderer implements TileDataImageRenderer {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 	public static Class<Double> getRuntimeBinClass () {
@@ -88,6 +89,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render (LayerConfiguration config) {
 		BufferedImage bi;
 		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
 			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -122,7 +124,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 				                                (int)Math.floor(index.getX() / coarsenessFactor),
 				                                (int)Math.floor(index.getY() / coarsenessFactor));
 
-				tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
+				tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
 					//we got data for this level so use it
 					break;
