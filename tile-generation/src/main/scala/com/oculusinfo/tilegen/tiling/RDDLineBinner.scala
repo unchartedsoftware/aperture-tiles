@@ -293,10 +293,6 @@ class RDDLineBinner(minBins: Int = 2,
 		 linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] =
 	{
-		if (calcLinePixels == null) {
-			
-		}
-				
 		val tileBinToUniBin = (TileIndex.tileBinIndexToUniversalBinIndex)_
 
 		val localMinBins = minBins
