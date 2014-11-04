@@ -15,12 +15,16 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	from javadoc.destinationDir
 }
  
+// Artifacts that will be produced when this project is built
 artifacts {
 	archives sourcesJar
 	archives javadocJar
 }
 
+// Jars / projects this project depends on.
 dependencies {
 	compile project(":math-utilities")	
 }
+// Call task for special handling for hbase dependencies - see top level build file for
+// definition and explanation.
 addHBaseDependencies(project)

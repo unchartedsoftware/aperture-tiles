@@ -1,8 +1,16 @@
+// This is the top level build file for the aperture tiles core projects.  Definitions / tasks that
+// are shared between sub-projects need to go in here, but care should be taken not to needlessly
+// pollute the global namespace.  The 'settings.gradle' file that is also in this directory defines
+// the sub-projects that will be built by this file, and 'properies.gradle' contains default property
+// values.
+
 // Reads the "buildType" string property from the command line and writes the the cloudera versions
 // versions into the ext namespace (which is where build global vars go).  There is a predefined build
 // type in gradle.properties that will be applied if nothing is specified here.
 //
+// ********************************************************
 // ** ANY NEW DEPLOYMENT VARIANTS NEED TO BE ADDED HERE. **
+// ********************************************************
 task validateBuildType() {
 	switch (buildType) {
 		case "cdh5.1.2":
@@ -63,9 +71,12 @@ task validateBuildType() {
 }
 
 // Adds hbase dependencies to the supplied project based on the build type.  We can't use the  
-// DSL in this context, so we have to go through the lower level DependencyManager APIs.
+// DSL in this context, so we have to go through the lower level DependencyManager APIs.  The
+// reason this needs special handling is that HBase went from being a single jar in earlier version,
+// to multiple jars in later.  CDH5.x picks up the new split HBase jar, while CDH4.x needs the 
+// unified jar.
 def addHBaseDependencies(projectRef) {
-	// Anything that starts with cdh5 gets the split jars, others assumed to get old-style unified jar
+	// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
 	if (buildType =~ /cdh5\w*/) {
 		logger.info("Matched CDH5x cloudera version - using new-style jars")
 		projectRef.getDependencies().add("compile", "org.apache.hbase:hbase-common:$hbaseVersion", {

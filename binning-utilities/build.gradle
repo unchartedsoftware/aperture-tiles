@@ -15,11 +15,13 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	from javadoc.destinationDir
 }
  
+// Artifacts that will be produced when this project is built
 artifacts {
 	archives sourcesJar
 	archives javadocJar
 }
 
+// Jars / projects this project depends on.
 dependencies {
 	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"
 	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"	
@@ -29,4 +31,6 @@ dependencies {
 	compile "com.esotericsoftware.kryo:kryo:2.21"
 	testCompile "junit:junit:4.8.1"
 }
+// Call to special handling for hbase dependencies - see top level build file for
+// definition and explanation.
 addHBaseDependencies(project)
