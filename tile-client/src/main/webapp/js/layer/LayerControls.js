@@ -130,14 +130,15 @@ define(function (require) {
      * Replaces node's children and returns the replaced for storage. Fades out old content,
      * animates resizing to new container size, then fades in new contents.
      *
-     * @param {JQuery} $layerControlsContainer - The node to remove the children from.
-     * @param {Object} children - The children to replace.  Null will result in children being removed only.
+     * @param {JQuery} $controlsContent - The node to remove the children from.
+     * @param {Object} $children - The children to replace.  Null will result in children being removed only.
+     *
      * @returns {Array} - The removed children.
      */
-    replaceChildren = function ( $layerControlsContainer, children ) {
+    replaceChildren = function ( $controlsContent, $children ) {
 
         var removed,
-            previousHeight = $layerControlsContainer.outerHeight();
+            previousHeight = $controlsContent.outerHeight();
 
         function fadeOutChildren( container, callback ) {
             // animate and set the current contents to 0 opacity
@@ -172,18 +173,18 @@ define(function (require) {
             container.children().animate( {"opacity":1}, 100 )
                 .promise()
                     .done( function() {
-                        container.css( "height", "100%" );
+                        container.css( "height", "" );
                     });
         }
 
         // fade current children out
-        fadeOutChildren( $layerControlsContainer, function() {
+        fadeOutChildren( $controlsContent, function() {
             // swap old children with new children
-            removed = swapChildren( $layerControlsContainer, children );
+            removed = swapChildren( $controlsContent, $children );
             // resize parent container
-            animateToNewSize( $layerControlsContainer, previousHeight, function() {
+            animateToNewSize( $controlsContent, previousHeight, function() {
                 // fade new children in
-                fadeInChildren( $layerControlsContainer );
+                fadeInChildren( $controlsContent );
             });
         });
         return removed;
@@ -192,17 +193,24 @@ define(function (require) {
     /**
      * Creates and returns a jquery element object for the settings menu button.
      *
-     * @param {Object} $layerControlsContainer - The layer controls container element.
+     * @param {object} $controlsContent - The JQuery node that is the overlay content container.
+     * @param {object} $layersContainer  - The JQuery node that acts as the parent of all the layer controls.
      * @param {Object} layer - The layer object.
      * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
+     * @param {Object} settingsCustomization - An optional settings customization function.
+     *
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    createSettingsButton = function( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization ) {
+    createSettingsButton = function( $controlsContent,
+                                     $layerContent,
+                                     layer,
+                                     controlsMapping,
+                                     settingsCustomization ) {
 
         var $settingsButton = $('<button class="layer-controls-button">settings</button>');
         // set callback
         $settingsButton.click(function () {
-            showLayerSettings( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization );
+            showLayerSettings( $controlsContent, layer, settingsCustomization );
         });
         // set tooltip
         Util.enableTooltip( $settingsButton,
@@ -216,6 +224,7 @@ define(function (require) {
      *
      * @param {Object} layer - The layer object
      * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
+     *
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
     createVisibilityButton = function( layer, controlsMapping ) {
@@ -263,6 +272,11 @@ define(function (require) {
         $label.css( {"margin-top": -$label.outerHeight()*1.2, "margin-left": -$label.outerWidth()/2 } );
     };
 
+    /**
+     * Removes a label from the supplied element.
+     *
+     * @param {JQuery} $this - The element to which the label is removed
+     */
     removeSliderHoverLabel = function( $this ) {
         $this.find('.slider-value-hover').animate({
                 opacity: 0
@@ -281,6 +295,7 @@ define(function (require) {
      *
      * @param {Object} layer - The layer object.
      * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
+     *
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
     createOpacitySlider = function( layer, controlsMapping ) {
@@ -334,6 +349,7 @@ define(function (require) {
      *
      * @param {Object} layer - The layer object.
      * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
+     *
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
     createFilterSlider = function( layer, controlsMapping ) {
@@ -442,6 +458,8 @@ define(function (require) {
     /**
      * Generates the filter axis major and minor tick marks. 5 major and 4 minor tick marks will be created.
      * @param {Array} minMax - The min and max values for the axis.
+     * @param {String} rampFunc - The ramp transform function id.
+     *
      * @returns {JQuery} - The created filter axis object.
      */
     createFilterAxisContent = function ( minMax, rampFunc ) {
@@ -479,6 +497,9 @@ define(function (require) {
      *
      * @param {Integer} majorCount - The number of major tick marks.
      * @param {Array} minMax - The min and max values for the axis.
+     * @param {String} rampFunc - The ramp transform function id.
+     *
+     * @returns {JQuery} - The created filter axis labels.
      */
     createFilterAxisLabels = function( majorCount, minMax, rampFunc ){
         var log10 = function(val) {
@@ -530,9 +551,10 @@ define(function (require) {
      * @param {Object} layer - The layer object.
      * @param {Object} layersByUuid - The layers by uuid.
      * @param {Object} controlsMap - The entire control map for all objects to their associated control elements.
+     *
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
-    addLayerDragCallbacks = function( sortedLayers, $layerControlsContainer, $layerControlRoot, layer, layersByUuid, controlsMap ) {
+    addLayerDragCallbacks = function( sortedLayers, $controlsContent, $layersContainer, $layerControlRoot, layer, layersByUuid, controlsMap ) {
 
         var controlsMapping = controlsMap[ layer.uuid ];
 
@@ -592,7 +614,7 @@ define(function (require) {
                     left: dragStartPosition.left - dropStartPosition.left
                 })).done( function () {
                     // once animation is complete, re-do the html
-                    replaceLayers( sortedLayers, $layerControlsContainer, controlsMap, layersByUuid );
+                    replaceLayers( sortedLayers, $controlsContent, $layersContainer, controlsMap, layersByUuid );
                 });
                 // swap z-indexes
                 otherZ = dropLayer.getZIndex();
@@ -608,6 +630,7 @@ define(function (require) {
      * @param {JQuery} $layerContent - The containing jquery element for the respective layer.
      * @param {Object} layer - The layer object.
      * @param {Object} controlsMapping - The control mapping from the layer id to the associated control elements.
+     *
      * @returns {JQuery} - The created element wrapped in a jquery object.
      */
     createBaseLayerButtons = function( $layerContent, layer, controlsMapping ) {
@@ -657,14 +680,22 @@ define(function (require) {
      * Adds a new set of layer controls to the panel.
      *
      * @param {Array} sortedLayers - The sorted array of layers.
-     * @param {Integer} index - The index of the layer to be added to the controls panel.
-     * @param {JQuery } $layerControlsContainer - The parent element in the document tree to add the controls to.
+     * @param {Object} layer - The layer to be added to the controls panel.
+     * @param {JQuery} $controlsContent - The JQuery node that is the overlay content container.
+     * @param {JQuery} $layersContainer - The parent element in the document tree to add the controls to.
      * @param {Object} controlsMap - Maps layers to the sets of controls associated with them.
      * @param {Object} layersByUuid - Layers by uuid.
+     * @param {Object} settingsCustomization - An optional settings customization function.
      */
-    addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization ) {
-        var layer = sortedLayers[index],
-            uuid = layer.uuid,
+    addLayer = function ( sortedLayers,
+                          layer,
+                          $controlsContent,
+                          $layersContainer,
+                          controlsMap,
+                          layersByUuid,
+                          settingsCustomization ) {
+
+        var uuid = layer.uuid,
             name = layer.name || layer.id,
             domain = layer.domain,
             $layerControlRoot,
@@ -678,10 +709,10 @@ define(function (require) {
 
         // create layer root
         $layerControlRoot = $('<div id="layer-controls-' + uuid + '" class="layer-controls-layer layer-controls-'+domain+'"></div>');
-        $layerControlsContainer.append( $layerControlRoot );
+        $layersContainer.append( $layerControlRoot );
         controlsMapping.layerRoot = $layerControlRoot;
         // add layer dragging / dropping callbacks to swap layer z-index
-        addLayerDragCallbacks( sortedLayers, $layerControlsContainer, $layerControlRoot, layer, layersByUuid, controlsMap );
+        addLayerDragCallbacks( sortedLayers, $controlsContent, $layersContainer, $layerControlRoot, layer, layersByUuid, controlsMap );
 
         // create title div
         $layerControlTitleBar = $('<div class="layer-title"><span class="layer-labels">' + name + '</span></div>');
@@ -694,7 +725,7 @@ define(function (require) {
 
         // create settings button, only for server layers
         if ( domain === 'server' ) {
-            $layerContent.append( createSettingsButton( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization ) );
+            $layerContent.append( createSettingsButton( $controlsContent, $layerContent, layer, controlsMapping, settingsCustomization ) );
         }
 
         // add visibility toggle box
@@ -723,10 +754,13 @@ define(function (require) {
     /**
      * Displays a settings panel for a layer.
      *
-     * @param {object} $layerControlsContainer - The parent node to attach the layer panel to.
-     * @param {object} layer - The layer object.
+     * @param {JQuery} $controlsContent - The JQuery node that is the overlay content container.
+     * @param {Object} layer - The layer object.
+     * @param {Object} settingsCustomization - An optional settings customization function.
      */
-    showLayerSettings = function( $layerControlsContainer, $layerContent, layer, controlsMapping, settingsCustomization ) {
+    showLayerSettings = function( $controlsContent,
+                                  layer,
+                                  settingsCustomization ) {
 
         var $settingsContainer,
             $settingsTitleBar,
@@ -746,7 +780,7 @@ define(function (require) {
             i;
 
         // Save the main layer controls hierarchy
-        oldChildren = $layerControlsContainer.children();
+        oldChildren = $controlsContent.children();
 
         $settingsContainer = $('<div class="settings-layer-container"></div>');
 
@@ -766,7 +800,7 @@ define(function (require) {
         Util.enableTooltip( $backButton,
                             TOOLTIP_SETTINGS_BACK_BUTTON );
         $backButton.click(function () {
-            replaceChildren( $layerControlsContainer, oldChildren );
+            replaceChildren( $controlsContent, oldChildren );
         });
 
         $settingsTitleBar.append($backButton);
@@ -864,13 +898,18 @@ define(function (require) {
             $settingsContent.append( settingsCustomization( layer ) );
         }
 
-        replaceChildren( $layerControlsContainer, $settingsContainer );
+        replaceChildren( $controlsContent, $settingsContainer );
     };
 
     /**
      * Creates an observer to handle layer state changes, and update the controls based on them.
+     * @param {object} layers - A layer object.
+     * @param {object} layers - An array map of layer objects.
+     * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
+     *
+     * @returns {Function} - The subscriber function for the given layer.
      */
-    makeLayerControlsSubscriber = function ( layer, layers, controlsMap, $layersControlListRoot) {
+    makeLayerControlsSubscriber = function ( layer, layers, controlsMap ) {
         return function ( message, path ) {
 
             var field = message.field,
@@ -948,17 +987,24 @@ define(function (require) {
      * new control references will be stored in the controlsMap for later access.
      *
      * @param {object} layers - An array map of layer objects.
-     * @param {object} $layerControlsListRoot  - The JQuery node that acts as the parent of all the layer controls.
+     * @param {object} $controlsContent - The JQuery node that is the overlay content container.
+     * @param {object} $layersContainer  - The JQuery node that acts as the parent of all the layer controls.
      * @param {object} controlsMap - A map indexed by layer ID contain references to the individual layer controls.
+     * @param {Object} layersByUuid - Layers by uuid.
+     * @param {Object} settingsCustomization - An optional settings customization function.
      */
-    replaceLayers = function ( layers, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization ) {
+    replaceLayers = function ( layers,
+                               $controlsContent,
+                               $layersContainer,
+                               controlsMap,
+                               layersByUuid,
+                               settingsCustomization ) {
+
         var sortedLayers = sortLayers( layers ),
             i, key;
 
         // empty the container
-        $layerControlsContainer.empty();
-
-        //$layerControlsContainer.append( '<div class="layer-controls-buffer"></div>');
+        $layersContainer.empty();
 
         // Clear out any existing the controls map
         for (key in controlsMap) {
@@ -969,11 +1015,14 @@ define(function (require) {
 
         // Add layers - this will update the controls list.
         for (i = 0; i < sortedLayers.length; i += 1) {
-            addLayer( sortedLayers, i, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization );
+            addLayer( sortedLayers,
+                      sortedLayers[i],
+                      $controlsContent,
+                      $layersContainer,
+                      controlsMap,
+                      layersByUuid,
+                      settingsCustomization );
         }
-
-        // append a spacer element at the bottom, padding causes jitter in overlay animation
-        //$layerControlsContainer.append( '<div class="layer-controls-buffer"></div>');
     };
 
     /**
@@ -995,7 +1044,6 @@ define(function (require) {
 
 
 
-
     LayerControls = Class.extend({
         ClassName: "LayerControls",
 
@@ -1003,30 +1051,38 @@ define(function (require) {
          * Initializes the layer controls by modifying the DOM tree, and registering
          * callbacks against the layer object
          *
-         * @param controlsContent - The DOM element used as the container for the controls panel elements.
-         * @param layers - The array of layers objects.
+         * @param {JQuery} controlsContent - The DOM element used as the container for the controls panel elements.
+         * @param {Array} layers - The array of layers objects.
+         * @param {Object} settingsCustomization - An optional settings customization function.
          */
         init: function ( controlsContent, layers, settingsCustomization ) {
 
             var i;
 
-            // "Private" vars
             this.controlsMap = {};
             this.layersByUuid = {};
-
-            // find the container
-            this.$layerControlsRoot = controlsContent;
+            this.$controlsContent = controlsContent;
+            // wrap layer contents in this div, this will allow scrollability,
+            // while hiding draggable overflow.
+            this.$layersContainer = $( '<div class="layers-container"></div>' );
+            this.$controlsContent.append( this.$layersContainer );
 
             // Add layers visuals and register listeners against the model
-            replaceLayers( layers, this.$layerControlsRoot, this.controlsMap, this.layersByUuid, settingsCustomization );
+            replaceLayers( layers,
+                           this.$controlsContent,
+                           this.$layersContainer,
+                           this.controlsMap,
+                           this.layersByUuid,
+                           settingsCustomization );
 
             for (i=0; i<layers.length; i++) {
-                PubSub.subscribe( layers[i].getChannel(),makeLayerControlsSubscriber(
-                    layers[i],
-                    layers,
-                    this.controlsMap,
-                    this.$layerControlsContainer
-                ));
+                // create subscriber function for each layer
+                PubSub.subscribe( layers[i].getChannel(),
+                    makeLayerControlsSubscriber(
+                        layers[i],
+                        layers,
+                        this.controlsMap
+                    ));
             }
         },
 
