@@ -143,6 +143,12 @@ trait ValueExtractorFactory {
 		                     Some(if ("constant" == field || "zero" == field) "constant"
 		                          else "double")).toLowerCase
 
+	def getFieldAggregation (field: String, properties: PropertiesWrapper): String =
+		properties.getString("oculus.binning.parsing." + field + ".fieldAggregation",
+		                     "The way to aggregate the value field when binning",
+		                     Some("add")).toLowerCase
+
+
 	/** Get the stated sub-type of a property in a field specified by a set of properties */
 	def getPropertyType (field: String, properties: PropertiesWrapper): String =
 		properties.getString("oculus.binning.parsing."+field+".propertyType",
@@ -219,40 +225,54 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 
 
 class FieldValueExtractorFactory  extends ValueExtractorFactory {
+	protected def checkTypeValidity (fieldName: String, properties: PropertiesWrapper): Boolean = {
+		// We break the type match out as a separate function so we can
+		// call it recursively in the case of a property map input
+		def matches (fieldType: String): Boolean =
+			fieldType match {
+				case "int" => true
+				case "long" => true
+				case "date" => true
+				case "float" => true
+				case "double" => true
+				case "propertyMap" =>
+					matches(getPropertyType(fieldName, properties))
+				case _ => false
+			}
+		matches(getFieldType(fieldName, properties))
+	}
+
 	def handles (field: Option[String], fields: Option[String],
 	             properties: PropertiesWrapper): Boolean =
 		field match {
 			case Some(fieldName) => {
-				def matches (fieldType: String): Boolean =
-					fieldType match {
-						case "int" => true
-						case "long" => true
-						case "date" => true
-						case "float" => true
-						case "double" => true
-						case "propertyMap" => matches(getPropertyType(fieldName, properties))
-						case _ => false
-					}
-				matches(getFieldType(fieldName, properties))
+				// We match field aggregation of min, max, or add, and the
+				// above field types
+				(getFieldAggregation(fieldName, properties) match {
+					case "add" => true
+					case "min" => true
+					case "minimum" => true
+					case "max" => true
+					case "maximum" => true
+					case _ => false
+				}) && checkTypeValidity(fieldName, properties)
 			}
 			case _ => false
 		}
 
-	def construct (field: String, properties: PropertiesWrapper) = {
-		val fieldAggregation =
-			properties.getString("oculus.binning.parsing." + field
-				                     + ".fieldAggregation",
-			                     "The way to aggregate the value field when binning",
-			                     Some("add"))
-
+	def construct (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _] = {
+		val fieldAggregation = getFieldAggregation(field, properties)
 		val fieldType = getFieldType(field, properties)
 		val codecFactory = getCodecFactory(properties)
 
 		def constructBinningAnalytic[T, JT] ()(implicit numeric: SimpleNumeric[T],
 		                                       converter: TypeConversion[T, JT]) =
-			if ("min" == fieldAggregation) new NumericMinBinningAnalytic[T, JT]
-			else if ("max" == fieldAggregation) new NumericMaxBinningAnalytic[T, JT]
-			else new NumericSumBinningAnalytic[T, JT]
+			if ("min" == fieldAggregation || "minimum" == fieldAggregation)
+				new NumericMinBinningAnalytic[T, JT]
+			else if ("max" == fieldAggregation || "maximum" == fieldAggregation)
+				new NumericMaxBinningAnalytic[T, JT]
+			else
+				new NumericSumBinningAnalytic[T, JT]
 
 		fieldType match {
 			case "int" =>
@@ -308,56 +328,64 @@ class FieldValueExtractor[T: ClassTag, JT] (
 
 
 
-class MeanFieldValueExtractorFactory extends ValueExtractorFactory {
-	def handles (field: Option[String], fields: Option[String],
-	             properties: PropertiesWrapper): Boolean =
+class MeanFieldValueExtractorFactory extends  FieldValueExtractorFactory {
+	override def handles (field: Option[String], fields: Option[String],
+	                      properties: PropertiesWrapper): Boolean =
 		field match {
 			case Some(fieldName) => {
-				def matches (fieldType: String): Boolean =
-					fieldType match {
-						case "mean" => true
-						case "average" => true
-						case _ => false
-					}
-				matches(getFieldType(fieldName, properties))
+				(getFieldAggregation(fieldName, properties) match {
+					case "mean" => true
+					case "average" => true
+					case _ => false
+				}) && checkTypeValidity(fieldName, properties)
 			}
 			case _ => false
 		}
 
-	def construct (field: String, properties: PropertiesWrapper) = {
+	override def construct (field: String, properties: PropertiesWrapper): CSVValueExtractor[_, _] = {
+		val fieldType = getFieldType(field, properties)
 		val emptyValue = properties.getDoubleOption(
 			"oculus.binning.parsing."+field+".emptyValue",
 			"The value to use for bins where there aren't enough data points to give a "+
-				"valid average")
+				"valid average").map(Double.box(_))
 		val minCount = properties.getIntOption(
 			"oculus.binning.parsing."+field+".minCount",
 			"The minimum number of data points allowed to have a valid mean for this field")
-		new MeanValueExtractor(field, emptyValue, minCount)
+
+		fieldType match {
+			case "int" => new MeanValueExtractor[Int](field, emptyValue, minCount)
+			case "long" => new MeanValueExtractor[Long](field, emptyValue, minCount)
+			case "float" => new MeanValueExtractor[Float](field, emptyValue, minCount)
+			// Default is Double
+			case _ => new MeanValueExtractor[Double](field, emptyValue, minCount)
+		}
 	}
 }
 
-class MeanValueExtractor (fieldName: String, emptyValue: Option[Double], minCount: Option[Int])
-		extends CSVValueExtractor[(Double, Int), JavaDouble]
+class MeanValueExtractor[T] (
+	fieldName: String, emptyValue: Option[JavaDouble], minCount: Option[Int])(
+	implicit numeric: SimpleNumeric[T])
+		extends CSVValueExtractor[(T, Int), JavaDouble]
 {
 	private val binningAnalytic =
 		if (emptyValue.isDefined && minCount.isDefined) {
-			new NumericMeanBinningAnalytic[Double](emptyValue.get, minCount.get)
+			new NumericMeanBinningAnalytic[T](emptyValue.get, minCount.get)
 		} else if (emptyValue.isDefined) {
-			new NumericMeanBinningAnalytic[Double](emptyValue = emptyValue.get)
+			new NumericMeanBinningAnalytic[T](emptyValue = emptyValue.get)
 		} else if (minCount.isDefined) {
-			new NumericMeanBinningAnalytic[Double](minCount = minCount.get)
+			new NumericMeanBinningAnalytic[T](minCount = minCount.get)
 		} else {
-			new NumericMeanBinningAnalytic[Double]()
+			new NumericMeanBinningAnalytic[T]()
 		}
 	def name: String = fieldName
 	def description: String = "The mean value of field "+fieldName
 	def fields: Array[String] = Array(fieldName)
-	def calculateValue (fieldValues: Map[String, Any]): (Double, Int) =
-		Try((fieldValues.get(fieldName).get.asInstanceOf[Double], 1))
+	def calculateValue (fieldValues: Map[String, Any]): (T, Int) =
+		Try((fieldValues.get(fieldName).get.asInstanceOf[T], 1))
 			.getOrElse(binningAnalytic.defaultUnprocessedValue)
 	def getSerializer: TileSerializer[JavaDouble] =
 		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
-	def getBinningAnalytic: BinningAnalytic[(Double, Int), JavaDouble] = binningAnalytic
+	def getBinningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = binningAnalytic
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
 		val convertFcn: JavaDouble => Double = bt => bt.asInstanceOf[Double]
@@ -368,8 +396,8 @@ class MeanValueExtractor (fieldName: String, emptyValue: Option[Double], minCoun
 	}
 
 
-	def getDataAnalytics: Seq[AnalysisDescription[(_, (Double, Int)), _]] =
-		Seq[AnalysisDescription[(_, (Double, Int)), _]]()
+	def getDataAnalytics: Seq[AnalysisDescription[(_, (T, Int)), _]] =
+		Seq[AnalysisDescription[(_, (T, Int)), _]]()
 }
 
 

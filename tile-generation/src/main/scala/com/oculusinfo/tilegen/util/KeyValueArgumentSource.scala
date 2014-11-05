@@ -363,6 +363,50 @@ abstract class KeyValueArgumentSource {
 
 
 	/**
+	 * Just like {@link #getString}, except it returns a Float
+	 */
+	def getFloat (key: String,
+	             description: String,
+	             default: Option[Float] = None): Float = {
+		val convertFcn: String => Float = s => s.toFloat
+		getInternal[Float](key, description, "float", convertFcn, default).get
+	}
+
+	/**
+	 * Just like {@link #getStringOption}, except it returns a Float
+	 */
+	def getFloatOption (key: String,
+	                   description: String,
+	                   default: Option[Float] = None): Option[Float] = {
+		val convertFcn: String => Float = s => s.toFloat
+		getInternal[Float](key, description, "float", convertFcn, default)
+	}
+
+	/**
+	 * Just like {@link #getStringSeq}, except it returns a sequence of Floats
+	 */
+	def getFloatSeq (key: String,
+	                description: String,
+	                separator: String = ",",
+	                default: Option[Seq[Float]] = Some(Seq[Float]())): Seq[Float] = {
+		val convertFcn: String => Float = s => s.toFloat
+		getSequencePropInternal[Float](key, description, "float",
+		                              convertFcn, separator, default).get
+	}
+
+	/**
+	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Floats
+	 */
+	def getFloatPropSeq (key: String,
+	                    description: String,
+	                    default: Option[Seq[Float]] = Some(Seq[Float]())): Seq[Float] = {
+		val convertFcn: String => Float = s => s.toFloat
+		getPropSequenceInternal(key, description, "float", convertFcn, default).get
+	}
+
+
+
+	/**
 	 * Just like {@link #getString}, except it returns a Double
 	 */
 	def getDouble (key: String,

@@ -73,9 +73,11 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 	def parseValue (value: String, field: String, parseType: String, subParseType: String,
 	                dateFormats: Map[String, SimpleDateFormat]): Any = {
 		if ("int" == parseType) {
-			value.toInt.toDouble
+			value.toInt
 		} else if ("long" == parseType) {
-			value.toLong.toDouble
+			value.toLong
+        } else if ("float" == parseType) {
+            value.toFloat
 		} else if ("date" == parseType) {
 			dateFormats(field).parse(value).getTime()
 		} else if ("ipv4" == parseType) {
@@ -102,8 +104,6 @@ class CSVRecordParser (properties: CSVRecordPropertiesWrapper) {
 			parseValue(propValue, field, propType, null, dateFormats)
 		} else if ("string" == parseType || "substring" == parseType) {
 			value
-		} else if ("float" == parseType) {
-			value.toFloat
 		} else {
 			value.toDouble
 		}

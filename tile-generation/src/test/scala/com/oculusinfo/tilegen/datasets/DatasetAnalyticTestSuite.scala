@@ -27,6 +27,7 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.lang.{Double => JavaDouble}
+import java.lang.{Float => JavaFloat}
 import java.io.File
 import java.io.FileWriter
 import java.util.Properties
@@ -89,7 +90,8 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		props.setProperty("oculus.binning.parsing.x.index", "0")
 		props.setProperty("oculus.binning.parsing.y.index", "1")
 		props.setProperty("oculus.binning.parsing.v.index", "2")
-		props.setProperty("oculus.binning.parsing.v.fieldType", "average")
+        props.setProperty("oculus.binning.parsing.v.fieldType", "long")
+        props.setProperty("oculus.binning.parsing.v.fieldAggregation", "mean")
 		props.setProperty("oculus.binning.index.type", "cartesian")
 		props.setProperty("oculus.binning.xField", "x")
 		props.setProperty("oculus.binning.yField", "y")
@@ -179,8 +181,8 @@ class TestTileAnalytic
 {}
 
 class TestDataAnalytic
-		extends MonolithicAnalysisDescription[((Double, Double), (Double, Int)), Double] (
-	v => {
+		extends MonolithicAnalysisDescription[((Double, Double), (Long, Int)), Double] (
+v => {
 		val result = ((v._2._1+1)*(v._2._1+1))
 		result
 	},
