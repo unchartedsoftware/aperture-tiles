@@ -64,9 +64,9 @@ import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumTileAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericMeanBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.StringScoreBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.SimpleNumeric
-import com.oculusinfo.tilegen.tiling.analytics.TypeConversion
+import com.oculusinfo.tilegen.util.ExtendedNumeric
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.util.TypeConversion
 
 
 
@@ -249,13 +249,13 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 				// We match field aggregation of min, max, or add, and the
 				// above field types
 				(getFieldAggregation(fieldName, properties) match {
-					case "add" => true
-					case "min" => true
-					case "minimum" => true
-					case "max" => true
-					case "maximum" => true
-					case _ => false
-				}) && checkTypeValidity(fieldName, properties)
+					 case "add" => true
+					 case "min" => true
+					 case "minimum" => true
+					 case "max" => true
+					 case "maximum" => true
+					 case _ => false
+				 }) && checkTypeValidity(fieldName, properties)
 			}
 			case _ => false
 		}
@@ -265,7 +265,7 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 		val fieldType = getFieldType(field, properties)
 		val codecFactory = getCodecFactory(properties)
 
-		def constructBinningAnalytic[T, JT] ()(implicit numeric: SimpleNumeric[T],
+		def constructBinningAnalytic[T, JT] ()(implicit numeric: ExtendedNumeric[T],
 		                                       converter: TypeConversion[T, JT]) =
 			if ("min" == fieldAggregation || "minimum" == fieldAggregation)
 				new NumericMinBinningAnalytic[T, JT]
@@ -301,7 +301,7 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 
 class FieldValueExtractor[T: ClassTag, JT] (
 	fieldName: String, binningAnalytic: BinningAnalytic[T, JT], serializer: TileSerializer[JT])(
-	implicit numeric: SimpleNumeric[T], converter: TypeConversion[T, JT])
+	implicit numeric: ExtendedNumeric[T], converter: TypeConversion[T, JT])
 		extends CSVValueExtractor[T, JT]
 {
 	def name: String = fieldName
@@ -334,10 +334,10 @@ class MeanFieldValueExtractorFactory extends  FieldValueExtractorFactory {
 		field match {
 			case Some(fieldName) => {
 				(getFieldAggregation(fieldName, properties) match {
-					case "mean" => true
-					case "average" => true
-					case _ => false
-				}) && checkTypeValidity(fieldName, properties)
+					 case "mean" => true
+					 case "average" => true
+					 case _ => false
+				 }) && checkTypeValidity(fieldName, properties)
 			}
 			case _ => false
 		}
@@ -364,7 +364,7 @@ class MeanFieldValueExtractorFactory extends  FieldValueExtractorFactory {
 
 class MeanValueExtractor[T] (
 	fieldName: String, emptyValue: Option[JavaDouble], minCount: Option[Int])(
-	implicit numeric: SimpleNumeric[T])
+	implicit numeric: ExtendedNumeric[T])
 		extends CSVValueExtractor[(T, Int), JavaDouble]
 {
 	private val binningAnalytic =

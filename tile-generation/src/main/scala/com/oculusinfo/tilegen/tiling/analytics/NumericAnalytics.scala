@@ -30,6 +30,8 @@ package com.oculusinfo.tilegen.tiling.analytics
 import java.lang.{Double => JavaDouble}
 
 import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.tilegen.util.ExtendedNumeric
+import com.oculusinfo.tilegen.util.TypeConversion
 
 
 
@@ -39,7 +41,7 @@ import com.oculusinfo.binning.util.Pair
  * 
  * @tparam T The numeric type of data of which to sum.
  */
-class NumericSumAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analytic[T] {
+class NumericSumAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] {
 	def aggregate (a: T, b: T): T = numeric.plus(a, b)
 	def defaultProcessedValue: T = numeric.zero
 	def defaultUnprocessedValue: T = numeric.zero
@@ -51,7 +53,7 @@ class NumericSumAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analyti
  * @tparam JT The numeric type to which to convert the data when writing to 
  *            bins (typically a java version of the same numeric type).
  */
-class NumericSumBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
+class NumericSumBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
                                         converter: TypeConversion[T, JT])
 		extends NumericSumAnalytic[T]
 		with BinningAnalytic[T, JT]
@@ -63,7 +65,7 @@ class NumericSumBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
  * 
  * @tparam T The numeric type of data of which to sum.
  */
-class NumericSumTileAnalytic[T] (analyticName: String = "sum")(implicit numeric: SimpleNumeric[T])
+class NumericSumTileAnalytic[T] (analyticName: String = "sum")(implicit numeric: ExtendedNumeric[T])
 		extends NumericSumAnalytic[T]
 		with TileAnalytic[T]
 {
@@ -78,7 +80,7 @@ class NumericSumTileAnalytic[T] (analyticName: String = "sum")(implicit numeric:
  * 
  * @tparam T The numeric type of data of which to take the maximum.
  */
-class NumericMaxAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analytic[T] {
+class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] {
 	def aggregate (a: T, b: T): T =
 		if (numeric.isNaN(a)) b
 		else if (numeric.isNaN(b)) a
@@ -93,7 +95,7 @@ class NumericMaxAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analyti
  * @tparam JT The numeric type to which to convert the data when writing to 
  *            bins (typically a java version of the same numeric type).
  */
-class NumericMaxBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
+class NumericMaxBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
                                         converter: TypeConversion[T, JT])
 		extends NumericMaxAnalytic[T]
 		with BinningAnalytic[T, JT]
@@ -105,7 +107,7 @@ class NumericMaxBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
  * 
  * @tparam T The numeric type of data of which to take the maximum.
  */
-class NumericMaxTileAnalytic[T] (analyticName: String = "maximum")(implicit numeric: SimpleNumeric[T])
+class NumericMaxTileAnalytic[T] (analyticName: String = "maximum")(implicit numeric: ExtendedNumeric[T])
 		extends NumericMaxAnalytic[T]
 		with TileAnalytic[T]
 {
@@ -126,7 +128,7 @@ class NumericMaxTileAnalytic[T] (analyticName: String = "maximum")(implicit nume
  * @tparam T The numeric type of data of which to tak ethe maximum.
  * @tparam PT The type of the payload attached to the numeric data.
  */
-class NumericMaxWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: SimpleNumeric[T])
+class NumericMaxWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: ExtendedNumeric[T])
 		extends Analytic[(T, PT)]
 {
 	def aggregate (a: (T, PT), b: (T, PT)): (T, PT) =
@@ -146,7 +148,7 @@ class NumericMaxWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: Si
  */
 class NumericMaxWithPayloadBinningAnalytic[T,
                                            JT <: Serializable,
-                                           PT <: Serializable](implicit numeric: SimpleNumeric[T],
+                                           PT <: Serializable](implicit numeric: ExtendedNumeric[T],
                                                                converter: TypeConversion[T, JT])
 		extends NumericMaxWithPayloadAnalytic[T, PT]
 		with BinningAnalytic[(T, PT), Pair[JT, PT]]
@@ -161,7 +163,7 @@ class NumericMaxWithPayloadBinningAnalytic[T,
  */
 class NumericMaxWithPayloadTileAnalytic[T, PT <: Serializable] (
 	analyticName: String = "maximum")(
-	implicit numeric: SimpleNumeric[T])
+	implicit numeric: ExtendedNumeric[T])
 		extends NumericMaxWithPayloadAnalytic[T, PT]
 		with TileAnalytic[(T, PT)]
 {
@@ -176,7 +178,7 @@ class NumericMaxWithPayloadTileAnalytic[T, PT <: Serializable] (
  * 
  * @tparam T The numeric type of data of which to take the minimum.
  */
-class NumericMinAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analytic[T] {
+class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] {
 	def aggregate (a: T, b: T): T =
 		if (numeric.isNaN(a)) b
 		else if (numeric.isNaN(b)) a
@@ -191,7 +193,7 @@ class NumericMinAnalytic[T] (implicit numeric: SimpleNumeric[T]) extends Analyti
  * @tparam JT The numeric type to which to convert the data when writing to 
  *            bins (typically a java version of the same numeric type).
  */
-class NumericMinBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
+class NumericMinBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
                                         converter: TypeConversion[T, JT])
 		extends NumericMinAnalytic[T]
 		with BinningAnalytic[T, JT]
@@ -203,7 +205,7 @@ class NumericMinBinningAnalytic[T, JT] (implicit numeric: SimpleNumeric[T],
  * 
  * @tparam T The numeric type of data of which to take the minimum.
  */
-class NumericMinTileAnalytic[T] (analyticName: String = "minimum")(implicit numeric: SimpleNumeric[T])
+class NumericMinTileAnalytic[T] (analyticName: String = "minimum")(implicit numeric: ExtendedNumeric[T])
 		extends NumericMinAnalytic[T]
 		with TileAnalytic[T]
 {
@@ -224,7 +226,7 @@ class NumericMinTileAnalytic[T] (analyticName: String = "minimum")(implicit nume
  * @tparam T The numeric type of data of which to tak ethe maximum.
  * @tparam PT The type of the payload attached to the numeric data.
  */
-class NumericMinWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: SimpleNumeric[T])
+class NumericMinWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: ExtendedNumeric[T])
 		extends Analytic[(T, PT)]
 {
 	def aggregate (a: (T, PT), b: (T, PT)): (T, PT) =
@@ -243,7 +245,7 @@ class NumericMinWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: Si
  * @tparam PT The type of the payload attached to the numeric data.
  */
 class NumericMinWithPayloadBinningAnalytic[T, JT <: Serializable, PT <: Serializable] (
-	implicit numeric: SimpleNumeric[T],	converter: TypeConversion[T, JT])
+	implicit numeric: ExtendedNumeric[T],	converter: TypeConversion[T, JT])
 		extends NumericMinWithPayloadAnalytic[T, PT]
 		with BinningAnalytic[(T, PT), Pair[JT, PT]]
 {
@@ -256,7 +258,7 @@ class NumericMinWithPayloadBinningAnalytic[T, JT <: Serializable, PT <: Serializ
  * @tparam PT The type of the payload attached to the numeric data.
  */
 class NumericMinWithPayloadTileAnalytic[T, PT <: Serializable] (
-	analyticName: String = "minimum")(implicit numeric: SimpleNumeric[T])
+	analyticName: String = "minimum")(implicit numeric: ExtendedNumeric[T])
 		extends NumericMinWithPayloadAnalytic[T, PT]
 		with TileAnalytic[(T, PT)]
 {
@@ -273,7 +275,7 @@ class NumericMinWithPayloadTileAnalytic[T, PT <: Serializable] (
  *           Double, no matter what numeric input type is given.
  */
 class NumericMeanAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
-                              minCount: Int = 1)(implicit numeric: SimpleNumeric[T])
+                              minCount: Int = 1)(implicit numeric: ExtendedNumeric[T])
 		extends Analytic[(T, Int)]
 {
 	def aggregate (a: (T, Int), b: (T, Int)): (T, Int) =
@@ -293,7 +295,7 @@ class NumericMeanAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
  *           Double, no matter what numeric input type is given.
  */
 class NumericMeanBinningAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
-                                     minCount: Int = 1)(implicit numeric: SimpleNumeric[T])
+                                     minCount: Int = 1)(implicit numeric: ExtendedNumeric[T])
 		extends NumericMeanAnalytic[T](emptyValue, minCount)
 		with BinningAnalytic[(T, Int), JavaDouble]
 {
@@ -309,7 +311,7 @@ class NumericMeanBinningAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
  */
 class NumericMeanTileAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
                                   minCount: Int = 1,
-                                  analyticName: String = "")(implicit numeric: SimpleNumeric[T])
+                                  analyticName: String = "")(implicit numeric: ExtendedNumeric[T])
 		extends NumericMeanAnalytic[T](emptyValue, minCount)
 		with TileAnalytic[(T, Int)]
 {
@@ -340,7 +342,7 @@ class NumericMeanTileAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
  *           Java Doubles, no matter what numeric input type is given.
  */
 class NumericStatsAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
-                               minCount: Int = 1)(implicit numeric: SimpleNumeric[T])
+                               minCount: Int = 1)(implicit numeric: ExtendedNumeric[T])
 		extends Analytic[(T, T, Int)]
 {
 	def aggregate (a: (T, T, Int), b: (T, T, Int)): (T, T, Int) =
@@ -360,7 +362,7 @@ class NumericStatsAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, J
 	}
 }
 class NumericStatsBinningAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
-                                      minCount: Int = 1)(implicit numeric: SimpleNumeric[T])
+                                      minCount: Int = 1)(implicit numeric: ExtendedNumeric[T])
 		extends NumericStatsAnalytic[T]
 		with BinningAnalytic[(T, T, Int), Pair[JavaDouble, JavaDouble]]
 {
@@ -371,7 +373,7 @@ class NumericStatsBinningAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble
 }
 class NumericStatstileAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
                                    minCount: Int = 1,
-                                   analyticName: String = "")(implicit numeric: SimpleNumeric[T])
+                                   analyticName: String = "")(implicit numeric: ExtendedNumeric[T])
 		extends NumericStatsAnalytic[T]
 		with TileAnalytic[(T, T, Int)]
 {

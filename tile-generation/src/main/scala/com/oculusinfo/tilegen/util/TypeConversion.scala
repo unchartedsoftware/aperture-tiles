@@ -1,4 +1,4 @@
-package com.oculusinfo.tilegen.tiling.analytics
+package com.oculusinfo.tilegen.util
 
 import java.lang.{Byte => JavaByte}
 import java.lang.{Short => JavaShort}
