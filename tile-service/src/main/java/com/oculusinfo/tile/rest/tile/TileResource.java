@@ -186,14 +186,16 @@ public class TileResource extends ApertureServerResource {
 
 			String ext = (String) getRequest().getAttributes().get("ext");
 			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
+
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
+
 				BufferedImage tile = _service.getTileImage( layer, index, tileSet, queryParams );
 				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
-
 				setStatus(Status.SUCCESS_OK);
 				return imageRep;
+
 			} else if (ResponseType.Tile.equals(extType.getResponseType())) {
 				// We return an object including the tile index ("index") and 
 				// the tile data ("data").
@@ -207,9 +209,9 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
 				result.put("tile", _service.getTileObject( layer, index, tileSet, queryParams ));
-
 				setStatus(Status.SUCCESS_OK);
 				return new JsonRepresentation(result);
+
 			} else {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			}

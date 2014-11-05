@@ -44,13 +44,11 @@ define(function (require) {
 
         init: function ( spec, map ) {
 
-            this.id = spec.source.layer;
             this.uuid = Util.generateUuid();
-            this.name = spec.name || spec.layer;
+            this.name = spec.name || "Unnamed Layer";
             this.domain = spec.domain;
             this.map = map;
             this.layerSpec = spec;
-            this.layerInfo = null;
         },
 
         /**
@@ -58,13 +56,6 @@ define(function (require) {
          */
         getLayerSpec: function () {
             return this.layerSpec;
-        },
-
-        /**
-         *  Returns the layer's information object
-         */
-        getLayerInfo: function () {
-            return this.layerInfo;
         },
 
         /**

@@ -30,9 +30,6 @@ define(function (require) {
 
     var Layer = require('../Layer'),
         PubSub = require('../../util/PubSub'),
-        Util = require('../../util/Util'),
-        LayerService = require('../LayerService'),
-        TileService = require('./TileService'),
         makeRedrawFunc,
         ClientLayer;
 
@@ -54,47 +51,46 @@ define(function (require) {
 
         init: function ( spec, views, map ) {
 
-            var that = this;
-
-            function concatIds( views ) {
-                var ids = {},
-                    id = '',
-                    i;
-                for ( i=0; i<views.length; i++ ) {
-                    if ( !ids[ views[i].layer ] ) {
-                        id += ( id.length > 0 ) ? '|' + views[i].layer : views[i].layer;
-                        ids[ views[i].layer ] = true;
-                    }
-                }
-                return id;
-            }
+            var that = this,
+                view,
+                i;
 
             // set reasonable defaults
             spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
             spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
 
-            this.id = concatIds( spec.views );
-            this.uuid = Util.generateUuid();
-            this.domain = 'client';
-            this.name = spec.name || this.id;
-            this.map = map;
-            this.layerSpec = spec;
-            this.layerInfo = {};
+            // call base constructor
+            this._super( spec, map );
+
             this.views = views;
             this.renderersByTile = {};
             this.defaultViewIndex = 0;
-            this.hasBeenConfigured = false;
             this.click = null;
             this.hover = null;
 
+            for (i=0; i<this.views.length; i++) {
+                view = this.views[i];
+                // pass parent layer (this) along with meta data to the renderer / details
+                view.renderer.parent = that;
+                if ( view.details ) {
+                    view.details.parent = that;
+                }
+                // subscribe renderer to pubsub AFTER it has its parent reference
+                view.renderer.subscribeRenderer();
+            }
+
+            // update tiles on map move
+            this.map.on('move', function() {
+                that.update();
+            });
             // clear click state if map is clicked
             this.map.on( 'click', function() {
                 that.setClick( null );
             });
-
             this.setZIndex( spec.zIndex );
             this.setVisibility( spec.enabled );
             this.setOpacity( spec.opacity );
+            this.update();
         },
 
 
@@ -254,10 +250,14 @@ define(function (require) {
 
             var that = this,
                 oldIndex = this.getTileViewIndex( tilekey ),
-                oldRenderer = this.views[oldIndex].renderer,
-                newRenderer = this.views[newIndex].renderer,
-                oldService = this.views[oldIndex].service,
-                newService = this.views[newIndex].service;
+                oldView = this.views[oldIndex],
+                oldSource = oldView.source,
+                oldRenderer = oldView.renderer,
+                oldService = oldView.service,
+                newView = this.views[newIndex],
+                newSource = newView.source,
+                newRenderer = newView.renderer,
+                newService = newView.service;
 
             if ( newIndex === oldIndex ) {
                 return;
@@ -270,7 +270,7 @@ define(function (require) {
                 this.renderersByTile[tilekey] = newIndex;
             }
 
-            if ( newService.layerInfo.layer === oldService.layerInfo.layer ) {
+            if ( newSource.layer === oldSource.layer ) {
                 // both renderers share the same data source, swap tile data
                 // give tile to new view
                 newService.data[tilekey] = oldService.data[tilekey];
@@ -301,74 +301,6 @@ define(function (require) {
 
 
         /**
-         * Configure the layer, this involves sending the layer specification
-         * object for each view to the server in a POST request. The server will respond
-         * with a meta data object containing the views layer configuration uuid. If a previous
-         * uuid exists, the server will automatically send an unconfigure request to
-         * free the previous configuration.
-         */
-        configure: function( callback ) {
-
-            var that = this,
-                viewSpecs = this.layerSpec.views,
-                layerInfos = this.layerInfo,
-                deferreds = [],
-                i;
-
-            function configureView( viewSpecs ) {
-
-                var layerDeferred = $.Deferred();
-
-                LayerService.configureLayer( viewSpecs, function( layerInfo, statusInfo ) {
-
-                    var layerId = layerInfo.layer;
-
-                    if (statusInfo.success) {
-                        if ( layerInfos[layerId] ) {
-                            // if a previous configuration exists, release it
-                            LayerService.unconfigureLayer( layerInfos[layerId], function() {
-                                return true;
-                            });
-                        }
-                        // set layer info
-                        layerInfos[ layerId ] = layerInfo;
-                        // resolve deferred
-                        layerDeferred.resolve();
-                    }
-                });
-                return layerDeferred;
-            }
-
-            for ( i=0; i<viewSpecs.length; i++ ) {
-                deferreds.push( configureView( viewSpecs[i] ) );
-            }
-
-            $.when.apply( $, deferreds ).done( function() {
-                var i, view;
-                for (i=0; i<that.views.length; i++) {
-                    view = that.views[i];
-                    view.service = new TileService( layerInfos[ view.id ], that.map.getPyramid() );
-                    // pass parent layer (this) along with meta data to the renderer / details
-                    view.renderer.parent = that;
-                    view.renderer.meta = layerInfos[ view.id ].meta;
-                    if ( view.details ) {
-                        view.details.parent = that;
-                        view.details.meta = layerInfos[ view.id ].meta;
-                    }
-                    // subscribe renderer to pubsub AFTER it has its parent reference
-                    view.renderer.subscribeRenderer();
-                    that.hasBeenConfigured = true;
-                }
-                // attach callback now
-                that.map.on('move', $.proxy(that.update, that));
-                that.update();
-                callback( layerInfos );
-            });
-
-        },
-
-
-        /**
          * Map update callback, this function is called when the map view state is updating. Requests
          * and draws any new tiles
          */
@@ -380,7 +312,7 @@ define(function (require) {
                 tilesByRenderer = [],
                 tileViewBounds, i;
 
-            if ( !this.hasBeenConfigured || !this.getVisibility() ) {
+            if ( !this.getVisibility() ) {
                 return;
             }
 

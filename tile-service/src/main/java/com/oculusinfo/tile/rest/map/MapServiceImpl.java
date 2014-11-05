@@ -54,7 +54,7 @@ public class MapServiceImpl implements MapService {
 
 	@Inject
 	public MapServiceImpl (@Named("com.oculusinfo.tile.map.config") String mapConfigurationLocation) {
-	    _mapConfigurationsById = new HashMap<String, JSONObject>();
+	    _mapConfigurationsById = new HashMap<>();
 	    _mapConfigurations = new JSONArray();
 
 	    readConfigFiles(getConfigurationFiles(mapConfigurationLocation));
@@ -80,7 +80,7 @@ public class MapServiceImpl implements MapService {
 	private File[] getConfigurationFiles (String location) {
 		try {
 			// Find our configuration file.
-			URI path = null;
+			URI path;
 			if (location.startsWith("res://")) {
 				location = location.substring(6);
 				path = MapServiceImpl.class.getResource(location).toURI();

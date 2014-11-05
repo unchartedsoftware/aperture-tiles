@@ -134,7 +134,7 @@ public class LegendResource extends ApertureServerResource {
 		}
 
 		JSONObject requestParams = createRequestParamsObject(form);
-	    LayerConfiguration config = _layerService.getLayerConfiguration( layer, null, requestParams );
+	    LayerConfiguration config = _layerService.getLayerConfiguration( layer, requestParams );
 
         setStatus(Status.SUCCESS_OK);
 		if(outputType.equalsIgnoreCase("uri")){
@@ -154,13 +154,11 @@ public class LegendResource extends ApertureServerResource {
 	                                                 int height,
 	                                                 boolean renderHorizontally) {
 		try {
+
 			BufferedImage tile = _service.getLegend( config, width, height, renderHorizontally );
 			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
-			
-			setStatus(Status.SUCCESS_CREATED);
-			
 			return imageRep;
-			
+
 		} catch (Exception e) {
 			throw new ResourceException(Status.CONNECTOR_ERROR_INTERNAL, "Unable to generate legend image.", e);
 		}
@@ -176,16 +174,14 @@ public class LegendResource extends ApertureServerResource {
 	                                                   int height,
 	                                                   boolean renderHorizontally) {
 		try {
+
 			BufferedImage tile = _service.getLegend( config, width, height, renderHorizontally );
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(tile, "png", baos);
 			baos.flush();
-			
 			String encodedImage = Base64.encode(baos.toByteArray(), true);
 			baos.close();
 			encodedImage = "data:image/png;base64," + URLEncoder.encode(encodedImage, "ISO-8859-1");
-			setStatus(Status.SUCCESS_CREATED);
-
 			return new StringRepresentation( encodedImage );
 			
 		} catch (IOException e) {

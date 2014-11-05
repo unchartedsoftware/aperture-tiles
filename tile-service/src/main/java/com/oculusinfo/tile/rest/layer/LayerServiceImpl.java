@@ -91,9 +91,8 @@ public class LayerServiceImpl implements LayerService {
 	@Override
 	public PyramidMetaData getMetaData( String layerId ) {
 		try {
-			LayerConfiguration config = getLayerConfiguration( layerId, null, null );
+			LayerConfiguration config = getLayerConfiguration( layerId, null );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
-            System.out.println( dataId );
 			PyramidIO pyramidIO = config.produce( PyramidIO.class );
 			return getMetaData( layerId, dataId, pyramidIO );
 		} catch (ConfigurationException e) {
@@ -106,7 +105,6 @@ public class LayerServiceImpl implements LayerService {
 		try {
 			JSONObject metadata = _metaDataCache.get( layerId );
 			if ( metadata == null ) {
-                System.out.println( "Checking for meta data for: " +  layerId );
 				String s = pyramidIO.readMetaData( dataId );
 				if ( s == null ) {
 					throw new JSONException( "Missing metadata." );
@@ -142,46 +140,9 @@ public class LayerServiceImpl implements LayerService {
 		}
 		return result;
 	}
-    /*
-    private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
-        JSONObject result = new JSONObject();
-		try {
-            JSONObject config = JsonUtilities.deepClone( options );
-            if (query != null) {
-                Iterator<?> keys = query.keys();
-                while ( keys.hasNext() ) {
-                    String key = (String) keys.next();
-                    System.out.println( key );
-                    config.put( key, query.get( key ) );
-                }
-            }
-            result.put( "config", config );
-		}
-		catch (Exception e) {
-			LOGGER.error("Couldn't merge query options with main options.", e);
-		}
-		return result;
-	}
-     */
-    /*
-    private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
-        JSONObject result = new JSONObject();
-		try {
-            JSONObject config = JsonUtilities.deepClone( options );
-            if (query != null) {
-                config.put( "renderer", query );
-            }
-            result.put( "config", config );
-		}
-		catch (Exception e) {
-			LOGGER.error("Couldn't merge query options with main options.", e);
-		}
-		return result;
-	}
-	*/
 
     @Override
-	public LayerConfiguration getLayerConfiguration( String layerId, TileIndex tile, JSONObject requestParams ) {
+	public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams ) {
 		try {
 
             JSONObject layerConfig = _layersById.get( layerId );
@@ -210,16 +171,8 @@ public class LayerServiceImpl implements LayerService {
 				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-                System.out.println( "Initializing pyramid for read" );
 				pyramidIO.initializeForRead( dataId, width, height, initProps);
 			}
-
-            if ( tile != null ) {
-                PyramidMetaData metadata = getMetaData( layerId, dataId, pyramidIO );
-                String minimum = metadata.getCustomMetaData(""+tile.getLevel(), "minimum");
-                String maximum = metadata.getCustomMetaData(""+tile.getLevel(), "maximum");
-                config.setLevelProperties(tile, minimum, maximum);
-            }
 
 			return config;
 

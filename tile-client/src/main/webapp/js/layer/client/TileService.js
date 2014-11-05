@@ -83,7 +83,7 @@ define(function (require) {
         /**
          * Construct a TileService
          */
-        init: function ( layerInfo, tilepyramid ) {
+        init: function ( source, tilepyramid ) {
             // current tile data
             this.data = {};
             // tiles flagged as actively requested and waiting on
@@ -91,14 +91,14 @@ define(function (require) {
             // callbacks
             this.dataCallback = {};
             // layer info
-            this.layerInfo = layerInfo;
+            this.source = source;
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
 
-            if ( !serviceRegistry[ layerInfo.layer ] ) {
-                serviceRegistry[ layerInfo.layer ] = [];
+            if ( !serviceRegistry[ source.layer ] ) {
+                serviceRegistry[ source.layer ] = [];
             }
-            serviceRegistry[ layerInfo.layer ].push( this );
+            serviceRegistry[ source.layer ].push( this );
         },
 
 
@@ -263,8 +263,8 @@ define(function (require) {
 
                 // request data from server
                 aperture.io.rest(
-                    (this.layerInfo.apertureservice+'1.0.0/'+
-                     this.layerInfo.layer+'/'+
+                    (this.source.apertureservice+'1.0.0/'+
+                     this.source.layer+'/'+
                      level+'/'+
                      xIndex+'/'+
                      yIndex+'.json'),
@@ -458,8 +458,8 @@ define(function (require) {
         function requestTile( tile ) {
             // request data from server
             aperture.io.rest(
-                (service.layerInfo.apertureservice+'1.0.0/'+
-                 service.layerInfo.layer+'/'+
+                (service.source.apertureservice+'1.0.0/'+
+                 service.source.layer+'/'+
                  tile.level+'/'+
                  tile.xIndex+'/'+
                  tile.yIndex+'.json'),

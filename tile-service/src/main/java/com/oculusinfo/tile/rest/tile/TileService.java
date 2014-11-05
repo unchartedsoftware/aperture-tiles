@@ -33,8 +33,7 @@ import java.util.UUID;
 public interface TileService {
 	/**
 	 * TMS tile request.
-	 * 
-	 * @param id - 'default' is ok - means use server defaults. Use getLayer (/layer) to obtain an id.
+	 *
 	 * @param layer - The layer for which to get an image
 	 * @param index The index of the desired tile
 	 * @param tileSet A set of other tiles which will be wanted along with this
@@ -45,9 +44,7 @@ public interface TileService {
 
 	/**
 	 * TMS raw tile data request.
-	 * 
-	 * @param id - 'default' is ok - means use server defaults. Use getLayer
-	 *            (/layer) to obtain an id.
+	 *
 	 * @param layer - The layer for which to get tile data
 	 * @param index The index of the desired tile
 	 * @param tileSet A set of other tiles which will be wanted along with this

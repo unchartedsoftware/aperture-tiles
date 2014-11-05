@@ -58,14 +58,9 @@ public interface LayerService {
      * Gets a configuration object to be used when rendering a layer.
      *
      * @param layer The layer to be rendered
-     * @param tile An index indicating the tile to be rendered. For most
-     *            renderers, the only part of this that matters is the level,
-     *            but there are a few exceptions. A null value indicates that
-     *            any tile-specific pieces of the configuration may safely be
-     *            ignored.
      * @param requestParams Additional query parameters to override
      */
-    public LayerConfiguration getLayerConfiguration( String layer, TileIndex tile, JSONObject requestParams );
+    public LayerConfiguration getLayerConfiguration( String layer, JSONObject requestParams );
 
     /**
      * Get the meta-data associated with the given layer (which must be listed

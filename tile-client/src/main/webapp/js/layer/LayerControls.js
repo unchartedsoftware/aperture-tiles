@@ -665,7 +665,7 @@ define(function (require) {
     addLayer = function ( sortedLayers, index, $layerControlsContainer, controlsMap, layersByUuid, settingsCustomization ) {
         var layer = sortedLayers[index],
             uuid = layer.uuid,
-            name = layer.name || layer.id,
+            name = layer.name,
             domain = layer.domain,
             $layerControlRoot,
             $layerControlTitleBar,

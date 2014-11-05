@@ -28,8 +28,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.transformation.TileTransformer;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
@@ -72,7 +74,14 @@ public class TileServiceImpl implements TileService {
 		BufferedImage bi = null;
 
 		try {
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, index, query );
+
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
+
+            // set level extrema
+            PyramidMetaData metadata = _layerService.getMetaData( layer );
+            String minimum = metadata.getCustomMetaData(""+index.getLevel(), "minimum");
+            String maximum = metadata.getCustomMetaData(""+index.getLevel(), "maximum");
+            config.setLevelProperties( index, minimum, maximum );
 
 			// Record image dimensions in case of error. 
 			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -103,18 +112,19 @@ public class TileServiceImpl implements TileService {
 	@Override
 	public JSONObject getTileObject( String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
 		try {
-		    LayerConfiguration config = _layerService.getLayerConfiguration( layer, index, query );
+		    LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
 
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		    PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<?> serializer = config.produce(TileSerializer.class);
 
 			config.prepareForRendering(layer, index, tileSet);
 
-			InputStream tile = pyramidIO.getTileStream(layer, serializer, index);
-			if (null == tile) return null;
-			
+			InputStream tile = pyramidIO.getTileStream( dataId, serializer, index );
+			if (null == tile) {
+                return null;
+            }
 			TileTransformer transformer = config.produce(TileTransformer.class);
-			
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
             return transformer.Transform(deserializedJSON);
 			

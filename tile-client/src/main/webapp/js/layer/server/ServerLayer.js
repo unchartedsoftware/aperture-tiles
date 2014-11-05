@@ -46,7 +46,7 @@ define(function (require) {
      * @param {Object} level - The current map zoom level.
      */
     requestRampImage = function ( layer ) {
-        aperture.io.rest('/legend/' + layer.id + "?theme="+layer.getTheme() + "&ramp=" + layer.getRampType(),
+        aperture.io.rest('/legend/' + layer.layerSpec.source.layer + "?theme="+layer.getTheme() + "&ramp=" + layer.getRampType(),
                          'GET',
                          function ( legendString, status ) {
                              layer.setRampImageUrl( legendString );
@@ -127,7 +127,6 @@ define(function (require) {
                     that.setRampMinMax( getLevelMinMax( that ) );
                 }
             });
-
 
             this.update();
             requestRampImage( this );
