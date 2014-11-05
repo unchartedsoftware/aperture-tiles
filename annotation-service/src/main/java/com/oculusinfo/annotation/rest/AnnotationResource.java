@@ -33,6 +33,7 @@ import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.Form;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -92,30 +93,6 @@ public class AnnotationResource extends ApertureServerResource {
 				Pair<String, Long> certificate = _service.modify(layer, annotation);
 				jsonResult.put("uuid", certificate.getFirst() );
 				jsonResult.put("timestamp", certificate.getSecond().toString() );
-
-			} else if ( requestType.equals("configure") ) {
-				
-				String layer = json.getString("layer");
-				JSONObject jsonFilters = json.getJSONObject("configuration");
-				UUID uuid = _service.configureLayer(layer, jsonFilters);
-				jsonResult.put("layer", layer);
-				jsonResult.put("uuid", uuid);
-
-			} else if ( requestType.equals("unconfigure") ) {
-
-				String layer = json.getString("layer");
-				UUID uuid = UUID.fromString(json.getString("uuid"));
-				_service.unconfigureLayer( layer, uuid );
-
-			} else if ( requestType.equals("list") ) {
-				
-				List<AnnotationInfo> layers = _service.list();
-				JSONArray jsonLayers = new JSONArray();
-				for (int i=0; i<layers.size(); ++i) {
-					jsonLayers.put( i, layers.get(i).getRawData() );
-				}
-				return new JsonRepresentation(jsonLayers);
-			
 			}
 			
 			setStatus(Status.SUCCESS_OK);		
@@ -131,37 +108,42 @@ public class AnnotationResource extends ApertureServerResource {
 		}
 	}
 	
-	
+	/**
+	 * If there's any query params, then they are turned into a {@link JSONObject}.
+	 * @param query
+	 * 	The query for the resource request.
+	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
+	 * @return
+	 * 	Returns a {@link JSONObject} that represents all the query parameters,
+	 * 	or null if the query doesn't exist
+	 */
+	private JSONObject createQueryParamsObject(Form query) {
+		JSONObject obj = null;
+		if (query != null) {
+			obj = new JSONObject(query.getValuesMap());
+		}
+		return obj;
+	}
+
+
 	@Get
 	public Representation getAnnotation() throws ResourceException {
 
 		try {
 
 			String layer = (String) getRequest().getAttributes().get("layer");
-			String id = (String) getRequest().getAttributes().get("uuid");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			String xAttr = (String) getRequest().getAttributes().get("x");
 			String yAttr = (String) getRequest().getAttributes().get("y");
-			
+			JSONObject queryParams = createQueryParamsObject(getRequest().getResourceRef().getQueryAsForm());
+
 			int zoomLevel = Integer.parseInt(levelDir);
 			int x = Integer.parseInt(xAttr);
 			int y = Integer.parseInt(yAttr);
 
-			UUID uuid = null;
-			if( !id.equals("default") ){
-				uuid = UUID.fromString(id);
-			}
-
-			JSONObject tileJson = new JSONObject();
-			tileJson.put("level", zoomLevel);
-			tileJson.put("xIndex", x);
-			tileJson.put("yIndex", y);
-
-			JSONObject result = new JSONObject();
-			result.put("tile", tileJson );
 			TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 		    
-			Map<BinIndex, List<AnnotationData<?>>> data = _service.read(uuid, layer, index);
+			Map<BinIndex, List<AnnotationData<?>>> data = _service.read( layer, index, queryParams );
 
 			// annotations by bin
 			JSONObject binsJson = new JSONObject();
@@ -176,7 +158,14 @@ public class AnnotationResource extends ApertureServerResource {
 				}
 				binsJson.put( binIndex.toString(), annotationArray );
 			}
-		    
+
+		    JSONObject tileJson = new JSONObject();
+			tileJson.put("level", zoomLevel);
+			tileJson.put("xIndex", x);
+			tileJson.put("yIndex", y);
+
+			JSONObject result = new JSONObject();
+			result.put("tile", tileJson );
 			result.put( "annotations", binsJson );
 
 			setStatus(Status.SUCCESS_CREATED);

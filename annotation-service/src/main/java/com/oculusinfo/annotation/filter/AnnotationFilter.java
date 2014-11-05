@@ -30,9 +30,6 @@ import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
 
 
-/**
- * This class represents a single annotation
- */
 public interface AnnotationFilter {
     
 	public FilteredBinResults filterBins( List<AnnotationBin> bin );

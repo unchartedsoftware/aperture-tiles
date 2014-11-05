@@ -24,10 +24,6 @@
 package com.oculusinfo.annotation.rest.impl;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,21 +31,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.json.JSONArray;
-import org.json.JSONException;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.layer.LayerService;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.AnnotationTile;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
@@ -57,7 +49,6 @@ import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.annotation.rest.AnnotationInfo;
 import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
@@ -65,11 +56,8 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 
 
@@ -94,46 +82,40 @@ public class AnnotationServiceImpl implements AnnotationService {
 		                                                                new TypeDescriptor(Long.class))));
 	}
 
-	private List<AnnotationInfo> _annotationLayers;
-	private Map<String, AnnotationInfo> _annotationLayersById;
-	private Map<UUID, JSONObject> _configurationssByUuid;
-
-	private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-	private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
-	private FactoryProvider<AnnotationIO>  _annotationIOFactoryProvider;
-	private FactoryProvider<TileSerializer<?>> _tileSerializerFactoryProvider;
-	private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
-        
-	protected AnnotationSerializer _dataSerializer;
-	protected AnnotationIndexer _indexer;
+	private LayerService _layerService;
+	private AnnotationSerializer _dataSerializer;
+	private AnnotationIndexer _indexer;
 	
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
-	
-	@Inject
-	public AnnotationServiceImpl( @Named("com.oculusinfo.annotation.config") String annotationConfigurationLocation,
-	                             FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
-	                              FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
-	                              FactoryProvider<TileSerializer<?>> tileSerializerFactoryProvider,
-	                              FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
-	                              FactoryProvider<AnnotationFilter> filterFactoryProvider,
-	                              AnnotationIndexer indexer,
-	                              AnnotationSerializer serializer ) {
+    @Inject
+	public AnnotationServiceImpl( LayerService service,
+                                  AnnotationSerializer serializer,
+                                  AnnotationIndexer indexer ) {
 
-		_annotationLayers = new ArrayList<>();
-		_annotationLayersById = new HashMap<>();
-		_configurationssByUuid = new HashMap<>();
+        _layerService = service;
+        _dataSerializer = serializer;
+        _indexer = indexer;
 
-		_pyramidIOFactoryProvider = pyramidIOFactoryProvider;
-		_annotationIOFactoryProvider = annotationIOFactoryProvider;
-		_tileSerializerFactoryProvider = tileSerializerFactoryProvider;
-		_tilePyramidFactoryProvider = tilePyramidFactoryProvider;
-		_filterFactoryProvider = filterFactoryProvider;
-
-		_dataSerializer = serializer;
-		_indexer = indexer;
-		
-		readConfigFiles( getConfigurationFiles( annotationConfigurationLocation ) );
+        // since tables may not exist, create them in a thread-safe manner
+        /* TODO: this makes extra '-data' tables for all layers, figure a better way to determine
+                 if they are sued for annotation data
+        for ( String layer : _layerService.getLayers() ) {
+            LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+            String dataId = config.getPropertyValue( LayerConfiguration.DATA_ID );
+            try {
+                _lock.writeLock().lock();
+                AnnotationIO aio = config.produce( AnnotationIO.class );
+                aio.initializeForRead( layer );
+                PyramidIO pio = config.produce( PyramidIO.class );
+                pio.initializeForRead( layer, 0, 0, null );
+            } catch ( Exception e ) {
+                e.printStackTrace();
+            } finally {
+                _lock.writeLock().unlock();
+            }
+        }
+        */
 	}
 
 
@@ -143,7 +125,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();
 		try {
 
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
 
 			/*
@@ -185,7 +167,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				                                   + "MODIFY operation aborted. It is recommended "
 				                                   + "upon receiving this exception to refresh all client annotations");
 			}
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
 
 			/*
@@ -213,15 +195,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	public Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex query ) {
+	public Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) {
 
 		_lock.readLock().lock();
 		try {
 
-			AnnotationConfiguration config = getConfiguration( layer, id );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
 			AnnotationFilter filter = config.produce( AnnotationFilter.class );
-			return getDataFromTiles( layer, query, filter, pyramid );
+			return getDataFromTiles( layer, tile, filter, pyramid );
     		
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -236,7 +218,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();
 		try {
 
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			TilePyramid pyramid = config.produce(TilePyramid.class);
 
 			/*
@@ -258,131 +240,6 @@ public class AnnotationServiceImpl implements AnnotationService {
 		} finally {
 			_lock.writeLock().unlock();
 		}
-	}
-
-
-	@Override
-	public List<AnnotationInfo> list () {
-		return _annotationLayers;
-	}
-
-
-	public AnnotationConfiguration getConfiguration( String layer ) {
-
-		return getConfiguration( layer, null );
-	}
-
-	public AnnotationConfiguration getConfiguration( String layer, UUID uuid ) {
-					
-		try {
-			AnnotationConfiguration configFactory = new AnnotationConfiguration( _pyramidIOFactoryProvider,
-			                                                                     _annotationIOFactoryProvider,
-			                                                                     _tileSerializerFactoryProvider,
-			                                                                     _tilePyramidFactoryProvider,
-			                                                                     _filterFactoryProvider,
-			                                                                     null, 
-			                                                                     null );
-			JSONObject baseLayerConfig;
-			if ( uuid != null ) {
-				// copy layer info
-				baseLayerConfig = JsonUtilities.deepClone( _annotationLayersById.get( layer ).getRawData() );
-				// overlay configuration
-				JsonUtilities.overlayInPlace( baseLayerConfig, _configurationssByUuid.get( uuid ) );
-			} else {
-				baseLayerConfig = _annotationLayersById.get( layer ).getRawData();
-			}
-			configFactory.readConfiguration( baseLayerConfig );
-			return configFactory.produce( AnnotationConfiguration.class );
-			
-		} catch (ConfigurationException e) {
-			LOGGER.warn("Error configuring annotations for {}", layer, e);
-			return null;
-		}
-		
-
-	}
-
-
-	@Override
-	public UUID configureLayer (String layerId, JSONObject overrideConfiguration ) {
-
-		UUID uuid = UUID.randomUUID();
-		_configurationssByUuid.put( uuid, overrideConfiguration );
-		return uuid;
-	}
-
-
-	@Override
-	public void unconfigureLayer (String layerId, UUID uuid ) {
-
-		_configurationssByUuid.remove( uuid );
-	}
-
-
-	private File[] getConfigurationFiles (String location) {
-		try {
-			// Find our configuration file.
-			URI path = null;
-			if (location.startsWith("res://")) {
-				location = location.substring(6);
-				path = AnnotationServiceImpl.class.getResource(location).toURI();
-			} else {
-				path = new File(location).toURI();
-			}
-
-			File configRoot = new File(path);
-			if (!configRoot.exists())
-				throw new Exception(location+" doesn't exist");
-
-			if (configRoot.isDirectory()) {
-				return configRoot.listFiles();
-			} else {
-				return new File[] {configRoot};
-			}
-		} catch (Exception e) {
-			LOGGER.warn("Can't find configuration file {}", location, e);
-			return new File[0];
-		}
-	}
-
-	private void readConfigFiles (File[] files) {
-		for (File file: files) {
-			try {
-				JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
-				JSONArray configurations = contents.getJSONArray("layers");
-				for (int i=0; i<configurations.length(); ++i) {    	
-    				
-					AnnotationInfo info = new AnnotationInfo(configurations.getJSONObject(i));
-					addInfoAndInitializeLayer(info);
-				}
-			} catch (FileNotFoundException e) {
-				LOGGER.error("Cannot find annotation configuration file {} ", file, e);
-				return;
-			} catch (JSONException e) {
-				LOGGER.error("Annotation configuration file {} was not valid JSON.", file, e);
-			}
-		}
-	}
-
-	private void addInfoAndInitializeLayer (AnnotationInfo info) {
-
-		_annotationLayers.add(info);
-		_annotationLayersById.put(info.getID(), info);
-
-		try {
-			// ensure both the tile and data io's exist
-			// tile io
-			AnnotationConfiguration config = getConfiguration( info.getID() );
-			PyramidIO tileIo = config.produce( PyramidIO.class );
-			tileIo.initializeForWrite( info.getID() );
-			// data io
-			AnnotationIO dataIo = config.produce( AnnotationIO.class );
-			dataIo.initializeForWrite( info.getID() );
-
-		} catch ( Exception e ) {
-			throw new IllegalArgumentException( e.getMessage() );
-		}
-
 	}
 
 	
@@ -582,7 +439,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		if ( tiles.size() == 0 ) return;
 		
 		try {
-			AnnotationConfiguration config = getConfiguration(layer);
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce(PyramidIO.class);	
 
 			TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
@@ -590,8 +447,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 				                                       getRuntimeBinClass(),
 				                                       getRuntimeTypeDescriptor());
 
-			//io.initializeForWrite( layer );
-			io.writeTiles( layer, serializer, AnnotationTile.convertToRaw( tiles ) );
+			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			io.writeTiles( dataId, serializer, AnnotationTile.convertToRaw( tiles ) );
 					
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -606,10 +463,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 		dataList.add( data );
 
 		try {
-			AnnotationConfiguration config = getConfiguration(layer);
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			AnnotationIO io = config.produce( AnnotationIO.class );
-			//io.initializeForWrite( layer );
-			io.writeData( layer, _dataSerializer, dataList );
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			io.writeData( dataId, _dataSerializer, dataList );
 
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -625,9 +482,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce( PyramidIO.class );
-			io.removeTiles( layer, tiles );	
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			io.removeTiles( dataId, tiles );
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -643,9 +501,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 		try {
 
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			AnnotationIO io = config.produce( AnnotationIO.class );
-			io.removeData( layer, dataList );
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			io.removeData( dataId, dataList );
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -664,15 +523,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 		}
 		
 		try {
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce( PyramidIO.class );
 			TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
 				SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 				                                       getRuntimeBinClass(),
 				                                       getRuntimeTypeDescriptor());
 
-			//io.initializeForRead( layer, 0, 0, null );			
-			for (AnnotationTile tile : AnnotationTile.convertFromRaw(io.readTiles(layer, serializer, indices))) {
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+
+			for (AnnotationTile tile : AnnotationTile.convertFromRaw(io.readTiles(dataId, serializer, indices))) {
 				if (!readTiles.contains(tile.getDefinition())) {
 					readTiles.add(tile.getDefinition());
 					tiles.add(tile);
@@ -695,10 +555,10 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 
-			AnnotationConfiguration config = getConfiguration( layer );
+			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			AnnotationIO io = config.produce( AnnotationIO.class );
-			//io.initializeForRead( layer );
-			data = io.readData( layer, _dataSerializer, certificates );
+			data = io.readData( dataId, _dataSerializer, certificates );
 			
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );

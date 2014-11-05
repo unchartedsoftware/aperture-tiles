@@ -52,6 +52,9 @@ public interface LayerService {
      */
     public List< JSONObject > getLayerConfigs();
 
+
+    public List< String > getLayers();
+
     /**
      * For use by other services; the LayerResource doesn't serve this out.
      *

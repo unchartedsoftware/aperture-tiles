@@ -88,6 +88,21 @@ public class LayerServiceImpl implements LayerService {
 		return _layers;
 	}
 
+    @Override
+	public List< String > getLayers() {
+        List< String > layers = new ArrayList<>();
+        try {
+            for ( JSONObject layerConfig : _layers ) {
+                layers.add( layerConfig.getString( "layer" ) );
+                System.out.println( layerConfig.getString( "layer" ) );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
+		return layers;
+	}
+
 	@Override
 	public PyramidMetaData getMetaData( String layerId ) {
 		try {
@@ -107,9 +122,11 @@ public class LayerServiceImpl implements LayerService {
 			if ( metadata == null ) {
 				String s = pyramidIO.readMetaData( dataId );
 				if ( s == null ) {
-					throw new JSONException( "Missing metadata." );
-				}
-				metadata = new JSONObject( s );
+					//throw new JSONException( "Missing metadata." );
+                    metadata = new JSONObject();
+				} else {
+                    metadata = new JSONObject( s );
+                }
 				_metaDataCache.put( layerId, metadata );
 			}
 			return new PyramidMetaData( metadata );

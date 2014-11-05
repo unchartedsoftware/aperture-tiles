@@ -146,14 +146,14 @@ define( function (require) {
             details = assembleDetails( detailsSpec );
             if ( details ) {
                 // if details is available, add meta
-                details.meta = view.source.meta;
+                details.meta = view.source.meta.meta;
             }
 
             // create renderer object
             rendererSpec = view.renderer;
             rendererSpec.spec.details = details;
             renderer = new loadedModules[ rendererSpec.type ]( map, rendererSpec.spec );
-            renderer.meta = view.source.meta;
+            renderer.meta = view.source.meta.meta;
 
             // create tile service object
             service = new TileService( view.source, map.getPyramid() );

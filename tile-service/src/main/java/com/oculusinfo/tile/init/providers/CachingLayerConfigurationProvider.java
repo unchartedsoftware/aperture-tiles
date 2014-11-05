@@ -26,6 +26,9 @@ package com.oculusinfo.tile.init.providers;
 import java.io.IOException;
 import java.util.List;
 
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.binning.TilePyramid;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,17 +52,20 @@ import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedLi
 public class CachingLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
 	private static final Logger LOGGER = LoggerFactory.getLogger(CachingLayerConfigurationProvider.class);
 
-
-
-
-	@Inject
-	private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-	@Inject
-	private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-	@Inject
-	private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-	@Inject
+    @Inject
+    private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+    @Inject
+    private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
+    @Inject
+    private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
+    @Inject
+    private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
+    @Inject
+    private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
+    @Inject
     private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
+    @Inject
+    private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
 
 
 	private FactoryProvider<PyramidIO> _cachingProvider;
@@ -102,17 +108,27 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	private class CachingLayerConfiguration extends LayerConfiguration {
 		public CachingLayerConfiguration (ConfigurableFactory<?> parent,
 		                                  List<String> path) {
-			super(_cachingProvider, _serializationFactoryProvider,
-			      _rendererFactoryProvider, _tileTransformerFactoryProvider, 
-			      parent, path);
+			super(_pyramidIOFactoryProvider,
+                  _annotationIOFactoryProvider,
+                  _tilePyramidFactoryProvider,
+                  _serializationFactoryProvider,
+                  _rendererFactoryProvider,
+                  _tileTransformerFactoryProvider,
+                  _filterFactoryProvider,
+                  parent, path);
 		}
 
 
 		public CachingLayerConfiguration (String name, ConfigurableFactory<?> parent,
 		                                  List<String> path) {
-			super(_cachingProvider, _serializationFactoryProvider,
-			      _rendererFactoryProvider, _tileTransformerFactoryProvider, 
-			      name, parent, path);
+			super(_pyramidIOFactoryProvider,
+                  _annotationIOFactoryProvider,
+                  _tilePyramidFactoryProvider,
+                  _serializationFactoryProvider,
+                  _rendererFactoryProvider,
+                  _tileTransformerFactoryProvider,
+                  _filterFactoryProvider,
+                  name, parent, path);
 		}
 
 		@Override

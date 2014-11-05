@@ -24,6 +24,9 @@
 package com.oculusinfo.tile.init.providers;
 
 import com.google.inject.Inject;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.transformation.TileTransformer;
@@ -35,32 +38,45 @@ import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import java.util.List;
 
 public class StandardLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
+
     @Inject
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+    @Inject
+    private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
+    @Inject
+    private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
     @Inject
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
     @Inject
     private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
     @Inject
     private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
-
+    @Inject
+    private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
 
 
     @Override
     public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                      _annotationIOFactoryProvider,
+                                      _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
                                       _rendererFactoryProvider, 
-                                      _tileTransformerFactoryProvider, null, path);
+                                      _tileTransformerFactoryProvider,
+                                      _filterFactoryProvider,
+                                      null, path);
     }
 
     @Override
-    public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
-                                                                  List<String> path) {
+    public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,                                                     List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                      _annotationIOFactoryProvider,
+                                      _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, 
-                                      _tileTransformerFactoryProvider, parent, path);
+                                      _rendererFactoryProvider,
+                                      _tileTransformerFactoryProvider,
+                                      _filterFactoryProvider,
+                                      parent, path);
     }
 
     @Override
@@ -68,8 +84,12 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
                                                                   ConfigurableFactory<?> parent,
                                                                   List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                      _annotationIOFactoryProvider,
+                                      _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, 
-                                      _tileTransformerFactoryProvider, factoryName, parent, path);
+                                      _rendererFactoryProvider,
+                                      _tileTransformerFactoryProvider,
+                                      _filterFactoryProvider,
+                                      factoryName, parent, path);
     }
 }

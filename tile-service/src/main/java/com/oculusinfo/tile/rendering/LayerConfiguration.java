@@ -24,11 +24,14 @@
 package com.oculusinfo.tile.rendering;
 
 
+import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
@@ -57,9 +60,11 @@ import java.util.*;
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
+    public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");
 	public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "data","pyramidio" ) );
 	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "data","serializer" ) );
 	public static final List<String> TILE_TRANSFORMER_PATH = Collections.unmodifiableList( Arrays.asList( "data","transformer" ) );
+    public static final List<String> FILTER_PATH = Collections.singletonList("filter");
 
     public static final StringProperty LAYER_NAME = new StringProperty("layer",
         "The ID of the layer; exact format depends on how the layer is stored.",
@@ -120,22 +125,30 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	private String _levelMinimum;
 	private String _levelMaximum;
 
-	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                               FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
+                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
 	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+                               FactoryProvider<AnnotationFilter> filterFactoryProvider,
 	                           ConfigurableFactory<?> parent,
 	                           List<String> path) {
-		this(pyramidIOFactoryProvider, serializationFactoryProvider,
-		     rendererFactoryProvider, tileTransformerFactoryProvider, null, parent, path);
+		this(pyramidIOFactoryProvider, annotationIOFactoryProvider, tilePyramidFactoryProvider, serializationFactoryProvider,
+		    rendererFactoryProvider, tileTransformerFactoryProvider, filterFactoryProvider,
+            null, parent, path);
 	}
 
 
-	public LayerConfiguration (FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                               FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
+                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
 	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
-	                           String name, ConfigurableFactory<?> parent,
+                               FactoryProvider<AnnotationFilter> filterFactoryProvider,
+	                           String name,
+                               ConfigurableFactory<?> parent,
 	                           List<String> path) {
 		super(name, LayerConfiguration.class, parent, path);
 
@@ -156,10 +169,13 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 		_transformFactory = new ValueTransformerFactory(this, new ArrayList<String>() );
 		addChildFactory(_transformFactory);
-		addChildFactory( rendererFactoryProvider.createFactory(this, new ArrayList<String>()) );
-		addChildFactory(pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH));
-		addChildFactory(serializationFactoryProvider.createFactory(this, SERIALIZER_PATH));
-		addChildFactory(tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORMER_PATH));
+        addChildFactory( rendererFactoryProvider.createFactory(this, new ArrayList<String>()) );
+		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
+		addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
+        addChildFactory( annotationIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
+		addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
+		addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORMER_PATH) );
+        addChildFactory( filterFactoryProvider.createFactory(this, FILTER_PATH) );
 	}
 
 	@Override

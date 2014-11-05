@@ -23,7 +23,6 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
@@ -32,7 +31,6 @@ import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 
 
@@ -56,7 +54,7 @@ public interface AnnotationService {
 	 * Read annotations from the storage service
 	 * 
 	 */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex tile ) throws IllegalArgumentException;
+	public abstract Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
 	
 	
 	/*
@@ -65,16 +63,4 @@ public interface AnnotationService {
 	 */
 	public abstract void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException;
 
-	
-	/*
-	 * Configuration interface 
-	 */
-	public abstract AnnotationConfiguration getConfiguration( String layer );
-	public abstract UUID configureLayer (String layerId, JSONObject configuration );
-    public abstract void unconfigureLayer (String layerId, UUID uuid );
-
-    /*
-     * List Layers interface
-     */
-	public abstract List<AnnotationInfo> list();
 }
