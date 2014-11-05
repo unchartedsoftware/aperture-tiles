@@ -47,8 +47,8 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileAndBinIndices
-
 import com.oculusinfo.tilegen.datasets.ValueDescription
+import com.oculusinfo.tilegen.util.EndPointsToLine
 
 
 class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable {
@@ -168,10 +168,11 @@ class RDDLineBinner(minBins: Int = 2,
 		valueScheme: ValueDescription[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
-		calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)],		
 		writeLocation: String,
 		tileIO: TileIO,
 		levelSets: Seq[Seq[Int]],
+		calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
+			new EndPointsToLine().endpointsToLineBins,
 		xBins: Int = 256,
 		yBins: Int = 256,
 		name: String = "unknown",
@@ -260,8 +261,13 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
-	 * 
-	 * @param IT the index type, convertable to a cartesian pair with the 
+	 * @param calcLinePixels A function used to rasterize the line/arc between
+	 *                       two end points.  Defaults to a line based implementation.
+	 * @param usePointBinner Indicates whether the lines will be consolidate by point
+	 *                       or by tile.  Defaults to using point based consolidation.
+	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
+	 *                    or arcs.  Defaults to lines.
+	 * @param IT the index type, convertible to a cartesian pair with the 
 	 *           coordinateFromIndex function
 	 * @param PT The bin type, when processing and aggregating
 	 * @param AT The type of tile-level analytic to calculate for each tile.
@@ -280,7 +286,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	,	 
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	= 
+			 new EndPointsToLine().endpointsToLineBins,	 
 		 isDensityStrip: Boolean = false,
 		 usePointBinner: Boolean = true,
 		 linesAsArcs: Boolean = false):
@@ -359,7 +366,12 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
-	 * 
+	 * @param calcLinePixels A function used to rasterize the line/arc between
+	 *                       two end points.  Defaults to a line based implementation.
+	 * @param usePointBinner Indicates whether the lines will be consolidate by point
+	 *                       or by tile.  Defaults to using point based consolidation.
+	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
+	 *                    or arcs.  Defaults to lines.
 	 * @param IT The index type, convertable to tile and bin
 	 * @param PT The bin type, when processing and aggregating
 	 * @param AT The type of tile-level analytic to calculate for each tile.
@@ -376,7 +388,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)],		 
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] = 
+			 new EndPointsToLine().endpointsToLineBins,
 		 isDensityStrip: Boolean = false,
 		 usePointBinner: Boolean = true,
 		 linesAsArcs: Boolean = false): RDD[TileData[BT]] =
