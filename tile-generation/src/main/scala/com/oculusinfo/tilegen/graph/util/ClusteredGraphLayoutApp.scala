@@ -42,7 +42,7 @@ object ClusteredGraphLayoutApp {
 		argParser.debug
 
 		val jars =
-			Seq(new MavenReference("com.oculusinfo", "tile-generation", "0.4-SNAPSHOT")
+			Seq(new MavenReference("com.oculusinfo", "tile-generation", SparkConnector.getDefaultVersions("base"))
 			) union SparkConnector.getDefaultLibrariesFromMaven
 		val sc = argParser.getSparkConnector(jars).getSparkContext("Clustered Graph Layout") 
 		val sourceDir = argParser.getString("source", "The source directory where to find clustered graph data")
