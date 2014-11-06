@@ -45,29 +45,20 @@ import java.util.Map;
  * the serializer when writing / reading the data from the PyramidIO
  */
 
-public class AnnotationTile implements Serializable {
-
-	private static final long serialVersionUID = 1L;
-    private TileData< AnnotationBin > _tile;
+public class AnnotationTile extends TileData< AnnotationBin > {
 
     public AnnotationTile( TileIndex index ) {
-        _tile = new TileData<>( index, (AnnotationBin)null );
+        super( index );
     }
 
 
     public AnnotationTile( TileIndex index , List< AnnotationBin > data ) {
-        _tile = new TileData<>( index, data );
+        super( index, data );
     }
 
 
     public AnnotationTile( TileData< Map<String, List<Pair<String,Long>>> > rawTile ) {
-        _tile = new TileData<>( rawTile.getDefinition(),
-                                AnnotationBin.convertFromRaw( rawTile.getData() ) );
-    }
-
-
-    public TileIndex getDefinition() {
-        return _tile.getDefinition();
+        super( rawTile.getDefinition(),  AnnotationBin.convertFromRaw( rawTile.getData() ) );
     }
 
 
@@ -91,26 +82,15 @@ public class AnnotationTile implements Serializable {
     }
 
 
-    public  TileData<Map<String, List<Pair<String,Long>>>> getRawData() {
+    public TileData<Map<String, List<Pair<String,Long>>>> getRawData() {
 
-        List< Map<String, List<Pair<String,Long>>> > rawBins = AnnotationBin.convertToRaw( _tile.getData() );
+        List< Map<String, List<Pair<String,Long>>> > rawBins = AnnotationBin.convertToRaw( getData() );
         return new TileData<>( getDefinition(), rawBins );
     }
 
-
-    public TileData< AnnotationBin > getData() {
-        return _tile;
-    }
-
-
-    public List< AnnotationBin > getBins() {
-        return _tile.getData();
-    }
-
-
     public boolean isEmpty() {
 
-        for ( AnnotationBin bin : _tile.getData()  ) {
+        for ( AnnotationBin bin : getData()  ) {
             if ( bin != null ) {
                 return false;
             }
@@ -121,11 +101,11 @@ public class AnnotationTile implements Serializable {
 
     public void addDataToBin( BinIndex binIndex, AnnotationData<?> data ) {
 
-        AnnotationBin bin = _tile.getBin( binIndex.getX(), binIndex.getY() );
+        AnnotationBin bin = getBin( binIndex.getX(), binIndex.getY() );
 
         if ( bin == null ) {
             bin = new AnnotationBin();
-            _tile.setBin( binIndex.getX(), binIndex.getY(), bin );
+            setBin( binIndex.getX(), binIndex.getY(), bin );
         }
 
         bin.addData( data );
@@ -134,13 +114,13 @@ public class AnnotationTile implements Serializable {
 
     public void removeDataFromBin( BinIndex binIndex, AnnotationData<?> data ) {
 
-        AnnotationBin bin = _tile.getBin( binIndex.getX(), binIndex.getY() );
+        AnnotationBin bin = getBin( binIndex.getX(), binIndex.getY() );
 
         bin.removeData( data );
 
         // remove bin if empty
         if ( bin.isEmpty() ) {
-            _tile.setBin( binIndex.getX(), binIndex.getY(), null );
+            setBin( binIndex.getX(), binIndex.getY(), null );
         }
     }
 
@@ -149,7 +129,7 @@ public class AnnotationTile implements Serializable {
 
         List<Pair<String, Long>> allCertificates = new LinkedList<>();
         // for each bin
-        for ( AnnotationBin bin : _tile.getData() ) {
+        for ( AnnotationBin bin : getData() ) {
             if (bin != null) {
                 // get all certificates
                 allCertificates.addAll( bin.getAllCertificates() );

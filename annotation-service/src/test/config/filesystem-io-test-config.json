@@ -1,32 +1,28 @@
 {
-	"layers": [ 
-		{ 
-			"id" : "annotations-unit-test",
-			"name" : "Source vs Amount Annotation Service",
-			"description": "Source vs Amount bitcoin annotations",
-			"pyramid" : {
-				"type" : "WebMercator"
+	"annotations-unit-test": {
+        "id": "annotations-unit-test",
+        "pyramid" : {
+            "type" : "WebMercator"
+        },
+        "data": {
+			"pyramidio": {
+				"type": "file",
+				"root.path": ".\\",
+				"extension": "json"
 			},
-			"data": {
-				"pyramidio": {
-					"type": "file",
-					"root.path": ".\\",
-					"extension": "json"
-				},
-				"serializer": {
-					"type": "string->[(string, long)]-j"
-				}
-			},
-			"groups": [ "Urgent", "High", "Medium", "Low" ],
-			"filter" : {
-				"type": "n-most-recent-by-group",
-				"countsByGroup": {
-					"Urgent": 100,
-					"High": 100,
-					"Medium": 100,
-					"Low" : 100
-				}
+			"serializer": {
+				"type": "string->[(string, long)]-j"
+			}
+		},
+		"groups": [ "Urgent", "High", "Medium", "Low" ],
+		"filter" : {
+			"type": "n-most-recent-by-group",
+			"countsByGroup": {
+				"Urgent": 100,
+				"High": 100,
+				"Medium": 100,
+				"Low" : 100
 			}
 		}
-	]
+    }
 }

@@ -23,7 +23,6 @@
  */
 package com.oculusinfo.annotation;
 
-import com.oculusinfo.annotation.config.AnnotationConfiguration;
 import com.oculusinfo.annotation.data.AnnotationData;
 import com.oculusinfo.annotation.data.impl.JSONAnnotation;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
@@ -38,7 +37,6 @@ import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
-import com.oculusinfo.annotation.rest.AnnotationInfo;
 import com.oculusinfo.annotation.rest.AnnotationService;
 import com.oculusinfo.annotation.rest.impl.AnnotationServiceImpl;
 import com.oculusinfo.binning.BinIndex;
@@ -48,13 +46,17 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.transformation.TileTransformer;
+import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 import com.oculusinfo.tile.init.FactoryProvider;
-import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
-import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
-import com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryProvider;
+import com.oculusinfo.tile.init.providers.*;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rest.layer.LayerService;
+import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -72,8 +74,9 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
     static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
     static final String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
 	protected AnnotationService _service;
-	protected UUID _uuid;
-	protected AnnotationInfo _layerSpec;
+    protected String _layerId = "annotations-unit-test";
+    protected String _dataId = "annotations-unit-test";
+    protected LayerService _layerService;
 
 	List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
 	Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
@@ -85,49 +88,100 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
     	
 		try {
 
-			//String configFile = ".\\annotation-service\\src\\test\\config\\hbase-test-config.json";
 			String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
 
-			Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
-			for (DefaultPyramidIOFactoryProvider provider: DefaultPyramidIOFactoryProvider.values())
-				tileIoSet.add(provider);
-			FactoryProvider<PyramidIO> tileIoFactoryProvider = new StandardPyramidIOFactoryProvider( tileIoSet );
+            FactoryProvider<LayerConfiguration> layerConfigurationProvider = new FactoryProvider<LayerConfiguration>() {
 
-			Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
-			for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
-				annotationIoSet.add(provider);
-			FactoryProvider<AnnotationIO> annotationIoFactoryProvider = new StandardAnnotationIOFactoryProvider( annotationIoSet );
+                private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
+                private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
+                private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
+                private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
+                private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
+                private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
+                private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
 
-			Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
-            for (DefaultAnnotationFilterFactoryProvider provider: DefaultAnnotationFilterFactoryProvider.values())
-                filterIoSet.add(provider);
-			FactoryProvider<AnnotationFilter> filterFactoryProvider = new StandardAnnotationFilterFactoryProvider( filterIoSet );
 
-			Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
-			for (DefaultTileSerializerFactoryProvider provider: DefaultTileSerializerFactoryProvider.values())
-				serializerSet.add(provider);
-			FactoryProvider<TileSerializer<?>> serializerFactoryProvider = new StandardTileSerializerFactoryProvider(serializerSet);
-			FactoryProvider<TilePyramid> pyramidFactoryProvider = new StandardTilePyramidFactoryProvider();
+                private void guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode() {
+                    /*
+                        guice README.md:
+                            "Put simply, Guice alleviates the need for factories and the use of new
+                            in your Java code. Think of Guice's @Inject as the new new. You will still
+                            need to write factories in some cases, but your code will not depend directly
+                            on them. Your code will be easier to change, unit test and reuse in other contexts."
+                     */
+                    Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
+                    tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
+                    Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
+                    annotationIoSet.addAll( Arrays.asList( DefaultAnnotationIOFactoryProvider.values() ) );
+                    Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
+                    serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
+                    Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
+                    filterIoSet.addAll( Arrays.asList( DefaultAnnotationFilterFactoryProvider.values() ) );
+                    _pyramidIOFactoryProvider = new StandardPyramidIOFactoryProvider( tileIoSet );
+                    _annotationIOFactoryProvider = new StandardAnnotationIOFactoryProvider( annotationIoSet );
+                    _tilePyramidFactoryProvider = new StandardTilePyramidFactoryProvider();
+                    _serializationFactoryProvider = new StandardTileSerializerFactoryProvider(serializerSet);
+                    _rendererFactoryProvider = new StandardImageRendererFactoryProvider();
+                    _tileTransformerFactoryProvider = new StandardTileTransformerFactoryProvider();
+                    _filterFactoryProvider = new StandardAnnotationFilterFactoryProvider( filterIoSet );
+                }
 
-			AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
+                @Override
+                public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
+                    guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode();
+                    return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                                  _annotationIOFactoryProvider,
+                                                  _tilePyramidFactoryProvider,
+                                                  _serializationFactoryProvider,
+                                                  _rendererFactoryProvider,
+                                                  _tileTransformerFactoryProvider,
+                                                  _filterFactoryProvider,
+                                                  null, path);
+                }
+
+                @Override
+                public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
+                                                                              List<String> path) {
+                    guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode();
+                    return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                                  _annotationIOFactoryProvider,
+                                                  _tilePyramidFactoryProvider,
+                                                  _serializationFactoryProvider,
+                                                  _rendererFactoryProvider,
+                                                  _tileTransformerFactoryProvider,
+                                                  _filterFactoryProvider,
+                                                  parent, path);
+                }
+
+                @Override
+                public ConfigurableFactory<LayerConfiguration> createFactory (String factoryName,
+                                                                              ConfigurableFactory<?> parent,
+                                                                              List<String> path) {
+                    guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode();
+                    return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                                  _annotationIOFactoryProvider,
+                                                  _tilePyramidFactoryProvider,
+                                                  _serializationFactoryProvider,
+                                                  _rendererFactoryProvider,
+                                                  _tileTransformerFactoryProvider,
+                                                  _filterFactoryProvider,
+                                                  factoryName, parent, path);
+                }
+            };
+
+            _layerService = new LayerServiceImpl( configFile,
+	                                              layerConfigurationProvider );
+
+            AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
 			AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
-			_service = new AnnotationServiceImpl( configFile,
-			                                      tileIoFactoryProvider,
-			                                      annotationIoFactoryProvider,
-			                                      serializerFactoryProvider,
-			                                      pyramidFactoryProvider,
-			                                      filterFactoryProvider,
-			                                      annotationIndexer,
-			                                      annotationSerializer);
-
-			_layerSpec = _service.list().get(0);
-			_uuid = _service.configureLayer(_layerSpec.getID(), _layerSpec.getRawData());
+			_service = new AnnotationServiceImpl( _layerService,
+                                                  annotationSerializer,
+			                                      annotationIndexer );
 
 		} catch (Exception e) {
 			throw e;
 		}
-    	
 	}
 
 	@After
@@ -280,7 +334,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
 			AnnotationData<?> clone = annotation.clone();
 			long start = System.currentTimeMillis();
-			_service.write( _layerSpec.getID(), annotation.clone() );
+			_service.write( _layerId, annotation.clone() );
 			long end = System.currentTimeMillis();
 			double time = ((end-start)/1000.0);
 			if ( VERBOSE )
@@ -312,7 +366,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
 			try {
 				long start = System.currentTimeMillis();
-				_service.modify( _layerSpec.getID(), newAnnotation );
+				_service.modify( _layerId, newAnnotation );
 				long end = System.currentTimeMillis();
 				double time = ((end-start)/1000.0);
 				annotation.update( newAnnotation );
@@ -332,7 +386,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 			AnnotationData<?> clone = annotation.clone();
 			try {
 				long start = System.currentTimeMillis();
-				_service.remove( _layerSpec.getID(), clone.getCertificate() );
+				_service.remove( _layerId, clone.getCertificate() );
 				long end = System.currentTimeMillis();
 				double time = ((end-start)/1000.0);
 				removeAnnotationFromPublic(annotation);
@@ -421,18 +475,18 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 
 			try {
 
-				AnnotationConfiguration config = _service.getConfiguration( _layerSpec.getID() );
+				LayerConfiguration config = _layerService.getLayerConfiguration( _layerId, null );
 				PyramidIO tileIo = config.produce( PyramidIO.class );
 				AnnotationIO dataIo = config.produce( AnnotationIO.class );
 				if ( tileIo instanceof HBasePyramidIO ) {
 					if ( VERBOSE )
 						System.out.println("Dropping tile HBase table");
-					((HBasePyramidIO)tileIo).dropTable( _layerSpec.getID() );
+					((HBasePyramidIO)tileIo).dropTable( _dataId );
 				}
 				if ( dataIo instanceof HBaseAnnotationIO ) {
 					if ( VERBOSE )
 						System.out.println("Dropping data HBase table");
-					((HBaseAnnotationIO)dataIo).dropTable( _layerSpec.getID() );
+					((HBaseAnnotationIO)dataIo).dropTable( _dataId );
 				}
 
 				if ( tileIo instanceof FileSystemPyramidIO &&
@@ -440,7 +494,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 					if ( VERBOSE )
 						System.out.println("Deleting temporary file system folders");
 					try {
-						File testDir = new File( ".\\" + _layerSpec.getID() );
+						File testDir = new File( ".\\" + _dataId );
 						for ( File f : testDir.listFiles() ) {
 							f.delete();
 						}
@@ -458,7 +512,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 	private Map<BinIndex, List<AnnotationData<?>>> readAll() {
 		// scan all
 		TileIndex tile = new TileIndex( 0, 0, 0 );
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _uuid, _layerSpec.getID(), tile );
+		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _layerId, tile, null );
 		return scan;
 	}
 
@@ -471,7 +525,7 @@ public class AnnotationServiceTests extends AnnotationTestsBase {
 	}
 	
 	private Map<BinIndex, List<AnnotationData<?>>> readRandom( TileIndex tile ) {
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _uuid, _layerSpec.getID(), tile );
+		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read(  _layerId, tile, null );
 		return scan;
 	}
 }

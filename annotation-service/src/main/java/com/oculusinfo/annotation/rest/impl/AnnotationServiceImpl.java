@@ -370,7 +370,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		List<FilteredBinResults> results = new LinkedList<FilteredBinResults>(); 
 		for ( AnnotationTile tile : tiles ) {
 			// for each bin
-			FilteredBinResults r = filter.filterBins(tile.getBins());
+			FilteredBinResults r = filter.filterBins(tile.getData());
 			certificates.addAll(r.getFilteredBins());
 			results.add(r);			
 		}

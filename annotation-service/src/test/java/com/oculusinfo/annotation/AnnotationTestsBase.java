@@ -355,7 +355,7 @@ public class AnnotationTestsBase {
             for (int i=0; i<tile.getDefinition().getXBins(); i++ ) {
                 for (int j=0; j<tile.getDefinition().getYBins(); j++ ) {
 
-                    AnnotationBin bin = tile.getData().getBin(i, j);
+                    AnnotationBin bin = tile.getBin(i, j);
 
                     if ( bin != null) {
                         // add bin object to tile

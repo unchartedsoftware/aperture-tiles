@@ -62,7 +62,6 @@ import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
 public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 	private final Logger _logger = LoggerFactory.getLogger(getClass());
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
     // This is the only way to get a generified class; because of type erasure,
@@ -82,7 +81,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
         try {
             return Double.parseDouble(rawValue);
         } catch (NumberFormatException|NullPointerException e) {
-            LOGGER.info("Bad {} value {} for {}, defaulting to {}", propName, rawValue, layer, def);
+            _logger.info("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
             return def;
         }
     }

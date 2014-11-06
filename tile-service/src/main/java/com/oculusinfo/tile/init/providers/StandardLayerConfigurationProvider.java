@@ -68,7 +68,8 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
     }
 
     @Override
-    public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,                                                     List<String> path) {
+    public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
+                                                                  List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
                                       _annotationIOFactoryProvider,
                                       _tilePyramidFactoryProvider,
