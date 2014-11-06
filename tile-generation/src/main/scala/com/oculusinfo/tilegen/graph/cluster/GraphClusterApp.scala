@@ -79,7 +79,7 @@ object GraphClusterApp {
 	argParser.debug
 
 	val jars =
-		Seq(new MavenReference("com.oculusinfo", "tile-generation", "0.3-SNAPSHOT")) union SparkConnector.getDefaultLibrariesFromMaven
+		Seq(new MavenReference("com.oculusinfo", "tile-generation", "0.4-SNAPSHOT")) union SparkConnector.getDefaultLibrariesFromMaven
 	val sc = argParser.getSparkConnector(jars).getSparkContext("Graph Clustering")
 	
 	val sourceFile = argParser.getString("source", "The source location at which to find the data")
