@@ -31,6 +31,9 @@ import org.apache.avro.generic.GenericRecord;
 
 import java.io.IOException;
 
+/**
+ * A serializer to serialize tiles whose bin values are a float, using Avro.
+ */
 public class FloatAvroSerializer extends GenericAvroSerializer<Float> {
     private static final long serialVersionUID = -2713168398186948313L;
     private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Float.class);

@@ -30,6 +30,11 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+/**
+ * This serializer factory constructs a
+ * {@link com.oculusinfo.binning.io.serialization.impl.FloatAvroSerializer},
+ * for use with tiles whose bin values are floats.
+ */
 public class FloatAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Float>> {
     public static final String NAME = "float-a";
 

@@ -29,6 +29,9 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
+/**
+ * A serializer to serialize tiles whose bin values are lists of longs, using Avro.
+ */
 public class LongArrayAvroSerializer extends GenericAvroArraySerializer<Long> {
     private static final long serialVersionUID = 2620079488825221312L;
     private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Long.class);

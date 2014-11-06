@@ -32,6 +32,9 @@ import org.apache.avro.generic.GenericRecord;
 
 import java.io.IOException;
 
+/**
+ * A serializer to serialize tiles whose bin values are an integer, using Avro.
+ */
 public class IntegerAvroSerializer extends GenericAvroSerializer<Integer> {
 	private static final long serialVersionUID = 2068151360199139591L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Integer.class);

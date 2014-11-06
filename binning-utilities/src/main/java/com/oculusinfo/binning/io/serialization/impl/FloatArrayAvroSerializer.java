@@ -29,6 +29,9 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
+/**
+ * A serializer to serialize tiles whose bin values are lists of floats, using Avro.
+ */
 public class FloatArrayAvroSerializer extends GenericAvroArraySerializer<Float> {
     private static final long serialVersionUID = -4155237915140553762L;
     private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Float.class);

@@ -29,6 +29,14 @@ import java.util.List;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+/**
+ * This serializer factory constructs a
+ * {@link com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer},
+ * for use with old-style double-valued tiles.  It is no longer supported.  Please use
+ * {@link com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializerFactory}
+ * instead.
+ */
+@Deprecated
 public class BackwardsCompatibilitySerializerFactory extends ConfigurableFactory<TileSerializer<Double>> {
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})

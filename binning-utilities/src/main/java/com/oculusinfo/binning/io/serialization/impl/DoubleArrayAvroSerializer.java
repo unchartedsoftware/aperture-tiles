@@ -29,6 +29,9 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
+/**
+ * A serializer to serialize tiles whose bin values are lists of doubles, using Avro.
+ */
 public class DoubleArrayAvroSerializer extends GenericAvroArraySerializer<Double> {
 	private static final long serialVersionUID = 5994875196491382037L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);
