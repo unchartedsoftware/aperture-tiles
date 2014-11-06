@@ -24,19 +24,18 @@
 package com.oculusinfo.tile.rendering;
 
 
-import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.binning.io.AnnotationIO;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.tile.rest.annotation.filter.AnnotationFilter;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
-import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.properties.TileIndexProperty;
 import com.oculusinfo.tile.init.FactoryProvider;

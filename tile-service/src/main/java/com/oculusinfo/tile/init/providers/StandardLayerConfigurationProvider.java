@@ -24,8 +24,8 @@
 package com.oculusinfo.tile.init.providers;
 
 import com.google.inject.Inject;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.tile.rest.annotation.filter.AnnotationFilter;
+import com.oculusinfo.binning.io.AnnotationIO;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
