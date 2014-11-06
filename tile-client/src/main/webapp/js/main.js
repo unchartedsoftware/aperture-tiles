@@ -58,13 +58,14 @@ require(['./ApertureConfig',
 
 	        var apertureConfigFile = "data/aperture-config.json",
 	            layerConfigFile = "data/layers-config.json",
+	            mapConfigFile = "data/map-config.json",
 	            apertureDeferred = $.Deferred(),
 	            layerDeferred = $.Deferred(),
+	            mapDeferred = $.Deferred(),
 	            getServerLayers,
 	            getClientLayers,
 	            getAnnotationLayers,
 	            layerControlsContent,
-	            mapsDeferred,
 	            layersDeferred;
 
             /**
@@ -149,23 +150,25 @@ require(['./ApertureConfig',
                 layerDeferred.resolve( layerConfig );
             });
 
-            $.when( apertureDeferred, layerDeferred ).done( function( apertureConfig, layerConfig ) {
+            $.getJSON( mapConfigFile, function( mapConfig ) {
+                mapDeferred.resolve( mapConfig );
+            });
+
+            $.when( apertureDeferred,
+                    layerDeferred,
+                    mapDeferred ).done( function( apertureConfig, layerConfig, mapConfig ) {
 
 		        // First off, configure aperture.
 		        configureAperture( apertureConfig );
 
-		        // Get our list of maps and layers
-		        mapsDeferred = MapService.requestMaps();
+		        // Get our list of layers
 		        layersDeferred = LayerService.requestLayers();
 
-		        $.when ( mapsDeferred, layersDeferred ).done(
-
-			        function ( maps, layers ) {
-				        // For now, just use the first map
+		        $.when( layersDeferred ).done( function ( layers ) {
 				        var currentMap,
 				            currentBaseLayer,
+				            mapSpec,
 				            addBaseLayerToURL,
-				            mapConfig,
 				            worldMap,
 				            viewsOverlay,
 				            viewLink,
@@ -182,7 +185,7 @@ require(['./ApertureConfig',
                             annotationLayerDeferreds;
 
 				        // Initialize our view choice panel
-				        if (maps.length > 1) {
+				        if ( mapConfig.maps.length > 1) {
 
 					        // ... first, create the panel
 					        viewsOverlay = new OverlayButton({
@@ -199,7 +202,7 @@ require(['./ApertureConfig',
                             };
 
                             // ... Next, insert contents
-                            for (i=0; i<maps.length; ++i) {
+                            for (i=0; i<mapConfig.maps.length; ++i) {
                                 viewLink = $('<a/>').attr({
                                     'href': '?map='+i,
 	                                'class': 'views-link'
@@ -209,7 +212,7 @@ require(['./ApertureConfig',
                                 viewLink.click( addBaseLayerToURL );
 
                                 viewEntry = $('<div class="views-entry" style="text-align:center;"></div>').append( viewLink );
-                                viewLink.append(maps[i].description+'<br>' );
+                                viewLink.append(mapConfig.maps[i].description+'<br>' );
                                 viewsOverlay.getContentElement().append( viewEntry );
                             }
 				        }
@@ -218,15 +221,15 @@ require(['./ApertureConfig',
 				        currentMap = Util.getURLParameter('map');
 				        currentBaseLayer = Util.getURLParameter('baselayer');
 
-				        if ( !currentMap || !maps[currentMap] ) {
+				        if ( !currentMap || !mapConfig.maps[currentMap] ) {
 					        currentMap = 0;
 				        }
 
-				        mapConfig = maps[currentMap];
+				        mapSpec = mapConfig.maps[currentMap];
 
-                        mapConfig.MapConfig.baseLayerIndex = ( currentBaseLayer !== undefined ) ? currentBaseLayer : 0;
+                        mapSpec.map.baseLayerIndex = ( currentBaseLayer !== undefined ) ? currentBaseLayer : 0;
 
-				        worldMap = new Map( "map", mapConfig );   // create map
+				        worldMap = new Map( "map", mapSpec );   // create map
 
 				        // ... perform any project-specific map customizations ...
 				        if ( UICustomization.customizeMap ) {
