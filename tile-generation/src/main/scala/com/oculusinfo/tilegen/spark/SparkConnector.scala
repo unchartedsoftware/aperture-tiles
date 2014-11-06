@@ -104,6 +104,7 @@ object SparkConnector {
 
 		Seq(new MavenReference("com.oculusinfo", "math-utilities", version("base")),
 		    new MavenReference("com.oculusinfo", "binning-utilities", version("base")),
+		    new MavenReference("com.oculusinfo", "geometric-utilities", version("base")),
 		    new MavenReference("com.oculusinfo", "tile-generation", version("base")),
 		    // These two are needed for avro serialization
 		    // new MavenReference("org.apache.avro", "avro", "1.7.4"),
