@@ -43,7 +43,7 @@ import org.restlet.resource.ResourceException;
 import com.google.inject.Inject;
 import com.oculusinfo.binning.AnnotationData;
 import com.oculusinfo.binning.impl.JSONAnnotation;
-import com.oculusinfo.tile.rest.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.Pair;

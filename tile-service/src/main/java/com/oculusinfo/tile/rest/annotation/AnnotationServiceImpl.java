@@ -46,7 +46,7 @@ import com.oculusinfo.binning.AnnotationData;
 import com.oculusinfo.binning.AnnotationTile;
 import com.oculusinfo.tile.rest.annotation.filter.AnnotationFilter;
 import com.oculusinfo.tile.rest.annotation.filter.impl.FilteredBinResults;
-import com.oculusinfo.tile.rest.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.index.AnnotationIndexer;
 import com.oculusinfo.binning.io.AnnotationIO;
 import com.oculusinfo.binning.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.BinIndex;

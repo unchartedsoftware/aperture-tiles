@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.annotation.index.impl;
+package com.oculusinfo.binning.index.impl;
 
 import com.oculusinfo.binning.AnnotationData;
-import com.oculusinfo.tile.rest.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
 import com.oculusinfo.binning.TileIndex;

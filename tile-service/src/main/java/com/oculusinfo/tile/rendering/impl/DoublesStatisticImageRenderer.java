@@ -85,7 +85,6 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 		BufferedImage bi = null;
 		TileIndex tileIndex = null;
 		String layer = "?";
-		int lineNumber = 0;
  		
 		try {
 			tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
@@ -93,7 +92,6 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-			lineNumber = config.getPropertyValue(LayerConfiguration.LINE_NUMBER);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 				     getRuntimeBinClass(),
@@ -143,7 +141,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
 			String text = shortName + ": " + formattedTotal + " " + formattedCoverage;
-			drawTextGlow(bi, text, 5, 10 + (20*lineNumber), FONT, Color.white, Color.black);
+			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
 			LOGGER.debug("Tile is corrupt: " + layer + ":" + tileIndex);

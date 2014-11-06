@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.annotation.index;
+package com.oculusinfo.binning.index;
 
 import com.oculusinfo.binning.AnnotationData;
 import com.oculusinfo.binning.BinIndex;

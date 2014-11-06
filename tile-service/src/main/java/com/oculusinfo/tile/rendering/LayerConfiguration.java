@@ -57,6 +57,7 @@ import java.util.*;
  * @author nkronenfeld
  */
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
     public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");
@@ -66,47 +67,40 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     public static final List<String> FILTER_PATH = Collections.singletonList("filter");
 
     public static final StringProperty LAYER_NAME = new StringProperty("layer",
-        "The ID of the layer; exact format depends on how the layer is stored.",
+        "The ID of the layer",
         null);
-    public static final StringProperty DATA_ID = new StringProperty("id",
-        "The ID of the data source of the layer.",
-        null);
-	public static final StringProperty SHORT_NAME = new StringProperty("name",
+    public static final StringProperty SHORT_NAME = new StringProperty("name",
 	    "A shortened, human-readable version of the layer name.  Defaults to the same value as LAYER_NAME",
 	     null);
-	public static final StringProperty TRANSFORM = new StringProperty("transform",
-	    "The transformation to apply to the data before display",
-		"linear",
-		new String[] {"linear", "log10"});
+    public static final StringProperty DATA_ID = new StringProperty("id",
+        "The ID of the data source of the layer; exact format depends on how the layer is stored.",
+        null);
 	public static final IntegerProperty COARSENESS = new IntegerProperty("coarseness",
 	    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
 	    1);
-	public static final IntegerProperty LINE_NUMBER = new IntegerProperty("lineNumber",
-	    "For use by the server only",
-	    0);
 	public static final IntegerProperty OUTPUT_WIDTH = new IntegerProperty("outputWidth",
-	    "For use by the server only",
+	    "The output image width, defaults to the standard 256",
 	    256);
 	public static final IntegerProperty OUTPUT_HEIGHT = new IntegerProperty("outputHeight",
-	    "For use by the server only",
+	    "The output image height, defaults to the standard 256",
 	    256);
 	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
-	    "For server use only - derived property",
+	    "The maximum value set to the lower bound of the color ramp spectrum",
 	    0);
 	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
-	    "For server use only - derived property",
+	    "The maximum value set to the upper bound of the color ramp spectrum",
 	    100);
 
 	// Per-tile properties
 	public static final TileIndexProperty TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
-		            "For server use only, on a tile-by-tile basis",
-		            null);
+        "For server use only, on a tile-by-tile basis",
+        null);
 	public static final StringProperty LEVEL_MINIMUMS = new StringProperty("levelMinimums",
-		         "For server use only, on a tile-by-tile basis",
-		         null);
+         "For server use only, on a tile-by-tile basis",
+         null);
 	public static final StringProperty LEVEL_MAXIMUMS  = new StringProperty("levelMaximums",
-		         "For server use only, on a tile-by-tile basis",
-		         null);
+         "For server use only, on a tile-by-tile basis",
+         null);
 
 
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
@@ -154,10 +148,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(LAYER_NAME);
         addProperty(DATA_ID);
 		addProperty(SHORT_NAME);
-		addProperty(TRANSFORM);
 		addProperty(OUTPUT_WIDTH);
 		addProperty(OUTPUT_HEIGHT);
-		addProperty(LINE_NUMBER);
 		addProperty(COARSENESS);
 		addProperty(RANGE_MIN);
 		addProperty(RANGE_MAX);
