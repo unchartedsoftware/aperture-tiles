@@ -23,7 +23,7 @@ artifacts {
 	archives javadocJar
 }
 
-// Add a configuration to provide access to the phantom js exe depedency 
+// Add a configuration to provide access to the phantom js exe dependency 
 configurations {
 	phantomJs
 }
@@ -32,7 +32,7 @@ dependencies {
 	phantomJs "oculus.aperture.service:aperture-capture-phantom:1.0.7@exe"
 }
 
-// Task to copy the phantom js exe to the bin dir.  Bind it in to run
+// Task to copy the phantom js exe to the bin dir.  Bind it into the jetty run
 // prior to the war task.
 task phantomCopy(type: Copy) {
 	from configurations.phantomJs
@@ -43,11 +43,11 @@ war.dependsOn(phantomCopy)
 // Configure the jetty run task
 jettyRun {
 	httpPort = 9090	
-	contextPath = project.name
-	
+	contextPath = project.name	
 }
 
-// Restlet isn't in maven central?
+// Restlet isn't in maven central for some reason, so we need to add their
+// location to the set from the parent build file.
 repositories {
 	maven {
 		url = "http://maven.restlet.org"

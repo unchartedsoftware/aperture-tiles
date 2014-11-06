@@ -23,14 +23,16 @@ artifacts {
 
 // Jars / projects this project depends on.
 dependencies {
-	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"
+	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"	
 	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"	
 	compile "org.apache.avro:avro:1.7.4"
 	compile "org.json:json:20090211"
 	compile "org.xerial:sqlite-jdbc:3.7.2"
 	compile "com.esotericsoftware.kryo:kryo:2.21"
 	testCompile "junit:junit:4.8.1"
+
+	// Call to special handling for hbase dependencies - see top level build file for
+	// definition and explanation.
+	addHBaseDependencies()
 }
-// Call to special handling for hbase dependencies - see top level build file for
-// definition and explanation.
-addHBaseDependencies(project)
+
