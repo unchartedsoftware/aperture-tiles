@@ -29,6 +29,7 @@ import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,6 @@ import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
 
 /**
  * A server side to render List<Pair<String, Int>> tiles.
@@ -101,7 +101,8 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 	 */
     public BufferedImage render (LayerConfiguration config) {
         BufferedImage bi;
-        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
         TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
         try {
             int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -113,7 +114,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-            IValueTransformer t = config.produce(IValueTransformer.class);
+            ValueTransformer t = config.produce(ValueTransformer.class);
             int[] rgbArray = new int[outputWidth*outputHeight];
 
             double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -136,7 +137,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
                         (int)Math.floor(index.getX() / coarsenessFactor),
                         (int)Math.floor(index.getY() / coarsenessFactor));
 
-                tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
+                tileDatas = pyramidIO.readTiles( dataId , serializer, Collections.singleton(scaleLevelIndex));
                 if (tileDatas.size() >= 1) {
                     //we got data for this level so use it
                     break;
@@ -146,7 +147,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             // Missing tiles are commonplace and we didn't find any data up the
             // tree either. We don't want a big long error for that.
             if (tileDatas.size() < 1) {
-                _logger.info("Missing tile " + index + " for layer " + layer);
+                _logger.info("Missing tile " + index + " for layer " + layerId);
                 return null;
             }
 
@@ -217,7 +218,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
         } catch (Exception e) {
-            _logger.error("Tile error: " + layer + ":" + index, e);
+            _logger.error("Tile error: " + layerId + ":" + index, e);
             bi = null;
         }
         return bi;

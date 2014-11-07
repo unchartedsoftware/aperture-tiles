@@ -32,7 +32,7 @@ import java.io.Serializable;
 
 public interface AnnotationSerializer extends Serializable {
 	
-    public AnnotationData<?> deserialize ( InputStream rawData ) throws IOException;
-    public void serialize (AnnotationData<?> annotation, OutputStream ouput) throws IOException;
+    public AnnotationData<?> deserialize( InputStream rawData ) throws IOException;
+    public void serialize( AnnotationData<?> annotation, OutputStream output ) throws IOException;
     
 }

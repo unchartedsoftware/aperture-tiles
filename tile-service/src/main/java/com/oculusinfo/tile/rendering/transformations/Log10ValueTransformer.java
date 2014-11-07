@@ -24,7 +24,7 @@
  */
 package com.oculusinfo.tile.rendering.transformations;
 
-public class Log10ValueTransformer implements IValueTransformer {
+public class Log10ValueTransformer implements ValueTransformer {
 	private double _loggedMax;
 	private double _layerMax; 
 

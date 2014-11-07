@@ -36,7 +36,7 @@ import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +88,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	@Override
 	public BufferedImage render (LayerConfiguration config) {
 		BufferedImage bi;
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
         String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
@@ -101,7 +101,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-			IValueTransformer t = config.produce(IValueTransformer.class);
+			ValueTransformer t = config.produce(ValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -133,7 +133,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-				LOGGER.info("Missing tile " + index + " for layer " + layer);
+				LOGGER.info("Missing tile " + index + " for layer " + layerId);
 				return null;
 			}
 
@@ -194,7 +194,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 		} catch (Exception e) {
-			LOGGER.debug("Tile is corrupt: " + layer + ":" + index);
+			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
 			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}

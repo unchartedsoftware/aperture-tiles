@@ -120,9 +120,9 @@ public abstract class AnnotationData<T> implements Serializable {
     		if (that instanceof AnnotationData<?>) {
     			AnnotationData<?> o = (AnnotationData<?>)that;
     			return getUUID().equals( o.getUUID() ) &&
-    				   getX() == o.getX() &&
-    				   getY() == o.getY() &&
-    				   getLevel() == o.getLevel() &&
+    				   getX().equals( o.getX() ) &&
+    				   getY().equals( o.getY() ) &&
+    				   getLevel().equals( o.getLevel() ) &&
     				   getData().equals( o.getData() );
     		}    		
     	}	

@@ -25,13 +25,10 @@
 package com.oculusinfo.tile.rest.layer;
 
 
-import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import org.json.JSONObject;
-
 import java.util.List;
-import java.util.UUID;
 
 
 
@@ -43,31 +40,34 @@ import java.util.UUID;
  * @author nkronenfeld
  */
 public interface LayerService {
+
     /**
-     * List all available layers. See {@link LayerResource#layerRequest(String)}
-     * for details (though this method returns a list of java objects, rather
-     * than a pile of JOSN).
-     * 
-     * @return
+     * Return a list of all layer configuration JSON objects.
      */
-    public List< JSONObject > getLayerConfigs();
-
-
-    public List< String > getLayers();
+    public List< JSONObject > getLayerJSONs();
 
     /**
-     * For use by other services; the LayerResource doesn't serve this out.
-     *
-     * Gets a configuration object to be used when rendering a layer.
-     *
-     * @param layer The layer to be rendered
+     * Return a specific layer configuration JSON object.
+     * @param layerId The layer identification string
+     */
+    public JSONObject getLayerJSON( String layerId );
+
+    /**
+     * Return a list of layer identification strings
+     */
+    public List< String > getLayerIds();
+
+    /**
+     * Returns the layer configuration object for a given layer id. Request parameters
+     * will override any default config attributes.
+     * @param layerId The layer identification string
      * @param requestParams Additional query parameters to override
      */
-    public LayerConfiguration getLayerConfiguration( String layer, JSONObject requestParams );
+    public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams );
 
     /**
-     * Get the meta-data associated with the given layer (which must be listed
-     * by {@link #listLayers()})
+     * Returns the meta-data associated with the given layer
+     * @param layerId The layer identification string
      */
     public PyramidMetaData getMetaData (String layerId);
 }

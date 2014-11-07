@@ -66,40 +66,44 @@ public class LayerServiceImpl implements LayerService {
 
 	@Inject
 	public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
-	                         FactoryProvider<LayerConfiguration> layerConfigurationProvider) {
+	                         FactoryProvider<LayerConfiguration> layerConfigProvider) {
 		_layers = new ArrayList<>();
 		_layersById = new HashMap<>();
 		_metaDataCache = new HashMap<>();
-        _layerConfigurationProvider = layerConfigurationProvider;
+        _layerConfigurationProvider = layerConfigProvider;
 
-		if (layerConfigurationProvider instanceof CachingLayerConfigurationProvider) {
-			((CachingLayerConfigurationProvider) layerConfigurationProvider).addLayerListener(new LayerDataChangedListener () {
-					public void onLayerDataChanged (String layerId) {
-						_metaDataCache.remove(layerId);
-					}
-				});
+		if (layerConfigProvider instanceof CachingLayerConfigurationProvider) {
+            CachingLayerConfigurationProvider caching = (CachingLayerConfigurationProvider)layerConfigProvider;
+			caching.addLayerListener( new LayerDataChangedListener () {
+                public void onLayerDataChanged (String layerId) {
+                    _metaDataCache.remove(layerId);
+                }
+            });
 		}
 
 		readConfigFiles( getConfigurationFiles( layerConfigurationLocation ) );
 	}
 
 	@Override
-	public List< JSONObject > getLayerConfigs() {
+	public List< JSONObject > getLayerJSONs() {
 		return _layers;
 	}
 
     @Override
-	public List< String > getLayers() {
+	public JSONObject getLayerJSON( String layerId ) {
+		return _layersById.get( layerId );
+	}
+
+    @Override
+	public List< String > getLayerIds() {
         List< String > layers = new ArrayList<>();
         try {
             for ( JSONObject layerConfig : _layers ) {
                 layers.add( layerConfig.getString( "layer" ) );
-                System.out.println( layerConfig.getString( "layer" ) );
             }
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-
 		return layers;
 	}
 

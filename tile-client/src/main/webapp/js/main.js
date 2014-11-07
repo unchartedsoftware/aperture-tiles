@@ -65,8 +65,7 @@ require(['./ApertureConfig',
 	            getServerLayers,
 	            getClientLayers,
 	            getAnnotationLayers,
-	            layerControlsContent,
-	            layersDeferred;
+	            layerControlsContent;
 
             /**
              * Iterate through server layers, and append zIndex to
@@ -158,11 +157,19 @@ require(['./ApertureConfig',
                     layerDeferred,
                     mapDeferred ).done( function( apertureConfig, layerConfig, mapConfig ) {
 
+                var layersDeferred = $.Deferred();
+
 		        // First off, configure aperture.
 		        configureAperture( apertureConfig );
 
 		        // Get our list of layers
-		        layersDeferred = LayerService.requestLayers();
+		        LayerService.requestLayers( function( layers ) {
+		            layersDeferred.resolve( layers );
+		        });
+
+		        LayerService.requestLayer( "instagram-users", function( layer ) {
+		            console.log( JSON.stringify( layer ) );
+		        });
 
 		        $.when( layersDeferred ).done( function ( layers ) {
 				        var currentMap,

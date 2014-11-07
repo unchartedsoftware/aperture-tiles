@@ -32,12 +32,12 @@ import com.oculusinfo.factory.properties.StringProperty;
 import java.util.List;
 
 /**
- * A factory for creating {@link IValueTransformer} objects.
+ * A factory for creating {@link ValueTransformer} objects.
  * 
  * @author cregnier
  *
  */
-public class ValueTransformerFactory extends ConfigurableFactory<IValueTransformer> {
+public class ValueTransformerFactory extends ConfigurableFactory<ValueTransformer> {
 	public static final StringProperty TRANSFORM_NAME    = new StringProperty("transform",
 		    "The type of transformation to apply to the data.",
 		    "linear",
@@ -62,7 +62,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<IValueTransform
 	}
 
 	public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, IValueTransformer.class, parent, path);
+		super(name, ValueTransformer.class, parent, path);
 
 		addProperty(TRANSFORM_NAME);
 		addProperty(TRANSFORM_MAXIMUM);
@@ -90,7 +90,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<IValueTransform
 	}
 
 	@Override
-	protected IValueTransformer create () {
+	protected ValueTransformer create () {
 		String name = getPropertyValue(TRANSFORM_NAME);
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);
 

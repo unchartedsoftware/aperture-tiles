@@ -82,13 +82,14 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 */
 	@Override
 	public BufferedImage render(LayerConfiguration config) {
-		BufferedImage bi = null;
-		TileIndex tileIndex = null;
-		String layer = "?";
+		BufferedImage bi;
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
  		
 		try {
-			tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
-			layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+			index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+
 			String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
@@ -99,13 +100,13 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 
 			bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
 		
-			List<TileData<Double>> tileDatas = pyramidIO.readTiles(layer,
+			List<TileData<Double>> tileDatas = pyramidIO.readTiles(dataId,
 			                                                       serializer,
-			                                                       Collections.singleton(tileIndex));
+			                                                       Collections.singleton(index));
 			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-				LOGGER.info("Missing tile " + tileIndex + " for layer " + layer);
+				LOGGER.info("Missing tile " + index + " for layer " + layerId);
 				return null;
 			}
 
@@ -144,7 +145,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
-			LOGGER.debug("Tile is corrupt: " + layer + ":" + tileIndex);
+			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
 			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}

@@ -25,184 +25,89 @@ package com.oculusinfo.tile.rest.layer;
 
 
 import com.google.inject.Inject;
-import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import oculus.aperture.common.rest.ApertureServerResource;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
-import java.util.UUID;
 
 
 
 public class LayerResource extends ApertureServerResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerResource.class);
 
-
-
     private LayerService        _service;
-
-
 
     @Inject
     public LayerResource (LayerService service) {
         _service = service;
     }
 
-    /**
-     * <p>
-     * Fulfill a request relating to layer setup.
-     * </p>
-     * 
-     * <p>
-     * The type of request should be in the requestType parameter. Possible
-     * request types (specified in the <b>request</b> property of the post data)
-     * are:
-     * <dl>
-     * <dt>
-     * list</dt>
-     * <dd>
-     * <p>
-     * Returns a list of hierarchically organized layers that are available to
-     * the client. This request has no parameters. The following properties may
-     * be at each level of the tree:
-     * <dl>
-     * <dt>id</dt>
-     * <dd>The ID by which the server knows this layer. This is what must be
-     * passed back to the server for any layer request requiring an ID.</dd>
-     * <dt>name</dt>
-     * <dd>The human-readable name of the layer, for use by the client in
-     * presenting the layer to the user.</dd>
-     * <dt>axes</dt>
-     * <dd>An object specifying the X and Y axis of this and all sub-layers.
-     * Only one axis set can pertain to a given leaf node - so if a given level
-     * specifies this property, no lower levels will</dd>
-     * <dt>children</dt>
-     * <dd>The children of this level - any layers grouped under this label</dd>
-     * <dt>configurations</dt>
-     * <dd>A list of possible renderer configurations that can be used with this
-     * layer. These renderer configurations should form the basis of any
-     * configuration request made by the client.</dd>
-     * </dl>
-     * Only final leaf nodes are true layers - all higher entries are
-     * placeholders for organizational purposes only.</dd>
-     * 
-     * <dt>metadata</dt>
-     * <dd>
-     * retrieves the metadata for the specified layer.  This request has one input parameter:
-     * <dl>
-     * <dt>layer</dt>
-     * <dd>The ID of the layer whose metadata is desired.</dd>
-     * </dl>
-     * </dd>
-     * 
-     * <dt>
-     * configure</dt>
-     * <dd>
-     * Configure a layer for display by the client. This request has one input
-     * parameters:
-     * <dl>
-     * <dt>configuration</dt>
-     * <dd>An object specifying the configuration to be applied to said layer,
-     * defining how it will be rendered. This configuration includes the layer
-     * name.</dd>
-     * </dl>
-     * A <em>configure</em> request will return a string containing a UUID with
-     * which the client can later reference this particular configuration</dd>
-     * 
-     * <dt>unconfigure</dt>
-     * <dd>Tells the server to forget a particular configuration, as it will no
-     * longer be needed. This request has but one parameter:
-     * <dl>
-     * <dt>configuration</dt>
-     * <dd>The UUID of the configuration to be forgotten (as returned from the
-     * corresponding <em>configure</em> request)</dd>
-     * </dl>
-     * </dd>
-     * </dl>
-     * </p>
-     */
-    @Post("json:json")
-    public Representation layerRequest (String jsonArguments) {
+
+    private JSONObject getLayerInformation( String layerId ) throws JSONException {
         try {
-            JSONObject arguments = new JSONObject(jsonArguments);
-
-            String requestType = arguments.getString("request");
-
-            if (null == requestType) {
-                throw new IllegalArgumentException("No request type given to layer request.");
-            }
-            requestType = requestType.toLowerCase();
-
-            if ("list".equals(requestType)) {
-
-                // Layer list request
-                List<JSONObject> layers = _service.getLayerConfigs();
-                JSONObject jsonLayers = new JSONObject();
-                for (int i=0; i<layers.size(); ++i) {
-                    // clone layer config
-                    JSONObject layer = JsonUtilities.deepClone( layers.get( i ) );
-                    // get layer id
-                    String layerId = layer.getString( "layer" );
-                    // get host
-                    String host = getRequest().getResourceRef().getPath();
-                    host = host.substring( 0, host.lastIndexOf("layer") );
-                    // get layer metadata
-                    PyramidMetaData metaDataPyramid = _service.getMetaData( layerId );
-                    JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
-                    // try to add images per tile to meta
-                    try {
-                        LayerConfiguration config = _service.getLayerConfiguration( layerId, null );
-                        TileDataImageRenderer renderer = config.produce( TileDataImageRenderer.class );
-                        if (null != renderer) {
-                            metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
-                        }
-                    } catch (ConfigurationException e) {
-                        // If we have to skip images per tile, it's not a huge deal
-                        LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
-                    }
-                    layer.put("meta", metaData );
-
-                    layer.put("tms", host + "tile/");
-                    layer.put("apertureservice", "/tile/");
-                    jsonLayers.put( layerId, layer );
+            // clone layer config
+            JSONObject layer = JsonUtilities.deepClone( _service.getLayerJSON( layerId ) );
+            // get host
+            String host = getRequest().getResourceRef().getPath();
+            host = host.substring( 0, host.lastIndexOf("layer") );
+            // get layer metadata
+            PyramidMetaData metaDataPyramid = _service.getMetaData( layerId );
+            JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
+            // try to add images per tile to meta
+            try {
+                LayerConfiguration config = _service.getLayerConfiguration( layerId, null );
+                TileDataImageRenderer renderer = config.produce( TileDataImageRenderer.class );
+                if (null != renderer) {
+                    metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
                 }
-                return new JsonRepresentation( jsonLayers );
+            } catch (ConfigurationException e) {
+                // If we have to skip images per tile, it's not a huge deal
+                LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
+            }
+            layer.put("meta", metaData );
+            layer.put("tms", host + "tile/");
+            layer.put("apertureservice", "/tile/");
+            return layer;
+        } catch (JSONException e) {
+            throw new JSONException( "Bad layer request, layer " + layerId + " does not exist" );
+        }
+    }
 
-            } else if ("metadata".equals(requestType)) {
-                // Metadata request
-                String layer = arguments.getString("layer");
-                PyramidMetaData metaData = _service.getMetaData(layer);
-                if (null == metaData) {
-                    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Unknown layer "+layer);
-                } else {
-                    return new JsonRepresentation(metaData.getRawData());
+
+    @Get
+    public Representation getLayer() {
+        try {
+            // see if resource is specified
+            String layerURN = (String) getRequest().getAttributes().get("layer");
+            JSONObject jsonLayers = new JSONObject();
+            if ( layerURN == null ) {
+                 // if not, return all layers
+                List<String> layerIds = _service.getLayerIds();
+                for (int i=0; i<layerIds.size(); ++i) {
+                    jsonLayers.put( layerIds.get(i), getLayerInformation( layerIds.get(i) ) );
                 }
             } else {
-                throw new IllegalArgumentException("Illegal request type "+requestType);
+                 // if so, return specific layers
+                jsonLayers = getLayerInformation( layerURN );
             }
+            setStatus(Status.SUCCESS_OK);
+            return new JsonRepresentation( jsonLayers );
         } catch (JSONException e) {
-            LOGGER.warn("Bad layers request: {}", jsonArguments, e);
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
                                         "Unable to create JSON object from supplied options string",
-                                        e);
-        } catch (IllegalArgumentException e) {
-            LOGGER.warn("Error in layer request {}", jsonArguments, e);
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                                        "Error in layer request: "+e.getMessage(),
                                         e);
         }
     }

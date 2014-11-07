@@ -49,12 +49,12 @@ public enum DefaultAnnotationIOFactoryProvider implements DelegateFactoryProvide
 				return new HBaseAnnotationIOFactory(parent, path);
 			}
 		}),
-		FILE(new Constructor() {
-				@Override
-				public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
-					return new FileSystemAnnotationIOFactory(parent, path);
-				}
-			});
+    FILE(new Constructor() {
+            @Override
+            public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
+                return new FileSystemAnnotationIOFactory(parent, path);
+            }
+    });
 
 
 	// -------------------------------------

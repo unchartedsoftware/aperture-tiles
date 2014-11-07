@@ -24,7 +24,7 @@
  */
 package com.oculusinfo.tile.rendering.transformations;
 
-public class LinearCappedValueTransformer implements IValueTransformer {
+public class LinearCappedValueTransformer implements ValueTransformer {
 	private final double _min;
 	private final double _max;
 	private final double _layerMax;

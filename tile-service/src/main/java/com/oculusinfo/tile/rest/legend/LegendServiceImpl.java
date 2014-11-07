@@ -28,7 +28,7 @@ import com.google.inject.Singleton;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.LinearCappedValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 import org.slf4j.Logger;
@@ -36,9 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 
 /**
  * A service that generates an image coloured using the specified
@@ -85,7 +82,7 @@ public class LegendServiceImpl implements LegendService {
 				min = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
 			}
 			
-			IValueTransformer t = new LinearCappedValueTransformer(min, max, levelMax);
+			ValueTransformer t = new LinearCappedValueTransformer(min, max, levelMax);
 
 			if ( renderHorizontally ) {
 				for (int i = 0; i < width; i++){

@@ -43,7 +43,7 @@ public interface TileTransformer {
     /**
      * Transforms the tile data in JSON format based on transform type and returns result
      *
-     * @param JSONObject representing the tile data in JSON form to be transformed
+     * @param json representing the tile data in JSON form to be transformed
      * @return JSONObject representing the fully transformed tile based on the transform type
      */
     public JSONObject Transform(JSONObject json) throws JSONException;

@@ -29,7 +29,7 @@ package com.oculusinfo.tile.rendering.transformations;
  * @author dgray
  *
  */
-public interface IValueTransformer {
+public interface ValueTransformer {
 	public double transform (double value);
 	public double getMaximumValue ();
 }

@@ -32,7 +32,7 @@ package com.oculusinfo.tile.rendering.transformations;
  * 
  * @author nkronenfeld
  */
-public class HalfSigmoidValueTransformer implements IValueTransformer {
+public class HalfSigmoidValueTransformer implements ValueTransformer {
     private double _center;
     private double _scale;
 

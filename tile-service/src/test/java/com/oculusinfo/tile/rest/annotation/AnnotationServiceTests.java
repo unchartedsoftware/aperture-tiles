@@ -89,7 +89,7 @@ public class AnnotationServiceTests {
     	
 		try {
 
-			String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+			String configFile = ".\\tile-service\\src\\test\\config\\filesystem-io-test-config.json";
 
             FactoryProvider<LayerConfiguration> layerConfigurationProvider = new FactoryProvider<LayerConfiguration>() {
 
@@ -100,7 +100,6 @@ public class AnnotationServiceTests {
                 private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
                 private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
                 private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
-
 
                 private void guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode() {
                     Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
@@ -213,7 +212,6 @@ public class AnnotationServiceTests {
 		}
 
 		public synchronized AnnotationData<?> clone() {
-
 			JSONObject json = _data.toJSON();
 			return JSONAnnotation.fromJSON( json );
 		}
@@ -221,7 +219,6 @@ public class AnnotationServiceTests {
 		public synchronized void update(AnnotationData<?> newState ) {
 			_data = newState;
 		}
-    	
 	}
 
     

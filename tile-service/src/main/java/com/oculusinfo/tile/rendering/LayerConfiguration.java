@@ -111,8 +111,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
             LEVEL_MINIMUMS
         )));
 
-
-	// Some local properties it doesn't get from the configuration
 	private ValueTransformerFactory _transformFactory;
 	private TileIndex _tileCoordinate;
 	private String _levelMinimum;
@@ -127,9 +125,10 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
                                FactoryProvider<AnnotationFilter> filterFactoryProvider,
 	                           ConfigurableFactory<?> parent,
 	                           List<String> path) {
-		this(pyramidIOFactoryProvider, annotationIOFactoryProvider, tilePyramidFactoryProvider, serializationFactoryProvider,
-		    rendererFactoryProvider, tileTransformerFactoryProvider, filterFactoryProvider,
-            null, parent, path);
+		this( pyramidIOFactoryProvider, annotationIOFactoryProvider,
+              tilePyramidFactoryProvider, serializationFactoryProvider,
+		      rendererFactoryProvider, tileTransformerFactoryProvider, filterFactoryProvider,
+              null, parent, path);
 	}
 
 
@@ -143,7 +142,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	                           String name,
                                ConfigurableFactory<?> parent,
 	                           List<String> path) {
-		super(name, LayerConfiguration.class, parent, path);
+		super( name, LayerConfiguration.class, parent, path );
 
 		addProperty(LAYER_NAME);
         addProperty(DATA_ID);
@@ -159,7 +158,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(LEVEL_MAXIMUMS);
 
 		_transformFactory = new ValueTransformerFactory(this, new ArrayList<String>() );
-		addChildFactory(_transformFactory);
+		addChildFactory( _transformFactory );
         addChildFactory( rendererFactoryProvider.createFactory(this, new ArrayList<String>()) );
 		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
 		addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
@@ -190,7 +189,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 				return property.getType().cast(_levelMinimum);
 			}
 		}
-
 		return super.getPropertyValue(property);
 	}
 
@@ -200,7 +198,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		_tileCoordinate = tileIndex;
 		_levelMaximum = levelMaximum;
 		_levelMinimum = levelMinimum;
-
 		try {
 			TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
 			if (null != renderer) {

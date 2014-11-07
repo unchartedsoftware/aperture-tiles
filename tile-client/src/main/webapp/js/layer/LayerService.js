@@ -34,8 +34,7 @@ define(function (require) {
     var Util = require('../util/Util'),
         LayerService,
         parseMetaMinMaxJson,
-        parseLevelsMinMax,
-        layersDeferred;
+        parseLevelsMinMax;
 
     /**
      * Parse a given meta data layers min and max json strings,
@@ -77,30 +76,33 @@ define(function (require) {
          * Request layers from the server, sending them to the listed callback 
          * function when they are received.
          */
-        requestLayers: function () {
-	        if ( !layersDeferred ) {
-		        layersDeferred = $.Deferred();
-                aperture.io.rest('/layer',
-                                 'POST',
-                                 function (layers, status) {
-	                                 if (status.success) {
-	                                     _.forIn( layers, function( layer ) {
-	                                         layer.meta.minMax = parseLevelsMinMax( layer.meta );
-	                                     });
-		                                 layersDeferred.resolve(layers);
-	                                 } else {
-		                                 layersDeferred.fail(status);
-	                                 }
-                                 },
-                                 {
-                                     postData: {
-                                         request: "list"
-                                     },
-                                     contentType: 'application/json'
+        requestLayers: function( callback ) {
+            aperture.io.rest('/layer',
+                             'GET',
+                             function (layers, status) {
+                                 if (status.success) {
+                                     _.forIn( layers, function( layer ) {
+                                         layer.meta.minMax = parseLevelsMinMax( layer.meta );
+                                     });
                                  }
-                                );
-            }
-	        return layersDeferred;
+                                 callback( layers );
+                             });
+
+        },
+
+        /**
+         * Request a specific layer from the server, sending it to the listed callback
+         * function when it is received.
+         */
+        requestLayer: function( layerId, callback ) {
+            aperture.io.rest('/layer/' + layerId,
+                             'GET',
+                             function (layer, status) {
+                                 if (status.success) {
+                                     layer.meta.minMax = parseLevelsMinMax( layer.meta );
+                                 }
+                                 callback( layer );
+                             });
         }
     };
 

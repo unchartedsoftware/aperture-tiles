@@ -31,11 +31,11 @@ import java.util.*;
 
 /**
  * This class represents a bin's worth of annotations. As the annotation API uses
- * the binning-utilities package uses generic types for serialization, this class is
+ * the binning-utilities packages generic types for serialization, this class is
  * used to encapsulate the unique behaviour needed for adding and removing annotations
- * from each bin object
+ * from each bin object.
  *
- * An annotation bin is a hash-map from each group string to a list of annotation
+ * An annotation bin is a map from each group string to a list of annotation
  * certificates. Each certificate is represented as a uuid and a timestamp in
  * the form of a Pair<String, Long>
  *
@@ -62,14 +62,12 @@ public class AnnotationBin implements Serializable {
     private Map<String, List<Pair<String, Long>>> _bin;
 
 
-    public AnnotationBin()
-    {
+    public AnnotationBin(){
         _bin = new LinkedHashMap<>();
     }
 
 
-    public AnnotationBin( Map<String, List<Pair<String, Long>>> rawBin )
-    {
+    public AnnotationBin( Map<String, List<Pair<String, Long>>> rawBin ) {
         if ( rawBin != null ) {
             _bin = rawBin;
         } else {
@@ -107,7 +105,6 @@ public class AnnotationBin implements Serializable {
 
 
     public boolean isEmpty() {
-
         return _bin.isEmpty();
     }
 
