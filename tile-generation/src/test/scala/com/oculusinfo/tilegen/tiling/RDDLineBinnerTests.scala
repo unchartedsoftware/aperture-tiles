@@ -25,19 +25,29 @@
 
 package com.oculusinfo.tilegen.tiling
 
+
+
 import java.lang.{Double => JavaDouble}
+
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.util.Try
-import org.apache.spark.SharedSparkContext
+
 import org.scalatest.FunSuite
+
+import org.apache.spark.SharedSparkContext
+import org.apache.spark.rdd.RDD
+
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.tilegen.datasets.CountValueExtractor
-import com.oculusinfo.tilegen.util.EndPointsToLine
-import org.apache.spark.rdd.RDD
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.tilegen.datasets.CountValueExtractor
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
+import com.oculusinfo.tilegen.util.EndPointsToLine
+
+
 
 case class SegmentIndexScheme extends IndexScheme[Segment] with Serializable {
 	def toCartesian (segment: Segment) = (segment.p0x, segment.p0y)
@@ -208,13 +218,13 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		val dataAnalytics: Option[AnalysisDescription[SegmentData, Double]] = None
 		
 		val lineDrawer = new EndPointsToLine(maxLength, 256, 256)
-		
+
 		binner.binAndWriteData(
 			data,
 			coordFcn,
 			valueFcn,
 			new SegmentIndexScheme,
-			new SumDoubleAnalytic with StandardDoubleBinningAnalytic,
+			new NumericSumBinningAnalytic[Double, JavaDouble](),
 			tileAnalytics,
 			dataAnalytics,
 			new CountValueExtractor(),
