@@ -34,8 +34,8 @@ import org.apache.spark.SparkContext
 
 import com.oculusinfo.binning.TileIndex
 //import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord
-import com.oculusinfo.tilegen.tiling.TileAnalytic
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.TileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 
 
 class GraphMaxRecordAnalytic extends TileAnalytic[List[GraphAnalyticsRecord]] {

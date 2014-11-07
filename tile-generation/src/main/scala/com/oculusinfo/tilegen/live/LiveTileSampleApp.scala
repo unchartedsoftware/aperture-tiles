@@ -42,8 +42,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 
 import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.tilegen.tiling.SumDoubleAnalytic
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 
 
 
@@ -63,7 +62,7 @@ object LiveTileSampleApp {
 			).cache
 			val imageDir = argParser.getString("d", "The destination directory into which to put images")
 			val pyramid = new AOITilePyramid(-1.0, -1.0, 1.0, 1.0)
-			val analytic = new SumDoubleAnalytic with StandardDoubleBinningAnalytic
+			val analytic = new NumericSumBinningAnalytic[Double, JavaDouble]()
 			val generator = new LiveTileGenerator[Double, JavaDouble](data, pyramid, analytic)
 
 			var done = false

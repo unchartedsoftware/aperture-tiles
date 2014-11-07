@@ -36,8 +36,8 @@ import org.apache.spark.SparkContext
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 
-import com.oculusinfo.tilegen.tiling.TileAnalytic
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.TileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 
 
 

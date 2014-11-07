@@ -30,6 +30,11 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+/**
+ * This serializer factory constructs a
+ * {@link com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer},
+ * for use with tiles whose bin values are integers.
+ */
 public class IntegerAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Integer>> {
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})

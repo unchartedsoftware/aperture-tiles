@@ -30,6 +30,12 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+
+/**
+ * This serializer factory constructs a
+ * {@link com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer},
+ * for use with tiles whose values are lists of doubles.
+ */
 public class DoubleArrayAvroSerializerFactory extends ConfigurableFactory<TileSerializer<List<Double>>> {
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})

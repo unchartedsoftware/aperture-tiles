@@ -31,7 +31,7 @@ import java.util.{List => JavaList}
 
 import scala.collection.JavaConverters._
 
-import com.oculusinfo.tilegen.tiling.BinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
 
 class GraphBinningAnalytic

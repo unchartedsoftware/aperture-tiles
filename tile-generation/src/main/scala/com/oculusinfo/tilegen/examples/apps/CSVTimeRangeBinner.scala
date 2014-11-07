@@ -63,7 +63,7 @@ import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
 import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.IndexScheme
