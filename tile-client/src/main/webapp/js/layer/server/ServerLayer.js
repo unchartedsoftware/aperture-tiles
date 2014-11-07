@@ -100,8 +100,10 @@ define(function (require) {
         RAMP_TYPES: [
              {id: "spectral", name: "Spectral"},
              {id: "hot", name: "Hot"},
+             {id: "polar", name: "Polar"},
              {id: "neutral", name: "Neutral"},
              {id: "cool", name: "Cool"},
+             {id: "valence", name: "Valence"},
              {id: "flat", name: "Flat"}
         ],
 
@@ -343,20 +345,31 @@ define(function (require) {
         },
 
 
+        /**
+         * Has the filter value been locked?
+         */
         isFilterValueLocked: function( index ) {
             return this.getLayerSpec().preservelegendrange[ index ];
         },
 
 
+        /**
+         * Set whether or not the filter value is locked
+         */
         setFilterValueLocking: function( index, value ) {
             this.getLayerSpec().preservelegendrange[ index ] = value;
         },
+
 
         /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
          */
         setZIndex: function ( zIndex ) {
-            this.map.setLayerIndex( this.layer.olLayer_, zIndex );
+            // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
+            // set the z-index of the layer dev. setLayerIndex sets a relative
+            // index based on current map layers, which then sets a z-index. This
+            // caused issues with async layer loading.
+            $( this.layer.olLayer_.div ).css( 'z-index', zIndex );
             PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
@@ -365,7 +378,7 @@ define(function (require) {
          * Get the layers zIndex
          */
         getZIndex: function () {
-            return this.map.getLayerIndex( this.layer.olLayer_ );
+            return $( this.layer.olLayer_.div ).css( 'z-index' );
         },
 
 
