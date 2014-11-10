@@ -171,6 +171,10 @@ require(['./ApertureConfig',
 		            console.log( JSON.stringify( layer ) );
 		        });
 
+		        LayerService.configureLayer( "instagram-users", { ramp:'cold' }, function( sha ) {
+		            console.log( sha );
+		        });
+
 		        $.when( layersDeferred ).done( function ( layers ) {
 				        var currentMap,
 				            currentBaseLayer,

@@ -25,6 +25,8 @@ package com.oculusinfo.factory;
 
 
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
 import java.util.*;
 
 import org.json.JSONException;
@@ -187,7 +189,7 @@ abstract public class ConfigurableFactory<T> {
 	/**
 	 * List out all properties directly expected by this factory.
 	 */
-	protected Iterable<ConfigurationProperty<?>> getProperties () {
+	public Iterable<ConfigurationProperty<?>> getProperties () {
 		return _properties;
 	}
 
@@ -197,7 +199,7 @@ abstract public class ConfigurableFactory<T> {
 	 * @param property
      * @param path
 	 */
-	public <PT> void addProperty (ConfigurationProperty<PT> property, List<String> path ) {
+	public <PT> void addProperty (ConfigurationProperty<PT> property, List<String> path) {
 		_properties.add(property);
         _pathsByProperty.put( property.getName(), path );
 	}
@@ -207,7 +209,7 @@ abstract public class ConfigurableFactory<T> {
 	 *
 	 * @param property
 	 */
-	public <PT> void addProperty (ConfigurationProperty<PT> property ) {
+	public <PT> void addProperty (ConfigurationProperty<PT> property) {
 		addProperty( property, new ArrayList<String>() );
 	}
 
@@ -256,7 +258,7 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
 
-        if (!hasPropertyValue(property)) {
+        if ( !hasPropertyValue( property ) ) {
             return property.getDefaultValue();
         }
         try {
@@ -470,6 +472,63 @@ abstract public class ConfigurableFactory<T> {
 			child.writeConfigurationInformation(stream, prefix);
 		}
 	}
+
+    private String getFullPropertyString( String name) {
+
+        StringBuilder sb = new StringBuilder();
+        for ( String subPath : _rootPath ) {
+            sb.append( subPath );
+            sb.append(".");
+        }
+        if ( _pathsByProperty.get( name ) != null ) {
+            List<String> attributePath = new ArrayList<>( _pathsByProperty.get( name ) );
+            for ( String subPath : attributePath ) {
+                sb.append( subPath );
+                sb.append( "." );
+            }
+        }
+        sb.append( name );
+        return sb.toString();
+    }
+
+    private String getFactoryString() {
+        StringBuilder sb = new StringBuilder();
+        for ( ConfigurationProperty<?> prop : _properties ) {
+            sb.append( getFullPropertyString( prop.getName() ) );
+            sb.append( ":" );
+            sb.append( getPropertyValue( prop ) );
+        }
+        for ( ConfigurableFactory<?> child: _children ) {
+			sb.append( child.getFactoryString() );
+		}
+        return sb.toString();
+    }
+
+
+    /**
+     * Return a SHA-256 hexcode representing the state of the configuration
+     * @return String representing the hexcode SHA-256 hash of the configuration state
+     */
+    public String generateSHA256() {
+        try {
+            String propertyString = getFactoryString();
+            // generate SHA-256 from the string
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+            md.update( propertyString.getBytes( "UTF-8" ) );
+            byte[] digest = md.digest();
+
+            // convert SHA-256 bytes to hex string
+            StringBuilder sb2 = new StringBuilder();
+            for ( byte b : digest ) {
+                sb2.append( Integer.toString( ( b & 0xff ) + 0x100, 16 ).substring( 1 ) );
+            }
+            return sb2.toString();
+        } catch ( Exception e ) {
+			LOGGER.warn("Error registering configuration to SHA");
+            return "";
+		}
+    }
+
 
 	/**
 	 * Get the JSON object used to configure this factory.

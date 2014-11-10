@@ -106,6 +106,22 @@ define(function (require) {
                                  }
                                  callback( layer );
                              });
+        },
+
+        /**
+         * Set up a configuration object on the server.
+         */
+        configureLayer: function( layerId, params, callback ) {
+
+            aperture.io.rest('/layer/' + layerId,
+                             'POST',
+                             function( response, statusInfo ) {
+                                callback( response.sha );
+                             },
+                             {
+                                 postData: params,
+                                 contentType: 'application/json'
+                             });
         }
     };
 

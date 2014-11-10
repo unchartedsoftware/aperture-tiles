@@ -33,6 +33,7 @@ import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.EmptyConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
@@ -47,28 +48,28 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
+import java.security.MessageDigest;
 import java.util.*;
 
 @Singleton
 public class LayerServiceImpl implements LayerService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
+    private static final String ERROR_SHA = "ERROR-SHA-256";
 
 	private List< JSONObject > _layers;
 	private Map< String, JSONObject > _layersById;
+    private Map< String, JSONObject > _layersBySha;
 	private Map< String, JSONObject > _metaDataCache;
-    private FactoryProvider<LayerConfiguration> _layerConfigurationProvider;
-
+    private FactoryProvider< LayerConfiguration > _layerConfigurationProvider;
 
 	@Inject
-	public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
-	                         FactoryProvider<LayerConfiguration> layerConfigProvider) {
+	public LayerServiceImpl( @Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
+	                         FactoryProvider<LayerConfiguration> layerConfigProvider ) {
 		_layers = new ArrayList<>();
 		_layersById = new HashMap<>();
+        _layersBySha = new HashMap<>();
 		_metaDataCache = new HashMap<>();
         _layerConfigurationProvider = layerConfigProvider;
 
@@ -80,7 +81,6 @@ public class LayerServiceImpl implements LayerService {
                 }
             } );
 		}
-
 		readConfigFiles( getConfigurationFiles( layerConfigurationLocation ) );
 	}
 
@@ -126,7 +126,6 @@ public class LayerServiceImpl implements LayerService {
 			if ( metadata == null ) {
 				String s = pyramidIO.readMetaData( dataId );
 				if ( s == null ) {
-					//throw new JSONException( "Missing metadata." );
                     metadata = new JSONObject();
 				} else {
                     metadata = new JSONObject( s );
@@ -151,6 +150,7 @@ public class LayerServiceImpl implements LayerService {
             if (query != null) {
                 Iterator<?> keys = query.keys();
                 while ( keys.hasNext() ) {
+                    // override options with query
                     String key = (String) keys.next();
                     result.put( key, query.get( key ) );
                 }
@@ -165,49 +165,58 @@ public class LayerServiceImpl implements LayerService {
     @Override
 	public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams ) {
 		try {
-
-            JSONObject layerConfig = _layersById.get( layerId );
-
+            JSONObject layerConfig;
+            if ( requestParams != null && requestParams.has("sha") ) {
+                layerConfig =_layersBySha.get( requestParams.getString("sha") );
+            } else {
+                layerConfig = _layersById.get( layerId );
+            }
 			//the root factory that does nothing
 			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory( null, null, null );
-			
 			//add another factory that will handle query params
 			RequestParamsFactory queryParamsFactory = new RequestParamsFactory( null, rootFactory, new ArrayList<String>() );
 			rootFactory.addChildFactory(queryParamsFactory);
-			
 			//add the layer configuration factory
 			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory( rootFactory, new ArrayList<String>() );
 			rootFactory.addChildFactory(factory);
-
 			rootFactory.readConfiguration( mergeQueryConfigOptions( layerConfig, requestParams ) );
-
 			LayerConfiguration config = rootFactory.produce( LayerConfiguration.class );
-
 			// Initialize the PyramidIO for reading
 			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
             PyramidIO pyramidIO = config.produce( PyramidIO.class );
 			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
-
             if ( initJSON != null ) {
 				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
 				pyramidIO.initializeForRead( dataId, width, height, initProps);
 			}
-
 			return config;
-
 		} catch ( Exception e ) {
 			LOGGER.warn("Error configuring rendering for", e);
 			return null;
 		}
 	}
 
+    @Override
+	public String configureLayer( String layerId, JSONObject overrideConfiguration ) throws Exception {
+        try {
+            // build layer config to produce string, this ensures that ALL configurable
+            // properties are used in sha generation, rather than only those in the JSON
+            LayerConfiguration config = getLayerConfiguration( layerId, overrideConfiguration );
 
+            // get SHA-256 hash of state
+            String shaHex = config.generateSHA256();
 
-	// ////////////////////////////////////////////////////////////////////////
-	// Section: Configuration reading methods
-	//
+            // store the config under the SHA-256
+            _layersBySha.put( shaHex, mergeQueryConfigOptions( _layersById.get( layerId ), overrideConfiguration ) );
+            return shaHex;
+        } catch ( Exception e ) {
+			LOGGER.warn("Error registering configuration to SHA");
+            throw e;
+		}
+	}
+
 	private File[] getConfigurationFiles (String location) {
 		try {
 			// Find our configuration file.

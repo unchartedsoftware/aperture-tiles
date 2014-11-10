@@ -38,6 +38,7 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,12 @@ public class LayerResource extends ApertureServerResource {
 
     private JSONObject getLayerInformation( String layerId ) throws JSONException {
         try {
-            // clone layer config
-            JSONObject layer = JsonUtilities.deepClone( _service.getLayerJSON( layerId ) );
+            // full layer config
+            JSONObject layerConfig = JsonUtilities.deepClone( _service.getLayerJSON( layerId ) );
+            // we only need public section
+            JSONObject layer = layerConfig.getJSONObject("public");
+            // append id
+            layer.put("id", layerConfig.getString("id") );
             // get host
             String host = getRequest().getResourceRef().getPath();
             host = host.substring( 0, host.lastIndexOf("layer") );
@@ -70,7 +75,7 @@ public class LayerResource extends ApertureServerResource {
             try {
                 LayerConfiguration config = _service.getLayerConfiguration( layerId, null );
                 TileDataImageRenderer renderer = config.produce( TileDataImageRenderer.class );
-                if (null != renderer) {
+                if ( null != renderer ) {
                     metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
                 }
             } catch (ConfigurationException e) {
@@ -110,6 +115,26 @@ public class LayerResource extends ApertureServerResource {
         } catch (JSONException e) {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
                                         "Unable to create JSON object from supplied options string",
+                                        e);
+        }
+    }
+
+
+    @Post
+    public Representation configureLayer( String jsonArguments ) {
+        try {
+            String layerURN = (String) getRequest().getAttributes().get("layer");
+            JSONObject arguments = new JSONObject(jsonArguments);
+            String sha = _service.configureLayer( layerURN, arguments );
+
+            JSONObject result = new JSONObject();
+            result.put( "sha", sha );
+            return new JsonRepresentation( result );
+
+        } catch ( Exception e ) {
+            LOGGER.warn("Bad layers request: {}", jsonArguments, e);
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                                        "Unable to configure service options string",
                                         e);
         }
     }

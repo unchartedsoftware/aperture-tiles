@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest.layer;
 
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.List;
 
@@ -64,6 +65,13 @@ public interface LayerService {
      * @param requestParams Additional query parameters to override
      */
     public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams );
+
+    /**
+     * Returns a SHA-256 hex string containing the state of the layer.
+     * @param layerId The layer identification string
+     * @param overrideConfiguration Additional query parameters to override
+     */
+    public String configureLayer( String layerId, JSONObject overrideConfiguration ) throws Exception;
 
     /**
      * Returns the meta-data associated with the given layer

@@ -131,9 +131,9 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             // Get the coarseness-scaled true tile index
             TileIndex scaleLevelIndex = null;
-            // need to get the tile data for the level of the base level minus the courseness
-            for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
-                scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel,
+            // need to get the tile data for the level of the base level minus the coarseness
+            for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
+                scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
                         (int)Math.floor(index.getX() / coarsenessFactor),
                         (int)Math.floor(index.getY() / coarsenessFactor));
 

@@ -60,12 +60,12 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-    public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");
-    public static final List<String> DATA_PATH = Collections.singletonList( "data" );
-	public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "data","pyramidio" ) );
-	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "data","serializer" ) );
-	public static final List<String> TILE_TRANSFORMER_PATH = Collections.unmodifiableList( Arrays.asList( "data","transformer" ) );
-    public static final List<String> FILTER_PATH = Collections.singletonList("filter");
+    public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
+    public static final List<String> DATA_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data" ) );
+	public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
+	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
+	public static final List<String> TILE_TRANSFORMER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "data","transformer" ) );
+    public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
 
     public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
@@ -94,11 +94,11 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         "For server use only, on a tile-by-tile basis",
         null);
 	public static final StringProperty LEVEL_MINIMUMS = new StringProperty("levelMinimums",
-         "For server use only, on a tile-by-tile basis",
-         null);
+        "For server use only, on a tile-by-tile basis",
+        null);
 	public static final StringProperty LEVEL_MAXIMUMS  = new StringProperty("levelMaximums",
-         "For server use only, on a tile-by-tile basis",
-         null);
+        "For server use only, on a tile-by-tile basis",
+        null);
 
 
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
