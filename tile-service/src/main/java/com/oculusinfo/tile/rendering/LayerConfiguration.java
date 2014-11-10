@@ -61,17 +61,15 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
     public static final List<String> TILE_PYRAMID_PATH = Collections.singletonList("pyramid");
+    public static final List<String> DATA_PATH = Collections.singletonList( "data" );
 	public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "data","pyramidio" ) );
 	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "data","serializer" ) );
 	public static final List<String> TILE_TRANSFORMER_PATH = Collections.unmodifiableList( Arrays.asList( "data","transformer" ) );
     public static final List<String> FILTER_PATH = Collections.singletonList("filter");
 
-    public static final StringProperty LAYER_NAME = new StringProperty("layer",
+    public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
         null);
-    public static final StringProperty SHORT_NAME = new StringProperty("name",
-	    "A shortened, human-readable version of the layer name.  Defaults to the same value as LAYER_NAME",
-	     null);
     public static final StringProperty DATA_ID = new StringProperty("id",
         "The ID of the data source of the layer; exact format depends on how the layer is stored.",
         null);
@@ -105,7 +103,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
 		Collections.unmodifiableSet(new HashSet<ConfigurationProperty<?>>(Arrays.asList(
-            SHORT_NAME,
             TILE_COORDINATE,
             LEVEL_MAXIMUMS,
             LEVEL_MINIMUMS
@@ -144,9 +141,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	                           List<String> path) {
 		super( name, LayerConfiguration.class, parent, path );
 
-		addProperty(LAYER_NAME);
-        addProperty(DATA_ID);
-		addProperty(SHORT_NAME);
+		addProperty(LAYER_ID);
+        addProperty(DATA_ID, DATA_PATH);
 		addProperty(OUTPUT_WIDTH);
 		addProperty(OUTPUT_HEIGHT);
 		addProperty(COARSENESS);
@@ -159,12 +155,13 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 		_transformFactory = new ValueTransformerFactory(this, new ArrayList<String>() );
 		addChildFactory( _transformFactory );
+
         addChildFactory( rendererFactoryProvider.createFactory(this, new ArrayList<String>()) );
-		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
-		addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
+        addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
         addChildFactory( annotationIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
-		addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
-		addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORMER_PATH) );
+        addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
+        addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORMER_PATH) );
+		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
         addChildFactory( filterFactoryProvider.createFactory(this, FILTER_PATH) );
 	}
 
@@ -176,12 +173,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	@Override
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
 		if (LOCAL_PROPERTIES.contains(property)) {
-            if (SHORT_NAME.equals(property)) {
-				// Only override this if it isn't explicitly set - effectively this is a dynamic default
-				if (!hasPropertyValue(SHORT_NAME)) {
-					return property.getType().cast(getPropertyValue(LAYER_NAME));
-				}
-			} else if (TILE_COORDINATE.equals(property)) {
+            if (TILE_COORDINATE.equals(property)) {
 				return property.getType().cast(_tileCoordinate);
 			} else if (LEVEL_MAXIMUMS.equals(property)) {
 				return property.getType().cast(_levelMaximum);
@@ -205,7 +197,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
 			}
 		} catch (ConfigurationException e) {
-			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(SHORT_NAME));
+			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(LAYER_ID));
 		}
 	}
 

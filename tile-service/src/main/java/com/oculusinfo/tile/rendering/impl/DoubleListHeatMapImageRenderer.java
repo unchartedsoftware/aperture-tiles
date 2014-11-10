@@ -60,7 +60,7 @@ import com.oculusinfo.tile.rendering.color.ColorRamp;
  */
 
 public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
@@ -81,7 +81,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
         try {
             return Double.parseDouble(rawValue);
         } catch (NumberFormatException|NullPointerException e) {
-            _logger.info("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
+            LOGGER.info("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
             return def;
         }
     }
@@ -89,7 +89,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
 	@Override
 	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
 		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
 		return new Pair<>(minimumValue,  maximumValue);
@@ -101,7 +101,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 	 */
     public BufferedImage render (LayerConfiguration config) {
         BufferedImage bi;
-        String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
         String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
         TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
         try {
@@ -147,7 +147,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             // Missing tiles are commonplace and we didn't find any data up the
             // tree either. We don't want a big long error for that.
             if (tileDatas.size() < 1) {
-                _logger.info("Missing tile " + index + " for layer " + layerId);
+                LOGGER.info("Missing tile " + index + " for layer " + layerId);
                 return null;
             }
 
@@ -218,7 +218,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
         } catch (Exception e) {
-            _logger.error("Tile error: " + layerId + ":" + index, e);
+            LOGGER.error("Tile error: " + layerId + ":" + index, e);
             bi = null;
         }
         return bi;

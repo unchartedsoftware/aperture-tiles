@@ -27,7 +27,6 @@ package com.oculusinfo.tile.rest.layer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
@@ -41,6 +40,7 @@ import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.RequestParamsFactory;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -74,11 +74,11 @@ public class LayerServiceImpl implements LayerService {
 
 		if (layerConfigProvider instanceof CachingLayerConfigurationProvider) {
             CachingLayerConfigurationProvider caching = (CachingLayerConfigurationProvider)layerConfigProvider;
-			caching.addLayerListener( new LayerDataChangedListener () {
-                public void onLayerDataChanged (String layerId) {
-                    _metaDataCache.remove(layerId);
+			caching.addLayerListener( new LayerDataChangedListener() {
+                public void onLayerDataChanged( String layerId ) {
+                    _metaDataCache.remove( layerId );
                 }
-            });
+            } );
 		}
 
 		readConfigFiles( getConfigurationFiles( layerConfigurationLocation ) );
@@ -99,7 +99,7 @@ public class LayerServiceImpl implements LayerService {
         List< String > layers = new ArrayList<>();
         try {
             for ( JSONObject layerConfig : _layers ) {
-                layers.add( layerConfig.getString( "layer" ) );
+                layers.add( layerConfig.getString( LayerConfiguration.LAYER_ID.getName() ) );
             }
         } catch ( Exception e ) {
             e.printStackTrace();
@@ -169,13 +169,13 @@ public class LayerServiceImpl implements LayerService {
             JSONObject layerConfig = _layersById.get( layerId );
 
 			//the root factory that does nothing
-			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
+			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory( null, null, null );
 			
 			//add another factory that will handle query params
-			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.<String>emptyList());
+			RequestParamsFactory queryParamsFactory = new RequestParamsFactory( null, rootFactory, new ArrayList<String>() );
 			rootFactory.addChildFactory(queryParamsFactory);
 			
-			//add the layer configuration factory under the path 'config'
+			//add the layer configuration factory
 			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory( rootFactory, new ArrayList<String>() );
 			rootFactory.addChildFactory(factory);
 
@@ -211,7 +211,7 @@ public class LayerServiceImpl implements LayerService {
 	private File[] getConfigurationFiles (String location) {
 		try {
 			// Find our configuration file.
-			URI path = null;
+			URI path;
 			if (location.startsWith("res://")) {
 				location = location.substring(6);
 				path = LayerServiceImpl.class.getResource(location).toURI();
@@ -237,17 +237,12 @@ public class LayerServiceImpl implements LayerService {
 	private void readConfigFiles( File[] files ) {
 		for (File file: files) {
 			try {
-				JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
-                Iterator<?> keys = contents.keys();
-
-                while( keys.hasNext() ){
-                    String key = (String)keys.next();
-                    if( contents.get(key) instanceof JSONObject ) {
-                        JSONObject layerJSON = contents.getJSONObject(key);
-                        layerJSON.put("layer", key ); // append layer name
-                        _layersById.put( key, layerJSON );
+				JSONArray contents = new JSONArray( new JSONTokener(new FileReader(file)) );
+                for ( int i=0; i<contents.length(); i++ ) {
+                    if( contents.get(i) instanceof JSONObject ) {
+                        JSONObject layerJSON = contents.getJSONObject(i);
+                        _layersById.put( layerJSON.getString( LayerConfiguration.LAYER_ID.getName() ), layerJSON );
                         _layers.add( layerJSON );
-                        System.out.println( "key: " + key );
                         System.out.println( layerJSON.toString( 4 ) );
                     }
                 }

@@ -95,10 +95,10 @@ define(function (require) {
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
 
-            if ( !serviceRegistry[ source.layer ] ) {
-                serviceRegistry[ source.layer ] = [];
+            if ( !serviceRegistry[ source.id ] ) {
+                serviceRegistry[ source.id ] = [];
             }
-            serviceRegistry[ source.layer ].push( this );
+            serviceRegistry[ source.id ].push( this );
         },
 
 
@@ -264,7 +264,7 @@ define(function (require) {
                 // request data from server
                 aperture.io.rest(
                     (this.source.apertureservice+'1.0.0/'+
-                     this.source.layer+'/'+
+                     this.source.id+'/'+
                      level+'/'+
                      xIndex+'/'+
                      yIndex+'.json'),
@@ -459,7 +459,7 @@ define(function (require) {
             // request data from server
             aperture.io.rest(
                 (service.source.apertureservice+'1.0.0/'+
-                 service.source.layer+'/'+
+                 service.source.id+'/'+
                  tile.level+'/'+
                  tile.xIndex+'/'+
                  tile.yIndex+'.json'),

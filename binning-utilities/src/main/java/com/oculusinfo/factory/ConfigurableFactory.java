@@ -25,11 +25,7 @@ package com.oculusinfo.factory;
 
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,6 +58,7 @@ abstract public class ConfigurableFactory<T> {
 	private List<ConfigurableFactory<?>>  _children;
 
     private Set<ConfigurationProperty<?>> _properties;
+    private HashMap<String, List<String> > _pathsByProperty;
 
 	private boolean                       _configured;
 	private JSONObject                    _configurationNode;
@@ -153,6 +150,7 @@ abstract public class ConfigurableFactory<T> {
         _children = new ArrayList<>();
         _configured = false;
         _properties = new HashSet<>();
+        _pathsByProperty = new HashMap<>();
         _isSingleton = isSingleton;
         _singletonProduct = null;
         
@@ -197,10 +195,48 @@ abstract public class ConfigurableFactory<T> {
 	 * Add a property to the list of properties used by this factory
 	 * 
 	 * @param property
+     * @param path
 	 */
-	protected <PT> void addProperty (ConfigurationProperty<PT> property) {
+	public <PT> void addProperty (ConfigurationProperty<PT> property, List<String> path ) {
 		_properties.add(property);
+        _pathsByProperty.put( property.getName(), path );
 	}
+
+    /**
+	 * Add a property to the list of properties used by this factory
+	 *
+	 * @param property
+	 */
+	public <PT> void addProperty (ConfigurationProperty<PT> property ) {
+		addProperty( property, new ArrayList<String>() );
+	}
+
+
+    private JSONObject getPropertyNode (ConfigurationProperty<?> property) {
+
+        if ( _pathsByProperty.get( property.getName() ) == null ) {
+            return new JSONObject();
+        }
+
+        List<String> path = new ArrayList<>(  _pathsByProperty.get( property.getName() ) );
+        if ( path.isEmpty() ) {
+            return _configurationNode;
+        } else {
+            try {
+                String subPath;
+                JSONObject currentNode = _configurationNode;
+                while ( path.size() > 1 ) {
+                    subPath = path.remove( 0 );
+                    currentNode = currentNode.getJSONObject( subPath );
+                }
+                return currentNode.getJSONObject( path.get(0) );
+            } catch (JSONException e ) {
+                e.printStackTrace();
+
+            }
+        }
+        return new JSONObject();
+    }
 
 	/**
 	 * Indicates if an actual value is recorded for the given property.
@@ -209,7 +245,7 @@ abstract public class ConfigurableFactory<T> {
 	 * @return True if the property is listed and non-default in the factory.
 	 */
 	public boolean hasPropertyValue (ConfigurationProperty<?> property) {
-		return (_configured && null != _configurationNode && _configurationNode.has(property.getName()));
+        return (_configured && null != _configurationNode && getPropertyNode( property ).has( property.getName() ) );
 	}
 
 	/**
@@ -219,11 +255,12 @@ abstract public class ConfigurableFactory<T> {
 	 * readConfiguration (either version).
 	 */
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
-		if (!hasPropertyValue(property))
-			return property.getDefaultValue();
 
-		try {
-			return property.unencodeJSON(new JSONNode(_configurationNode, property.getName()));
+        if (!hasPropertyValue(property)) {
+            return property.getDefaultValue();
+        }
+        try {
+			return property.unencodeJSON(new JSONNode( getPropertyNode( property ) , property.getName()) );
 		} catch (JSONException e) {
 			// Must not have been there.  Ignore, leaving as default. 
 			LOGGER.info("Property {} from configuration {} not found. Using default", property, _configurationNode);

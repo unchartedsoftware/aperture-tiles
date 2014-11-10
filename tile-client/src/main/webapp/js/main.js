@@ -73,7 +73,7 @@ require(['./ApertureConfig',
              */
 	        getServerLayers = function( layerConfig, layerInfos ) {
 	            var Z_INDEX_OFFSET = 1,
-	                layers = layerConfig.layers.filter( function( elem ) {
+	                layers = layerConfig.filter( function( elem ) {
 	                    return elem.domain === "server";
 	                }),
 	                i;
@@ -90,7 +90,7 @@ require(['./ApertureConfig',
              */
             getClientLayers = function( layerConfig, layerInfos ) {
                 var Z_INDEX_OFFSET = 1000,
-                    layers = layerConfig.layers.filter( function( elem ) {
+                    layers = layerConfig.filter( function( elem ) {
 	                    return elem.domain === "client";
 	                }),
                     i, j;
@@ -109,7 +109,7 @@ require(['./ApertureConfig',
              */
 	        getAnnotationLayers = function( layerConfig, layerInfos ) {
 		        var Z_INDEX_OFFSET = 500,
-		            layers = layerConfig.layers.filter( function( elem ) {
+		            layers = layerConfig.filter( function( elem ) {
 	                    return elem.domain === "annotation";
 	                }),
 		            i;
@@ -192,7 +192,7 @@ require(['./ApertureConfig',
                             annotationLayerDeferreds;
 
 				        // Initialize our view choice panel
-				        if ( mapConfig.maps.length > 1) {
+				        if ( mapConfig.length > 1) {
 
 					        // ... first, create the panel
 					        viewsOverlay = new OverlayButton({
@@ -209,7 +209,7 @@ require(['./ApertureConfig',
                             };
 
                             // ... Next, insert contents
-                            for (i=0; i<mapConfig.maps.length; ++i) {
+                            for (i=0; i<mapConfig.length; ++i) {
                                 viewLink = $('<a/>').attr({
                                     'href': '?map='+i,
 	                                'class': 'views-link'
@@ -219,7 +219,7 @@ require(['./ApertureConfig',
                                 viewLink.click( addBaseLayerToURL );
 
                                 viewEntry = $('<div class="views-entry" style="text-align:center;"></div>').append( viewLink );
-                                viewLink.append(mapConfig.maps[i].description+'<br>' );
+                                viewLink.append(mapConfig[i].description+'<br>' );
                                 viewsOverlay.getContentElement().append( viewEntry );
                             }
 				        }
@@ -228,11 +228,11 @@ require(['./ApertureConfig',
 				        currentMap = Util.getURLParameter('map');
 				        currentBaseLayer = Util.getURLParameter('baselayer');
 
-				        if ( !currentMap || !mapConfig.maps[currentMap] ) {
+				        if ( !currentMap || !mapConfig[currentMap] ) {
 					        currentMap = 0;
 				        }
 
-				        mapSpec = mapConfig.maps[currentMap];
+				        mapSpec = mapConfig[currentMap];
 
                         mapSpec.map.baseLayerIndex = ( currentBaseLayer !== undefined ) ? currentBaseLayer : 0;
 

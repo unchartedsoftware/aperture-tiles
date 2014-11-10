@@ -61,7 +61,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	public static final JSONArrayProperty GRADIENTS = new JSONArrayProperty("gradients", "A set of themed gradient definitions.", "[]");
 
 	
-	private List<ThemedGradientFactory> gradients = new ArrayList<ThemedGradientFactory>();
+	private List<ThemedGradientFactory> gradients = new ArrayList<>();
 
 	
 	public ColorRampFactory (ConfigurableFactory<?> parent, List<String> path) {
@@ -76,6 +76,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		addProperty(HUE1);
 		addProperty(HUE2);
 		addProperty(GRADIENTS);
+        addProperty(THEME);
 	}
 
 	@Override

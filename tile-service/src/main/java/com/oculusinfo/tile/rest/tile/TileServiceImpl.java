@@ -54,13 +54,14 @@ import java.util.UUID;
  */
 @Singleton
 public class TileServiceImpl implements TileService {
-	private static final Logger _logger = LoggerFactory.getLogger(TileServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(TileServiceImpl.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
-	@Inject
 	private LayerService _layerService;
-	
-	public TileServiceImpl () {
+
+	@Inject
+	public TileServiceImpl ( LayerService layerService ) {
+        _layerService = layerService;
 	}
 
 
@@ -93,9 +94,9 @@ public class TileServiceImpl implements TileService {
 
 			bi = tileRenderer.render(config);
 		} catch (ConfigurationException e) {
-			_logger.warn("No renderer specified for tile request. "+ e.getMessage());
+			LOGGER.warn("No renderer specified for tile request. "+ e.getMessage());
 		} catch (IllegalArgumentException e) {
-            _logger.info("Renderer configuration not recognized.");
+            LOGGER.info("Renderer configuration not recognized.");
         }
 
 		if (bi == null){
@@ -129,9 +130,9 @@ public class TileServiceImpl implements TileService {
             return transformer.Transform(deserializedJSON);
 			
 		} catch (IOException | JSONException | ConfigurationException e) {
-			_logger.warn("Exception getting tile for {}", index, e);
+			LOGGER.warn("Exception getting tile for {}", index, e);
 		}  catch (IllegalArgumentException e) {
-            _logger.info("Renderer configuration not recognized.");
+            LOGGER.info("Renderer configuration not recognized.");
         }
 		return null;
 	}

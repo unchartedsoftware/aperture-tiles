@@ -99,7 +99,7 @@ public class AnnotationServiceImpl implements AnnotationService {
         // since tables may not exist, create them in a thread-safe manner
         /* TODO: this makes extra '-data' tables for all layers, figure a better way to determine
                  if they are sued for annotation data
-        for ( String layer : _layerService.getLayers() ) {
+        for ( String layer : _layerService.getLayerIds() ) {
             LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
             String dataId = config.getPropertyValue( LayerConfiguration.DATA_ID );
             try {
@@ -194,7 +194,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	public Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) {
+	public Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex index, JSONObject query ) {
 
 		_lock.readLock().lock();
 		try {
@@ -202,7 +202,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 			LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
 			AnnotationFilter filter = config.produce( AnnotationFilter.class );
-			return getDataFromTiles( layer, tile, filter, pyramid );
+
+			return getDataFromTiles( layer, index, filter, pyramid );
     		
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );

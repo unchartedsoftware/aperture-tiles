@@ -31,13 +31,13 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import oculus.aperture.common.rest.ApertureServerResource;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ import java.util.List;
 public class LayerResource extends ApertureServerResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerResource.class);
 
-    private LayerService        _service;
+    private LayerService _service;
 
     @Inject
     public LayerResource (LayerService service) {
@@ -92,19 +92,21 @@ public class LayerResource extends ApertureServerResource {
         try {
             // see if resource is specified
             String layerURN = (String) getRequest().getAttributes().get("layer");
-            JSONObject jsonLayers = new JSONObject();
             if ( layerURN == null ) {
                  // if not, return all layers
+                JSONArray jsonLayers = new JSONArray();
                 List<String> layerIds = _service.getLayerIds();
                 for (int i=0; i<layerIds.size(); ++i) {
-                    jsonLayers.put( layerIds.get(i), getLayerInformation( layerIds.get(i) ) );
+                    jsonLayers.put( i, getLayerInformation( layerIds.get(i) ) );
                 }
+                setStatus(Status.SUCCESS_OK);
+                return new JsonRepresentation( jsonLayers );
             } else {
                  // if so, return specific layers
-                jsonLayers = getLayerInformation( layerURN );
+                JSONObject jsonLayer = getLayerInformation( layerURN );
+                setStatus(Status.SUCCESS_OK);
+                return new JsonRepresentation( jsonLayer );
             }
-            setStatus(Status.SUCCESS_OK);
-            return new JsonRepresentation( jsonLayers );
         } catch (JSONException e) {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
                                         "Unable to create JSON object from supplied options string",

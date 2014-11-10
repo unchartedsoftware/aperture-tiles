@@ -52,31 +52,35 @@ import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedLi
 public class CachingLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
 	private static final Logger LOGGER = LoggerFactory.getLogger(CachingLayerConfigurationProvider.class);
 
-    @Inject
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-    @Inject
     private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
-    @Inject
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
-    @Inject
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-    @Inject
     private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-    @Inject
     private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
-    @Inject
     private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
+    private FactoryProvider<PyramidIO> _cachingProvider;
+	private CachingPyramidIO _pyramidIO;
 
+    @Inject
+    public CachingLayerConfigurationProvider( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                                              FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
+                                              FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+                                              FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+                                              FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+                                              FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+                                              FactoryProvider<AnnotationFilter> filterFactoryProvider ) {
 
-	private FactoryProvider<PyramidIO> _cachingProvider;
-	private CachingPyramidIO           _pyramidIO;
-
-
-
-	public CachingLayerConfigurationProvider () {
-		_cachingProvider = new CachingPyramidIOProvider();
+        _pyramidIOFactoryProvider = pyramidIOFactoryProvider;
+        _annotationIOFactoryProvider = annotationIOFactoryProvider;
+        _tilePyramidFactoryProvider = tilePyramidFactoryProvider;
+        _serializationFactoryProvider = serializationFactoryProvider;
+        _rendererFactoryProvider = rendererFactoryProvider;
+        _tileTransformerFactoryProvider = tileTransformerFactoryProvider;
+        _filterFactoryProvider = filterFactoryProvider;
+        _cachingProvider = new CachingPyramidIOProvider();
 		_pyramidIO = new CachingPyramidIO();
-	}
+    }
 
 	public void addLayerListener (LayerDataChangedListener listener) {
 		_pyramidIO.addLayerListener(listener);
@@ -179,7 +183,7 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 
 		private void setupBasePyramidIO () {
 			if (!_baseInitialized) {
-				String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_NAME);
+				String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_ID);
 				_pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
 				_baseInitialized = true;
 			}

@@ -24,13 +24,13 @@
  */
 package com.oculusinfo.tile.rest.legend;
 
-import com.oculusinfo.tile.rendering.LayerConfiguration;
-
+import org.json.JSONObject;
 import java.awt.image.BufferedImage;
 
 public interface LegendService {
-	public BufferedImage getLegend( LayerConfiguration config,
+	public BufferedImage getLegend( String layer,
                                     int width,
-	                                int height,
-                                    boolean renderHorizontally );
+                                    int height,
+                                    boolean renderHorizontally,
+                                    JSONObject query );
 }

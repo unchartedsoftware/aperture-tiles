@@ -83,14 +83,12 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	@Override
 	public BufferedImage render(LayerConfiguration config) {
 		BufferedImage bi;
-		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
         String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
  		
 		try {
 			index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
-
-			String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
@@ -141,7 +139,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			decFormat = new DecimalFormat("##.##");
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
-			String text = shortName + ": " + formattedTotal + " " + formattedCoverage;
+			String text = layerId + ": " + formattedTotal + " " + formattedCoverage;
 			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {

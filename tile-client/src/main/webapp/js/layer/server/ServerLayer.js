@@ -46,7 +46,7 @@ define(function (require) {
      * @param {Object} level - The current map zoom level.
      */
     requestRampImage = function ( layer ) {
-        aperture.io.rest('/legend/' + layer.layerSpec.source.layer + "?theme="+layer.getTheme() + "&ramp=" + layer.getRampType(),
+        aperture.io.rest('/legend/' + layer.layerSpec.source.id + "?theme="+layer.getTheme() + "&ramp=" + layer.getRampType(),
                          'GET',
                          function ( legendString, status ) {
                              layer.setRampImageUrl( legendString );
@@ -486,7 +486,7 @@ define(function (require) {
                         'name': 'Aperture Tile Layers',
                         'url': this.layerSpec.source.tms,
                         'options': {
-                            'layername': this.layerSpec.source.layer,
+                            'layername': this.layerSpec.source.id,
                             'type': 'png',
                             'version': '1.0.0',
                             'maxExtent': olBounds,

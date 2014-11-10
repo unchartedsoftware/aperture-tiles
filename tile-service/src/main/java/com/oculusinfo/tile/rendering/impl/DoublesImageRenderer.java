@@ -76,7 +76,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	 */
 	@Override
 	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
 		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
 		return new Pair<Double, Double>(minimumValue,  maximumValue);
@@ -88,7 +88,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	@Override
 	public BufferedImage render (LayerConfiguration config) {
 		BufferedImage bi;
-		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
         String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {

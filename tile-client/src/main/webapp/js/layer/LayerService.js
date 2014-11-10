@@ -80,12 +80,15 @@ define(function (require) {
             aperture.io.rest('/layer',
                              'GET',
                              function (layers, status) {
+                                 var layerMap = {},
+                                    i;
                                  if (status.success) {
-                                     _.forIn( layers, function( layer ) {
-                                         layer.meta.minMax = parseLevelsMinMax( layer.meta );
-                                     });
+                                     for ( i=0; i<layers.length; i++ ) {
+                                         layers[i].meta.minMax = parseLevelsMinMax( layers[i].meta );
+                                         layerMap[ layers[i].id ] = layers[i];
+                                     }
                                  }
-                                 callback( layers );
+                                 callback( layerMap );
                              });
 
         },

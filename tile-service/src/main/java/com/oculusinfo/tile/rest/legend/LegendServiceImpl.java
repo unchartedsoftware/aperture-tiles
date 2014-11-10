@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.tile.rest.legend;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
@@ -31,6 +32,9 @@ import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.LinearCappedValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
+import com.oculusinfo.tile.rest.layer.LayerService;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,16 +53,21 @@ public class LegendServiceImpl implements LegendService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(LegendServiceImpl.class);
 
-	LegendServiceImpl () {
+    private LayerService _layerService;
+
+    @Inject
+	LegendServiceImpl( LayerService layerService ) {
+        _layerService = layerService;
 	}
 	
 	/* (non-Javadoc)
 	 * @see LegendService#getLegend(Object, ColorRampParameter, String, int, int, int, boolean, boolean)
 	 */
-	public BufferedImage getLegend( LayerConfiguration config, int width, int height, boolean renderHorizontally ) {
+	public BufferedImage getLegend( String layer, int width, int height, boolean renderHorizontally, JSONObject query ) {
 
+        LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = bi.createGraphics();	
+		Graphics2D g = bi.createGraphics();
 
 		try {
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
@@ -110,7 +119,7 @@ public class LegendServiceImpl implements LegendService {
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error attempting to get legend - mis-configured layer");
 		} catch (IllegalArgumentException e) {
-            LOGGER.info("Renderer configuration not recognized.");
+            LOGGER.info( "Renderer configuration not recognized." );
         }
 		return bi;
 	}

@@ -91,76 +91,24 @@ public class AnnotationServiceTests {
 
 			String configFile = ".\\tile-service\\src\\test\\config\\filesystem-io-test-config.json";
 
-            FactoryProvider<LayerConfiguration> layerConfigurationProvider = new FactoryProvider<LayerConfiguration>() {
+            Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
+            tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
+            Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
+            annotationIoSet.addAll( Arrays.asList( DefaultAnnotationIOFactoryProvider.values() ) );
+            Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
+            serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
+            Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
+            filterIoSet.addAll( Arrays.asList( DefaultAnnotationFilterFactoryProvider.values() ) );
 
-                private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-                private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
-                private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
-                private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-                private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-                private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
-                private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
-
-                private void guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode() {
-                    Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
-                    tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
-                    Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
-                    annotationIoSet.addAll( Arrays.asList( DefaultAnnotationIOFactoryProvider.values() ) );
-                    Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
-                    serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
-                    Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
-                    filterIoSet.addAll( Arrays.asList( DefaultAnnotationFilterFactoryProvider.values() ) );
-                    _pyramidIOFactoryProvider = new StandardPyramidIOFactoryProvider( tileIoSet );
-                    _annotationIOFactoryProvider = new StandardAnnotationIOFactoryProvider( annotationIoSet );
-                    _tilePyramidFactoryProvider = new StandardTilePyramidFactoryProvider();
-                    _serializationFactoryProvider = new StandardTileSerializerFactoryProvider(serializerSet);
-                    _rendererFactoryProvider = new StandardImageRendererFactoryProvider();
-                    _tileTransformerFactoryProvider = new StandardTileTransformerFactoryProvider();
-                    _filterFactoryProvider = new StandardAnnotationFilterFactoryProvider( filterIoSet );
-                }
-
-                @Override
-                public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
-                    guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode();
-                    return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                                  _annotationIOFactoryProvider,
-                                                  _tilePyramidFactoryProvider,
-                                                  _serializationFactoryProvider,
-                                                  _rendererFactoryProvider,
-                                                  _tileTransformerFactoryProvider,
-                                                  _filterFactoryProvider,
-                                                  null, path);
-                }
-
-                @Override
-                public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
-                                                                              List<String> path) {
-                    guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode();
-                    return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                                  _annotationIOFactoryProvider,
-                                                  _tilePyramidFactoryProvider,
-                                                  _serializationFactoryProvider,
-                                                  _rendererFactoryProvider,
-                                                  _tileTransformerFactoryProvider,
-                                                  _filterFactoryProvider,
-                                                  parent, path);
-                }
-
-                @Override
-                public ConfigurableFactory<LayerConfiguration> createFactory (String factoryName,
-                                                                              ConfigurableFactory<?> parent,
-                                                                              List<String> path) {
-                    guiceAlleviatesTheNeedForFactoriesAndTheUseOfNewInYourJavaCode();
-                    return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                                  _annotationIOFactoryProvider,
-                                                  _tilePyramidFactoryProvider,
-                                                  _serializationFactoryProvider,
-                                                  _rendererFactoryProvider,
-                                                  _tileTransformerFactoryProvider,
-                                                  _filterFactoryProvider,
-                                                  factoryName, parent, path);
-                }
-            };
+            FactoryProvider<LayerConfiguration> layerConfigurationProvider = new StandardLayerConfigurationProvider(
+                new StandardPyramidIOFactoryProvider( tileIoSet ),
+                new StandardAnnotationIOFactoryProvider( annotationIoSet ),
+                new StandardTilePyramidFactoryProvider(),
+                new StandardTileSerializerFactoryProvider(serializerSet),
+                new StandardImageRendererFactoryProvider(),
+                new StandardTileTransformerFactoryProvider(),
+                new StandardAnnotationFilterFactoryProvider( filterIoSet )
+            );
 
             _layerService = new LayerServiceImpl( configFile,
 	                                              layerConfigurationProvider );

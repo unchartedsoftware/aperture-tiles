@@ -25,12 +25,8 @@
 package com.oculusinfo.tile.rest.legend;
 
 import com.google.inject.Inject;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
-import com.oculusinfo.tile.rest.layer.LayerService;
 import oculus.aperture.common.rest.ApertureServerResource;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -39,7 +35,6 @@ import org.restlet.engine.util.Base64;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
-import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import javax.imageio.ImageIO;
@@ -47,18 +42,14 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.UUID;
 
 public class LegendResource extends ApertureServerResource {
 
-	@Inject
 	private LegendService _service;
-	@Inject
-    private LayerService  _layerService;
 
-
-	
-	public LegendResource () {
+    @Inject
+	public LegendResource( LegendService service ) {
+        _service = service;
 	}
 
 
@@ -80,32 +71,6 @@ public class LegendResource extends ApertureServerResource {
 	}
 
 
-    /*
-	@Post("json")
-	public StringRepresentation getLegend( String jsonData ) throws ResourceException {
-
-		try {
-
-			JSONObject jsonObj = new JSONObject(jsonData);
-			String layer = jsonObj.getString("layer");
-			int zoomLevel = jsonObj.getInt("level");
-			int width = jsonObj.getInt("width");
-			int height = jsonObj.getInt("height");
-			boolean renderHorizontally = false;
-			if (jsonObj.has("orientation")){
-				renderHorizontally = jsonObj.getString("orientation").equalsIgnoreCase("horizontal");
-			}
-
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, new TileIndex(zoomLevel, 0, 0), null );
-
-			return generateEncodedImage( config, width, height, renderHorizontally );
-		} catch (JSONException e) {
-			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-			                            "Unable to create JSON object from supplied options string", e);
-		}
-	}
-	*/
-	
 	@Get
 	public Representation getLegend() throws ResourceException {
 
@@ -134,28 +99,24 @@ public class LegendResource extends ApertureServerResource {
 		}
 
 		JSONObject requestParams = createRequestParamsObject(form);
-	    LayerConfiguration config = _layerService.getLayerConfiguration( layer, requestParams );
 
         setStatus(Status.SUCCESS_OK);
 		if(outputType.equalsIgnoreCase("uri")){
-			return generateEncodedImage( config, width, height, renderHorizontally );
+			return generateEncodedImage( layer, width, height, renderHorizontally, requestParams );
 		} else { //(outputType.equalsIgnoreCase("png")){
-			return generateImage( config, width, height, renderHorizontally );
+			return generateImage( layer, width, height, renderHorizontally, requestParams );
 		}
 	}
 
-	/**
-	 * @param width
-	 * @param height
-	 * @return
-	 */
-	private ImageOutputRepresentation generateImage( LayerConfiguration config,
+
+	private ImageOutputRepresentation generateImage( String layer,
 	                                                 int width,
 	                                                 int height,
-	                                                 boolean renderHorizontally) {
+	                                                 boolean renderHorizontally,
+                                                     JSONObject query ) {
 		try {
 
-			BufferedImage tile = _service.getLegend( config, width, height, renderHorizontally );
+			BufferedImage tile = _service.getLegend( layer, width, height, renderHorizontally, query );
 			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
 			return imageRep;
 
@@ -164,18 +125,15 @@ public class LegendResource extends ApertureServerResource {
 		}
 	}
 
-	/**
-	 * @param width
-	 * @param height
-	 * @return
-	 */
-	private StringRepresentation generateEncodedImage( LayerConfiguration config,
+
+	private StringRepresentation generateEncodedImage( String layer,
 	                                                   int width,
 	                                                   int height,
-	                                                   boolean renderHorizontally) {
+	                                                   boolean renderHorizontally,
+                                                       JSONObject query ) {
 		try {
 
-			BufferedImage tile = _service.getLegend( config, width, height, renderHorizontally );
+			BufferedImage tile = _service.getLegend( layer, width, height, renderHorizontally, query );
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(tile, "png", baos);
 			baos.flush();

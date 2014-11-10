@@ -39,21 +39,31 @@ import java.util.List;
 
 public class StandardLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
 
-    @Inject
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-    @Inject
     private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
-    @Inject
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
-    @Inject
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-    @Inject
     private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-    @Inject
     private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
-    @Inject
     private FactoryProvider<AnnotationFilter> _filterFactoryProvider;
 
+    @Inject
+    public StandardLayerConfigurationProvider( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                                               FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
+                                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+                                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+                                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+                                               FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+                                               FactoryProvider<AnnotationFilter> filterFactoryProvider ) {
+
+        _pyramidIOFactoryProvider = pyramidIOFactoryProvider;
+        _annotationIOFactoryProvider = annotationIOFactoryProvider;
+        _tilePyramidFactoryProvider = tilePyramidFactoryProvider;
+        _serializationFactoryProvider = serializationFactoryProvider;
+        _rendererFactoryProvider = rendererFactoryProvider;
+        _tileTransformerFactoryProvider = tileTransformerFactoryProvider;
+        _filterFactoryProvider = filterFactoryProvider;
+    }
 
     @Override
     public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {

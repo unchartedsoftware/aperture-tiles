@@ -47,7 +47,7 @@ import org.json.JSONObject;
  */
 
 public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer{
-	private static final Logger _logger = LoggerFactory.getLogger(FilterVarsDoubleArrayTileTransformer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FilterVarsDoubleArrayTileTransformer.class);
 	
 	private List<Integer> _variables = new ArrayList<>();
 	
@@ -66,7 +66,7 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 			}
 		}
 		catch (JSONException e) {
-			_logger.warn("Exception getting variables for filter variables transformer", e);
+			LOGGER.warn("Exception getting variables for filter variables transformer", e);
 		}
 	}
 

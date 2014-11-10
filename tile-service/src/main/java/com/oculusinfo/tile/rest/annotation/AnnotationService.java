@@ -36,28 +36,28 @@ import java.util.Map;
 
 public interface AnnotationService {
 	
-	/*
+	/**
 	 * Write an annotation to the storage service
 	 * 
 	 */
 	public abstract Pair<String,Long> write( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 	
 	
-	/*
+	/**
 	 * Modify an annotation in the storage service
 	 * 
 	 */
 	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 	
 	
-	/*
+	/**
 	 * Read annotations from the storage service
 	 * 
 	 */
 	public abstract Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
 	
 	
-	/*
+	/**
 	 * Remove an annotation from the storage service
 	 * 
 	 */
