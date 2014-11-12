@@ -46,10 +46,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * @author dgray
- *
- */
+
 @Singleton
 public class TileServiceImpl implements TileService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TileServiceImpl.class);
@@ -73,23 +70,21 @@ public class TileServiceImpl implements TileService {
 		BufferedImage bi = null;
 
 		try {
-
+            // get layer configuration
 			LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
-
             // set level extrema
             PyramidMetaData metadata = _layerService.getMetaData( layer );
             String minimum = metadata.getCustomMetaData(""+index.getLevel(), "minimum");
             String maximum = metadata.getCustomMetaData(""+index.getLevel(), "maximum");
             config.setLevelProperties( index, minimum, maximum );
-
-			// Record image dimensions in case of error. 
+			// record image dimensions in case of error.
 			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-
+            // produce the tile renderer from the configuration
 			TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
-
+            // prepare for rendering
 			config.prepareForRendering(layer, index, tileSet);
-
+            // render to buffered image
 			bi = tileRenderer.render(config);
 		} catch (ConfigurationException e) {
 			LOGGER.warn("No renderer specified for tile request. "+ e.getMessage());
@@ -111,22 +106,23 @@ public class TileServiceImpl implements TileService {
 	@Override
 	public JSONObject getTileObject( String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
 		try {
+            // get layer configuration
 		    LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
-
+            // get data source id, and produce pyramid io and serializer
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		    PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<?> serializer = config.produce(TileSerializer.class);
-
+            // prepare for rendering
 			config.prepareForRendering(layer, index, tileSet);
-
+            // pull tile data from pyramid io
 			InputStream tile = pyramidIO.getTileStream( dataId, serializer, index );
 			if (null == tile) {
                 return null;
             }
+            // produce transformer, return transformed de-serialized data
 			TileTransformer transformer = config.produce(TileTransformer.class);
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
             return transformer.transform(deserializedJSON);
-			
 		} catch (IOException | JSONException | ConfigurationException e) {
 			LOGGER.warn("Exception getting tile for {}", index, e);
 		}  catch (IllegalArgumentException e) {

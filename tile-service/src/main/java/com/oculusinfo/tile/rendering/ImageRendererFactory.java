@@ -49,7 +49,7 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 
     public DoubleProperty HORIZONTAL_ALIGNMENT = new DoubleProperty("halign",
         "The alignment of the displayed information, with 0.0 being on the left hand side of the tile, and 1.0 being on the right",
-            0.5);
+        0.5);
 
     public DoubleProperty VERTICAL_ALIGNMENT = new DoubleProperty("valign",
         "The alignment of the displayed information, with 0.0 being on the bottom of the tile, and 1.0 being on the top",

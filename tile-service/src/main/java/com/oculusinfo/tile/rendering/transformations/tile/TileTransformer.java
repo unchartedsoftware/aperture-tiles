@@ -50,8 +50,8 @@ public interface TileTransformer<T> {
 
     /**
      * Same transformation on the raw tile form
-     * @param data
-     * @return
+     * @param data The tile data to be transformed
+     * @return TileData containing the transformed data
      * @throws Exception
      */
     //takes tile data x returns tile data x generified on function level

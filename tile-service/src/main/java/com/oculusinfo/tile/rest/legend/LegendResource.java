@@ -52,15 +52,18 @@ public class LegendResource extends ApertureServerResource {
         _service = service;
 	}
 
-
+    /**
+     * Get request. Returns a image or encoded image based on the layer ramp.
+     */
 	@Get
 	public Representation getLegend() throws ResourceException {
 
-        // get layer
+        // get layer id
         String layer = (String) getRequest().getAttributes().get("layer");
 
 		try {
 
+            // decode the query parameters
             JSONObject decodedQueryParams = new JSONObject();
             if ( getRequest().getResourceRef().hasQuery() ) {
                 decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
@@ -93,11 +96,8 @@ public class LegendResource extends ApertureServerResource {
 	                                                 boolean renderHorizontally,
                                                      JSONObject query ) {
 		try {
-
 			BufferedImage tile = _service.getLegend( layer, width, height, renderHorizontally, query );
-			ImageOutputRepresentation imageRep = new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
-			return imageRep;
-
+			return new ImageOutputRepresentation(MediaType.IMAGE_PNG, tile);
 		} catch (Exception e) {
 			throw new ResourceException(Status.CONNECTOR_ERROR_INTERNAL, "Unable to generate legend image.", e);
 		}
@@ -110,7 +110,6 @@ public class LegendResource extends ApertureServerResource {
 	                                                   boolean renderHorizontally,
                                                        JSONObject query ) {
 		try {
-
 			BufferedImage tile = _service.getLegend( layer, width, height, renderHorizontally, query );
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(tile, "png", baos);
@@ -119,7 +118,6 @@ public class LegendResource extends ApertureServerResource {
 			baos.close();
 			encodedImage = "data:image/png;base64," + URLEncoder.encode(encodedImage, "ISO-8859-1");
 			return new StringRepresentation( encodedImage );
-			
 		} catch (IOException e) {
 			throw new ResourceException(Status.CONNECTOR_ERROR_INTERNAL,
 			                            "Unable to encode legend image.", e);

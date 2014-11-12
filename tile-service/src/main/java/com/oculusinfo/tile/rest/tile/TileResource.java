@@ -76,9 +76,15 @@ public class TileResource extends ApertureServerResource {
 		this._service = service;
 	}
 
+    /**
+     * Tilesets defined by tile indices, or tile bounds may be specified as request parameters.
+     * @param query request parameter JSONObject.
+     * @return Set<TileIndex> set of tile indices specified by the set or bound parameters. If
+     * none are specified, return empty set.
+     */
 	private Collection<TileIndex>  parseTileSetDescription( JSONObject query ) {
 
-        Set<TileIndex> indices = null;
+        Set<TileIndex> indices = new HashSet<>();
         try {
             if ( null != query ) {
                 // Check for specifically requested tiles
@@ -89,9 +95,6 @@ public class TileResource extends ApertureServerResource {
                         for ( String tileDescription : tileDescriptions ) {
                             TileIndex index = TileIndex.fromString( tileDescription );
                             if ( null != index ) {
-                                if ( null == indices ) {
-                                    indices = new HashSet<>();
-                                }
                                 indices.add( index );
                             }
                         }
@@ -148,20 +151,17 @@ public class TileResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
 			TileIndex index = new TileIndex(zoomLevel, x, y);
+            String ext = (String) getRequest().getAttributes().get("ext");
+			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 
-
+            // decode and build JSONObject from request parameters
             JSONObject decodedQueryParams = null;
             if ( getRequest().getResourceRef().hasQuery() ) {
                 decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
             }
+            // parse parameters for tile sets or tile bounds
 			Collection<TileIndex> tileSet = parseTileSetDescription( decodedQueryParams );
-			if (null == tileSet) {
-				tileSet = new HashSet<>();
-			}
 			tileSet.add(index);
-
-			String ext = (String) getRequest().getAttributes().get("ext");
-			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);

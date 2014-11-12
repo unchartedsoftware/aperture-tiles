@@ -33,12 +33,9 @@ import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.EmptyConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rest.RequestParamsFactory;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
 import org.json.JSONArray;
@@ -50,13 +47,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URI;
-import java.security.MessageDigest;
 import java.util.*;
 
 @Singleton
 public class LayerServiceImpl implements LayerService {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
-    private static final String ERROR_SHA = "ERROR-SHA-256";
 
 	private List< JSONObject > _layers;
 	private Map< String, JSONObject > _layersById;
@@ -164,23 +160,23 @@ public class LayerServiceImpl implements LayerService {
     @Override
 	public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams ) {
 		try {
+            // first check if the query parameters contains a SHA-256 hash. If so
+            // load the configured JSONObject. Otherwise take the server default.
             JSONObject layerConfig;
             if ( requestParams != null && requestParams.has("sha") ) {
                 layerConfig =_layersBySha.get( requestParams.getString("sha") );
             } else {
                 layerConfig = _layersById.get( layerId );
             }
-			//the root factory that does nothing
-			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory( null, null, null );
-			//add another factory that will handle query params
-			RequestParamsFactory queryParamsFactory = new RequestParamsFactory( null, rootFactory, new ArrayList<String>() );
-			rootFactory.addChildFactory(queryParamsFactory);
-			//add the layer configuration factory
-			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory( rootFactory, new ArrayList<String>() );
-			rootFactory.addChildFactory(factory);
-			rootFactory.readConfiguration( mergeQueryConfigOptions( layerConfig, requestParams ) );
-			LayerConfiguration config = rootFactory.produce( LayerConfiguration.class );
-			// Initialize the PyramidIO for reading
+			// create layer configuration factory
+			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory( null, new ArrayList<String>() );
+			// override the server configuration with supplied query parameters, this simply overlays
+            // the query parameter JSON over the server default JSON, then sets the factory upp
+            // to build our layer configuration object.
+            factory.readConfiguration( mergeQueryConfigOptions( layerConfig, requestParams ) );
+            // produce the layer configuration
+			LayerConfiguration config = factory.produce( LayerConfiguration.class );
+			// initialize the PyramidIO for reading
 			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
             PyramidIO pyramidIO = config.produce( PyramidIO.class );
 			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
@@ -200,8 +196,9 @@ public class LayerServiceImpl implements LayerService {
     @Override
 	public String configureLayer( String layerId, JSONObject overrideConfiguration ) throws Exception {
         try {
-            // build layer config to produce string, this ensures that ALL configurable
-            // properties are used in sha generation, rather than only those in the JSON
+            // use the layer config to produce the string rather than the config json itself,
+            // this ensures that ALL configurable properties are used in sha generation, rather
+            // than those only specified in the JSON
             LayerConfiguration config = getLayerConfiguration( layerId, overrideConfiguration );
 
             // get SHA-256 hash of state
@@ -226,7 +223,6 @@ public class LayerServiceImpl implements LayerService {
 			} else {
 				path = new File(location).toURI();
 			}
-
 			File configRoot = new File(path);
 			if (!configRoot.exists())
 				throw new Exception(location+" doesn't exist");
@@ -251,10 +247,8 @@ public class LayerServiceImpl implements LayerService {
                         JSONObject layerJSON = contents.getJSONObject(i);
                         _layersById.put( layerJSON.getString( LayerConfiguration.LAYER_ID.getName() ), layerJSON );
                         _layers.add( layerJSON );
-                        System.out.println( layerJSON.toString( 4 ) );
                     }
                 }
-
 			} catch (FileNotFoundException e) {
 				LOGGER.error("Cannot find layer configuration file {} ", file, e);
 				return;

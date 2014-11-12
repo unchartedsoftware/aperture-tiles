@@ -30,6 +30,17 @@ package com.oculusinfo.tile.rendering.transformations.value;
  *
  */
 public interface ValueTransformer<T> {
+
+    /**
+     * Transform generic type of data
+     * @param value The data to be transformed.
+     * @return The transformed data
+     */
 	public T transform (T value);
+
+    /**
+     * Get the maximum value possible from the transformer
+     * @return The maximum value possible respective to the transform
+     */
 	public T getMaximumValue ();
 }

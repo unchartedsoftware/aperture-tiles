@@ -209,6 +209,7 @@ define(function (require) {
             this.layerSpec.renderer.theme = this.map.getTheme();
             requestRampImage( that );
             this.update();
+            this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
         },
         
         /**
@@ -346,6 +347,7 @@ define(function (require) {
             // set the z-index of the layer dev. setLayerIndex sets a relative
             // index based on current map layers, which then sets a z-index. This
             // caused issues with async layer loading.
+            this.layerSpec.zIndex = zIndex;
             $( this.layer.olLayer_.div ).css( 'z-index', zIndex );
             PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
@@ -355,7 +357,7 @@ define(function (require) {
          * Get the layers zIndex
          */
         getZIndex: function () {
-            return $( this.layer.olLayer_.div ).css( 'z-index' );
+            return this.layerSpec.zIndex;
         },
 
 

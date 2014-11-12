@@ -25,7 +25,6 @@ package com.oculusinfo.factory;
 
 
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.util.*;
 
@@ -45,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * writing out a configuration.
  * 
  * @param <T> The type of object constructed by this factory.
- * 
+ *
  * @author nkronenfeld
  */
 abstract public class ConfigurableFactory<T> {

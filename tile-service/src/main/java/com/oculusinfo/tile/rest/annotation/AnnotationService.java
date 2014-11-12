@@ -35,32 +35,45 @@ import java.util.Map;
 
 
 public interface AnnotationService {
-	
-	/**
-	 * Write an annotation to the storage service
-	 * 
-	 */
+
+    /**
+     * Write an annotation to the storage service
+     *
+     * @param layer The layer identification string.
+     * @param annotation The annotation data object to be written.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract Pair<String,Long> write( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
-	
-	
-	/**
-	 * Modify an annotation in the storage service
-	 * 
-	 */
+
+    /**
+     * Modify an annotation in the storage service
+     *
+     * @param layer The layer identification string.
+     * @param annotation The modified annotation data object to be written.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
-	
-	
-	/**
-	 * Read annotations from the storage service
-	 * 
-	 */
+
+    /**
+     * Read annotations from the storage service
+     *
+     * @param layer The layer identification string.
+     * @param tile The tile index to read.
+     * @param query Query parameter object.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
-	
-	
-	/**
-	 * Remove an annotation from the storage service
-	 * 
-	 */
+
+    /**
+     * Remove an annotation from the storage service
+     * @param layer The layer identification string.
+     * @param certificate The uuid and timestamp pair that represents the annotation to be removed.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException;
 
 }

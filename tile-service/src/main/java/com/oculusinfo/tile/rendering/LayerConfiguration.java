@@ -42,17 +42,16 @@ import com.oculusinfo.factory.properties.TileIndexProperty;
 import com.oculusinfo.tile.init.FactoryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
 
 
 
 /**
- * A tile-service specific, local-only factory that acts as a container to
- * random parameters used for rendering. This is weird as a factory - it really
- * is a catch-all for various other things, and doesn't produce a good, per se,
- * but rather just properties. As such, the good type it produces is really just
- * itself (though it does have sub-factories).
+ * The root node of the ConfigurableFactory tree that represents a layer's configured
+ * state. Each layer can be represented as a JSON object.
+ *
+ * Nodes that contain values are represented by ConfigurableProperty objects.
+ * Nodes that contain class enumerations and are represented by ConfigurableFactory objects.
  * 
  * @author nkronenfeld
  */
@@ -60,14 +59,21 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-    public static final List<String> DATA_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data" ) );
-	public static final List<String> RENDERER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "renderer" ) );
-    public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
-	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
+    /**
+     * public configuration paths, properties under these paths are accessible to the client.
+     */
 	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","tileTransform" ) );
     public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
     public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
     public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
+	public static final List<String> RENDERER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "renderer" ) );
+
+    /**
+     * private configuration paths, properties under public nodes are not accessible to the client
+     */
+    public static final List<String> DATA_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data" ) );
+    public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
+	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
 
     public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
@@ -90,8 +96,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
 	    "The maximum value set to the upper bound of the color ramp spectrum",
 	    100);
-
-	// Per-tile properties
 	public static final TileIndexProperty TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
         "For server use only, on a tile-by-tile basis",
         null);
@@ -101,7 +105,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final StringProperty LEVEL_MAXIMUMS = new StringProperty("levelMaximums",
         "For server use only, on a tile-by-tile basis",
         null);
-
 
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
 		Collections.unmodifiableSet(new HashSet<ConfigurationProperty<?>>(Arrays.asList(
@@ -186,6 +189,12 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		return super.getPropertyValue(property);
 	}
 
+    /**
+     * Set the tile index, and level minimum and maximum for the impending read
+     * @param tileIndex The index of the tile to be rendererd.
+     * @param levelMinimum The level minimum.
+     * @param levelMaximum The level maximum.
+     */
 	public void setLevelProperties (TileIndex tileIndex,
 	                                String levelMinimum,
 	                                String levelMaximum) {
@@ -204,7 +213,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	}
 
 
-	/*
+	/**
 	 * This is a placeholder for the caching configuration to override; it does
 	 * nothing in this version.
 	 * 

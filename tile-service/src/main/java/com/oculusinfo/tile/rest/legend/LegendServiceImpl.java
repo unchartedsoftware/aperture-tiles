@@ -74,21 +74,16 @@ public class LegendServiceImpl implements LegendService {
 			
 			// legend always uses a linear capped value transform - don't use layer config specified transform
 			double levelMax = config.getPropertyValue( ValueTransformerFactory.LAYER_MAXIMUM);
-			
-			double max;
+			double levelMin = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
+
+            double max = levelMax;
 			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MAXIMUM)) {
 				max = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
 			}
-			else {
-				max = levelMax;
-			}
 
-			double min;
+			double min = levelMin;
 			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM)) {
 				min = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
-			}
-			else {
-				min = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
 			}
 			
 			ValueTransformer<Double> t = new LinearCappedValueTransformer(min, max, levelMax);
@@ -101,17 +96,12 @@ public class LegendServiceImpl implements LegendService {
 					g.drawLine(i, 0, i, height);
 				}
 			} else {
-				//Override the above.
-				int barHeight = height;
-				int barYOffset = 0;
-				int barXOffset = 0;
-    			
-				for(int i = 0; i <= barHeight; i++){
-					double v = ((double)(i+1)/(double)barHeight) * levelMax;
+				for(int i = 0; i <= height; i++){
+					double v = ((double)(i+1)/(double)height) * levelMax;
 					int colorInt = colorRamp.getRGB(t.transform(v));		
 					g.setColor(new Color(colorInt, true));
-					int y = barHeight-i+barYOffset;
-					g.drawLine(barXOffset, y, width, y);
+					int y = height-i;
+					g.drawLine(0, y, width, y);
 				}
 			}
 			g.dispose();

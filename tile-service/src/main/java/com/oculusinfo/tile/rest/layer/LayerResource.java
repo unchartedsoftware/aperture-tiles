@@ -57,6 +57,11 @@ public class LayerResource extends ApertureServerResource {
     }
 
 
+    /**
+     * Returns the 'public' node of the layer configuration object, along with the layer id under
+     * the attribute 'id', and the layer meta data under the attribute 'meta'
+     * @param layerId The layer identification string.
+     */
     private JSONObject getLayerInformation( String layerId ) throws JSONException {
         try {
             // full layer config
@@ -92,6 +97,10 @@ public class LayerResource extends ApertureServerResource {
     }
 
 
+    /**
+     * GET request. If {layerid} URN is specified, will return information for the single
+     * layer. If not, it will return information from all configured layers.
+     */
     @Get
     public Representation getLayer() {
         try {
@@ -119,7 +128,10 @@ public class LayerResource extends ApertureServerResource {
         }
     }
 
-
+    /**
+     * POST request. Saves a configuration state on the server. Returns a deterministic
+     * SHA-256 hash of the layer configuration.
+     */
     @Post
     public Representation configureLayer( String jsonArguments ) {
         try {
