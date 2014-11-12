@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -22,36 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.transformation;
+package com.oculusinfo.tile.rendering.transformations.value;
 
-
-
-import com.oculusinfo.binning.TileData;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-
-/** 
- * 	The generic tile transformer performs no transformation on the tile data
- * 		and thus simply passes back the tile data JSON passed in.
- * 
+/**
+ * Transforms a value to another value between 0 and 1.
+ * @author dgray
+ *
  */
-public class GenericTileTransformer implements TileTransformer{
-	
-
-	public GenericTileTransformer(){		
-	}
-	
-
-	// No transformation is required for the generic Transformer so just return the JSON passed in
-	@Override
-	public JSONObject Transform (JSONObject json) throws JSONException {
-		return json;
-	}
-
-    @Override
-    public <T> TileData<T> Transform(TileData<T> data, Class<? extends T> type) throws Exception {
-        return data;
-    }
-
+public interface ValueTransformer<T> {
+	public T transform (T value);
+	public T getMaximumValue ();
 }

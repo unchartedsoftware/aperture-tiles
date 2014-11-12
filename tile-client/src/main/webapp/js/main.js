@@ -171,7 +171,7 @@ require(['./ApertureConfig',
 		            console.log( JSON.stringify( layer ) );
 		        });
 
-		        LayerService.configureLayer( "instagram-users", { ramp:'cold' }, function( sha ) {
+		        LayerService.configureLayer( "instagram-users", { renderer: { ramp:'cold' } }, function( sha ) {
 		            console.log( sha );
 		        });
 

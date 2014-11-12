@@ -22,24 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations;
+package com.oculusinfo.tile.rendering.transformations.value;
 
-public class Log10ValueTransformer implements ValueTransformer {
-	private double _loggedMax;
-	private double _layerMax; 
-
-	public Log10ValueTransformer(double max){
-		_loggedMax = Math.log10(max);
-		_layerMax = max;
+public class LinearCappedValueTransformer implements ValueTransformer<Double> {
+	private final double _min;
+	private final double _max;
+	private final double _layerMax;
+	
+	public LinearCappedValueTransformer (double minCap, double maxCap, double layerMax) {
+		_min = Math.min(minCap, maxCap);
+		_max = Math.max(minCap, maxCap);
+		_layerMax = layerMax;
 	}
 	
 	@Override
-	public double transform(double value) {
-		return Math.log10(value)/_loggedMax;
+	public Double transform(Double value) {
+		return Math.max(Math.min(value, _max), _min) / (_max - _min);
 	}
 
 	@Override
-	public double getMaximumValue () {
+	public Double getMaximumValue () {
 		return _layerMax;
 	}
 }

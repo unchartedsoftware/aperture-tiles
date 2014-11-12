@@ -26,6 +26,7 @@ package com.oculusinfo.tile.init.providers;
 import java.io.IOException;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.annotation.filter.AnnotationFilter;
 import com.oculusinfo.binning.io.AnnotationIO;
 import com.oculusinfo.binning.TilePyramid;
@@ -39,7 +40,6 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;

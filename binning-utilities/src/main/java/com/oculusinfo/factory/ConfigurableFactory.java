@@ -219,25 +219,26 @@ abstract public class ConfigurableFactory<T> {
         if ( _pathsByProperty.get( property.getName() ) == null ) {
             return new JSONObject();
         }
-
+        JSONObject node;
         List<String> path = new ArrayList<>(  _pathsByProperty.get( property.getName() ) );
         if ( path.isEmpty() ) {
             return _configurationNode;
         } else {
-            try {
-                String subPath;
-                JSONObject currentNode = _configurationNode;
-                while ( path.size() > 1 ) {
-                    subPath = path.remove( 0 );
-                    currentNode = currentNode.getJSONObject( subPath );
+            String subPath;
+            JSONObject currentNode = _configurationNode;
+            while ( path.size() > 1 ) {
+                subPath = path.remove( 0 );
+                currentNode = currentNode.optJSONObject( subPath );
+                if ( currentNode == null ) {
+                    return new JSONObject();
                 }
-                return currentNode.getJSONObject( path.get(0) );
-            } catch (JSONException e ) {
-                e.printStackTrace();
-
             }
+            node = currentNode.optJSONObject( path.get(0) );
+            if ( node == null ) {
+                return new JSONObject();
+            }
+            return node;
         }
-        return new JSONObject();
     }
 
 	/**

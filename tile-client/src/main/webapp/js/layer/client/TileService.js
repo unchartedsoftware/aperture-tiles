@@ -23,15 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-
-/**
- * This module defines a TileService class that is to be injected into a
- * TileTracker instance. This class is responsible for RESTful requests
- * from the server
- */
 define(function (require) {
     "use strict";
 
@@ -270,8 +262,7 @@ define(function (require) {
                      yIndex+'.json'),
                     'GET',
                     $.proxy(this.getCallback, this),
-                    // Add in the list of all needed tiles
-                    {'params': tileSetBounds }
+                    {'params': [] }
                 );
             }
         },
@@ -471,7 +462,6 @@ define(function (require) {
                         callback( service.transformTileToBins( tileData.tile, tilekey ) );
                     }
                 },
-                // Add in the list of all needed tiles
                 {'params': [] }
             );
         }

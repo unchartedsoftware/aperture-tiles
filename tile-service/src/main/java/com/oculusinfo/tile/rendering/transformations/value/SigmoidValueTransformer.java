@@ -22,26 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations;
+package com.oculusinfo.tile.rendering.transformations.value;
 
-public class LinearCappedValueTransformer implements ValueTransformer {
-	private final double _min;
-	private final double _max;
-	private final double _layerMax;
-	
-	public LinearCappedValueTransformer (double minCap, double maxCap, double layerMax) {
-		_min = Math.min(minCap, maxCap);
-		_max = Math.max(minCap, maxCap);
-		_layerMax = layerMax;
-	}
-	
-	@Override
-	public double transform(double value) {
-		return Math.max(Math.min(value, _max), _min) / (_max - _min);
-	}
 
-	@Override
-	public double getMaximumValue () {
-		return _layerMax;
-	}
+/**
+ * A value transformer that transforms two-tailed infinite range into a finite
+ * range
+ * 
+ * @author nkronenfeld
+ */
+public class SigmoidValueTransformer implements ValueTransformer<Double> {
+    private double _center;
+    private double _scale;
+
+    public SigmoidValueTransformer (double expectedMin, double expectedMax) {
+        _center = (expectedMax+expectedMin)/2.0;
+        _scale = (expectedMax-expectedMin)/2.0;
+    }
+
+    @Override
+    public Double transform (Double value) {
+        double scaledInput = (value-_center) / (_scale - _center);
+
+        return (1/(1+Math.exp(-scaledInput)));
+    }
+
+    @Override
+    public Double getMaximumValue () {
+        return 1.0;
+    }
 }

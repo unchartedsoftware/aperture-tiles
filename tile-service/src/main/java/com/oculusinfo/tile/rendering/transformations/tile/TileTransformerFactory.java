@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.transformation;
+package com.oculusinfo.tile.rendering.transformations.tile;
 
 import java.util.List;
 
@@ -30,7 +30,6 @@ import org.json.JSONObject;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.JSONProperty;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.binning.io.transformation.TileTransformer;
 
 
 /**
@@ -39,43 +38,27 @@ import com.oculusinfo.binning.io.transformation.TileTransformer;
  * @author tlachapelle
  */
 
-public class StandardTileTransformerFactory extends ConfigurableFactory<TileTransformer> {
+public class TileTransformerFactory extends ConfigurableFactory<TileTransformer> {
 	
 
 	public static StringProperty TILE_TRANSFORMER_TYPE 	= new StringProperty("type",
-		   "The type of Transformer desired.  Currently this includes only the default and the filtervars transformer",
-		   "generic", 
-		   new String[] {
-				     "generic",
-				     "filtervars"
-				     });
+	    "The type of Transformer desired.",
+		"identity");
 	
-	public static JSONProperty   INITIALIZATION_DATA    = new JSONProperty("data",
-		 "Data to be passed to the tile transformer for read initialization",
-		 null);
+	public static JSONProperty INITIALIZATION_DATA = new JSONProperty("data",
+		"Data to be passed to the tile transformer for read initialization",
+		null);
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Class<TileTransformer> getGenericTransformerClass () {
-		return (Class) TileTransformer.class;
+	public TileTransformerFactory( ConfigurableFactory<?> parent,
+                                   List<String> path ) {
+		this(null, parent, path);
 	}
 
-	public StandardTileTransformerFactory (ConfigurableFactory<?> parent, 
-	                                      List<String> path) {
-		super(getGenericTransformerClass(), parent, path);
-
-		initializeProperties();
-	}
-
-	public StandardTileTransformerFactory (String name,
-	                                      ConfigurableFactory<?> parent,
-	                                      List<String> path) {
-		super(name, getGenericTransformerClass(), parent, path);
-
-		initializeProperties();
-	}
-
-	protected void initializeProperties () {
-		addProperty(TILE_TRANSFORMER_TYPE);
+	public TileTransformerFactory( String name,
+                                   ConfigurableFactory<?> parent,
+	                               List<String> path) {
+		super(name, TileTransformer.class, parent, path);
+        addProperty(TILE_TRANSFORMER_TYPE);
 		addProperty(INITIALIZATION_DATA);
 	}
 
@@ -88,8 +71,8 @@ public class StandardTileTransformerFactory extends ConfigurableFactory<TileTran
 			JSONObject variables = getPropertyValue(INITIALIZATION_DATA);
 			return new FilterVarsDoubleArrayTileTransformer(variables);
 		}
-		else {  // 'generic' or none passed in will give the default transformer
-			return new GenericTileTransformer();
+		else {  // 'identity' or none passed in will give the default transformer
+			return new IdentityTileTransformer();
 		}
 	}
 }

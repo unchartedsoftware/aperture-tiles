@@ -22,34 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations;
+package com.oculusinfo.tile.rendering.transformations.value;
 
+public class Log10ValueTransformer implements ValueTransformer<Double> {
+	private double _loggedMax;
+	private double _layerMax; 
 
+	public Log10ValueTransformer(double max){
+		_loggedMax = Math.log10(max);
+		_layerMax = max;
+	}
+	
+	@Override
+	public Double transform(Double value) {
+		return Math.log10(value)/_loggedMax;
+	}
 
-/**
- * A value transformer that transforms one-tailed infinite range into a finite
- * range
- * 
- * @author nkronenfeld
- */
-public class HalfSigmoidValueTransformer implements ValueTransformer {
-    private double _center;
-    private double _scale;
-
-    public HalfSigmoidValueTransformer (double min, double expectedMax) {
-        _center = min;
-        _scale = expectedMax;
-    }
-    @Override
-    public double transform (double value) {
-        double scaledInput = (value-_center) / (_scale - _center);
-
-        // We only care about the top half.
-        return (1/(1+Math.exp(-scaledInput)))*2.0-1.0;
-    }
-
-    @Override
-    public double getMaximumValue () {
-        return 1.0;
-    }
+	@Override
+	public Double getMaximumValue () {
+		return _layerMax;
+	}
 }

@@ -28,8 +28,8 @@ import com.google.inject.Inject;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 import oculus.aperture.common.rest.ApertureServerResource;
+import org.json.JSONArray;
 import org.json.JSONObject;
-import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -41,7 +41,6 @@ import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public class TileResource extends ApertureServerResource {
 
@@ -76,90 +75,63 @@ public class TileResource extends ApertureServerResource {
 	public TileResource(TileService service) {
 		this._service = service;
 	}
-	
-	private Integer getIntQueryValue (Form query, String key) {
-		String stringValue = query.getFirstValue(key, true, null);
-		if (null == stringValue) return null;
-		try {
-			return Integer.parseInt(stringValue);
-		} catch (NumberFormatException e) {
-			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-			                            "Parameter "+key+" had non-integer value \""+stringValue+"\"");
-		}
-	}
 
-	private TileIndex getTileIndexQueryValue (Form query, String key) {
-		String stringValue = query.getFirstValue(key, true, null);
-		if (null == stringValue) return null;
-		return TileIndex.fromString(stringValue);
-	}
+	private Collection<TileIndex>  parseTileSetDescription( JSONObject query ) {
 
-	private Collection<TileIndex>  parseTileSetDescription (Form query) {
-		Set<TileIndex> indices = null;
+        Set<TileIndex> indices = null;
+        try {
+            if ( null != query ) {
+                // Check for specifically requested tiles
+                if ( query.has("tileset") ) {
+                    JSONArray tileSets = query.getJSONArray( "tileset" );
+                    for ( int i = 0; i < tileSets.length(); i++ ) {
+                        String[] tileDescriptions = tileSets.getString( i ).split( "\\|" );
+                        for ( String tileDescription : tileDescriptions ) {
+                            TileIndex index = TileIndex.fromString( tileDescription );
+                            if ( null != index ) {
+                                if ( null == indices ) {
+                                    indices = new HashSet<>();
+                                }
+                                indices.add( index );
+                            }
+                        }
+                    }
+                }
 
-		if (null != query) {
-			// Check for specifically requested tiles
-			String[] tileSets = query.getValuesArray("tileset", true);
-			for (String tileSetDescription: tileSets) {
-				String[] tileDescriptions = tileSetDescription.split("\\|");
-				for (String tileDescription: tileDescriptions) {
-					TileIndex index = TileIndex.fromString(tileDescription);
-					if (null != index) {
-						if (null == indices) {
-							indices = new HashSet<>();
-						}
-						indices.add(index);
-					}
-				}
-			}
+                // Check for simple bounds
+                Integer minX = query.optInt( "minx" );
+                Integer maxX = query.optInt( "maxx" );
+                Integer minY = query.optInt( "miny" );
+                Integer maxY = query.optInt( "maxy" );
+                Integer minZ = query.optInt( "minz" );
+                Integer maxZ = query.optInt( "maxz" );
 
-			// Check for simple bounds
-			Integer minX = getIntQueryValue(query, "minx");
-			Integer maxX = getIntQueryValue(query, "maxx");
-			Integer minY = getIntQueryValue(query, "miny");
-			Integer maxY = getIntQueryValue(query, "maxy");
-			Integer minZ = getIntQueryValue(query, "minz");
-			Integer maxZ = getIntQueryValue(query, "maxz");
+                TileIndex minTile = TileIndex.fromString( query.optString( "mintile" ) );
+                TileIndex maxTile = TileIndex.fromString( query.optString( "maxtile" ) );
 
-			TileIndex minTile = getTileIndexQueryValue(query, "mintile");
-			TileIndex maxTile = getTileIndexQueryValue(query, "maxtile");
+                if (null == minTile && null != minX && null != minY && null != minZ) {
+                     minTile = new TileIndex(minZ, minX, minY);
+                }
+                if (null == maxTile && null != maxX && null != maxY && null != maxZ) {
+                     maxTile = new TileIndex(maxZ, maxX, maxY);
+                }
+                if (null != minTile && null != maxTile) {
+                    for ( int z = minTile.getLevel(); z <= maxTile.getLevel(); ++z ) {
+                        for ( int x = minTile.getX(); x <= maxTile.getX(); ++x ) {
+                            for ( int y = minTile.getY(); y <= maxTile.getY(); ++y ) {
+                                if ( null == indices )
+                                    indices = new HashSet<>();
+                                indices.add( new TileIndex( z, x, y ) );
+                            }
+                        }
+                    }
+                }
+            }
 
-			if (null == minTile && null != minX && null != minY && null != minZ) {
-				minTile = new TileIndex(minZ, minX, minY);
-			}
-			if (null == maxTile && null != maxX && null != maxY && null != maxZ) {
-				maxTile = new TileIndex(maxZ, maxX, maxY);
-			}
-			if (null != minTile && null != maxTile) {
-				for (int z=minTile.getLevel(); z <= maxTile.getLevel(); ++z) {
-					for (int x=minTile.getX(); x <= maxTile.getX(); ++x) {
-						for (int y=minTile.getY(); y <= maxTile.getY(); ++y) {
-							if (null == indices)
-								indices = new HashSet<>();
-							indices.add(new TileIndex(z, x, y));
-						}
-					}
-				}
-			}
-		}
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
 		return indices;
-	}
-	
-	/**
-	 * If there's any query params, then they are turned into a {@link JSONObject}.
-	 * @param query
-	 * 	The query for the resource request.
-	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
-	 * @return
-	 * 	Returns a {@link JSONObject} that represents all the query parameters,
-	 * 	or null if the query doesn't exist
-	 */
-	private JSONObject createQueryParamsObject(Form query) {
-		JSONObject obj = null;
-		if (query != null) {
-			obj = new JSONObject(query.getValuesMap());
-		}
-		return obj;
 	}
 
 	@Get
@@ -176,9 +148,13 @@ public class TileResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
 			TileIndex index = new TileIndex(zoomLevel, x, y);
-			JSONObject queryParams = createQueryParamsObject(getRequest().getResourceRef().getQueryAsForm());
 
-			Collection<TileIndex> tileSet = parseTileSetDescription(getRequest().getResourceRef().getQueryAsForm());
+
+            JSONObject decodedQueryParams = null;
+            if ( getRequest().getResourceRef().hasQuery() ) {
+                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
+            }
+			Collection<TileIndex> tileSet = parseTileSetDescription( decodedQueryParams );
 			if (null == tileSet) {
 				tileSet = new HashSet<>();
 			}
@@ -191,7 +167,7 @@ public class TileResource extends ApertureServerResource {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
 
-				BufferedImage tile = _service.getTileImage( layer, index, tileSet, queryParams );
+				BufferedImage tile = _service.getTileImage( layer, index, tileSet, decodedQueryParams );
 				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
 				setStatus(Status.SUCCESS_OK);
 				return imageRep;
@@ -208,7 +184,7 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("xIndex", x);
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
-				result.put("tile", _service.getTileObject( layer, index, tileSet, queryParams ));
+				result.put("tile", _service.getTileObject( layer, index, tileSet, decodedQueryParams ));
 				setStatus(Status.SUCCESS_OK);
 				return new JsonRepresentation(result);
 

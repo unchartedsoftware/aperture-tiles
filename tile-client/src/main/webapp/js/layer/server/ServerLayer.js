@@ -46,12 +46,20 @@ define(function (require) {
      * @param {Object} level - The current map zoom level.
      */
     requestRampImage = function ( layer ) {
-        aperture.io.rest('/legend/' + layer.layerSpec.source.id + "?theme="+layer.getTheme() + "&ramp=" + layer.getRampType(),
+
+        function generateQueryParamString() {
+            var query = {
+                    renderer: layer.layerSpec.renderer,
+                    theme: layer.layerSpec.theme
+                };
+            return '?'+encodeURIComponent( JSON.stringify( query ) );
+        }
+
+        aperture.io.rest('/legend/' + layer.layerSpec.source.id + generateQueryParamString(),
                          'GET',
                          function ( legendString, status ) {
                              layer.setRampImageUrl( legendString );
                          });
-
     };
 
     /**
@@ -62,7 +70,7 @@ define(function (require) {
      */
     getLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
-            coarseness = layer.layerSpec.coarseness,
+            coarseness = layer.layerSpec.renderer.coarseness,
             adjustedZoom = zoomLevel - (coarseness-1),
             meta =  layer.layerSpec.source.meta.meta,
             minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[adjustedZoom])),
@@ -108,15 +116,16 @@ define(function (require) {
             // set reasonable defaults
             spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
             spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-            spec.coarseness = ( spec.coarseness !== undefined ) ?  spec.coarseness : 1;
-            spec.ramp = spec.ramp || "spectral";
-            spec.transform = spec.transform || 'linear';
-            spec.theme = spec.theme || map.getTheme();
-            spec.legendrange = spec.legendrange || [0,100];
-            spec.preservelegendrange = spec.preservelegendrange || [ false, false ];
-            spec.transformer = spec.transformer || {};
-            spec.transformer.type = spec.transformer.type || "generic";
-            spec.transformer.data = spec.transformer.data || {};
+            spec.renderer = spec.renderer || {};
+            spec.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ?  spec.renderer.coarseness : 1;
+            spec.renderer.ramp = spec.ramp || "spectral";
+            spec.renderer.rangeMin = ( spec.renderer.rangeMin !== undefined ) ? spec.renderer.rangeMin : 0;
+            spec.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? spec.renderer.rangeMax : 100;
+            spec.renderer.preserveRangeMin = spec.preserveRangeMin || false;
+            spec.renderer.preserveRangeMax = spec.preserveRangeMax || false;
+            spec.renderer.theme = spec.renderer.theme || map.getTheme();
+            spec.valueTransform = spec.valueTransform || { type: 'linear' };
+            spec.tileTransform = spec.tileTransform || { type: 'generic' };
 
             // call base constructor
             this._super( spec, map );
@@ -180,7 +189,7 @@ define(function (require) {
          */
         setRampType: function ( rampType ) {
             var that = this;
-            this.layerSpec.ramp = rampType;
+            this.layerSpec.renderer.ramp = rampType;
             requestRampImage( that );
             this.update();
         },
@@ -189,7 +198,7 @@ define(function (require) {
          *  Get ramp type for layer
          */
         getRampType: function() {
-            return this.layerSpec.ramp;
+            return this.layerSpec.renderer.ramp;
         },
 
         /**
@@ -197,7 +206,7 @@ define(function (require) {
          */
         updateTheme: function () {
         	var that = this;
-            this.layerSpec.theme = this.map.getTheme();
+            this.layerSpec.renderer.theme = this.map.getTheme();
             requestRampImage( that );
             this.update();
         },
@@ -206,7 +215,7 @@ define(function (require) {
          * Get the current theme for the layer
          */
         getTheme: function() {
-        	return this.layerSpec.theme;
+        	return this.layerSpec.renderer.theme;
         },
 
 
@@ -251,7 +260,7 @@ define(function (require) {
          * @param {string} rampFunction - The new new ramp function.
          */
         setRampFunction: function ( rampFunction ) {
-            this.layerSpec.transform = rampFunction;
+            this.layerSpec.valueTransform = { type: rampFunction };
             this.update();
             PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
         },
@@ -261,7 +270,7 @@ define(function (require) {
          * Get the current ramps function
          */
         getRampFunction: function() {
-            return this.layerSpec.transform;
+            return this.layerSpec.valueTransform.type;
         },
 
 
@@ -271,10 +280,11 @@ define(function (require) {
          * @param {Array} filterRange - A two element array with values in the range [0.0, 1.0],
          * where the first element is the min range, and the second is the max range.
          */
-        setFilterRange: function ( filterRange ) {
-            this.layerSpec.legendrange = filterRange;
+        setFilterRange: function ( min, max ) {
+            this.layerSpec.renderer.rangeMin = min;
+            this.layerSpec.renderer.rangeMax = max;
             this.update();
-            PubSub.publish( this.getChannel(), { field: 'filterRange', value: filterRange });
+            PubSub.publish( this.getChannel(), { field: 'filterRange', value: [ min, max ] });
         },
 
 
@@ -282,7 +292,7 @@ define(function (require) {
          * Get the current ramp filter range from 0 to 100
          */
         getFilterRange: function() {
-            return this.layerSpec.legendrange;
+            return [ this.layerSpec.renderer.rangeMin, this.layerSpec.renderer.rangeMax ];
         },
 
 
@@ -310,7 +320,10 @@ define(function (require) {
          * Has the filter value been locked?
          */
         isFilterValueLocked: function( index ) {
-            return this.layerSpec.preservelegendrange[ index ];
+            if ( index === 0 ) {
+                return this.layerSpec.preserveRangeMin;
+            }
+            return this.layerSpec.preserveRangeMax;
         },
 
 
@@ -318,7 +331,10 @@ define(function (require) {
          * Set whether or not the filter value is locked
          */
         setFilterValueLocking: function( index, value ) {
-            this.layerSpec.preservelegendrange[ index ] = value;
+            if ( index === 0 ) {
+                this.layerSpec.preserveRangeMin = value;
+            }
+            this.layerSpec.preserveRangeMax = value;
         },
 
 
@@ -347,7 +363,7 @@ define(function (require) {
          * Set the layers transformer type
          */
         setTransformerType: function ( transformerType ) {
-            this.layerSpec.transformer.type = transformerType;
+            this.layerSpec.tileTransform.type = transformerType;
             this.update();
             PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
         },
@@ -357,7 +373,7 @@ define(function (require) {
          * Get the layers transformer type
          */
         getTransformerType: function () {
-            return this.layerSpec.transformer.type;
+            return this.layerSpec.tileTransform.type;
         },
 
 
@@ -365,7 +381,7 @@ define(function (require) {
          * Set the transformer data arguments
          */
         setTransformerData: function ( transformerData ) {
-            this.layerSpec.transformer.data = transformerData;
+            this.layerSpec.tileTransform.data = transformerData;
             this.update();
             PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
         },
@@ -375,7 +391,7 @@ define(function (require) {
          * Get the transformer data arguments
          */
         getTransformerData: function () {
-            return this.layerSpec.transformer.data;
+            return this.layerSpec.tileTransform.data;
         },
 
 
@@ -383,7 +399,7 @@ define(function (require) {
          * Set the layer coarseness
          */
         setCoarseness: function( coarseness ) {
-            this.layerSpec.coarseness = coarseness;
+            this.layerSpec.renderer.coarseness = coarseness;
             this.setRampMinMax( getLevelMinMax( this ) );
             this.update();
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
@@ -394,7 +410,7 @@ define(function (require) {
          * Get the layer coarseness
          */
         getCoarseness: function() {
-            return this.layerSpec.coarseness;
+            return this.layerSpec.renderer.coarseness;
         },
 
 
@@ -402,12 +418,20 @@ define(function (require) {
          * Generate query parameters based on state of layer
          */
         generateQueryParamString: function() {
-            return "&ramp=" + this.getRampType() + 
-                    "&transform=" + this.getRampFunction() + 
-                    "&theme=" + this.getTheme() + 
-                    "&coarseness=" + this.getCoarseness() +
-                    "&rangeMin=" + this.getFilterRange()[0] + 
-                    "&rangeMax=" + this.getFilterRange()[1];
+            var viewBounds = this.map.getTileBoundsInView(),
+                query = {
+                    minX: viewBounds.minX,
+                    maxX: viewBounds.maxX,
+                    minY: viewBounds.minY,
+                    maxY: viewBounds.maxY,
+                    minZ: viewBounds.minZ,
+                    maxZ: viewBounds.maxZ,
+                    renderer: this.layerSpec.renderer,
+                    tileTransform: this.layerSpec.tileTransform,
+                    valueTransform: this.layerSpec.valueTransform,
+                    theme: this.layerSpec.theme
+                };
+            return '?'+encodeURIComponent( JSON.stringify( query ) );
         },
 
 
@@ -437,27 +461,14 @@ define(function (require) {
                     x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
                     y = yFunction( Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ) ),
                     z = this.map.getZoom(),
-                    fullUrl, viewBounds;
+                    fullUrl;
 
                 if (x >= 0 && y >= 0) {
-                    // tile bounds in view
-                    viewBounds = that.map.getTileBoundsInView();
                     // set base url
                     fullUrl = (this.url + this.version + "/" +
                                this.layername + "/" +
                                z + "/" + x + "/" + y + "." + this.type);
-                    // if bounds supplied, append those
-                    if (viewBounds) {
-                        fullUrl = (fullUrl
-                                + "?minX=" + viewBounds.minX
-                                + "&maxX=" + viewBounds.maxX
-                                + "&minY=" + viewBounds.minY
-                                + "&maxY=" + viewBounds.maxY
-                                + "&minZ=" + viewBounds.minZ
-                                + "&maxZ=" + viewBounds.maxZ
-                                + that.generateQueryParamString() );
-                    }
-                    return fullUrl;
+                    return fullUrl + that.generateQueryParamString();
                 }
             }
 

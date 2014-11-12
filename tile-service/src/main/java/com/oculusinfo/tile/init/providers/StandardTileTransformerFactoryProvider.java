@@ -23,34 +23,31 @@
  */
 package com.oculusinfo.tile.init.providers;
 
-
-
 import java.util.List;
 
-import com.oculusinfo.binning.io.transformation.TileTransformer;
-import com.oculusinfo.binning.io.transformation.StandardTileTransformerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.FactoryProvider;
-
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformerFactory;
 
 
 public class StandardTileTransformerFactoryProvider implements FactoryProvider<TileTransformer> {
 	@Override
 	public ConfigurableFactory<TileTransformer> createFactory (List<String> path) {
-		return new StandardTileTransformerFactory(null, path);
+		return new TileTransformerFactory(null, path);
 	}
 
 	@Override
 	public ConfigurableFactory<TileTransformer> createFactory (ConfigurableFactory<?> parent,
 	                                                     List<String> path) {
-		return new StandardTileTransformerFactory(parent, path);
+		return new TileTransformerFactory(parent, path);
 	}
 
 	@Override
 	public ConfigurableFactory<TileTransformer> createFactory (String factoryName,
 	                                                     ConfigurableFactory<?> parent,
 	                                                     List<String> path) {
-		return new StandardTileTransformerFactory(factoryName, parent, path);
+		return new TileTransformerFactory(factoryName, parent, path);
 	}
 	
 }

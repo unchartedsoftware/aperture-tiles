@@ -145,18 +145,17 @@ public class LayerServiceImpl implements LayerService {
 	 * Wraps the options and query {@link JSONObject}s together into a new object.
 	 */
 	private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
+
         JSONObject result = JsonUtilities.deepClone( options );
-		try {
-            if (query != null) {
-                Iterator<?> keys = query.keys();
-                while ( keys.hasNext() ) {
-                    // override options with query
-                    String key = (String) keys.next();
-                    result.put( key, query.get( key ) );
-                }
+        try {
+            // all client configurable properties exist under an unseen 'public' node,
+            // create this node before overlay query parameters onto server config
+            if ( query != null ) {
+                JSONObject publicNode = new JSONObject();
+                publicNode.put( "public", query );
+                result = JsonUtilities.overlayInPlace( result, publicNode );
             }
-		}
-		catch (Exception e) {
+        } catch (Exception e) {
 			LOGGER.error("Couldn't merge query options with main options.", e);
 		}
 		return result;

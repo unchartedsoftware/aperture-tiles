@@ -29,9 +29,9 @@ import com.google.inject.Singleton;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.LinearCappedValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
+import com.oculusinfo.tile.rendering.transformations.value.LinearCappedValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -73,7 +73,7 @@ public class LegendServiceImpl implements LegendService {
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 			
 			// legend always uses a linear capped value transform - don't use layer config specified transform
-			double levelMax = config.getPropertyValue(ValueTransformerFactory.LAYER_MAXIMUM);
+			double levelMax = config.getPropertyValue( ValueTransformerFactory.LAYER_MAXIMUM);
 			
 			double max;
 			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MAXIMUM)) {
@@ -91,7 +91,7 @@ public class LegendServiceImpl implements LegendService {
 				min = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
 			}
 			
-			ValueTransformer t = new LinearCappedValueTransformer(min, max, levelMax);
+			ValueTransformer<Double> t = new LinearCappedValueTransformer(min, max, levelMax);
 
 			if ( renderHorizontally ) {
 				for (int i = 0; i < width; i++){

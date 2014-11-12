@@ -22,14 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations;
+package com.oculusinfo.tile.rendering.transformations.value;
+
+
 
 /**
- * Transforms a value to another value between 0 and 1.
- * @author dgray
- *
+ * A value transformer that transforms one-tailed infinite range into a finite
+ * range
+ * 
+ * @author nkronenfeld
  */
-public interface ValueTransformer {
-	public double transform (double value);
-	public double getMaximumValue ();
+public class HalfSigmoidValueTransformer implements ValueTransformer<Double> {
+    private double _center;
+    private double _scale;
+
+    public HalfSigmoidValueTransformer (double min, double expectedMax) {
+        _center = min;
+        _scale = expectedMax;
+    }
+
+    @Override
+    public Double transform (Double value) {
+        double scaledInput = (value-_center) / (_scale - _center);
+
+        // We only care about the top half.
+        return (1/(1+Math.exp(-scaledInput)))*2.0-1.0;
+    }
+
+    @Override
+    public Double getMaximumValue () {
+        return 1.0;
+    }
 }

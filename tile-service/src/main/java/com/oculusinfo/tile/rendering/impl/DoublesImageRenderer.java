@@ -36,7 +36,7 @@ import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +79,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
 		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<Double, Double>(minimumValue,  maximumValue);
+		return new Pair<>(minimumValue,  maximumValue);
 	}
 
 	/* (non-Javadoc)
@@ -101,7 +101,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-			ValueTransformer t = config.produce(ValueTransformer.class);
+            @SuppressWarnings("unchecked")
+			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -118,7 +119,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			// Get the coarseness-scaled true tile index
 			TileIndex scaleLevelIndex = null;
-			// need to get the tile data for the level of the base level minus the courseness
+			// need to get the tile data for the level of the base level minus the coarseness
 			for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
 				scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
 				                                (int)Math.floor(index.getX() / coarsenessFactor),

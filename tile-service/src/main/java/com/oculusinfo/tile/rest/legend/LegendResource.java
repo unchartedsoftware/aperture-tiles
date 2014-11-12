@@ -53,58 +53,36 @@ public class LegendResource extends ApertureServerResource {
 	}
 
 
-	/**
-	 * If there's any request params, then they are turned into a {@link JSONObject}.
-	 * @param query
-	 * 	The query for the resource request.
-	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
-	 * @return
-	 * 	Returns a {@link JSONObject} that represents all the query parameters,
-	 * 	or null if the query doesn't exist
-	 */
-	private JSONObject createRequestParamsObject(Form query) {
-		JSONObject obj = null;
-		if (query != null) {
-			obj = new JSONObject(query.getValuesMap());
-		}
-		return obj;
-	}
-
-
 	@Get
 	public Representation getLegend() throws ResourceException {
 
         // get layer
         String layer = (String) getRequest().getAttributes().get("layer");
 
-		// get parameters from query
-		Form form = getRequest().getResourceRef().getQueryAsForm();
-		String outputType = form.getFirstValue("output", "uri");
-		String orientationString = form.getFirstValue("orientation", "horizontal").trim();
-
-		// get the root node ID from the form
-		int width;
-		int height;
-		boolean renderHorizontally;
-
 		try {
 
-			renderHorizontally = orientationString.equalsIgnoreCase("horizontal");
-			width = Integer.parseInt(form.getFirstValue("width", "128").trim());
-			height = Integer.parseInt(form.getFirstValue("height", "1").trim());
+            JSONObject decodedQueryParams = new JSONObject();
+            if ( getRequest().getResourceRef().hasQuery() ) {
+                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
+            }
 
-		} catch (NumberFormatException e) {
+            String outputType = decodedQueryParams.optString("output", "uri");
+			int width = decodedQueryParams.optInt("width", 128);
+            int height = decodedQueryParams.optInt("height", 1);
+            String orientationString = decodedQueryParams.optString("orientation", "horizontal");
+            boolean renderHorizontally = orientationString.equalsIgnoreCase("horizontal");
+
+            setStatus(Status.SUCCESS_OK);
+
+            if(outputType.equalsIgnoreCase("uri")){
+                return generateEncodedImage( layer, width, height, renderHorizontally, decodedQueryParams );
+            } else { //(outputType.equalsIgnoreCase("png")){
+                return generateImage( layer, width, height, renderHorizontally, decodedQueryParams );
+            }
+
+		} catch ( Exception e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-			                            "Unable to create Integer from supplied string. Check parameters.", e);
-		}
-
-		JSONObject requestParams = createRequestParamsObject(form);
-
-        setStatus(Status.SUCCESS_OK);
-		if(outputType.equalsIgnoreCase("uri")){
-			return generateEncodedImage( layer, width, height, renderHorizontally, requestParams );
-		} else { //(outputType.equalsIgnoreCase("png")){
-			return generateImage( layer, width, height, renderHorizontally, requestParams );
+			                            "Unable to create legend from supplied string. Check parameters.", e);
 		}
 	}
 

@@ -28,13 +28,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.util.AvroJSONConverter;
 import org.json.JSONException;
@@ -46,7 +45,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.UUID;
 
 /**
  * @author dgray
@@ -127,7 +125,7 @@ public class TileServiceImpl implements TileService {
             }
 			TileTransformer transformer = config.produce(TileTransformer.class);
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
-            return transformer.Transform(deserializedJSON);
+            return transformer.transform(deserializedJSON);
 			
 		} catch (IOException | JSONException | ConfigurationException e) {
 			LOGGER.warn("Exception getting tile for {}", index, e);

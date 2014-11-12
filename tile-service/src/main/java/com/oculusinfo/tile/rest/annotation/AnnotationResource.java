@@ -134,7 +134,11 @@ public class AnnotationResource extends ApertureServerResource {
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			String xAttr = (String) getRequest().getAttributes().get("x");
 			String yAttr = (String) getRequest().getAttributes().get("y");
-			JSONObject queryParams = createQueryParamsObject(getRequest().getResourceRef().getQueryAsForm());
+
+            JSONObject decodedQueryParams = null;
+            if ( getRequest().getResourceRef().hasQuery() ) {
+                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
+            }
 
 			int zoomLevel = Integer.parseInt(levelDir);
 			int x = Integer.parseInt(xAttr);
@@ -142,7 +146,7 @@ public class AnnotationResource extends ApertureServerResource {
 
 			TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 		    
-			Map<BinIndex, List<AnnotationData<?>>> data = _service.read( layer, index, queryParams );
+			Map<BinIndex, List<AnnotationData<?>>> data = _service.read( layer, index, decodedQueryParams );
 
 			// annotations by bin
 			JSONObject binsJson = new JSONObject();

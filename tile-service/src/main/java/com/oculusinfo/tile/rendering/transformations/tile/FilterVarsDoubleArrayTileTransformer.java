@@ -22,9 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.transformation;
-
-
+package com.oculusinfo.tile.rendering.transformations.tile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +44,7 @@ import org.json.JSONObject;
  * 
  */
 
-public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer{
+public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<List<T>> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FilterVarsDoubleArrayTileTransformer.class);
 	
 	private List<Integer> _variables = new ArrayList<>();
@@ -74,7 +72,7 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 	//	bin's array only at the indexes stored in the _variables list and build the resulting'
 	// 	JSON based on this criteria
 	@Override
-	public JSONObject Transform (JSONObject inputJSON) throws JSONException {
+	public JSONObject transform (JSONObject inputJSON) throws JSONException {
 		JSONObject resultJSON;
 		
 		if ( _variables == null ) {
@@ -120,29 +118,26 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
 		return resultJSON;
 	}
 
-	// No way to check this, so we have to hope and pray :-(
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public <T> TileData<T> Transform (TileData<T> inputData, Class<? extends T> type) throws Exception {
-        if (!List.class.isAssignableFrom(type)) throw new IllegalArgumentException("This transformer only works on lists");
+    public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
 
         //list of indices to keep
-        TileData<List<Double>> resultTile;
+        TileData<List<T>> resultTile;
 
         //If there are none to keep, return empty list
         if (_variables == null) {
             resultTile = null;
         } else {
-            List<List<Double>> rawData = (List) inputData.getData();
-            List<List<Double>> transformedData = new ArrayList<>(rawData.size());
+            List<List<T>> rawData = inputData.getData();
+            List<List<T>> transformedData = new ArrayList<>(rawData.size());
 
-            for (List<Double> rawEntry: rawData) {
+            for (List<T> rawEntry: rawData) {
                 int size = rawEntry.size();
-                List<Double> transformedEntry = new ArrayList<>(_variables.size());
+                List<T> transformedEntry = new ArrayList<>(_variables.size());
 
                 for ( int varIndex : _variables ) {
                     if (varIndex < size)
-                        transformedEntry.add(rawEntry.get(varIndex));
+                        transformedEntry.add( rawEntry.get(varIndex) );
                 }
                 transformedData.add(transformedEntry);
             }
@@ -150,7 +145,7 @@ public class FilterVarsDoubleArrayTileTransformer extends GenericTileTransformer
             resultTile = new TileData<>(inputData.getDefinition(), transformedData);
         }
 
-        return (TileData) resultTile;
+        return resultTile;
     }
 
 }

@@ -29,8 +29,9 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import com.oculusinfo.tile.rest.annotation.filter.AnnotationFilter;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
@@ -39,7 +40,6 @@ import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.properties.TileIndexProperty;
 import com.oculusinfo.tile.init.FactoryProvider;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +60,14 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerConfiguration.class);
 
-    public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
     public static final List<String> DATA_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data" ) );
-	public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
+	public static final List<String> RENDERER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "renderer" ) );
+    public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
 	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
-	public static final List<String> TILE_TRANSFORMER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "data","transformer" ) );
+	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","tileTransform" ) );
+    public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
     public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
+    public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
 
     public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
@@ -96,7 +98,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final StringProperty LEVEL_MINIMUMS = new StringProperty("levelMinimums",
         "For server use only, on a tile-by-tile basis",
         null);
-	public static final StringProperty LEVEL_MAXIMUMS  = new StringProperty("levelMaximums",
+	public static final StringProperty LEVEL_MAXIMUMS = new StringProperty("levelMaximums",
         "For server use only, on a tile-by-tile basis",
         null);
 
@@ -142,25 +144,25 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		super( name, LayerConfiguration.class, parent, path );
 
 		addProperty(LAYER_ID);
-        addProperty(DATA_ID, DATA_PATH);
-		addProperty(OUTPUT_WIDTH);
+        addProperty(OUTPUT_WIDTH);
 		addProperty(OUTPUT_HEIGHT);
-		addProperty(COARSENESS);
-		addProperty(RANGE_MIN);
-		addProperty(RANGE_MAX);
+        addProperty(DATA_ID, DATA_PATH);
+		addProperty(COARSENESS, RENDERER_PATH);
+		addProperty(RANGE_MIN, RENDERER_PATH);
+		addProperty(RANGE_MAX, RENDERER_PATH);
 
 		addProperty(TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);
 
-		_transformFactory = new ValueTransformerFactory(this, new ArrayList<String>() );
+		_transformFactory = new ValueTransformerFactory( this, VALUE_TRANSFORM_PATH );
 		addChildFactory( _transformFactory );
 
-        addChildFactory( rendererFactoryProvider.createFactory(this, new ArrayList<String>()) );
+        addChildFactory( rendererFactoryProvider.createFactory(this, RENDERER_PATH) );
         addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
         addChildFactory( annotationIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
         addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
-        addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORMER_PATH) );
+        addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORM_PATH) );
 		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
         addChildFactory( filterFactoryProvider.createFactory(this, FILTER_PATH) );
 	}

@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations;
+package com.oculusinfo.tile.rendering.transformations.value;
 
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationProperty;
@@ -38,23 +38,23 @@ import java.util.List;
  *
  */
 public class ValueTransformerFactory extends ConfigurableFactory<ValueTransformer> {
-	public static final StringProperty TRANSFORM_NAME    = new StringProperty("transform",
-		    "The type of transformation to apply to the data.",
-		    "linear",
-		    new String[] {"linear", "log10", "minmax", "half-sigmoid", "sigmoid"});
-	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("transformMax",
-		    "The maximum value to allow in the input data, when using a minmax transformation",
-		    Double.MAX_VALUE);
-	public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("transformMin",
-		    "The minimum value to allow in the input data, when using a minmax transformation",
-		    Double.MIN_VALUE);
-	public static final DoubleProperty LAYER_MAXIMUM = new DoubleProperty("transformLayerMax",
-		    "For use by the server only",
-		    Double.MAX_VALUE);
-	public static final DoubleProperty LAYER_MINIMUM = new DoubleProperty("transformLayerMin",
-		    "For use by the server only",
-		    Double.MIN_VALUE);
 
+	public static final StringProperty TRANSFORM_NAME = new StringProperty("type",
+	    "The type of transformation to apply to the data.",
+		"linear",
+		new String[] {"linear", "log10", "minmax", "half-sigmoid", "sigmoid"});
+	public static final DoubleProperty TRANSFORM_MAXIMUM = new DoubleProperty("max",
+	    "The maximum value to allow in the input data, when using a minmax transformation",
+	    Double.MAX_VALUE);
+	public static final DoubleProperty TRANSFORM_MINIMUM = new DoubleProperty("min",
+	    "The minimum value to allow in the input data, when using a minmax transformation",
+	    Double.MIN_VALUE);
+	public static final DoubleProperty LAYER_MAXIMUM = new DoubleProperty("layerMax",
+        "For use by the server only",
+		Double.MAX_VALUE);
+	public static final DoubleProperty LAYER_MINIMUM = new DoubleProperty("layerMin",
+		"For use by the server only",
+		Double.MIN_VALUE);
 
 
 	public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {

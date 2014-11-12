@@ -29,7 +29,8 @@ import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.List;
 
-import com.oculusinfo.tile.rendering.transformations.ValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.transformation.TileTransformer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -114,7 +114,8 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-            ValueTransformer t = config.produce(ValueTransformer.class);
+            @SuppressWarnings("unchecked")
+            ValueTransformer<Double> t = config.produce(ValueTransformer.class);
             int[] rgbArray = new int[outputWidth*outputHeight];
 
             double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -152,8 +153,9 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             }
 
             TileData<List<Double>> data = tileDatas.get(0);
-            TileTransformer tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Double>> transformedContents = tileTransformer.Transform(data, getRuntimeBinClass());
+            @SuppressWarnings("unchecked")
+            TileTransformer<List<Double>> tileTransformer = config.produce(TileTransformer.class);
+            TileData<List<Double>> transformedContents = tileTransformer.transform( data );
 
             int xBins = data.getDefinition().getXBins();
             int yBins = data.getDefinition().getYBins();
@@ -214,6 +216,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
                         }
                     }
                 }
+
             }
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);

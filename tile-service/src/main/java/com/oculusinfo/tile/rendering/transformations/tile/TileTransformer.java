@@ -21,13 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.transformation;
+package com.oculusinfo.tile.rendering.transformations.tile;
 
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.oculusinfo.binning.TileData;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 /**
@@ -38,7 +37,7 @@ import com.oculusinfo.binning.TileData;
  *
  * @author tlachapelle
  */
-public interface TileTransformer {
+public interface TileTransformer<T> {
 
     /**
      * Transforms the tile data in JSON format based on transform type and returns result
@@ -46,18 +45,18 @@ public interface TileTransformer {
      * @param json representing the tile data in JSON form to be transformed
      * @return JSONObject representing the fully transformed tile based on the transform type
      */
-    public JSONObject Transform(JSONObject json) throws JSONException;
+    public JSONObject transform(JSONObject json) throws JSONException;
 
 
     /**
      * Same transformation on the raw tile form
      * @param data
-     * @param <T>
      * @return
      * @throws Exception
      */
     //takes tile data x returns tile data x generified on function level
-    public <T> TileData<T> Transform(TileData<T> data, Class<? extends T> type) throws Exception;
+    public TileData<T> transform(TileData<T> data) throws Exception;
+
 }
 
 
