@@ -31,6 +31,9 @@ import org.apache.avro.generic.GenericRecord;
 
 import java.io.IOException;
 
+/**
+ * A serializer to serialize tiles whose bin values are a double, using Avro.
+ */
 public class DoubleAvroSerializer extends GenericAvroSerializer<Double> {
 	private static final long serialVersionUID = 6100948287405483872L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);

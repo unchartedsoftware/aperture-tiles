@@ -30,6 +30,11 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+/**
+ * This serializer factory constructs a
+ * {@link com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer},
+ * for use with tiles whose bin values are doubles.
+ */
 public class DoubleAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Double>> {
 	public static final String NAME = "double-a";
 

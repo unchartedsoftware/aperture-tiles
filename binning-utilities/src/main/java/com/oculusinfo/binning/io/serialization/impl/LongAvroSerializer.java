@@ -31,6 +31,9 @@ import org.apache.avro.generic.GenericRecord;
 
 import java.io.IOException;
 
+/**
+ * A serializer to serialize tiles whose bin values are a long, using Avro.
+ */
 public class LongAvroSerializer extends GenericAvroSerializer<Long> {
 	private static final long serialVersionUID = 6100948287405483872L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Long.class);

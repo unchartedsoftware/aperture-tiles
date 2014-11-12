@@ -42,7 +42,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
-import com.oculusinfo.tilegen.tiling.BinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
 
 

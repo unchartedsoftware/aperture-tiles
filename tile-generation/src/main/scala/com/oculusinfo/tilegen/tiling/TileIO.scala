@@ -44,6 +44,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
+import com.oculusinfo.binning.io.impl.SQLitePyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer
@@ -57,9 +58,9 @@ import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-import com.oculusinfo.binning.io.impl.SQLitePyramidIO
 
 
 

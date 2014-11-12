@@ -56,6 +56,8 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
 import com.oculusinfo.tilegen.datasets.ValueDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
 
 /**
@@ -344,7 +346,7 @@ class RDDBinner {
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, Object])]] =
+			Option[RDD[(TileIndex, Map[String, Any])]] =
 	{
 		dataAnalytics.map(da =>
 			data.mapPartitions(iter =>
@@ -380,7 +382,7 @@ class RDDBinner {
 		(data: RDD[((TileIndex, BinIndex), PT)],
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-		 tileMetaData: Option[RDD[(TileIndex, Map[String, Object])]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
 		 consolidationPartitions: Option[Int],
 		 isDensityStrip: Boolean): RDD[TileData[BT]] =
 	{
@@ -396,7 +398,7 @@ class RDDBinner {
 		//
 		// First the binning data half
 		val reduced: RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                              Option[Map[String, Object]]))] = {
+		                              Option[Map[String, Any]]))] = {
 			val env = SparkEnv.get
 			val conf = SparkEnv.get.conf
 			
@@ -406,7 +408,7 @@ class RDDBinner {
 		}
 		// Now the metadata half (in a way that should take no work if there is no metadata)
 		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                                      Option[Map[String, Object]]))]] =
+		                                      Option[Map[String, Any]]))]] =
 			tileMetaData.map(
 				_.map{case (index, metaData) => (index, (None, Some(metaData))) }
 			)
