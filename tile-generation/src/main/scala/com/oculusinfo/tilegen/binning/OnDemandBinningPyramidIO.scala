@@ -29,6 +29,8 @@ package com.oculusinfo.tilegen.binning
 
 
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.IOException
 import java.lang.{Iterable => JavaIterable}
@@ -67,7 +69,7 @@ import com.oculusinfo.tilegen.util.Rectangle
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
+class OnDemandBinningPyramidIO (sc: SparkContext) extends PyramidIO {
 	private val datasets = MutableMap[String, Dataset[_, _, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
 	private var consolidationPartitions: Option[Int] = Some(1)
@@ -100,7 +102,7 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 					if (!dataDescription.stringPropertyNames.contains("oculus.binning.caching.processed"))
 						dataDescription.setProperty("oculus.binning.caching.processed", "true")
 
-					val newDataset = 
+					val newDataset =
 						DatasetFactory.createDataset(sc, dataDescription,
 						                             Some(width), Some(height))
 					newDataset.getTileAnalytics.map(_.addGlobalAccumulator(sc))
@@ -160,12 +162,11 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 	                   javaTiles: JavaIterable[TileIndex]):
 			JavaList[TileData[BT]] = {
 		def inner[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag]: JavaList[TileData[BT]] = {
-			val tiles: Iterable[TileIndex] = javaTiles.asScala
-
-			if (!datasets.contains(pyramidId) ||
-				    tiles.isEmpty) {
+			// Note that all tiles given _must_ have the same dimensions.
+			if (!datasets.contains(pyramidId) || null == javaTiles || !javaTiles.iterator.hasNext) {
 				null
 			} else {
+				val tiles: Iterable[TileIndex] = javaTiles.asScala
 				val dataset = datasets(pyramidId).asInstanceOf[Dataset[IT, PT, DT, AT, BT]]
 				val indexScheme = dataset.getIndexScheme
 				val binningAnalytic = dataset.getBinningAnalytic
@@ -239,9 +240,20 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 		inner
 	}
 
-	def getTileStream[T] (pyramidId: String, serializer: TileSerializer[T],
-	                      tile: TileIndex): InputStream = {
-		null
+	def getTileStream[BT] (pyramidId: String, serializer: TileSerializer[BT],
+	                       tile: TileIndex): InputStream = {
+		val results: JavaList[TileData[BT]] =
+			readTiles(pyramidId, serializer, List[TileIndex](tile).asJava)
+
+		if (null == results || 0 == results.size || null == results.get(0)) {
+			null
+		} else {
+			val bos = new ByteArrayOutputStream;
+			serializer.serialize(results.get(0), bos);
+			bos.flush
+			bos.close
+			new ByteArrayInputStream(bos.toByteArray)
+		}
 	}
 
 	private def getMetaData (pyramidId: String): Option[PyramidMetaData] = {
@@ -255,6 +267,6 @@ class LiveStaticTilePyramidIO (sc: SparkContext) extends PyramidIO {
 		getMetaData(pyramidId).map(_.toString).getOrElse(null)
 
 	def removeTiles (id: String, tiles: JavaIterable[TileIndex]  ) : Unit =
-		throw new IOException("removeTiles not currently supported for LiveStaticTilePyramidIO")
+		throw new IOException("removeTiles not currently supported for OnDemandBinningPyramidIO")
 	
 }

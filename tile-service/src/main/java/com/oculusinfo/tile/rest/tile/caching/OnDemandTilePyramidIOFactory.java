@@ -34,15 +34,15 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.spark.SparkContextProvider;
-import com.oculusinfo.tilegen.binning.LiveStaticTilePyramidIO;
+import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO;
 
-public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(LiveTilePyramidIOFactory.class);
+public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(OnDemandTilePyramidIOFactory.class);
 
 	@Inject
 	private SparkContextProvider _contextProvider;
 
-	public LiveTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+	public OnDemandTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
 		super("live", PyramidIO.class, parent, path);
 		_contextProvider = contextProvider;
 	}
@@ -51,7 +51,7 @@ public class LiveTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	protected PyramidIO create () {
 		try {
 			JSONObject config = getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-			return new LiveStaticTilePyramidIO(_contextProvider.getSparkContext(config));
+			return new OnDemandAccumulatorPyramidIO(_contextProvider.getSparkContext(config));
 		}
 		catch (Exception e) {
 			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
