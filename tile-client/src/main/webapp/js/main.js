@@ -28,50 +28,44 @@ require(['./ApertureConfig',
          './customization',
          './ui/OverlayButton',
          './util/Util',
-         './binning/PyramidFactory',
-         './map/MapService',
          './map/Map',
          './layer/LayerService',
          './layer/LayerControls',
          './layer/server/ServerLayerFactory',
          './layer/client/ClientLayerFactory',
          './layer/client/CarouselControls',
-         './layer/annotation/AnnotationService',
          './layer/annotation/AnnotationLayerFactory'],
 
-        function (configureAperture,
+        function( configureAperture,
                   UICustomization,
                   OverlayButton,
                   Util,
-                  PyramidFactory,
-                  MapService,
                   Map,
                   LayerService,
                   LayerControls,
                   ServerLayerFactory,
                   ClientLayerFactory,
                   CarouselControls,
-                  AnnotationService,
                   AnnotationLayerFactory) {
 
 	        "use strict";
 
 	        var apertureConfigFile = "data/aperture-config.json",
-	            layerConfigFile = "data/layers-config.json",
+	            layerConfigFile = "data/layer-config.json",
 	            mapConfigFile = "data/map-config.json",
-	            apertureDeferred = $.Deferred(),
-	            layerDeferred = $.Deferred(),
-	            mapDeferred = $.Deferred(),
-	            getServerLayers,
-	            getClientLayers,
-	            getAnnotationLayers,
-	            layerControlsContent;
+	            viewConfigFile = "data/view-config.json",
+	            apertureDeferred,
+	            layerDeferred,
+	            mapDeferred,
+	            viewDeferred,
+	            layerControlsContent,
+	            worldMap;
 
             /**
              * Iterate through server layers, and append zIndex to
              * mirror the top-down ordering set in the config file.
              */
-	        getServerLayers = function( layerConfig, layerInfos ) {
+	        function getServerLayers( layerConfig, layerInfos ) {
 	            var Z_INDEX_OFFSET = 1,
 	                layers = layerConfig.filter( function( elem ) {
 	                    return elem.domain === "server";
@@ -82,13 +76,13 @@ require(['./ApertureConfig',
 	                layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
 	            }
 	            return layers;
-            };
+            }
 
             /**
              * Iterate through client layers, and append zIndex to
              * mirror the top-down ordering set in the config file.
              */
-            getClientLayers = function( layerConfig, layerInfos ) {
+            function getClientLayers( layerConfig, layerInfos ) {
                 var Z_INDEX_OFFSET = 1000,
                     layers = layerConfig.filter( function( elem ) {
 	                    return elem.domain === "client";
@@ -101,13 +95,13 @@ require(['./ApertureConfig',
                     }
                 }
                 return layers;
-            };
+            }
 
             /**
              * Iterate through annotation layers, and append zIndex to
              * mirror the top-down ordering set in the config file.
              */
-	        getAnnotationLayers = function( layerConfig, layerInfos ) {
+	        function getAnnotationLayers( layerConfig, layerInfos ) {
 		        var Z_INDEX_OFFSET = 500,
 		            layers = layerConfig.filter( function( elem ) {
 	                    return elem.domain === "annotation";
@@ -118,9 +112,99 @@ require(['./ApertureConfig',
                     layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
 		        }
 		        return layers;
-	        };
+	        }
 
-	        // Create description element
+            /**
+             * GET a configuration file from server and resolve the returned
+             * $.Deferred when it is received.
+             */
+	        function getConfigFile( file ) {
+	            var deferred = $.Deferred();
+	            $.getJSON( file )
+                    .done( function( config ) {
+                        deferred.resolve( config );
+                    })
+                    .fail( function( jqxhr, textStatus, error ) {
+                        var err = textStatus + ", " + error;
+                        console.log( "Request to GET "+file+" failed: " + err );
+                    });
+                return deferred;
+	        }
+
+            /**
+             * Assemble current view from view configuration. If there are multiple view,
+             * create the corresponding overlay button.
+             */
+	        function assembleView( layerConfig, mapConfig, viewConfig ) {
+
+                var viewsOverlay,
+                    viewIndex,
+                    viewLink,
+                    viewEntry,
+                    currentView,
+                    baseLayerIndex,
+                    map,
+                    layers,
+                    i;
+
+                function addBaseLayerToURL() {
+                    var href = $(this).attr('href');
+                    $(this).attr('href', href + "&baselayer="+worldMap.getBaseLayerIndex() );
+                }
+
+                // read map and base layer index parameters from url, if present
+                viewIndex = Util.getURLParameter('view');
+                if ( !viewIndex ) {
+                    viewIndex = 0;
+                }
+
+                baseLayerIndex = Util.getURLParameter('baselayer');
+                if ( !baseLayerIndex ) {
+                    baseLayerIndex = 0;
+                }
+
+                if ( viewConfig.length > 1 ) {
+                    // create the view panel
+                    viewsOverlay = new OverlayButton({
+                        id:'views',
+                        header: 'Views',
+                        content: '',
+                        horizontalPosition: 'right',
+                        verticalPosition: 'bottom'
+                    });
+                    // insert all view contents into overlay
+                    for ( i=0; i<viewConfig.length; ++i ) {
+                        viewLink = $('<a/>').attr({
+                            'href': '?view='+i,
+                            'class': 'views-link'
+                        });
+                        // on click, inject the base layer index
+                        viewLink.click( addBaseLayerToURL );
+                        viewEntry = $('<div class="views-entry" style="text-align:center;"></div>').append( viewLink );
+                        viewLink.append( viewConfig[i].name + '<br>' );
+                        viewsOverlay.getContentElement().append( viewEntry );
+                    }
+                }
+
+                currentView = viewConfig[ viewIndex ];
+
+                layers = [];
+                for ( i=0; i<currentView.layers.length; i++ ) {
+                    layers.push( layerConfig[ currentView.layers[i] ] );
+                }
+                map = mapConfig[ currentView.map ];
+                map.map.baseLayerIndex = baseLayerIndex;
+
+                return {
+                    layers: layers,
+                    map: map
+                };
+	        }
+
+	        /**
+	         * GET the description html and create an overlay button
+	         * containing it.
+	         */
 	        $.get("description.html", function( descriptionHtml ) {
 		        // create the overlay container
 		        new OverlayButton({
@@ -132,7 +216,9 @@ require(['./ApertureConfig',
 		        }).getContentElement().append(''); // jslint...
 	        });
 
-            // create layer controls
+            /**
+             * Create an empty overlay button for the layer controls
+             */
             layerControlsContent = new OverlayButton({
                 id:'layer-controls',
                 header: 'Controls',
@@ -141,21 +227,18 @@ require(['./ApertureConfig',
                 verticalPosition: 'bottom'
             }).getContentElement();
 
-            $.getJSON( apertureConfigFile, function( apertureConfig ) {
-                apertureDeferred.resolve( apertureConfig );
-            });
-
-            $.getJSON( layerConfigFile, function( layerConfig ) {
-                layerDeferred.resolve( layerConfig );
-            });
-
-            $.getJSON( mapConfigFile, function( mapConfig ) {
-                mapDeferred.resolve( mapConfig );
-            });
+            /*
+             * GET all client-side configuration files
+             */
+            apertureDeferred = getConfigFile( apertureConfigFile );
+            layerDeferred = getConfigFile( layerConfigFile );
+            mapDeferred = getConfigFile( mapConfigFile );
+            viewDeferred = getConfigFile( viewConfigFile );
 
             $.when( apertureDeferred,
                     layerDeferred,
-                    mapDeferred ).done( function( apertureConfig, layerConfig, mapConfig ) {
+                    mapDeferred,
+                    viewDeferred ).done( function( apertureConfig, layerConfig, mapConfig, viewConfig ) {
 
                 var layersDeferred = $.Deferred();
 
@@ -167,24 +250,8 @@ require(['./ApertureConfig',
 		            layersDeferred.resolve( layers );
 		        });
 
-		        LayerService.requestLayer( "instagram-users", function( layer ) {
-		            console.log( JSON.stringify( layer ) );
-		        });
-
-		        LayerService.configureLayer( "instagram-users", { renderer: { ramp:'cold' } }, function( sha ) {
-		            console.log( sha );
-		        });
-
 		        $.when( layersDeferred ).done( function ( layers ) {
-				        var currentMap,
-				            currentBaseLayer,
-				            mapSpec,
-				            addBaseLayerToURL,
-				            worldMap,
-				            viewsOverlay,
-				            viewLink,
-				            viewEntry,
-				            i,
+				        var view,
 				            clientLayers,
 				            serverLayers,
 				            annotationLayers,
@@ -195,61 +262,18 @@ require(['./ApertureConfig',
                             serverLayerDeferreds,
                             annotationLayerDeferreds;
 
-				        // Initialize our view choice panel
-				        if ( mapConfig.length > 1) {
+				        view = assembleView( layerConfig, mapConfig, viewConfig );
 
-					        // ... first, create the panel
-					        viewsOverlay = new OverlayButton({
-                                id:'views',
-                                header: 'Views',
-                                content: '',
-                                horizontalPosition: 'right',
-                                verticalPosition: 'bottom'
-                            });
-
-                            addBaseLayerToURL = function() {
-                                var href = $(this).attr('href');
-                                $(this).attr('href', href + "&baselayer="+worldMap.getBaseLayerIndex() );
-                            };
-
-                            // ... Next, insert contents
-                            for (i=0; i<mapConfig.length; ++i) {
-                                viewLink = $('<a/>').attr({
-                                    'href': '?map='+i,
-	                                'class': 'views-link'
-                                });
-
-                                // on click, inject the base layer index
-                                viewLink.click( addBaseLayerToURL );
-
-                                viewEntry = $('<div class="views-entry" style="text-align:center;"></div>').append( viewLink );
-                                viewLink.append(mapConfig[i].description+'<br>' );
-                                viewsOverlay.getContentElement().append( viewEntry );
-                            }
-				        }
-
-				        // read map and base layer index parameters from url, if present
-				        currentMap = Util.getURLParameter('map');
-				        currentBaseLayer = Util.getURLParameter('baselayer');
-
-				        if ( !currentMap || !mapConfig[currentMap] ) {
-					        currentMap = 0;
-				        }
-
-				        mapSpec = mapConfig[currentMap];
-
-                        mapSpec.map.baseLayerIndex = ( currentBaseLayer !== undefined ) ? currentBaseLayer : 0;
-
-				        worldMap = new Map( "map", mapSpec );   // create map
+				        worldMap = new Map( "map", view.map );   // create map
 
 				        // ... perform any project-specific map customizations ...
 				        if ( UICustomization.customizeMap ) {
 					        UICustomization.customizeMap( worldMap );
 				        }
 
-				        clientLayers = getClientLayers( layerConfig, layers );
-				        serverLayers = getServerLayers( layerConfig, layers );
-                        annotationLayers = getAnnotationLayers( layerConfig, layers );
+				        clientLayers = getClientLayers( view.layers, layers );
+				        serverLayers = getServerLayers( view.layers, layers );
+                        annotationLayers = getAnnotationLayers( view.layers, layers );
 
                         clientLayerFactory = new ClientLayerFactory();
                         serverLayerFactory = new ServerLayerFactory();

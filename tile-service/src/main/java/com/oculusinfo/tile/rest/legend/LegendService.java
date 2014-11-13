@@ -28,6 +28,16 @@ import org.json.JSONObject;
 import java.awt.image.BufferedImage;
 
 public interface LegendService {
+
+    /**
+     * Renders a buffer image for the corresponding layer's ramp configuration
+     * @param layer The layer identification string.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @param renderHorizontally Whether the ramp it is rendered horizontally or vertically
+     * @param query The query parameters JSON object to override server defaults.
+     * @return BufferedImage The buffered image.
+     */
 	public BufferedImage getLegend( String layer,
                                     int width,
                                     int height,

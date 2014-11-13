@@ -37,7 +37,7 @@ import java.util.List;
  * other services and resources throughout the tile server. it keeps track of
  * available layers, and the configurations thereof.
  * 
- * @author nkronenfeld
+ * @author nkronenfeld, kbirk
  */
 public interface LayerService {
 

@@ -926,8 +926,8 @@ define(function (require) {
 
                 case "opacity":
 
-                     controlsMapping.opacitySlider.slider( "value", value * OPACITY_RESOLUTION );
-                     break;
+                    controlsMapping.opacitySlider.slider( "value", value * OPACITY_RESOLUTION );
+                    break;
 
                 case "rampFunction":
 
@@ -937,8 +937,8 @@ define(function (require) {
 
                 case "filterRange":
 
-                     controlsMapping.filterSliderImg.css( {'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
-                     break;
+                    controlsMapping.filterSliderImg.css( {'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
+                    break;
 
                 case "rampImageUrl":
 

@@ -59,23 +59,25 @@ define(function (require) {
                     case "click":
 
                         // if a click occurs, lets redraw all nodes to ensure that any click change is refreshed
-                        // use setTimeout with 0 to ensure clientlayer setClick event is processed before redraw
-                        setTimeout( function() {
-                            that.nodeLayer.all().redraw( new aperture.Transition( 100 ) );
-
-                        }, 0);
+                        that.nodeLayer.all().redraw();
                         break;
 
                     case "hover":
 
                         if ( value ) {
                             // if a hover occurs, only redraw the relevant tile
-                            // use setTimeout with 0 to ensure clientlayer setHover event is processed before redraw
-                            setTimeout( function() {
-                                that.nodeLayer.all().where('tilekey', value.tilekey ).redraw( new aperture.Transition( 100 ) );
-                            }, 0);
+                           that.nodeLayer.all().where('tilekey', value.tilekey ).redraw();
                         }
                         break;
+                }
+            });
+
+            PubSub.subscribe( 'layer', function( message, path ) {
+
+                var field = message.field;
+
+                if ( field === "baseLayerIndex" ) {
+                    that.nodeLayer.all().redraw();
                 }
             });
 
@@ -105,7 +107,7 @@ define(function (require) {
             */
             function getYOffset( numTopics, index ) {
                 var SPACING =  36;
-                return 118 - ( (( numTopics - 1) / 2 ) - index ) * SPACING;
+                return 116 - ( (( numTopics - 1) / 2 ) - index ) * SPACING;
             }
 
             /*
@@ -116,28 +118,23 @@ define(function (require) {
             this.tagLabels = this.nodeLayer.addLayer( aperture.LabelLayer );
             this.tagLabels.map('offset-x').asValue( this.Y_CENTRE_OFFSET );
             this.tagLabels.map('text-anchor').asValue( 'middle' );      // center text horizontally
-            this.tagLabels.map('font-outline').asValue( '#000000' );    // black outline
-            this.tagLabels.map('font-outline-width').asValue( 3 );      // outline width
+            this.tagLabels.map('font-outline').from( function() {
+                return ( that.parent.map.getTheme() === "dark" ) ? "black" : "white";
+            });
+            this.tagLabels.map('font-outline-width').asValue( 2 );      // outline width
             this.tagLabels.map('fill').from( function( index ) {
                 // change the fill colour dynamically based on the click state
-                var click = that.parent.getClick();
-                if ( click && !$.isEmptyObject( click ) ) {
-                    if ( this.tilekey === click.tilekey && index === click.index ) {
-                        return "blue";
-                    }
+                var click = that.parent.getClick(),
+                    hover = that.parent.getHover();
+                if ( click && this.tilekey === click.tilekey && index === click.index ) {
+                    return "#09CFFF";
                 }
-                return "white";
-            });
-            this.tagLabels.map('font-size').from( function( index ) {
-                // change the fill colour dynamically based on the hover state
-                var hover = that.parent.getHover();
-                if ( hover && !$.isEmptyObject( hover ) ) {
-                    if ( this.tilekey === hover.tilekey && index === hover.index ) {
-                        return 28;
-                    }
+                if ( hover && this.tilekey === hover.tilekey && index === hover.index ) {
+                    return "#D33CFF";
                 }
-                return 21;
+                return ( that.parent.map.getTheme() === "dark" ) ? "white" : "black";
             });
+            this.tagLabels.map('font-size').asValue(28);
 
             // set the visibility and opacity mappings to that of the base ApertureRenderer attributes
             this.tagLabels.map('visible').from( function() {
@@ -147,7 +144,7 @@ define(function (require) {
                 return that.opacity;
             });
 
-            // set the number of labels that will be renderered
+            // set the number of labels that will be rendered
             this.tagLabels.map('label-count').from( function() {
                 return Math.min( this.values.length, MAX_TOPICS );
             });
@@ -164,8 +161,7 @@ define(function (require) {
             this.tagLabels.on('click', function(event) {
                 var click = {
                     tilekey: event.data.tilekey,
-                    index: event.index[0],
-                    type: "aperture"
+                    index: event.index[0]
                 };
                 that.parent.setClick( click );
                 return true; // swallow event
@@ -173,18 +169,12 @@ define(function (require) {
             this.tagLabels.on('mouseover', function(event) {
                 var hover = {
                     tilekey: event.data.tilekey,
-                    index: event.index[0],
-                    type: "aperture",
-                    state: "on"
+                    index: event.index[0]
                 };
                 that.parent.setHover( hover );
             });
             this.tagLabels.on('mouseout', function(event) {
-                var hover = {
-                    tilekey: event.data.tilekey,
-                    state:"off"
-                };
-                that.parent.setHover( hover );
+                that.parent.setHover( { tilekey: event.data.tilekey } );
             });
         }
 

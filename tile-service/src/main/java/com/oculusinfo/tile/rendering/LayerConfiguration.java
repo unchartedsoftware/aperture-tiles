@@ -53,7 +53,7 @@ import java.util.*;
  * Nodes that contain values are represented by ConfigurableProperty objects.
  * Nodes that contain class enumerations and are represented by ConfigurableFactory objects.
  * 
- * @author nkronenfeld
+ * @author nkronenfeld, kbirk
  */
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
 

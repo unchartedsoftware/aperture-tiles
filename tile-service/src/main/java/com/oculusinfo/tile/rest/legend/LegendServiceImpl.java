@@ -33,7 +33,6 @@ import com.oculusinfo.tile.rendering.transformations.value.LinearCappedValueTran
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import com.oculusinfo.tile.rest.layer.LayerService;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
