@@ -36,22 +36,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer> {
-    public static StringProperty RENDERER_TYPE        = new StringProperty("type",
-                                                                           "The type of renderer that will be used to render the data on the server",
-                                                                           "heatmap",
-                                                                           new String[] {"heatmap", "listheatmap", "toptextscores", "textscores",
-                                                                                         "doublestatistics", "metadata"});
-    public ListProperty<String>  METADATA_COMPONENTS  = new ListProperty<>(new StringProperty("component",
-                                                                                              "A component of the metadata to show",
-                                                                                              null),
-                                                                           "components",
-                                                                           "A list of the labels of metadata information to show");
-    public DoubleProperty        HORIZONTAL_ALIGNMENT = new DoubleProperty("halign",
-                                                                           "The alignment of the displayed information, with 0.0 being on the left hand side of the tile, and 1.0 being on the right",
-                                                                           0.5);
-    public DoubleProperty        VERTICAL_ALIGNMENT   = new DoubleProperty("valign",
-                                                                           "The alignment of the displayed information, with 0.0 being on the bottom of the tile, and 1.0 being on the top",
-                                                                           0.5);
+
+    public static StringProperty RENDERER_TYPE = new StringProperty("type",
+        "The type of renderer that will be used to render the data on the server",
+        "heatmap",
+        new String[] {"heatmap", "listheatmap", "toptextscores", "textscores", "doublestatistics", "metadata"});
+
+    public ListProperty<String> METADATA_COMPONENTS = new ListProperty<>(
+        new StringProperty("component", "A component of the metadata to show",null),
+        "components",
+        "A list of the labels of metadata information to show");
+
+    public DoubleProperty HORIZONTAL_ALIGNMENT = new DoubleProperty("halign",
+        "The alignment of the displayed information, with 0.0 being on the left hand side of the tile, and 1.0 being on the right",
+        0.5);
+
+    public DoubleProperty VERTICAL_ALIGNMENT = new DoubleProperty("valign",
+        "The alignment of the displayed information, with 0.0 being on the bottom of the tile, and 1.0 being on the top",
+        0.5);
 
 
 	public ImageRendererFactory (ConfigurableFactory<?> parent,

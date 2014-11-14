@@ -75,14 +75,14 @@ public class MetaDataRenderer implements TileDataImageRenderer {
 
     private <T> BufferedImage renderInternal (LayerConfiguration config, TileSerializer<T> serializer) throws ConfigurationException, IOException {
         BufferedImage bi;
-        String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
         TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 
         int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
         int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
         PyramidIO pyramidIO = config.produce(PyramidIO.class);
 
-        List<TileData<T>> tiles = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
+        List<TileData<T>> tiles = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));
 
         bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = bi.createGraphics();

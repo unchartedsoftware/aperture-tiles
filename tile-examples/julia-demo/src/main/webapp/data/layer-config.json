@@ -1,0 +1,7 @@
+{
+    "julia-heatmap-layer": {
+        "name": "Julia set",
+        "source": "julia-set",
+        "domain": "server"
+    }
+}
