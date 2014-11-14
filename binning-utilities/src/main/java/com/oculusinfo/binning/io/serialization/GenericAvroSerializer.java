@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
@@ -50,15 +51,27 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 5775555328063499845L;
+	private static void checkCodec (CodecFactory compressionCodec) {
+		String codecName = compressionCodec.toString();
+		synchronized (CodecFactory.class) {
+			try {
+				CodecFactory.fromString(codecName);
+			} catch (AvroRuntimeException e) {
+				CodecFactory.addCodec(codecName, compressionCodec);
+			}
+		}
+	}
+
 
 
 	private Schema _tileSchema = null;
 	private Schema _recordSchema = null;
 
-	private CodecFactory _compressionCodec;
+	private String _compressionCodec;
 	private TypeDescriptor _typeDescription;
 	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
-		_compressionCodec = compressionCodec;
+		checkCodec(compressionCodec);
+		_compressionCodec = compressionCodec.toString();
 		_typeDescription = typeDescription;
 	}
 
@@ -185,7 +198,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
-			dataFileWriter.setCodec(_compressionCodec);
+			dataFileWriter.setCodec(CodecFactory.fromString(_compressionCodec));
 			dataFileWriter.create(tileSchema, stream);
 			dataFileWriter.append(tileRecord);
 			dataFileWriter.close();
