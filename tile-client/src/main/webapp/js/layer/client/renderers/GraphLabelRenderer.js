@@ -136,9 +136,12 @@ define(function (require) {
                 $html = $([]),
                 fontSize,
                 split,
-                totalNodes,
+                countNorm,
+                labelIndex,
                 percent,
                 weight,
+                hierLevel,
+                parentIDarray,
                 i, j;
 
             function getFontSize( count, totalCount ) {
@@ -148,41 +151,68 @@ define(function (require) {
             }
 
             function capitalize( str ) {
-                return str.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+            	return str.replace(/(?:^|,|\s)\S/g, function(a) { return a.toUpperCase(); });	//convert metadata string to camel-case
             }
 
-            totalNodes = meta.minMax.max.communities[0].numNodes / 2;
-
+            //get graph hierarchy level for this zoom level (assumed same hierarchy level for all tiles at a given zoom level)
+            hierLevel = meta.minMax.max.communities[0].hierLevel;	
+            
+            if (hierLevel === 0) {
+            	countNorm = meta.minMax.max.communities[0].degree / 2;	//normalize label attributes by community degree if hierLevel = 0
+            }
+            else {
+            	countNorm = meta.minMax.max.communities[0].numNodes / 2;	//else normalize label attributes by num internal nodes
+            }
+            	            
             for (i=0; i<values.length; i++) {
 
                 value = values[i];
+                parentIDarray = [];	//re-init this array for each tile
 
                 for (j=0; j<value.communities.length; j++) {
 
                     community = value.communities[j];
-
+                    
                     pos = this.map.getViewportPixelFromCoord( community[spec.node.x], community[spec.node.y] );
+                    
                     offset = {
                         x : pos.x - tilePos.x,
                         y : pos.y - tilePos.y
                     };
-
+                     
                     split = capitalize( community.metadata.toLowerCase() ).split(",");
-                    fontSize = getFontSize( community.numNodes, totalNodes );
-                    percent = Math.min( 1, (( fontSize - 12 ) / 10) + 0.5 );
-                    weight = Math.round( (percent*100) / 10 ) * 10;
+                    labelIndex = ( spec.labelIndex !== undefined ) ? spec.labelIndex : 0;
 
-                    if ( community.degree > 0 ) {
-                        $html = $html.add( '<div class="node-label node-label-'+this.id+' node-label-'+this.id+'-'+ weight +'" style="'
-                              + 'left:'+(offset.x)+'px;'
-                              + 'top:'+(offset.y)+'px;'
-                              + 'font-size:' + fontSize + 'px;'
-                              + 'line-height:' + fontSize + 'px;'
-                              + 'margin-top:' + (-fontSize/2) + 'px;'
-                              + 'height:' + fontSize + 'px;'
-                              + 'z-index:' + Math.floor( fontSize ) + ';'
-                              + '">'+split[0]+'</div>' );
+                    // Only draw one label per Parent community per tile, and don't draw labels for isolated communities,
+                    // and don't render if label string is empty, and only draw up to 5 labels per tile
+                    if ((community.degree === 0) 
+                    		|| (split[labelIndex] === "")
+                    		|| (parentIDarray.length >= 5)
+                    		|| (parentIDarray.indexOf(community.parentID) !== -1)) {	
+                    	continue;	// Skip this label entry
                     }
+                    else {
+                    	parentIDarray.push(community.parentID);	// add this parent ID to the list, and draw the label (below)
+                    }
+                      
+                    if (hierLevel === 0) {
+                    	fontSize = getFontSize( community.degree, countNorm );
+                    }
+                    else {
+                    	fontSize = getFontSize( community.numNodes, countNorm );
+                    }
+                    percent = Math.min( 1, (( fontSize - MIN_FONT_SIZE ) / 10) + 0.5 );
+                    weight = Math.round( (percent*100) / 10 ) * 10;
+                    
+                    $html = $html.add( '<div class="node-label node-label-'+this.id+' node-label-'+this.id+'-'+ weight +'" style="'
+                          + 'left:'+(offset.x)+'px;'
+                          + 'top:'+(offset.y)+'px;'
+                          + 'font-size:' + fontSize + 'px;'
+                          + 'line-height:' + fontSize + 'px;'
+                          + 'margin-top:' + (-fontSize/2) + 'px;'
+                          + 'height:' + fontSize + 'px;'
+                          + 'z-index:' + Math.floor( fontSize ) + ';'
+                          + '">'+split[labelIndex]+'</div>' );
 
                 }
             }
