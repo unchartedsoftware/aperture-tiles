@@ -61,9 +61,13 @@ public class PatternedSchemaStore {
      */
     public Schema getSchema (Object key, Object... arguments) {
         if (!_schema.containsKey(key)) {
-            String substituted = String.format(_pattern, arguments);
-            Schema resolved = new AvroSchemaComposer().add(substituted).resolved();
-            _schema.put(key, resolved);
+            synchronized (this) {
+                if (!_schema.containsKey(key)) {
+                    String substituted = String.format(_pattern, arguments);
+                    Schema resolved = new AvroSchemaComposer().add(substituted).resolved();
+                    _schema.put(key, resolved);
+                }
+            }
         }
         return _schema.get(key);
     }
