@@ -2,9 +2,9 @@
     {
         "id":"tweet-heatmap",
         "public": {
-                "pyramid": {
+            "pyramid": {
                 "type": "WebMercator"
-            },
+            }
         },
         "private": {
            "data" : {
@@ -16,13 +16,13 @@
                 }
             }
         }
-    },               
+    },
     {
         "id": "top-tweets",
         "public": {
-                "pyramid": {
+            "pyramid": {
                 "type": "WebMercator"
-            },
+            }
         },
         "private": {
            "data" : {

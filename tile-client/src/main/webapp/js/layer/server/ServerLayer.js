@@ -55,7 +55,7 @@ define(function (require) {
             return '?'+encodeURIComponent( JSON.stringify( query ) );
         }
 
-        aperture.io.rest('/legend/' + layer.layerSpec.source.id + generateQueryParamString(),
+        aperture.io.rest('/legend/v1.0/' + layer.layerSpec.source.id + generateQueryParamString(),
                          'GET',
                          function ( legendString, status ) {
                              layer.setRampImageUrl( legendString );
@@ -125,7 +125,7 @@ define(function (require) {
             spec.renderer.preserveRangeMax = spec.preserveRangeMax || false;
             spec.renderer.theme = spec.renderer.theme || map.getTheme();
             spec.valueTransform = spec.valueTransform || { type: 'linear' };
-            spec.tileTransform = spec.tileTransform || { type: 'generic' };
+            spec.tileTransform = spec.tileTransform || { type: 'identity' };
 
             // call base constructor
             this._super( spec, map );
@@ -501,7 +501,7 @@ define(function (require) {
                         'options': {
                             'layername': this.layerSpec.source.id,
                             'type': 'png',
-                            'version': '1.0.0',
+                            'version': 'v1.0',
                             'maxExtent': olBounds,
                             transparent: true,
                             getURL: createUrl

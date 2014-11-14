@@ -69,7 +69,7 @@ define(function (require) {
 
             // request data from server
             aperture.io.rest(
-                '/annotation/'+
+                '/annotation/v1.0/'+
                  source.id+'/'+
                  level+'/'+
                  xIndex+'/'+
@@ -106,7 +106,7 @@ define(function (require) {
         /**
          * modify an the annotation on the server
          * @param source     annotation layer info
-         * @param certificate   annotation to be modified
+         * @param annotation   annotation to be modified
          * @param callback      the callback that is called upon receiving data from server
          */
         modifyAnnotation: function( source, annotation, callback ) {
@@ -155,7 +155,7 @@ define(function (require) {
             request.layer = source.id;
 
             // Request the layer information
-            aperture.io.rest('/annotation',
+            aperture.io.rest('/annotation/v1.0/',
                              'POST',
                              callback,
                              {

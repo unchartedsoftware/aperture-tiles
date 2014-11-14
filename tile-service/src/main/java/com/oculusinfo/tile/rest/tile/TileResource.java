@@ -26,6 +26,7 @@ package com.oculusinfo.tile.rest.tile;
 
 import com.google.inject.Inject;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
@@ -142,7 +143,10 @@ public class TileResource extends ApertureServerResource {
 
 		try {
 			// No alternate versions supported. But if we did:
-			//String version = (String) getRequest().getAttributes().get("version");
+			String version = (String) getRequest().getAttributes().get("version");
+            if ( version == null ) {
+                version = LayerConfiguration.DEFAULT_VERSION;
+            }
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
@@ -184,6 +188,7 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("xIndex", x);
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
+                result.put("version", version);
 				result.put("tile", _service.getTileObject( layer, index, tileSet, decodedQueryParams ));
 				setStatus(Status.SUCCESS_OK);
 				return new JsonRepresentation(result);

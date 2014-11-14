@@ -62,7 +62,7 @@ public class LayerResource extends ApertureServerResource {
      * the attribute 'id', and the layer meta data under the attribute 'meta'
      * @param layerId The layer identification string.
      */
-    private JSONObject getLayerInformation( String layerId ) throws JSONException {
+    private JSONObject getLayerInformation( String layerId, String version ) throws JSONException {
         try {
             // full layer config
             JSONObject layerConfig = JsonUtilities.deepClone( _service.getLayerJSON( layerId ) );
@@ -70,6 +70,8 @@ public class LayerResource extends ApertureServerResource {
             JSONObject layer = layerConfig.getJSONObject("public");
             // append id
             layer.put("id", layerConfig.getString("id") );
+            // append version
+            layer.put("version", version);
             // get host
             String host = getRequest().getResourceRef().getPath();
             host = host.substring( 0, host.lastIndexOf("layer") );
@@ -105,19 +107,23 @@ public class LayerResource extends ApertureServerResource {
     public Representation getLayer() {
         try {
             // see if resource is specified
+            String version = (String) getRequest().getAttributes().get("version");
+            if ( version == null ) {
+                version = LayerConfiguration.DEFAULT_VERSION;
+            }
             String layerURN = (String) getRequest().getAttributes().get("layer");
             if ( layerURN == null ) {
                  // if not, return all layers
                 JSONArray jsonLayers = new JSONArray();
                 List<String> layerIds = _service.getLayerIds();
                 for (int i=0; i<layerIds.size(); ++i) {
-                    jsonLayers.put( i, getLayerInformation( layerIds.get(i) ) );
+                    jsonLayers.put( i, getLayerInformation( layerIds.get(i), version ) );
                 }
                 setStatus(Status.SUCCESS_OK);
                 return new JsonRepresentation( jsonLayers );
             } else {
                  // if so, return specific layers
-                JSONObject jsonLayer = getLayerInformation( layerURN );
+                JSONObject jsonLayer = getLayerInformation( layerURN, version );
                 setStatus(Status.SUCCESS_OK);
                 return new JsonRepresentation( jsonLayer );
             }
@@ -135,12 +141,17 @@ public class LayerResource extends ApertureServerResource {
     @Post
     public Representation configureLayer( String jsonArguments ) {
         try {
+            String version = (String) getRequest().getAttributes().get("version");
+            if ( version == null ) {
+                version = LayerConfiguration.DEFAULT_VERSION;
+            }
             String layerURN = (String) getRequest().getAttributes().get("layer");
             JSONObject arguments = new JSONObject(jsonArguments);
             String sha = _service.configureLayer( layerURN, arguments );
 
             JSONObject result = new JSONObject();
             result.put( "sha", sha );
+            result.put( "version", version );
             return new JsonRepresentation( result );
 
         } catch ( Exception e ) {

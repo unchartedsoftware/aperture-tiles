@@ -25,6 +25,7 @@
 package com.oculusinfo.tile.rest.legend;
 
 import com.google.inject.Inject;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONObject;
@@ -57,7 +58,12 @@ public class LegendResource extends ApertureServerResource {
 	@Get
 	public Representation getLegend() throws ResourceException {
 
-        // get layer id
+        /*
+        String version = (String) getRequest().getAttributes().get("version");
+        if ( version == null ) {
+            version = LayerConfiguration.DEFAULT_VERSION;
+        }
+        */
         String layer = (String) getRequest().getAttributes().get("layer");
 
 		try {

@@ -77,7 +77,7 @@ define(function (require) {
          * function when they are received.
          */
         requestLayers: function( callback ) {
-            aperture.io.rest('/layer',
+            aperture.io.rest('/layer/v1.0/',
                              'GET',
                              function (layers, status) {
                                  var layerMap = {},
@@ -98,7 +98,7 @@ define(function (require) {
          * function when it is received.
          */
         requestLayer: function( layerId, callback ) {
-            aperture.io.rest('/layer/' + layerId,
+            aperture.io.rest('/layer/v1.0/' + layerId,
                              'GET',
                              function (layer, status) {
                                  if (status.success) {
@@ -113,7 +113,7 @@ define(function (require) {
          */
         configureLayer: function( layerId, params, callback ) {
 
-            aperture.io.rest('/layer/' + layerId,
+            aperture.io.rest('/layer/v1.0/' + layerId,
                              'POST',
                              function( response, statusInfo ) {
                                 callback( response.sha );

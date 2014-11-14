@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest.annotation;
 import java.util.List;
 import java.util.Map;
 
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import oculus.aperture.common.rest.ApertureServerResource;
 
 import org.json.JSONArray;
@@ -60,9 +61,12 @@ public class AnnotationResource extends ApertureServerResource {
 	public Representation postAnnotation( String jsonData ) throws ResourceException {
 
 		try {
-
+            String version = (String) getRequest().getAttributes().get("version");
+            if ( version == null ) {
+                version = LayerConfiguration.DEFAULT_VERSION;
+            }
 			JSONObject json = new JSONObject( jsonData );
-			
+
 			String requestType = json.getString( "type" ).toLowerCase();	
 			JSONObject jsonResult = new JSONObject();
 			
@@ -93,6 +97,7 @@ public class AnnotationResource extends ApertureServerResource {
 			
 			setStatus(Status.SUCCESS_CREATED);
 			jsonResult.put("status", "success");
+            jsonResult.put("version", version);
 			return new JsonRepresentation(jsonResult);
 			
 		} catch (JSONException e) {
@@ -109,6 +114,10 @@ public class AnnotationResource extends ApertureServerResource {
 
 		try {
 
+            String version = (String) getRequest().getAttributes().get("version");
+            if ( version == null ) {
+                version = LayerConfiguration.DEFAULT_VERSION;
+            }
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			String xAttr = (String) getRequest().getAttributes().get("x");
@@ -149,6 +158,7 @@ public class AnnotationResource extends ApertureServerResource {
 			JSONObject result = new JSONObject();
 			result.put("tile", tileJson );
 			result.put( "annotations", binsJson );
+            result.put("version", version);
 
 			setStatus(Status.SUCCESS_OK);
 			return new JsonRepresentation( result );

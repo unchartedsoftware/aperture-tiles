@@ -75,6 +75,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
 	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
 
+    public static final String DEFAULT_VERSION = "v1.0";
+
     public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
         null);

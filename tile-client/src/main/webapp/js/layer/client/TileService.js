@@ -255,7 +255,7 @@ define(function (require) {
 
                 // request data from server
                 aperture.io.rest(
-                    (this.source.apertureservice+'1.0.0/'+
+                    (this.source.apertureservice+'v1.0/'+
                      this.source.id+'/'+
                      level+'/'+
                      xIndex+'/'+
