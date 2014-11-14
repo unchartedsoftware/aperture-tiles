@@ -270,7 +270,7 @@ define(function (require) {
                 this.renderersByTile[tilekey] = newIndex;
             }
 
-            if ( newSource.layer === oldSource.layer ) {
+            if ( newSource.id === oldSource.id ) {
                 // both renderers share the same data source, swap tile data
                 // give tile to new view
                 newService.data[tilekey] = oldService.data[tilekey];
