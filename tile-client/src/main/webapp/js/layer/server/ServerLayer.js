@@ -55,7 +55,7 @@ define(function (require) {
             return '?'+encodeURIComponent( JSON.stringify( query ) );
         }
 
-        aperture.io.rest('/legend/v1.0/' + layer.layerSpec.source.id + generateQueryParamString(),
+        aperture.io.rest('/v1.0/legend/' + layer.layerSpec.source.id + generateQueryParamString(),
                          'GET',
                          function ( legendString, status ) {
                              layer.setRampImageUrl( legendString );
@@ -467,8 +467,7 @@ define(function (require) {
 
                 if (x >= 0 && y >= 0) {
                     // set base url
-                    fullUrl = (this.url + this.version + "/" +
-                               this.layername + "/" +
+                    fullUrl = ( this.url + this.layername + "/" +
                                z + "/" + x + "/" + y + "." + this.type);
                     return fullUrl + that.generateQueryParamString();
                 }
@@ -501,7 +500,6 @@ define(function (require) {
                         'options': {
                             'layername': this.layerSpec.source.id,
                             'type': 'png',
-                            'version': 'v1.0',
                             'maxExtent': olBounds,
                             transparent: true,
                             getURL: createUrl

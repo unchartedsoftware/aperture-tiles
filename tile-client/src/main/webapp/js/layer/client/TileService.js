@@ -255,7 +255,8 @@ define(function (require) {
 
                 // request data from server
                 aperture.io.rest(
-                    (this.source.apertureservice+'v1.0/'+
+                    ('/v1.0'+
+                     this.source.apertureservice+
                      this.source.id+'/'+
                      level+'/'+
                      xIndex+'/'+
@@ -449,7 +450,8 @@ define(function (require) {
         function requestTile( tile ) {
             // request data from server
             aperture.io.rest(
-                (service.source.apertureservice+'1.0.0/'+
+                ('/v1.0'+
+                 service.source.apertureservice+
                  service.source.id+'/'+
                  tile.level+'/'+
                  tile.xIndex+'/'+
