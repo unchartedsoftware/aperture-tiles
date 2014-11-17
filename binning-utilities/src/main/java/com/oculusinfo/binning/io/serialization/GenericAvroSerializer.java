@@ -51,15 +51,24 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 5775555328063499845L;
-	private static void checkCodec (CodecFactory compressionCodec) {
-		String codecName = compressionCodec.toString();
-		synchronized (CodecFactory.class) {
-			try {
-				CodecFactory.fromString(codecName);
-			} catch (AvroRuntimeException e) {
-				CodecFactory.addCodec(codecName, compressionCodec);
-			}
+
+
+
+	// Functions to encode and decode codecs as strings, so we can serialize
+	// them accross the network or accross machines.  Unfortunately, we cannot
+	// simply use CodecFactory.toString and CodecFactory.fromString, as they
+	// fail to reverse each other for deflate codecs.
+	private static CodecFactory descriptionToCodec (String codecDescription) {
+		if (codecDescription.startsWith("deflate")) {
+			// Knock off the initial "deflate-"
+			int deflateLevel = Integer.parseInt(codecDescription.substring(8));
+			return CodecFactory.deflateCodec(deflateLevel);
+		} else {
+			return CodecFactory.fromString(codecDescription);
 		}
+	}
+	private static String codecToDescription (CodecFactory codec) {
+		return codec.toString();
 	}
 
 
@@ -69,9 +78,9 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 
 	private String _compressionCodec;
 	private TypeDescriptor _typeDescription;
+
 	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
-		checkCodec(compressionCodec);
-		_compressionCodec = compressionCodec.toString();
+		_compressionCodec = codecToDescription(compressionCodec);
 		_typeDescription = typeDescription;
 	}
 
@@ -198,7 +207,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
-			dataFileWriter.setCodec(CodecFactory.fromString(_compressionCodec));
+			dataFileWriter.setCodec(descriptionToCodec(_compressionCodec));
 			dataFileWriter.create(tileSchema, stream);
 			dataFileWriter.append(tileRecord);
 			dataFileWriter.close();
