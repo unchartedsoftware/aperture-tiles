@@ -1,0 +1,10 @@
+[
+	{
+		"name": "Julia Set",
+		"layers": [
+			"live-julia-layer",
+			"static-julia-layer"
+		],
+		"map": "julia-map"
+	}
+]

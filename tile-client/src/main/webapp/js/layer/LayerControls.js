@@ -117,10 +117,10 @@ define(function (require) {
 
 
     updateFilterSliderHandles = function( layer, filterSlider ) {
-        if ( layer.getLayerSpec().preservelegendrange[0] === true ) {
+        if ( layer.getLayerSpec().preserveRangeMin === true ) {
             filterSlider.slider( "values", 0, convertFilterValueToSliderValue( layer, layer.getFilterValues()[0] ) * FILTER_RESOLUTION );
         }
-        if ( layer.getLayerSpec().preservelegendrange[1] === true ) {
+        if ( layer.getLayerSpec().preserveRangeMax === true ) {
             filterSlider.slider( "values", 1, convertFilterValueToSliderValue( layer, layer.getFilterValues()[1] ) * FILTER_RESOLUTION );
         }
     };
@@ -373,7 +373,7 @@ define(function (require) {
                     previousValues = layer.getFilterRange();
                 if ( values[0] !== previousValues[0] || values[1] !== previousValues[1] ) {
                     // prevent re-configuration on click / dblclick
-                    layer.setFilterRange( [values[0] , values[1]] );
+                    layer.setFilterRange( values[0], values[1] );
                 }
             },
             slide: function( event, ui ) {
@@ -696,7 +696,7 @@ define(function (require) {
                           settingsCustomization ) {
 
         var uuid = layer.uuid,
-            name = layer.name || layer.id,
+            name = layer.name,
             domain = layer.domain,
             $layerControlRoot,
             $layerControlTitleBar,
@@ -926,8 +926,8 @@ define(function (require) {
 
                 case "opacity":
 
-                     controlsMapping.opacitySlider.slider( "value", value * OPACITY_RESOLUTION );
-                     break;
+                    controlsMapping.opacitySlider.slider( "value", value * OPACITY_RESOLUTION );
+                    break;
 
                 case "rampFunction":
 
@@ -937,8 +937,8 @@ define(function (require) {
 
                 case "filterRange":
 
-                     controlsMapping.filterSliderImg.css( {'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
-                     break;
+                    controlsMapping.filterSliderImg.css( {'background': 'url(' + layer.getRampImageUrl() + ')', 'background-size': 'contain'});
+                    break;
 
                 case "rampImageUrl":
 

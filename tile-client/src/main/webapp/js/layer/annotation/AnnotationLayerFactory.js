@@ -54,22 +54,14 @@ define( function (require) {
                 return requireDeferred;
             }
 
-            layerJSON.layer = layerJSON.id;
-
             rendererDeferred = loadModule( "./renderers/" +  layerJSON.renderers.layer );
             detailsDeferred = loadModule( "./details/" +  layerJSON.renderers.details );
 
             $.when( rendererDeferred, detailsDeferred ).done( function( renderer, details ) {
-
+                renderer.meta = layerJSON.source.meta.meta;
+                details.meta = layerJSON.source.meta.meta;
                 annotationLayer = new AnnotationLayer( layerJSON, renderer, details, map );
-
-                annotationLayer.configure( function( layerInfo ) {
-                      // update layer and resolve deferred
-                      annotationLayer.update();
-                      annotationLayerDeferred.resolve( annotationLayer );
-                });
-
-                //annotationLayerDeferred.resolve( annotationLayer );
+                annotationLayerDeferred.resolve( annotationLayer );
             });
 
             return annotationLayerDeferred;

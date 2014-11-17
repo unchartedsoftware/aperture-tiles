@@ -24,11 +24,23 @@
  */
 package com.oculusinfo.tile.rest.legend;
 
-import com.oculusinfo.tile.rendering.LayerConfiguration;
-
+import org.json.JSONObject;
 import java.awt.image.BufferedImage;
 
 public interface LegendService {
-	public BufferedImage getLegend (LayerConfiguration config, String layer, int zoomLevel, int width,
-	                                int height, boolean doAxis, boolean renderHorizontally);
+
+    /**
+     * Renders a buffer image for the corresponding layer's ramp configuration
+     * @param layer The layer identification string.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @param renderHorizontally Whether the ramp it is rendered horizontally or vertically
+     * @param query The query parameters JSON object to override server defaults.
+     * @return BufferedImage The buffered image.
+     */
+	public BufferedImage getLegend( String layer,
+                                    int width,
+                                    int height,
+                                    boolean renderHorizontally,
+                                    JSONObject query );
 }

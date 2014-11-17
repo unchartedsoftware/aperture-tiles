@@ -56,7 +56,7 @@ import java.util.List;
  * @author nkronenfeld
  */
 public class TopTextScoresImageRenderer implements TileDataImageRenderer {
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	// Best we can do here :-(
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -118,7 +118,9 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	@Override
 	public BufferedImage render(LayerConfiguration config) {
 		BufferedImage bi;
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -130,9 +132,9 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(index));
+			List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton(index));
 			if (tileDatas.isEmpty()) {
-				_logger.debug("Layer {} is missing tile ().", layer, index);
+				LOGGER.debug("Layer {} is missing tile ().", layerId, index);
 				return null;
 			}
 			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
@@ -185,8 +187,8 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 				}
 			}
 		} catch (Exception e) {
-			_logger.debug("Tile is corrupt: " + layer + ":" + index);
-			_logger.debug("Tile error: ", e);
+			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
+			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}
 		return bi;

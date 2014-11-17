@@ -247,8 +247,7 @@ define(function (require) {
             indexClass = (i === 0) ? DOT_CLASS_SELECTED : DOT_CLASS_DEFAULT;
             $dots[i] = $("<div id='" + DOT_ID_PREFIX +i+"' class='" + DOT_CLASS + " " +indexClass+"' value='"+i+"'></div>");
             // set tooltip
-            Util.enableTooltip( $dots[i],
-                             TOOLTIP_INDEX_DOT );
+            Util.enableTooltip( $dots[i], TOOLTIP_INDEX_DOT );
 
             generateCallbacks( $dots[i], i );
             $indexContainer.append( $dots[i] );

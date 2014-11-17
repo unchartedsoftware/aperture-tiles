@@ -25,11 +25,8 @@ package com.oculusinfo.factory;
 
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.security.MessageDigest;
+import java.util.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,22 +44,26 @@ import org.slf4j.LoggerFactory;
  * writing out a configuration.
  * 
  * @param <T> The type of object constructed by this factory.
- * 
+ *
  * @author nkronenfeld
  */
 abstract public class ConfigurableFactory<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableFactory.class);
 
-
-
 	private String                        _name;
 	private Class<T>                      _factoryType;
+
 	private List<String>                  _rootPath;
+
+    private ConfigurableFactory<?>        _parent;
 	private List<ConfigurableFactory<?>>  _children;
+
+    private Set<ConfigurationProperty<?>> _properties;
+    private HashMap<String, List<String> > _pathsByProperty;
+
 	private boolean                       _configured;
 	private JSONObject                    _configurationNode;
-	private Set<ConfigurationProperty<?>> _properties;
-	private ConfigurableFactory<?>        _parent;
+
     private boolean                       _isSingleton;
     private T                             _singletonProduct;
 
@@ -146,10 +147,11 @@ abstract public class ConfigurableFactory<T> {
         if (null != path) {
             rootPath.addAll(path);
         }
-        _rootPath = Collections.unmodifiableList(rootPath);
+        _rootPath = Collections.unmodifiableList( rootPath );
         _children = new ArrayList<>();
         _configured = false;
         _properties = new HashSet<>();
+        _pathsByProperty = new HashMap<>();
         _isSingleton = isSingleton;
         _singletonProduct = null;
         
@@ -186,7 +188,7 @@ abstract public class ConfigurableFactory<T> {
 	/**
 	 * List out all properties directly expected by this factory.
 	 */
-	protected Iterable<ConfigurationProperty<?>> getProperties () {
+	public Iterable<ConfigurationProperty<?>> getProperties () {
 		return _properties;
 	}
 
@@ -194,10 +196,49 @@ abstract public class ConfigurableFactory<T> {
 	 * Add a property to the list of properties used by this factory
 	 * 
 	 * @param property
+     * @param path
 	 */
-	protected <PT> void addProperty (ConfigurationProperty<PT> property) {
+	public <PT> void addProperty (ConfigurationProperty<PT> property, List<String> path) {
 		_properties.add(property);
+        _pathsByProperty.put( property.getName(), path );
 	}
+
+    /**
+	 * Add a property to the list of properties used by this factory
+	 *
+	 * @param property
+	 */
+	public <PT> void addProperty (ConfigurationProperty<PT> property) {
+		addProperty( property, new ArrayList<String>() );
+	}
+
+
+    private JSONObject getPropertyNode (ConfigurationProperty<?> property) {
+
+        if ( _pathsByProperty.get( property.getName() ) == null ) {
+            return new JSONObject();
+        }
+        JSONObject node;
+        List<String> path = new ArrayList<>(  _pathsByProperty.get( property.getName() ) );
+        if ( path.isEmpty() ) {
+            return _configurationNode;
+        } else {
+            String subPath;
+            JSONObject currentNode = _configurationNode;
+            while ( path.size() > 1 ) {
+                subPath = path.remove( 0 );
+                currentNode = currentNode.optJSONObject( subPath );
+                if ( currentNode == null ) {
+                    return new JSONObject();
+                }
+            }
+            node = currentNode.optJSONObject( path.get(0) );
+            if ( node == null ) {
+                return new JSONObject();
+            }
+            return node;
+        }
+    }
 
 	/**
 	 * Indicates if an actual value is recorded for the given property.
@@ -206,7 +247,7 @@ abstract public class ConfigurableFactory<T> {
 	 * @return True if the property is listed and non-default in the factory.
 	 */
 	public boolean hasPropertyValue (ConfigurationProperty<?> property) {
-		return (_configured && null != _configurationNode && _configurationNode.has(property.getName()));
+        return (_configured && null != _configurationNode && getPropertyNode( property ).has( property.getName() ) );
 	}
 
 	/**
@@ -216,11 +257,12 @@ abstract public class ConfigurableFactory<T> {
 	 * readConfiguration (either version).
 	 */
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
-		if (!hasPropertyValue(property))
-			return property.getDefaultValue();
 
-		try {
-			return property.unencodeJSON(new JSONNode(_configurationNode, property.getName()));
+        if ( !hasPropertyValue( property ) ) {
+            return property.getDefaultValue();
+        }
+        try {
+			return property.unencodeJSON(new JSONNode( getPropertyNode( property ) , property.getName()) );
 		} catch (JSONException e) {
 			// Must not have been there.  Ignore, leaving as default. 
 			LOGGER.info("Property {} from configuration {} not found. Using default", property, _configurationNode);
@@ -369,10 +411,10 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	public static JSONObject getLeafNode (JSONObject rootNode, List<String> path) {
 		JSONObject target = rootNode;
-		for (String pathElt: path) {
-			if (target.has(pathElt)) {
+		for (String subpath: path) {
+			if (target.has( subpath )) {
 				try {
-					target = target.getJSONObject(pathElt);
+					target = target.getJSONObject( subpath );
 				} catch (JSONException e) {
 					// Node is of the wrong type; default everything.
 					target = null;
@@ -430,6 +472,63 @@ abstract public class ConfigurableFactory<T> {
 			child.writeConfigurationInformation(stream, prefix);
 		}
 	}
+
+    private String getFullPropertyString( String name) {
+
+        StringBuilder sb = new StringBuilder();
+        for ( String subPath : _rootPath ) {
+            sb.append( subPath );
+            sb.append(".");
+        }
+        if ( _pathsByProperty.get( name ) != null ) {
+            List<String> attributePath = new ArrayList<>( _pathsByProperty.get( name ) );
+            for ( String subPath : attributePath ) {
+                sb.append( subPath );
+                sb.append( "." );
+            }
+        }
+        sb.append( name );
+        return sb.toString();
+    }
+
+    private String getFactoryString() {
+        StringBuilder sb = new StringBuilder();
+        for ( ConfigurationProperty<?> prop : _properties ) {
+            sb.append( getFullPropertyString( prop.getName() ) );
+            sb.append( ":" );
+            sb.append( getPropertyValue( prop ) );
+        }
+        for ( ConfigurableFactory<?> child: _children ) {
+			sb.append( child.getFactoryString() );
+		}
+        return sb.toString();
+    }
+
+
+    /**
+     * Return a SHA-256 hexcode representing the state of the configuration
+     * @return String representing the hexcode SHA-256 hash of the configuration state
+     */
+    public String generateSHA256() {
+        try {
+            String propertyString = getFactoryString();
+            // generate SHA-256 from the string
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+            md.update( propertyString.getBytes( "UTF-8" ) );
+            byte[] digest = md.digest();
+
+            // convert SHA-256 bytes to hex string
+            StringBuilder sb2 = new StringBuilder();
+            for ( byte b : digest ) {
+                sb2.append( Integer.toString( ( b & 0xff ) + 0x100, 16 ).substring( 1 ) );
+            }
+            return sb2.toString();
+        } catch ( Exception e ) {
+			LOGGER.warn("Error registering configuration to SHA");
+            return "";
+		}
+    }
+
 
 	/**
 	 * Get the JSON object used to configure this factory.

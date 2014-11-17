@@ -1,0 +1,36 @@
+{
+    "twitter-heatmap-layer": {
+        "name": "Twitter Activity Heatmap",
+        "source": "tweet-heatmap",
+        "domain": "server",
+        "pyramid": {
+            "type": "WebMercator"
+        },
+        "opacity": 0.85,    
+        "valueTransform": {
+            "type":"log10"
+        }
+    },               
+    "twitter-keywords-layer": {
+        "name": "Twitter most common words",
+        "domain": "client",      
+        "views": [
+            {
+                "source": "top-tweets",
+                "domain": "client",
+                "renderer": {
+                    "type":"TopTopicsHtml",
+                    "spec": {}
+                }
+            },
+            {
+                "source": "top-tweets",
+                "domain": "client",
+                "renderer": {    
+                    "type":"TopTopicsAperture",
+                    "spec": {}
+                }
+            }
+        ]
+    }
+}

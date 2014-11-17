@@ -134,6 +134,7 @@ define(function (require) {
                 tilePos = this.map.getTopLeftViewportPixelForTile( tilekey ),
                 pos, offset,
                 $html = $([]),
+                labelIndex,
                 fontSize,
                 split,
                 totalNodes,
@@ -172,6 +173,8 @@ define(function (require) {
                     percent = Math.min( 1, (( fontSize - 12 ) / 10) + 0.5 );
                     weight = Math.round( (percent*100) / 10 ) * 10;
 
+                    labelIndex = ( spec.labelIndex !== undefined ) ? spec.labelIndex : 0;
+
                     if ( community.degree > 0 ) {
                         $html = $html.add( '<div class="node-label node-label-'+this.id+' node-label-'+this.id+'-'+ weight +'" style="'
                               + 'left:'+(offset.x)+'px;'
@@ -181,7 +184,7 @@ define(function (require) {
                               + 'margin-top:' + (-fontSize/2) + 'px;'
                               + 'height:' + fontSize + 'px;'
                               + 'z-index:' + Math.floor( fontSize ) + ';'
-                              + '">'+split[0]+'</div>' );
+                              + '">'+split[labelIndex]+'</div>' );
                     }
 
                 }
