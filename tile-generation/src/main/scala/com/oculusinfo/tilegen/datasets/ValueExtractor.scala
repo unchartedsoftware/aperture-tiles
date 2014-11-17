@@ -38,11 +38,6 @@ import scala.util.{Try, Success, Failure}
 import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.LongAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.FloatAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -67,6 +62,8 @@ import com.oculusinfo.tilegen.tiling.analytics.StringScoreBinningAnalytic
 import com.oculusinfo.tilegen.util.ExtendedNumeric
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import com.oculusinfo.tilegen.util.TypeConversion
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 
 
 
@@ -206,7 +203,7 @@ class CountValueExtractor extends CSVValueExtractor[Double, JavaDouble] {
 	def fields: Array[String] = Array[String]()
 	def calculateValue (fieldValues: Map[String, Any]): Double = 1.0
 	def getSerializer: TileSerializer[JavaDouble] =
-		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
+		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Double, JavaDouble] = new NumericSumBinningAnalytic[Double, JavaDouble]()
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
@@ -279,22 +276,22 @@ class FieldValueExtractorFactory  extends ValueExtractorFactory {
 				new FieldValueExtractor[Int, JavaInt](
 					field,
 					constructBinningAnalytic[Int, JavaInt](),
-					new IntegerAvroSerializer(codecFactory))
+					new PrimitiveAvroSerializer(classOf[JavaInt], codecFactory))
 			case "long" =>
 				new FieldValueExtractor[Long, JavaLong](
 					field,
 					constructBinningAnalytic[Long, JavaLong](),
-					new LongAvroSerializer(codecFactory))
+					new PrimitiveAvroSerializer(classOf[JavaLong], codecFactory))
 			case "float" =>
 				new FieldValueExtractor[Float, JavaFloat](
 					field,
 					constructBinningAnalytic[Float, JavaFloat](),
-					new FloatAvroSerializer(codecFactory))
+					new PrimitiveAvroSerializer(classOf[JavaFloat], codecFactory))
 			case "double" =>
 				new FieldValueExtractor[Double, JavaDouble](
 					field,
 					constructBinningAnalytic[Double, JavaDouble](),
-					new DoubleAvroSerializer(codecFactory))
+					new PrimitiveAvroSerializer(classOf[JavaDouble], codecFactory))
 		}
 	}
 }
@@ -384,7 +381,7 @@ class MeanValueExtractor[T] (
 		Try((fieldValues.get(fieldName).get.asInstanceOf[T], 1))
 			.getOrElse(binningAnalytic.defaultUnprocessedValue)
 	def getSerializer: TileSerializer[JavaDouble] =
-		new DoubleAvroSerializer(CodecFactory.bzip2Codec())
+		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = binningAnalytic
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
@@ -635,7 +632,7 @@ class SeriesValueExtractor (fieldNames: Array[String])
 	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
 		fieldNames.map(field => Try(fieldValues(field).asInstanceOf[Double]).getOrElse(0.0))
 	def getSerializer =
-		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
+		new PrimitiveArrayAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =
 		new ArrayBinningAnalytic[Double, JavaDouble](new NumericSumBinningAnalytic())
 
@@ -700,7 +697,7 @@ class IndirectSeriesValueExtractor (keyField: String,
 				else 0.0
 		)
 	def getSerializer =
-		new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
+		new PrimitiveArrayAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[JavaDouble]] =
 		new ArrayBinningAnalytic[Double, JavaDouble](new NumericSumBinningAnalytic())
 

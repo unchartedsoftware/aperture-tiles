@@ -24,8 +24,8 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -39,10 +39,10 @@ public class SerializationTypeTests {
 	@Test
 	public void testSerializerTypeing () {
 		Assert.assertEquals(new TypeDescriptor(Double.class),
-		                    new DoubleAvroSerializer(null).getBinTypeDescription());
+		                    new PrimitiveAvroSerializer<>(Double.class, null).getBinTypeDescription());
 		Assert.assertEquals(new TypeDescriptor(List.class,
 		                                       new TypeDescriptor(Double.class)),
-		                    new DoubleArrayAvroSerializer(null).getBinTypeDescription());
+		                    new PrimitiveArrayAvroSerializer<>(Double.class, null).getBinTypeDescription());
 		Assert.assertEquals(new TypeDescriptor(List.class,
 		                                       new TypeDescriptor(Pair.class,
 		                                                          new TypeDescriptor(String.class),

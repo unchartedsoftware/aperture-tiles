@@ -28,16 +28,9 @@ package com.oculusinfo.tile.init;
 import java.util.List;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardsCompatibilitySerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.FloatArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.FloatAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.IntegerArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.LongArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.LongAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringFloatPairArrayAvroSerializerFactory;
@@ -65,17 +58,18 @@ public enum DefaultTileSerializerFactoryProvider
 	implements DelegateFactoryProviderTarget<TileSerializer<?>>
 {
 	LEGACY(new Constructor() {
-			@Override
+			@SuppressWarnings("deprecation")
+            @Override
 			public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 			                                                                List<String> path) {
-				return new BackwardsCompatibilitySerializerFactory(parent, path);
+				return new com.oculusinfo.binning.io.serialization.impl.BackwardsCompatibilitySerializerFactory(parent, path);
 			}
 		}),
 		DOUBLE_AVRO(new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new DoubleAvroSerializerFactory(parent, path);
+					return new PrimitiveAvroSerializerFactory<>(parent, path, Double.class);
 				}
         
 			}),
@@ -83,7 +77,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new FloatAvroSerializerFactory(parent, path);
+					return new PrimitiveAvroSerializerFactory<>(parent, path, Float.class);
 				}
 
 			}),
@@ -91,7 +85,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new IntegerAvroSerializerFactory(parent, path);
+					return new PrimitiveAvroSerializerFactory<>(parent, path, Integer.class);
 				}
         
 			}),
@@ -99,7 +93,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new LongAvroSerializerFactory(parent, path);
+					return new PrimitiveAvroSerializerFactory<>(parent, path, Long.class);
 				}
         
 			}),
@@ -115,7 +109,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new DoubleArrayAvroSerializerFactory(parent, path);
+					return new PrimitiveArrayAvroSerializerFactory<>(parent, path, Double.class);
 				}
         
 			}),
@@ -123,7 +117,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new FloatArrayAvroSerializerFactory(parent, path);
+					return new PrimitiveArrayAvroSerializerFactory<>(parent, path, Float.class);
 				}
         
 			}),
@@ -131,7 +125,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new IntegerArrayAvroSerializerFactory(parent, path);
+					return new PrimitiveArrayAvroSerializerFactory<>(parent, path, Integer.class);
 				}
         
 			}),
@@ -139,7 +133,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new LongArrayAvroSerializerFactory(parent, path);
+					return new PrimitiveArrayAvroSerializerFactory<>(parent, path, Long.class);
 				}
         
 			}),

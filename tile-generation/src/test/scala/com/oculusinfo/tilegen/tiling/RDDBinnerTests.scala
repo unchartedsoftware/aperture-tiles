@@ -41,7 +41,6 @@ import org.apache.spark.SharedSparkContext
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 
 import com.oculusinfo.tilegen.datasets.CountValueExtractor
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription

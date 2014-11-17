@@ -24,11 +24,11 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.io.serialization.AvroSchemaComposer;
-import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
+
+import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
 
 /**
  * A serializer to serialize tiles whose bin values are lists of some primitive
@@ -72,6 +72,11 @@ public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<
         return _schema;
     }
 
+    // This doesn't need to be checked because 
+    //  (a) One can't create a serializer for which it theoreticallly won't work.
+    //  (b) It is possible to use the wrong serializer for a given tile, in which 
+    //      case it will fail - but it should fail in that case.
+    @SuppressWarnings("unchecked")
     @Override
     protected T getEntryValue(GenericRecord entry) {
         return (T) entry.get(0);

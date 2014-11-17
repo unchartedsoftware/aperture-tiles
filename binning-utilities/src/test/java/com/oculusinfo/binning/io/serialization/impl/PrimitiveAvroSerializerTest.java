@@ -24,24 +24,25 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.util.Utf8;
-import org.apache.hadoop.hbase.thrift.generated.IllegalArgument;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.util.Utf8;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+
 // Test that primitive avro serialization works
 public class PrimitiveAvroSerializerTest {
-    <T> void testRoundTrip(Class<? extends T> type, T... data) throws Exception {
+    @SafeVarargs
+    final <T> void testRoundTrip(Class<? extends T> type, T... data) throws Exception {
         TileSerializer<T> serializer = new PrimitiveAvroSerializer<T>(type, CodecFactory.nullCodec());
 
         // Create our tile
@@ -126,6 +127,7 @@ public class PrimitiveAvroSerializerTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void testReferenceType () throws Exception {
-        testRoundTrip(List.class, new ArrayList());
+        List<Integer> sample = new ArrayList<>();
+        testRoundTrip(sample.getClass(), sample);
     }
 }

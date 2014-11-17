@@ -39,7 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PrimitiveArrayAvroSerializerTest {
-    <T> void testRoundTrip(Class<? extends T> type, int arraySize, T... data) throws Exception {
+    @SafeVarargs
+    final <T> void testRoundTrip(Class<? extends T> type, int arraySize, T... data) throws Exception {
         TileSerializer<List<T>> serializer = new PrimitiveArrayAvroSerializer<T>(type, CodecFactory.nullCodec());
 
         // Create our tile
@@ -150,6 +151,7 @@ public class PrimitiveArrayAvroSerializerTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void testReferenceType () throws Exception {
-        testRoundTrip(List.class, 1, new ArrayList());
+        List<Integer> sample = new ArrayList<>();
+        testRoundTrip(sample.getClass(), 1, sample);
     }
 }

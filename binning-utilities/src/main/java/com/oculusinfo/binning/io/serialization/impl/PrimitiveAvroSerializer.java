@@ -24,18 +24,19 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.io.serialization.AvroSchemaComposer;
-import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
-import com.oculusinfo.binning.util.TypeDescriptor;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.util.*;
+import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 /**
  * A serializer to serialize tiles whose bin values are any Avro primitive type.
@@ -119,6 +120,11 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
         return _schema;
     }
 
+    // This doesn't need to be checked because 
+    //  (a) One can't create a serializer for which it theoreticallly won't work.
+    //  (b) It is possible to use the wrong serializer for a given tile, in which 
+    //      case it will fail - but it should fail in that case.
+    @SuppressWarnings("unchecked")
     @Override
     protected T getValue (GenericRecord bin) {
         return (T) bin.get("value");
