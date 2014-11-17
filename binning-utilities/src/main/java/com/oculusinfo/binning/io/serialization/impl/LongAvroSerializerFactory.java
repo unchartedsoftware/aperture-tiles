@@ -30,6 +30,11 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+/**
+ * This serializer factory constructs a
+ * {@link com.oculusinfo.binning.io.serialization.impl.LongAvroSerializer},
+ * for use with tiles whose bin values are longs.
+ */
 public class LongAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Long>> {
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})

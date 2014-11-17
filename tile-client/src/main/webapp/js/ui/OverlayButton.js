@@ -30,9 +30,12 @@ define(function (require) {
 
     var Class = require('../class'),
         DURATION = 300,
+        getMaxContentHeight,
         OverlayButton;
 
-
+    getMaxContentHeight = function() {
+        return  Math.floor( $(window).height() / 2 );
+    };
 
     OverlayButton = Class.extend({
         /**
@@ -88,19 +91,19 @@ define(function (require) {
             openOverlay = function () {
 
                 var deltaWidth,
-                    previousOverflow;
+                    maxHeight = getMaxContentHeight();
 
-                // measure elements
+                // measure elements and calc delta width to re-size header
                 that.inactiveWidth = that.$header.outerWidth();
                 that.activeWidth = that.$content.outerWidth();
-
-                previousOverflow = that.$content.css('overflow');
-                that.$content.css('overflow', 'hidden');
-                that.$content.children().css('opacity', 0);
                 deltaWidth = that.activeWidth - that.inactiveWidth;
-
+                // set opacity to 0, to fade in from
+                that.$content.children().css('opacity', 0);
+                // set a maximum height
+                that.$content.css( 'max-height', maxHeight );
                  // disable click until animation is complete
                 that.$header.off('click');
+
                 that.$header.animate({
                         // open header
                         width: "+="+deltaWidth
@@ -108,10 +111,20 @@ define(function (require) {
                     {
                         complete: function() {
                             // open content
+                            var contentHeight = parseInt( that.$content.css('height'), 10 );
 
                             that.$content.children().animate({
                                 opacity: 1
                             }, DURATION );
+
+                            if ( contentHeight >= maxHeight ) {
+                                // set timeout to override jquery setting overflow to hidden during
+                                // animation. This allows the scrollbar to appear instantly
+                                setTimeout( function() {
+                                    that.$content.css('overflow','');
+                                }, 1 );
+                            }
+
                             that.$content.animate({
                                 height: 'toggle'
                             },
@@ -119,7 +132,6 @@ define(function (require) {
                                 complete: function() {
                                     // re-enable click, but switch to close callback
                                     that.$header.click( closeOverlay );
-                                    that.$content.css( 'overflow', previousOverflow );
                                 },
                                 duration: DURATION
                             });
@@ -130,13 +142,25 @@ define(function (require) {
 
             closeOverlay = function() {
 
-                var deltaWidth = that.activeWidth - that.inactiveWidth;
+                var deltaWidth = that.activeWidth - that.inactiveWidth,
+                    contentHeight = parseInt( that.$content.css('height'), 10 ),
+                    maxHeight = getMaxContentHeight();
+
                 // disable click until animation is complete
                 that.$header.off('click');
                 that.$content.children().css('opacity', 1);
                 that.$content.children().animate({
                     opacity: 0
                 }, DURATION );
+
+                if ( contentHeight >= maxHeight ) {
+                    // set timeout to override jquery setting overflow to hidden during
+                    // animation. This allows the scrollbar to appear instantly
+                    setTimeout( function() {
+                        that.$content.css('overflow','');
+                    }, 1 );
+                }
+
                 that.$content.animate({
                         height: 'toggle'
                     },
@@ -173,6 +197,7 @@ define(function (require) {
         getContentElement: function() {
             return this.$content;
         },
+
 
         getContainerElement: function() {
             return this.$container;

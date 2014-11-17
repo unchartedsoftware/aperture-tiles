@@ -44,6 +44,8 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 
 import com.oculusinfo.tilegen.datasets.CountValueExtractor
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 
 
 
@@ -67,7 +69,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		                       coordFcn,
 		                       valueFcn,
 		                       new CartesianIndexScheme,
-		                       new SumDoubleAnalytic with StandardDoubleBinningAnalytic,
+		                       new NumericSumBinningAnalytic[Double, JavaDouble](),
 		                       tileAnalytics,
 		                       dataAnalytics,
 		                       new CountValueExtractor(),

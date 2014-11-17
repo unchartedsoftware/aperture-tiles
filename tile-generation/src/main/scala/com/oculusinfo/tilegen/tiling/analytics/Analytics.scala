@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.tilegen.tiling
+package com.oculusinfo.tilegen.tiling.analytics
 
 
 
@@ -32,7 +32,6 @@ import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.util.{List => JavaList}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
@@ -43,10 +42,8 @@ import org.apache.spark.AccumulatorParam
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.binning.util.Pair
+
 
 
 /**
@@ -148,7 +145,7 @@ trait TileAnalytic[T] extends Analytic[T] {
 	 * only this function (unimplemented), and a StandardTileAnalytic with 
 	 * the rest
 	 */
-	def toMap (value: T): Map[String, Object] =
+	def toMap (value: T): Map[String, Any] =
 		Map(name -> valueToString(value))
 
 	override def toString = "["+name+"]"
@@ -173,7 +170,7 @@ class ComposedTileAnalytic[T1, T2]
 		(val1.defaultProcessedValue, val2.defaultProcessedValue)
 	def defaultUnprocessedValue: (T1, T2) =
 		(val1.defaultUnprocessedValue, val2.defaultUnprocessedValue)
-	override def toMap (value: (T1, T2)): Map[String, Object] =
+	override def toMap (value: (T1, T2)): Map[String, Any] =
 		val1.toMap(value._1) ++ val2.toMap(value._2)
 	override def toString = "["+val1+" + "+val2+"]"
 }
@@ -240,7 +237,7 @@ trait AnalysisDescription[RT, AT] {
 	def accumulate (tile: TileIndex, data: AT): Unit
 	// Get accumulatoed metadata info in a form that can be applied
 	// directly to metadata.
-	def toMap: Map[String, Object]
+	def toMap: Map[String, Any]
 	// Apply accumulated metadata info to actual metadata
 	def applyTo (metaData: PyramidMetaData): Unit
 
@@ -287,9 +284,9 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				info._2.accumulator += data
 		)
 
-	def toMap: Map[String, Object] = accumulatorInfos.map(info =>
+	def toMap: Map[String, Any] = accumulatorInfos.map(info =>
 		analytic.toMap(info._2.accumulator.value).map{case (k, v) => (info._2.name+"."+k, v)}
-	).reduceOption(_ ++ _).getOrElse(Map[String, String]())
+	).reduceOption(_ ++ _).getOrElse(Map[String, Any]())
 
 	def applyTo (metaData: PyramidMetaData): Unit = {
 		toMap.foreach{case (key, value) =>
@@ -360,7 +357,7 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.accumulate(tile, data._1)
 		analysis2.accumulate(tile, data._2)
 	}
-	def toMap: Map[String, Object] = analysis1.toMap ++ analysis2.toMap
+	def toMap: Map[String, Any] = analysis1.toMap ++ analysis2.toMap
 	def applyTo (metaData: PyramidMetaData): Unit = {
 		analysis1.applyTo(metaData)
 		analysis2.applyTo(metaData)
@@ -405,371 +402,6 @@ class AnalysisDescriptionTileWrapper[RT, AT: ClassTag]
 // /////////////////////////////////////////////////////////////////////////////
 // Some standard analytic functions
 //
-class SumDoubleAnalytic extends Analytic[Double] {
-	def aggregate (a: Double, b: Double): Double = a + b
-	def defaultProcessedValue: Double = 0.0
-	def defaultUnprocessedValue: Double = 0.0
-}
-
-class MinimumDoubleAnalytic extends Analytic[Double] {
-	def aggregate (a: Double, b: Double): Double =
-		if (a.isNaN) b
-		else if (b.isNaN) a
-		else a min b
-
-	def defaultProcessedValue: Double = 0.0
-	def defaultUnprocessedValue: Double = Double.MaxValue
-}
-class MinimumDoubleTileAnalytic extends MinimumDoubleAnalytic with TileAnalytic[Double] {
-	def name = "minimum"
-}
-
-class MaximumDoubleAnalytic extends Analytic[Double] {
-	def aggregate (a: Double, b: Double): Double =
-		if (a.isNaN) b
-		else if (b.isNaN) a
-		else a max b
-
-	def defaultProcessedValue: Double = 0.0
-	def defaultUnprocessedValue: Double = Double.MinValue
-}
-class MaximumDoubleTileAnalytic extends MaximumDoubleAnalytic with TileAnalytic[Double] {
-	def name = "maximum"
-}
-
-class SumLogDoubleAnalytic(base: Double = math.exp(1.0)) extends Analytic[Double] {
-	def aggregate (a: Double, b: Double): Double =
-		math.log(math.pow(base, a) + math.pow(base, b))/math.log(base)
-	def defaultProcessedValue: Double = 0.0
-	def defaultUnprocessedValue: Double = Double.NegativeInfinity
-}
-
-trait StandardDoubleBinningAnalytic extends BinningAnalytic[Double, JavaDouble] {
-	def finish (value: Double): JavaDouble = new JavaDouble(value)
-}
-
-
-
-/**
- * A standard analytic to calculate the mean of a value.
- * 
- * This doesn't currently exist in simple Analytic form since the finish function 
- * is an integral part of the process.  If/When someone implements a TileAnalytic
- * using mean, it is suggested they derive directly from this BinningAnalytic, and
- * map the output of finish into metadata rather than the raw (Double,Int) value.
- */
-class MeanDoubleBinningAnalytic (emptyValue: Double = JavaDouble.NaN,
-                                 minCount: Int = 1)
-		extends Analytic[(Double, Int)]
-		with BinningAnalytic[(Double, Int), JavaDouble]
-{
-	def aggregate (a: (Double, Int), b: (Double, Int)): (Double, Int) =
-		(a._1 + b._1, a._2 + b._2)
-	def defaultProcessedValue: (Double, Int) = (0.0, 0)
-	def defaultUnprocessedValue: (Double, Int) = (0.0, 0)
-	def finish (value: (Double, Int)): JavaDouble = {
-		val (total, count) = value
-		if (count < minCount) {
-			emptyValue
-		} else {
-			new JavaDouble(total/count)
-		}
-	}
-}
-
-
-
-class SumIntAnalytic extends Analytic[Int] {
-	def aggregate (a: Int, b: Int): Int = a + b
-	def defaultProcessedValue: Int = 0
-	def defaultUnprocessedValue: Int = 0
-}
-
-class MinimumIntAnalytic extends Analytic[Int] {
-	def aggregate (a: Int, b: Int): Int = a min b
-	def defaultProcessedValue: Int = 0
-	def defaultUnprocessedValue: Int = Int.MaxValue
-}
-
-class MinimumIntTileAnalytic extends MinimumIntAnalytic with TileAnalytic[Int] {
-	def name = "minimum"
-}
-
-class MaximumIntAnalytic extends Analytic[Int] {
-	def aggregate (a: Int, b: Int): Int = a max b
-	def defaultProcessedValue: Int = 0
-	def defaultUnprocessedValue: Int = Int.MinValue
-}
-
-class MaximumIntTileAnalytic extends MinimumIntAnalytic with TileAnalytic[Int] {
-	def name = "maximum"
-}
-
-trait StandardIntBinningAnalytic extends BinningAnalytic[Int, JavaInt] {
-	def finish (value: Int): JavaInt = new JavaInt(value)
-}
-
-
-
-
-class SumLongAnalytic extends Analytic[Long] {
-	def aggregate (a: Long, b: Long): Long = a + b
-	def defaultProcessedValue: Long = 0L
-	def defaultUnprocessedValue: Long = 0L
-}
-
-class MinimumLongAnalytic extends Analytic[Long] {
-	def aggregate (a: Long, b: Long): Long = a min b
-	def defaultProcessedValue: Long = 0L
-	def defaultUnprocessedValue: Long = Long.MaxValue
-}
-
-class MinimumLongTileAnalytic extends MinimumLongAnalytic with TileAnalytic[Long] {
-	def name = "minimum"
-}
-
-class MaximumLongAnalytic extends Analytic[Long] {
-	def aggregate (a: Long, b: Long): Long = a max b
-	def defaultProcessedValue: Long = 0L
-	def defaultUnprocessedValue: Long = Long.MinValue
-}
-
-class MaximumLongTileAnalytic extends MinimumLongAnalytic with TileAnalytic[Long] {
-	def name = "maximum"
-}
-
-trait StandardLongBinningAnalytic extends BinningAnalytic[Long, JavaLong] {
-	def finish (value: Long): JavaLong = new JavaLong(value)
-}
-
-
-
-
-abstract class StandardDoubleArrayAnalytic extends Analytic[Seq[Double]] {
-	def aggregateElements (a: Double, b: Double): Double
-
-	def aggregate (a: Seq[Double], b: Seq[Double]): Seq[Double] = {
-		val alen = a.length
-		val blen = b.length
-		val len = alen max blen
-		Range(0, len).map(n =>
-			{
-				if (n < alen && n < blen) aggregateElements(a(n), b(n))
-				else if (n < alen) a(n)
-				else b(n)
-			}
-		)
-	}
-	def defaultProcessedValue: Seq[Double] = Seq[Double]()
-	def defaultUnprocessedValue: Seq[Double] = Seq[Double]()
-}
-trait StandardDoubleArrayTileAnalytic extends TileAnalytic[Seq[Double]] {
-	override def valueToString (value: Seq[Double]): String = value.mkString("[", ",", "]")
-}
-
-class SumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
-	def aggregateElements (a: Double, b: Double): Double = a + b
-}
-
-class MinimumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
-	def aggregateElements (a: Double, b: Double): Double = a min b
-}
-
-class MinimumDoubleArrayTileAnalytic
-		extends MinimumDoubleArrayAnalytic
-		with StandardDoubleArrayTileAnalytic
-{
-	def name = "minimums"
-}
-
-class MaximumDoubleArrayAnalytic extends StandardDoubleArrayAnalytic {
-	def aggregateElements (a: Double, b: Double): Double = a max b
-}
-
-class MaximumDoubleArrayTileAnalytic
-		extends MaximumDoubleArrayAnalytic
-		with StandardDoubleArrayTileAnalytic
-{
-	def name = "maximums"
-}
-
-trait StandardDoubleArrayBinningAnalytic extends BinningAnalytic[Seq[Double],
-                                                                 JavaList[JavaDouble]] {
-	def finish (value: Seq[Double]): JavaList[JavaDouble] =
-		value.map(v => new JavaDouble(v)).asJava
-}
-
-/**
- * Standard string score ordering
- * 
- * @param aggregationLimit The number of elements to keep when aggregating
- * @param order An optional function to specify the order of values.  If not 
- *              given, the order will be random.
- */
-class StringScoreAnalytic
-	(aggregationLimit: Option[Int] = None,
-	 order: Option[((String, Double), (String, Double)) => Boolean] = None)
-		extends Analytic[Map[String, Double]]
-{
-	def aggregate (a: Map[String, Double],
-	               b: Map[String, Double]): Map[String, Double] = {
-		val combination =
-			(a.keySet union b.keySet).map(key =>
-				key -> (a.getOrElse(key, 0.0) + b.getOrElse(key, 0.0))
-			)
-		val sorted: Iterable[(String, Double)] = order.map(fcn =>
-			combination.toList.sortWith(fcn)
-		).getOrElse(combination)
-
-		aggregationLimit.map(limit =>
-			sorted.take(limit)
-		).getOrElse(sorted).toMap
-	}
-	def defaultProcessedValue: Map[String, Double] = Map[String, Double]()
-	def defaultUnprocessedValue: Map[String, Double] = Map[String, Double]()
-}
-
-/**
- * Extends the standard string score analytic into a binning analytic.
- * 
- * @param aggregationLimit See StringScoreAnalytic
- * @param order See StringScoreAnalytic
- * @param storageLimit The maximum number of entries to store in each tile bin.
- */
-class StandardStringScoreBinningAnalytic
-	(aggregationLimit: Option[Int] = None,
-	 order: Option[((String, Double), (String, Double)) => Boolean] = None,
-	 storageLimit: Option[Int] = None)
-		extends StringScoreAnalytic(aggregationLimit, order)
-		with BinningAnalytic[Map[String, Double],
-		                     JavaList[Pair[String, JavaDouble]]]
-{
-	def finish (value: Map[String, Double]): JavaList[Pair[String, JavaDouble]] = {
-		val valueSeq =
-			order
-				.map(fcn => value.toSeq.sortWith(fcn))
-				.getOrElse(value.toSeq)
-				.map(p => new Pair(p._1, new JavaDouble(p._2)))
-		storageLimit
-			.map(valueSeq.take(_))
-			.getOrElse(valueSeq)
-			.asJava
-	}
-}
-
-trait StandardStringScoreTileAnalytic extends TileAnalytic[Map[String, Double]] {
-	override def valueToString (value: Map[String, Double]): String =
-		value.map(p => "\""+p._1+"\":"+p._2).mkString("[", ",", "]")
-}
-
-class CategoryValueAnalytic(categoryNames: Seq[String])
-		extends Analytic[Seq[Double]]
-{
-	def aggregate (a: Seq[Double], b: Seq[Double]): Seq[Double] =
-		Range(0, a.length max b.length).map(i =>
-			{
-				def getOrElse(value: Seq[Double], index: Int, default: Double): Double =
-					value.applyOrElse(index, (n: Int) => default)
-				getOrElse(a, i, 0.0) + getOrElse(b, i, 0.0)
-			}
-		)
-	def defaultProcessedValue: Seq[Double] = Seq[Double]()
-	def defaultUnprocessedValue: Seq[Double] = Seq[Double]()
-}
-class CategoryValueBinningAnalytic(categoryNames: Seq[String])
-		extends CategoryValueAnalytic(categoryNames)
-		with BinningAnalytic[Seq[Double],
-		                     JavaList[Pair[String, JavaDouble]]]
-{
-	def finish (value: Seq[Double]): JavaList[Pair[String, JavaDouble]] = {
-		Range(0, value.length min categoryNames.length).map(i =>
-			new Pair[String, JavaDouble](categoryNames(i), value(i))
-		).toSeq.asJava
-	}
-}
-
-
-
-/**
- * This analytic stores the CIDR block represented by a given tile.
- */
-object IPv4Analytics extends Serializable {
-	import IPv4ZCurveIndexScheme._
-
-	private val EPSILON = 1E-10
-	def getCIDRBlock (pyramid: TilePyramid)(tile: TileData[_]): String = {
-		// Figure out the IP address of our corners
-		val index = tile.getDefinition()
-		val bounds = pyramid.getTileBounds(index)
-		val llAddr = ipArrayToLong(reverse(bounds.getMinX(), bounds.getMinY()))
-		val urAddr = ipArrayToLong(reverse(bounds.getMaxX()-EPSILON, bounds.getMaxY()-EPSILON))
-
-		// Figure out how many significant bits they have in common
-		val significant = 0xffffffffL & ~(llAddr ^ urAddr)
-		// That is the number of blocks
-		val block = 32 -
-			(for (i <- 0 to 32) yield (i, ((1L << i) & significant) != 0))
-			.find(_._2)
-			.getOrElse((32, false))._1
-		// And apply that to either to get the common address
-		val addr = longToIPArray(llAddr & significant)
-		ipArrayToString(addr)+"/"+block
-	}
-
-	def getIPAddress (pyramid: TilePyramid, max: Boolean)(tile: TileData[_]): Long = {
-		val index = tile.getDefinition()
-		val bounds = pyramid.getTileBounds(index)
-		if (max) {
-			ipArrayToLong(reverse(bounds.getMaxX()-EPSILON, bounds.getMaxY()-EPSILON))
-		} else {
-			ipArrayToLong(reverse(bounds.getMinX(), bounds.getMinY()))
-		}
-	}
-
-	/**
-	 * Get an analysis description for an analysis that stores the CIDR block 
-	 * of an IPv4-indexed tile, with an arbitrary tile pyramid.
-	 */
-	def getCIDRBlockAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
-			AnalysisDescription[TileData[BT], String] =
-		new TileOnlyMonolithicAnalysisDescription[TileData[BT], String](
-			getCIDRBlock(pyramid),
-			new StringAnalytic("CIDR Block"))
-
-
-	def getMinIPAddressAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
-			AnalysisDescription[TileData[BT], Long] =
-		new MonolithicAnalysisDescription[TileData[BT], Long](
-			getIPAddress(pyramid, false),
-			new TileAnalytic[Long] {
-				def name = "Minimum IP Address"
-				def aggregate (a: Long, b: Long): Long = a min b
-				def defaultProcessedValue: Long = 0L
-				def defaultUnprocessedValue: Long = 0xffffffffL
-				override def valueToString (value: Long): String =
-					ipArrayToString(longToIPArray(value))
-			})
-
-	def getMaxIPAddressAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
-			AnalysisDescription[TileData[BT], Long] =
-		new MonolithicAnalysisDescription[TileData[BT], Long](
-			getIPAddress(pyramid, true),
-			new TileAnalytic[Long] {
-				def name = "Maximum IP Address"
-				def aggregate (a: Long, b: Long): Long = a max b
-				def defaultProcessedValue: Long = 0xffffffffL
-				def defaultUnprocessedValue: Long = 0L
-				override def valueToString (value: Long): String =
-					ipArrayToString(longToIPArray(value))
-			})
-}
-
-class StringAnalytic (analyticName: String) extends TileAnalytic[String] {
-	def name = analyticName
-	def aggregate (a: String, b: String): String = a+b
-	def defaultProcessedValue: String = ""
-	def defaultUnprocessedValue: String = ""
-}
 
 
 /**
@@ -784,7 +416,7 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 	def name: String = "VariableSeries"
-	override def toMap (value: String): Map[String, Object] = Map[String, String]()
+	override def toMap (value: String): Map[String, Any] = Map[String, String]()
 }
 /**
  * A very simply tile analytic that just writes custom metadata directly to the tile set 
@@ -801,7 +433,7 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 	def analytic: TileAnalytic[String] = new CustomMetadataAnalytic
 	def accumulate (tile: TileIndex, data: String): Unit = {}
 	// This is used to apply the analytic to tiles; we don't want anything to happen there
-	def toMap: Map[String, Object] = Map[String, Object]()
+	def toMap: Map[String, Any] = Map[String, Any]()
 	// This is used to apply the analytic to metadata; here's where we want stuff used.
 	def applyTo (metaData: PyramidMetaData): Unit =
 		customData.map{case (key, value) =>

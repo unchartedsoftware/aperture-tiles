@@ -139,7 +139,6 @@ abstract class KeyValueArgumentSource {
 
 		getInternal[Seq[T]](key, description, "Seq["+argType+"]",
 		                    convertFcn, default)
-		None
 	}
 
 	/* Get a sequence of keys */
@@ -274,135 +273,122 @@ abstract class KeyValueArgumentSource {
 
 
 
-	/**
-	 * Just like {@link #getString}, except it returns an Int
-	 */
-	def getInt (key: String,
-	            description: String,
-	            default: Option[Int] = None): Int = {
-		val convertFcn: String => Int = s => s.toInt
-		getInternal[Int](key, description, "int", convertFcn, default).get
-	}
+	/** Just like {@linke #getStringOption}, except it returns a numeric type */
+	def getNumericOption[T] (key: String,
+	                         description: String,
+	                         default: Option[T] = None)(implicit extnum: ExtendedNumeric[T]):
+			Option[T] =
+		getInternal[T](key, description, extnum.name, extnum.fromString(_), default)
 
-	/**
-	 * Just like {@link #getStringOption}, except it returns an Int
-	 */
-	def getIntOption (key: String,
-	                  description: String,
-	                  default: Option[Int] = None): Option[Int] = {
-		val convertFcn: String => Int = s => s.toInt
-		getInternal[Int](key, description, "int", convertFcn, default)
-	}
-
-	/**
-	 * Just like {@link #getStringSeq}, except it returns a sequence of Ints
-	 */
-	def getIntSeq (key: String,
-	               description: String,
-	               separator: String = ",",
-	               default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] = {
-		val convertFcn: String => Int = s => s.toInt
-		getSequencePropInternal[Int](key, description, "int",
-		                             convertFcn, separator, default).get
-	}
-
-	/**
-	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Ints
-	 */
-	def getIntPropSeq (key: String,
+	/** Just like {@link #getString), except that it returns a numeric type */
+	def getNumeric[T] (key: String,
 	                   description: String,
-	                   default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] = {
-		val convertFcn: String => Int = s => s.toInt
-		getPropSequenceInternal(key, description, "int", convertFcn, default).get
-	}
+	                   default: Option[T] = None)(implicit extnum: ExtendedNumeric[T]): T =
+		getNumericOption[T](key, description, default).get
 
-
-
-	/**
-	 * Just like {@link #getString}, except it returns a Long
-	 */
-	def getLong (key: String,
-	             description: String,
-	             default: Option[Long] = None): Long = {
-		val convertFcn: String => Long = s => s.toLong
-		getInternal[Long](key, description, "long", convertFcn, default).get
-	}
-
-	/**
-	 * Just like {@link #getStringOption}, except it returns a Long
-	 */
-	def getLongOption (key: String,
-	                   description: String,
-	                   default: Option[Long] = None): Option[Long] = {
-		val convertFcn: String => Long = s => s.toLong
-		getInternal[Long](key, description, "long", convertFcn, default)
-	}
-
-	/**
-	 * Just like {@link #getStringSeq}, except it returns a sequence of Longs
-	 */
-	def getLongSeq (key: String,
-	                description: String,
-	                separator: String = ",",
-	                default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] = {
-		val convertFcn: String => Long = s => s.toLong
-		getSequencePropInternal[Long](key, description, "long",
-		                              convertFcn, separator, default).get
-	}
-
-	/**
-	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Longs
-	 */
-	def getLongPropSeq (key: String,
-	                    description: String,
-	                    default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] = {
-		val convertFcn: String => Long = s => s.toLong
-		getPropSequenceInternal(key, description, "long", convertFcn, default).get
-	}
-
-
-
-	/**
-	 * Just like {@link #getString}, except it returns a Double
-	 */
-	def getDouble (key: String,
-	               description: String,
-	               default: Option[Double] = None): Double = {
-		val convertFcn: String => Double = s => s.toDouble
-		getInternal[Double](key, description, "double", convertFcn, default).get
-	}
-
-	/**
-	 * Just like {@link #getStringOption}, except it returns a Double
-	 */
-	def getDoubleOption (key: String,
-	                     description: String,
-	                     default: Option[Double] = None): Option[Double] = {
-		val convertFcn: String => Double = s => s.toDouble
-		getInternal[Double](key, description, "double", convertFcn, default)
-	}
-
-	/**
-	 * Just like {@link #getStringSeq}, except it returns a sequence of Doubles
-	 */
-	def getDoubleSeq (key: String,
-	                  description: String,
-	                  separator: String = ",",
-	                  default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] = {
-		val convertFcn: String => Double = s => s.toDouble
-		getSequencePropInternal[Double](key, description, "double",
-		                                convertFcn, separator, default).get
-	}
-
-	/**
-	 * Just like {@link #getStringPropSeq}, except it returns a sequence of Doubles
-	 */
-	def getDoublePropSeq (key: String,
+	/** Just like {@link #getStringSeq}, except it returns a sequence of a numeric type */
+	def getNumericSeq[T] (key: String,
 	                      description: String,
-	                      default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] = {
-		val convertFcn: String => Double = s => s.toDouble
-		getPropSequenceInternal(key, description, "double", convertFcn, default).get
-	}
+	                      separator: String = ",",
+	                      default: Option[Seq[T]] = Some(Seq[T]()))(
+		implicit extnum: ExtendedNumeric[T]): Seq[T] =
+		getSequencePropInternal[T](key, description, extnum.name, extnum.fromString(_),
+		                           separator, default).get
+
+	/** Just like {@link #gtStringPropSeq}, excep it returns a sequence of a numeric type */
+	def getNumericPropSeq[T] (key: String,
+	                          description: String,
+	                          default: Option[Seq[T]] = Some(Seq[T]()))(
+		implicit extnum: ExtendedNumeric[T]): Seq[T] =
+		getPropSequenceInternal(key, description, extnum.name, extnum.fromString(_), default).get
+
+
+
+	/** Just like {@link #getString}, except it returns an Int */
+	def getInt (key: String, description: String,
+	            default: Option[Int] = None): Int =
+		getNumeric[Int](key, description, default)
+
+	/** Just like {@link #getStringOption}, except it returns an Int */
+	def getIntOption (key: String, description: String,
+	                  default: Option[Int] = None): Option[Int] =
+		getNumericOption[Int](key, description, default)
+
+	/** Just like {@link #getStringSeq}, except it returns a sequence of Ints */
+	def getIntSeq (key: String, description: String, separator: String = ",",
+	               default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] =
+		getNumericSeq[Int](key, description, separator, default)
+
+	/** Just like {@link #getStringPropSeq}, except it returns a sequence of Ints */
+	def getIntPropSeq (key: String, description: String,
+	                   default: Option[Seq[Int]] = Some(Seq[Int]())): Seq[Int] =
+		getNumericPropSeq[Int](key, description, default)
+
+
+
+	/** Just like {@link #getString}, except it returns a Long */
+	def getLong (key: String, description: String,
+	             default: Option[Long] = None): Long =
+		getNumeric[Long](key, description, default)
+
+	/** Just like {@link #getStringOption}, except it returns a Long */
+	def getLongOption (key: String, description: String,
+	                   default: Option[Long] = None): Option[Long] =
+		getNumericOption[Long](key, description, default)
+
+	/** Just like {@link #getStringSeq}, except it returns a sequence of Longs */
+	def getLongSeq (key: String, description: String, separator: String = ",",
+	                default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] =
+		getNumericSeq[Long](key, description, separator, default)
+
+	/** Just like {@link #getStringPropSeq}, except it returns a sequence of Longs */
+	def getLongPropSeq (key: String, description: String,
+	                    default: Option[Seq[Long]] = Some(Seq[Long]())): Seq[Long] =
+		getNumericPropSeq[Long](key, description, default)
+
+
+
+	/** Just like {@link #getString}, except it returns a Float */
+	def getFloat (key: String, description: String,
+	              default: Option[Float] = None): Float =
+		getNumeric[Float](key, description, default)
+
+	/** Just like {@link #getStringOption}, except it returns a Float */
+	def getFloatOption (key: String, description: String,
+	                    default: Option[Float] = None): Option[Float] =
+		getNumericOption[Float](key, description, default)
+
+	/** Just like {@link #getStringSeq}, except it returns a sequence of Floats */
+	def getFloatSeq (key: String, description: String, separator: String = ",",
+	                 default: Option[Seq[Float]] = Some(Seq[Float]())): Seq[Float] =
+		getNumericSeq[Float](key, description, separator, default)
+
+	/** Just like {@link #getStringPropSeq}, except it returns a sequence of Floats */
+	def getFloatPropSeq (key: String, description: String,
+	                     default: Option[Seq[Float]] = Some(Seq[Float]())): Seq[Float] =
+		getNumericPropSeq[Float](key, description, default)
+
+
+
+	/** Just like {@link #getString}, except it returns a Double */
+	def getDouble (key: String, description: String,
+	               default: Option[Double] = None): Double =
+		getNumeric[Double](key, description, default)
+
+	/** Just like {@link #getStringOption}, except it returns a Double */
+	def getDoubleOption (key: String, description: String,
+	                     default: Option[Double] = None): Option[Double] =
+		getNumericOption[Double](key, description, default)
+
+	/** Just like {@link #getStringSeq}, except it returns a sequence of Doubles */
+	def getDoubleSeq (key: String, description: String, separator: String = ",",
+	                  default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] =
+		getNumericSeq[Double](key, description, separator, default)
+
+	/** Just like {@link #getStringPropSeq}, except it returns a sequence of Doubles */
+	def getDoublePropSeq (key: String, description: String,
+	                      default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] =
+		getNumericPropSeq[Double](key, description, default)
 
 
 
@@ -545,10 +531,10 @@ abstract class KeyValueArgumentSource {
 			}
 		)
 		new GeneralSparkConnector(
-		  // Only set a master when it has been passed in.  This lets the default
+			// Only set a master when it has been passed in.  This lets the default
 			// value specified in spark-conf get picked up when no master is specified.
 			getStringOption("spark",
-			          "Spark master location (defaults to externally set value ie. spark-conf)"),
+			                "Spark master location (defaults to externally set value ie. spark-conf)"),
 			getString("sparkhome",
 			          "Spark home location (defaults to ${SPARK_HOME}",
 			          Some(System.getenv("SPARK_HOME"))),

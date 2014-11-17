@@ -47,6 +47,8 @@ import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
@@ -219,10 +221,10 @@ class SortedBinner {
 		//
 		// cf stands for 'common form'
 		val cfTiles: RDD[(TileIndex, (Option[TileData[PT]],
-		                              Option[Map[String, Object]]))] =
+		                              Option[Map[String, Any]]))] =
 			processTypeTiles.map{case (index, tile) => (index, (Some(tile), None))}
 		val cfMetaData: Option[RDD[(TileIndex, (Option[TileData[PT]],
-		                                        Option[Map[String, Object]]))]] =
+		                                        Option[Map[String, Any]]))]] =
 			metaData.map(_.map{case (index, datum) => (index, (None, Some(datum)))})
 
 		val tiles =
@@ -301,7 +303,7 @@ class SortedBinner {
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, Object])]] =
+			Option[RDD[(TileIndex, Map[String, Any])]] =
 	{
 		dataAnalytics.map(da =>
 			{

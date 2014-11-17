@@ -64,10 +64,12 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		props.setProperty("oculus.binning.source.partitions", "13")
 		props.setProperty("oculus.binning.name", "sample name")
 		props.setProperty("oculus.binning.parsing.a.index", "0")
-		props.setProperty("oculus.binning.parsing.a.fieldType", "Mean")
+		props.setProperty("oculus.binning.parsing.a.fieldType", "double")
+		props.setProperty("oculus.binning.parsing.a.fieldAggregation", "meAn")
 		props.setProperty("oculus.binning.parsing.separator", "\t")
 		props.setProperty("oculus.binning.parsing.b.index", "1")
-		props.setProperty("oculus.binning.parsing.b.fieldType", "aVerage")
+		props.setProperty("oculus.binning.parsing.b.fieldType", "float")
+		props.setProperty("oculus.binning.parsing.b.fieldAggregation", "aVerage")
 		props.setProperty("oculus.binning.parsing.c.index", "2")
 		props.setProperty("oculus.binning.parsing.c.fieldType", "Median")
 
@@ -77,13 +79,13 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		val CSVPropsA = new CSVRecordPropertiesWrapper(props)
 		assert(CSVValueExtractor.fromProperties(CSVPropsA,
 		                                        CSVValueExtractor.standardFactories)
-			       .isInstanceOf[MeanValueExtractor])
+			       .isInstanceOf[MeanValueExtractor[Double]])
 
 		props.setProperty("oculus.binning.valueField", "b")
 		val CSVPropsB = new CSVRecordPropertiesWrapper(props)
 		assert(CSVValueExtractor.fromProperties(CSVPropsB,
 		                                        CSVValueExtractor.standardFactories)
-			       .isInstanceOf[MeanValueExtractor])
+			       .isInstanceOf[MeanValueExtractor[Float]])
 
 		// Make sure something else (say, for the sake of argument, 'median')
 		// does not.
@@ -91,7 +93,7 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		val CSVPropsC = new CSVRecordPropertiesWrapper(props)
 		assert(!(CSVValueExtractor.fromProperties(CSVPropsC,
 		                                          CSVValueExtractor.standardFactories)
-			         .isInstanceOf[MeanValueExtractor]))
+			         .isInstanceOf[MeanValueExtractor[_]]))
 	}
 }
 

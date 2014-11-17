@@ -46,8 +46,8 @@ import com.oculusinfo.tilegen.datasets.DatasetFactory
 import org.apache.spark.SparkContext
 import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import java.util.{List => JavaList}
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import org.apache.spark.graphx._
 import scala.collection.JavaConverters._

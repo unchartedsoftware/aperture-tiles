@@ -47,8 +47,10 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileAndBinIndices
-
 import com.oculusinfo.tilegen.datasets.ValueDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.util.EndPointsToLine
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
 
 class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable {
@@ -168,10 +170,11 @@ class RDDLineBinner(minBins: Int = 2,
 		valueScheme: ValueDescription[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
-		calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)],		
 		writeLocation: String,
 		tileIO: TileIO,
 		levelSets: Seq[Seq[Int]],
+		calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
+			new EndPointsToLine().endpointsToLineBins,
 		xBins: Int = 256,
 		yBins: Int = 256,
 		name: String = "unknown",
@@ -260,8 +263,13 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
-	 * 
-	 * @param IT the index type, convertable to a cartesian pair with the 
+	 * @param calcLinePixels A function used to rasterize the line/arc between
+	 *                       two end points.  Defaults to a line based implementation.
+	 * @param usePointBinner Indicates whether the lines will be consolidate by point
+	 *                       or by tile.  Defaults to using point based consolidation.
+	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
+	 *                    or arcs.  Defaults to lines.
+	 * @param IT the index type, convertible to a cartesian pair with the 
 	 *           coordinateFromIndex function
 	 * @param PT The bin type, when processing and aggregating
 	 * @param AT The type of tile-level analytic to calculate for each tile.
@@ -280,7 +288,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	,	 
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	= 
+			 new EndPointsToLine().endpointsToLineBins,	 
 		 isDensityStrip: Boolean = false,
 		 usePointBinner: Boolean = true,
 		 linesAsArcs: Boolean = false):
@@ -359,7 +368,12 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
-	 * 
+	 * @param calcLinePixels A function used to rasterize the line/arc between
+	 *                       two end points.  Defaults to a line based implementation.
+	 * @param usePointBinner Indicates whether the lines will be consolidate by point
+	 *                       or by tile.  Defaults to using point based consolidation.
+	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
+	 *                    or arcs.  Defaults to lines.
 	 * @param IT The index type, convertable to tile and bin
 	 * @param PT The bin type, when processing and aggregating
 	 * @param AT The type of tile-level analytic to calculate for each tile.
@@ -376,7 +390,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)],		 
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] = 
+			 new EndPointsToLine().endpointsToLineBins,
 		 isDensityStrip: Boolean = false,
 		 usePointBinner: Boolean = true,
 		 linesAsArcs: Boolean = false): RDD[TileData[BT]] =
@@ -449,7 +464,7 @@ class RDDLineBinner(minBins: Int = 2,
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, Object])]] =
+			Option[RDD[(TileIndex, Map[String, Any])]] =
 	{
 		dataAnalytics.map(da =>
 			data.mapPartitions(iter =>
@@ -491,7 +506,7 @@ class RDDLineBinner(minBins: Int = 2,
 		(data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-		 tileMetaData: Option[RDD[(TileIndex, Map[String, Object])]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
 		 consolidationPartitions: Option[Int],
 		 isDensityStrip: Boolean,
 		 xBins: Int = 256,
@@ -537,14 +552,14 @@ class RDDLineBinner(minBins: Int = 2,
 		//     Rest of process is same as regular RDDBinner (reduceByKey, convert
 		//     to (tile,(bin,value)), groupByKey, and create tiled results)
 		val reduced: RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                              Option[Map[String, Object]]))] =
+		                              Option[Map[String, Any]]))] =
 			expanded.reduceByKey(binAnalytic.aggregate(_, _),
 			                     RDDLineBinner.getNumSplits(consolidationPartitions, expanded)
 			).map(p => (p._1._1, (Some((p._1._2, p._2)), None)))
 
 		// Now the metadata half (in a way that should take no work if there is no metadata)
 		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                                      Option[Map[String, Object]]))]] =
+		                                      Option[Map[String, Any]]))]] =
 			tileMetaData.map(
 				_.map{case (index, metaData) => (index, (None, Some(metaData))) }
 			)
@@ -623,7 +638,7 @@ class RDDLineBinner(minBins: Int = 2,
 		(data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-		 tileMetaData: Option[RDD[(TileIndex, Map[String, Object])]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
 		 consolidationPartitions: Option[Int],
 		 isDensityStrip: Boolean,
 		 xBins: Int = 256,
@@ -657,7 +672,7 @@ class RDDLineBinner(minBins: Int = 2,
 		// val reduced2 = reduced1.flatMap(p => {
 		
 		val segmentsByTile: RDD[(TileIndex, (Option[(BinIndex, BinIndex, PT)],
-		                                     Option[Map[String, Object]]))] =
+		                                     Option[Map[String, Any]]))] =
 			data.flatMap(p =>
 				{
 					val ((lineStart, lineEnd, tile), procType) = p
@@ -674,7 +689,7 @@ class RDDLineBinner(minBins: Int = 2,
 		// Now, the metadata half (in a way that should take no work if there
 		// is no metadata)
 		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, BinIndex, PT)],
-		                                      Option[Map[String, Object]]))]] =
+		                                      Option[Map[String, Any]]))]] =
 			tileMetaData.map(_.map{case (index, metaData) => (index, (None, Some(metaData)))})
 
 		// Get the combination of the two sets, again in a way that does no
