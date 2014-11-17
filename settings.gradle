@@ -5,4 +5,6 @@ include 'math-utilities',
 	'tile-generation', 
 	'tile-service', 
 	'tile-packaging',
-	'annotation-service'
+	'annotation-service',
+	'tile-client',
+	'tile-examples:julia-demo'

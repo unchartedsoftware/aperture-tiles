@@ -40,12 +40,6 @@ task phantomCopy(type: Copy) {
 }
 war.dependsOn(phantomCopy)
 
-// Configure the jetty run task
-jettyRun {
-	httpPort = 9090	
-	contextPath = project.name	
-}
-
 // Restlet isn't in maven central for some reason, so we need to add their
 // location to the set from the parent build file.
 repositories {

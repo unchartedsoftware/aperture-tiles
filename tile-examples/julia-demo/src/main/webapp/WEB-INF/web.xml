@@ -21,7 +21,7 @@
 			com.oculusinfo.tile.init.ImageRendererFactoryModule:
 			<!-- Serialization factory module - override to add custom tile 
 			     serializers -->
-			com.oculusinfo.tile.init.TileSerializerFactoryModule:
+			com.oculusinfo.tile.init.StandardTileSerializerFactoryModule:
 			<!-- Pyramid IO factory module - override to add custom PyramidIO 
 			     implementations -->
 			<!-- For standard, pre-batched tiling -->

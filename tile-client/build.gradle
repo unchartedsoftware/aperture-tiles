@@ -1,0 +1,24 @@
+description = "A basic map client that allows for client-side user interaction with"
+
+apply plugin: "war"
+
+// Define a configuration for the war overlay process.
+configurations {
+	warOverlay
+}
+
+// Add the tile service war to the overlay config
+dependencies {
+	compile project(":annotation-service")
+	warOverlay "com.oculusinfo:tile-service:$version@war"
+}
+
+// Append the overlay process to the end of the WAR task.
+war << {
+	// unpack all the war files into the temp directory for this task
+	configurations.warOverlay.each {
+		ant.unwar src: it, dest: temporaryDir
+	}
+	// update the war file, but when a duplicate file is found preserve the original
+	ant.war basedir: temporaryDir, destfile: archivePath, update: true
+}
