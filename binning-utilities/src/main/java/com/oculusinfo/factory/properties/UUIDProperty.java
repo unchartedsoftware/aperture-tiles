@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.properties;
+package com.oculusinfo.factory.properties;
 
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
