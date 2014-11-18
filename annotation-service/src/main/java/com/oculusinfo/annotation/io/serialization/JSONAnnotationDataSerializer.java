@@ -1,9 +1,9 @@
-/*
- * Copyright (c) 2014 Oculus Info Inc.
+/**
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -22,26 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.annotation.io.serialization;
+
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.impl.JSONAnnotation;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+public class JSONAnnotationDataSerializer extends GenericJSONAnnotationSerializer<JSONObject> {
+	
+    private static final long serialVersionUID = -6779123604244971240L;
 
+    public JSONAnnotationDataSerializer() {
+		super();
+	}
 
-public class TileModule extends AbstractModule {
 	@Override
-	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
+    protected JSONObject translateToJSON ( AnnotationData<?> value ) {
+		
+		return value.toJSON();
+	}
+	
+	@Override
+	protected JSONAnnotation getValue(Object obj) throws JSONException {
+		
+		return JSONAnnotation.fromJSON( (JSONObject)obj );
 	}
 }

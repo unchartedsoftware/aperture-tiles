@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -22,26 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.annotation.io;
 
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.util.Pair;
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+import java.io.IOException;
+import java.util.List;
 
+public interface AnnotationIO {
+   
+	
+	/**
+	 * Write
+	 */
+	public void initializeForWrite (String tableName) throws IOException;
+    public void writeData (String id, 
+					       AnnotationSerializer serializer, 
+					       Iterable<AnnotationData<?>> data ) throws IOException;
 
-public class TileModule extends AbstractModule {
-	@Override
-	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
-	}
+    /**
+     * Read
+     */
+    public void initializeForRead (String tableName);
+    public List<AnnotationData<?>> readData (String id,
+								             AnnotationSerializer serializer,
+								             Iterable<Pair<String,Long>> certificates) throws IOException;
+ 
+    /**
+     * Delete
+     */
+    public void removeData (String id, Iterable<Pair<String,Long>> data ) throws IOException;
+  
 }

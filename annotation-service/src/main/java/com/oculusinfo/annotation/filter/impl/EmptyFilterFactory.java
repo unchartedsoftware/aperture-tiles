@@ -22,26 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.annotation.filter.impl;
+
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.factory.ConfigurableFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+public class EmptyFilterFactory extends ConfigurableFactory<AnnotationFilter> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(EmptyFilterFactory.class);
+	public static final String NAME = "empty";
 
 
-public class TileModule extends AbstractModule {
+	public EmptyFilterFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super(NAME, AnnotationFilter.class, parent, path);
+	}
+
 	@Override
-	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
+	protected AnnotationFilter create() {
+		try {
+			return new EmptyFilter();
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create EmptyFilter", e);
+		}
+		return null;
 	}
 }

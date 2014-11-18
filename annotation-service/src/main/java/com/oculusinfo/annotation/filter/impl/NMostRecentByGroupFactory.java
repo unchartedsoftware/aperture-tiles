@@ -22,26 +22,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.annotation.filter.impl;
+
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.JSONProperty;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+public class NMostRecentByGroupFactory extends ConfigurableFactory<AnnotationFilter> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(NMostRecentByGroupFactory.class);
 
+	
+	public static JSONProperty COUNTS_BY_GROUP = new JSONProperty("countsByGroup",
+	    "Indicates the number of annotations to read for each bin, by priority",
+	    null);
 
-public class TileModule extends AbstractModule {
+	public NMostRecentByGroupFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super("n-most-recent-by-group", AnnotationFilter.class, parent, path);
+		
+		addProperty(COUNTS_BY_GROUP);
+	}
+
 	@Override
-	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
+	protected AnnotationFilter create() {
+		try {
+			JSONObject countsByGroup = getPropertyValue(COUNTS_BY_GROUP);
+			return new NMostRecentByGroupFilter(countsByGroup);
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create NMostRecentByPriorityFactory", e);
+		}
+		return null;
 	}
 }

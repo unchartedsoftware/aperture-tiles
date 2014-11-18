@@ -22,26 +22,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
-
+package com.oculusinfo.annotation.rest;
 
 import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 
 
-public class TileModule extends AbstractModule {
+public class AnnotationServiceModule extends AbstractModule {
+
 	@Override
 	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
+		bind(AnnotationSerializer.class).to(JSONAnnotationDataSerializer.class);
+		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);
+		bind(AnnotationService.class).to(AnnotationServiceImpl.class);
 	}
+
 }

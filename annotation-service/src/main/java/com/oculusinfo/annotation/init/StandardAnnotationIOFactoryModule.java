@@ -22,26 +22,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
-
+package com.oculusinfo.annotation.init;
 
 import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
+import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.FactoryProvider;
 
+public class StandardAnnotationIOFactoryModule extends AbstractModule {
 
-public class TileModule extends AbstractModule {
 	@Override
 	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
+		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
+		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
+			factoryProviderBinder.addBinding().toInstance(provider);
+		
+		bind(new TypeLiteral<FactoryProvider<AnnotationIO>>() {}).to(StandardAnnotationIOFactoryProvider.class);
 	}
 }

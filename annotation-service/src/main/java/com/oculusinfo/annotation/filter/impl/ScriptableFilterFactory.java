@@ -22,26 +22,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.annotation.filter.impl;
+
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.StringProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.data.DataService;
-import com.oculusinfo.tile.rest.data.DataServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
+public class ScriptableFilterFactory extends ConfigurableFactory<AnnotationFilter> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableFilterFactory.class);
 
+	
+	public static StringProperty SCRIPT_STRING = new StringProperty("script",
+	    "The javascript script string that evaluates to a boolean based off a single annotation",
+	    null);
 
-public class TileModule extends AbstractModule {
+	public ScriptableFilterFactory(ConfigurableFactory<?> parent, List<String> path) {
+		super("scriptable", AnnotationFilter.class, parent, path);
+		
+		addProperty(SCRIPT_STRING);
+	}
+
 	@Override
-	protected void configure() {
-		bind(LayerService.class).to(LayerServiceImpl.class);
-		bind(TileService.class).to(TileServiceImpl.class);
-		bind(LegendService.class).to(LegendServiceImpl.class);
-		bind(DataService.class).to(DataServiceImpl.class);
+	protected AnnotationFilter create() {
+		try {
+			String script = getPropertyValue(SCRIPT_STRING);
+			return new ScriptableFilter(script);
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create ScriptableFilter", e);
+		}
+		return null;
 	}
 }

@@ -40,6 +40,10 @@
 			<!-- Annotation filter factory module - override to add custom AnnotationFilter 
 			     implementations -->
 			com.oculusinfo.tile.init.StandardAnnotationFilterFactoryModule:
+			<!-- Sets up the REST interface by which clients can retrieve tiles -->
+	      	com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+		      <!-- Sets up the annotation service -->
+		    com.oculusinfo.annotation.rest.AnnotationServiceModule:
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data) -->
 			com.oculusinfo.tile.spark.SparkModule:
