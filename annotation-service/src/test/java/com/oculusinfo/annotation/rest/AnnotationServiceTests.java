@@ -85,7 +85,7 @@ public class AnnotationServiceTests {
     	
 		try {
 
-			String configFile = ".\\tile-service\\src\\test\\config\\filesystem-io-test-config.json";
+			String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
 
             Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );

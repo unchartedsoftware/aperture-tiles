@@ -1,0 +1,31 @@
+[
+	{
+        "id": "annotations-unit-test",
+        "public": {
+        	"pyramid" : {
+	            "type" : "WebMercator"
+	        },
+	        "filter" : {
+				"type": "n-most-recent-by-group",
+				"countsByGroup": {
+					"Urgent": 100,
+					"High": 100,
+					"Medium": 100,
+					"Low" : 100
+				}
+			}
+        },       
+        "private": {
+        	"data": {
+				"pyramidio": {
+					"type": "file",
+					"root.path": ".\\",
+					"extension": "json"
+				},
+				"serializer": {
+					"type": "string->[(string, long)]-j"
+				}
+			}
+        }		
+    }
+]
