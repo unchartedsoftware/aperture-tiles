@@ -21,29 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.rest.annotation;
+package com.oculusinfo.annotation.rest;
 
-import com.oculusinfo.binning.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.annotation.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.init.DefaultAnnotationFilterFactoryProvider;
+import com.oculusinfo.annotation.init.DefaultAnnotationIOFactoryProvider;
+import com.oculusinfo.annotation.init.providers.StandardAnnotationFilterFactoryProvider;
+import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
+import com.oculusinfo.annotation.util.AnnotationGenerator;
+import com.oculusinfo.annotation.util.AnnotationUtil;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.impl.JSONAnnotation;
-import com.oculusinfo.binning.index.AnnotationIndexer;
-import com.oculusinfo.binning.index.impl.AnnotationIndexerImpl;
-import com.oculusinfo.binning.io.AnnotationIO;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.FileSystemAnnotationIO;
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
-import com.oculusinfo.binning.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
-import com.oculusinfo.binning.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.JSONAnnotationDataSerializer;
-import com.oculusinfo.binning.util.AnnotationGenerator;
-import com.oculusinfo.binning.util.AnnotationUtil;
-import com.oculusinfo.tile.init.providers.StandardAnnotationFilterFactoryProvider;
-import com.oculusinfo.tile.init.providers.StandardAnnotationIOFactoryProvider;
+import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
+import com.oculusinfo.tile.init.DefaultTileSerializerFactoryProvider;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rest.annotation.filter.AnnotationFilter;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
 import org.json.JSONObject;
@@ -53,6 +60,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.*;
 
 
 public class AnnotationServiceTests {
@@ -90,23 +98,22 @@ public class AnnotationServiceTests {
 
             FactoryProvider<LayerConfiguration> layerConfigurationProvider = new StandardLayerConfigurationProvider(
                 new StandardPyramidIOFactoryProvider( tileIoSet ),
-                new StandardAnnotationIOFactoryProvider( annotationIoSet ),
                 new StandardTilePyramidFactoryProvider(),
                 new StandardTileSerializerFactoryProvider(serializerSet),
                 new StandardImageRendererFactoryProvider(),
-                new StandardTileTransformerFactoryProvider(),
-                new StandardAnnotationFilterFactoryProvider( filterIoSet )
+                new StandardTileTransformerFactoryProvider()
             );
 
-            _layerService = new LayerServiceImpl( configFile,
-	                                              layerConfigurationProvider );
+            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
 
             AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
 			AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
 			_service = new AnnotationServiceImpl( _layerService,
-                                                  annotationSerializer,
-			                                      annotationIndexer );
+              annotationSerializer,
+              annotationIndexer,
+              new StandardAnnotationIOFactoryProvider( annotationIoSet ),
+              new StandardAnnotationFilterFactoryProvider( filterIoSet ) );
 
 		} catch (Exception e) {
 			throw e;

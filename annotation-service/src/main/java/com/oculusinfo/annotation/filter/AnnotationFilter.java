@@ -23,9 +23,9 @@
  */
 package com.oculusinfo.annotation.filter;
 
+import com.oculusinfo.annotation.AnnotationBin;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
-import com.oculusinfo.binning.AnnotationBin;
-import com.oculusinfo.binning.AnnotationData;
 
 import java.util.List;
 

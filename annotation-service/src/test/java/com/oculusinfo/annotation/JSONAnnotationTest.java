@@ -23,12 +23,13 @@
  */
 package com.oculusinfo.annotation;
 
-import com.oculusinfo.binning.impl.JSONAnnotation;
+import com.oculusinfo.annotation.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.util.AnnotationGenerator;
+import com.oculusinfo.annotation.util.AnnotationUtil;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.index.AnnotationIndexer;
-import com.oculusinfo.binning.index.impl.AnnotationIndexerImpl;
-import com.oculusinfo.binning.util.AnnotationGenerator;
-import com.oculusinfo.binning.util.AnnotationUtil;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;

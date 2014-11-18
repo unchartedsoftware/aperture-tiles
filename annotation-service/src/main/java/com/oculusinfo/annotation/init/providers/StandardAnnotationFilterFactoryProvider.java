@@ -30,6 +30,7 @@ import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.AnnotationFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.providers.StandardUberFactoryProvider;
 
 import java.util.List;
 import java.util.Set;

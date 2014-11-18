@@ -24,17 +24,22 @@
 package com.oculusinfo.annotation.io.impl;
 
 
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.AnnotationTile;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
+import com.oculusinfo.annotation.io.AnnotationIO;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
+import com.oculusinfo.annotation.util.AnnotationGenerator;
+import com.oculusinfo.annotation.util.AnnotationUtil;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.index.AnnotationIndexer;
-import com.oculusinfo.binning.index.impl.AnnotationIndexerImpl;
-import com.oculusinfo.binning.io.AnnotationIO;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.JSONAnnotationDataSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializer;
-import com.oculusinfo.binning.util.AnnotationGenerator;
-import com.oculusinfo.binning.util.AnnotationUtil;
 import com.oculusinfo.binning.util.Pair;
 import org.junit.Assert;
 import org.junit.Before;

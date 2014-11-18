@@ -22,11 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.io.serialization.impl;
+package com.oculusinfo.annotation.io.serialization;
 
 import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.impl.JSONAnnotation;
-import com.oculusinfo.annotation.io.serialization.GenericJSONAnnotationSerializer;
 import org.json.JSONException;
 import org.json.JSONObject;
 

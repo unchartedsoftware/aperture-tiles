@@ -25,11 +25,11 @@
 package com.oculusinfo.annotation.rest;
 
 import com.google.inject.Inject;
-import com.oculusinfo.binning.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.impl.JSONAnnotation;
-import com.oculusinfo.binning.index.AnnotationIndexer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import oculus.aperture.common.rest.ApertureServerResource;

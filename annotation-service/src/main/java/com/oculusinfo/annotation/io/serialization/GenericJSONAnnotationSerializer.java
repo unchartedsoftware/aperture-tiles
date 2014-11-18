@@ -28,6 +28,8 @@ import com.oculusinfo.annotation.AnnotationData;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.*;
+
 public abstract class GenericJSONAnnotationSerializer<T> implements AnnotationSerializer {
 	
     private static final long serialVersionUID = 2617903534522413550L;

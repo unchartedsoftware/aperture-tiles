@@ -26,15 +26,23 @@ package com.oculusinfo.annotation.rest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.AnnotationTile;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.annotation.io.serialization.TileSerializer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 import com.oculusinfo.tile.rest.layer.LayerService;
@@ -42,6 +50,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -70,39 +79,59 @@ public class AnnotationServiceImpl implements AnnotationService {
 	private LayerService _layerService;
 	private AnnotationSerializer _dataSerializer;
 	private AnnotationIndexer _indexer;
+    private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
+    private FactoryProvider<AnnotationFilter> _annotationFilterFactoryProvider;
+    private Map<String, Boolean> _initializedLayersById;
 	
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
     @Inject
 	public AnnotationServiceImpl( LayerService service,
                                   AnnotationSerializer serializer,
-                                  AnnotationIndexer indexer ) {
+                                  AnnotationIndexer indexer,
+                                  FactoryProvider<AnnotationIO> annotationIOFactoryProvider,
+                                  FactoryProvider<AnnotationFilter> annotationFilterFactoryProvider) {
 
         _layerService = service;
         _dataSerializer = serializer;
         _indexer = indexer;
-
-        // since tables may not exist, create them in a thread-safe manner
-        /* TODO: this makes extra '-data' tables for all layers, figure a better way to determine
-                 if they are sued for annotation data
-        for ( String layer : _layerService.getLayerIds() ) {
-            LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
-            String dataId = config.getPropertyValue( LayerConfiguration.DATA_ID );
-            try {
-                _lock.writeLock().lock();
-                AnnotationIO aio = config.produce( AnnotationIO.class );
-                aio.initializeForRead( layer );
-                PyramidIO pio = config.produce( PyramidIO.class );
-                pio.initializeForRead( layer, 0, 0, null );
-            } catch ( Exception e ) {
-                e.printStackTrace();
-            } finally {
-                _lock.writeLock().unlock();
-            }
-        }
-        */
+        _annotationIOFactoryProvider = annotationIOFactoryProvider;
+        _annotationFilterFactoryProvider = annotationFilterFactoryProvider;
+        _initializedLayersById = new HashMap<>();
 	}
 
+    /**
+	 * Wraps the options and query {@link JSONObject}s together into a new object.
+	 */
+	private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
+
+        JSONObject result = JsonUtilities.deepClone( options );
+        try {
+            // all client configurable properties exist under an unseen 'public' node,
+            // create this node before overlay query parameters onto server config
+            if ( query != null ) {
+                JSONObject publicNode = new JSONObject();
+                publicNode.put( "public", query );
+                result = JsonUtilities.overlayInPlace( result, publicNode );
+            }
+        } catch (Exception e) {
+			LOGGER.error("Couldn't merge query options with main options.", e);
+		}
+		return result;
+	}
+
+    public LayerConfiguration getLayerConfiguration( String layer, JSONObject query ) {
+        LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
+        config.addChildFactory( _annotationIOFactoryProvider.createFactory(config, LayerConfiguration.PYRAMID_IO_PATH) );
+        config.addChildFactory( _annotationFilterFactoryProvider.createFactory(config, LayerConfiguration.FILTER_PATH) );
+        JSONObject layerConfig = _layerService.getLayerJSON( layer );
+        try {
+            config.readConfiguration( mergeQueryConfigOptions( layerConfig, query ) );
+            return config;
+        } catch ( Exception e ) {
+            return null;
+        }
+    }
 
 	public Pair<String,Long> write( String layer,
 	                                AnnotationData<?> annotation ) throws IllegalArgumentException {
@@ -110,8 +139,22 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();
 		try {
 
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
+
+            /*
+             * This makes the assumption that if you are writing an annotation, the table MAY
+             * not exist. So in this case, for the first write, make the table if it does no exist
+             * in a thread-safe manner.
+             */
+            if ( !_initializedLayersById.containsKey( layer  ) ) {
+                String dataId = config.getPropertyValue( LayerConfiguration.DATA_ID );
+                AnnotationIO aio = config.produce( AnnotationIO.class );
+                aio.initializeForRead( dataId );
+                PyramidIO pio = config.produce( PyramidIO.class );
+                pio.initializeForRead( dataId, 0, 0, null );
+                _initializedLayersById.put( layer, true );
+            }
 
 			/*
 			 * check if UUID results in IO collision, if so prevent io corruption
@@ -152,7 +195,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				                                   + "MODIFY operation aborted. It is recommended "
 				                                   + "upon receiving this exception to refresh all client annotations");
 			}
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
 
 			/*
@@ -185,7 +228,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.readLock().lock();
 		try {
 
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
+			LayerConfiguration config = getLayerConfiguration( layer, query );
 			TilePyramid pyramid = config.produce( TilePyramid.class );
 			AnnotationFilter filter = config.produce( AnnotationFilter.class );
 
@@ -204,7 +247,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		_lock.writeLock().lock();
 		try {
 
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			TilePyramid pyramid = config.produce(TilePyramid.class);
 
 			/*
@@ -240,7 +283,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 */
 	private boolean checkForCollision( String layer, AnnotationData<?> annotation ) {
 		
-		List<Pair<String,Long>> certificate = new LinkedList<>();  
+		List<Pair<String,Long>> certificate = new LinkedList<>();
 		certificate.add( annotation.getCertificate() );
 		return ( readDataFromIO( layer, certificate ).size() > 0 ) ;
 	}
@@ -273,7 +316,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	 * Iterate through all indices, find matching tiles and add data certificate, if tile
 	 * is missing, add it
 	 */
-	private void addDataCertificateToTiles( List< AnnotationTile > tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {
+	private void addDataCertificateToTiles( List<AnnotationTile> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {
 		
 		for ( TileAndBinIndices index : indices ) {			
 			// check all existing tiles for matching index
@@ -425,7 +468,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		if ( tiles.size() == 0 ) return;
 		
 		try {
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce(PyramidIO.class);	
 
 			TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
@@ -449,7 +492,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		dataList.add( data );
 
 		try {
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			AnnotationIO io = config.produce( AnnotationIO.class );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			io.writeData( dataId, _dataSerializer, dataList );
@@ -468,7 +511,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce( PyramidIO.class );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			io.removeTiles( dataId, tiles );
@@ -487,7 +530,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 		try {
 
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			AnnotationIO io = config.produce( AnnotationIO.class );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			io.removeData( dataId, dataList );
@@ -509,7 +552,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		}
 		
 		try {
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce( PyramidIO.class );
 			TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
 				SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
@@ -541,7 +584,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		try {
 
-			LayerConfiguration config = _layerService.getLayerConfiguration( layer, null );
+			LayerConfiguration config = getLayerConfiguration( layer, null );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			AnnotationIO io = config.produce( AnnotationIO.class );
 			data = io.readData( dataId, _dataSerializer, certificates );

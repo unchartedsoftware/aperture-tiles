@@ -59,7 +59,7 @@ abstract public class ConfigurableFactory<T> {
 	private List<ConfigurableFactory<?>>  _children;
 
     private Set<ConfigurationProperty<?>> _properties;
-    private HashMap<String, List<String> > _pathsByProperty;
+    private HashMap<String, List<String>> _pathsByProperty;
 
 	private boolean                       _configured;
 	private JSONObject                    _configurationNode;
@@ -280,7 +280,7 @@ abstract public class ConfigurableFactory<T> {
 	 * 
 	 * @param child The child to add.
 	 */
-	protected void addChildFactory (ConfigurableFactory<?> child) {
+	public void addChildFactory (ConfigurableFactory<?> child) {
 		_children.add(child);
 		child._parent = this;
 	}
@@ -376,9 +376,12 @@ abstract public class ConfigurableFactory<T> {
 	 *             or if configuration is called twice.
 	 */
 	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
-		if (_configured) {
+
+        /*
+        if (_configured) {
 			throw new ConfigurationException("Attempt to configure factory "+this+" twice");
 		}
+		*/
 
 		try {
 			_configurationNode = getConfigurationNode(rootNode);

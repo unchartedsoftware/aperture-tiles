@@ -32,6 +32,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -39,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.*;
 
 //import org.apache.hadoop.hbase.TableName;
 
@@ -63,8 +65,8 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
     private Configuration  _config;
-    private HBaseAdmin     _admin;
-    private HConnection    _connection;
+    private HBaseAdmin _admin;
+    private HConnection _connection;
 
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
@@ -78,7 +80,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
-        _connection = HConnectionManager.createConnection(_config);
+        _connection = HConnectionManager.createConnection( _config );
 
 
     }

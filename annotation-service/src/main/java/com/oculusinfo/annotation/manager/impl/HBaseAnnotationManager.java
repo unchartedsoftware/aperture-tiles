@@ -29,7 +29,7 @@ import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
+import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.manager.AnnotationManager;
 import com.oculusinfo.binning.util.Pair;
 import org.slf4j.Logger;

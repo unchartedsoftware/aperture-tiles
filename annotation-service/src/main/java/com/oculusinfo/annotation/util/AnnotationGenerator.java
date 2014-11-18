@@ -23,11 +23,19 @@
  */
 package com.oculusinfo.annotation.util;
 
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.AnnotationTile;
 import com.oculusinfo.annotation.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileAndBinIndices;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.*;
 
 
 public class AnnotationGenerator {
