@@ -37,6 +37,10 @@
 	           	implementations -->
 	      	com.oculusinfo.tile.init.StandardAnnotationFilterFactoryModule:
 	      	<!-- Sets up the REST interface by which clients can retrieve tiles -->
+	      	com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+		      <!-- Sets up the annotation service -->
+		    com.oculusinfo.annotation.rest.AnnotationServiceModule:
+		      <!-- Sets up the REST interface by which clients can retrieve tiles -->
 	      	com.oculusinfo.tile.rest.RestConfigModule:
 	      	<!-- Sets up the tile-rendering service -->
 	      	com.oculusinfo.tile.rest.TileModule:

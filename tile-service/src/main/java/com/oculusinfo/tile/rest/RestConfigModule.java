@@ -26,7 +26,6 @@ package com.oculusinfo.tile.rest;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.oculusinfo.tile.rest.annotation.AnnotationResource;
 import com.oculusinfo.tile.rest.data.DataResource;
 import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
@@ -55,12 +54,5 @@ public class RestConfigModule extends AbstractModule {
 
         resourceBinder.addBinding("/{version}/data").toInstance(new ResourceDefinition(DataResource.class));
         resourceBinder.addBinding("/data").toInstance(new ResourceDefinition(DataResource.class));
-
-        resourceBinder.addBinding("/{version}/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
-        resourceBinder.addBinding("/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
-
-        resourceBinder.addBinding("/{version}/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
-        resourceBinder.addBinding("/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
-
 	}
 }

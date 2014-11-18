@@ -28,7 +28,7 @@ import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.rest.tile.caching.LiveTilePyramidIOFactory;
+import com.oculusinfo.tile.rest.tile.caching.OnDemandTilePyramidIOFactory;
 import com.oculusinfo.tile.spark.SparkContextProvider;
 
 import java.util.List;
@@ -41,12 +41,12 @@ public class SparkAwarePyramidIOFactoryProvider implements DelegateFactoryProvid
 
 	@Override
 	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-		return new LiveTilePyramidIOFactory(null, path, _contextProvider);
+		return new OnDemandTilePyramidIOFactory(null, path, _contextProvider);
 	}
 	
 	@Override
 	public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
 	                                                     List<String> path) {
-		return new LiveTilePyramidIOFactory(parent, path, _contextProvider);
+		return new OnDemandTilePyramidIOFactory(parent, path, _contextProvider);
 	}
 }

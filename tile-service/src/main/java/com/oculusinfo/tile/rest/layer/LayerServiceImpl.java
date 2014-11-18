@@ -164,7 +164,7 @@ public class LayerServiceImpl implements LayerService {
             // load the configured JSONObject. Otherwise take the server default.
             JSONObject layerConfig;
             if ( requestParams != null && requestParams.has("sha") ) {
-                layerConfig =_layersBySha.get( requestParams.getString("sha") );
+                layerConfig = _layersBySha.get( requestParams.getString("sha") );
             } else {
                 layerConfig = _layersById.get( layerId );
             }

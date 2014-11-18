@@ -26,12 +26,6 @@ package com.oculusinfo.tile.rest;
 
 
 import com.google.inject.AbstractModule;
-import com.oculusinfo.binning.io.serialization.AnnotationSerializer;
-import com.oculusinfo.binning.io.serialization.impl.JSONAnnotationDataSerializer;
-import com.oculusinfo.binning.index.AnnotationIndexer;
-import com.oculusinfo.binning.index.impl.AnnotationIndexerImpl;
-import com.oculusinfo.tile.rest.annotation.AnnotationService;
-import com.oculusinfo.tile.rest.annotation.AnnotationServiceImpl;
 import com.oculusinfo.tile.rest.data.DataService;
 import com.oculusinfo.tile.rest.data.DataServiceImpl;
 import com.oculusinfo.tile.rest.layer.LayerService;
@@ -49,8 +43,5 @@ public class TileModule extends AbstractModule {
 		bind(TileService.class).to(TileServiceImpl.class);
 		bind(LegendService.class).to(LegendServiceImpl.class);
 		bind(DataService.class).to(DataServiceImpl.class);
-        bind(AnnotationService.class).to(AnnotationServiceImpl.class);
-        bind(AnnotationSerializer.class).to(JSONAnnotationDataSerializer.class);
-		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);
 	}
 }
