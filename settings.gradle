@@ -7,4 +7,5 @@ include 'math-utilities',
 	'tile-packaging',
 	'annotation-service',
 	'tile-client',
-	'tile-examples:julia-demo'
+	'tile-examples:julia-demo',
+	'tile-examples:twitter-topics:twitter-topics-utilities'
