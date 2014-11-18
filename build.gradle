@@ -165,13 +165,16 @@ subprojects {
 			
 			// Append an action to the clean task that will clean up the old
 			// aperture-config.json file
-			clean << {
+			clean {
 				delete "src/main/webapp/data/aperture-config.json"
 			}
 			
-			// Add a task of preddefined type Copy to copy and filter the
+			// Add a task of predefined type Copy to copy and filter the
 			// aperture config file.  It will run before the war build task.
 			task copyApertureConfig(type: Copy) {
+				inputs.file file("src/main/filteredResources/aperture-config.json")
+				outputs.file file("src/main/webapp/data/aperture-config.json")
+				
 				from "src/main/filteredResources"
 				into "src/main/webapp/data"
 				include "aperture-config.json"

@@ -45,17 +45,39 @@ artifacts {
 	archives testJar
 }
 
-// Token filtering - this uses ANT filtering functionality.  The .toString() calls
-// are needed because ANT works with basic Java Strings, rather than Groovy's GStrings.
-// We could also assign the versions in single quotes, which forces the use of a Java
-// String.
-processResources {
+// Add a delete to the clean task that will remove the scripts directory if it exists.
+clean {
+	inputs.dir "scripts"
+	inputs.file "src/main/resources/build.properties"
+	delete "scripts"
+	delete "src/main/resources/build.properties"
+}
+
+// Copy and filter resources files.  This uses a baseline copy task, and applies
+// Ant's token functionality to filter values.
+task copyFilteredResources(type: Copy) {	
+	from "src/main/filtered-resources-gradle"
+	into "src/main/resources"
 	filter ReplaceTokens, tokens:[
 		"project-version": version.toString(),
 		"hadoop-core-version": hadoopCoreVersion.toString(),
-		"hbase-version": hbaseVersion.toString() 
+		"hbase-version": hbaseVersion.toString()
 	]
 }
+
+task copyFilteredScripts (type: Copy) {
+	from "src/main/filtered-scripts-gradle"
+	into "scripts"
+	filter ReplaceTokens, tokens:[
+		"project-version": version.toString(),
+		"hbase-version": hbaseVersion.toString(),
+		"scala-version": hbaseVersion.toString()
+	]
+}
+// Make sure the above tasks run before resource processing.
+processResources.dependsOn copyFilteredResources, copyFilteredScripts
+
+
  
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
 // in our setup because the scala code in this project is used by the java code (causing 
