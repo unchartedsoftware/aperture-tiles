@@ -61,16 +61,7 @@ task setBuildVersions {
 			}
 			break
 		default:
-			logger.info "Invalid build type $buildType specified - defaulting to cdh5.0"
-			project.ext {
-				hadoopCommonVersion = "2.3.0-cdh5.0.0"
-				hadoopCoreVersion = "2.3.0-mr1-cdh5.0.0"
-				hbaseVersion = "0.96.1.1-cdh5.0.0"
-				sparkVersion = "0.9.0-cdh5.0.0"
-				dependencyScalaVersion = "2.10"
-				scalaVersion = "2.10.3"
-			}
-			buildType = "cdh5.0.0"
+			throw new StopExecutionException("Unsupported build type '$buildType' specified")
 	}
 }
 init.dependsOn setBuildVersions
