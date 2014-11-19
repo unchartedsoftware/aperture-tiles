@@ -26,8 +26,10 @@
 			<!-- For standard, pre-batched tiling -->
 			<!-- Standard implementation -->
 			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+			
 			<!-- For tiling requiring a spark connection -->
-			com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
+			com.oculusinfo.sparktile.init.SparkAwarePyramidIOFactoryModule:
+
 			<!-- Tile Transformer factory module - override to add custom tile
 			     Transformer -->
 			com.oculusinfo.tile.init.TileTransformerFactoryModule:
@@ -36,17 +38,18 @@
 			com.oculusinfo.tile.init.CachingLayerConfigurationModule:
 			<!-- Annotation IO factory module - override to add custom AnnotationIO 
 			     implementations -->
-			com.oculusinfo.tile.init.StandardAnnotationIOFactoryModule:
+			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
 			<!-- Annotation filter factory module - override to add custom AnnotationFilter 
 			     implementations -->
-			com.oculusinfo.tile.init.StandardAnnotationFilterFactoryModule:
+			com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
 			<!-- Sets up the REST interface by which clients can retrieve tiles -->
 	      	com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
 		      <!-- Sets up the annotation service -->
 		    com.oculusinfo.annotation.rest.AnnotationServiceModule:
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data) -->
-			com.oculusinfo.tile.spark.SparkModule:
+			com.oculusinfo.sparktile.spark.SparkModule:
+
 			<!-- Sets up the REST interface by which clients can retrieve tiles -->
 			com.oculusinfo.tile.rest.RestConfigModule:
 			<!-- Sets up the tile-rendering service -->
@@ -75,8 +78,10 @@
 
 	<!-- Servlet config must run on app deployment -->
 	<listener>
-		<!-- Required with a spark connection, harmless in all other cases -->
+		<!-- Required for some tile services, harmless in all other cases -->
 		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
+		<!-- Required with a spark connection, harmless in all other cases -->
+		<listener-class>com.oculusinfo.sparktile.SparkTileServiceConfiguration</listener-class>
 	</listener>
 
 </web-app>
