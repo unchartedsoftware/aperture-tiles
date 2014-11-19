@@ -8,4 +8,5 @@ include 'math-utilities',
 	'annotation-service',
 	'tile-client',
 	'tile-examples:julia-demo',
-	'tile-examples:twitter-topics:twitter-topics-utilities'
+	'tile-examples:twitter-topics:twitter-topics-utilities',
+	'tile-examples:twitter-topics:twitter-topics-client'

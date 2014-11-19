@@ -186,10 +186,9 @@ subprojects {
 			war << {
 				// unpack all the war files into the temp directory for this task
 				configurations.warOverlay.each {
-						println "Overlaying " + it
 						ant.unwar src: it, dest: temporaryDir
 				}
-				// update the war file, but when a duplicate file is found preserve the original
+				// update the war file
 				ant.war basedir: temporaryDir, destfile: archivePath, update: true
 			}
 		}
