@@ -26,8 +26,6 @@ package com.oculusinfo.tile.init.providers;
 import java.io.IOException;
 import java.util.List;
 
-import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
-import com.oculusinfo.binning.TilePyramid;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -43,6 +42,7 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
@@ -104,7 +104,7 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	private class CachingLayerConfiguration extends LayerConfiguration {
 		public CachingLayerConfiguration (ConfigurableFactory<?> parent,
 		                                  List<String> path) {
-			super(_pyramidIOFactoryProvider,
+			super(_cachingProvider,
                   _tilePyramidFactoryProvider,
                   _serializationFactoryProvider,
                   _rendererFactoryProvider,
@@ -115,7 +115,7 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 
 		public CachingLayerConfiguration (String name, ConfigurableFactory<?> parent,
 		                                  List<String> path) {
-			super(_pyramidIOFactoryProvider,
+			super(_cachingProvider,
                   _tilePyramidFactoryProvider,
                   _serializationFactoryProvider,
                   _rendererFactoryProvider,
@@ -129,7 +129,8 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 		                                 Iterable<TileIndex> tileSet) {
 			try {
 				TileSerializer<?> serializer = produce(TileSerializer.class);
-				_pyramidIO.requestTiles(layer, serializer, tileSet);
+				String pyramidId = getPropertyValue(LayerConfiguration.LAYER_ID);
+				_pyramidIO.requestTiles(pyramidId, serializer, tileSet);
 			} catch (IOException e) {
 				LOGGER.warn("Error requesting tile set", e);
 			} catch (ConfigurationException e) {
