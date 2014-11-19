@@ -159,29 +159,8 @@ Example:
 
 ```json
 {
-    “tile” : {
-        “level”: 7,
-        “xIndex”: 8,
-        “yIndex”: 4
-    },
-    “annotations” : {
-        “[0,0]”: [{
-            “level”: 7,
-            “x”: 73.35,
-            “y”: -125.6,
-            “range”: {
-                “min”: 0,
-                “max”: 9
-            }
-            “group”: "Urgent",   
-            “data”: {
-                “comment”: … ,
-                “author”: … ,
-                “date”: … 
-            },
-            “certificate”: { … }
-        }]
-    }
+    “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
+    “timestamp”: “1401830862“
 }
 ```
 
