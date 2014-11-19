@@ -24,8 +24,9 @@
  */
 package com.oculusinfo.annotation.manager;
 
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.annotation.data.AnnotationData;
+
 import java.io.IOException;
 import java.util.List;
 

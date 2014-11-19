@@ -41,7 +41,7 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 	
 	private PyramidStreamSource _stream;
 	
@@ -84,7 +84,7 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
 			InputStream stream = _stream.getTileStream(basePath, tile);
 			//stream will be null if the tile cannot be found
 			if(stream==null){
-				_logger.info("no tile data found for " + tile.toString() );
+				LOGGER.info("no tile data found for " + tile.toString() );
 				continue;
 			}
             

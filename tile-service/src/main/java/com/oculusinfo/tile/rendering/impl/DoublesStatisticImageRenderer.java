@@ -82,18 +82,15 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 */
 	@Override
 	public BufferedImage render(LayerConfiguration config) {
-		BufferedImage bi = null;
-		TileIndex tileIndex = null;
-		String layer = "?";
-		int lineNumber = 0;
+		BufferedImage bi;
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
  		
 		try {
-			tileIndex = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
-			layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
-			String shortName = config.getPropertyValue(LayerConfiguration.SHORT_NAME);
+			index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-			lineNumber = config.getPropertyValue(LayerConfiguration.LINE_NUMBER);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
 			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 				     getRuntimeBinClass(),
@@ -101,13 +98,13 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 
 			bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
 		
-			List<TileData<Double>> tileDatas = pyramidIO.readTiles(layer,
+			List<TileData<Double>> tileDatas = pyramidIO.readTiles(dataId,
 			                                                       serializer,
-			                                                       Collections.singleton(tileIndex));
+			                                                       Collections.singleton(index));
 			
 			// Missing tiles are commonplace.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-				LOGGER.info("Missing tile " + tileIndex + " for layer " + layer);
+				LOGGER.info("Missing tile " + index + " for layer " + layerId);
 				return null;
 			}
 
@@ -142,11 +139,11 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 			decFormat = new DecimalFormat("##.##");
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
 			
-			String text = shortName + ": " + formattedTotal + " " + formattedCoverage;
-			drawTextGlow(bi, text, 5, 10 + (20*lineNumber), FONT, Color.white, Color.black);
+			String text = layerId + ": " + formattedTotal + " " + formattedCoverage;
+			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
 					
 		} catch (Exception e) {
-			LOGGER.debug("Tile is corrupt: " + layer + ":" + tileIndex);
+			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
 			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}

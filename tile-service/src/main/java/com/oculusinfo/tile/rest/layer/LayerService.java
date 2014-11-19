@@ -25,13 +25,10 @@
 package com.oculusinfo.tile.rest.layer;
 
 
-import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import org.json.JSONObject;
-
 import java.util.List;
-import java.util.UUID;
 
 
 
@@ -40,59 +37,44 @@ import java.util.UUID;
  * other services and resources throughout the tile server. it keeps track of
  * available layers, and the configurations thereof.
  * 
- * @author nkronenfeld
+ * @author nkronenfeld, kbirk
  */
 public interface LayerService {
-    /**
-     * List all available layers. See {@link LayerResource#layerRequest(String)}
-     * for details (though this method returns a list of java objects, rather
-     * than a pile of JOSN).
-     * 
-     * @return
-     */
-    public List<LayerInfo> listLayers ();
 
     /**
-     * Get the meta-data associated with the given layer (which must be listed
-     * by {@link #listLayers()})
+     * Return a list of all layer configuration JSON objects.
+     */
+    public List< JSONObject > getLayerJSONs();
+
+    /**
+     * Return a specific layer configuration JSON object.
+     * @param layerId The layer identification string
+     */
+    public JSONObject getLayerJSON( String layerId );
+
+    /**
+     * Return a list of layer identification strings
+     */
+    public List< String > getLayerIds();
+
+    /**
+     * Returns the layer configuration object for a given layer id. Request parameters
+     * will override any default config attributes.
+     * @param layerId The layer identification string
+     * @param requestParams Additional query parameters to override
+     */
+    public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams );
+
+    /**
+     * Returns a SHA-256 hex string containing the state of the layer.
+     * @param layerId The layer identification string
+     * @param overrideConfiguration Additional query parameters to override
+     */
+    public String configureLayer( String layerId, JSONObject overrideConfiguration ) throws Exception;
+
+    /**
+     * Returns the meta-data associated with the given layer
+     * @param layerId The layer identification string
      */
     public PyramidMetaData getMetaData (String layerId);
-
-    /**
-     * Configure a layer for rendering.
-     * 
-     * @param The ID of the layer to be configured
-     * @param configuration The configuration of the layer to set. This is layed
-     *            on top of the default configuration as returned by
-     *            {@link #listLayers()}, so for the most part, only properties
-     *            that are changed from the default need be listed. The one
-     *            exception is that, if there are more than one base renderer
-     *            configurations, the renderer type is used to tell which base
-     *            to override, so it must be specified.
-     * @return A unique UUID by which this configuration should be known.
-     */
-    public UUID configureLayer (String layerId, JSONObject configuration);
-
-    /**
-     * For use by other services; the LayerResource doesn't serve this out.
-     * 
-     * Gets a configuration object to be used when rendering a layer.
-     * 
-     * @param layer The layer to be rendered
-     * @param tile An index indicating the tile to be rendered. For most
-     *            renderers, the only part of this that matters is the level,
-     *            but there are a few exceptions. A null value indicates that
-     *            any tile-specific pieces of the configuration may safely be
-     *            ignored.
-     */
-    public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile, JSONObject requestParams);
-
-    /**
-     * Indicates to the service that all users are done with a given
-     * configuration.
-     * 
-     * @param uuid
-     *            The id of the configuration that is no longer needed.
-     */
-    public void forgetConfiguration (UUID uuid);
 }

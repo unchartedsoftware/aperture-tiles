@@ -133,7 +133,6 @@ define(function (require) {
                         */
                         $topic.click( function() {
                             var click = {
-                                topic: topic,
                                 $elem: $(this),
                                 type: "html"
                             };

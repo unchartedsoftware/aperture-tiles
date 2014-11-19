@@ -38,8 +38,17 @@ public class AnnotationRestConfigModule extends AbstractModule {
 		MapBinder<String, ResourceDefinition> resourceBinder =
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
 		
+		resourceBinder.addBinding("/{version}/annotation/layer").toInstance(new ResourceDefinition( AnnotationResource.class ));
+		resourceBinder.addBinding("/annotation/layer").toInstance(new ResourceDefinition( AnnotationResource.class ));
+
+		resourceBinder.addBinding("/{version}/annotation/layer/{layer}").toInstance(new ResourceDefinition( AnnotationResource.class ));
+		resourceBinder.addBinding("/annotation/layer/{layer}").toInstance(new ResourceDefinition( AnnotationResource.class ));
+
+		resourceBinder.addBinding("/{version}/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
 		resourceBinder.addBinding("/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
-		resourceBinder.addBinding("/annotation/{layer}/{uuid}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
+
+		resourceBinder.addBinding("/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));		
+		resourceBinder.addBinding("/{version}/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
 		
 	}
 }

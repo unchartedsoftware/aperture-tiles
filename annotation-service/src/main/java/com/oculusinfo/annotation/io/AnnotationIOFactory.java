@@ -23,6 +23,7 @@
  */
 package com.oculusinfo.annotation.io;
 
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.JSONProperty;

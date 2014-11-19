@@ -23,15 +23,7 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
 
-
-/**
- * This module defines a TileService class that is to be injected into a
- * TileTracker instance. This class is responsible for RESTful requests
- * from the server
- */
 define(function (require) {
     "use strict";
 
@@ -83,7 +75,7 @@ define(function (require) {
         /**
          * Construct a TileService
          */
-        init: function ( layerInfo, tilepyramid ) {
+        init: function ( source, tilepyramid ) {
             // current tile data
             this.data = {};
             // tiles flagged as actively requested and waiting on
@@ -91,14 +83,14 @@ define(function (require) {
             // callbacks
             this.dataCallback = {};
             // layer info
-            this.layerInfo = layerInfo;
+            this.source = source;
             // set tile pyramid type
             this.tilePyramid = tilepyramid;
 
-            if ( !serviceRegistry[ layerInfo.layer ] ) {
-                serviceRegistry[ layerInfo.layer ] = [];
+            if ( !serviceRegistry[ source.id ] ) {
+                serviceRegistry[ source.id ] = [];
             }
-            serviceRegistry[ layerInfo.layer ].push( this );
+            serviceRegistry[ source.id ].push( this );
         },
 
 
@@ -263,15 +255,15 @@ define(function (require) {
 
                 // request data from server
                 aperture.io.rest(
-                    (this.layerInfo.apertureservice+'1.0.0/'+
-                     this.layerInfo.layer+'/'+
+                    ('/v1.0'+
+                     this.source.apertureservice+
+                     this.source.id+'/'+
                      level+'/'+
                      xIndex+'/'+
                      yIndex+'.json'),
                     'GET',
                     $.proxy(this.getCallback, this),
-                    // Add in the list of all needed tiles
-                    {'params': tileSetBounds }
+                    {'params': [] }
                 );
             }
         },
@@ -458,8 +450,9 @@ define(function (require) {
         function requestTile( tile ) {
             // request data from server
             aperture.io.rest(
-                (service.layerInfo.apertureservice+'1.0.0/'+
-                 service.layerInfo.layer+'/'+
+                ('/v1.0'+
+                 service.source.apertureservice+
+                 service.source.id+'/'+
                  tile.level+'/'+
                  tile.xIndex+'/'+
                  tile.yIndex+'.json'),
@@ -471,7 +464,6 @@ define(function (require) {
                         callback( service.transformTileToBins( tileData.tile, tilekey ) );
                     }
                 },
-                // Add in the list of all needed tiles
                 {'params': [] }
             );
         }

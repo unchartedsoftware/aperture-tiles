@@ -25,8 +25,8 @@
 package com.oculusinfo.annotation.init;
 
 import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.annotation.io.FileSystemAnnotationIOFactory;
-import com.oculusinfo.annotation.io.HBaseAnnotationIOFactory;
+import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIOFactory;
+import com.oculusinfo.annotation.io.impl.HBaseAnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 
@@ -50,12 +50,12 @@ public enum DefaultAnnotationIOFactoryProvider implements DelegateFactoryProvide
 				return new HBaseAnnotationIOFactory(parent, path);
 			}
 		}),
-		FILE(new Constructor() {
-				@Override
-				public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
-					return new FileSystemAnnotationIOFactory(parent, path);
-				}
-			});
+    FILE(new Constructor() {
+            @Override
+            public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
+                return new FileSystemAnnotationIOFactory(parent, path);
+            }
+    });
 
 
 	// -------------------------------------

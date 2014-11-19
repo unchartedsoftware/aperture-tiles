@@ -11,53 +11,40 @@
 	<context-param>
 		<param-name>guice-modules</param-name>
 		<param-value>
-			<!-- A :-separated list of modules, so there must be a : after all but 
-			     the last module listed. -->
-
-			<!-- Pyramid factory module - override to add custom TilePyramids -->
-			com.oculusinfo.tile.init.TilePyramidFactoryModule:
-			<!-- Renderer factory module - override to add custom server-side 
-			     renderers. -->
-			com.oculusinfo.tile.init.ImageRendererFactoryModule:
-			<!-- Serialization factory module - override to add custom tile 
-			     serializers -->
-			com.oculusinfo.tile.init.TileSerializerFactoryModule:
-			<!-- Pyramid IO factory module - override to add custom PyramidIO 
-			     implementations -->
-			<!-- For standard, pre-batched tiling -->
-			<!-- Standard implementation -->
-			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
-			<!-- Tile Transformer factory module - override to add custom tile
-			     Transformer -->
-			com.oculusinfo.tile.init.TileTransformerFactoryModule:
-			<!-- For tiling requiring a spark connection
-			     com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
-			-->
-			<!-- LayerConfiguration factory module - override to add custom layer configuration 
-			     parameters -->
-			com.oculusinfo.tile.init.StandardLayerConfigurationModule:
-
-			<!-- For any operation requiring a spark connection (including live
-			     tiling or drill-through to raw data)
-			     com.oculusinfo.tile.spark.SparkModule:
-			-->
-
-			<!-- Sets up the REST interface by which clients can retrieve tiles -->
-			com.oculusinfo.tile.rest.RestConfigModule:
-			<!-- Sets up the tile-rendering service -->
-			com.oculusinfo.tile.rest.TileModule:
-
-			<!-- Annotation IO factory module - override to add custom AnnotationIO 
-			     implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
-			<!-- Annotation filter factory module - override to add custom AnnotationFilter 
-			     implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
-			<!-- Sets up the REST interface by which clients can retrieve annotations -->
-			com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
-			<!-- Sets up the annotation service -->
-			com.oculusinfo.annotation.rest.AnnotationServiceModule
-		</param-value>
+	      	<!-- A :-separated list of modules, so there must be a : after all but 
+	     		the last module listed. -->
+	      	<!-- Pyramid factory module - override to add custom TilePyramids -->
+	      	com.oculusinfo.tile.init.TilePyramidFactoryModule:
+	      	<!-- Renderer factory module - override to add custom server-side 
+	          	renderers. -->
+	      	com.oculusinfo.tile.init.ImageRendererFactoryModule:
+	      	<!-- Serialization factory module - override to add custom tile 
+	           	serializers -->
+	      	com.oculusinfo.tile.init.StandardTileSerializerFactoryModule:
+	      	<!-- Pyramid IO factory module - override to add custom PyramidIO 
+	           	implementations -->
+	      	com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+	      	<!-- LayerConfiguration factory module - override to add custom layer configuration 
+	           	parameters -->
+	      	com.oculusinfo.tile.init.StandardLayerConfigurationModule:
+	      	<!-- Tile Transformer factory module - override to add custom tile
+	           	Transformer -->
+	      	com.oculusinfo.tile.init.TileTransformerFactoryModule:
+	      	<!-- Annotation IO factory module - override to add custom AnnotationIO 
+	           	implementations -->
+	      	com.oculusinfo.tile.init.StandardAnnotationIOFactoryModule:
+	      	<!-- Annotation filter factory module - override to add custom AnnotationFilter 
+	           	implementations -->
+	      	com.oculusinfo.tile.init.StandardAnnotationFilterFactoryModule:
+	      	<!-- Sets up the REST interface by which clients can retrieve tiles -->
+	      	com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+		      <!-- Sets up the annotation service -->
+		    com.oculusinfo.annotation.rest.AnnotationServiceModule:
+		      <!-- Sets up the REST interface by which clients can retrieve tiles -->
+	      	com.oculusinfo.tile.rest.RestConfigModule:
+	      	<!-- Sets up the tile-rendering service -->
+	      	com.oculusinfo.tile.rest.TileModule:
+	    </param-value>
 	</context-param>
 
 	<!-- Config File Location -->

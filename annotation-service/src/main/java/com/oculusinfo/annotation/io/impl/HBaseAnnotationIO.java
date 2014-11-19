@@ -24,7 +24,7 @@
  */
 package com.oculusinfo.annotation.io.impl;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.util.Pair;
@@ -65,8 +65,8 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
     private Configuration  _config;
-    private HBaseAdmin     _admin;
-    private HConnection    _connection;
+    private HBaseAdmin _admin;
+    private HConnection _connection;
 
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
@@ -80,7 +80,7 @@ public class HBaseAnnotationIO implements AnnotationIO {
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
-        _connection = HConnectionManager.createConnection(_config);
+        _connection = HConnectionManager.createConnection( _config );
 
 
     }

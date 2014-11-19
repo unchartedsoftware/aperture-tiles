@@ -36,7 +36,7 @@ public class StandardAnnotationIOFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder = 
+		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder =
 			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
 		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
 			factoryProviderBinder.addBinding().toInstance(provider);

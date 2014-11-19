@@ -23,7 +23,7 @@
  */
 package com.oculusinfo.annotation.index.impl;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
