@@ -1,4 +1,4 @@
-description = "Useful utilites to help pyramid-based binning schemes (and others, as necessary)"
+description = "Back-end service for tile annotations"
 
 // Pulls in required plugins
 apply plugin: "java"

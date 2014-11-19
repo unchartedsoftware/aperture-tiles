@@ -45,12 +45,19 @@ artifacts {
 	archives testJar
 }
 
-// Add a delete to the clean task that will remove the scripts directory if it exists.
+// Add a delete to the clean task that will remove the scripts directory if it exists.  Would
+// be better to be able to do this using wildcards, but it doesn't seem to be supported by the 
+// Gradle API.  One alternative would be to use the fileset api, which allows for a filtering
+// operation. 
 clean {
-	inputs.dir "scripts"
-	inputs.file "src/main/resources/build.properties"
-	delete "scripts"
-	delete "src/main/resources/build.properties"
+	inputs.files "src/main/resources/build.properties", 
+		"scripts/spark-run", 
+		"scripts/spark-run.cmd", 
+		"scripts/spark-shell"
+	delete "src/main/resources/build.properties",
+		"scripts/spark-run",
+		"scripts/spark-run.cmd",
+		"scripts/spark-shell"
 }
 
 // Copy and filter resources files.  This uses a baseline copy task, and applies

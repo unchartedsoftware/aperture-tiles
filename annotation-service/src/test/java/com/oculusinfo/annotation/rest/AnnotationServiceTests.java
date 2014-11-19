@@ -85,28 +85,28 @@ public class AnnotationServiceTests {
     	
 		try {
 
-			String configFile = ".\\annotation-service\\src\\test\\config\\filesystem-io-test-config.json";
+			String configFile = ("res:///filesystem-io-test-config.json").toString();
 
-            Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
-            tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
-            Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
-            annotationIoSet.addAll( Arrays.asList( DefaultAnnotationIOFactoryProvider.values() ) );
-            Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
-            serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
-            Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
-            filterIoSet.addAll( Arrays.asList( DefaultAnnotationFilterFactoryProvider.values() ) );
+			Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
+			tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
+			Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
+			annotationIoSet.addAll( Arrays.asList( DefaultAnnotationIOFactoryProvider.values() ) );
+			Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
+			serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
+			Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
+			filterIoSet.addAll( Arrays.asList( DefaultAnnotationFilterFactoryProvider.values() ) );
 
-            FactoryProvider<LayerConfiguration> layerConfigurationProvider = new StandardLayerConfigurationProvider(
-                new StandardPyramidIOFactoryProvider( tileIoSet ),
-                new StandardTilePyramidFactoryProvider(),
-                new StandardTileSerializerFactoryProvider(serializerSet),
-                new StandardImageRendererFactoryProvider(),
-                new StandardTileTransformerFactoryProvider()
-            );
+			FactoryProvider<LayerConfiguration> layerConfigurationProvider = new StandardLayerConfigurationProvider(
+					new StandardPyramidIOFactoryProvider( tileIoSet ),
+					new StandardTilePyramidFactoryProvider(),
+					new StandardTileSerializerFactoryProvider(serializerSet),
+					new StandardImageRendererFactoryProvider(),
+					new StandardTileTransformerFactoryProvider()
+					);
 
-            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
+			_layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
 
-            AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
+			AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
 			AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
 			_service = new AnnotationServiceImpl( _layerService,
