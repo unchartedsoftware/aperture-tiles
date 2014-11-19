@@ -36,10 +36,10 @@
 			com.oculusinfo.tile.init.CachingLayerConfigurationModule:
 			<!-- Annotation IO factory module - override to add custom AnnotationIO 
 			     implementations -->
-			com.oculusinfo.tile.init.StandardAnnotationIOFactoryModule:
+			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
 			<!-- Annotation filter factory module - override to add custom AnnotationFilter 
 			     implementations -->
-			com.oculusinfo.tile.init.StandardAnnotationFilterFactoryModule:
+			com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
 			<!-- Sets up the REST interface by which clients can retrieve tiles -->
 	      	com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
 		      <!-- Sets up the annotation service -->
