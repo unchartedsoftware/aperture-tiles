@@ -23,94 +23,73 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
-
-
 /**
  * This module defines a TileIterator class, the equivalent of TileIterator in
  * binning-utilities.
  */
-define(function (require) {
+define( function () {
     "use strict";
 
+    function TileIterator( spec ) {
+        this.pyramid = spec.pyramid;
+        this.level = spec.level;
+        this.minTile = spec.pyramid.rootToTile( spec.minX, spec.minY, spec.level );
+        this.maxTile = spec.pyramid.rootToTile( spec.maxX, spec.maxY, spec.level );
+        this.curX = this.minTile.xIndex;
+        this.curY = this.minTile.yIndex;
+    }
 
+    TileIterator.prototype.hasNext = function () {
+        return (this.curX <= this.maxTile.xIndex &&
+                this.curY <= this.maxTile.yIndex);
+    };
 
-    var Class = require('../class'),
-        TileIterator;
-
-
-
-    TileIterator = Class.extend({
-        ClassName: "TileIterator",
-        init: function (pyramid, level, minX, minY, maxX, maxY) {
-            this.pyramid = pyramid;
-            this.level = level;
-            this.minTile = pyramid.rootToTile(minX, minY, level);
-            this.maxTile = pyramid.rootToTile(maxX, maxY, level);
+    TileIterator.prototype.next = function () {
+        var tile = {
+            xIndex:    this.curX,
+            yIndex:    this.curY,
+            level:     this.level,
+            xBinCount: 256,
+            yBinCount: 256
+        };
+        this.curX = this.curX + 1;
+        if (this.curX > this.maxTile.xIndex) {
             this.curX = this.minTile.xIndex;
-            this.curY = this.minTile.yIndex;
-        },
-
-        hasNext: function () {
-            return (this.curX <= this.maxTile.xIndex &&
-                    this.curY <= this.maxTile.yIndex);
-        },
-
-        next: function () {
-            var tile = {
-                xIndex:    this.curX,
-                yIndex:    this.curY,
-                level:     this.level,
-                xBinCount: 256,
-                yBinCount: 256
-            };
-
-            this.curX = this.curX + 1;
-            if (this.curX > this.maxTile.xIndex) {
-                this.curX = this.minTile.xIndex;
-                this.curY = this.curY + 1;
-            }
-
-            return tile;
-        },
-
-        getRest: function () {
-            var all = [];
-
-            while (this.hasNext()) {
-                all[all.length] = this.next();
-            }
-
-            return all;
-        },
-
-        toString: function () {
-            var srep = "", index;
-
-            while (this.hasNext()) {
-                if (srep.length > 0) {
-                    srep = srep + "|";
-                }
-                index = this.next();
-                srep = srep + "["+index.xIndex+"/"+index.xBinCount+","+index.yIndex+"/"+index.yBinCount+", lvl "+index.level+"]";
-            }
-
-            return srep;
-        },
-
-        toTileBounds: function () {
-            return {
-                'minX': this.minTile.xIndex,
-                'maxX': this.maxTile.xIndex,
-                'minY': this.minTile.yIndex,
-                'maxY': this.maxTile.yIndex,
-                'minZ': this.level,
-                'maxZ': this.level
-            };
+            this.curY = this.curY + 1;
         }
-    });
+        return tile;
+    };
+
+    TileIterator.prototype.getRest = function () {
+        var all = [];
+        while (this.hasNext()) {
+            all[all.length] = this.next();
+        }
+        return all;
+    };
+
+    TileIterator.prototype.toString = function () {
+        var srep = "", index;
+        while (this.hasNext()) {
+            if (srep.length > 0) {
+                srep = srep + "|";
+            }
+            index = this.next();
+            srep = srep + "["+index.xIndex+"/"+index.xBinCount+","+index.yIndex+"/"+index.yBinCount+", lvl "+index.level+"]";
+        }
+        return srep;
+    };
+
+    TileIterator.prototype.toTileBounds = function () {
+        return {
+            'minX': this.minTile.xIndex,
+            'maxX': this.maxTile.xIndex,
+            'minY': this.minTile.yIndex,
+            'maxY': this.maxTile.yIndex,
+            'minZ': this.level,
+            'maxZ': this.level
+        };
+    };
 
     return TileIterator;
 });

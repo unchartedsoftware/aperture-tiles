@@ -23,42 +23,62 @@
  * SOFTWARE.
  */
 
-define(function (require) {
+define( function(require) {
     "use strict";
 
+    var HtmlNodeLayer = require('../../HtmlNodeLayer'),
+        HtmlLayer = require('../../HtmlLayer');
 
+    function HtmlRenderer( spec ) {
+        this.spec = spec;
+    }
 
-    var ClientRenderer = require('./ClientRenderer'),
-        HtmlRenderer;
+    HtmlRenderer.prototype.activate = function() {
+        var that = this;
+        this.nodeLayer = new HtmlNodeLayer({
+            map: this.map,
+            xAttr: 'longitude',
+            yAttr: 'latitude',
+            idKey: 'tilekey'
+        });
+        this.nodeLayer.addLayer( new HtmlLayer({
+            html: function() {
+                var $tile = $('<div class="aperture-tile aperture-tile-'+this.tilekey+'""></div>'),
+                    $content = that.spec.html || "";
+                return $tile.append( $content );
+            }
+        }));
+    };
 
+    HtmlRenderer.prototype.deactivate = function() {
+        // TODO:
+        return true;
+    };
 
+    HtmlRenderer.prototype.setOpacity = function( opacity ) {
+        this.nodeLayer.getRootElement().css( 'opacity', opacity );
+    };
 
-    HtmlRenderer = ClientRenderer.extend({
-        ClassName: "HtmlRenderer",
+    HtmlRenderer.prototype.setVisibility = function( visible ) {
+        var visibility = visible ? 'visible' : 'hidden';
+        this.nodeLayer.getRootElement().css( 'visibility', visibility );
+    };
 
-        init: function( map, spec ) {
-            this._super( map, spec );
-            this.nodeLayer = {};
-        },
+    HtmlRenderer.prototype.setZIndex = function( zIndex ) {
+        this.nodeLayer.getRootElement().css( 'zIndex', zIndex );
+    };
 
-        setOpacity: function( opacity ) {
-            this.nodeLayer.getRootElement().css( 'opacity', opacity );
-        },
+    HtmlRenderer.prototype.redraw = function( data ) {
+        this.nodeLayer.all( data ).redraw();
+    };
 
-        setVisibility: function( visible ) {
-            var visibility = visible ? 'visible' : 'hidden';
-            this.nodeLayer.getRootElement().css( 'visibility', visibility );
-        },
+    HtmlRenderer.prototype.draw = function( data ) {
+        this.nodeLayer.join( [ data ] ).redraw();
+    };
 
-        setZIndex: function( zIndex ) {
-            this.nodeLayer.getRootElement().css( 'zIndex', zIndex );
-        },
-
-        redraw: function( data ) {
-            this.nodeLayer.all( data ).redraw();
-        }
-
-    });
+    HtmlRenderer.prototype.erase = function( tilekeys ) {
+        this.nodeLayer.remove( tilekeys );
+    };
 
     return HtmlRenderer;
 });

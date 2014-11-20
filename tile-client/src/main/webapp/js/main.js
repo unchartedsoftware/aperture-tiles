@@ -29,14 +29,18 @@ require(['./ApertureConfig',
          './map/Map',
          './layer/LayerService',
         './layer/base/BaseLayer',
-         './layer/server/ServerLayer'],
+        './layer/server/ServerLayer',
+        './layer/client/ClientLayer',
+        './layer/client/renderers/HtmlRenderer'],
 
         function( configureAperture,
                   Util,
                   Map,
                   LayerService,
                   BaseLayer,
-                  ServerLayer ) {
+                  ServerLayer,
+                  ClientLayer,
+                  HtmlRenderer ) {
 
 	        "use strict";
 
@@ -50,22 +54,6 @@ require(['./ApertureConfig',
 	            viewDeferred,
 	            map;
 
-            /**
-             * Iterate through server layers, and append zIndex to
-             * mirror the top-down ordering set in the config file.
-             */
-	        function getServerLayers( layerConfig, layerInfos ) {
-	            var Z_INDEX_OFFSET = 1,
-	                layers = layerConfig.filter( function( elem ) {
-	                    return elem.domain === "server";
-	                }),
-	                i;
-	            for ( i=0; i<layers.length; i++ ) {
-	                layers[i].source = layerInfos[ layers[i].source ];
-	                layers[i].zIndex = Z_INDEX_OFFSET + ( layers.length - i );
-	            }
-	            return layers;
-            }
 
             /**
              * GET a configuration file from server and resolve the returned
@@ -135,17 +123,117 @@ require(['./ApertureConfig',
 		        $.when( layersDeferred ).done( function ( layers ) {
 				        var view,
 				            baseLayer,
+                            clientLayer,
 				            serverLayer;
 
 				        view = assembleView( layerConfig, mapConfig, viewConfig );
 
-                        baseLayer = new BaseLayer();
+                        baseLayer = new BaseLayer( {
+                            "type": "Google",
+                            "theme" : "dark",
+                            "options" : {
+                                "name" : "Dark",
+                                "type" : "styled",
+                                "style" : [
+                                    {
+                                        'featureType': 'all',
+                                        'stylers': [
+                                            { 'saturation': -100 },
+                                            { 'invert_lightness' : true },
+                                            { 'visibility' : 'simplified' }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'landscape.natural',
+                                        'stylers': [
+                                            { 'lightness': -50 }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'poi',
+                                        'stylers': [
+                                            { 'visibility': 'off' }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'road',
+                                        'stylers': [
+                                            { 'lightness': -50 }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'road',
+                                        'elementType': 'labels',
+                                        'stylers': [
+                                            { 'visibility': 'off' }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'road.highway',
+                                        'stylers': [
+                                            { 'lightness': -60 }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'road.arterial',
+                                        'stylers': [
+                                            { 'visibility': 'off' }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'administrative',
+                                        'stylers': [
+                                            { 'lightness': 10 }
+                                        ]
+                                    },
+                                    {
+                                        'featureType': 'administrative.province',
+                                        'elementType': 'geometry',
+                                        'stylers': [
+                                            { 'lightness': 15 }
+                                        ]
+                                    },
+                                    {
+                                        'featureType' : 'administrative.country',
+                                        'elementType' : 'geometry',
+                                        'stylers' : [
+                                            { 'visibility' : 'on' },
+                                            { 'lightness' : -56 }
+                                        ]
+                                    },
+                                    {
+                                        'elementType' : 'labels',
+                                        'stylers' : [
+                                            { 'lightness' : -46 },
+                                            { 'visibility' : 'on' }
+                                        ] }
+                                ]
+                            }
+                        });
 
-                        map = new Map( mapConfig );
+                        serverLayer = new ServerLayer({
+                            source: layers["tweet-heatmap"],
+                            valueTransform: {
+                                type: "log10"
+                            }
+                        });
+
+                        clientLayer = new ClientLayer({
+                            views: [
+                                {
+                                    source: layers["top-tweets"],
+                                    renderer: new HtmlRenderer({
+                                        html: '<div style="position:relative; left: 100px; top: 100px; width:56px; height:56px; background-color:blue;"/>'
+                                    })
+                                }
+                            ]
+                        });
+
+                        view.map.id = "map";
+                        map = new Map( view.map );
                         map.add( baseLayer );
-
-				        serverLayer = new ServerLayer( getServerLayers( view.layers, layers )[0] );
                         map.add( serverLayer );
+                        map.add( clientLayer );
 			        }
 		        );
 	        }, 'json');

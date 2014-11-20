@@ -31,6 +31,7 @@ define(function (require) {
 
 	function BaseLayer( spec ) {
         // set defaults
+        spec = spec || {};
         spec.type = spec.type || "BlankBase";
         spec.theme = spec.theme || "dark";
         spec.options = spec.options || {
@@ -42,115 +43,114 @@ define(function (require) {
             weight : "1px",
             style : "solid"
         };
+        spec.domain = "base";
         // call base constructor
         Layer.call( this, spec );
-        this.domain = "base";
         // set basic map properties
-        this.setVisibility( spec.enabled !== undefined ? spec.enabled : true );
-        this.setOpacity( spec.opacity || 1.0 );
+        this.visibility = ( spec.enabled !== undefined ) ? spec.enabled : true ;
+        this.opacity = spec.opacity || 1.0;
     }
 
-    BaseLayer.prototype = {
- 
-        activate: function() {
+    BaseLayer.prototype = Object.create( Layer.prototype );
 
-            var $map = this.map.getElement(),
-                olMap_ = this.map.olMap_,
-                newBaseLayerType;
+    BaseLayer.prototype.activate = function() {
 
-            if( this.spec.type === 'BlankBase' ) {
+        var $map = this.map.getElement(),
+            olMap_ = this.map.map.olMap_,
+            newBaseLayerType;
 
-                // changing to blank base layer
-                $map.css( 'background-color', this.spec.options.color );
+        if( this.spec.type === 'BlankBase' ) {
 
-            } else {
+            // changing to blank base layer
+            $map.css( 'background-color', this.spec.options.color );
 
-                //reset the background color
-                $map.css( 'background-color', '' );
-                // create new layer instance
-                newBaseLayerType = ( this.spec.type === 'Google' ) ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
-                this.layer = this.map.addLayer( newBaseLayerType, {}, this.spec );
-                // attach, and refresh it by toggling visibility
-                olMap_.baseLayer = this.layer.olLayer_;
-                olMap_.setBaseLayer( this.layer.olLayer_ );
-                // ensure baselayer remains bottom layer
-                this.setLayerIndex( this.layer.olLayer_, -1 );
-                // toggle visibility to force redraw
-                olMap_.baseLayer.setVisibility(false);
-                olMap_.baseLayer.setVisibility(true);
-            }
+        } else {
 
-            if ( this.spec.theme && this.spec.theme.toLowerCase() === "light" ) {
-                $("body").removeClass('dark-theme').addClass('light-theme');
-            } else {
-                $("body").removeClass('light-theme').addClass('dark-theme');
-            }
-
-            // update tile border
-            this.setTileBorderStyle();
-
-            if ( this.spec.type !== "BlankBase" ) {
-                // if switching to a non-blank baselayer, ensure opacity and visibility is restored
-                this.setOpacity( this.getOpacity() );
-                this.setVisibility( this.getVisibility() );
-            }
-        },
-
-        deactivate: function() {
-            var $map = this.getElement(),
-                olMap_ = this.map.olMap_;
-
-            if( this.spec.type !== 'BlankBase' ) {
-                // destroy previous baselayer
-                olMap_.baseLayer.destroy();
-                //reset the background color
-                $map.css( 'background-color', '' );
-            }
-        },
-
-        setTileBorderStyle: function () {
-            var tileBorder = this.spec.tileBorder;
-            // remove any previous style
-            $( document.body ).find( "#tiles-border-style" ).remove();
-            if ( tileBorder === 'default' ) {
-                tileBorder = {
-                    "color" : "rgba(255, 255, 255, .5)",
-                    "style" : "solid",
-                    "weight" : "1px"
-                };
-            }
-            //set individual defaults if they are omitted.
-            tileBorder.color = tileBorder.color || "rgba(255, 255, 255, .5)";
-            tileBorder.style = tileBorder.style || "solid";
-            tileBorder.weight = tileBorder.weight || "1px";
-            $( document.body ).prepend(
-                $('<style id="tiles-border-style" type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
-                    'border-left : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +
-                    '; border-top : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +';}' +
-                  '</style>')
-            );
-        },
-
-        setOpacity: function( opacity ) {
-            this.opacity = opacity;
-            this.map.olMap_.baseLayer.setOpacity ( opacity );
-            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
-        },
-
-        getOpacity: function() {
-            return this.opacity;
-        },
-
-        setVisibility: function( visibility ) {
-            this.visibility = visibility;
-            this.map.olMap_.baseLayer.setVisibility( visibility );
-            PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility });
-        },
-
-        getVisibility: function() {
-            return this.visibility;
+            //reset the background color
+            $map.css( 'background-color', '' );
+            // create new layer instance
+            newBaseLayerType = ( this.spec.type === 'Google' ) ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
+            this.layer = this.map.map.addLayer( newBaseLayerType, {}, this.spec );
+            // attach, and refresh it by toggling visibility
+            olMap_.baseLayer = this.layer.olLayer_;
+            olMap_.setBaseLayer( this.layer.olLayer_ );
+            // ensure baselayer remains bottom layer
+            this.map.setLayerIndex( this.layer.olLayer_, -1 );
+            // toggle visibility to force redraw
+            olMap_.baseLayer.setVisibility(false);
+            olMap_.baseLayer.setVisibility(true);
         }
-	};
+
+        if ( this.spec.theme && this.spec.theme.toLowerCase() === "light" ) {
+            $("body").removeClass('dark-theme').addClass('light-theme');
+        } else {
+            $("body").removeClass('light-theme').addClass('dark-theme');
+        }
+
+        // update tile border
+        this.setTileBorderStyle();
+
+        if ( this.spec.type !== "BlankBase" ) {
+            // if switching to a non-blank baselayer, ensure opacity and visibility is restored
+            this.setOpacity( this.getOpacity() );
+            this.setVisibility( this.getVisibility() );
+        }
+    };
+
+    BaseLayer.prototype.deactivate = function() {
+        var $map = this.getElement(),
+            olMap_ = this.map.map.olMap_;
+
+        if( this.spec.type !== 'BlankBase' ) {
+            // destroy previous baselayer
+            olMap_.baseLayer.destroy();
+            //reset the background color
+            $map.css( 'background-color', '' );
+        }
+    };
+
+    BaseLayer.prototype.setTileBorderStyle = function () {
+        var tileBorder = this.spec.tileBorder;
+        // remove any previous style
+        $( document.body ).find( "#tiles-border-style" ).remove();
+        if ( tileBorder === 'default' ) {
+            tileBorder = {
+                "color" : "rgba(255, 255, 255, .5)",
+                "style" : "solid",
+                "weight" : "1px"
+            };
+        }
+        //set individual defaults if they are omitted.
+        tileBorder.color = tileBorder.color || "rgba(255, 255, 255, .5)";
+        tileBorder.style = tileBorder.style || "solid";
+        tileBorder.weight = tileBorder.weight || "1px";
+        $( document.body ).prepend(
+            $('<style id="tiles-border-style" type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
+                'border-left : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +
+                '; border-top : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +';}' +
+              '</style>')
+        );
+    };
+
+    BaseLayer.prototype.setOpacity = function( opacity ) {
+        this.opacity = opacity;
+        this.map.map.olMap_.baseLayer.setOpacity ( opacity );
+        PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
+    };
+
+    BaseLayer.prototype.getOpacity = function() {
+        return this.opacity;
+    };
+
+    BaseLayer.prototype.setVisibility = function( visibility ) {
+        this.visibility = visibility;
+        this.map.map.olMap_.baseLayer.setVisibility( visibility );
+        PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility });
+    };
+
+    BaseLayer.prototype.getVisibility = function() {
+        return this.visibility;
+    };
 
 	return BaseLayer;
 });

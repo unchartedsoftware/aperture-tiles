@@ -23,18 +23,11 @@
  * SOFTWARE.
  */
 
-
 define(function (require) {
     "use strict";
 
-
-
-    var Class = require('../../class'),
-        serviceRegistry = {},
-        tileQueryParser,
-        TileService;
-
-
+    /*
+    var tileQueryParser;
 
     tileQueryParser = function( obj, path ) {
         var i, parse, results = [];
@@ -66,57 +59,9 @@ define(function (require) {
         }
         return results;
     };
+    */
 
-
-
-    TileService = Class.extend({
-        ClassName: "TileService",
-
-        /**
-         * Construct a TileService
-         */
-        init: function ( source, tilepyramid ) {
-            // current tile data
-            this.data = {};
-            // tiles flagged as actively requested and waiting on
-            this.pendingData = {};
-            // callbacks
-            this.dataCallback = {};
-            // layer info
-            this.source = source;
-            // set tile pyramid type
-            this.tilePyramid = tilepyramid;
-
-            if ( !serviceRegistry[ source.id ] ) {
-                serviceRegistry[ source.id ] = [];
-            }
-            serviceRegistry[ source.id ].push( this );
-        },
-
-
-        /**
-         * Convert local data map into an array and return it.
-         */
-        getDataArray: function( tiles ) {
-            var data = this.data,
-                tilekey, tile,
-                allData = [];
-            for ( tilekey in data ) {
-                if ( data.hasOwnProperty(tilekey) ) {
-                    tile = data[tilekey];
-                    // check format of data
-                    if ( $.isArray( tile ) ) {
-                        // for each tile, data is an array, merge it together
-                        $.merge( allData, tile );
-                    } else {
-                        // for each tile, data is an object
-                        allData.push( tile );
-                    }
-                }
-            }
-            return allData;
-        },
-
+    var TileService = {
 
         /**
          * Create a universal unique key for a given tile
@@ -126,7 +71,6 @@ define(function (require) {
         createTileKey: function (tile) {
             return tile.level + "," + tile.xIndex + "," + tile.yIndex;
         },
-
 
         /**
          * Create a universal unique key for a given bin in a given tile
@@ -139,17 +83,6 @@ define(function (require) {
             return tileKey + ":" + bin.x + "," + bin.y;
         },
 
-
-        /**
-         * Clears unneeded data from memory
-         */
-        releaseData: function(tilekey) {
-            delete this.data[tilekey];
-            delete this.pendingData[tilekey];
-            delete this.dataCallback[tilekey];
-        },
-
-
         /**
          * Requests tile data. If tile is not in memory, send GET request to server and
          * set individual callback function on receive. Callback is not called if tile
@@ -158,51 +91,10 @@ define(function (require) {
          * @param requestedTiles array of requested tilekeys
          * @param callback callback function
          */
-        requestData: function( requestedTiles, tileSetBounds, callback ) {
-
-            var currentTiles = this.data,
-                pendingTiles = this.pendingData,
-                defunctTiles = {},
-                neededTiles = [],
-                i, tile, tilekey;
-
-            // track the tiles we have
-            for ( tilekey in currentTiles ) {
-                if ( currentTiles.hasOwnProperty(tilekey) ) {
-                    defunctTiles[ tilekey ] = true;
-                }
-            }
-            // and the tiles we are waiting on
-            for ( tilekey in pendingTiles ) {
-                if ( pendingTiles.hasOwnProperty(tilekey) ) {
-                    defunctTiles[ tilekey ] = true;
-                }
-            }
-
-            // Go through, seeing what we need.
-            for (i=0; i<requestedTiles.length; ++i) {
-                tile = requestedTiles[i];
-                tilekey = this.createTileKey(tile);
-
-                if ( defunctTiles[ tilekey ] ) {
-                    // Already have the data, or waiting for it remove from defunct list
-                    delete defunctTiles[ tilekey ];
-                } else {
-                    // New data.  Mark for fetch.
-                    neededTiles.push( tilekey );
-                }
-            }
-
-            // Remove all old defunct tiles references
-            for ( tilekey in defunctTiles ) {
-                if ( defunctTiles.hasOwnProperty( tilekey ) ) {
-                    this.releaseData( tilekey );
-                }
-            }
-
-            // send requests to server
-            for (i=0; i<neededTiles.length; ++i) {
-                this.getRequest( neededTiles[i], tileSetBounds, callback );
+        getTiles: function( source, pyramid, tilekeys, callback ) {
+            var i;
+            for (i=0; i<tilekeys.length; ++i) {
+                this.getRequest( source, pyramid, tilekeys[i], callback );
             }
         },
 
@@ -239,62 +131,26 @@ define(function (require) {
          *   }
          * }
          */
-        getRequest: function( tilekey, tileSetBounds, callback ) {
-
+        getRequest: function( source, pyramid, tilekey, callback ) {
             var parsedValues = tilekey.split(','),
                 level = parseInt(parsedValues[0], 10),
                 xIndex = parseInt(parsedValues[1], 10),
                 yIndex = parseInt(parsedValues[2], 10);
 
-            // ensure we only send a request once
-            if (this.pendingData[tilekey] === undefined) {
-
-                // flag tile as loading and stash callback
-                this.pendingData[tilekey] = true;
-                this.dataCallback[tilekey] = callback;
-
-                // request data from server
-                aperture.io.rest(
-                    ('/v1.0'+
-                     this.source.apertureservice+
-                     this.source.id+'/'+
-                     level+'/'+
-                     xIndex+'/'+
-                     yIndex+'.json'),
-                    'GET',
-                    $.proxy(this.getCallback, this),
-                    {'params': [] }
-                );
-            }
-        },
-
-
-        /**
-         * Called when a tile is received from server, flags tilekey as 'loaded' and
-         * calls every callback function is respective array
-         *
-         * @param tileData received tile data from server
-         */
-        getCallback: function(tileData) {
-
-            // create tile key: "level, xIndex, yIndex"
-            var tilekey = this.createTileKey( tileData.index );
-
-            // ensure we still need the tile
-            if (this.pendingData[tilekey] === true) {
-
-                // convert tile data into data by bin
-                this.data[tilekey] = this.transformTileToBins( tileData.tile, tilekey );
-
-                if (tileData.tile !== undefined) {
-                    // only call callback function if the tile actually has data associated with it
-                    this.dataCallback[tilekey]( tilekey );
-                }
-
-                // clear callbacks and 'waiting on' status
-                delete this.pendingData[tilekey];
-                delete this.dataCallback[tilekey];
-            }
+            // request data from server
+            aperture.io.rest(
+                ('/v1.0'+
+                 source.apertureservice+
+                 source.id+'/'+
+                 level+'/'+
+                 xIndex+'/'+
+                 yIndex+'.json'),
+                'GET',
+                function ( tileData ) {
+                    callback( TileService.transformTileToBins( tileData.tile, tilekey, pyramid )[0] );
+                },
+                {'params': [] }
+            );
         },
 
 
@@ -331,23 +187,21 @@ define(function (require) {
          * @return An array of output records, each of which will be considered
          *         a node by the MapLayer's MapNodeLayer.
          */
-        transformTileToBins: function (tileData, tilekey) {
+        transformTileToBins: function( tileData, tilekey, tilePyramid ) {
 
-            var x, y, binNum, bin, binRect, binData, results;
-
-            results = [];
-
+            var x, y,
+                binNum, bin, binRect, binData,
+                results = [];
             if (tileData) {
-
                 binNum = 0;
                 for (y=0; y<tileData.yBinCount; ++y) {
                     for (x=0; x<tileData.xBinCount; ++x) {
                         bin =  {x: x, y: y};
 
-                        binRect = this.tilePyramid.getBinBounds( tileData, bin );
+                        binRect = tilePyramid.getBinBounds( tileData, bin );
                         
                         binData = {
-                            binkey: this.createBinKey(tilekey, bin),
+                            binkey: TileService.createBinKey(tilekey, bin),
                             tilekey: tilekey,
                             longitude: binRect.minX, // top left of tile
                             latitude: binRect.maxY,
@@ -362,128 +216,128 @@ define(function (require) {
             return results;
         }
 
-    });
-
-
-    /**
-     * Query all services instances for a given layer id by a property path. Returns an
-     * array containing all values, including duplicates.
-     * Valid search queries includes:
-     *      'singleAttributes',
-     *      'sub.attributes',
-     *      'entireArrays[]',
-     *      'specificArrayIndices[2]'
-     *      'combinations.of[].the[0].above'
-     */
-    TileService.queryTiles = function( layerId, query, options ) {
-        var services = serviceRegistry[ layerId ],
-            tiles = [], results = [], nonDups = [],
-            i;
-        if ( !services || !query ) {
-            return [];
-        }
-        options = options || {};
-        // get all tile data in a single array
-        for ( i=0; i<services.length; i++ ) {
-            $.merge( tiles, services[i].getDataArray() );
-        }
-        // search tile data for query
-        for ( i=0; i<tiles.length; i++ ) {
-            $.merge( results, tileQueryParser( tiles[i], query.split('.') ) );
-        }
-        // remove duplicates if specified
-        if ( options.removeDuplicates ) {
-            $.each( results, function( i, element ) {
-                if ( $.inArray( element, nonDups ) === -1) {
-                    nonDups.push( element );
-                }
-            });
-            results = nonDups;
-        }
-        return results;
     };
 
 
-    /**
-     * Checks all service instances for a given layer id and returns all data
-     * held in memory, keyed by tilekey;
-     */
-    TileService.getTilesInMemory = function( layerId ) {
-        var services = serviceRegistry[ layerId ],
-            tiles = {},
-            i;
-
-        function assignData( data, key ) {
-            tiles[key] = data;
-        }
-
-        if ( !services ) {
-            return [];
-        }
-        // get all tile data in a single array
-        for ( i=0; i<services.length; i++ ) {
-            _.forIn( services[i].data, assignData );
-        }
-        return tiles;
-    };
-
-
-    /**
-     * Checks all service instances for the given layer id, merges all tiles that are
-     * in memory and returns them. Any missing tiles are requested and passed
-     * to the given callback function.
-     */
-    TileService.requestTilesGlobal = function( layerId, tiles, callback ) {
-
-        var tilesInMemory = this.getTilesInMemory( layerId ),
-            services = serviceRegistry[ layerId ],
-            service, tilesWithData = [],
-            i;
-
-        if ( !services ) {
-            return [];
-        }
-
-        // doesn't matter which service instance we use
-        service = services[0];
-
-        function requestTile( tile ) {
-            // request data from server
-            aperture.io.rest(
-                ('/v1.0'+
-                 service.source.apertureservice+
-                 service.source.id+'/'+
-                 tile.level+'/'+
-                 tile.xIndex+'/'+
-                 tile.yIndex+'.json'),
-                'GET',
-                function( tileData ) {
-                    var tile = tileData.index,
-                        tilekey = tile.level + "," + tile.xIndex + "," + tile.yIndex;
-                    if (tileData.tile !== undefined) {
-                        callback( service.transformTileToBins( tileData.tile, tilekey ) );
-                    }
-                },
-                {'params': [] }
-            );
-        }
-
-        for ( i=0; i<tiles.length; i++ ) {
-            if ( !tilesInMemory[ tiles[i] ] ) {
-                // request all given tiles not in memory
-                requestTile( tiles[i] );
-            }
-        }
-
-        _.forEach( tilesInMemory, function( value ) {
-            if ( value.length > 0 ) {
-                tilesWithData.push( value[0] );
-            }
-
-        });
-
-        return tilesWithData;
-    };
+//    /**
+//     * Query all services instances for a given layer id by a property path. Returns an
+//     * array containing all values, including duplicates.
+//     * Valid search queries includes:
+//     *      'singleAttributes',
+//     *      'sub.attributes',
+//     *      'entireArrays[]',
+//     *      'specificArrayIndices[2]'
+//     *      'combinations.of[].the[0].above'
+//     */
+//    TileService.queryTiles = function( layerId, query, options ) {
+//        var services = serviceRegistry[ layerId ],
+//            tiles = [], results = [], nonDups = [],
+//            i;
+//        if ( !services || !query ) {
+//            return [];
+//        }
+//        options = options || {};
+//        // get all tile data in a single array
+//        for ( i=0; i<services.length; i++ ) {
+//            $.merge( tiles, services[i].getDataArray() );
+//        }
+//        // search tile data for query
+//        for ( i=0; i<tiles.length; i++ ) {
+//            $.merge( results, tileQueryParser( tiles[i], query.split('.') ) );
+//        }
+//        // remove duplicates if specified
+//        if ( options.removeDuplicates ) {
+//            $.each( results, function( i, element ) {
+//                if ( $.inArray( element, nonDups ) === -1) {
+//                    nonDups.push( element );
+//                }
+//            });
+//            results = nonDups;
+//        }
+//        return results;
+//    };
+//
+//
+//    /**
+//     * Checks all service instances for a given layer id and returns all data
+//     * held in memory, keyed by tilekey;
+//     */
+//    TileService.getTilesInMemory = function( layerId ) {
+//        var services = serviceRegistry[ layerId ],
+//            tiles = {},
+//            i;
+//
+//        function assignData( data, key ) {
+//            tiles[key] = data;
+//        }
+//
+//        if ( !services ) {
+//            return [];
+//        }
+//        // get all tile data in a single array
+//        for ( i=0; i<services.length; i++ ) {
+//            _.forIn( services[i].data, assignData );
+//        }
+//        return tiles;
+//    };
+//
+//
+//    /**
+//     * Checks all service instances for the given layer id, merges all tiles that are
+//     * in memory and returns them. Any missing tiles are requested and passed
+//     * to the given callback function.
+//     */
+//    TileService.requestTilesGlobal = function( layerId, tiles, callback ) {
+//
+//        var tilesInMemory = this.getTilesInMemory( layerId ),
+//            services = serviceRegistry[ layerId ],
+//            service, tilesWithData = [],
+//            i;
+//
+//        if ( !services ) {
+//            return [];
+//        }
+//
+//        // doesn't matter which service instance we use
+//        service = services[0];
+//
+//        function requestTile( tile ) {
+//            // request data from server
+//            aperture.io.rest(
+//                ('/v1.0'+
+//                 service.source.apertureservice+
+//                 service.source.id+'/'+
+//                 tile.level+'/'+
+//                 tile.xIndex+'/'+
+//                 tile.yIndex+'.json'),
+//                'GET',
+//                function( tileData ) {
+//                    var tile = tileData.index,
+//                        tilekey = tile.level + "," + tile.xIndex + "," + tile.yIndex;
+//                    if (tileData.tile !== undefined) {
+//                        callback( service.transformTileToBins( tileData.tile, tilekey ) );
+//                    }
+//                },
+//                {'params': [] }
+//            );
+//        }
+//
+//        for ( i=0; i<tiles.length; i++ ) {
+//            if ( !tilesInMemory[ tiles[i] ] ) {
+//                // request all given tiles not in memory
+//                requestTile( tiles[i] );
+//            }
+//        }
+//
+//        _.forEach( tilesInMemory, function( value ) {
+//            if ( value.length > 0 ) {
+//                tilesWithData.push( value[0] );
+//            }
+//
+//        });
+//
+//        return tilesWithData;
+//    };
 
     return TileService;
 });

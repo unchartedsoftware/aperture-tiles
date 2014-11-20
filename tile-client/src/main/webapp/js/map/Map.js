@@ -34,24 +34,66 @@ define(function (require) {
 
 
 	var BaseLayer = require('../layer/base/BaseLayer'),
+        ServerLayer = require('../layer/server/ServerLayer'),
+        ClientLayer = require('../layer/client/ClientLayer'),
         PubSub = require('../util/PubSub'),
-	    AoIPyramid = require('../binning/AoITilePyramid'),
-	    PyramidFactory = require('../binning/PyramidFactory'),
+	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
+	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
 	    TileIterator = require('../binning/TileIterator'),
 	    Axis =  require('./Axis'),
-	    TILESIZE = 256;
+	    TILESIZE = 256,
+        tileEventSubscribers = {},
+        setMouseEventCallbacks;
 
+
+
+    /**
+     * Set callbacks to update the maps tile focus, identifying which tile the user is currently
+     * hovering over.
+     */
+    setMouseEventCallbacks = function( map ) {
+        var previousMouse = {};
+        function updateTileFocus( layer, x, y ) {
+            var tilekey = map.getTileKeyFromViewportPixel( x, y );
+            if ( tilekey !== map.getTileFocus() ) {
+                // only update tilefocus if it actually changes
+                map.previousTileFocus = map.getTileFocus();
+                map.tileFocus = tilekey;
+                PubSub.publish( 'layer', { field: 'tileFocus', value: tilekey });
+            }
+        }
+        // set tile focus callbacks
+        map.on('mousemove', function(event) {
+            updateTileFocus( map, event.xy.x, event.xy.y );
+            previousMouse.x = event.xy.x;
+            previousMouse.y = event.xy.y;
+        });
+        map.on('zoomend', function(event) {
+            updateTileFocus( map, previousMouse.x, previousMouse.y );
+        });
+        // if mousedown while map is panning, interrupt pan
+        map.getElement().mousedown( function(){
+            if ( map.map.olMap_.panTween ) {
+                 map.map.olMap_.panTween.callbacks = null;
+                 map.map.olMap_.panTween.stop();
+            }
+        });
+    };
 
 	function Map( spec ) {
-
-        var that = this;
 
         this.id = spec.id;
         this.$map = $( spec.selector || ("#" + this.id) );
         this.axes = [];
-        this.pyramid = PyramidFactory.createPyramid( spec.pyramid );
 
-        // Set the map configuration
+        // set map tile pyramid
+        if ( "AreaOfInterest" === spec.pyramid.type ) {
+            this.pyramid = new AreaOfInterestTilePyramid( spec.pyramid );
+        } else if ( "WebMercator" === spec.pyramid.type ) {
+            this.pyramid = new WebMercatorTilePyramid();
+        }
+
+        // set the map configuration
         spec.baseLayer = {}; // default to no base layer
         aperture.config.provide({
             'aperture.map' : {
@@ -73,22 +115,14 @@ define(function (require) {
         // create div root layer
         this.createRoot();
 
-        // if mousedown while map is panning, interrupt pan
-        this.getElement().mousedown( function(){
-            if ( that.map.olMap_.panTween ) {
-                 that.map.olMap_.panTween.callbacks = null;
-                 that.map.olMap_.panTween.stop();
-            }
-        });
-
         // initialize previous zoom
         this.previousZoom = this.map.getZoom();
         this.baseLayerIndex = -1;
 
-        this.setTileFocusCallbacks();
+        setMouseEventCallbacks( this );
 
         // set resize callback
-        $(window).resize( $.proxy(this.updateSize, this) );
+        $(window).resize( $.proxy( this.updateSize, this ) );
 
         // Trigger the initial resize event to resize everything
         $(window).resize();
@@ -105,45 +139,23 @@ define(function (require) {
         add: function( layer ) {
             if ( layer instanceof BaseLayer ) {
                 this.baselayers = this.baselayers || [];
+                layer.map = this;
                 this.baselayers.push( layer );
                 if ( this.baseLayerIndex < 0 ) {
                     this.setBaseLayerIndex( 0 );
                 }
+            } else if ( layer instanceof ServerLayer ) {
+                this.serverLayers = this.serverLayers || [];
+                layer.map = this;
+                layer.activate();
+                this.serverLayers.push( layer );
+            } else if ( layer instanceof ClientLayer ) {
+                this.clientLayers = this.clientLayers || [];
+                layer.map = this;
+                layer.activate();
+                this.clientLayers.push( layer );
             }
         },
-
-		setTileFocusCallbacks: function() {
-            var that = this,
-                previousMouse = {};
-            function updateTileFocus( layer, x, y ) {
-                var tilekey = that.getTileKeyFromViewportPixel( x, y );
-                if ( tilekey !== that.getTileFocus() ) {
-                    // only update tilefocus if it actually changes
-                    that.setTileFocus( tilekey );
-                }
-            }
-		    // set tile focus callbacks
-            this.on('mousemove', function(event) {
-                updateTileFocus( that, event.xy.x, event.xy.y );
-                previousMouse.x = event.xy.x;
-                previousMouse.y = event.xy.y;
-            });
-            this.on('zoomend', function(event) {
-                updateTileFocus( that, previousMouse.x, previousMouse.y );
-            });
-		},
-
-
-		/**
-         * Set the layers tile focus, identifying which tile the user is currently
-         * hovering over.
-         */
-        setTileFocus: function( tilekey ) {
-            this.previousTileFocus = this.tileFocus;
-            this.tileFocus = tilekey;
-            PubSub.publish( 'layer', { field: 'tileFocus', value: tilekey });
-        },
-
 
         /**
          * Get the layers tile focus.
@@ -151,15 +163,6 @@ define(function (require) {
         getTileFocus: function() {
             return this.tileFocus;
         },
-
-
-        /**
-         * Get the layers previous tile focus.
-         */
-        getPreviousTileFocus: function() {
-            return this.previousTileFocus;
-        },
-
 
         createRoot: function() {
 
@@ -184,7 +187,6 @@ define(function (require) {
             this.trigger('move'); // fire initial move event
         },
 
-
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.getPreviousBaseLayerIndex() ],
                 newBaseLayer = this.baselayers[ index ];
@@ -194,7 +196,7 @@ define(function (require) {
             newBaseLayer.activate();
             this.previousBaseLayerIndex = this.baseLayerIndex;
             this.baseLayerIndex = index;
-            PubSub.publish( this.getChannel(), { field: 'baseLayerIndex', value: index });
+            PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
         getTheme: function() {
@@ -293,14 +295,23 @@ define(function (require) {
 			    // Current map bounds, in meters
 			    bounds = this.map.olMap_.getExtent(),
 			    // Total map bounds, in meters
-			    mapExtent = this.map.olMap_.getMaxExtent(),
+			    extents = this.map.olMap_.getMaxExtent(),
 			    // Pyramid for the total map bounds
-			    mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
-			                                mapExtent.right, mapExtent.top);
+			    pyramid = new AreaOfInterestTilePyramid({
+                    minX: extents.left,
+                    minY: extents.bottom,
+                    maxX: extents.right,
+                    maxY: extents.top
+                });
 			// determine all tiles in view
-			return new TileIterator( mapPyramid, level,
-			                         bounds.left, bounds.bottom,
-			                         bounds.right, bounds.top);
+			return new TileIterator({
+                pyramid: pyramid,
+                level: level,
+                minX: bounds.left,
+                minY: bounds.bottom,
+                maxX: bounds.right,
+                maxY: bounds.top
+            });
 		},
 
 
@@ -308,23 +319,44 @@ define(function (require) {
             var tiles = this.getTileIterator().getRest(),
                 culledTiles = [],
                 maxTileIndex = Math.pow(2, this.getZoom() ),
-                tile,
+                tile, removed = [], added = [],
                 i;
             for (i=0; i<tiles.length; i++) {
                 tile = tiles[i];
                 if ( tile.xIndex >= 0 && tile.yIndex >= 0 &&
                      tile.xIndex < maxTileIndex && tile.yIndex < maxTileIndex ) {
-                     culledTiles.push( tile );
+                     culledTiles.push( tile.level + "," + tile.xIndex + "," + tile.yIndex );
                 }
             }
+            this.previousTilesInView = this.tilesInView;
             this.tilesInView = culledTiles;
-		},
 
+            if ( this.previousTilesInView ) {
+                // determine which tiles have been added and removed from view
+                for ( i=0; i<this.previousTilesInView.length; i++ ) {
+                    tile = this.previousTilesInView[i];
+                    if ( this.tilesInView.indexOf( tile ) === -1 ) {
+                        removed.push( tile );
+                    }
+                }
+                for ( i=0; i<this.tilesInView.length; i++ ) {
+                    tile = this.tilesInView[i];
+                    if ( this.previousTilesInView.indexOf( tile ) === -1 ) {
+                        added.push( tile );
+                    }
+                }
+                // if a tile has been added or removed, trigger 'tile' event
+                if ( added.length > 0 || removed.length > 0 ) {
+                    this.trigger( 'tile', { added: added, removed: removed } );
+                }
+            } else {
+                this.trigger( 'tile', { added: this.tilesInView, removed: [] } );
+            }
+		},
 
 		getTilesInView: function() {
             return this.tilesInView.slice( 0 ); // return copy
 		},
-
 
 		getTileBoundsInView: function() {
 		    var bounds = this.getTileIterator().toTileBounds(),
@@ -553,20 +585,6 @@ define(function (require) {
 			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
 		},
 
-        /*
-		getCoordFromMap: function (x, y) {
-			var
-			// Total map bounds, in meters
-			mapExtent = this.map.olMap_.getMaxExtent(),
-			// Pyramid for the total map bounds
-			mapPyramid = new AoIPyramid(mapExtent.left, mapExtent.bottom,
-			                            mapExtent.right, mapExtent.top),
-			tile = mapPyramid.rootToFractionalTile({level: 0, xIndex: x, yIndex: y}),
-			coords = this.pyramid.fractionalTileToRoot(tile);
-			return {x: coords.xIndex, y: coords.yIndex};
-		},
-		*/
-
 		transformOLGeometryToLonLat: function (geometry) {
 			return geometry.transform(new OpenLayers.projection("EPSG:900913"),
 			                          new OpenLayers.projection("EPSG:4326"));
@@ -663,6 +681,11 @@ define(function (require) {
 				});
 				break;
 
+            case 'tile':
+
+                tileEventSubscribers[ this.id ] = tileEventSubscribers[ this.id ] || [];
+                tileEventSubscribers[ this.id ].push( callback );
+                break;
 
 			default:
 
@@ -695,6 +718,13 @@ define(function (require) {
 				}
 				break;
 
+            case 'tile':
+
+                if ( tileEventSubscribers[ this.id ] ) {
+                    tileEventSubscribers[ this.id ].remove( tileEventSubscribers[ this.id ].splice( tileEventSubscribers[ this.id ].indexOf( callback ) ) );
+                }
+                break;
+
 			default:
 
 				this.map.off(eventType, callback);
@@ -703,6 +733,8 @@ define(function (require) {
 		},
 
 		trigger: function(eventType, event) {
+
+            var i;
 
 			switch (eventType) {
 
@@ -715,6 +747,15 @@ define(function (require) {
 
 				this.map.olMap_.events.triggerEvent(eventType, event);
 				break;
+
+            case 'tile':
+
+                if ( tileEventSubscribers[ this.id ] ) {
+                    for ( i=0; i<tileEventSubscribers[ this.id ].length; i++ ) {
+                        tileEventSubscribers[ this.id ][i]( event );
+                    }
+                }
+                break;
 
 			default:
 

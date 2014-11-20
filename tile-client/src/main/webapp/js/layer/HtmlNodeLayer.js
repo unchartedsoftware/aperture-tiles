@@ -24,13 +24,10 @@
  */
 
 
-define(function (require) {
+define( function(require) {
     "use strict";
 
-
-
-    var Class = require('../class'),
-        Util = require('../util/Util'),
+    var Util = require('../util/Util'),
         createLayerRoot,
         createNodeRoot,
         createNode,
@@ -38,9 +35,7 @@ define(function (require) {
         doesNodeExist,
         getNodeByData,
         removeNodeById,
-        removeNode,
-        HtmlNodeLayer;
-
+        removeNode;
 
     /**
      * Creates the root element for the entire html node layer and attaches it to the
@@ -48,7 +43,6 @@ define(function (require) {
      * process, and then propagate events through to underlying DOM elements.
      */
     createLayerRoot = function( that ) {
-
         // create layer root div
         that.$root_ = $('<div style="position:relative; z-index:0;"></div>');
         // append to map root
@@ -58,7 +52,6 @@ define(function (require) {
             Util.enableEventPropagation( that.$root_ );
         }
     };
-
 
     /**
      * Creates the root element for a data node. This node is positioned using the xAttr and yAttr
@@ -77,7 +70,6 @@ define(function (require) {
         return $('<div style="position:absolute;left:'+pos.x+'px; top:'+ (that.map_.getMapHeight() - pos.y) +'px; height:0px; width:0px;"></div>');
     };
 
-
     /**
      * Creates a node object that stores both the data of the node, and the root element, and the elements
      * of the node.
@@ -93,7 +85,6 @@ define(function (require) {
              $elements : null
         };
     };
-
 
     /**
      * Destroys a node ensuring that all respective DOM elements are removed correctly.
@@ -114,14 +105,12 @@ define(function (require) {
         }
     };
 
-
     /**
      * When given a data object, checks if that data is represented currently by the layer.
      */
     doesNodeExist = function( that, data) {
         return getNodeByData( that, data ) !== null;
     };
-
 
     /**
      * Returns a node by object reference
@@ -167,390 +156,371 @@ define(function (require) {
         }
     };
 
+    function HtmlNodeLayer( spec ) {
+        this.map_ = spec.map || null;
+        this.xAttr_ = spec.xAttr || null;
+        this.yAttr_ = spec.yAttr || null;
+        this.idKey_=  spec.idKey || null;
+        this.propagate = spec.propagate !== undefined ? spec.propagate : true;
+        this.nodes_ = [];
+        this.nodesById_ = {};
+        this.layers_ = [];
+        this.subset_ = [];
+        createLayerRoot( this );
+    }
 
-    HtmlNodeLayer = Class.extend({
-        ClassName: "HtmlNodeLayer",
+    /**
+     * Returns the root DOM element for the layer.
+     */
+    HtmlNodeLayer.prototype.getRootElement = function() {
+        return this.$root_;
+    };
 
-        Z_INDEX : 1000,
-
-        init: function( spec ) {
-
-            this.map_ = spec.map || null;
-            this.xAttr_ = spec.xAttr || null;
-            this.yAttr_ = spec.yAttr || null;
-            this.idKey_=  spec.idKey || null;
-            this.propagate = spec.propagate !== undefined ? spec.propagate : true;
-            this.nodes_ = [];
-            this.nodesById_ = {};
-            this.layers_ = [];
-            this.subset_ = [];
-            createLayerRoot( this );
-        },
-
-
-        /**
-         * Returns the root DOM element for the layer.
-         */
-        getRootElement: function() {
-
-            return this.$root_;
-        },
+    /**
+     * Adds an HtmlLayer object to the list of node layer representations.
+     */
+    HtmlNodeLayer.prototype.addLayer = function( layer ) {
+        this.layers_.push( layer );
+    };
 
 
-        /**
-         * Adds an HtmlLayer object to the list of node layer representations.
-         */
-        addLayer : function( layer ) {
+    /**
+     * Removes an HtmlLayer object to the list of node layer representations.
+     */
+    HtmlNodeLayer.prototype.removeLayer = function( layer ) {
 
-            this.layers_.push( layer );
-        },
-
-
-        /**
-         * Removes an HtmlLayer object to the list of node layer representations.
-         */
-        removeLayer : function( layer ) {
-
-            var layers = this.layers_,
-                index = layers.indexOf( layer );
-            if ( index !== -1 ) {
-                layers.splice( layer );
-            }
-        },
+        var layers = this.layers_,
+            index = layers.indexOf( layer );
+        if ( index !== -1 ) {
+            layers.splice( layer );
+        }
+    };
 
 
-        /**
-         * Re-allocates the data for all nodes of the entire layer. All nodes for data that are not
-         * currently represented are created, all defunct nodes for now missing data are removed. Produces
-         * a subset for all new nodes.
-         */
-        all: function( data ) {
+    /**
+     * Re-allocates the data for all nodes of the entire layer. All nodes for data that are not
+     * currently represented are created, all defunct nodes for now missing data are removed. Produces
+     * a subset for all new nodes.
+     */
+    HtmlNodeLayer.prototype. all = function( data ) {
 
-            var that = this,
-                nodes = this.nodes_,
-                idKey = this.idKey_,
-                i,
-                node,
-                newData = [],
-                newNodes = [];
+        var that = this,
+            nodes = this.nodes_,
+            idKey = this.idKey_,
+            i,
+            node,
+            newData = [],
+            newNodes = [];
 
-            if ( data === undefined ) {
-                this.subset_ = this.nodes_;
-                return this;
-            }
-
-            function allByKey() {
-
-                var key,
-                    nodesById = that.nodesById_,
-                    defunctNodesById = {};
-
-                // keep list of current nodes, to track which ones are not in the new set
-                // use existing id's, not the ids INSIDE the nodes, as these may be intentionally
-                // changed to force a redraw
-                for (key in nodesById) {
-                    if (nodesById.hasOwnProperty( key )) {
-                        defunctNodesById[ key ] = true;
-                    }
-                }
-
-                // only root will execute the following code
-                for (i=0; i<data.length; i++) {
-
-                    key = data[i][idKey];
-
-                    if ( nodesById[key] !== undefined ) {
-                        // remove from tracking list
-                        delete defunctNodesById[ key ];
-                    } else {
-                        // new data
-                        newData.push( data[i] );
-                    }
-                }
-
-                // destroy and remove all remaining nodes
-                for (key in defunctNodesById) {
-                    if (defunctNodesById.hasOwnProperty( key )) {
-
-                        removeNodeById( that, key );
-                    }
-                }
-
-                // create nodes for new data
-                for (i=0; i<newData.length; i++) {
-                    node = createNode( that, newData[i] );
-                    nodes.push( node );
-                    newNodes.push( node );
-                    key = newData[i][idKey];
-                    nodesById[ key ] = node;
-                }
-            }
-
-            function allNoKey() {
-
-                var defunctNodesArray = [],
-                    index;
-
-                // keep list of current nodes, to track which ones are not in the new set
-                for (i=0; i<nodes.length; ++i) {
-                    defunctNodesArray.push( getNodeByData( that, nodes[i].data ) );
-                }
-
-                // only root will execute the following code
-                for (i=0; i<data.length; i++) {
-
-                    if ( doesNodeExist( that, [i] ) ) {
-                        // remove from tracking list
-                        index = defunctNodesArray.indexOf(  getNodeByData( that, data[i] ) );
-                        defunctNodesArray.splice(index, 1);
-                    } else {
-                        // new data
-                        newData.push( data[i] );
-                    }
-                }
-
-                // destroy and remove all remaining nodes
-                for (i=0; i<defunctNodesArray.length; i++) {
-                    // remove from array
-                    removeNode( that, defunctNodesArray[i] );
-                }
-
-                // create nodes for new data
-                for (i=0; i<newData.length; i++) {
-                    node = createNode( that, newData[i] );
-                    nodes.push( node );
-                    newNodes.push( node );
-                }
-            }
-
-            if ( idKey ) {
-                allByKey();
-            } else {
-                allNoKey();
-            }
-
-            this.subset_ = newNodes;
-            return this;
-        },
-
-
-        /**
-         * Adds new data to the layer. Produces a subset for all new nodes.
-         */
-        join : function( data ) {
-
-             var that = this,
-                 nodes = this.nodes_,
-                 nodesById = this.nodesById_,
-                 idKey = this.idKey_,
-                 i,
-                 key,
-                 node,
-                 newNodes = [];
-
-            function joinByKey() {
-
-                for (i=0; i<data.length; i++) {
-
-                    key = data[i][idKey];
-
-                    if ( nodesById[key] === undefined ) {
-                        node = createNode( that, data[i] );
-                        nodes.push( node );
-                        newNodes.push( node );
-                        nodesById[ key ] = node;
-                    }
-                }
-            }
-
-            function joinNoKey() {
-
-                for (i=0; i<data.length; i++) {
-
-                    if ( doesNodeExist( that, data[i] ) ) {
-                        node = createNode( that, data[i] );
-                        nodes.push( node );
-                        newNodes.push( node );
-                    }
-                }
-            }
-
-            if ( idKey ) {
-                joinByKey();
-            } else {
-                joinNoKey();
-            }
-
-            this.subset_ = newNodes;
-            return this;
-        },
-
-
-        /**
-         * Removes data from the layer. Produces a subset for all remaining nodes.
-         */
-        remove : function( data ) {
-
-            var that = this,
-                idKey = this.idKey_,
-                key,
-                i;
-
-            // remove by data
-            function removeByData() {
-                for (i=0; i<data.length; i++) {
-                    removeNode( that, getNodeByData( that, data[i] ) );
-                }
-            }
-
-            // remove by data, by id
-            function removeByDataId() {
-
-                for (i=0; i<data.length; i++) {
-                    key = data[i][ idKey ];
-                    removeNodeById( that, key );
-                }
-
-            }
-
-            // remove by ids
-            function removeById() {
-
-                for (i=0; i<data.length; i++) {
-                    key = data[i];
-                    removeNodeById( that, key );
-                }
-
-            }
-
-            // wrap in array if it already isn't
-            if ( !$.isArray( data ) ) {
-                data = [ data ];
-            }
-
-            switch ( typeof data[0] ) {
-                case 'object':
-                    if (idKey) {
-                        removeByDataId();
-                    } else {
-                        removeByData();
-                    }
-                    break;
-                case 'string':
-                    removeById();
-                    break;
-            }
-
+        if ( data === undefined ) {
             this.subset_ = this.nodes_;
             return this;
-        },
+        }
 
+        function allByKey() {
 
-        /**
-         * Removes all data from the layer.
-         */
-        clear: function() {
+            var key,
+                nodesById = that.nodesById_,
+                defunctNodesById = {};
 
-            var nodes = this.nodes_,
-                i;
-
-            for (i=0; i<nodes.length; i++) {
-                this.destroyNode( nodes[i] );
-            }
-            this.nodes_ = [];
-            this.nodesById_ = {};
-            this.subset_ = [];
-
-            return this;
-        },
-
-
-        /**
-         * Produces a subset depending on the evaluation criteria provided. This may be
-         * node id's, node data objects, or functions evaluating on nodes.
-         */
-        where: function( idEval ) {
-
-            var that = this,
-                nodes = this.nodes_,
-                nodesById = this.nodesById_,
-                subset = [],
-                node,
-                i;
-
-            function whereById() {
-                for (i=0; i<idEval.length; i++) {
-                    node = nodesById[ idEval[i] ];
-                    if (node) {
-                        subset.push( node );
-                    }
+            // keep list of current nodes, to track which ones are not in the new set
+            // use existing id's, not the ids INSIDE the nodes, as these may be intentionally
+            // changed to force a redraw
+            for (key in nodesById) {
+                if (nodesById.hasOwnProperty( key )) {
+                    defunctNodesById[ key ] = true;
                 }
             }
 
-            function whereByFunction() {
-                for (i=0; i<nodes.length; i++) {
-                    if ( idEval( nodes[i].data ) ) {
-                        subset.push( nodes[i] );
-                    }
+            // only root will execute the following code
+            for (i=0; i<data.length; i++) {
+
+                key = data[i][idKey];
+
+                if ( nodesById[key] !== undefined ) {
+                    // remove from tracking list
+                    delete defunctNodesById[ key ];
+                } else {
+                    // new data
+                    newData.push( data[i] );
                 }
             }
 
-            function whereByData() {
-                for (i=0; i<idEval.length; i++) {
-                    node = getNodeByData( that, idEval[i] );
-                    if (node) {
-                        subset.push( node );
-                    }
+            // destroy and remove all remaining nodes
+            for (key in defunctNodesById) {
+                if (defunctNodesById.hasOwnProperty( key )) {
+
+                    removeNodeById( that, key );
                 }
             }
 
-            // wrap in array if it already isn't
-            if ( !$.isArray( idEval ) ) {
-                idEval = [ idEval ];
-            }
-
-            switch ( typeof idEval[0] ) {
-                case 'object':
-                    whereByData();
-                    break;
-                case 'function':
-                    whereByFunction();
-                    break;
-                case 'string':
-                    whereById();
-                    break;
-            }
-
-            this.subset_ = subset;
-            return this;
-        },
-
-
-        /**
-         * Renders all nodes in the current subset. Removes and recreates any nodes that currently
-         * exist in DOM.
-         */
-        redraw: function() {
-            var subset = this.subset_,
-                layers = this.layers_,
-                i;
-
-            // remove any prior elements, do this here rather than
-            // inside HtmlLayer in case multiple layers are attached
-            for (i=0; i<subset.length; i++) {
-                if ( subset[i].$elements ) {
-                    subset[i].$elements.remove();
-                }
-            }
-
-            // redraw layers
-            for (i=0; i<layers.length; i++) {
-                layers[i].redraw( subset );
+            // create nodes for new data
+            for (i=0; i<newData.length; i++) {
+                node = createNode( that, newData[i] );
+                nodes.push( node );
+                newNodes.push( node );
+                key = newData[i][idKey];
+                nodesById[ key ] = node;
             }
         }
 
+        function allNoKey() {
 
-    });
+            var defunctNodesArray = [],
+                index;
+
+            // keep list of current nodes, to track which ones are not in the new set
+            for (i=0; i<nodes.length; ++i) {
+                defunctNodesArray.push( getNodeByData( that, nodes[i].data ) );
+            }
+
+            // only root will execute the following code
+            for (i=0; i<data.length; i++) {
+
+                if ( doesNodeExist( that, [i] ) ) {
+                    // remove from tracking list
+                    index = defunctNodesArray.indexOf(  getNodeByData( that, data[i] ) );
+                    defunctNodesArray.splice(index, 1);
+                } else {
+                    // new data
+                    newData.push( data[i] );
+                }
+            }
+
+            // destroy and remove all remaining nodes
+            for (i=0; i<defunctNodesArray.length; i++) {
+                // remove from array
+                removeNode( that, defunctNodesArray[i] );
+            }
+
+            // create nodes for new data
+            for (i=0; i<newData.length; i++) {
+                node = createNode( that, newData[i] );
+                nodes.push( node );
+                newNodes.push( node );
+            }
+        }
+
+        if ( idKey ) {
+            allByKey();
+        } else {
+            allNoKey();
+        }
+
+        this.subset_ = newNodes;
+        return this;
+    };
+
+    /**
+     * Adds new data to the layer. Produces a subset for all new nodes.
+     */
+    HtmlNodeLayer.prototype.join = function( data ) {
+
+         var that = this,
+             nodes = this.nodes_,
+             nodesById = this.nodesById_,
+             idKey = this.idKey_,
+             i,
+             key,
+             node,
+             newNodes = [];
+
+        function joinByKey() {
+
+            for (i=0; i<data.length; i++) {
+
+                key = data[i][idKey];
+
+                if ( nodesById[key] === undefined ) {
+                    node = createNode( that, data[i] );
+                    nodes.push( node );
+                    newNodes.push( node );
+                    nodesById[ key ] = node;
+                }
+            }
+        }
+
+        function joinNoKey() {
+
+            for (i=0; i<data.length; i++) {
+
+                if ( doesNodeExist( that, data[i] ) ) {
+                    node = createNode( that, data[i] );
+                    nodes.push( node );
+                    newNodes.push( node );
+                }
+            }
+        }
+
+        if ( idKey ) {
+            joinByKey();
+        } else {
+            joinNoKey();
+        }
+
+        this.subset_ = newNodes;
+        return this;
+    };
+
+    /**
+     * Removes data from the layer. Produces a subset for all remaining nodes.
+     */
+    HtmlNodeLayer.prototype.remove = function( data ) {
+
+        var that = this,
+            idKey = this.idKey_,
+            key,
+            i;
+
+        // remove by data
+        function removeByData() {
+            for (i=0; i<data.length; i++) {
+                removeNode( that, getNodeByData( that, data[i] ) );
+            }
+        }
+
+        // remove by data, by id
+        function removeByDataId() {
+
+            for (i=0; i<data.length; i++) {
+                key = data[i][ idKey ];
+                removeNodeById( that, key );
+            }
+
+        }
+
+        // remove by ids
+        function removeById() {
+
+            for (i=0; i<data.length; i++) {
+                key = data[i];
+                removeNodeById( that, key );
+            }
+
+        }
+
+        // wrap in array if it already isn't
+        if ( !$.isArray( data ) ) {
+            data = [ data ];
+        }
+
+        switch ( typeof data[0] ) {
+            case 'object':
+                if (idKey) {
+                    removeByDataId();
+                } else {
+                    removeByData();
+                }
+                break;
+            case 'string':
+                removeById();
+                break;
+        }
+
+        this.subset_ = this.nodes_;
+        return this;
+    };
+
+    /**
+     * Removes all data from the layer.
+     */
+    HtmlNodeLayer.prototype.clear = function() {
+
+        var nodes = this.nodes_,
+            i;
+
+        for (i=0; i<nodes.length; i++) {
+            this.destroyNode( nodes[i] );
+        }
+        this.nodes_ = [];
+        this.nodesById_ = {};
+        this.subset_ = [];
+
+        return this;
+    };
+
+    /**
+     * Produces a subset depending on the evaluation criteria provided. This may be
+     * node id's, node data objects, or functions evaluating on nodes.
+     */
+    HtmlNodeLayer.prototype.where = function( idEval ) {
+
+        var that = this,
+            nodes = this.nodes_,
+            nodesById = this.nodesById_,
+            subset = [],
+            node,
+            i;
+
+        function whereById() {
+            for (i=0; i<idEval.length; i++) {
+                node = nodesById[ idEval[i] ];
+                if (node) {
+                    subset.push( node );
+                }
+            }
+        }
+
+        function whereByFunction() {
+            for (i=0; i<nodes.length; i++) {
+                if ( idEval( nodes[i].data ) ) {
+                    subset.push( nodes[i] );
+                }
+            }
+        }
+
+        function whereByData() {
+            for (i=0; i<idEval.length; i++) {
+                node = getNodeByData( that, idEval[i] );
+                if (node) {
+                    subset.push( node );
+                }
+            }
+        }
+
+        // wrap in array if it already isn't
+        if ( !$.isArray( idEval ) ) {
+            idEval = [ idEval ];
+        }
+
+        switch ( typeof idEval[0] ) {
+            case 'object':
+                whereByData();
+                break;
+            case 'function':
+                whereByFunction();
+                break;
+            case 'string':
+                whereById();
+                break;
+        }
+
+        this.subset_ = subset;
+        return this;
+    };
+
+    /**
+     * Renders all nodes in the current subset. Removes and recreates any nodes that currently
+     * exist in DOM.
+     */
+    HtmlNodeLayer.prototype.redraw = function() {
+        var subset = this.subset_,
+            layers = this.layers_,
+            i;
+
+        // remove any prior elements, do this here rather than
+        // inside HtmlLayer in case multiple layers are attached
+        for (i=0; i<subset.length; i++) {
+            if ( subset[i].$elements ) {
+                subset[i].$elements.remove();
+            }
+        }
+
+        // redraw layers
+        for (i=0; i<layers.length; i++) {
+            layers[i].redraw( subset );
+        }
+    };
 
     return HtmlNodeLayer;
 });

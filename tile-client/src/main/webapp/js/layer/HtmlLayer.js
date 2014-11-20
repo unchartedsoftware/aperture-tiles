@@ -24,23 +24,15 @@
  */
 
 
-define(function (require) {
+define( function () {
     "use strict";
 
-
-
-    var Class = require('../class'),
-        evaluateCss,
-        evaluateHtml,
-        HtmlLayer;
-
-
+    var evaluateCss,
+        evaluateHtml;
 
     evaluateCss = function( data, css ) {
-
         var result = {},
             key;
-
         for (key in css) {
             if (css.hasOwnProperty(key)) {
                 // set as value or evaluate function
@@ -52,69 +44,45 @@ define(function (require) {
         return result;
     };
 
-
     evaluateHtml = function( node, html, css ) {
-
         var $html;
-
         // create and style html elements
         $html = $.isFunction( html ) ? $.proxy( html, node.data )() : html;
         $html = ( $html instanceof jQuery ) ? $html : $($html);
         $html.css( evaluateCss( node.data, css ) );
-
         return $html;
     };
 
+    function HtmlLayer( spec ) {
+        this.html_ = spec.html || null;
+        this.css_ = spec.css || {};
+    }
 
-    HtmlLayer = Class.extend({
-        ClassName: "HtmlLayer",
+    HtmlLayer.prototype.html = function( html ) {
+        // set or update the internal html of this layer
+        this.html_ = html;
+    };
 
-        /**
-         * Constructs an html layer object that is attached to an html node layer
-         * @param spec the specification object
-         */
-        init: function( spec ) {
-
-            this.html_ = spec.html || null;
-            this.css_ = spec.css || {};
-        },
-
-
-        html : function( html ) {
-
-            // set or update the internal html of this layer
-            this.html_ = html;
-        },
-
-
-        css : function( attribute, value ) {
-
-            // add css object or attribute to css for layer
-            if ( $.isPlainObject(attribute) ) {
-                $.extend( this.css_, attribute );
-            } else {
-                this.css_[attribute] = value;
-            }
-        },
-
-
-        redraw :  function( nodes ) {
-
-            var i,
-                node;
-
-            for (i=0; i<nodes.length; i++) {
-
-                node = nodes[i];
-
-                // create elements
-                node.$elements = evaluateHtml( node, this.html_, this.css_ );
-                // append elements to tile root
-                node.$root.append( node.$elements );
-            }
+    HtmlLayer.prototype.css = function( attribute, value ) {
+        // add css object or attribute to css for layer
+        if ( $.isPlainObject(attribute) ) {
+            $.extend( this.css_, attribute );
+        } else {
+            this.css_[attribute] = value;
         }
+    };
 
-    });
+    HtmlLayer.prototype.redraw = function( nodes ) {
+        var i,
+            node;
+        for (i=0; i<nodes.length; i++) {
+            node = nodes[i];
+            // create elements
+            node.$elements = evaluateHtml( node, this.html_, this.css_ );
+            // append elements to tile root
+            node.$root.append( node.$elements );
+        }
+    };
 
     return HtmlLayer;
 });

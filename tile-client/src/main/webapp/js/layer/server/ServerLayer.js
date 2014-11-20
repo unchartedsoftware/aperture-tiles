@@ -38,16 +38,14 @@ define(function (require) {
      * @param {Object} level - The current map zoom level.
      */
     requestRampImage = function( layer ) {
-
         function generateQueryParamString() {
             var query = {
-                    renderer: layer.layerSpec.renderer,
-                    theme: layer.layerSpec.theme
+                    renderer: layer.spec.renderer,
+                    theme: layer.spec.theme
                 };
             return '?'+encodeURIComponent( JSON.stringify( query ) );
         }
-
-        aperture.io.rest('/v1.0/legend/' + layer.layerSpec.source.id + generateQueryParamString(),
+        aperture.io.rest('/v1.0/legend/' + layer.spec.source.id + generateQueryParamString(),
                          'GET',
                          function ( legendString, status ) {
                              layer.setRampImageUrl( legendString );
@@ -62,9 +60,9 @@ define(function (require) {
      */
     getLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
-            coarseness = layer.layerSpec.renderer.coarseness,
+            coarseness = layer.spec.renderer.coarseness,
             adjustedZoom = zoomLevel - (coarseness-1),
-            meta =  layer.layerSpec.source.meta.meta,
+            meta =  layer.spec.source.meta.meta,
             minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[adjustedZoom])),
             maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[adjustedZoom])),
             min = minArray ? ($.isArray(minArray) ? minArray[adjustedZoom] : minArray.minimum) : 0,
@@ -73,10 +71,8 @@ define(function (require) {
     };
 
     function ServerLayer( spec ) {
-
-        var that = this;
-
         // set reasonable defaults
+        spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
         spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
         spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
         spec.renderer = spec.renderer || {};
@@ -86,395 +82,401 @@ define(function (require) {
         spec.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? spec.renderer.rangeMax : 100;
         spec.renderer.preserveRangeMin = spec.preserveRangeMin || false;
         spec.renderer.preserveRangeMax = spec.preserveRangeMax || false;
-        spec.renderer.theme = spec.renderer.theme || spec.map.getTheme();
         spec.valueTransform = spec.valueTransform || { type: 'linear' };
         spec.tileTransform = spec.tileTransform || { type: 'identity' };
-
+        spec.domain = "server";
         // call base constructor
         Layer.call( this, spec );
+    }
 
+    ServerLayer.prototype = Object.create( Layer.prototype );
+
+    ServerLayer.prototype.activate = function() {
+        var that = this;
         // set callback to update ramp min/max on zoom
         this.map.on("zoomend", function() {
             if ( that.layer ) {
                 that.setRampMinMax( getLevelMinMax( that ) );
             }
         });
-
         this.update();
         requestRampImage( this );
-        this.setZIndex( this.layerSpec.zIndex );
-        this.setOpacity( this.layerSpec.opacity );
-        this.setVisibility( this.layerSpec.enabled );
+        this.setZIndex( this.spec.zIndex );
+        this.setOpacity( this.spec.opacity );
+        this.setVisibility( this.spec.enabled );
+        this.setTheme( this.map.getTheme() );
         this.setRampMinMax( getLevelMinMax( that ) );
-    }
+    };
 
-    ServerLayer.prototype = {
+    ServerLayer.prototype.deactivate = function() {
+        // TODO: implement
+        return true;
+    };
 
-        /**
-         * Valid ramp type strings.
-         */
-        RAMP_TYPES: [
-             {id: "spectral", name: "Spectral"},
-             {id: "hot", name: "Hot"},
-             {id: "polar", name: "Polar"},
-             {id: "neutral", name: "Neutral"},
-             {id: "cool", name: "Cool"},
-             {id: "valence", name: "Valence"},
-             {id: "flat", name: "Flat"}
-        ],
+    /**
+     * Valid ramp type strings.
+     */
+    ServerLayer.prototype.RAMP_TYPES = [
+         {id: "spectral", name: "Spectral"},
+         {id: "hot", name: "Hot"},
+         {id: "polar", name: "Polar"},
+         {id: "neutral", name: "Neutral"},
+         {id: "cool", name: "Cool"},
+         {id: "valence", name: "Valence"},
+         {id: "flat", name: "Flat"}
+    ];
 
-        /**
-         * Valid ramp function strings.
-         */
-        RAMP_FUNCTIONS: [
-            {id: "linear", name: "Linear"},
-            {id: "log10", name: "Log 10"}
-        ],
+    /**
+     * Valid ramp function strings.
+     */
+    ServerLayer.prototype.RAMP_FUNCTIONS = [
+        {id: "linear", name: "Linear"},
+        {id: "log10", name: "Log 10"}
+    ];
 
-        /**
-         * Set the opacity
-         */
-        setOpacity: function ( opacity ) {
-            if (this.layer) {
-                this.layer.olLayer_.setOpacity( opacity );
-                PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
-            }
-        },
-
-        /**
-         *  Get layer opacity
-         */
-        getOpacity: function() {
-            return this.layer.olLayer_.opacity;
-        },
-
-        /**
-         * Set the visibility
-         */
-        setVisibility: function ( visibility ) {
-            if (this.layer) {
-                this.layer.olLayer_.setVisibility( visibility );
-                PubSub.publish( this.getChannel(), { field: 'visibility', value: visibility });
-            }
-        },
-
-        /**
-         * Get layer visibility
-         */
-        getVisibility: function() {
-            return this.layer.olLayer_.getVisibility();
-        },
-
-        /**
-         * Updates the ramp type associated with the layer
-         */
-        setRampType: function ( rampType ) {
-            var that = this;
-            this.layerSpec.renderer.ramp = rampType;
-            requestRampImage( that );
-            this.update();
-        },
-
-        /**
-         *  Get ramp type for layer
-         */
-        getRampType: function() {
-            return this.layerSpec.renderer.ramp;
-        },
-
-        /**
-         * Updates the theme associated with the layer
-         */
-        updateTheme: function () {
-        	var that = this;
-            this.layerSpec.renderer.theme = this.map.getTheme();
-            requestRampImage( that );
-            this.update();
-            this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
-        },
-        
-        /**
-         * Get the current theme for the layer
-         */
-        getTheme: function() {
-        	return this.layerSpec.renderer.theme;
-        },
-
-        /**
-         * Sets the ramps current min and max
-         */
-        setRampMinMax: function( minMax ) {
-            this.rampMinMax = minMax;
-            PubSub.publish( this.getChannel(), { field: 'rampMinMax', value: minMax });
-        },
-
-        /**
-         * Get the ramps current min and max for the zoom level
-         */
-        getRampMinMax: function() {
-            return this.rampMinMax;
-        },
-
-        /**
-         * Update the ramps URL string
-         */
-        setRampImageUrl: function ( url ) {
-            this.rampImageUrl = url;
-            PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
-        },
-
-        /**
-         * Get the current ramps URL string
-         */
-        getRampImageUrl: function() {
-            return this.rampImageUrl;
-        },
-
-        /**
-         * Updates the ramp function associated with the layer.  Results in a POST
-         * to the server.
-         *
-         * @param {string} rampFunction - The new new ramp function.
-         */
-        setRampFunction: function ( rampFunction ) {
-            this.layerSpec.valueTransform = { type: rampFunction };
-            this.update();
-            PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
-        },
-
-        /**
-         * Get the current ramps function
-         */
-        getRampFunction: function() {
-            return this.layerSpec.valueTransform.type;
-        },
-
-        /**
-         * Updates the filter range for the layer.  Results in a POST to the server.
-         *
-         * @param {Array} filterRange - A two element array with values in the range [0.0, 1.0],
-         * where the first element is the min range, and the second is the max range.
-         */
-        setFilterRange: function ( min, max ) {
-            this.layerSpec.renderer.rangeMin = min;
-            this.layerSpec.renderer.rangeMax = max;
-            this.update();
-            PubSub.publish( this.getChannel(), { field: 'filterRange', value: [ min, max ] });
-        },
-
-        /**
-         * Get the current ramp filter range from 0 to 100
-         */
-        getFilterRange: function() {
-            return [ this.layerSpec.renderer.rangeMin, this.layerSpec.renderer.rangeMax ];
-        },
-
-        /**
-         * Updates the filter values for the layer.  Results in a POST to the server.
-         *
-         * @param {Array} filterRange - A two element array with values in the range levelMin and levelMax,
-         * where the first element is the min range, and the second is the max range.
-         */
-        setFilterValues: function ( min, max ) {
-            this.filterValues = [ min, max ];
-            PubSub.publish( this.getChannel(), { field: 'filterValues', value: [ min, max ] });
-        },
-
-        /**
-         * Get the current ramp filter values from levelMin and levelMax
-         */
-        getFilterValues: function() {
-            return this.filterValues || this.getRampMinMax();
-        },
-
-        /**
-         * Has the filter value been locked?
-         */
-        isFilterValueLocked: function( index ) {
-            if ( index === 0 ) {
-                return this.layerSpec.preserveRangeMin;
-            }
-            return this.layerSpec.preserveRangeMax;
-        },
-
-        /**
-         * Set whether or not the filter value is locked
-         */
-        setFilterValueLocking: function( index, value ) {
-            if ( index === 0 ) {
-                this.layerSpec.preserveRangeMin = value;
-            }
-            this.layerSpec.preserveRangeMax = value;
-        },
-
-        /**
-         * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
-         */
-        setZIndex: function ( zIndex ) {
-            // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
-            // set the z-index of the layer dev. setLayerIndex sets a relative
-            // index based on current map layers, which then sets a z-index. This
-            // caused issues with async layer loading.
-            this.layerSpec.zIndex = zIndex;
-            $( this.layer.olLayer_.div ).css( 'z-index', zIndex );
-            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
-        },
-
-        /**
-         * Get the layers zIndex
-         */
-        getZIndex: function () {
-            return this.layerSpec.zIndex;
-        },
-
-        /**
-         * Set the layers transformer type
-         */
-        setTransformerType: function ( transformerType ) {
-            this.layerSpec.tileTransform.type = transformerType;
-            this.update();
-            PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
-        },
-
-        /**
-         * Get the layers transformer type
-         */
-        getTransformerType: function () {
-            return this.layerSpec.tileTransform.type;
-        },
-
-        /**
-         * Set the transformer data arguments
-         */
-        setTransformerData: function ( transformerData ) {
-            this.layerSpec.tileTransform.data = transformerData;
-            this.update();
-            PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
-        },
-
-        /**
-         * Get the transformer data arguments
-         */
-        getTransformerData: function () {
-            return this.layerSpec.tileTransform.data;
-        },
-
-        /**
-         * Set the layer coarseness
-         */
-        setCoarseness: function( coarseness ) {
-            this.layerSpec.renderer.coarseness = coarseness;
-            this.setRampMinMax( getLevelMinMax( this ) );
-            this.update();
-            PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
-        },
-
-        /**
-         * Get the layer coarseness
-         */
-        getCoarseness: function() {
-            return this.layerSpec.renderer.coarseness;
-        },
-
-        /**
-         * Generate query parameters based on state of layer
-         */
-        generateQueryParamString: function() {
-            var viewBounds = this.map.getTileBoundsInView(),
-                query = {
-                    minX: viewBounds.minX,
-                    maxX: viewBounds.maxX,
-                    minY: viewBounds.minY,
-                    maxY: viewBounds.maxY,
-                    minZ: viewBounds.minZ,
-                    maxZ: viewBounds.maxZ,
-                    renderer: this.layerSpec.renderer,
-                    tileTransform: this.layerSpec.tileTransform,
-                    valueTransform: this.layerSpec.valueTransform,
-                    theme: this.layerSpec.theme
-                };
-            return '?'+encodeURIComponent( JSON.stringify( query ) );
-        },
-
-        /**
-         * Update all our openlayers layers on our map.
-         */
-        update: function () {
-
-            var that = this,
-                olBounds,
-                yFunction;
-
-            // y transformation function for non-density strips
-            function passY( yInput ) {
-                return yInput;
-            }
-            // y transformation function for density strips
-            function clampY( yInput ) {
-                return 0;
-            }
-            // create url function
-            function createUrl( bounds ) {
-
-                var res = this.map.getResolution(),
-                    maxBounds = this.maxExtent,
-                    tileSize = this.tileSize,
-                    x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                    y = yFunction( Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ) ),
-                    z = this.map.getZoom(),
-                    fullUrl;
-
-                if (x >= 0 && y >= 0) {
-                    // set base url
-                    fullUrl = ( this.url + this.layername + "/" +
-                               z + "/" + x + "/" + y + "." + this.type);
-                    return fullUrl + that.generateQueryParamString();
-                }
-            }
-
-            if ( !this.map ) {
-                return;
-            }
-
-            // The bounds of the full OpenLayers map, used to determine
-            // tile coordinates
-            // Note: these values are not set to full 20037508.342789244 as
-            // it produces extra tiles around intended border. This rounded
-            // down value results in the intended tile bounds ending at the
-            // border of the map
-            olBounds = new OpenLayers.Bounds(-20037500, -20037500,
-                                              20037500,  20037500);
-
-            // Adjust y function if we're displaying a density strip
-            yFunction = ( this.layerSpec.isDensityStrip ) ? clampY : passY;
-
-            if ( !this.layer ) {
-
-                // add the new layer
-                this.layer = this.map.addApertureLayer(
-                    aperture.geo.MapTileLayer.TMS, {},
-                    {
-                        'name': 'Aperture Tile Layers',
-                        'url': this.layerSpec.source.tms,
-                        'options': {
-                            'layername': this.layerSpec.source.id,
-                            'type': 'png',
-                            'maxExtent': olBounds,
-                            transparent: true,
-                            getURL: createUrl
-                        }
-                    }
-                );
-
-            } else {
-
-                // layer already exists, simply update service endpoint
-                this.layer.olLayer_.getURL = createUrl;
-            }
-
-            // redraw this layer
-            this.layer.olLayer_.redraw();
+    /**
+     * Set the opacity
+     */
+    ServerLayer.prototype.setOpacity = function ( opacity ) {
+        if (this.layer) {
+            this.layer.olLayer_.setOpacity( opacity );
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         }
+    };
+
+    /**
+     *  Get layer opacity
+     */
+    ServerLayer.prototype.getOpacity = function() {
+        return this.layer.olLayer_.opacity;
+    };
+
+    /**
+     * Set the visibility
+     */
+    ServerLayer.prototype.setVisibility = function ( visibility ) {
+        if (this.layer) {
+            this.layer.olLayer_.setVisibility( visibility );
+            PubSub.publish( this.getChannel(), { field: 'visibility', value: visibility });
+        }
+    };
+
+    /**
+     * Get layer visibility
+     */
+    ServerLayer.prototype.getVisibility = function() {
+        return this.layer.olLayer_.getVisibility();
+    };
+
+    /**
+     * Updates the ramp type associated with the layer
+     */
+    ServerLayer.prototype.setRampType = function ( rampType ) {
+        var that = this;
+        this.spec.renderer.ramp = rampType;
+        requestRampImage( that );
+        this.update();
+    };
+
+    /**
+     *  Get ramp type for layer
+     */
+    ServerLayer.prototype.getRampType = function() {
+        return this.spec.renderer.ramp;
+    };
+
+    /**
+     * Updates the theme associated with the layer
+     */
+    ServerLayer.prototype.setTheme = function () {
+        var that = this;
+        this.spec.renderer.theme = this.map.getTheme();
+        requestRampImage( that );
+        this.update();
+        this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
+    };
+
+    /**
+     * Get the current theme for the layer
+     */
+    ServerLayer.prototype.getTheme = function() {
+        return this.spec.renderer.theme;
+    };
+
+    /**
+     * Sets the ramps current min and max
+     */
+    ServerLayer.prototype.setRampMinMax = function( minMax ) {
+        this.rampMinMax = minMax;
+        PubSub.publish( this.getChannel(), { field: 'rampMinMax', value: minMax });
+    };
+
+    /**
+     * Get the ramps current min and max for the zoom level
+     */
+    ServerLayer.prototype.getRampMinMax = function() {
+        return this.rampMinMax;
+    };
+
+    /**
+     * Update the ramps URL string
+     */
+    ServerLayer.prototype.setRampImageUrl = function ( url ) {
+        this.rampImageUrl = url;
+        PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
+    };
+
+    /**
+     * Get the current ramps URL string
+     */
+    ServerLayer.prototype.getRampImageUrl = function() {
+        return this.rampImageUrl;
+    };
+
+    /**
+     * Updates the ramp function associated with the layer.  Results in a POST
+     * to the server.
+     *
+     * @param {string} rampFunction - The new new ramp function.
+     */
+    ServerLayer.prototype.setRampFunction = function ( rampFunction ) {
+        this.spec.valueTransform = { type: rampFunction };
+        this.update();
+        PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
+    };
+
+    /**
+     * Get the current ramps function
+     */
+    ServerLayer.prototype.getRampFunction = function() {
+        return this.spec.valueTransform.type;
+    };
+
+    /**
+     * Updates the filter range for the layer.  Results in a POST to the server.
+     *
+     * @param {Array} filterRange - A two element array with values in the range [0.0, 1.0],
+     * where the first element is the min range, and the second is the max range.
+     */
+    ServerLayer.prototype.setFilterRange = function ( min, max ) {
+        this.spec.renderer.rangeMin = min;
+        this.spec.renderer.rangeMax = max;
+        this.update();
+        PubSub.publish( this.getChannel(), { field: 'filterRange', value: [ min, max ] });
+    };
+
+    /**
+     * Get the current ramp filter range from 0 to 100
+     */
+    ServerLayer.prototype.getFilterRange = function() {
+        return [ this.spec.renderer.rangeMin, this.spec.renderer.rangeMax ];
+    };
+
+    /**
+     * Updates the filter values for the layer.  Results in a POST to the server.
+     *
+     * @param {Array} filterRange - A two element array with values in the range levelMin and levelMax,
+     * where the first element is the min range, and the second is the max range.
+     */
+    ServerLayer.prototype.setFilterValues = function ( min, max ) {
+        this.filterValues = [ min, max ];
+        PubSub.publish( this.getChannel(), { field: 'filterValues', value: [ min, max ] });
+    };
+
+    /**
+     * Get the current ramp filter values from levelMin and levelMax
+     */
+    ServerLayer.prototype.getFilterValues = function() {
+        return this.filterValues || this.getRampMinMax();
+    };
+
+    /**
+     * Has the filter value been locked?
+     */
+    ServerLayer.prototype.isFilterValueLocked = function( index ) {
+        if ( index === 0 ) {
+            return this.spec.preserveRangeMin;
+        }
+        return this.spec.preserveRangeMax;
+    };
+
+    /**
+     * Set whether or not the filter value is locked
+     */
+    ServerLayer.prototype.setFilterValueLocking = function( index, value ) {
+        if ( index === 0 ) {
+            this.spec.preserveRangeMin = value;
+        }
+        this.spec.preserveRangeMax = value;
+    };
+
+    /**
+     * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
+     */
+    ServerLayer.prototype.setZIndex = function ( zIndex ) {
+        // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
+        // set the z-index of the layer dev. setLayerIndex sets a relative
+        // index based on current map layers, which then sets a z-index. This
+        // caused issues with async layer loading.
+        this.spec.zIndex = zIndex;
+        $( this.layer.olLayer_.div ).css( 'z-index', zIndex );
+        PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
+    };
+
+    /**
+     * Get the layers zIndex
+     */
+    ServerLayer.prototype.getZIndex = function () {
+        return this.spec.zIndex;
+    };
+
+    /**
+     * Set the layers transformer type
+     */
+    ServerLayer.prototype.setTransformerType = function ( transformerType ) {
+        this.spec.tileTransform.type = transformerType;
+        this.update();
+        PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
+    };
+
+    /**
+     * Get the layers transformer type
+     */
+    ServerLayer.prototype.getTransformerType = function () {
+        return this.spec.tileTransform.type;
+    };
+
+    /**
+     * Set the transformer data arguments
+     */
+    ServerLayer.prototype.setTransformerData = function ( transformerData ) {
+        this.spec.tileTransform.data = transformerData;
+        this.update();
+        PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
+    };
+
+    /**
+     * Get the transformer data arguments
+     */
+    ServerLayer.prototype.getTransformerData = function () {
+        return this.spec.tileTransform.data;
+    };
+
+    /**
+     * Set the layer coarseness
+     */
+    ServerLayer.prototype.setCoarseness = function( coarseness ) {
+        this.spec.renderer.coarseness = coarseness;
+        this.setRampMinMax( getLevelMinMax( this ) );
+        this.update();
+        PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
+    };
+
+    /**
+     * Get the layer coarseness
+     */
+    ServerLayer.prototype.getCoarseness = function() {
+        return this.spec.renderer.coarseness;
+    };
+
+    /**
+     * Generate query parameters based on state of layer
+     */
+    ServerLayer.prototype.generateQueryParamString = function() {
+        var viewBounds = this.map.getTileBoundsInView(),
+            query = {
+                minX: viewBounds.minX,
+                maxX: viewBounds.maxX,
+                minY: viewBounds.minY,
+                maxY: viewBounds.maxY,
+                minZ: viewBounds.minZ,
+                maxZ: viewBounds.maxZ,
+                renderer: this.spec.renderer,
+                tileTransform: this.spec.tileTransform,
+                valueTransform: this.spec.valueTransform,
+                theme: this.spec.theme
+            };
+        return '?'+encodeURIComponent( JSON.stringify( query ) );
+    };
+
+    /**
+     * Update all our openlayers layers on our map.
+     */
+    ServerLayer.prototype.update = function () {
+
+        var that = this,
+            olBounds,
+            yFunction;
+
+        // y transformation function for non-density strips
+        function passY( yInput ) {
+            return yInput;
+        }
+        // y transformation function for density strips
+        function clampY( yInput ) {
+            return 0;
+        }
+        // create url function
+        function createUrl( bounds ) {
+
+            var res = this.map.getResolution(),
+                maxBounds = this.maxExtent,
+                tileSize = this.tileSize,
+                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
+                y = yFunction( Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ) ),
+                z = this.map.getZoom(),
+                fullUrl;
+
+            if (x >= 0 && y >= 0) {
+                // set base url
+                fullUrl = ( this.url + this.layername + "/" +
+                           z + "/" + x + "/" + y + "." + this.type);
+                return fullUrl + that.generateQueryParamString();
+            }
+        }
+
+        if ( !this.map ) {
+            return;
+        }
+
+        // The bounds of the full OpenLayers map, used to determine
+        // tile coordinates
+        // Note: these values are not set to full 20037508.342789244 as
+        // it produces extra tiles around intended border. This rounded
+        // down value results in the intended tile bounds ending at the
+        // border of the map
+        olBounds = new OpenLayers.Bounds(-20037500, -20037500,
+                                          20037500,  20037500);
+
+        // Adjust y function if we're displaying a density strip
+        yFunction = ( this.spec.isDensityStrip ) ? clampY : passY;
+
+        if ( !this.layer ) {
+
+            // add the new layer
+            this.layer = this.map.addApertureLayer(
+                aperture.geo.MapTileLayer.TMS, {},
+                {
+                    'name': 'Aperture Tile Layers',
+                    'url': this.spec.source.tms,
+                    'options': {
+                        'layername': this.spec.source.id,
+                        'type': 'png',
+                        'maxExtent': olBounds,
+                        transparent: true,
+                        getURL: createUrl
+                    }
+                }
+            );
+
+        } else {
+
+            // layer already exists, simply update service endpoint
+            this.layer.olLayer_.getURL = createUrl;
+        }
+
+        // redraw this layer
+        this.layer.olLayer_.redraw();
     };
 
     return ServerLayer;
