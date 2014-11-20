@@ -103,12 +103,12 @@ public class TileResource extends ApertureServerResource {
                 }
 
                 // Check for simple bounds
-                Integer minX = query.optInt( "minx" );
-                Integer maxX = query.optInt( "maxx" );
-                Integer minY = query.optInt( "miny" );
-                Integer maxY = query.optInt( "maxy" );
-                Integer minZ = query.optInt( "minz" );
-                Integer maxZ = query.optInt( "maxz" );
+                Integer minX = query.optInt( "minX" );
+                Integer maxX = query.optInt( "maxX" );
+                Integer minY = query.optInt( "minY" );
+                Integer maxY = query.optInt( "maxY" );
+                Integer minZ = query.optInt( "minZ" );
+                Integer maxZ = query.optInt( "maxZ" );
 
                 TileIndex minTile = TileIndex.fromString( query.optString( "mintile" ) );
                 TileIndex maxTile = TileIndex.fromString( query.optString( "maxtile" ) );
