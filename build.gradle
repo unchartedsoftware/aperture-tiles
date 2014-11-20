@@ -94,6 +94,10 @@ subprojects {
 		}
 	}
 	
+	// A shared function to determine whether we use the older unified HBase jar, or the
+	// newer split jars.  Currently just looks for cdh5 vs other build types.
+	ext.checkHBaseSplit = buildType =~ /cdh5\w*/
+		
 	// A shared function that adds hbase dependencies to the supplied project based on the build type.  
 	// We can't use the DSL in this context, so we have to go through the lower level DependencyManager APIs.  
 	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
@@ -101,7 +105,7 @@ subprojects {
 	// unified jar.
 	ext.addHBaseDependencies = {
 		// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
-		if (buildType =~ /cdh5\w*/) {
+		if (checkHBaseSplit) {
 			logger.info("Matched CDH5x cloudera version - using new-style jars")
 			getDependencies().add("compile", "org.apache.hbase:hbase-common:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -129,6 +133,29 @@ subprojects {
 			})
 		}
 	}	
+	
+	// Function passed down to subprojects that produces calls to add hbase jars
+	// to a spark-run script.
+	ext.getHBaseJarStrings = {
+		if (checkHBaseSplit) {
+			"""\
+addSparkJar org.apache.hbase hbase-common $hbaseVersion
+addSparkJar org.apache.hbase hbase-server $hbaseVersion
+addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
+		} else {
+			"addSparkJar org.apache.hbase hbase $hbaseVersion"
+		}		
+	}
+	
+	// Function passed down to subprojects that poduces hbase class path entries
+	// to be used in run scripts. 
+	ext.getHBaseClasspathEntries = {
+		if (checkHBaseSplit) {
+			"\${LIB}/hbase-client.jar:\${LIB}/hbase-server.jar:\${LIB}/hbase-common.jar"
+		} else {
+			"\${LIB}/hbase.jar"
+		}
+	}
 	
 	// Once evaluation is done (each build file has been loaded and processed, but
 	// the build hasn't started) add behavior specific to web client projects.

@@ -55,7 +55,8 @@ addToSparkClasspath com.oculusinfo tile-generation @project.version@
 addToSparkClasspath com.oculusinfo twitter-demo-day-utilities @project.version@
 
 # framework-related jars
-addToSparkClasspath org.apache.hbase hbase ${hbase-version}
+@hbase-jars@
+
 
 # additional stuff needed to use avro serialization
 

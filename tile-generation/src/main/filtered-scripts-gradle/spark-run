@@ -51,7 +51,7 @@ addSparkJar com.oculusinfo math-utilities @project-version@
 addSparkJar com.oculusinfo binning-utilities @project-version@ 
 
 # framework-related jars
-addSparkJar org.apache.hbase hbase @hbase-version@
+@hbase-jars@
 addSparkJar org.scala-lang scala-library @scala-version@
 # json version is derived indirectly, can't be coded here.
 addSparkJar org.json json 20090211

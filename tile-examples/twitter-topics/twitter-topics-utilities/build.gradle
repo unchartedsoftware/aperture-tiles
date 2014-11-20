@@ -15,8 +15,8 @@ test << {
 
 // Add a delete to the clean task that will remove the scripts directory if it exists.
 clean {
-	inputs.dir "scripts"
-	delete "scripts"
+	inputs.file "scripts/spark-run"
+	delete "scripts/spark-run"
 }
 
 // aperture config file.  It will run before the jar assembly task.
@@ -24,7 +24,8 @@ task copyFilteredScripts(type: Copy) {
 	from "src/main/filtered-scripts-gradle"
 	into "scripts"
 	filter ReplaceTokens, tokens:[
-		"project.version": version.toString()
+		"project.version": version.toString(),
+		"hbase-jars": getHBaseJarStrings().toString()
 	]
 }
 processResources.dependsOn copyFilteredScripts
