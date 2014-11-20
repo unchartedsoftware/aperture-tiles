@@ -30,6 +30,16 @@
 			<artifactId>binning-utilities</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>spark-tile-utilities</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.oculusinfo</groupId>
+			<artifactId>annotation-service</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
