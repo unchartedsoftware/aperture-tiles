@@ -178,6 +178,10 @@ code .jscontent{
 	float: left;
 	cursor: pointer;
 }
+
+.submenu-item:link, .submenu-item:active, .submenu-item:visited {
+		color: #4E443C;
+}
 .submenu-item:hover {
 	color: #C40;
 }
