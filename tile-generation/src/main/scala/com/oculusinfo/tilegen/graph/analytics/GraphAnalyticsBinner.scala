@@ -245,13 +245,14 @@ object GraphAnalyticsBinner {
 		val dataAnalytics: Option[AnalysisDescription[((Double, Double), GraphAnalyticsRecord),
 		                                              Int]] = None  	                                              
 		// process data                                              
-		genericProcessData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)		
+		genericProcessData(sc, rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)		
 		
 	}
 	
 	//------------
 	private def genericProcessData[AT, DT]
-		(rawData: RDD[String],
+		(sc: SparkContext,
+		 rawData: RDD[String],
 		 levelSets: Seq[Seq[Int]],
 		 tileIO: TileIO,
 		 tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]], AT]],
@@ -264,13 +265,14 @@ object GraphAnalyticsBinner {
 		val tileAnalyticsTag: ClassTag[AT] = tileAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
 		val dataAnalyticsTag: ClassTag[DT] = dataAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
 
-		processData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)(tileAnalyticsTag, dataAnalyticsTag)
+		processData(sc, rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)(tileAnalyticsTag, dataAnalyticsTag)
 		
 	}
 	
 	//------------
 	private def processData[AT: ClassTag, DT: ClassTag]
-		(rawData: RDD[String],
+		(sc: SparkContext,
+		 rawData: RDD[String],
 		 levelSets: Seq[Seq[Int]],
 		 tileIO: TileIO,
 		 tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]], AT]],
@@ -302,10 +304,24 @@ object GraphAnalyticsBinner {
 
 		val binner = new RDDBinner
 		binner.debug = true
-		val tilePyramid = getTilePyramid(properties)		
+		val tilePyramid = getTilePyramid(properties)	
+		
+		println("\tTile analytics: "+tileAnalytics)
+		println("\tData analytics: "+dataAnalytics)
+
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))		
 
 		levelSets.foreach(levelSet =>
-			{
+			{			
+				// Add level accumulators for all analytics for these levels (for now at least)
+				tileAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+						
 				println()
 				println()
 				println()

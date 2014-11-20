@@ -147,7 +147,7 @@ define(function (require) {
                     radius = this.map.getViewportPixelFromCoord( community[spec.node.radius], 0 ).x - this.map.getViewportPixelFromCoord( 0, 0 ).x;
                     diameter = radius*2;
                     
-                    if (radius < 2) {
+                    if ((radius < 1) || (community.degree === 0)) {
                     	continue;
                     }
                     
