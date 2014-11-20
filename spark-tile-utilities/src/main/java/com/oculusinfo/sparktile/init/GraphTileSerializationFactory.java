@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.sparktile.init;
 
 import java.util.List;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord;
 import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsAvroSerializer;
 
