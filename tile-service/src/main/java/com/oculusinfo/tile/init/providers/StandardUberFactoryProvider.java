@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.factory.providers;
+package com.oculusinfo.tile.init.providers;
 
 
 
@@ -31,8 +31,8 @@ import java.util.Set;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 
 

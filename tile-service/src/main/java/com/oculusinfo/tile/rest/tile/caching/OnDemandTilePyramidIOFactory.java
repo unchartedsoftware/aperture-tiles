@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+/**
+ * Copyright (c) 2013 Oculus Info Inc. http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
  * 
@@ -21,32 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.sparktile.init.providers;
-
-
-import com.google.inject.Inject;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
-import com.oculusinfo.sparktile.rest.tile.caching.OnDemandTilePyramidIOFactory;
-import com.oculusinfo.sparktile.spark.SparkContextProvider;
+package com.oculusinfo.tile.rest.tile.caching;
 
 import java.util.List;
 
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.PyramidIOFactory;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.spark.SparkContextProvider;
+import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO;
 
-public class SparkAwarePyramidIOFactoryProvider implements DelegateFactoryProviderTarget<PyramidIO> {
+public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(OnDemandTilePyramidIOFactory.class);
+
 	@Inject
 	private SparkContextProvider _contextProvider;
 
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-		return new OnDemandTilePyramidIOFactory(null, path, _contextProvider);
+	public OnDemandTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+		super("live", PyramidIO.class, parent, path);
+		_contextProvider = contextProvider;
 	}
-	
+
 	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new OnDemandTilePyramidIOFactory(parent, path, _contextProvider);
+	protected PyramidIO create () {
+		try {
+			JSONObject config = getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
+			return new OnDemandAccumulatorPyramidIO(_contextProvider.getSparkContext(config));
+		}
+		catch (Exception e) {
+			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
+		}
+		return null;
 	}
 }

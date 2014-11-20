@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc. http://www.oculusinfo.com/
+/*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
  * 
  * Released under the MIT License.
  * 
@@ -21,29 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.sparktile;
+package com.oculusinfo.tile.init.providers;
+
+
+import com.google.inject.Inject;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.rest.tile.caching.OnDemandTilePyramidIOFactory;
+import com.oculusinfo.tile.spark.SparkContextProvider;
+
+import java.util.List;
 
 
 
-import javax.servlet.ServletContextEvent;
+public class SparkAwarePyramidIOFactoryProvider implements DelegateFactoryProviderTarget<PyramidIO> {
+	@Inject
+	private SparkContextProvider _contextProvider;
 
-
-
-/**
- * A simple listener that is told when the servlet is created or destroyed.
- * 
- * @author nkronenfeld
- * 
- */
-public interface ServletLifecycleListener {
-	/**
-	 * Called when the servlet is initialized; this will only get called if the
-	 * listener somehow registers itself before the servlet is initialized.
-	 */
-	public void onServletInitialized (ServletContextEvent event);
-
-	/**
-	 * Called when the servlet is destroyed.
-	 */
-	public void onServletDestroyed (ServletContextEvent event);
+	@Override
+	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
+		return new OnDemandTilePyramidIOFactory(null, path, _contextProvider);
+	}
+	
+	@Override
+	public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
+	                                                     List<String> path) {
+		return new OnDemandTilePyramidIOFactory(parent, path, _contextProvider);
+	}
 }

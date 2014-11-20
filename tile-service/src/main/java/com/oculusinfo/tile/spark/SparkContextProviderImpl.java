@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.sparktile.spark;
+package com.oculusinfo.tile.spark;
 
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.sparktile.ServletLifecycleListener;
-import com.oculusinfo.sparktile.SparkTileServerConfiguration;
+import com.oculusinfo.tile.ServletLifecycleListener;
+import com.oculusinfo.tile.TileServiceConfiguration;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -87,7 +87,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	                                 @Named("org.apache.spark.jobName") String jobName,
 	                                 @Named("org.apache.spark.home") String sparkHome,
 	                                 @Named("org.apache.spark.jars") String extraJars,
-	                                 SparkTileServerConfiguration config) {
+	                                 TileServiceConfiguration config) {
 		_master = master;
 		_jobName = jobName;
 		_sparkHome = sparkHome;
