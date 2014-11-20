@@ -28,7 +28,7 @@ import java.util.List;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord;
 import com.oculusinfo.twitter.binning.TwitterTopicAvroSerializer;
 

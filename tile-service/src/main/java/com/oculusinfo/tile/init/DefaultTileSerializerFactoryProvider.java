@@ -45,7 +45,6 @@ import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerial
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.ConfigurableFactory;
 
 

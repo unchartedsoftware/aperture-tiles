@@ -26,7 +26,6 @@ package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
-import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 

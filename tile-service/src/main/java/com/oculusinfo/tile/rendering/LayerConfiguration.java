@@ -37,7 +37,7 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.properties.TileIndexProperty;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.FactoryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;

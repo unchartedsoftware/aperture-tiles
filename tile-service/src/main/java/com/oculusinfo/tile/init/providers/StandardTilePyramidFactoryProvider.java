@@ -26,7 +26,7 @@ package com.oculusinfo.tile.init.providers;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.TilePyramidFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 import java.util.List;
 

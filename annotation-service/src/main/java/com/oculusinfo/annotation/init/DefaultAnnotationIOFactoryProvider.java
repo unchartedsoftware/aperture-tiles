@@ -28,7 +28,7 @@ import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIOFactory;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
 
 import java.util.List;
 

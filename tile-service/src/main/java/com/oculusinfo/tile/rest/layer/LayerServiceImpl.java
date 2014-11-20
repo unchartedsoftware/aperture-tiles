@@ -33,7 +33,7 @@ import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;

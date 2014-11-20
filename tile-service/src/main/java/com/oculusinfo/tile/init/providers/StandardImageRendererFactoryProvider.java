@@ -25,7 +25,7 @@ package com.oculusinfo.tile.init.providers;
 
 
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.FactoryProvider;
 import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 

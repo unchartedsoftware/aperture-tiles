@@ -26,6 +26,7 @@ package com.oculusinfo.tile.rest;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import com.oculusinfo.tile.rest.data.DataResource;
 import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
@@ -50,5 +51,8 @@ public class RestConfigModule extends AbstractModule {
 
         resourceBinder.addBinding("/{version}/legend/{layer}").toInstance(new ResourceDefinition(LegendResource.class));
         resourceBinder.addBinding("/legend/{layer}").toInstance(new ResourceDefinition(LegendResource.class));
+
+        resourceBinder.addBinding("/{version}/data").toInstance(new ResourceDefinition(DataResource.class));
+        resourceBinder.addBinding("/data").toInstance(new ResourceDefinition(DataResource.class));
 	}
 }

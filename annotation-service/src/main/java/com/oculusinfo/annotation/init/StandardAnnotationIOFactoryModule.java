@@ -29,8 +29,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
 import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.tile.init.FactoryProvider;
 
 public class StandardAnnotationIOFactoryModule extends AbstractModule {
 

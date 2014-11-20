@@ -27,8 +27,6 @@ package com.oculusinfo.tile.init;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.factory.providers.FactoryProvider;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 

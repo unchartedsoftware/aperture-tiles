@@ -36,7 +36,6 @@ import com.oculusinfo.binning.io.impl.ResourcePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.ZipPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 
 
 
