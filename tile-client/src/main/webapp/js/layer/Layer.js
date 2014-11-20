@@ -23,91 +23,26 @@
  * SOFTWARE.
  */
 
-
-/**
- * This modules defines a basic layer class that can be added to maps.
- */
 define(function (require) {
     "use strict";
 
+    var Util = require('../util/Util');
 
+    function Layer( spec ) {
+        this.uuid = Util.generateUuid();
+        this.name = spec.name || "Unnamed Layer";
+        this.domain = spec.domain;
+        this.map = spec.map;
+        this.spec = spec;
+    }
 
-    var Class = require('../class'),
-        Util = require('../util/Util'),
-        Layer;
-
-
-
-    Layer = Class.extend({
-        ClassName: "Layer",
-
-
-        init: function ( spec, map ) {
-
-            this.uuid = Util.generateUuid();
-            this.name = spec.name || "Unnamed Layer";
-            this.domain = spec.domain;
-            this.map = map;
-            this.layerSpec = spec;
-        },
-
-        /**
-         *  Returns the layer's specification object
-         */
-        getLayerSpec: function () {
-            return this.layerSpec;
-        },
-
+    Layer.prototype = {
         /**
          *  Returns the layers channel path
          */
         getChannel: function () {
             return 'layer.' + this.domain + '.' + this.uuid;
-        },
-
-        /**
-         *  Sets the layers opacity
-         */
-        setOpacity: function( opacity ) {
-            return true;
-        },
-
-        /**
-         *  Returns the layers opacity
-         */
-        getOpacity: function() {
-            return true;
-        },
-
-        /**
-         *  Sets the layers visibility
-         */
-        setVisibility: function( visible ) {
-            return true;
-        },
-
-        /**
-         *  Returns the layers visibility
-         */
-        getVisibility: function() {
-            return true;
-        },
-
-        /**
-         *  Sets the layers z index
-         */
-        setZIndex: function( zIndex ) {
-            return true;
-        },
-
-        /**
-         *  Returns the layers z index
-         */
-        getZIndex: function() {
-            return true;
         }
-
-    });
-
+    };
     return Layer;
 });

@@ -33,110 +33,84 @@ define(function (require) {
 
 
 
-	var Class = require('../class'),
+	var BaseLayer = require('../layer/base/BaseLayer'),
         PubSub = require('../util/PubSub'),
-	    Util = require('../util/Util'),
 	    AoIPyramid = require('../binning/AoITilePyramid'),
 	    PyramidFactory = require('../binning/PyramidFactory'),
 	    TileIterator = require('../binning/TileIterator'),
 	    Axis =  require('./Axis'),
-	    TILESIZE = 256,
-	    Map;
+	    TILESIZE = 256;
 
 
+	function Map( spec ) {
 
-	Map = Class.extend({
-		ClassName: "Map",
+        var that = this;
 
-		init: function( id, spec ) {
+        this.id = spec.id;
+        this.$map = $( spec.selector || ("#" + this.id) );
+        this.axes = [];
+        this.pyramid = PyramidFactory.createPyramid( spec.pyramid );
 
-            var that = this,
-                mapConfig = spec.map,
-                pyramidConfig = spec.pyramid,
-                axisConfig = spec.axes;
-
-            this.id = id;
-            this.uuid = Util.generateUuid();
-            this.name = 'Base Layer';
-            this.domain = 'base';
-            this.$map = $( "#" + this.id );
-            this.axes = [];
-            this.pyramid = PyramidFactory.createPyramid( pyramidConfig );
-            this.baseLayers = ( $.isArray( mapConfig.baseLayer ) ) ? mapConfig.baseLayer : [mapConfig.baseLayer];
-            this.BASE_LAYERS = this.baseLayers;
-
-            if ( this.baseLayers.length === 0 ) {
-                this.baseLayers[0] = {
-                    "type" : "BlankBase",
-                    "options" : {
-                        "name" : "black",
-                        "color" : "rgb(0,0,0)"
-                    },
-                    "tile-border" : {
-                        "color" : "rgba(255, 255, 255, .5)",
-                        "weight" : "1px",
-                        "style" : "solid"
-                    }
-                };
+        // Set the map configuration
+        spec.baseLayer = {}; // default to no base layer
+        aperture.config.provide({
+            'aperture.map' : {
+                'defaultMapConfig' : spec
             }
+        });
 
-            // Set the map configuration
-            mapConfig.baseLayer = {}; // default to no base layer
-			aperture.config.provide({
-				'aperture.map' : {
-					'defaultMapConfig' : mapConfig
-				}
-			});
-
-
-			// Initialize the map
-			this.map = new aperture.geo.Map({
-				id: this.id,
-                options: {
-                    controls: [
-                        new OpenLayers.Control.Navigation({ documentDrag: true }),
-                        new OpenLayers.Control.Zoom()
-                    ]
-                }
-			});
-
-            // set basic map properties
-            this.setZIndex( -1 );
-            this.setVisibility( true );
-            this.setOpacity( mapConfig.opacity || 1.0 );
-			this.setBaseLayerIndex( mapConfig.baseLayerIndex !== undefined ? parseInt( mapConfig.baseLayerIndex, 10 ) : 0 );
-
-            // create div root layer
-            this.createRoot();
-
-            // if mousedown while map is panning, interrupt pan
-            this.getElement().mousedown( function(){
-                if ( that.map.olMap_.panTween ) {
-                     that.map.olMap_.panTween.callbacks = null;
-                     that.map.olMap_.panTween.stop();
-                }
-            });
-
-			// initialize previous zoom
-            this.previousZoom = this.map.getZoom();
-
-            this.setTileFocusCallbacks();
-
-            // set resize callback
-            $(window).resize( $.proxy(this.updateSize, this) );
-
-			// Trigger the initial resize event to resize everything
-			$(window).resize();
-
-			if( mapConfig.zoomTo ) {
-                this.map.zoomTo( mapConfig.zoomTo[0],
-                                 mapConfig.zoomTo[1],
-                                 mapConfig.zoomTo[2] );
+        // initialize the map
+        this.map = new aperture.geo.Map({
+            id: this.id,
+            options: {
+                controls: [
+                    new OpenLayers.Control.Navigation({ documentDrag: true }),
+                    new OpenLayers.Control.Zoom()
+                ]
             }
+        });
 
-            this.setAxisSpecs( axisConfig, pyramidConfig );
-		},
+        // create div root layer
+        this.createRoot();
 
+        // if mousedown while map is panning, interrupt pan
+        this.getElement().mousedown( function(){
+            if ( that.map.olMap_.panTween ) {
+                 that.map.olMap_.panTween.callbacks = null;
+                 that.map.olMap_.panTween.stop();
+            }
+        });
+
+        // initialize previous zoom
+        this.previousZoom = this.map.getZoom();
+        this.baseLayerIndex = -1;
+
+        this.setTileFocusCallbacks();
+
+        // set resize callback
+        $(window).resize( $.proxy(this.updateSize, this) );
+
+        // Trigger the initial resize event to resize everything
+        $(window).resize();
+
+        if( spec.zoomTo ) {
+            this.map.zoomTo( spec.zoomTo[0],
+                             spec.zoomTo[1],
+                             spec.zoomTo[2] );
+        }
+    }
+
+    Map.prototype = {
+
+        add: function( layer ) {
+            if ( layer instanceof BaseLayer ) {
+                this.baselayers = this.baselayers || [];
+                this.baselayers.push( layer );
+                if ( this.baseLayerIndex < 0 ) {
+                    this.setBaseLayerIndex( 0 );
+                }
+            }
+        },
 
 		setTileFocusCallbacks: function() {
             var that = this,
@@ -211,97 +185,15 @@ define(function (require) {
         },
 
 
-        setZIndex: function( zIndex ) {
-            this.zIndex = zIndex;
-            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
-        },
-
-
-        getZIndex: function() {
-            return this.zIndex;
-        },
-
-
-        setOpacity: function( opacity ) {
-            this.opacity = opacity;
-            this.map.olMap_.baseLayer.setOpacity ( opacity );
-            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
-        },
-
-
-        getOpacity: function() {
-            return this.opacity;
-        },
-
-
-        setVisibility: function( visibility ) {
-            this.visibility = visibility;
-            this.map.olMap_.baseLayer.setVisibility( visibility );
-            PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility });
-        },
-
-
-        getVisibility: function() {
-            return this.visibility;
-        },
-
-
-        getChannel: function() {
-            return 'layer.base.' + this.uuid;
-        },
-
-
-        setBaseLayerIndex: function(index) {
-
-            var $map = this.getElement(),
-                olMap_ = this.map.olMap_,
-                newBaseLayerConfig = this.baseLayers[index],
-                newBaseLayerType,
-                newBaseLayer;
-
+        setBaseLayerIndex: function( index ) {
+            var oldBaseLayer = this.baselayers[ this.getPreviousBaseLayerIndex() ],
+                newBaseLayer = this.baselayers[ index ];
+            if ( oldBaseLayer ) {
+                oldBaseLayer.deactivate();
+            }
+            newBaseLayer.activate();
             this.previousBaseLayerIndex = this.baseLayerIndex;
             this.baseLayerIndex = index;
-
-            if( newBaseLayerConfig.type === 'BlankBase' ) {
-
-                // changing to blank base layer
-                $map.css( 'background-color', newBaseLayerConfig.options.color );
-                olMap_.baseLayer.setVisibility(false);
-
-            } else {
-
-                // destroy previous baselayer
-                olMap_.baseLayer.destroy();
-                //reset the background color
-                $map.css( 'background-color', '' );
-                // create new layer instance
-                newBaseLayerType = (newBaseLayerConfig.type === 'Google') ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
-                newBaseLayer = this.map.addLayer( newBaseLayerType, {}, newBaseLayerConfig );
-                // attach, and refresh it by toggling visibility
-                olMap_.baseLayer = newBaseLayer.olLayer_;
-                olMap_.setBaseLayer( newBaseLayer.olLayer_ );
-                // ensure baselayer remains bottom layer
-                this.setLayerIndex( newBaseLayer.olLayer_, -1 );
-                // toggle visibility to force redraw
-                olMap_.baseLayer.setVisibility(false);
-                olMap_.baseLayer.setVisibility(true);
-            }
-
-            if ( newBaseLayerConfig.theme && newBaseLayerConfig.theme.toLowerCase() === "light" ) {
-                $("body").removeClass('dark-theme').addClass('light-theme');
-            } else {
-                $("body").removeClass('light-theme').addClass('dark-theme');
-            }
-
-            // update tile border
-            this.setTileBorderStyle( newBaseLayerConfig["tile-border"] );
-
-            if ( newBaseLayerConfig.type !== "BlankBase" ) {
-                // if switching to a non-blank baselayer, ensure opacity and visibility is restored
-                this.setOpacity( this.getOpacity() );
-                this.setVisibility( this.getVisibility() );
-            }
-
             PubSub.publish( this.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -317,43 +209,9 @@ define(function (require) {
             return this.previousBaseLayerIndex;
         },
 
-
-        setTileBorderStyle: function ( tileBorder ) {
-
-            // remove any previous style
-            $(document.body).find("#tiles-border-style").remove();
-
-            //if it is not defined, don't set border style
-            if( !tileBorder ){
-                return;
-            }
-
-            if( tileBorder === 'default' ){
-                tileBorder = {
-                    "color" : "rgba(255, 255, 255, .5)",
-                    "style" : "solid",
-                    "weight" : "1px"
-                };
-            }
-
-            //set individual defaults if they are omitted.
-            tileBorder.color = tileBorder.color || "rgba(255, 255, 255, .5)";
-            tileBorder.style = tileBorder.style || "solid";
-            tileBorder.weight = tileBorder.weight || "1px";
-
-            $(document.body).prepend(
-                $('<style id="tiles-border-style" type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
-                    'border-left : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +
-                    '; border-top : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +';}' +
-                  '</style>')
-            );
-        },
-
-
         getElement:  function() {
             return this.$map;
         },
-
 
         getRootElement: function() {
             return this.$root;
@@ -865,7 +723,7 @@ define(function (require) {
 			}
 		}
 
-	});
+	};
 
 	return Map;
 });

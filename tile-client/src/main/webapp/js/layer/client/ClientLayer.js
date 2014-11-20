@@ -23,17 +23,12 @@
  * SOFTWARE.
  */
 
-
 define(function (require) {
     "use strict";
 
-
     var Layer = require('../Layer'),
         PubSub = require('../../util/PubSub'),
-        makeRedrawFunc,
-        ClientLayer;
-
-
+        makeRedrawFunc;
 
     makeRedrawFunc = function( renderer, tileService, conditional ) {
         return function() {
@@ -44,55 +39,51 @@ define(function (require) {
         };
     };
 
+    function ClientLayer( spec ) {
 
+        var that = this,
+            view,
+            i;
 
-    ClientLayer = Layer.extend({
+        // set reasonable defaults
+        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
+        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
 
+        // call base constructor    
+        Layer.call( this, spec );
 
-        init: function ( spec, views, map ) {
+        this.views = spec.views;
+        this.renderersByTile = {};
+        this.defaultViewIndex = 0;
+        this.click = null;
+        this.hover = null;
 
-            var that = this,
-                view,
-                i;
-
-            // set reasonable defaults
-            spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-            spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
-
-            // call base constructor
-            this._super( spec, map );
-
-            this.views = views;
-            this.renderersByTile = {};
-            this.defaultViewIndex = 0;
-            this.click = null;
-            this.hover = null;
-
-            for (i=0; i<this.views.length; i++) {
-                view = this.views[i];
-                // pass parent layer (this) along with meta data to the renderer / details
-                view.renderer.parent = that;
-                if ( view.details ) {
-                    view.details.parent = that;
-                }
-                // subscribe renderer to pubsub AFTER it has its parent reference
-                view.renderer.subscribeRenderer();
+        for (i=0; i<this.views.length; i++) {
+            view = this.views[i];
+            // pass parent layer (this) along with meta data to the renderer / details
+            view.renderer.parent = that;
+            if ( view.details ) {
+                view.details.parent = that;
             }
+            // subscribe renderer to pubsub AFTER it has its parent reference
+            view.renderer.subscribeRenderer();
+        }
 
-            // update tiles on map move
-            this.map.on('move', function() {
-                that.update();
-            });
-            // clear click state if map is clicked
-            this.map.on( 'click', function() {
-                that.setClick( null );
-            });
-            this.setZIndex( spec.zIndex );
-            this.setVisibility( spec.enabled );
-            this.setOpacity( spec.opacity );
-            this.update();
-        },
+        // set callback to update tiles on map move
+        this.map.on( 'move', function() {
+            that.update();
+        });
+        // set callback to clear click state if map is clicked
+        this.map.on( 'click', function() {
+            that.setClick( null );
+        });
+        this.setZIndex( spec.zIndex );
+        this.setVisibility( spec.enabled );
+        this.setOpacity( spec.opacity );
+        this.update();
+    }
 
+    ClientLayer.prototype = {
 
         /**
          * Store click event object.
@@ -102,7 +93,6 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'click', value: value });
         },
 
-
         /**
          * Get click event object.
          */
@@ -110,14 +100,12 @@ define(function (require) {
             return this.click;
         },
 
-
         /**
          * Check if click event object exists.
          */
         isClicked: function() {
             return this.click !== null && this.click !== undefined;
         },
-
 
         /**
          * Store hover event object.
@@ -127,14 +115,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'hover', value: value });
         },
 
-
         /**
          * Get hover event object.
          */
         getHover: function() {
             return this.hover;
         },
-
 
         /**
          * Set whether the carousel conttrols is enabled or not.
@@ -144,7 +130,6 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'carouselEnabled', value: isEnabled });
         },
 
-
         /**
          * Check if the carousel controls is enabled.
          */
@@ -152,14 +137,12 @@ define(function (require) {
             return this.carouselEnabled;
         },
 
-
         /**
          * Returns the number of views in the layer.
          */
         getNumViews: function() {
             return this.views.length;
         },
-
 
         /**
          * Set the layers opacity.
@@ -173,14 +156,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         },
 
-
         /**
          * Get the layers opacity.
          */
         getOpacity: function() {
             return this.opacity;
         },
-
 
         /**
          * Set the layers visibility.
@@ -195,14 +176,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'enabled', value: visible });
         },
 
-
         /**
          * Get the layers visibility.
          */
         getVisibility: function() {
             return this.visibility;
         },
-
 
         /**
          * Set the layers z index.
@@ -216,14 +195,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
-
         /**
          * Get the layers z index.
          */
         getZIndex: function() {
             return this.zIndex;
         },
-
 
         /**
          * Set the default view index
@@ -234,14 +211,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'defaultViewIndex', value: index });
         },
 
-
         /**
          * Get the default view index
          */
         getDefaultViewIndex: function() {
             return this.defaultViewIndex;
         },
-
 
         /**
          * Set the carousel view index for a particular tile
@@ -290,7 +265,6 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'tileViewIndex', value: { tilekey: tilekey, index: newIndex } } );
         },
 
-
         /**
          * Get the carousel view index for a particular tile
          */
@@ -298,7 +272,6 @@ define(function (require) {
             var index = this.renderersByTile[tilekey];
             return ( index !== undefined ) ? index : this.defaultViewIndex;
         },
-
 
         /**
          * Map update callback, this function is called when the map view state is updating. Requests
@@ -345,7 +318,7 @@ define(function (require) {
             }
         }
 
-     });
+     };
 
     return ClientLayer;
 });

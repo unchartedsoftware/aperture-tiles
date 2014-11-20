@@ -23,21 +23,13 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
 define(function (require) {
     "use strict";
-
-
 
     var Layer = require('../Layer'),
         PubSub = require('../../util/PubSub'),
         requestRampImage,
-        getLevelMinMax,
-        ServerLayer;
-
-
+        getLevelMinMax;
 
     /**
      * Request colour ramp image from server.
@@ -45,7 +37,7 @@ define(function (require) {
      * @param {Object} layer - The layer object.
      * @param {Object} level - The current map zoom level.
      */
-    requestRampImage = function ( layer ) {
+    requestRampImage = function( layer ) {
 
         function generateQueryParamString() {
             var query = {
@@ -80,11 +72,43 @@ define(function (require) {
         return [ parseFloat(min), parseFloat(max) ];
     };
 
+    function ServerLayer( spec ) {
 
+        var that = this;
 
-    ServerLayer = Layer.extend({
-        ClassName: "ServerLayer",
+        // set reasonable defaults
+        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
+        spec.renderer = spec.renderer || {};
+        spec.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ?  spec.renderer.coarseness : 1;
+        spec.renderer.ramp = spec.ramp || "spectral";
+        spec.renderer.rangeMin = ( spec.renderer.rangeMin !== undefined ) ? spec.renderer.rangeMin : 0;
+        spec.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? spec.renderer.rangeMax : 100;
+        spec.renderer.preserveRangeMin = spec.preserveRangeMin || false;
+        spec.renderer.preserveRangeMax = spec.preserveRangeMax || false;
+        spec.renderer.theme = spec.renderer.theme || spec.map.getTheme();
+        spec.valueTransform = spec.valueTransform || { type: 'linear' };
+        spec.tileTransform = spec.tileTransform || { type: 'identity' };
 
+        // call base constructor
+        Layer.call( this, spec );
+
+        // set callback to update ramp min/max on zoom
+        this.map.on("zoomend", function() {
+            if ( that.layer ) {
+                that.setRampMinMax( getLevelMinMax( that ) );
+            }
+        });
+
+        this.update();
+        requestRampImage( this );
+        this.setZIndex( this.layerSpec.zIndex );
+        this.setOpacity( this.layerSpec.opacity );
+        this.setVisibility( this.layerSpec.enabled );
+        this.setRampMinMax( getLevelMinMax( that ) );
+    }
+
+    ServerLayer.prototype = {
 
         /**
          * Valid ramp type strings.
@@ -99,7 +123,6 @@ define(function (require) {
              {id: "flat", name: "Flat"}
         ],
 
-
         /**
          * Valid ramp function strings.
          */
@@ -107,44 +130,6 @@ define(function (require) {
             {id: "linear", name: "Linear"},
             {id: "log10", name: "Log 10"}
         ],
-
-
-        init: function ( spec, map ) {
-
-            var that = this;
-
-            // set reasonable defaults
-            spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
-            spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-            spec.renderer = spec.renderer || {};
-            spec.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ?  spec.renderer.coarseness : 1;
-            spec.renderer.ramp = spec.ramp || "spectral";
-            spec.renderer.rangeMin = ( spec.renderer.rangeMin !== undefined ) ? spec.renderer.rangeMin : 0;
-            spec.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? spec.renderer.rangeMax : 100;
-            spec.renderer.preserveRangeMin = spec.preserveRangeMin || false;
-            spec.renderer.preserveRangeMax = spec.preserveRangeMax || false;
-            spec.renderer.theme = spec.renderer.theme || map.getTheme();
-            spec.valueTransform = spec.valueTransform || { type: 'linear' };
-            spec.tileTransform = spec.tileTransform || { type: 'identity' };
-
-            // call base constructor
-            this._super( spec, map );
-
-            // update ramp min/max on zoom
-            this.map.on("zoomend", function() {
-                if ( that.layer ) {
-                    that.setRampMinMax( getLevelMinMax( that ) );
-                }
-            });
-
-            this.update();
-            requestRampImage( this );
-            this.setZIndex( this.layerSpec.zIndex );
-            this.setOpacity( this.layerSpec.opacity );
-            this.setVisibility( this.layerSpec.enabled );
-            this.setRampMinMax( getLevelMinMax( that ) );
-        },
-
 
         /**
          * Set the opacity
@@ -156,14 +141,12 @@ define(function (require) {
             }
         },
 
-
         /**
          *  Get layer opacity
          */
         getOpacity: function() {
             return this.layer.olLayer_.opacity;
         },
-
 
         /**
          * Set the visibility
@@ -175,14 +158,12 @@ define(function (require) {
             }
         },
 
-
         /**
          * Get layer visibility
          */
         getVisibility: function() {
             return this.layer.olLayer_.getVisibility();
         },
-
 
         /**
          * Updates the ramp type associated with the layer
@@ -219,7 +200,6 @@ define(function (require) {
         	return this.layerSpec.renderer.theme;
         },
 
-
         /**
          * Sets the ramps current min and max
          */
@@ -228,14 +208,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'rampMinMax', value: minMax });
         },
 
-
         /**
          * Get the ramps current min and max for the zoom level
          */
         getRampMinMax: function() {
             return this.rampMinMax;
         },
-
 
         /**
          * Update the ramps URL string
@@ -245,14 +223,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
         },
 
-
         /**
          * Get the current ramps URL string
          */
         getRampImageUrl: function() {
             return this.rampImageUrl;
         },
-
 
         /**
          * Updates the ramp function associated with the layer.  Results in a POST
@@ -266,14 +242,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
         },
 
-
         /**
          * Get the current ramps function
          */
         getRampFunction: function() {
             return this.layerSpec.valueTransform.type;
         },
-
 
         /**
          * Updates the filter range for the layer.  Results in a POST to the server.
@@ -288,14 +262,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'filterRange', value: [ min, max ] });
         },
 
-
         /**
          * Get the current ramp filter range from 0 to 100
          */
         getFilterRange: function() {
             return [ this.layerSpec.renderer.rangeMin, this.layerSpec.renderer.rangeMax ];
         },
-
 
         /**
          * Updates the filter values for the layer.  Results in a POST to the server.
@@ -308,14 +280,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'filterValues', value: [ min, max ] });
         },
 
-
         /**
          * Get the current ramp filter values from levelMin and levelMax
          */
         getFilterValues: function() {
             return this.filterValues || this.getRampMinMax();
         },
-
 
         /**
          * Has the filter value been locked?
@@ -327,7 +297,6 @@ define(function (require) {
             return this.layerSpec.preserveRangeMax;
         },
 
-
         /**
          * Set whether or not the filter value is locked
          */
@@ -337,7 +306,6 @@ define(function (require) {
             }
             this.layerSpec.preserveRangeMax = value;
         },
-
 
         /**
          * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
@@ -352,14 +320,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         },
 
-
         /**
          * Get the layers zIndex
          */
         getZIndex: function () {
             return this.layerSpec.zIndex;
         },
-
 
         /**
          * Set the layers transformer type
@@ -370,14 +336,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
         },
 
-
         /**
          * Get the layers transformer type
          */
         getTransformerType: function () {
             return this.layerSpec.tileTransform.type;
         },
-
 
         /**
          * Set the transformer data arguments
@@ -388,14 +352,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
         },
 
-
         /**
          * Get the transformer data arguments
          */
         getTransformerData: function () {
             return this.layerSpec.tileTransform.data;
         },
-
 
         /**
          * Set the layer coarseness
@@ -407,14 +369,12 @@ define(function (require) {
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         },
 
-
         /**
          * Get the layer coarseness
          */
         getCoarseness: function() {
             return this.layerSpec.renderer.coarseness;
         },
-
 
         /**
          * Generate query parameters based on state of layer
@@ -435,7 +395,6 @@ define(function (require) {
                 };
             return '?'+encodeURIComponent( JSON.stringify( query ) );
         },
-
 
         /**
          * Update all our openlayers layers on our map.
@@ -516,7 +475,7 @@ define(function (require) {
             // redraw this layer
             this.layer.olLayer_.redraw();
         }
-    });
+    };
 
     return ServerLayer;
 });
