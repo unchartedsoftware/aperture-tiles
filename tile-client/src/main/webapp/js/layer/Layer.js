@@ -26,22 +26,59 @@
 define(function (require) {
     "use strict";
 
-    var Util = require('../util/Util');
+    var Util = require('../util/Util'),
+        PubSub = require('../util/PubSub');
 
     function Layer( spec ) {
         this.uuid = Util.generateUuid();
         this.name = spec.name || "Unnamed Layer";
         this.domain = spec.domain;
         this.map = spec.map;
+        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
         this.spec = spec;
     }
 
     Layer.prototype = {
-        /**
-         *  Returns the layers channel path
-         */
+
+        setOpacity: function( opacity ) {
+            this.spec.opacity = opacity;
+            if ( this.layer ) {
+                this.layer.setOpacity ( opacity );
+                PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
+            }
+        },
+
+        getOpacity: function() {
+            return this.spec.opacity;
+        },
+
+        setVisibility: function( visibility ) {
+            this.spec.enabled = visibility;
+            if ( this.layer ) {
+                this.layer.setVisibility(visibility);
+                PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility } );
+            }
+        },
+
+        getVisibility: function() {
+            return this.spec.enabled;
+        },
+
         getChannel: function () {
             return 'layer.' + this.domain + '.' + this.uuid;
+        },
+
+        getURL: function( bounds ) {
+            var res = this.map.getResolution(),
+                maxBounds = this.maxExtent,
+                tileSize = this.tileSize,
+                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
+                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
+                z = this.map.getZoom();
+            if ( x >= 0 && y >= 0 ) {
+                return this.url + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
+            }
         }
     };
     return Layer;

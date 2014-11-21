@@ -38,7 +38,7 @@ define( function() {
             dataUrl;
         if ( shouldDraw ) {
             this.positionTile();
-            dataUrl = this.layer.getURL(this.bounds);
+            dataUrl = this.layer.getURL( this.bounds );
             if (dataUrl !== this.url) {
 
                 this.url = dataUrl;

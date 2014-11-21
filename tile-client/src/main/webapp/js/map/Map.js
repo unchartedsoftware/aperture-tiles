@@ -26,9 +26,9 @@
 define(function (require) {
 	"use strict";
 
-	var BaseLayer = require('../layer/base/BaseLayer'),
-        ServerLayer = require('../layer/server/ServerLayer'),
-        ClientLayer = require('../layer/client/ClientLayer'),
+	var BaseLayer = require('../layer/BaseLayer'),
+        ServerLayer = require('../layer/ServerLayer'),
+        ClientLayer = require('../layer/ClientLayer'),
         PubSub = require('../util/PubSub'),
 	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
 	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
@@ -543,16 +543,16 @@ define(function (require) {
 			return this.map.addLayer(layer);
 		},
 
+        removeLayer: function(layer) {
+			return this.map.addLayer(layer);
+		},
+
 		addControl: function(control) {
 			return this.map.addControl(control);
 		},
 
 		setLayerIndex: function(layer, zIndex) {
 			this.map.setLayerIndex(layer, zIndex);
-		},
-
-		getLayerIndex: function(layer) {
-			return this.map.getLayerIndex(layer);
 		},
 
 		getExtent: function () {

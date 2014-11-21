@@ -1,0 +1,102 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
+ * http://www.oculusinfo.com/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*global google */
+define(function (require) {
+	"use strict";
+
+	var Layer = require('./Layer');
+
+	function BaseLayer( spec ) {
+        // set defaults
+        spec = spec || {};
+        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
+        spec.type = spec.type || "Blank";
+        spec.options = spec.options || {
+            name : "black",
+            color : "rgb(0,0,0)"
+        };
+        spec.domain = "base";
+        // call base constructor
+        Layer.call( this, spec );
+    }
+
+    BaseLayer.prototype = Object.create( Layer.prototype );
+
+    BaseLayer.prototype.activate = function() {
+
+        var styledMapType;
+
+        switch ( this.spec.type ) {
+
+            case "Blank":
+
+                this.layer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
+                this.map.getElement().css( 'background-color', this.spec.options.color );
+                break;
+
+            case "Google":
+
+                this.layer = new OpenLayers.Layer.Google( "BaseLayer", this.spec.options );
+                break;
+
+            case "TMS":
+
+                this.layer = new OpenLayers.Layer.TMS( "BaseLayer", this.spec.url, this.spec.options );
+                break;
+        }
+
+        this.map.map.addLayer( this.layer );
+        this.map.map.setBaseLayer( this.layer );
+
+        if ( this.spec.options.type === 'styled' ) {
+            styledMapType = new google.maps.StyledMapType( this.spec.options.style, {name: 'Styled Map'} );
+            this.layer.mapObject.mapTypes.set( 'styled', styledMapType );
+            this.layer.mapObject.setMapTypeId( 'styled');
+        }
+
+        // ensure baselayer remains bottom layer
+        this.map.map.setLayerIndex( this.layer, -1 );
+
+        this.layer.setVisibility(false);
+        this.layer.setVisibility(true);
+
+        //if ( this.spec.type !== "Blank" ) {
+        // if switching to a non-blank baselayer, ensure opacity and visibility is restored
+        this.setOpacity( this.getOpacity() );
+        this.setVisibility( this.getVisibility() );
+        //}
+    };
+
+    BaseLayer.prototype.deactivate = function() {
+        var $map = this.map.getElement();
+        this.map.removeLayer( this.layer );
+        this.layer.destroy();
+        $map.css( 'background-color', '' );
+    };
+
+	return BaseLayer;
+});

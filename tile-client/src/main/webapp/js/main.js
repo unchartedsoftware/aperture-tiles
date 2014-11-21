@@ -26,21 +26,16 @@
 require(['./util/Util',
          './map/Map',
          './layer/LayerService',
-         './layer/base/BaseLayer',
-         './layer/server/ServerLayer',
-         //'./layer/client/ClientLayer',
-        './layer/client/HtmlTileLayer'],
-         //'./layer/client/renderers/HtmlRenderer'],
+         './layer/BaseLayer',
+         './layer/ServerLayer',
+         './layer/ClientLayer'],
 
         function( Util,
                   Map,
                   LayerService,
                   BaseLayer,
                   ServerLayer,
-                  //ClientLayer,
-                  HtmlTileLayer
-                  //HtmlRenderer
-                  ) {
+                  ClientLayer ) {
 
 	        "use strict";
 
@@ -116,13 +111,12 @@ require(['./util/Util',
 		        $.when( layersDeferred ).done( function ( layers ) {
 				        var view,
 				            baseLayer,
-                            //clientLayer,
-                            htmlLayer,
+                            clientLayer,
 				            serverLayer;
 
 				        view = assembleView( layerConfig, mapConfig, viewConfig );
 
-                        baseLayer = new BaseLayer( {
+                        baseLayer = new BaseLayer({
                             "type": "Google",
                             "theme" : "dark",
                             "options" : {
@@ -212,58 +206,26 @@ require(['./util/Util',
                             }
                         });
 
-                        /*
                         clientLayer = new ClientLayer({
-                            views: [
-                                {
-                                    source: layers["top-tweets"],
-                                    renderer: new HtmlRenderer({
-                                        html: '<div style="position:relative; left: 100px; top: 100px; width:56px; height:56px; background-color:blue;"/>'
-                                    })
+                            source: layers["top-tweets"],
+                            html: function( data )  {
+                                if ( data.tile ) {
+                                    return '<div class="testtest" style="'
+                                        + 'position:relative;'
+                                        + 'left: 100px;'
+                                        + 'top: 100px;'
+                                        + 'width:56px;'
+                                        + 'height:56px;"/>';
                                 }
-                            ]
-                        });
-                        */
-
-                        htmlLayer = new OpenLayers.Layer.Html(
-                            "Html test",
-                            layers["top-tweets"].tms,
-                            {
-                                layername: layers["top-tweets"].id,
-                                type: 'json',
-                                maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
-                                                                  20037500,  20037500),
-                                getURL: function createUrl( bounds ) {
-                                    var res = this.map.getResolution(),
-                                        maxBounds = this.maxExtent,
-                                        tileSize = this.tileSize,
-                                        x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                                        y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
-                                        z = this.map.getZoom(),
-                                        fullUrl;
-                                    if (x >= 0 && y >= 0) {
-                                        // set base url
-                                        fullUrl = ( this.url + this.layername + "/" +
-                                                   z + "/" + x + "/" + y + "." + this.type);
-                                        return fullUrl;
-                                    }
-                                },
-                                isBaseLayer: false,
-                                html: function( data )  {
-                                    if ( data.tile ) {
-                                        return '<div style="position:relative; left: 100px; top: 100px; width:56px; height:56px; background-color:blue;"/>';
-                                    }
-                                    return '';
-                                }
+                                return '';
                             }
-                        );
+                        });
 
                         view.map.id = "map";
                         map = new Map( view.map );
                         map.add( baseLayer );
                         map.add( serverLayer );
-                        //map.add( clientLayer );
-                        map.map.addLayer( htmlLayer );
+                        map.add( clientLayer );
 			        }
 		        );
 	        }, 'json');
