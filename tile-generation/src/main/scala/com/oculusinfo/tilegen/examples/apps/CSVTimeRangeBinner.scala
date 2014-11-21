@@ -249,8 +249,7 @@ object CSVTimeRangeBinner {
 							                                      levels,
 							                                      dataset.getNumXBins,
 							                                      dataset.getNumYBins,
-							                                      dataset.getConsolidationPartitions,
-							                                      dataset.isDensityStrip)
+							                                      dataset.getConsolidationPartitions)
 							// TODO: This doesn't actually write the tiles, does it?
 							// I think we need to write them to do anyting.
 							val rangeMD = tileIO.readMetaData(name).get

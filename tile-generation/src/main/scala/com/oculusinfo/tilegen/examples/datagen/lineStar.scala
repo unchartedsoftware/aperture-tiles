@@ -36,7 +36,6 @@ import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.spark.SparkConnector
