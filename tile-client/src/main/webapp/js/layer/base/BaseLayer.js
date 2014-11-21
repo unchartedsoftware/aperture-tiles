@@ -23,6 +23,7 @@
  * SOFTWARE.
  */
 
+/*global google */
 define(function (require) {
 	"use strict";
 
@@ -56,8 +57,8 @@ define(function (require) {
     BaseLayer.prototype.activate = function() {
 
         var $map = this.map.getElement(),
-            olMap_ = this.map.map.olMap_,
-            newBaseLayerType;
+            map = this.map.map,
+            styledMapType;
 
         if( this.spec.type === 'BlankBase' ) {
 
@@ -69,16 +70,28 @@ define(function (require) {
             //reset the background color
             $map.css( 'background-color', '' );
             // create new layer instance
-            newBaseLayerType = ( this.spec.type === 'Google' ) ? aperture.geo.MapTileLayer.Google : aperture.geo.MapTileLayer.TMS;
-            this.layer = this.map.map.addLayer( newBaseLayerType, {}, this.spec );
+            this.spec.isBaseLayer = false;
+            if ( this.spec.type === 'Google' ) {
+                this.layer = new OpenLayers.Layer.Google( "BaseLayer", this.spec.options );
+            } else {
+                this.layer = new OpenLayers.Layer.TMS( "BaseLayer", this.spec.url, this.spec.options );
+            }
+            this.map.addLayer( this.layer );
+
+            if ( this.spec.options.type === 'styled' ) {
+				styledMapType = new google.maps.StyledMapType( this.spec.options.style, {name: 'Styled Map'} );
+				this.layer.mapObject.mapTypes.set( 'styled', styledMapType );
+				this.layer.mapObject.setMapTypeId( 'styled');
+			}
+
             // attach, and refresh it by toggling visibility
-            olMap_.baseLayer = this.layer.olLayer_;
-            olMap_.setBaseLayer( this.layer.olLayer_ );
+            //map.baseLayer = this.layer;
+            map.setBaseLayer( this.layer );
             // ensure baselayer remains bottom layer
-            this.map.setLayerIndex( this.layer.olLayer_, -1 );
+            this.map.setLayerIndex( this.layer, -1 );
             // toggle visibility to force redraw
-            olMap_.baseLayer.setVisibility(false);
-            olMap_.baseLayer.setVisibility(true);
+            this.layer.setVisibility(false);
+            this.layer.setVisibility(true);
         }
 
         if ( this.spec.theme && this.spec.theme.toLowerCase() === "light" ) {
@@ -98,12 +111,10 @@ define(function (require) {
     };
 
     BaseLayer.prototype.deactivate = function() {
-        var $map = this.getElement(),
-            olMap_ = this.map.map.olMap_;
-
+        var $map = this.map.getElement();
         if( this.spec.type !== 'BlankBase' ) {
             // destroy previous baselayer
-            olMap_.baseLayer.destroy();
+            this.layer.destroy();
             //reset the background color
             $map.css( 'background-color', '' );
         }
@@ -125,7 +136,7 @@ define(function (require) {
         tileBorder.style = tileBorder.style || "solid";
         tileBorder.weight = tileBorder.weight || "1px";
         $( document.body ).prepend(
-            $('<style id="tiles-border-style" type="text/css">' + ('#' + this.id) + ' .olTileImage {' +
+            $('<style id="tiles-border-style" type="text/css">' + ('#' + this.map.id) + ' .olTileImage {' +
                 'border-left : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +
                 '; border-top : ' + tileBorder.weight + ' ' + tileBorder.style + ' ' + tileBorder.color +';}' +
               '</style>')
@@ -134,7 +145,7 @@ define(function (require) {
 
     BaseLayer.prototype.setOpacity = function( opacity ) {
         this.opacity = opacity;
-        this.map.map.olMap_.baseLayer.setOpacity ( opacity );
+        this.layer.setOpacity ( opacity );
         PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
     };
 
@@ -144,7 +155,7 @@ define(function (require) {
 
     BaseLayer.prototype.setVisibility = function( visibility ) {
         this.visibility = visibility;
-        this.map.map.olMap_.baseLayer.setVisibility( visibility );
+        this.layer.setVisibility( visibility );
         PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility });
     };
 

@@ -77,20 +77,24 @@ define(function (require) {
          * function when they are received.
          */
         requestLayers: function( callback ) {
-            aperture.io.rest('/v1.0/layer',
-                             'GET',
-                             function (layers, status) {
-                                 var layerMap = {},
-                                    i;
-                                 if (status.success) {
-                                     for ( i=0; i<layers.length; i++ ) {
-                                         layers[i].meta.minMax = parseLevelsMinMax( layers[i].meta );
-                                         layerMap[ layers[i].id ] = layers[i];
-                                     }
-                                 }
-                                 callback( layerMap );
-                             });
 
+            var layerMap = {},
+                i;
+
+            $.get( 'rest/v1.0/layer' ).then(
+                function( data ) {
+                    for ( i=0; i<data.length; i++ ) {
+                        data[i].meta.minMax = parseLevelsMinMax( data[i].meta );
+                        layerMap[ data[i].id ] = data[i];
+                    }
+                },
+                function( jqXHR, status, error ) {
+                    // TODO handle error
+                    return true;
+                }
+            ).always(function() {
+                callback( layerMap );
+            });
         },
 
         /**
@@ -98,30 +102,37 @@ define(function (require) {
          * function when it is received.
          */
         requestLayer: function( layerId, callback ) {
-            aperture.io.rest('/v1.0/layer/' + layerId,
-                             'GET',
-                             function (layer, status) {
-                                 if (status.success) {
-                                     layer.meta.minMax = parseLevelsMinMax( layer.meta );
-                                 }
-                                 callback( layer );
-                             });
+            var layer;
+            $.get( 'rest/v1.0/layer/' + layerId ).then(
+                function( data ) {
+                    layer = data;
+                    layer.meta.minMax = parseLevelsMinMax( layer.meta );
+                },
+                function( jqXHR, status, error ) {
+                    // TODO handle error
+                    return true;
+                }
+            ).always(function() {
+                callback( layer );
+            });
         },
 
         /**
          * Set up a configuration object on the server.
          */
         configureLayer: function( layerId, params, callback ) {
-
-            aperture.io.rest('/v1.0/layer/' + layerId,
-                             'POST',
-                             function( response, statusInfo ) {
-                                callback( response.sha );
-                             },
-                             {
-                                 postData: params,
-                                 contentType: 'application/json'
-                             });
+            var response = {};
+            $.post( 'rest/v1.0/layer/' + layerId, params ).then(
+                function( data ) {
+                    response = data;
+                },
+                function( jqXHR, status, error ) {
+                    // TODO handle error
+                    return true;
+                }
+            ).always(function() {
+                callback( response );
+            });
         }
     };
 

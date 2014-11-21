@@ -26,42 +26,9 @@
 define(function (require) {
     "use strict";
 
+    function Renderer( spec ) {
+        this.spec = spec;
+    }
 
-
-    var Class = require('../../../class'),
-        ClientRenderer;
-
-
-
-    ClientRenderer = Class.extend({
-        ClassName: "ClientRenderer",
-
-        init: function( map, spec ) {
-            this.map = map;
-            this.spec = spec;
-        },
-
-        subscribeRenderer: function() {
-           return true;
-        },
-
-        setOpacity: function( opacity ) {
-            return true;
-        },
-
-        setVisibility: function( visible ) {
-            return true;
-        },
-
-        setZIndex: function( zIndex ) {
-            return true;
-        },
-
-        redraw: function() {
-            return true;
-        }
-
-    });
-
-    return ClientRenderer;
+    return Renderer;
 });

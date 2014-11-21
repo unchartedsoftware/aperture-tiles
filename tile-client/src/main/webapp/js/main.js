@@ -23,32 +23,30 @@
  * SOFTWARE.
  */
 
-/* global OpenLayers */
-require(['./ApertureConfig',
-         './util/Util',
+require(['./util/Util',
          './map/Map',
          './layer/LayerService',
-        './layer/base/BaseLayer',
-        './layer/server/ServerLayer',
-        './layer/client/ClientLayer',
-        './layer/client/renderers/HtmlRenderer'],
+         './layer/base/BaseLayer',
+         './layer/server/ServerLayer',
+         //'./layer/client/ClientLayer',
+        './layer/client/HtmlTileLayer'],
+         //'./layer/client/renderers/HtmlRenderer'],
 
-        function( configureAperture,
-                  Util,
+        function( Util,
                   Map,
                   LayerService,
                   BaseLayer,
                   ServerLayer,
-                  ClientLayer,
-                  HtmlRenderer ) {
+                  //ClientLayer,
+                  HtmlTileLayer
+                  //HtmlRenderer
+                  ) {
 
 	        "use strict";
 
-	        var apertureConfigFile = "data/aperture-config.json",
-	            layerConfigFile = "data/layer-config.json",
+	        var layerConfigFile = "data/layer-config.json",
 	            mapConfigFile = "data/map-config.json",
 	            viewConfigFile = "data/view-config.json",
-	            apertureDeferred,
 	            layerDeferred,
 	            mapDeferred,
 	            viewDeferred,
@@ -100,20 +98,15 @@ require(['./ApertureConfig',
             /*
              * GET all client-side configuration files
              */
-            apertureDeferred = getConfigFile( apertureConfigFile );
             layerDeferred = getConfigFile( layerConfigFile );
             mapDeferred = getConfigFile( mapConfigFile );
             viewDeferred = getConfigFile( viewConfigFile );
 
-            $.when( apertureDeferred,
-                    layerDeferred,
+            $.when( layerDeferred,
                     mapDeferred,
-                    viewDeferred ).done( function( apertureConfig, layerConfig, mapConfig, viewConfig ) {
+                    viewDeferred ).done( function( layerConfig, mapConfig, viewConfig ) {
 
                 var layersDeferred = $.Deferred();
-
-		        // First off, configure aperture.
-		        configureAperture( apertureConfig );
 
 		        // Get our list of layers
 		        LayerService.requestLayers( function( layers ) {
@@ -123,7 +116,8 @@ require(['./ApertureConfig',
 		        $.when( layersDeferred ).done( function ( layers ) {
 				        var view,
 				            baseLayer,
-                            clientLayer,
+                            //clientLayer,
+                            htmlLayer,
 				            serverLayer;
 
 				        view = assembleView( layerConfig, mapConfig, viewConfig );
@@ -218,6 +212,7 @@ require(['./ApertureConfig',
                             }
                         });
 
+                        /*
                         clientLayer = new ClientLayer({
                             views: [
                                 {
@@ -228,12 +223,47 @@ require(['./ApertureConfig',
                                 }
                             ]
                         });
+                        */
+
+                        htmlLayer = new OpenLayers.Layer.Html(
+                            "Html test",
+                            layers["top-tweets"].tms,
+                            {
+                                layername: layers["top-tweets"].id,
+                                type: 'json',
+                                maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
+                                                                  20037500,  20037500),
+                                getURL: function createUrl( bounds ) {
+                                    var res = this.map.getResolution(),
+                                        maxBounds = this.maxExtent,
+                                        tileSize = this.tileSize,
+                                        x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
+                                        y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
+                                        z = this.map.getZoom(),
+                                        fullUrl;
+                                    if (x >= 0 && y >= 0) {
+                                        // set base url
+                                        fullUrl = ( this.url + this.layername + "/" +
+                                                   z + "/" + x + "/" + y + "." + this.type);
+                                        return fullUrl;
+                                    }
+                                },
+                                isBaseLayer: false,
+                                html: function( data )  {
+                                    if ( data.tile ) {
+                                        return '<div style="position:relative; left: 100px; top: 100px; width:56px; height:56px; background-color:blue;"/>';
+                                    }
+                                    return '';
+                                }
+                            }
+                        );
 
                         view.map.id = "map";
                         map = new Map( view.map );
                         map.add( baseLayer );
                         map.add( serverLayer );
-                        map.add( clientLayer );
+                        //map.add( clientLayer );
+                        map.map.addLayer( htmlLayer );
 			        }
 		        );
 	        }, 'json');

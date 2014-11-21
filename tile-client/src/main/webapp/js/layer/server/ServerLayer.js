@@ -45,11 +45,11 @@ define(function (require) {
                 };
             return '?'+encodeURIComponent( JSON.stringify( query ) );
         }
-        aperture.io.rest('/v1.0/legend/' + layer.spec.source.id + generateQueryParamString(),
-                         'GET',
-                         function ( legendString, status ) {
-                             layer.setRampImageUrl( legendString );
-                         });
+        $.get('rest/v1.0/legend/' + layer.spec.source.id + generateQueryParamString(),
+             'GET',
+             function ( legendString ) {
+                 layer.setRampImageUrl( legendString );
+             });
     };
 
     /**
@@ -62,12 +62,13 @@ define(function (require) {
         var zoomLevel = layer.map.getZoom(),
             coarseness = layer.spec.renderer.coarseness,
             adjustedZoom = zoomLevel - (coarseness-1),
-            meta =  layer.spec.source.meta.meta,
-            minArray = (meta && (meta.levelMinFreq || meta.levelMinimums || meta[adjustedZoom])),
-            maxArray = (meta && (meta.levelMaxFreq || meta.levelMaximums || meta[adjustedZoom])),
-            min = minArray ? ($.isArray(minArray) ? minArray[adjustedZoom] : minArray.minimum) : 0,
-            max = maxArray ? ($.isArray(maxArray) ? maxArray[adjustedZoom] : maxArray.maximum) : 0;
-        return [ parseFloat(min), parseFloat(max) ];
+            meta =  layer.spec.source.meta,
+            levelMinMax = meta.minMax[ adjustedZoom ],
+            minMax = levelMinMax ? levelMinMax.minMax : {
+                min: null,
+                max: null
+            };
+        return [ minMax.min, minMax.max ];
     };
 
     function ServerLayer( spec ) {
@@ -139,7 +140,7 @@ define(function (require) {
      */
     ServerLayer.prototype.setOpacity = function ( opacity ) {
         if (this.layer) {
-            this.layer.olLayer_.setOpacity( opacity );
+            this.layer.setOpacity( opacity );
             PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity });
         }
     };
@@ -148,7 +149,7 @@ define(function (require) {
      *  Get layer opacity
      */
     ServerLayer.prototype.getOpacity = function() {
-        return this.layer.olLayer_.opacity;
+        return this.layer.opacity;
     };
 
     /**
@@ -156,7 +157,7 @@ define(function (require) {
      */
     ServerLayer.prototype.setVisibility = function ( visibility ) {
         if (this.layer) {
-            this.layer.olLayer_.setVisibility( visibility );
+            this.layer.setVisibility( visibility );
             PubSub.publish( this.getChannel(), { field: 'visibility', value: visibility });
         }
     };
@@ -165,7 +166,7 @@ define(function (require) {
      * Get layer visibility
      */
     ServerLayer.prototype.getVisibility = function() {
-        return this.layer.olLayer_.getVisibility();
+        return this.layer.getVisibility();
     };
 
     /**
@@ -319,7 +320,7 @@ define(function (require) {
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
         this.spec.zIndex = zIndex;
-        $( this.layer.olLayer_.div ).css( 'z-index', zIndex );
+        $( this.layer.div ).css( 'z-index', zIndex );
         PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
 
@@ -383,14 +384,7 @@ define(function (require) {
      * Generate query parameters based on state of layer
      */
     ServerLayer.prototype.generateQueryParamString = function() {
-        var viewBounds = this.map.getTileBoundsInView(),
-            query = {
-                minX: viewBounds.minX,
-                maxX: viewBounds.maxX,
-                minY: viewBounds.minY,
-                maxY: viewBounds.maxY,
-                minZ: viewBounds.minZ,
-                maxZ: viewBounds.maxZ,
+        var query = {
                 renderer: this.spec.renderer,
                 tileTransform: this.spec.tileTransform,
                 valueTransform: this.spec.valueTransform,
@@ -405,32 +399,20 @@ define(function (require) {
     ServerLayer.prototype.update = function () {
 
         var that = this,
-            olBounds,
-            yFunction;
+            olBounds;
 
-        // y transformation function for non-density strips
-        function passY( yInput ) {
-            return yInput;
-        }
-        // y transformation function for density strips
-        function clampY( yInput ) {
-            return 0;
-        }
         // create url function
         function createUrl( bounds ) {
-
             var res = this.map.getResolution(),
                 maxBounds = this.maxExtent,
                 tileSize = this.tileSize,
                 x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                y = yFunction( Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ) ),
+                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
                 z = this.map.getZoom(),
                 fullUrl;
-
             if (x >= 0 && y >= 0) {
                 // set base url
-                fullUrl = ( this.url + this.layername + "/" +
-                           z + "/" + x + "/" + y + "." + this.type);
+                fullUrl = ( this.url + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type);
                 return fullUrl + that.generateQueryParamString();
             }
         }
@@ -448,35 +430,31 @@ define(function (require) {
         olBounds = new OpenLayers.Bounds(-20037500, -20037500,
                                           20037500,  20037500);
 
-        // Adjust y function if we're displaying a density strip
-        yFunction = ( this.spec.isDensityStrip ) ? clampY : passY;
-
         if ( !this.layer ) {
 
             // add the new layer
-            this.layer = this.map.addApertureLayer(
-                aperture.geo.MapTileLayer.TMS, {},
+            this.layer = new OpenLayers.Layer.TMS(
+                'Aperture Tile Layers',
+                this.spec.source.tms,
                 {
-                    'name': 'Aperture Tile Layers',
-                    'url': this.spec.source.tms,
-                    'options': {
-                        'layername': this.spec.source.id,
-                        'type': 'png',
-                        'maxExtent': olBounds,
-                        transparent: true,
-                        getURL: createUrl
-                    }
-                }
-            );
+                    layername: this.spec.source.id,
+                    type: 'png',
+                    maxExtent: olBounds,
+                    transparent: true,
+                    getURL: createUrl,
+                    isBaseLayer: false
+                });
+
+            this.map.addLayer( this.layer );
 
         } else {
 
             // layer already exists, simply update service endpoint
-            this.layer.olLayer_.getURL = createUrl;
+            this.layer.getURL = createUrl;
         }
 
         // redraw this layer
-        this.layer.olLayer_.redraw();
+        this.layer.redraw();
     };
 
     return ServerLayer;

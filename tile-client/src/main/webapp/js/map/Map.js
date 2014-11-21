@@ -23,15 +23,8 @@
  * SOFTWARE.
  */
 
-/* JSLint global declarations: these objects don't need to be declared. */
-/*global OpenLayers */
-
-
-
 define(function (require) {
 	"use strict";
-
-
 
 	var BaseLayer = require('../layer/base/BaseLayer'),
         ServerLayer = require('../layer/server/ServerLayer'),
@@ -43,15 +36,13 @@ define(function (require) {
 	    Axis =  require('./Axis'),
 	    TILESIZE = 256,
         tileEventSubscribers = {},
-        setMouseEventCallbacks;
-
-
+        setMapCallbacks;
 
     /**
      * Set callbacks to update the maps tile focus, identifying which tile the user is currently
      * hovering over.
      */
-    setMouseEventCallbacks = function( map ) {
+    setMapCallbacks = function( map ) {
         var previousMouse = {};
         function updateTileFocus( layer, x, y ) {
             var tilekey = map.getTileKeyFromViewportPixel( x, y );
@@ -73,18 +64,23 @@ define(function (require) {
         });
         // if mousedown while map is panning, interrupt pan
         map.getElement().mousedown( function(){
-            if ( map.map.olMap_.panTween ) {
-                 map.map.olMap_.panTween.callbacks = null;
-                 map.map.olMap_.panTween.stop();
+            if ( map.map.panTween ) {
+                 map.map.panTween.callbacks = null;
+                 map.map.panTween.stop();
             }
+        });
+        // set resize callback
+        $( window ).resize( function() {
+            map.updateSize();
         });
     };
 
 	function Map( spec ) {
 
+        var options = spec.options;
+
         this.id = spec.id;
-        this.$map = $( spec.selector || ("#" + this.id) );
-        this.axes = [];
+        this.$map = $( "#" + this.id );
 
         // set map tile pyramid
         if ( "AreaOfInterest" === spec.pyramid.type ) {
@@ -94,62 +90,64 @@ define(function (require) {
         }
 
         // set the map configuration
-        spec.baseLayer = {}; // default to no base layer
-        aperture.config.provide({
-            'aperture.map' : {
-                'defaultMapConfig' : spec
-            }
+        this.map = new OpenLayers.Map( this.id, {
+            projection: new OpenLayers.Projection( options.projection ),
+            displayProjection: new OpenLayers.Projection( options.displayProjection ),
+            maxExtent: OpenLayers.Bounds.fromArray( options.maxExtent ),
+            units: options.units || "m",
+            numZoomLevels: options.numZoomLevels || 18,
+            controls: [
+                new OpenLayers.Control.Navigation({ documentDrag: true }),
+                new OpenLayers.Control.Zoom()
+            ]
         });
 
-        // initialize the map
-        this.map = new aperture.geo.Map({
-            id: this.id,
-            options: {
-                controls: [
-                    new OpenLayers.Control.Navigation({ documentDrag: true }),
-                    new OpenLayers.Control.Zoom()
-                ]
-            }
-        });
-
-        // create div root layer
-        this.createRoot();
-
-        // initialize previous zoom
-        this.previousZoom = this.map.getZoom();
         this.baseLayerIndex = -1;
-
-        setMouseEventCallbacks( this );
-
-        // set resize callback
-        $(window).resize( $.proxy( this.updateSize, this ) );
-
-        // Trigger the initial resize event to resize everything
-        $(window).resize();
-
-        if( spec.zoomTo ) {
-            this.map.zoomTo( spec.zoomTo[0],
-                             spec.zoomTo[1],
-                             spec.zoomTo[2] );
-        }
     }
 
     Map.prototype = {
 
+        activate: function() {
+            // set initial viewpoint, required by openlayers
+            this.map.zoomToMaxExtent();
+            // create div root layer
+            this.createRoot();
+            // set mouse callbacks
+            setMapCallbacks( this );
+        },
+
+        deactivate: function() {
+            // TODO:
+            return true;
+        },
+
+        zoomTo: function( lat, lon, zoom ) {
+            var projection = new OpenLayers.Projection('EPSG:4326'),
+                center = new OpenLayers.LonLat( lon, lat );
+			if( this.map.getProjection() !== projection.projCode ) {
+				center.transform( projection, this.map.projection );
+			}
+			this.map.setCenter( center, zoom );
+        },
+
         add: function( layer ) {
             if ( layer instanceof BaseLayer ) {
+                // baselayer
                 this.baselayers = this.baselayers || [];
                 layer.map = this;
                 this.baselayers.push( layer );
                 if ( this.baseLayerIndex < 0 ) {
                     this.setBaseLayerIndex( 0 );
+                    this.activate();
                 }
             } else if ( layer instanceof ServerLayer ) {
+                // server layer
                 this.serverLayers = this.serverLayers || [];
                 layer.map = this;
                 layer.activate();
                 this.serverLayers.push( layer );
             } else if ( layer instanceof ClientLayer ) {
+                // client layer
                 this.clientLayers = this.clientLayers || [];
                 layer.map = this;
                 layer.activate();
@@ -188,13 +186,12 @@ define(function (require) {
         },
 
         setBaseLayerIndex: function( index ) {
-            var oldBaseLayer = this.baselayers[ this.getPreviousBaseLayerIndex() ],
+            var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
                 newBaseLayer = this.baselayers[ index ];
             if ( oldBaseLayer ) {
                 oldBaseLayer.deactivate();
             }
             newBaseLayer.activate();
-            this.previousBaseLayerIndex = this.baseLayerIndex;
             this.baseLayerIndex = index;
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
@@ -207,10 +204,6 @@ define(function (require) {
             return this.baseLayerIndex;
         },
 
-        getPreviousBaseLayerIndex: function() {
-            return this.previousBaseLayerIndex;
-        },
-
         getElement:  function() {
             return this.$map;
         },
@@ -218,7 +211,6 @@ define(function (require) {
         getRootElement: function() {
             return this.$root;
         },
-
 
 		setAxisSpecs: function ( axisConfig, pyramidConfig ) {
 
@@ -271,31 +263,20 @@ define(function (require) {
             this.redrawAxes();
 		},
 
-
-		redrawAxes: function() {
-			var i;
-			for (i=0; i<this.axes.length; i++) {
-				this.axes[i].redraw();
-			}
-		},
-
-
 		getAxes: function() {
 			return this.axes;
 		},
-
 
 		getPyramid: function() {
 			return this.pyramid;
 		},
 
-
 		getTileIterator: function() {
 			var level = this.map.getZoom(),
 			    // Current map bounds, in meters
-			    bounds = this.map.olMap_.getExtent(),
+			    bounds = this.map.getExtent(),
 			    // Total map bounds, in meters
-			    extents = this.map.olMap_.getMaxExtent(),
+			    extents = this.map.getMaxExtent(),
 			    // Pyramid for the total map bounds
 			    pyramid = new AreaOfInterestTilePyramid({
                     minX: extents.left,
@@ -328,6 +309,7 @@ define(function (require) {
                      culledTiles.push( tile.level + "," + tile.xIndex + "," + tile.yIndex );
                 }
             }
+
             this.previousTilesInView = this.tilesInView;
             this.tilesInView = culledTiles;
 
@@ -350,7 +332,7 @@ define(function (require) {
                     this.trigger( 'tile', { added: added, removed: removed } );
                 }
             } else {
-                this.trigger( 'tile', { added: this.tilesInView, removed: [] } );
+                this.trigger( 'tile', { added: this.tilesInView.slice(0), removed: [] } );
             }
 		},
 
@@ -358,36 +340,21 @@ define(function (require) {
             return this.tilesInView.slice( 0 ); // return copy
 		},
 
-		getTileBoundsInView: function() {
-		    var bounds = this.getTileIterator().toTileBounds(),
-		        maxTileIndex = Math.pow(2, this.getZoom() ) - 1;
-            bounds.minX = Math.max( 0, bounds.minX );
-            bounds.minY = Math.max( 0, bounds.minY );
-            bounds.maxX = Math.min( maxTileIndex, bounds.maxX );
-            bounds.maxY = Math.min( maxTileIndex , bounds.maxY );
-			return bounds;
-		},
-
-
         getMapWidth: function() {
             return this.getTileSize() * Math.pow( 2, this.getZoom() );
         },
-
 
         getMapHeight: function() {
             return this.getTileSize() * Math.pow( 2, this.getZoom() );
         },
 
-
 		getViewportWidth: function() {
-			return this.map.olMap_.viewPortDiv.clientWidth;
+			return this.map.viewPortDiv.clientWidth;
 		},
 
-
 		getViewportHeight: function() {
-			return this.map.olMap_.viewPortDiv.clientHeight;
+			return this.map.viewPortDiv.clientHeight;
         },
-
 
 		/**
 		 * Returns the maps min and max pixels in viewport pixels
@@ -396,20 +363,19 @@ define(function (require) {
 		 */
 		getMapMinAndMaxInViewportPixels: function() {
 
-		    var olMap = this.map.olMap_;
+		    var map = this.map;
 
 		    return {
                 min : {
-                    x: Math.round( olMap.minPx.x ),
-                    y: Math.round( olMap.maxPx.y )
+                    x: Math.round( map.minPx.x ),
+                    y: Math.round( map.maxPx.y )
                 },
                 max : {
-                    x: Math.round( olMap.maxPx.x ),
-                    y: Math.round( olMap.minPx.y )
+                    x: Math.round( map.maxPx.x ),
+                    y: Math.round( map.minPx.y )
                 }
             };
 		},
-
 
 		/**
 		 * Transforms a point from viewport pixel coordinates to map pixel coordinates
@@ -426,7 +392,6 @@ define(function (require) {
 			};
 		},
 
-
 		/**
 		 * Transforms a point from map pixel coordinates to viewport pixel coordinates
 		 * NOTE:    viewport [0,0] is TOP-LEFT
@@ -439,7 +404,6 @@ define(function (require) {
 				y: this.getMapWidth() - my + viewportMinMax.max.y
 			};
 		},
-
 
 		/**
 		 * Transforms a point from data coordinates to map pixel coordinates
@@ -455,7 +419,6 @@ define(function (require) {
 			};
 		},
 
-
 		/**
 		 * Transforms a point from map pixel coordinates to data coordinates
 		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
@@ -469,7 +432,6 @@ define(function (require) {
 			};
 		},
 
-
 		/**
 		 * Transforms a point from viewport pixel coordinates to data coordinates
 		 * NOTE:    viewport [0,0] is TOP-LEFT
@@ -480,7 +442,6 @@ define(function (require) {
 			return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
 		},
 
-
 		/**
 		 * Transforms a point from data coordinates to viewport pixel coordinates
 		 * NOTE:    viewport [0,0] is TOP-LEFT
@@ -490,7 +451,6 @@ define(function (require) {
 			var mapPixel = this.getMapPixelFromCoord(x, y);
 			return this.getViewportPixelFromMapPixel(mapPixel.x, mapPixel.y);
 		},
-
 
 		/**
          * Returns the tile and bin index corresponding to the given map pixel coordinate
@@ -518,7 +478,6 @@ define(function (require) {
 
         },
 
-
         /**
          * Returns the top left pixel location in viewport coord from a tile index
          */
@@ -528,7 +487,6 @@ define(function (require) {
             // transform map coord to viewport coord
             return this.getViewportPixelFromMapPixel( mapPixel.x, mapPixel.y );
         },
-
 
          /**
          * Returns the top left pixel location in viewport coord from a tile index
@@ -546,7 +504,6 @@ define(function (require) {
             };
         },
 
-
         /**
          * Returns the data coordinate value corresponding to the top left pixel of the tile
          */
@@ -554,7 +511,6 @@ define(function (require) {
             var mapPixel = this.getTopLeftMapPixelForTile( tilekey );
             return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
         },
-
 
 		/**
 		 * Returns the tile and bin index corresponding to the given viewport pixel coordinate
@@ -564,7 +520,6 @@ define(function (require) {
 			return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
 		},
 
-
 		/**
 		 * Returns the tile and bin index corresponding to the given data coordinate
 		 */
@@ -572,7 +527,6 @@ define(function (require) {
 			var mapPixel = this.getMapPixelFromCoord(x, y);
 			return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
 		},
-
 
 		getTileKeyFromViewportPixel: function(vx, vy) {
 			var tileAndBin = this.getTileAndBinFromViewportPixel(vx, vy, 1, 1);
@@ -585,150 +539,81 @@ define(function (require) {
 			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
 		},
 
-		transformOLGeometryToLonLat: function (geometry) {
-			return geometry.transform(new OpenLayers.projection("EPSG:900913"),
-			                          new OpenLayers.projection("EPSG:4326"));
+		addLayer: function(layer) {
+			return this.map.addLayer(layer);
 		},
 
-		getOLMap: function() {
-			return this.map.olMap_;
-		},
-
-		getApertureMap: function() {
-			return this.map;
-		},
-
-		addApertureLayer: function(layer, mappings, spec) {
-			return this.map.addLayer(layer, mappings, spec);
-		},
-
-		addOLLayer: function(layer) {
-			return this.map.olMap_.addLayer(layer);
-		},
-
-		addOLControl: function(control) {
-			return this.map.olMap_.addControl(control);
+		addControl: function(control) {
+			return this.map.addControl(control);
 		},
 
 		setLayerIndex: function(layer, zIndex) {
-			this.map.olMap_.setLayerIndex(layer, zIndex);
+			this.map.setLayerIndex(layer, zIndex);
 		},
 
 		getLayerIndex: function(layer) {
-			return this.map.olMap_.getLayerIndex(layer);
+			return this.map.getLayerIndex(layer);
 		},
 
 		getExtent: function () {
-			return this.map.olMap_.getExtent();
+			return this.map.getExtent();
 		},
 
 		getZoom: function () {
-			return this.map.olMap_.getZoom();
+			return this.map.getZoom();
 		},
 
 		zoomToExtent: function (extent, findClosestZoomLvl) {
-			this.map.olMap_.zoomToExtent(extent, findClosestZoomLvl);
+			this.map.zoomToExtent(extent, findClosestZoomLvl);
 		},
 
 		updateSize: function() {
-			this.map.olMap_.updateSize();
-            this.redrawAxes();
+			this.map.updateSize();
 		},
-
 
 		getTileSize: function() {
 			return TILESIZE;
 		},
 
-
         panToCoord: function( x, y ) {
             var viewportPixel = this.getViewportPixelFromCoord( x, y ),
-                lonlat = this.map.olMap_.getLonLatFromViewPortPx( viewportPixel );
+                lonlat = this.map.getLonLatFromViewPortPx( viewportPixel );
 
-            this.map.olMap_.panTo( lonlat );
+            this.map.panTo( lonlat );
         },
-
 
 		on: function (eventType, callback) {
 
-			var that = this;
+            switch (eventType) {
 
-			switch (eventType) {
+                case 'tile':
 
-			case 'click':
-			case 'zoomend':
-			case 'mousemove':
-			case 'movestart':
-			case 'moveend':
-            case 'move':
-				this.map.olMap_.events.register(eventType, this.map.olMap_, callback );
-                break;
+                    tileEventSubscribers[ this.id ] = tileEventSubscribers[ this.id ] || [];
+                    tileEventSubscribers[ this.id ].push(callback);
+                    break;
 
-			case 'panend':
+                default:
 
-				/*
-				 * ApertureJS 'panend' event is an alias to 'moveend' which also triggers
-				 * on 'zoomend'. This intercepts it and ensures 'panend' is not called on a 'zoomend'
-				 * event
-				 */
-				this.map.olMap_.events.register('moveend', this.map.olMap_, function(e) {
-
-					if (that.previousZoom === e.object.zoom ) {
-						// only process if zoom is same as previous
-						callback();
-					}
-					that.previousZoom = e.object.zoom;
-				});
-				break;
-
-            case 'tile':
-
-                tileEventSubscribers[ this.id ] = tileEventSubscribers[ this.id ] || [];
-                tileEventSubscribers[ this.id ].push( callback );
-                break;
-
-			default:
-
-				this.map.on(eventType, callback);
-				break;
-			}
-
+                    this.map.events.register(eventType, this.map, callback);
+                    break;
+            }
 		},
 
 		off: function(eventType, callback) {
 
 			switch (eventType) {
 
-			case 'click':
-			case 'zoomend':
-			case 'mousemove':
-			case 'movestart':
-			case 'moveend':
-            case 'move':
+                case 'tile':
 
-				this.map.olMap_.events.unregister( eventType, this.map.olMap_, callback );
-				break;
+                    if ( tileEventSubscribers[ this.id ] ) {
+                        tileEventSubscribers[ this.id ].remove( tileEventSubscribers[ this.id ].splice( tileEventSubscribers[ this.id ].indexOf( callback ) ) );
+                    }
+                    break;
 
-			case 'panend':
+                default:
 
-				if (callback !== undefined) {
-					console.log("Error, cannot unregister specified 'panend' event");
-				} else {
-					this.map.olMap_.events.unregister(eventType, this.map.olMap_);
-				}
-				break;
-
-            case 'tile':
-
-                if ( tileEventSubscribers[ this.id ] ) {
-                    tileEventSubscribers[ this.id ].remove( tileEventSubscribers[ this.id ].splice( tileEventSubscribers[ this.id ].indexOf( callback ) ) );
-                }
-                break;
-
-			default:
-
-				this.map.off(eventType, callback);
-				break;
+                    this.map.events.unregister( eventType, this.map, callback );
+                    break;
 			}
 		},
 
@@ -738,29 +623,19 @@ define(function (require) {
 
 			switch (eventType) {
 
-			case 'click':
-			case 'zoomend':
-			case 'mousemove':
-			case 'movestart':
-			case 'moveend':
-            case 'move':
+                case 'tile':
 
-				this.map.olMap_.events.triggerEvent(eventType, event);
-				break;
-
-            case 'tile':
-
-                if ( tileEventSubscribers[ this.id ] ) {
-                    for ( i=0; i<tileEventSubscribers[ this.id ].length; i++ ) {
-                        tileEventSubscribers[ this.id ][i]( event );
+                    if ( tileEventSubscribers[ this.id ] ) {
+                        for ( i=0; i<tileEventSubscribers[ this.id ].length; i++ ) {
+                            tileEventSubscribers[ this.id ][i]( event );
+                        }
                     }
-                }
-                break;
+                    break;
 
-			default:
+                default:
 
-				this.map.trigger(eventType, event);
-				break;
+                    this.map.events.triggerEvent( eventType, event );
+                    break;
 			}
 		}
 

@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/* global activityLogger */
-define(function (require) {
+
+define( function () {
     "use strict";
 
     return {
@@ -35,49 +35,6 @@ define(function (require) {
             });
         },
 
-
-        enableTooltip: function( $elem, message, openFunc, closeFunc ) {
-
-            return true;
-
-            /*
-            var tooltipOpened = false,
-                pendingCallback;
-
-            $elem.attr('title', '');
-            $elem.tooltip({
-                content: message,
-                track: true,
-                show: { delay: 800 },
-                open: function() {
-                    // wait until tooltip actually opens before calling
-                    pendingCallback = setTimeout( function() {
-                        tooltipOpened = true;
-                        if (openFunc) {
-                            openFunc();
-                        }
-                    }, 800);
-                },
-                close: function() {
-                    // cancel any pending callback
-                    clearTimeout( pendingCallback );
-                    if ( tooltipOpened ) {
-                        // only call if the tooltip actually opened
-                        if (closeFunc) {
-                            closeFunc();
-                        }
-                    }
-                    // clear flags on close
-                    tooltipOpened = false;
-                }
-            });
-            */
-        },
-
-
-        disableTooltip: function( $elem ) {
-            $elem.tooltip('disable');
-        },
 
         /**
          * Allows the given DOM element or jQuery object events to propagate through
@@ -141,7 +98,6 @@ define(function (require) {
                     domElement[events[i]] = null;
                 }
             }
-
         },
 
         /**
