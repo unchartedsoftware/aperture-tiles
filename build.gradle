@@ -161,8 +161,8 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 	// the build hasn't started) add behavior specific to web client projects.
 	// Client projects are flagged by a property called 'clientProject' - if that's present,
 	// the client behavior gets injected into the project in question.
-	afterEvaluate { Project project ->
-		if (project.ext.has("clientProject") && project.clientProject) {
+	afterEvaluate { Project proj ->
+		if (proj.ext.has("clientProject") && project.clientProject) {
 			
 			// Configure the jetty run task
 			jettyRun {
@@ -172,13 +172,12 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			
 			// Define a configuration for the war overlay process.
 			configurations {
-				warOverlay
+				projectUnderlay
 			}
 			
 			// Add the tile service war to the overlay config
 			dependencies {
-				warOverlay "com.oculusinfo:tile-service:$version@war"
-				warOverlay "com.oculusinfo:tile-client:$version@war"
+				projectUnderlay project(path: ":tile-client", configuration: "tileClientUnderlay")
 			}
 			
 			// Append an action to the clean task that will clean up the old
@@ -203,12 +202,13 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			// Append the overlay process to the end of the WAR task.
 			war << {
 				// unpack all the war files into the temp directory for this task
-				configurations.warOverlay.each {
+				configurations.projectUnderlay.each {
 						ant.unwar src: it, dest: temporaryDir
 				}
 				// update the war file
 				ant.war basedir: temporaryDir, destfile: archivePath, update: true
 			}
+			war.dependsOn ":tile-client:war"
 		}
 	}
 }

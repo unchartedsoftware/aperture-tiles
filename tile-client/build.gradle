@@ -4,21 +4,29 @@ apply plugin: "war"
 
 // Define a configuration for the war overlay process.
 configurations {
-	warOverlay
+	tileClientUnderlay
+}
+// Add the output of the war task to the tile client - this should be the combination
+// of the tile-service and the tile-client content
+artifacts {
+	tileClientUnderlay war
 }
 
-// Add the tile service war to the overlay config
+// Add the tile service war to the overlay config so we can reference it below.  Pull the 
+// tile service war out of that project's exposed config.
 dependencies {
 	compile project(":annotation-service")
-	warOverlay "com.oculusinfo:tile-service:$version@war"
+	tileClientUnderlay project(path: ":tile-service", configuration: "tileServiceUnderlay")
 }
 
-// Append the overlay process to the end of the WAR task.
+// Append the overlay process to the end of the WAR task - it just grabs the client
+// underlay
 war << {
 	// unpack all the war files into the temp directory for this task
-	configurations.warOverlay.each {
+	configurations.tileClientUnderlay.each {
 		ant.unwar src: it, dest: temporaryDir
 	}
 	// update the war file, but when a duplicate file is found preserve the original
 	ant.war basedir: temporaryDir, destfile: archivePath, update: true
 }
+war.dependsOn ":tile-service:war"

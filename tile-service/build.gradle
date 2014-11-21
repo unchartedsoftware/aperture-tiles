@@ -1,27 +1,7 @@
 description = "Useful utilites to help pyramid-based binning schemes (and others, as necessary)"
 
 // Pulls in the Java plugin
-apply plugin: "java"
 apply plugin: "war"
-apply plugin: "jetty"
-
-// Task to create a JAR from the all source set
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = "sources"
-	from sourceSets.main.allSource
-}
-
-// Task to create a javadoc JAR
-task javadocJar(type: Jar, dependsOn: javadoc) {
-	classifier = "javadoc"
-	from javadoc.destinationDir
-}
-
-// Add the produced jars to the extra artifacts list
-artifacts {
-	archives sourcesJar
-	archives javadocJar
-}
 
 // Add a configuration to provide access to the phantom js exe dependency 
 configurations {
@@ -39,6 +19,16 @@ task phantomCopy(type: Copy) {
 	into "bin/windows/phantomjs.exe"
 }
 war.dependsOn(phantomCopy)
+
+// Create a configuration to expose created artifacts
+configurations {
+	tileServiceUnderlay
+}
+
+// Create an externally accessible artifact that is created by our war task
+artifacts {
+	tileServiceUnderlay war
+}
 
 // Restlet isn't in maven central for some reason, so we need to add their
 // location to the set from the parent build file.
