@@ -5,7 +5,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 // pollute the global namespace.  The 'settings.gradle' file that is also in this directory defines
 // the sub-projects that will be built by this file, and 'properies.gradle' contains default property
 // values.
-
+apply plugin: "idea"
 
 
 // Task that reads the "buildType" string property from the command line and writes the the cloudera versions
@@ -66,14 +66,34 @@ task setBuildVersions {
 }
 init.dependsOn setBuildVersions
 
+
+// Generates files for the gradle wrapper (see http://www.gradle.org/docs/current/userguide/gradle_wrapper.html)
+// This only needs to be run when a new version of gradle is used, and the produced files should be checked into
+// source control when its done.
+task wrapper(type: Wrapper) {
+	gradleVersion = '2.1'
+}
+
+// Scalac will not allow default output directory for source and build to be the same,
+// so point idea at a different location for test output.  This has to be done at every
+// level.
+allprojects {
+	idea {
+		module {
+			testOutputDir = file('build/test')
+		}
+	}
+}
+
 // General definitions pushed down to all sub-projects - this code is executed within the context
 // of each subproject.
 subprojects {				
 	
 	// Allows for eclipse project files to be generated
 	apply plugin: "eclipse"
+	// Support for reading from / writing to maven repositories
 	apply plugin: "maven"
-	
+
 	// Shared group and version info.  We keep build variant types in the version names so that we get 
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
@@ -93,7 +113,7 @@ subprojects {
 			url = "https://repository.cloudera.com/artifactory/cloudera-repos"
 		}
 	}
-	
+
 	// A shared function to determine whether we use the older unified HBase jar, or the
 	// newer split jars.  Currently just looks for cdh5 vs other build types.
 	ext.checkHBaseSplit = buildType =~ /cdh5\w*/
