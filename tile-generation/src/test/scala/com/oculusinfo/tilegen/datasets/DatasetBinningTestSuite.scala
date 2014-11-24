@@ -44,84 +44,84 @@ import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
  * Created by nkronenfeld on 11/24/2014.
  */
 class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
-  val pyramidId = "live-tile test"
-  var dataFile: File = null
-  var pyramidIo: OnDemandAccumulatorPyramidIO = null
+	val pyramidId = "live-tile test"
+	var dataFile: File = null
+	var pyramidIo: OnDemandAccumulatorPyramidIO = null
 
-  override def beforeAll(configMap: Map[String, Any]) = {
-    super.beforeAll(configMap)
-    createDataset(sc)
-  }
+	override def beforeAll(configMap: Map[String, Any]) = {
+		super.beforeAll(configMap)
+		createDataset(sc)
+	}
 
-  override def afterAll(configMap: Map[String, Any]) = {
-    cleanupDataset
-    super.afterAll(configMap)
-  }
+	override def afterAll(configMap: Map[String, Any]) = {
+		cleanupDataset
+		super.afterAll(configMap)
+	}
 
-  private def createDataset(sc: SparkContext): Unit = {
-    // Create our data
-    // We create a simple data set with pairs (n, 7-n) as n goes from 0 to 6
-    dataFile = File.createTempFile("simple-live-tile-test", ".csv")
-    println("Creating temporary data file " + dataFile.getAbsolutePath())
-    val writer = new FileWriter(dataFile)
-    Range(0, 7).foreach(n =>
-      writer.write("%f,%f\n".format(n.toDouble, (7 - n).toDouble))
-    )
-    writer.flush()
-    writer.close()
+	private def createDataset(sc: SparkContext): Unit = {
+		// Create our data
+		// We create a simple data set with pairs (n, 7-n) as n goes from 0 to 6
+		dataFile = File.createTempFile("simple-live-tile-test", ".csv")
+		println("Creating temporary data file " + dataFile.getAbsolutePath())
+		val writer = new FileWriter(dataFile)
+		Range(0, 7).foreach(n =>
+			writer.write("%f,%f\n".format(n.toDouble, (7 - n).toDouble))
+		)
+		writer.flush()
+		writer.close()
 
-    // Create our pyramid IO
-    pyramidIo = new OnDemandAccumulatorPyramidIO(sc)
+		// Create our pyramid IO
+		pyramidIo = new OnDemandAccumulatorPyramidIO(sc)
 
-    // Read the one into the other
-    val props = new Properties()
-    props.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
-    props.setProperty("oculus.binning.projection.autobounds", "false")
-    props.setProperty("oculus.binning.projection.minx", "0.0")
-    props.setProperty("oculus.binning.projection.maxx", "7.9999")
-    props.setProperty("oculus.binning.projection.miny", "0.0")
-    props.setProperty("oculus.binning.projection.maxy", "7.9999")
-    props.setProperty("oculus.binning.parsing.separator", ",")
-    props.setProperty("oculus.binning.parsing.x.index", "0")
-    props.setProperty("oculus.binning.parsing.y.index", "1")
-    props.setProperty("oculus.binning.index.type", "cartesian")
-    props.setProperty("oculus.binning.xField", "x")
-    props.setProperty("oculus.binning.levels.0", "1")
+		// Read the one into the other
+		val props = new Properties()
+		props.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
+		props.setProperty("oculus.binning.projection.autobounds", "false")
+		props.setProperty("oculus.binning.projection.minx", "0.0")
+		props.setProperty("oculus.binning.projection.maxx", "7.9999")
+		props.setProperty("oculus.binning.projection.miny", "0.0")
+		props.setProperty("oculus.binning.projection.maxy", "7.9999")
+		props.setProperty("oculus.binning.parsing.separator", ",")
+		props.setProperty("oculus.binning.parsing.x.index", "0")
+		props.setProperty("oculus.binning.parsing.y.index", "1")
+		props.setProperty("oculus.binning.index.type", "cartesian")
+		props.setProperty("oculus.binning.xField", "x")
+		props.setProperty("oculus.binning.levels.0", "1")
 
-    pyramidIo.initializeForRead(pyramidId, 4, 4, props)
-  }
+		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
+	}
 
-  private def cleanupDataset: Unit = {
-    if (dataFile.exists) {
-      println("Deleting temporary data file " + dataFile)
-      dataFile.delete
-    }
-    dataFile = null
-    pyramidIo = null
-  }
+	private def cleanupDataset: Unit = {
+		if (dataFile.exists) {
+			println("Deleting temporary data file " + dataFile)
+			dataFile.delete
+		}
+		dataFile = null
+		pyramidIo = null
+	}
 
-  test("Simple one-dimensional binning using datasets") {
-    // Noting that visually, the tiles should look exactly as we enter them here.
-    val tile000: TileData[_] =
-      pyramidIo.readTiles(pyramidId, null,
-        List(new TileIndex(0, 0, 0, 4, 1)).asJava).get(0)
-    assert(tile000.getDefinition.getXBins() === 4)
-    assert(tile000.getDefinition.getYBins() === 1)
-    assert(tile000.getData.asScala.map(_.toString.toDouble) ===
-      List[Double](2.0, 2.0, 2.0, 1.0))
-    val tile100: TileData[_] =
-      pyramidIo.readTiles(pyramidId, null,
-        List(new TileIndex(1, 0, 0, 4, 1)).asJava).get(0)
-    assert(tile100.getDefinition.getXBins() === 4)
-    assert(tile100.getDefinition.getYBins() === 1)
-    assert(tile100.getData.asScala.map(_.toString.toDouble) ===
-      List[Double](1.0, 1.0, 1.0, 1.0))
-    val tile110: TileData[_] =
-      pyramidIo.readTiles(pyramidId, null,
-        List(new TileIndex(1, 1, 0, 4, 1)).asJava).get(0)
-    assert(tile110.getDefinition.getXBins() === 4)
-    assert(tile110.getDefinition.getYBins() === 1)
-    assert(tile110.getData.asScala.map(_.toString.toDouble) ===
-      List[Double](1.0, 1.0, 1.0, 0.0))
-  }
+	test("Simple one-dimensional binning using datasets") {
+		// Noting that visually, the tiles should look exactly as we enter them here.
+		val tile000: TileData[_] =
+			pyramidIo.readTiles(pyramidId, null,
+			                    List(new TileIndex(0, 0, 0, 4, 1)).asJava).get(0)
+		assert(tile000.getDefinition.getXBins() === 4)
+		assert(tile000.getDefinition.getYBins() === 1)
+		assert(tile000.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](2.0, 2.0, 2.0, 1.0))
+		val tile100: TileData[_] =
+			pyramidIo.readTiles(pyramidId, null,
+			                    List(new TileIndex(1, 0, 0, 4, 1)).asJava).get(0)
+		assert(tile100.getDefinition.getXBins() === 4)
+		assert(tile100.getDefinition.getYBins() === 1)
+		assert(tile100.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 1.0, 1.0, 1.0))
+		val tile110: TileData[_] =
+			pyramidIo.readTiles(pyramidId, null,
+			                    List(new TileIndex(1, 1, 0, 4, 1)).asJava).get(0)
+		assert(tile110.getDefinition.getXBins() === 4)
+		assert(tile110.getDefinition.getYBins() === 1)
+		assert(tile110.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 1.0, 1.0, 0.0))
+	}
 }
