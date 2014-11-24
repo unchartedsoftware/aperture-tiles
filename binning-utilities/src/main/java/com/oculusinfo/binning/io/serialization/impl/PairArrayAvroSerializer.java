@@ -24,45 +24,54 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
+
+
+import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
-import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import java.io.Serializable;
+
+
 
 /**
- * A serializer to serialize tiles whose bin values are lists of some primitive
- * type, using Avro.
- *
+ * A serializer to serialize tiles whose bin values are lists of pairs of some
+ * primitive types, using Avro.
  *
  * See {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer}
  * for information about what primitives are supported, and how.
  */
-public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<T> {
-	private static final long serialVersionUID = 5994875196491382037L;
-
+public class PairArrayAvroSerializer<S extends Serializable, T extends Serializable> extends GenericAvroArraySerializer<Pair<S, T>> {
+	private static final long serialVersionUID = 1777339648086558933L;
 	private static PatternedSchemaStore __schemaStore = new PatternedSchemaStore(
 		       "{\n" +
 		       "  \"name\":\"entryType\",\n" +
 		       "  \"namespace\":\"ar.avro\",\n" +
 		       "  \"type\":\"record\",\n" +
 		       "  \"fields\":[\n" +
-		       "    {\"name\":\"value\", \"type\":\"%s\"}\n" +
+		       "    {\n" +
+		       "      {\"name\":\"key\", \"type\":\"%s\"},\n" +
+		       "      {\"name\":\"value\", \"type\":\"%s\"}\n" +
+		       "    }\n" +
 		       "  ]\n" +
 		       "}");
-
-
-
 	private Schema _schema;
-	private boolean _toString; // A bit of a hack to handle string tiles as strings rather than Utf8s
 
-	public PrimitiveArrayAvroSerializer (Class<? extends T> type, CodecFactory compressionCodec) {
-		super(compressionCodec, PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(type));
+	public PairArrayAvroSerializer (Class<? extends S> keyType, Class<? extends T> valueType,
+	                                CodecFactory compressionCodec) {
+		super(compressionCodec,
+		      new TypeDescriptor(Pair.class,
+		                         PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(keyType),
+		                         PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(valueType)));
 
-		String typeName = PrimitiveAvroSerializer.getAvroType(type);
-		_schema = __schemaStore.getSchema(type, typeName);
-		_toString = (String.class.equals(type));
+		String keyTypeName = PrimitiveAvroSerializer.getAvroType(keyType);
+		String valueTypeName = PrimitiveAvroSerializer.getAvroType(valueType);
+		_schema = __schemaStore.getSchema(new Pair<>(keyType, valueType), keyTypeName, valueTypeName);
 	}
+
 
 	@Override
 	protected String getEntrySchemaFile() {
@@ -74,23 +83,19 @@ public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<
 		return _schema;
 	}
 
-	// This doesn't need to be checked because 
+	// This doesn't need to be checked because
 	//  (a) One can't create a serializer for which it theoreticallly won't work.
-	//  (b) It is possible to use the wrong serializer for a given tile, in which 
+	//  (b) It is possible to use the wrong serializer for a given tile, in which
 	//      case it will fail - but it should fail in that case.
 	@SuppressWarnings("unchecked")
 	@Override
-	protected T getEntryValue(GenericRecord entry) {
-		if (_toString) {
-			// A bit of a hack to handle string tiles as strings rather than Utf8s
-			return (T) entry.get(0).toString();
-		} else {
-			return (T) entry.get(0);
-		}
+	protected Pair<S, T> getEntryValue(GenericRecord entry) {
+		return new Pair<S, T>((S) entry.get("key"), (T) entry.get("value"));
 	}
 
 	@Override
-	protected void setEntryValue(GenericRecord avroEntry, T rawEntry) {
-		avroEntry.put("value", rawEntry);
+	protected void setEntryValue(GenericRecord avroEntry, Pair<S, T> rawEntry) {
+		avroEntry.put("key", rawEntry.getFirst());
+		avroEntry.put("value", rawEntry.getSecond());
 	}
 }

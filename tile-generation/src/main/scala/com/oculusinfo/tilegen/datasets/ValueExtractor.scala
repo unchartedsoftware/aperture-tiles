@@ -32,13 +32,14 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
+
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
@@ -463,7 +464,7 @@ class StringValueExtractor (fieldName: String,
 	def calculateValue (fieldValues: Map[String, Any]): Map[String, Double] =
 		Map(fieldValues.get(fieldName).toString -> 1.0)
 	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =
-		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
+		new PairArrayAvroSerializer(classOf[String], classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] =
 		binningAnalytic
 
@@ -563,7 +564,7 @@ class SubstringValueExtractor (fieldName: String,
 		Map(entry -> 1.0)
 	}
 	def getSerializer: TileSerializer[JavaList[Pair[String, JavaDouble]]] =
-		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
+		new PairArrayAvroSerializer(classOf[String], classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Map[String, Double], JavaList[Pair[String, JavaDouble]]] =
 		binningAnalytic
 
@@ -596,7 +597,7 @@ class MultiFieldValueExtractor (fieldNames: Array[String])
 	def calculateValue (fieldValues: Map[String, Any]): Seq[Double] =
 		fieldNames.map(field => Try(fieldValues(field).asInstanceOf[Double]).getOrElse(0.0))
 	def getSerializer =
-		new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
+		new PairArrayAvroSerializer(classOf[String], classOf[JavaDouble], CodecFactory.bzip2Codec())
 	def getBinningAnalytic: BinningAnalytic[Seq[Double], JavaList[Pair[String, JavaDouble]]] =
 		new CategoryValueBinningAnalytic[Double, JavaDouble](fieldNames, new NumericSumBinningAnalytic())
 

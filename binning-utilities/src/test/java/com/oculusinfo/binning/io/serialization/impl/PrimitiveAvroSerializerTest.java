@@ -109,10 +109,8 @@ public class PrimitiveAvroSerializerTest {
     }
 
     @Test
-    public void testUtf8 () throws Exception {
-        testRoundTrip(Utf8.class, new Utf8("a"), new Utf8("bb"), new Utf8("ccc"),
-                new Utf8("dddd"), new Utf8("eeeee"), new Utf8("ffffff"),
-                new Utf8("ggggggg"), new Utf8("hhhhhhhh"));
+    public void testString () throws Exception {
+        testRoundTrip(String.class, "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
     }
 
     @Test(expected=IllegalArgumentException.class)

@@ -29,11 +29,11 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.util.Utf8;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -43,96 +43,106 @@ import com.oculusinfo.binning.util.TypeDescriptor;
  *
  * The Avro primitives are: boolean, int, long, float, double, bytes, and string,
  * which correspond to Java Boolean, Integer, Long, Float, Double,
- * java.nio.ByteBuffer, and org.apache.avro.util.Utf8.  Attempting to create a
- * version with any other class will result in a run-time error.
+ * java.nio.ByteBuffer, and org.apache.avro.util.Utf8.  We do a bit of a hack to
+ * allow use of the much simpler String instead of Utf8, but the others stand as
+ * is.  Attempting to create a version with any other class will result in a
+ * run-time error.
  */
 public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
-    private static final long serialVersionUID = 4949141562108321166L;
+	private static final long serialVersionUID = 4949141562108321166L;
 
-    private static Map<Class<?>, String> VALID_PRIMITIVE_TYPES = null;
-
-    static {
-        Map<Class<?>, String> validTypes = new HashMap<>();
-        validTypes.put(Boolean.class, "boolean");
-        validTypes.put(Integer.class, "int");
-        validTypes.put(Long.class, "long");
-        validTypes.put(Float.class, "float");
-        validTypes.put(Double.class, "double");
-        validTypes.put(ByteBuffer.class, "bytes");
-        validTypes.put(Utf8.class, "string");
-        VALID_PRIMITIVE_TYPES = Collections.unmodifiableMap(validTypes);
-    }
-
-    /**
-     * Determines if a class represents a valid Avro primitive type
-      */
-    static <T> boolean isValidPrimitive (Class<? extends T> type) {
-        return VALID_PRIMITIVE_TYPES.containsKey(type);
-    }
-
-    /**
-     * Get the avro string type of a valid primitive type
-     */
-    static <T> String getAvroType (Class<? extends T> type) {
-        return VALID_PRIMITIVE_TYPES.get(type);
-    }
-
-    /**
-     * Wrap a primitive type in a type descriptor, making sure while doing so that it
-     * actually is a primitive type.
-     */
-    static <T> TypeDescriptor getPrimitiveTypeDescriptor (Class<? extends T> type) {
-        if (!isValidPrimitive(type))
-            throw new IllegalArgumentException("Invalid type "+type+
-                    ": Not one of the prescribed primitives allowed.");
-        return new TypeDescriptor(type);
-    }
-
-    private static PatternedSchemaStore __schemaStore = new PatternedSchemaStore(
-            "{\n" +
-            "  \"name\":\"recordType\",\n" +
-            "  \"namespace\":\"ar.avro\",\n" +
-            "  \"type\":\"record\",\n" +
-            "  \"fields\":[\n" +
-            "    {\"name\":\"value\", \"type\":\"%s\"}\n" +
-            "  ]\n" +
-            "}");
+	private static final Map<Class<?>, String> VALID_PRIMITIVE_TYPES =
+		Collections.unmodifiableMap(new HashMap<Class<?>, String>() {
+				{
+					put(Boolean.class, "boolean");
+					put(Integer.class, "int");
+					put(Long.class, "long");
+					put(Float.class, "float");
+					put(Double.class, "double");
+					put(ByteBuffer.class, "bytes");
+					put(String.class, "string");
+				}
+			});
+	public static final Set<Class<?>> PRIMITIVE_TYPES = VALID_PRIMITIVE_TYPES.keySet();
 
 
+	/**
+	 * Determines if a class represents a valid Avro primitive type
+	 */
+	static <T> boolean isValidPrimitive (Class<? extends T> type) {
+		return VALID_PRIMITIVE_TYPES.containsKey(type);
+	}
 
-    private Schema _schema;
+	/**
+	 * Get the avro string type of a valid primitive type
+	 */
+	static <T> String getAvroType (Class<? extends T> type) {
+		return VALID_PRIMITIVE_TYPES.get(type);
+	}
 
-    public PrimitiveAvroSerializer (Class<? extends T> type, CodecFactory compressionCodec) {
-        super(compressionCodec, getPrimitiveTypeDescriptor(type));
+	/**
+	 * Wrap a primitive type in a type descriptor, making sure while doing so that it
+	 * actually is a primitive type.
+	 */
+	static <T> TypeDescriptor getPrimitiveTypeDescriptor (Class<? extends T> type) {
+		if (!isValidPrimitive(type))
+			throw new IllegalArgumentException("Invalid type "+type+
+			                                   ": Not one of the prescribed primitives allowed.");
+		return new TypeDescriptor(type);
+	}
 
-        String typeName = getAvroType(type);
-        _schema = __schemaStore.getSchema(type, typeName);
-    }
+	private static PatternedSchemaStore __schemaStore = new PatternedSchemaStore(
+		       "{\n" +
+		       "  \"name\":\"recordType\",\n" +
+		       "  \"namespace\":\"ar.avro\",\n" +
+		       "  \"type\":\"record\",\n" +
+		       "  \"fields\":[\n" +
+		       "    {\"name\":\"value\", \"type\":\"%s\"}\n" +
+		       "  ]\n" +
+		       "}");
 
 
-    @Override
-    protected String getRecordSchemaFile () {
-        throw new UnsupportedOperationException("Primitive types have standard schema; schema files should not be required.");
-    }
 
-    @Override
-    protected Schema createRecordSchema () throws IOException {
-        return _schema;
-    }
+	private Schema _schema;
+	private boolean _toString; // A bit of a hack to handle string tiles as strings rather than Utf8s
 
-    // This doesn't need to be checked because 
-    //  (a) One can't create a serializer for which it theoreticallly won't work.
-    //  (b) It is possible to use the wrong serializer for a given tile, in which 
-    //      case it will fail - but it should fail in that case.
-    @SuppressWarnings("unchecked")
-    @Override
-    protected T getValue (GenericRecord bin) {
-        return (T) bin.get("value");
-    }
+	public PrimitiveAvroSerializer (Class<? extends T> type, CodecFactory compressionCodec) {
+		super(compressionCodec, getPrimitiveTypeDescriptor(type));
 
-    @Override
-    protected void setValue (GenericRecord bin, T value) throws IOException {
-        if (null == value) throw new IOException("Null value for bin");
-        bin.put("value", value);
-    }
+		String typeName = getAvroType(type);
+		_schema = __schemaStore.getSchema(type, typeName);
+		_toString = (String.class.equals(type));
+	}
+
+
+	@Override
+	protected String getRecordSchemaFile () {
+		throw new UnsupportedOperationException("Primitive types have standard schema; schema files should not be required.");
+	}
+
+	@Override
+	protected Schema createRecordSchema () throws IOException {
+		return _schema;
+	}
+
+	// This doesn't need to be checked because 
+	//  (a) One can't create a serializer for which it theoreticallly won't work.
+	//  (b) It is possible to use the wrong serializer for a given tile, in which 
+	//      case it will fail - but it should fail in that case.
+	@SuppressWarnings("unchecked")
+	@Override
+	protected T getValue (GenericRecord bin) {
+		if (_toString) {
+			// A bit of a hack to handle string tiles as strings rather than Utf8s
+			return (T) bin.get("value").toString();
+		} else {
+			return (T) bin.get("value");
+		}
+	}
+
+	@Override
+	protected void setValue (GenericRecord bin, T value) throws IOException {
+		if (null == value) throw new IOException("Null value for bin");
+		bin.put("value", value);
+	}
 }

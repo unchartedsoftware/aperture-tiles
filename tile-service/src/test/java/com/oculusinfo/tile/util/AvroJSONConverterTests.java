@@ -49,7 +49,7 @@ import org.junit.Test;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 
 
@@ -116,7 +116,7 @@ public class AvroJSONConverterTests {
 	@Test
 	public void testReadWordScoreTile () throws IOException, JSONException {
 		// Create a tile to test
-		TileSerializer<List<Pair<String, Double>>> serializer = new StringDoublePairArrayAvroSerializer(CodecFactory.nullCodec());
+		TileSerializer<List<Pair<String, Double>>> serializer = new PairArrayAvroSerializer(String.class, Double.class, CodecFactory.nullCodec());
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Double>>> tile = new TileData<>(index);
 		List<Pair<String, Double>> bin = new ArrayList<>();

@@ -26,7 +26,7 @@ package com.oculusinfo.binning.io.serialization;
 
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import org.junit.Assert;
@@ -47,6 +47,6 @@ public class SerializationTypeTests {
 		                                       new TypeDescriptor(Pair.class,
 		                                                          new TypeDescriptor(String.class),
 		                                                          new TypeDescriptor(Integer.class))),
-		                    new StringIntPairArrayAvroSerializer(null).getBinTypeDescription());
+		                    new PairArrayAvroSerializer<>(String.class, Integer.class, null).getBinTypeDescription());
 	}
 }

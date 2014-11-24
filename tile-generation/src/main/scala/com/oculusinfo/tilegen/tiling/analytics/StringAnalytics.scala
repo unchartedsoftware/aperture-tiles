@@ -31,6 +31,8 @@ import java.io.{Serializable => JavaSerializable}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
+import org.apache.avro.util.Utf8
+
 import scala.collection.JavaConverters._
 
 import com.oculusinfo.binning.util.Pair
