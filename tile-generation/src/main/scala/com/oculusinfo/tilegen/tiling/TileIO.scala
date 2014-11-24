@@ -29,6 +29,8 @@ import java.lang.{Double => JavaDouble}
 import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.io.File
+import org.apache.avro.util.Utf8
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{HashSet => MutableSet}
@@ -44,7 +46,6 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
@@ -295,7 +296,7 @@ object TileSerializerChooser {
 			case "avro-int" => new PrimitiveAvroSerializer(classOf[JavaInt], CodecFactory.bzip2Codec())
 			case "avro-long" => new PrimitiveAvroSerializer(classOf[JavaLong], CodecFactory.bzip2Codec())
 			case "avro-double-array" => new PrimitiveArrayAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
-			case "avro-string-array" => new StringArrayAvroSerializer(CodecFactory.bzip2Codec())
+			case "avro-string-array" => new PrimitiveArrayAvroSerializer(classOf[Utf8], CodecFactory.bzip2Codec())
 			case "avro-string-int-pair-array" => new StringIntPairArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case "avro-string-double-pair-array" => new StringDoublePairArrayAvroSerializer(CodecFactory.bzip2Codec())
 			case _ => throw new IllegalArgumentException("Illegal serializer type "+serializerType)

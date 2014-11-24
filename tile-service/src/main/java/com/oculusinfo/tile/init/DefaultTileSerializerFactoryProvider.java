@@ -31,7 +31,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringFloatPairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializerFactory;
@@ -39,7 +38,7 @@ import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerial
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-
+import org.apache.avro.util.Utf8;
 
 
 /**
@@ -59,7 +58,7 @@ public enum DefaultTileSerializerFactoryProvider
 {
 	LEGACY(new Constructor() {
 			@SuppressWarnings("deprecation")
-            @Override
+			@Override
 			public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 			                                                                List<String> path) {
 				return new com.oculusinfo.binning.io.serialization.impl.BackwardsCompatibilitySerializerFactory(parent, path);
@@ -141,7 +140,7 @@ public enum DefaultTileSerializerFactoryProvider
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new StringArrayAvroSerializerFactory(parent, path);
+					return new PrimitiveArrayAvroSerializerFactory<>(parent, path, Utf8.class);
 				}
         
 			}),
