@@ -29,13 +29,13 @@ define(function (require) {
 	var BaseLayer = require('../layer/BaseLayer'),
         ServerLayer = require('../layer/ServerLayer'),
         ClientLayer = require('../layer/ClientLayer'),
+        TileCarousel = require('../layer/TileCarousel'),
         PubSub = require('../util/PubSub'),
 	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
 	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
 	    TileIterator = require('../binning/TileIterator'),
 	    Axis =  require('./Axis'),
 	    TILESIZE = 256,
-        tileEventSubscribers = {},
         setMapCallbacks;
 
     /**
@@ -44,26 +44,26 @@ define(function (require) {
      */
     setMapCallbacks = function( map ) {
         var previousMouse = {};
-        function updateTileFocus( layer, x, y ) {
+        function updateTileFocus( x, y ) {
             var tilekey = map.getTileKeyFromViewportPixel( x, y );
-            if ( tilekey !== map.getTileFocus() ) {
+            if ( tilekey !== map.tileFocus ) {
                 // only update tilefocus if it actually changes
-                map.previousTileFocus = map.getTileFocus();
+                map.previousTileFocus = map.tileFocus;
                 map.tileFocus = tilekey;
                 PubSub.publish( 'layer', { field: 'tileFocus', value: tilekey });
             }
         }
         // set tile focus callbacks
         map.on('mousemove', function(event) {
-            updateTileFocus( map, event.xy.x, event.xy.y );
+            updateTileFocus( event.xy.x, event.xy.y );
             previousMouse.x = event.xy.x;
             previousMouse.y = event.xy.y;
         });
         map.on('zoomend', function(event) {
-            updateTileFocus( map, previousMouse.x, previousMouse.y );
+            updateTileFocus( previousMouse.x, previousMouse.y );
         });
         // if mousedown while map is panning, interrupt pan
-        map.getElement().mousedown( function(){
+        $( map.getElement() ).mousedown( function(){
             if ( map.map.panTween ) {
                  map.map.panTween.callbacks = null;
                  map.map.panTween.stop();
@@ -110,8 +110,6 @@ define(function (require) {
         activate: function() {
             // set initial viewpoint, required by openlayers
             this.map.zoomToMaxExtent();
-            // create div root layer
-            this.createRoot();
             // set mouse callbacks
             setMapCallbacks( this );
         },
@@ -131,10 +129,12 @@ define(function (require) {
         },
 
         add: function( layer ) {
+
+            layer.map = this;
+
             if ( layer instanceof BaseLayer ) {
                 // baselayer
                 this.baselayers = this.baselayers || [];
-                layer.map = this;
                 this.baselayers.push( layer );
                 if ( this.baseLayerIndex < 0 ) {
                     this.setBaseLayerIndex( 0 );
@@ -143,15 +143,15 @@ define(function (require) {
             } else if ( layer instanceof ServerLayer ) {
                 // server layer
                 this.serverLayers = this.serverLayers || [];
-                layer.map = this;
                 layer.activate();
                 this.serverLayers.push( layer );
             } else if ( layer instanceof ClientLayer ) {
                 // client layer
                 this.clientLayers = this.clientLayers || [];
-                layer.map = this;
                 layer.activate();
                 this.clientLayers.push( layer );
+            } else if ( layer instanceof TileCarousel ) {
+                layer.activate();
             }
         },
 
@@ -160,29 +160,6 @@ define(function (require) {
          */
         getTileFocus: function() {
             return this.tileFocus;
-        },
-
-        createRoot: function() {
-
-            var that = this;
-            this.$root = $('<div id="'+this.id+'-root" style="position:absolute; top:0px; z-index:999;"></div>');
-            this.$map.append( this.$root );
-
-            this.on('move', function() {
-                var pos = that.getViewportPixelFromMapPixel( 0, that.getMapHeight() ),
-                    translate = "translate("+ pos.x +"px, " + pos.y + "px)";
-                that.$root.css({
-                    "-webkit-transform": translate,
-                    "-moz-transform": translate,
-                    "-ms-transform": translate,
-                    "-o-transform": translate,
-                    "transform": translate
-                });
-                // update tiles in view
-                that.updateTilesInView();
-            });
-
-            this.trigger('move'); // fire initial move event
         },
 
         setBaseLayerIndex: function( index ) {
@@ -205,11 +182,15 @@ define(function (require) {
         },
 
         getElement:  function() {
-            return this.$map;
+            return this.map.div;
         },
 
-        getRootElement: function() {
-            return this.$root;
+        getViewportElement:  function() {
+            return this.map.viewPortDiv;
+        },
+
+        getContainerElement:  function() {
+            return this.map.layerContainerDiv;
         },
 
 		setAxisSpecs: function ( axisConfig, pyramidConfig ) {
@@ -295,12 +276,11 @@ define(function (require) {
             });
 		},
 
-
         updateTilesInView: function() {
             var tiles = this.getTileIterator().getRest(),
                 culledTiles = [],
                 maxTileIndex = Math.pow(2, this.getZoom() ),
-                tile, removed = [], added = [],
+                tile,
                 i;
             for (i=0; i<tiles.length; i++) {
                 tile = tiles[i];
@@ -309,31 +289,7 @@ define(function (require) {
                      culledTiles.push( tile.level + "," + tile.xIndex + "," + tile.yIndex );
                 }
             }
-
-            this.previousTilesInView = this.tilesInView;
             this.tilesInView = culledTiles;
-
-            if ( this.previousTilesInView ) {
-                // determine which tiles have been added and removed from view
-                for ( i=0; i<this.previousTilesInView.length; i++ ) {
-                    tile = this.previousTilesInView[i];
-                    if ( this.tilesInView.indexOf( tile ) === -1 ) {
-                        removed.push( tile );
-                    }
-                }
-                for ( i=0; i<this.tilesInView.length; i++ ) {
-                    tile = this.tilesInView[i];
-                    if ( this.previousTilesInView.indexOf( tile ) === -1 ) {
-                        added.push( tile );
-                    }
-                }
-                // if a tile has been added or removed, trigger 'tile' event
-                if ( added.length > 0 || removed.length > 0 ) {
-                    this.trigger( 'tile', { added: added, removed: removed } );
-                }
-            } else {
-                this.trigger( 'tile', { added: this.tilesInView.slice(0), removed: [] } );
-            }
 		},
 
 		getTilesInView: function() {
@@ -533,7 +489,6 @@ define(function (require) {
 			return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
 		},
 
-
 		getBinKeyFromViewportPixel: function(vx, vy, xBinCount, yBinCount) {
 			var tileAndBin = this.getTileAndBinFromViewportPixel( vx, vy, xBinCount, yBinCount );
 			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
@@ -578,65 +533,19 @@ define(function (require) {
         panToCoord: function( x, y ) {
             var viewportPixel = this.getViewportPixelFromCoord( x, y ),
                 lonlat = this.map.getLonLatFromViewPortPx( viewportPixel );
-
             this.map.panTo( lonlat );
         },
 
 		on: function (eventType, callback) {
-
-            switch (eventType) {
-
-                case 'tile':
-
-                    tileEventSubscribers[ this.id ] = tileEventSubscribers[ this.id ] || [];
-                    tileEventSubscribers[ this.id ].push(callback);
-                    break;
-
-                default:
-
-                    this.map.events.register(eventType, this.map, callback);
-                    break;
-            }
+            this.map.events.register(eventType, this.map, callback);
 		},
 
 		off: function(eventType, callback) {
-
-			switch (eventType) {
-
-                case 'tile':
-
-                    if ( tileEventSubscribers[ this.id ] ) {
-                        tileEventSubscribers[ this.id ].remove( tileEventSubscribers[ this.id ].splice( tileEventSubscribers[ this.id ].indexOf( callback ) ) );
-                    }
-                    break;
-
-                default:
-
-                    this.map.events.unregister( eventType, this.map, callback );
-                    break;
-			}
+			this.map.events.unregister( eventType, this.map, callback );
 		},
 
 		trigger: function(eventType, event) {
-
-            var i;
-
-			switch (eventType) {
-
-                case 'tile':
-
-                    if ( tileEventSubscribers[ this.id ] ) {
-                        for ( i=0; i<tileEventSubscribers[ this.id ].length; i++ ) {
-                            tileEventSubscribers[ this.id ][i]( event );
-                        }
-                    }
-                    break;
-
-                default:
-
-                    this.map.events.triggerEvent( eventType, event );
-                    break;
-			}
+            this.map.events.triggerEvent( eventType, event );
 		}
 
 	};

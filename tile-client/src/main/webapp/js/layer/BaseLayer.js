@@ -48,54 +48,47 @@ define(function (require) {
 
     BaseLayer.prototype.activate = function() {
 
-        var styledMapType;
+        var spec = this.spec,
+            styledMapType;
 
         switch ( this.spec.type ) {
 
             case "Blank":
 
                 this.layer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
-                this.map.getElement().css( 'background-color', this.spec.options.color );
+                this.map.getElement().style['background-color'] = spec.options.color;
                 break;
 
             case "Google":
 
-                this.layer = new OpenLayers.Layer.Google( "BaseLayer", this.spec.options );
+                this.layer = new OpenLayers.Layer.Google( "BaseLayer", spec.options );
                 break;
 
             case "TMS":
 
-                this.layer = new OpenLayers.Layer.TMS( "BaseLayer", this.spec.url, this.spec.options );
+                this.layer = new OpenLayers.Layer.TMS( "BaseLayer", spec.url, spec.options );
                 break;
         }
 
         this.map.map.addLayer( this.layer );
         this.map.map.setBaseLayer( this.layer );
 
-        if ( this.spec.options.type === 'styled' ) {
-            styledMapType = new google.maps.StyledMapType( this.spec.options.style, {name: 'Styled Map'} );
+        if ( spec.options.type === 'styled' ) {
+            styledMapType = new google.maps.StyledMapType( spec.options.style, {name: 'Styled Map'} );
             this.layer.mapObject.mapTypes.set( 'styled', styledMapType );
-            this.layer.mapObject.setMapTypeId( 'styled');
         }
 
         // ensure baselayer remains bottom layer
         this.map.map.setLayerIndex( this.layer, -1 );
 
-        this.layer.setVisibility(false);
-        this.layer.setVisibility(true);
-
-        //if ( this.spec.type !== "Blank" ) {
-        // if switching to a non-blank baselayer, ensure opacity and visibility is restored
         this.setOpacity( this.getOpacity() );
         this.setVisibility( this.getVisibility() );
-        //}
     };
 
     BaseLayer.prototype.deactivate = function() {
-        var $map = this.map.getElement();
         this.map.removeLayer( this.layer );
         this.layer.destroy();
-        $map.css( 'background-color', '' );
+        this.map.getElement().style['background-color'] = '';
     };
 
 	return BaseLayer;

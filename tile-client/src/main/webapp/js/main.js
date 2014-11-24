@@ -28,14 +28,16 @@ require(['./util/Util',
          './layer/LayerService',
          './layer/BaseLayer',
          './layer/ServerLayer',
-         './layer/ClientLayer'],
+         './layer/ClientLayer',
+         './layer/TileCarousel' ],
 
         function( Util,
                   Map,
                   LayerService,
                   BaseLayer,
                   ServerLayer,
-                  ClientLayer ) {
+                  ClientLayer,
+                  TileCarousel ) {
 
 	        "use strict";
 
@@ -221,11 +223,14 @@ require(['./util/Util',
                             }
                         });
 
+                        //var carousel = new TileCarousel();
+
                         view.map.id = "map";
                         map = new Map( view.map );
                         map.add( baseLayer );
                         map.add( serverLayer );
                         map.add( clientLayer );
+                        //map.add( carousel );
 			        }
 		        );
 	        }, 'json');
