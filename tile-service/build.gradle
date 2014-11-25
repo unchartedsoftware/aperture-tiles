@@ -12,11 +12,18 @@ dependencies {
 	phantomJs "oculus.aperture.service:aperture-capture-phantom:1.0.7@exe"
 }
 
+clean {
+	inputs.dir "bin"
+	delete "bin"
+}
+
 // Task to copy the phantom js exe to the bin dir.  Bind it into the jetty run
 // prior to the war task.
 task phantomCopy(type: Copy) {
+	outputs.dir "bin/windows"
 	from configurations.phantomJs
-	into "bin/windows/phantomjs.exe"
+	into "bin/windows"
+  	rename "aperture-capture-phantom-1.0.7.exe", "phantomjs.exe"
 }
 war.dependsOn(phantomCopy)
 
