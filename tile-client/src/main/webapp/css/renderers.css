@@ -197,21 +197,24 @@
 /* 		     Word Cloud Renderer  	     	*/
 /********************************************/
 
-.word-cloud-entry {
+.word-cloud-label {
 	cursor: pointer;
 	position:absolute;
-	top: 0;
-	z-index: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 180px;
 }
 
-.word-cloud-word {
-	position:absolute;
-}
-
-.word-cloud-word-temp {
+.word-cloud-label-temp {
 	position:relative;
+	visibility:hidden;
 	display: inline-block;
 	padding: 0 5px 0 5px;
+	max-width: 180px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 

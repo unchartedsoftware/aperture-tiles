@@ -76,7 +76,7 @@ define(function (require) {
 
         spec.renderer = spec.renderer || {};
         spec.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ?  spec.renderer.coarseness : 1;
-        spec.renderer.ramp = spec.ramp || "spectral";
+        spec.renderer.ramp = spec.renderer.ramp || "spectral";
         spec.renderer.rangeMin = ( spec.renderer.rangeMin !== undefined ) ? spec.renderer.rangeMin : 0;
         spec.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? spec.renderer.rangeMax : 100;
         spec.valueTransform = spec.valueTransform || { type: 'linear' };

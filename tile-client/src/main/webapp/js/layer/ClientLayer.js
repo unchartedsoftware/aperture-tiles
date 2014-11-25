@@ -87,6 +87,12 @@ define(function (require) {
         this.setVisibility( this.spec.enabled );
         this.setTheme( this.map.getTheme() );
         //this.setRampMinMax( getLevelMinMax( that ) );
+
+        if ( typeof this.spec.html === "object" ) {
+            this.spec.html.meta = this.spec.source.meta.meta;
+            this.spec.html.map = this.map;
+            this.spec.html.parent = this;
+        }
     };
 
     ClientLayer.prototype.deactivate = function() {

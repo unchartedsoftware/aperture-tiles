@@ -75,27 +75,34 @@ define(function (require) {
         });
     };
 
-	function Map( spec ) {
+	function Map( id, spec ) {
 
-        var options = spec.options;
+        spec = spec || {};
+        spec.options = spec.options || {};
+        spec.pyramid = spec.pyramid || {};
 
-        this.id = spec.id;
+        this.id = id;
         this.$map = $( "#" + this.id );
 
         // set map tile pyramid
-        if ( "AreaOfInterest" === spec.pyramid.type ) {
+        if ( spec.pyramid.type === "AreaOfInterest" ) {
             this.pyramid = new AreaOfInterestTilePyramid( spec.pyramid );
-        } else if ( "WebMercator" === spec.pyramid.type ) {
+        } else {
             this.pyramid = new WebMercatorTilePyramid();
         }
 
         // set the map configuration
         this.map = new OpenLayers.Map( this.id, {
-            projection: new OpenLayers.Projection( options.projection ),
-            displayProjection: new OpenLayers.Projection( options.displayProjection ),
-            maxExtent: OpenLayers.Bounds.fromArray( options.maxExtent ),
-            units: options.units || "m",
-            numZoomLevels: options.numZoomLevels || 18,
+            projection: new OpenLayers.Projection( spec.options.projection || "EPSG:900913" ),
+            displayProjection: new OpenLayers.Projection( spec.options.displayProjection || "EPSG:4326" ),
+            maxExtent: OpenLayers.Bounds.fromArray( spec.options.maxExtent || [
+                -20037508.342789244,
+				-20037508.342789244,
+				20037508.342789244,
+				20037508.342789244
+            ]),
+            units: spec.options.units || "m",
+            numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
                 new OpenLayers.Control.Navigation({ documentDrag: true }),
                 new OpenLayers.Control.Zoom()
@@ -318,9 +325,7 @@ define(function (require) {
 		 *          map [0,0] is BOTTOM-LEFT
 		 */
 		getMapMinAndMaxInViewportPixels: function() {
-
 		    var map = this.map;
-
 		    return {
                 min : {
                     x: Math.round( map.minPx.x ),
@@ -340,8 +345,7 @@ define(function (require) {
 		 */
 		getMapPixelFromViewportPixel: function(vx, vy) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = this.getMapWidth(); // take into account any padding or margins
-
+			    totalPixelSpan = this.getMapWidth();
 			return {
 				x: totalPixelSpan + vx - viewportMinMax.max.x,
 				y: totalPixelSpan - vy + viewportMinMax.max.y

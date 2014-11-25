@@ -26,9 +26,10 @@
 define(function (require) {
     "use strict";
 
-    var Util = require('../util/Util'),
+    var //Util = require('../util/Util'),
         PubSub = require('../util/PubSub'),
         CAROUSEL_CLASS = 'carousel-ui-pane',
+        /*
         DOT_CONTAINER_CLASS = "carousel-ui-dot-container",
         DOT_CLASS = 'carousel-ui-dot',
         DOT_CLASS_DEFAULT = 'carousel-ui-dot-default',
@@ -37,14 +38,14 @@ define(function (require) {
         CHEVRON_CLASS = "carousel-ui-chevron",
         CHEVRON_CLASS_LEFT = "carousel-ui-chevron-left",
         CHEVRON_CLASS_RIGHT = "carousel-ui-chevron-right",
-        resetCarousel,
-        makeClientLayersSubscriber,
-        makeLayerSubscriber,
-        repositionCarousel,
+        */
+        repositionCarousel;
+        /*
         createChevrons,
         createIndexDots,
         createCarousel,
         updateDotIndices;
+        */
 
     repositionCarousel = function( map, carouselDiv, tilekey ) {
 
@@ -60,93 +61,15 @@ define(function (require) {
             carouselDiv.style.visibility = 'hidden';
         } else {
             // if carousel is enabled, update its tile position
-            topLeft = map.getTopLeftMapPixelForTile( tilekey );
+            topLeft = map.getTopLeftViewportPixelForTile( tilekey );
+            topLeft = map.map.getLayerPxFromViewPortPx( new OpenLayers.Pixel( topLeft.x, topLeft.y ) );
             carouselDiv.style.visibility = 'visible';
             carouselDiv.style.left = topLeft.x + 'px';
-            carouselDiv.style.top = map.getMapHeight() - topLeft.y + 'px';
-            console.log( topLeft );
+            carouselDiv.style.top = topLeft.y + 'px';
         }
     };
 
-
-    resetCarousel = function( $carousel, layers ) {
-
-        var layerIndex,
-            maxZ = 0,
-            i;
-
-        // if a layer is disabled, ensure carousel appears
-        // on top most carouselEnabled client layer
-        for ( i=0; i<layers.length; i++ ) {
-            if ( layers[i].getVisibility() &&
-                 layers[i].getNumViews() > 1 &&
-                 layers[i].getZIndex() > maxZ ) {
-                layerIndex = i;
-                maxZ = layers[i].getZIndex();
-            }
-            // set all false
-            layers[i].setCarouselEnabled( false );
-        }
-
-        if ( layerIndex !== undefined ) {
-            layers[layerIndex].setCarouselEnabled( true );
-        } else {
-            $carousel.empty().css('visibility', 'hidden');
-        }
-    };
-
-
-    makeClientLayersSubscriber = function ( map, $carousel, controlMap, layers ) {
-        return function ( message, path ) {
-
-            var field = message.field;
-
-            switch ( field ) {
-
-                case "enabled":
-                    resetCarousel( $carousel, layers );
-                    break;
-
-                case "zIndex":
-                    resetCarousel( $carousel, layers );
-                    break;
-            }
-        };
-    };
-
-    /**
-     * Creates a subscriber to handle published carousel related layer state changes,
-     * and update the controls based on them.
-     */
-    makeLayerSubscriber = function ( map, $carousel, controlMap, layer ) {
-
-        return function ( message, path ) {
-
-            var field = message.field,
-                value = message.value;
-
-            switch ( field ) {
-
-                case "tileFocus":
-
-                    if ( layer.isCarouselEnabled() ) {
-                        repositionCarousel( map, $carousel, value );
-                        updateDotIndices( controlMap, layer );
-                    }
-                    break;
-
-                case "carouselEnabled":
-
-                    if ( value === true ) {
-                        // create carousel UI
-                        $carousel.css('visibility', 'visible');
-                        createCarousel( $carousel, map, controlMap, layer );
-                    }
-                    break;
-            }
-        };
-    };
-
+    /*
 
     updateDotIndices = function( controlMap, layer ) {
 
@@ -247,8 +170,10 @@ define(function (require) {
         map.getElement().append( $carousel );
         return $carousel;
     };
+    */
 
     function TileCarousel( spec ) {
+        return this;
     }
 
     TileCarousel.prototype.activate = function() {

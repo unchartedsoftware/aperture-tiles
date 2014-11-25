@@ -23,12 +23,22 @@
  * SOFTWARE.
  */
 
-define(function (require) {
+define( function( require ) {
     "use strict";
 
     function Renderer( spec ) {
         this.spec = spec;
     }
+
+    Renderer.prototype.setStyles = function() {
+        var themes = this.spec.themes,
+            i;
+        if ( themes ) {
+            for ( i=0; i<themes.length; i++ ) {
+                themes.injectTheme( "text-score-label", "text-score-entry", "color" );
+            }
+        }
+    };
 
     return Renderer;
 });

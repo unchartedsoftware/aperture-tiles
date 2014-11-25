@@ -91,6 +91,7 @@ define( function() {
         if ( !this.div ) {
             this.div = document.createElement('div');
             this.div.style.position = 'absolute';
+            this.div.className = 'olTileImage';
             this.layer.div.appendChild( this.div );
         }
 
@@ -120,8 +121,17 @@ define( function() {
 
     OpenLayers.Tile.Html.prototype.renderTile = function(container, data) {
         var html = this.layer.html;
-        if ( this.div ) {
-            this.div.innerHTML = typeof html === "function" ? html( data ) : html;
+        if ( this.div && data.tile ) {
+            if ( typeof html === "object") {
+                html = html.createHtml( data);
+            }
+            if ( typeof html === "function" ) {
+                html = html( data );
+            }
+            if ( html instanceof jQuery ) {
+                html = html[0].outerHTML;
+            }
+            this.div.innerHTML = html;
             this.div.style.visibility = 'inherit';
             this.div.style.opacity = 'inherit';
         }

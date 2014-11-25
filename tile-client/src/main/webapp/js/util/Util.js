@@ -178,14 +178,16 @@ define( function () {
         },
 
 
-        hexBlend: function( hex1, hex2 ) {
-            var rgb1 = this.hexToRgb( hex1 ),
-                rgb2 = this.hexToRgb( hex2 );
+        hexBlend: function( hexA, hexB, aIntoBPercentage ) {
+            var aPerc = Math.min( 1, aIntoBPercentage ) || 0.5,
+                bPerc = 1 - aPerc,
+                rgb1 = this.hexToRgb( hexA ),
+                rgb2 = this.hexToRgb( hexB );
 
             return this.rgbToHex({
-                r : ( rgb1.r + rgb2.r ) / 2,
-                g : ( rgb1.g + rgb2.g ) / 2,
-                b : ( rgb1.b + rgb2.b ) / 2
+                r : ( rgb1.r*aPerc + rgb2.r*bPerc ),
+                g : ( rgb1.g*aPerc + rgb2.g*bPerc ),
+                b : ( rgb1.b*aPerc + rgb2.b*bPerc )
             });
 
         },
