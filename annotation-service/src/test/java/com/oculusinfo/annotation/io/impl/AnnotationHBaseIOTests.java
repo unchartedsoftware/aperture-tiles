@@ -43,11 +43,13 @@ import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSe
 import com.oculusinfo.binning.util.Pair;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 
+@Ignore
 public class AnnotationHBaseIOTests {
 	
 	private static final String  TABLE_NAME = "annotation.hbase.test";
@@ -63,17 +65,16 @@ public class AnnotationHBaseIOTests {
 	private TilePyramid _pyramid;
 	private AnnotationIndexer _indexer;
 
-
 	@Before
 	public void setup () {
 		try {
-			_dataIO = new HBaseAnnotationIO("hadoop-s1.oculus.local",
-			                                "2181",
-			                                "hadoop-s1.oculus.local:60000");
+			_dataIO = new HBaseAnnotationIO("MUST",
+			                                "SET",
+			                                "THESE");
     		
-			_tileIO = new HBasePyramidIO("hadoop-s1.oculus.local",
-			                             "2181",
-			                             "hadoop-s1.oculus.local:60000");
+			_tileIO = new HBasePyramidIO("MUST",
+			                             "SET",
+			                             "THESE");
 		} catch (Exception e) {
     		
 			System.out.println("Error: " + e.getMessage());

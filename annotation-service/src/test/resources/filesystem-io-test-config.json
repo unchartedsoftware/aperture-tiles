@@ -17,6 +17,7 @@
         },       
         "private": {
         	"data": {
+        		"id": "annotations-unit-test",
 				"pyramidio": {
 					"type": "file",
 					"root.path": ".\\",
