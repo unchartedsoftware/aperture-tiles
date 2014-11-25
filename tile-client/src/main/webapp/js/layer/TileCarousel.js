@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-define(function (require) {
+define( function( require ) {
     "use strict";
 
     var //Util = require('../util/Util'),

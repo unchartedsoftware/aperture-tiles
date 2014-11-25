@@ -24,7 +24,7 @@
  */
 
 /*global google */
-define(function (require) {
+define( function( require ) {
 	"use strict";
 
 	var Layer = require('./Layer');

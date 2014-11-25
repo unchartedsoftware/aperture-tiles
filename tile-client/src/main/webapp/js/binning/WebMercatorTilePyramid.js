@@ -27,7 +27,7 @@
  * This module defines a TilePyramid class, the equivalent of 
  * WebMercatorTilePyramid in binning-utilities.
  */
-define( function () {
+define( function() {
 	"use strict";
 
 	var EPSG_900913_SCALE_FACTOR = 20037508.342789244,

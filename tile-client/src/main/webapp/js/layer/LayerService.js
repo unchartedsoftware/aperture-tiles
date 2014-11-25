@@ -23,12 +23,7 @@
  * SOFTWARE.
  */
 
-
-/**
- * This module handles communications with the server to get the list of 
- * layers the server can serve.
- */
-define(function (require) {
+define( function( require ) {
     "use strict";
 
     var Util = require('../util/Util'),

@@ -30,7 +30,7 @@ define( function( require ) {
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
-    function ClientLayer( spec ) {
+    function AnnotationLayer( spec ) {
         // set reasonable defaults
         spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
         spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
@@ -40,9 +40,9 @@ define( function( require ) {
         Layer.call( this, spec );
     }
 
-    ClientLayer.prototype = Object.create( Layer.prototype );
+    AnnotationLayer.prototype = Object.create( Layer.prototype );
 
-    ClientLayer.prototype.activate = function() {
+    AnnotationLayer.prototype.activate = function() {
 
         function getURL( bounds ) {
             var res = this.map.getResolution(),
@@ -59,7 +59,7 @@ define( function( require ) {
         }
 
         // add the new layer
-        this.layer = new HtmlTileLayer( //OpenLayers.Layer.Html(
+        this.layer = new HtmlTileLayer(
             'Aperture Tile Layers',
             this.spec.source.tms,
             {
@@ -86,7 +86,7 @@ define( function( require ) {
         }
     };
 
-    ClientLayer.prototype.deactivate = function() {
+    AnnotationLayer.prototype.deactivate = function() {
         // TODO: implement
         return true;
     };
@@ -94,21 +94,21 @@ define( function( require ) {
     /**
      * Updates the theme associated with the layer
      */
-    ClientLayer.prototype.setTheme = function( theme ) {
+    AnnotationLayer.prototype.setTheme = function( theme ) {
         this.spec.theme = theme;
     };
 
     /**
      * Get the current theme for the layer
      */
-    ClientLayer.prototype.getTheme = function() {
+    AnnotationLayer.prototype.getTheme = function() {
         return this.spec.theme;
     };
 
     /**
      * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
      */
-    ClientLayer.prototype.setZIndex = function ( zIndex ) {
+    AnnotationLayer.prototype.setZIndex = function ( zIndex ) {
         // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
         // set the z-index of the layer dev. setLayerIndex sets a relative
         // index based on current map layers, which then sets a z-index. This
@@ -121,9 +121,104 @@ define( function( require ) {
     /**
      * Get the layers zIndex
      */
-    ClientLayer.prototype.getZIndex = function () {
+    AnnotationLayer.prototype.getZIndex = function () {
         return this.spec.zIndex;
     };
 
-    return ClientLayer;
+    /**
+     * Create the a new annotation
+     */
+    AnnotationLayer.prototype.write = function( position ) {
+
+        var that = this,
+            coord,
+            tilekey;
+
+        // temp for debug writing
+        function DEBUG_ANNOTATION( coord ) {
+            var randomGroupIndex = Math.floor( that.spec.groups.length*Math.random() );
+            return {
+                x: coord.x,
+                y: coord.y,
+                group: that.spec.groups[ randomGroupIndex ],
+                range: {
+                    min: 0,
+                    max: that.map.getZoom()
+                },
+                level: that.map.getZoom(),
+                data: {}
+            };
+        }
+
+        // get position and tilekey for annotation
+        coord = this.map.getCoordFromViewportPixel( position.x, position.y );
+        tilekey = this.map.getTileKeyFromViewportPixel( position.x, position.y );
+
+        // write annotation
+        $.post( '/v1.0/annotation/',
+                {
+                    type: "write",
+                    annotation: DEBUG_ANNOTATION( coord ),
+                    layer: this.spec.source.id
+                }
+            ).then(
+                function() {
+                   // TODO: refresh tile
+                },
+                function( jqXHR, status, error ) {
+                    // TODO: handle error
+                    return true;
+                }
+            );
+    };
+
+
+    /**
+     * Modify an existing annotation
+     */
+    AnnotationLayer.prototype.modify = function( annotation ) {
+        $.post( '/v1.0/annotation/',
+                {
+                    type: "modify",
+                    annotation: annotation,
+                    layer: this.spec.source.id
+                }
+            ).then(
+                function() {
+                   // TODO: request old and new tile locations in case of failure
+                },
+                function( jqXHR, status, error ) {
+                    // TODO: handle error
+                    return true;
+                }
+            ).always( function() {
+                // TODO: request old and new tile locations in case of failure
+                return true;
+            });
+    };
+
+
+    /**
+     * Remove an existing annotation.
+     */
+    AnnotationLayer.prototype.remove = function( annotation ) {
+        $.post( '/v1.0/annotation/',
+                {
+                    type: "remove",
+                    certificate: annotation.certificate,
+                    layer: this.spec.source.id
+                }
+            ).then(
+                function() {
+                    // TODO: refresh tile
+                    return true;
+                },
+                function( jqXHR, status, error ) {
+                    // TODO: handle error
+                    return true;
+                }
+            );
+    };
+
+    return AnnotationLayer;
 });

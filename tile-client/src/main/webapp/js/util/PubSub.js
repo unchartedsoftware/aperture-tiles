@@ -23,8 +23,7 @@
  * SOFTWARE.
  */
 
-
-/*
+/**
     A hierarchical publish and subscribe object. Channels consist of strings, sub-channels
     are separated with a period ('.'). Publishing to a target channel will propagate the message
     breadth first as follows:

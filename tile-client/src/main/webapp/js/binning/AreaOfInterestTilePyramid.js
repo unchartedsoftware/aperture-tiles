@@ -27,7 +27,7 @@
  * This module defines a TilePyramid class, the equivalent of AOITilePyramid in
  * binning-utilities.
  */
-define( function () {
+define( function() {
 	"use strict";
 
 	function AreaOfInterestTilePyramid( spec ) {

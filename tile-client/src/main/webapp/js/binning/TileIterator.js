@@ -27,7 +27,7 @@
  * This module defines a TileIterator class, the equivalent of TileIterator in
  * binning-utilities.
  */
-define( function () {
+define( function() {
     "use strict";
 
     function TileIterator( spec ) {
