@@ -38,8 +38,6 @@ import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.util.AnnotationGenerator;
-import com.oculusinfo.annotation.util.AnnotationUtil;
-import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
@@ -280,17 +278,11 @@ public class AnnotationServiceTests {
 
 			TileIndex tile = getRandomTile();
 			long start = System.currentTimeMillis();
-			Map<BinIndex, List<AnnotationData<?>>> scan = readRandom( tile );
+			List<AnnotationData<?>> scan = readTile( tile );
 			long end = System.currentTimeMillis();
 			double time = ((end-start)/1000.0);
-
-			int annotationCount = 0;
-			for (List<AnnotationData<?>> annotations : scan.values()) {
-				annotationCount += annotations.size();
-			}
-
 			if ( VERBOSE )
-				System.out.println( "Thread " + _name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
+				System.out.println( "Thread " + _name + " read " + scan.size() + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
 		}
 
 		private void modify( AnnotationWrapper annotation ) {
@@ -396,8 +388,7 @@ public class AnnotationServiceTests {
 			}
 
 			// ensure everything was removed
-			Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
-			AnnotationUtil.printData( scan );
+			List<AnnotationData<?>> scan = readAll();
 			Assert.assertTrue(scan.size() == 0);
 
 			long end = System.currentTimeMillis();
@@ -442,12 +433,21 @@ public class AnnotationServiceTests {
 			}
 		}
 	}
+
+    private List<AnnotationData<?>> readTile( TileIndex tile ) {
+        List<AnnotationData<?>> annotations = new ArrayList<>();
+        List<List<AnnotationData<?>>> data = _service.read( _layerId, tile, null );
+        for ( List<AnnotationData<?>> bin : data ) {
+            for ( AnnotationData<?> annotation : bin ) {
+                annotations.add( annotation );
+            }
+        }
+		return annotations;
+	}
 	
-	private Map<BinIndex, List<AnnotationData<?>>> readAll() {
+	private List<AnnotationData<?>> readAll() {
 		// scan all
-		TileIndex tile = new TileIndex( 0, 0, 0 );
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _layerId, tile, null );
-		return scan;
+		return readTile( new TileIndex( 0, 0, 0 ) );
 	}
 
 	private TileIndex getRandomTile() {
@@ -456,10 +456,5 @@ public class AnnotationServiceTests {
 		int x = (int)(Math.random() * (level * (1 << level)) );
 		int y = (int)(Math.random() * (level * (1 << level)) );
 		return new TileIndex( level, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
-	}
-	
-	private Map<BinIndex, List<AnnotationData<?>>> readRandom( TileIndex tile ) {
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read(  _layerId, tile, null );
-		return scan;
 	}
 }
