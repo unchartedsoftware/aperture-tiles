@@ -116,7 +116,7 @@ public class AvroJSONConverterTests {
 	@Test
 	public void testReadWordScoreTile () throws IOException, JSONException {
 		// Create a tile to test
-		TileSerializer<List<Pair<String, Double>>> serializer = new PairArrayAvroSerializer(String.class, Double.class, CodecFactory.nullCodec());
+		TileSerializer<List<Pair<String, Double>>> serializer = new PairArrayAvroSerializer<>(String.class, Double.class, CodecFactory.nullCodec());
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Double>>> tile = new TileData<>(index);
 		List<Pair<String, Double>> bin = new ArrayList<>();

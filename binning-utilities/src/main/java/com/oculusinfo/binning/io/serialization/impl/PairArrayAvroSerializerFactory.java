@@ -26,13 +26,12 @@
 package com.oculusinfo.binning.io.serialization.impl;
 
 
+import java.util.List;
+
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
-
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * This serializer factory constructs a
@@ -42,7 +41,7 @@ import java.util.List;
  * See {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer}
  * for information about what primitives are supported, and how.
  */
-public class PairArrayAvroSerializerFactory<S extends Serializable, T extends Serializable>
+public class PairArrayAvroSerializerFactory<S, T>
 	extends ConfigurableFactory<TileSerializer<List<Pair<S, T>>>>
 {
 	private static <S, T> String getName (Class<? extends S> keyType, Class<? extends T> valueType) {
@@ -54,7 +53,7 @@ public class PairArrayAvroSerializerFactory<S extends Serializable, T extends Se
 
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static <S extends Serializable, T extends Serializable> Class<TileSerializer<List<Pair<S, T>>>>
+	private static <S, T> Class<TileSerializer<List<Pair<S, T>>>>
 		getGenericSerializerClass (Class<? extends S> keyType, Class<? extends T> valueType) {
 		if (!PrimitiveAvroSerializer.isValidPrimitive(keyType) ||
 		    !PrimitiveAvroSerializer.isValidPrimitive(valueType))
@@ -74,6 +73,6 @@ public class PairArrayAvroSerializerFactory<S extends Serializable, T extends Se
 
 	@Override
 	protected TileSerializer<List<Pair<S, T>>> create () {
-		return new PairArrayAvroSerializer(_keyType, _valueType, TileSerializerFactory.getCodecFactory(this));
+		return new PairArrayAvroSerializer<S, T>(_keyType, _valueType, TileSerializerFactory.getCodecFactory(this));
 	}
 }

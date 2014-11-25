@@ -26,14 +26,13 @@ package com.oculusinfo.binning.io.serialization.impl;
 
 
 
-import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
-import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.generic.GenericRecord;
 
-import java.io.Serializable;
+import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
+import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 
 
 
@@ -44,7 +43,7 @@ import java.io.Serializable;
  * See {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer}
  * for information about what primitives are supported, and how.
  */
-public class PairArrayAvroSerializer<S extends Serializable, T extends Serializable> extends GenericAvroArraySerializer<Pair<S, T>> {
+public class PairArrayAvroSerializer<S, T> extends GenericAvroArraySerializer<Pair<S, T>> {
 	private static final long serialVersionUID = 1777339648086558933L;
 	private static PatternedSchemaStore __schemaStore = new PatternedSchemaStore(
 		       "{\n" +
@@ -52,12 +51,15 @@ public class PairArrayAvroSerializer<S extends Serializable, T extends Serializa
 		       "  \"namespace\":\"ar.avro\",\n" +
 		       "  \"type\":\"record\",\n" +
 		       "  \"fields\":[\n" +
-		       "    {\n" +
-		       "      {\"name\":\"key\", \"type\":\"%s\"},\n" +
-		       "      {\"name\":\"value\", \"type\":\"%s\"}\n" +
-		       "    }\n" +
+		       "    {\"name\":\"key\", \"type\":\"%s\"},\n" +
+		       "    {\"name\":\"value\", \"type\":\"%s\"}\n" +
 		       "  ]\n" +
 		       "}");
+
+
+
+	private boolean _keyToString;
+	private boolean _valueToString;
 	private Schema _schema;
 
 	public PairArrayAvroSerializer (Class<? extends S> keyType, Class<? extends T> valueType,
@@ -70,6 +72,8 @@ public class PairArrayAvroSerializer<S extends Serializable, T extends Serializa
 		String keyTypeName = PrimitiveAvroSerializer.getAvroType(keyType);
 		String valueTypeName = PrimitiveAvroSerializer.getAvroType(valueType);
 		_schema = __schemaStore.getSchema(new Pair<>(keyType, valueType), keyTypeName, valueTypeName);
+		_keyToString = (String.class.equals(keyType));
+		_valueToString = (String.class.equals(valueType));
 	}
 
 
@@ -90,7 +94,15 @@ public class PairArrayAvroSerializer<S extends Serializable, T extends Serializa
 	@SuppressWarnings("unchecked")
 	@Override
 	protected Pair<S, T> getEntryValue(GenericRecord entry) {
-		return new Pair<S, T>((S) entry.get("key"), (T) entry.get("value"));
+		S key;
+		if (_keyToString) key = (S) entry.get("key").toString();
+		else key = (S) entry.get("key");
+
+		T value;
+		if (_valueToString) value = (T) entry.get("value").toString();
+		else value = (T) entry.get("value");
+
+		return new Pair<S, T>(key, value);
 	}
 
 	@Override

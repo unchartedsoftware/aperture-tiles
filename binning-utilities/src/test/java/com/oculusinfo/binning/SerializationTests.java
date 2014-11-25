@@ -35,7 +35,6 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.apache.avro.file.CodecFactory;
-import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
 import com.oculusinfo.binning.io.PyramidIO;
@@ -155,21 +154,20 @@ public class SerializationTests {
 	@Test
 	public void testStringArrayTileSerialization() throws IOException {
 		TileIndex index = new TileIndex(2, 0, 1, 10, 20);
-		TileData<List<Utf8>> tile = new TileData<List<Utf8>>(index);
+		TileData<List<String>> tile = new TileData<List<String>>(index);
 		for (int x=0; x<10; ++x) {
 			for (int y=0; y<20; ++y) {
-				tile.setBin(x, y, Arrays.asList(new Utf8(String.format("bin [%d, %d]", x, y)),
-				                                new Utf8("second"), new Utf8("third")));
+				tile.setBin(x, y, Arrays.asList(String.format("bin [%d, %d]", x, y), "second", "third"));
 			}
 		}
 		PyramidIO io = new TestPyramidIO();
-		TileSerializer<List<Utf8>> serializer = new PrimitiveArrayAvroSerializer(Utf8.class, CodecFactory.nullCodec());
+		TileSerializer<List<String>> serializer = new PrimitiveArrayAvroSerializer<>(String.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
-		List<TileData<List<Utf8>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
+		List<TileData<List<String>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
-		List<List<Utf8>> inData = tile.getData();
-		List<List<Utf8>> outData = tilesOut.get(0).getData();
+		List<List<String>> inData = tile.getData();
+		List<List<String>> outData = tilesOut.get(0).getData();
 		Assert.assertEquals(inData.size(), outData.size());
 		for (int i=0; i<inData.size(); ++i) {
 			Assert.assertEquals(inData.get(i).size(), outData.get(i).size());

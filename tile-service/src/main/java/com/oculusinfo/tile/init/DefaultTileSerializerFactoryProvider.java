@@ -25,16 +25,21 @@ package com.oculusinfo.tile.init;
 
 
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.*;
+import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import org.apache.avro.util.Utf8;
 
 
 /**
@@ -43,8 +48,9 @@ import org.apache.avro.util.Utf8;
  * <br>
  * To create one use the create method for the desired type. Example:<br>
  *
- * This isn't really an enum, but acts like one in all ways; it is not one to allow us to 
- * use loops and generification during initialization.
+ * This isn't really an enum, but acts like one in all ways except 
+ * initialization; it is not one to allow us to use loops and generification 
+ * during initialization.
  * 
  * <pre>
  * <code>
@@ -56,7 +62,14 @@ public final class DefaultTileSerializerFactoryProvider
 	implements DelegateFactoryProviderTarget<TileSerializer<?>>,
 	           Comparable<DefaultTileSerializerFactoryProvider>
 {
+	private static int __currentOrdinal                                        = 0;
+	private static List<DefaultTileSerializerFactoryProvider> __values         = new ArrayList<>();
+	private static Map<String, DefaultTileSerializerFactoryProvider> __reverse = new HashMap<>();
+
+
 	// Specific, un-generified serializer types
+
+	// Our old pre-avro serializer
 	@Deprecated
 	public static final DefaultTileSerializerFactoryProvider LEGACY =
 		new DefaultTileSerializerFactoryProvider("legacy", new Constructor() {
@@ -67,6 +80,7 @@ public final class DefaultTileSerializerFactoryProvider
 				}
 			});
 
+	// JSON serializers
 	public static final DefaultTileSerializerFactoryProvider DOUBLE_JSON =
 		new DefaultTileSerializerFactoryProvider("double_json", new Constructor() {
 				@Override
@@ -97,52 +111,59 @@ public final class DefaultTileSerializerFactoryProvider
 
 
 	// Generified serializer types
-	public static final DefaultTileSerializationFactoryProvider PRIMITIVES =
-		Collections.unmodifiableList(new ArrayList<>() {
+	// Single-value serialziers
+	public static final List<DefaultTileSerializerFactoryProvider> PRIMITIVES =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
 				{
-					for (Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
-						String name = PrimitiveArraySerializer.getAvroType(type)+"_avro";
+					for (final Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String name = PrimitiveAvroSerializer.getAvroType(type)+"_avro";
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 								                                                                List<String> path) {
 									return new PrimitiveAvroSerializerFactory<>(parent, path, type);
 								}
-							}))
+							}));
 					}
 				}
 			});
 
-	public static final DefaultTileSerializationFactoryProvider PRIMITIVE_ARRAYS =
-		Collections.unmodifiableList(new ArrayList<>() {
+	// Array serializers
+	public static final List<DefaultTileSerializerFactoryProvider> PRIMITIVE_ARRAYS =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
 				{
-					for (Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
-						String name = PrimitiveArraySerializer.getAvroType(type)+"_array_avro";
+					for (final Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String name = PrimitiveAvroSerializer.getAvroType(type)+"_array_avro";
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 								                                                                List<String> path) {
 									return new PrimitiveArrayAvroSerializerFactory<>(parent, path, type);
 								}
-							}))
+							}));
 					}
 				}
 			});
 
-	public static final DefaultTileSerializationFactoryProvider PAIRS =
-		Collections.unmodifiableList(new ArrayList<>() {
+	// Array of Pair (can be used for maps) serializers
+	public static final List<DefaultTileSerializerFactoryProvider> PAIRS =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
+
 				{
-					for (Class<?> keyType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
-						String keyName = PrimitiveArraySerializer.getAvroType(keyType);
-						for (Class<?> valueType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
-							String name = keyName+"_"+PrimitiveArraySerializer.getAvroType(valueType)+"_pair_array_avro";
+					for (final Class<?> keyType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String keyName = PrimitiveAvroSerializer.getAvroType(keyType);
+						for (final Class<?> valueType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+							String name = keyName+"_"+PrimitiveAvroSerializer.getAvroType(valueType)+"_pair_array_avro";
 							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 									@Override
 									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 									                                                                List<String> path) {
 										return new PairArrayAvroSerializerFactory<>(parent, path, keyType, valueType);
 									}
-								}))
+								}));
 						}
 					}
 				}
@@ -159,6 +180,7 @@ public final class DefaultTileSerializerFactoryProvider
 
 
 	private DefaultTileSerializerFactoryProvider (String name, Constructor constructor) {
+		_name = name;
 		_constructor = constructor;
 		_ordinal = __currentOrdinal;
 		__currentOrdinal = __currentOrdinal+1;
@@ -181,14 +203,14 @@ public final class DefaultTileSerializerFactoryProvider
 		return _constructor.create(parent, path);
 	}
 
+	// Enum mimics
 	@Override
 	public String toString () {
 		return _name;
 	}
 
-	// Enum mimics
 	@Override
-	protected Object clone () {
+	protected Object clone () throws CloneNotSupportedException {
 		throw new CloneNotSupportedException("Default Tile Serializer Factory Providers should be treated like enums.");
 	}
 
@@ -213,15 +235,7 @@ public final class DefaultTileSerializerFactoryProvider
 
 
 
-
-
-	private static interface Constructor {
-		ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-		                                                         List<String> path);
-	}
-
-
-
+	// Enum static mimics
 	public static DefaultTileSerializerFactoryProvider valueOf (String name) {
 		return __reverse.get(name.toLowerCase());
 	}
@@ -230,7 +244,10 @@ public final class DefaultTileSerializerFactoryProvider
 		return __values;
 	}
 
-	private static __currentOrdinal                                            = 0;
-	private static List<DefaultTileSerializerFactoryProvider> __values         = new ArrayList<>();
-	private static Map<String, DefaultTileSerializerFactoryProvider> __reverse = new HashMap<>();
+
+
+	private static interface Constructor {
+		ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+		                                                         List<String> path);
+	}
 }

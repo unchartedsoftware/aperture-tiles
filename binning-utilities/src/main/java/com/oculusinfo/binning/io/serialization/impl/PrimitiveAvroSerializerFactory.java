@@ -39,30 +39,30 @@ import java.util.List;
  * for information about what primitives are supported, and how.
  */
 public class PrimitiveAvroSerializerFactory<T> extends ConfigurableFactory<TileSerializer<T>> {
-    private static <T> String getName (Class<? extends T> type) {
-        if (!PrimitiveAvroSerializer.isValidPrimitive(type))
-            throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
-        return type.getSimpleName().toLowerCase()+"-a";
-    }
-    // This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static <ST> Class<TileSerializer<ST>> getGenericSerializerClass (Class<? extends ST> type) {
-        if (!PrimitiveAvroSerializer.isValidPrimitive(type))
-            throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
-        return (Class) TileSerializer.class;
-    }
+	private static <T> String getName (Class<? extends T> type) {
+		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
+			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
+		return type.getSimpleName().toLowerCase()+"-a";
+	}
+	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static <ST> Class<TileSerializer<ST>> getGenericSerializerClass (Class<? extends ST> type) {
+		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
+			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
+		return (Class) TileSerializer.class;
+	}
 
 
 
-    private Class<? extends T> _type;
+	private Class<? extends T> _type;
 
-    public PrimitiveAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path, Class<? extends T> type) {
-        super(getName(type), getGenericSerializerClass(type), parent, path);
-        _type = type;
-    }
+	public PrimitiveAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path, Class<? extends T> type) {
+		super(getName(type), getGenericSerializerClass(type), parent, path);
+		_type = type;
+	}
 
-    @Override
-    protected TileSerializer<T> create () {
-        return new PrimitiveAvroSerializer(_type, TileSerializerFactory.getCodecFactory(this));
-    }
+	@Override
+	protected TileSerializer<T> create () {
+		return new PrimitiveAvroSerializer<>(_type, TileSerializerFactory.getCodecFactory(this));
+	}
 }

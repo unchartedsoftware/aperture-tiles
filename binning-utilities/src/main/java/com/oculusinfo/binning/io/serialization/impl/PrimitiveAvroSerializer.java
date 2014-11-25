@@ -53,6 +53,7 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 
 	private static final Map<Class<?>, String> VALID_PRIMITIVE_TYPES =
 		Collections.unmodifiableMap(new HashMap<Class<?>, String>() {
+				private static final long serialVersionUID = 1L;
 				{
 					put(Boolean.class, "boolean");
 					put(Integer.class, "int");
@@ -76,7 +77,7 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 	/**
 	 * Get the avro string type of a valid primitive type
 	 */
-	static <T> String getAvroType (Class<? extends T> type) {
+	public static <T> String getAvroType (Class<? extends T> type) {
 		return VALID_PRIMITIVE_TYPES.get(type);
 	}
 

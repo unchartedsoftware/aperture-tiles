@@ -24,134 +24,134 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.util.Utf8;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.file.CodecFactory;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+
 public class PrimitiveArrayAvroSerializerTest {
-    @SafeVarargs
-    final <T> void testRoundTrip(Class<? extends T> type, int arraySize, T... data) throws Exception {
-        TileSerializer<List<T>> serializer = new PrimitiveArrayAvroSerializer<T>(type, CodecFactory.nullCodec());
+	@SafeVarargs
+	final <T> void testRoundTrip(Class<? extends T> type, int arraySize, T... data) throws Exception {
+		TileSerializer<List<T>> serializer = new PrimitiveArrayAvroSerializer<T>(type, CodecFactory.nullCodec());
 
-        // Create our tile
-        int n = (int) Math.ceil(data.length/(double)arraySize);
-        int size = (int) Math.ceil(Math.sqrt(n));
-        TileData<List<T>> input = new TileData<>(new TileIndex(0, 0, 0, size, size));
-        for (int y=0; y<size; ++y) {
-            for (int x=0; x<size; ++x) {
-                int i = ((x+size*y) % data.length)*arraySize;
-                List<T> list = new ArrayList<>(arraySize);
-                for (int j=0; j<arraySize; ++j)
-                    if ((i+j) < data.length)
-                        list.add(data[i+j]);
-                input.setBin(x, y, list);
-            }
-        }
+		// Create our tile
+		int n = (int) Math.ceil(data.length/(double)arraySize);
+		int size = (int) Math.ceil(Math.sqrt(n));
+		TileData<List<T>> input = new TileData<>(new TileIndex(0, 0, 0, size, size));
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				int i = ((x+size*y) % data.length)*arraySize;
+				List<T> list = new ArrayList<>(arraySize);
+				for (int j=0; j<arraySize; ++j)
+					if ((i+j) < data.length)
+						list.add(data[i+j]);
+				input.setBin(x, y, list);
+			}
+		}
 
-        // Send it round-trip through serialization
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        serializer.serialize(input, baos);
-        baos.flush();
-        baos.close();
+		// Send it round-trip through serialization
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serializer.serialize(input, baos);
+		baos.flush();
+		baos.close();
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        TileData<List<T>> output = serializer.deserialize(new TileIndex(1, 1, 1, size, size), bais);
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		TileData<List<T>> output = serializer.deserialize(new TileIndex(1, 1, 1, size, size), bais);
 
-        // Test to make sure output matches input.
-        Assert.assertEquals(input.getDefinition(), output.getDefinition());
-        for (int y=0; y<size; ++y) {
-            for (int x=0; x<size; ++x) {
-                assertListsEqual(input.getBin(x, y), output.getBin(x, y));
-            }
-        }
-    }
-    private <T> void assertListsEqual (List<T> a, List<T> b) {
-        Assert.assertEquals(a.size(), b.size());
-        for (int i=0; i<a.size(); ++i) {
-            Assert.assertEquals(a.get(i), b.get(i));
-        }
-    }
+		// Test to make sure output matches input.
+		Assert.assertEquals(input.getDefinition(), output.getDefinition());
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				assertListsEqual(input.getBin(x, y), output.getBin(x, y));
+			}
+		}
+	}
+	private <T> void assertListsEqual (List<T> a, List<T> b) {
+		Assert.assertEquals(a.size(), b.size());
+		for (int i=0; i<a.size(); ++i) {
+			Assert.assertEquals(a.get(i), b.get(i));
+		}
+	}
 
-    @Test
-    public void testBoolean () throws Exception {
-        testRoundTrip(Boolean.class, 3,
-                true, false, true,
-                true, false, true,
-                false, false, true,
-                false, false, false);
-    }
+	@Test
+	public void testBoolean () throws Exception {
+		testRoundTrip(Boolean.class, 3,
+		              true, false, true,
+		              true, false, true,
+		              false, false, true,
+		              false, false, false);
+	}
 
-    @Test
-    public void testInteger () throws Exception {
-        testRoundTrip(Integer.class, 2,
-                0, 0,
-                1, 1,
-                2, 4,
-                3, 9);
-    }
+	@Test
+	public void testInteger () throws Exception {
+		testRoundTrip(Integer.class, 2,
+		              0, 0,
+		              1, 1,
+		              2, 4,
+		              3, 9);
+	}
 
-    @Test
-    public void testLong () throws Exception {
-        testRoundTrip(Long.class, 3,
-                0L, 1L, 8L,
-                27L, 64L, 125L,
-                216L, 343L, 512L,
-                729L, 1000L, 1331L);
-    }
+	@Test
+	public void testLong () throws Exception {
+		testRoundTrip(Long.class, 3,
+		              0L, 1L, 8L,
+		              27L, 64L, 125L,
+		              216L, 343L, 512L,
+		              729L, 1000L, 1331L);
+	}
 
-    @Test
-    public void testFloat () throws Exception {
-        testRoundTrip(Float.class, 1,
-                0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
-    }
+	@Test
+	public void testFloat () throws Exception {
+		testRoundTrip(Float.class, 1,
+		              0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
+	}
 
-    @Test
-    public void testDouble () throws Exception {
-        testRoundTrip(Double.class, 1,
-                0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
-    }
+	@Test
+	public void testDouble () throws Exception {
+		testRoundTrip(Double.class, 1,
+		              0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
+	}
 
-    @Test
-    public void testBytes () throws Exception {
-        testRoundTrip(ByteBuffer.class, 1,
-                ByteBuffer.wrap(new byte[] {}),
-                ByteBuffer.wrap(new byte[] {(byte) 1}),
-                ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
-                ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
-    }
+	@Test
+	public void testBytes () throws Exception {
+		testRoundTrip(ByteBuffer.class, 1,
+		              ByteBuffer.wrap(new byte[] {}),
+		              ByteBuffer.wrap(new byte[] {(byte) 1}),
+		              ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
+		              ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
+	}
 
-    @Test
-    public void testUtf8 () throws Exception {
-        testRoundTrip(Utf8.class, 4,
-                new Utf8("a"), new Utf8("aa"), new Utf8("aaa"), new Utf8("aaaa"),
-                new Utf8("b"), new Utf8("bb"), new Utf8("bbb"), new Utf8("bbbb"),
-                new Utf8("c"), new Utf8("cc"), new Utf8("ccc"), new Utf8("cccc"),
-                new Utf8("d"), new Utf8("dd"), new Utf8("ddd"), new Utf8("dddd"));
-    }
+	@Test
+	public void testString () throws Exception {
+		testRoundTrip(String.class, 4,
+		              "a", "aa", "aaa", "aaaa",
+		              "b", "bb", "bbb", "bbbb",
+		              "c", "cc", "ccc", "cccc",
+		              "d", "dd", "ddd", "dddd");
+	}
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testShort () throws Exception {
-        testRoundTrip(Short.class, 1, (short)0);
-    }
+	@Test(expected=IllegalArgumentException.class)
+	public void testShort () throws Exception {
+		testRoundTrip(Short.class, 1, (short)0);
+	}
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testByte () throws Exception {
-        testRoundTrip(Byte.class, 1, (byte)0);
-    }
+	@Test(expected=IllegalArgumentException.class)
+	public void testByte () throws Exception {
+		testRoundTrip(Byte.class, 1, (byte)0);
+	}
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testReferenceType () throws Exception {
-        List<Integer> sample = new ArrayList<>();
-        testRoundTrip(sample.getClass(), 1, sample);
-    }
+	@Test(expected=IllegalArgumentException.class)
+	public void testReferenceType () throws Exception {
+		List<Integer> sample = new ArrayList<>();
+		testRoundTrip(sample.getClass(), 1, sample);
+	}
 }
