@@ -21,10 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.data;
+package com.oculusinfo.sparktile.rest.data;
 
 import com.google.inject.Inject;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,10 +49,6 @@ public class DataResource extends ApertureServerResource {
 	@Post("json:json")
 	public Representation dataRequest (String jsonArguments) {
 		try {
-            String version = (String) getRequest().getAttributes().get("version");
-            if ( version == null ) {
-                version = LayerConfiguration.DEFAULT_VERSION;
-            }
 			JSONObject arguments = new JSONObject(jsonArguments);
 			JSONObject dataset = arguments.getJSONObject("dataset");
 			int requestCount = arguments.optInt("requestCount", 0);
@@ -74,7 +69,6 @@ public class DataResource extends ApertureServerResource {
 			result.put("dataset", dataset);
 			result.put("requestCount", requestCount);
 			result.put("query", query);
-            result.put("version", version);
 
 			return new JsonRepresentation(result);
 		} catch (JSONException e) {

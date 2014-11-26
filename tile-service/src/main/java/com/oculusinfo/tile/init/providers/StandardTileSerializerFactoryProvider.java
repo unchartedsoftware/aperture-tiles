@@ -32,7 +32,8 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 
 
 
