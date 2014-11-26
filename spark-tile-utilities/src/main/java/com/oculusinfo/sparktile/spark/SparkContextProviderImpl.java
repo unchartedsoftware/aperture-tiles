@@ -24,11 +24,10 @@
 package com.oculusinfo.sparktile.spark;
 
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.oculusinfo.sparktile.ServletLifecycleListener;
-import com.oculusinfo.sparktile.SparkTileServerConfiguration;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import javax.servlet.ServletContextEvent;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -39,10 +38,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletContextEvent;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.oculusinfo.sparktile.ServletLifecycleListener;
+import com.oculusinfo.sparktile.SparkTileServerConfiguration;
+import com.oculusinfo.tile.ServletLifecycleListener;
+import com.oculusinfo.tile.TileServiceConfiguration;
 
 
 
@@ -124,8 +126,24 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	}
 
 	private String getJarPathForClass (Class<?> type) {
-		return type.getProtectionDomain().getCodeSource().getLocation()
-			.getPath();
+s	    String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
+	    // This whole "classes" case is to account for when we're trying to 
+	    // run from an IDE, which automatically adds projects to the class 
+	    // path.  we need class directories replaced with jars.  Note that 
+	    // this means the program won't work unless the project as been 
+	    // packaged; this was always the case, but is more explicitly so now.
+	    if (location.endsWith("classes/")) {
+	        File target = new File(location).getParentFile();
+	        File[] children = target.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept (File dir, String name) {
+                    return name.endsWith(".jar") && !name.endsWith("sources.jar") && !name.endsWith("javadoc.jar") && !name.endsWith("tests.jar");
+                }
+            });
+	        if (null != children && 1 == children.length)
+	            location = children[0].toURI().getPath();
+	    }
+	    return location;
 	}
 
 	@Override
