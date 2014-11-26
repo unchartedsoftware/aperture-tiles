@@ -38,8 +38,6 @@ import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.util.AnnotationGenerator;
-import com.oculusinfo.annotation.util.AnnotationUtil;
-import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
@@ -58,14 +56,16 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
 
 
 public class AnnotationServiceTests {
-	
-	static final boolean VERBOSE = true;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationServiceTests.class );
 	static final int NUM_THREADS = 8;
     static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
     static final String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
@@ -271,8 +271,7 @@ public class AnnotationServiceTests {
 			_service.write( _layerId, annotation.clone() );
 			long end = System.currentTimeMillis();
 			double time = ((end-start)/1000.0);
-			if ( VERBOSE )
-				System.out.println( "Thread " + _name + " successfully wrote " + clone.getUUID() + " in " + time + " sec" );
+			LOGGER.debug( "Thread " + _name + " successfully wrote " + clone.getUUID() + " in " + time + " sec" );
 			addAnnotationToPublic( annotation );
 		}
 
@@ -280,17 +279,10 @@ public class AnnotationServiceTests {
 
 			TileIndex tile = getRandomTile();
 			long start = System.currentTimeMillis();
-			Map<BinIndex, List<AnnotationData<?>>> scan = readRandom( tile );
+			List<AnnotationData<?>> scan = readTile( tile );
 			long end = System.currentTimeMillis();
 			double time = ((end-start)/1000.0);
-
-			int annotationCount = 0;
-			for (List<AnnotationData<?>> annotations : scan.values()) {
-				annotationCount += annotations.size();
-			}
-
-			if ( VERBOSE )
-				System.out.println( "Thread " + _name + " read " + scan.size() +" bins with " + annotationCount + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
+			LOGGER.debug( "Thread " + _name + " read " + scan.size() + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
 		}
 
 		private void modify( AnnotationWrapper annotation ) {
@@ -304,13 +296,11 @@ public class AnnotationServiceTests {
 				long end = System.currentTimeMillis();
 				double time = ((end-start)/1000.0);
 				annotation.update( newAnnotation );
-				if ( VERBOSE )
-					System.out.println( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() + " in " + time + " sec" );
+				LOGGER.debug( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() + " in " + time + " sec" );
 
 			} catch (Exception e) {
 
-				if ( VERBOSE )
-					System.out.println( "Thread " + _name + " unsuccessfully modified " + newAnnotation.getUUID() );
+				LOGGER.debug( "Thread " + _name + " unsuccessfully modified " + newAnnotation.getUUID() );
 			}
 
 		}
@@ -324,13 +314,11 @@ public class AnnotationServiceTests {
 				long end = System.currentTimeMillis();
 				double time = ((end-start)/1000.0);
 				removeAnnotationFromPublic(annotation);
-				if ( VERBOSE )
-					System.out.println("Thread " + _name + " successfully removed " + clone.getUUID() + " in " + time + " sec");
+				LOGGER.debug("Thread " + _name + " successfully removed " + clone.getUUID() + " in " + time + " sec");
 
 			} catch (Exception e) {
 
-				if ( VERBOSE )
-					System.out.println("Thread " + _name + " unsuccessfully removed " + clone.getUUID() );
+				LOGGER.debug("Thread " + _name + " unsuccessfully removed " + clone.getUUID() );
 			}
 		}
 
@@ -396,14 +384,12 @@ public class AnnotationServiceTests {
 			}
 
 			// ensure everything was removed
-			Map<BinIndex, List<AnnotationData<?>>> scan = readAll();
-			AnnotationUtil.printData( scan );
+			List<AnnotationData<?>> scan = readAll();
 			Assert.assertTrue(scan.size() == 0);
 
 			long end = System.currentTimeMillis();
 			double time = ((end - start) / 1000.0);
-			if ( VERBOSE )
-				System.out.println("Completed in " + time + " seconds");
+			LOGGER.debug("Completed in " + time + " seconds");
 
 		} finally {
 
@@ -413,20 +399,17 @@ public class AnnotationServiceTests {
 				PyramidIO tileIo = config.produce( PyramidIO.class );
 				AnnotationIO dataIo = config.produce( AnnotationIO.class );
 				if ( tileIo instanceof HBasePyramidIO ) {
-					if ( VERBOSE )
-						System.out.println("Dropping tile HBase table");
+					LOGGER.debug("Dropping tile HBase table");
 					((HBasePyramidIO)tileIo).dropTable( _dataId );
 				}
 				if ( dataIo instanceof HBaseAnnotationIO ) {
-					if ( VERBOSE )
-						System.out.println("Dropping data HBase table");
+					LOGGER.debug("Dropping data HBase table");
 					((HBaseAnnotationIO)dataIo).dropTable( _dataId );
 				}
 
 				if ( tileIo instanceof FileSystemPyramidIO &&
 				     dataIo instanceof FileSystemAnnotationIO ) {
-					if ( VERBOSE )
-						System.out.println("Deleting temporary file system folders");
+					LOGGER.debug("Deleting temporary file system folders");
 					try {
 						File testDir = new File( ".\\" + _dataId );
 						for ( File f : testDir.listFiles() ) {
@@ -442,12 +425,21 @@ public class AnnotationServiceTests {
 			}
 		}
 	}
+
+    private List<AnnotationData<?>> readTile( TileIndex tile ) {
+        List<AnnotationData<?>> annotations = new ArrayList<>();
+        List<List<AnnotationData<?>>> data = _service.read( _layerId, tile, null );
+        for ( List<AnnotationData<?>> bin : data ) {
+            for ( AnnotationData<?> annotation : bin ) {
+                annotations.add( annotation );
+            }
+        }
+		return annotations;
+	}
 	
-	private Map<BinIndex, List<AnnotationData<?>>> readAll() {
+	private List<AnnotationData<?>> readAll() {
 		// scan all
-		TileIndex tile = new TileIndex( 0, 0, 0 );
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read( _layerId, tile, null );
-		return scan;
+		return readTile( new TileIndex( 0, 0, 0 ) );
 	}
 
 	private TileIndex getRandomTile() {
@@ -456,10 +448,5 @@ public class AnnotationServiceTests {
 		int x = (int)(Math.random() * (level * (1 << level)) );
 		int y = (int)(Math.random() * (level * (1 << level)) );
 		return new TileIndex( level, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
-	}
-	
-	private Map<BinIndex, List<AnnotationData<?>>> readRandom( TileIndex tile ) {
-		Map<BinIndex, List<AnnotationData<?>>> scan = _service.read(  _layerId, tile, null );
-		return scan;
 	}
 }

@@ -223,7 +223,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	public Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex index, JSONObject query ) {
+	public List<List<AnnotationData<?>>> read( String layer, TileIndex index, JSONObject query ) {
 
 		_lock.readLock().lock();
 		try {
@@ -385,7 +385,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	
-	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
+	private List< List<AnnotationData<?>> > getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
 		
 		// wrap index into list 
 		List<TileIndex> indices = new LinkedList<>();
@@ -407,19 +407,23 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// read data from io
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
 		// apply filter to annotations
-		List<AnnotationData<?>> filteredAnnotations =  filter.filterAnnotations( annotations, results );
+		List<AnnotationData<?>> filteredAnnotations = filter.filterAnnotations( annotations, results );
 
-		// assemble data by bin
-		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
+        // fill array
+		List< List<AnnotationData<?>> > dataByBin = new ArrayList<List<AnnotationData<?>>>(
+                Collections.nCopies(
+                        tileIndex.getXBins()*tileIndex.getYBins(),
+                        new ArrayList<AnnotationData<?>>()
+                )
+        );
+
+        // assemble data by bin
 		for ( AnnotationData<?> annotation : filteredAnnotations ) {
-			// get index 
+			// get index
 			BinIndex binIndex = _indexer.getIndicesByLevel( annotation, tileIndex.getLevel(), pyramid ).get(0).getBin();
-			if (!dataByBin.containsKey( binIndex)) {
-				// no data under this bin, add list to map
-				dataByBin.put( binIndex, new LinkedList<AnnotationData<?>>() );
-			}
+            int index = binIndex.getX() + ( binIndex.getY() * tileIndex.getXBins() );
 			// add data to list, under bin
-			dataByBin.get( binIndex ).add( annotation );
+			dataByBin.get( index ).add( annotation );
 		}
 		return dataByBin;
 	}

@@ -65,7 +65,7 @@ public interface AnnotationService {
      *
      * @throws IllegalArgumentException
      */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
+	public abstract List<List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
 
     /**
      * Remove an annotation from the storage service
