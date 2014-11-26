@@ -34,8 +34,8 @@ define( function( require ) {
         // set reasonable defaults
         spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
         spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
-        spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
-        spec.domain = "client";
+        spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 500;
+        spec.domain = "annotation";
         // call base constructor    
         Layer.call( this, spec );
     }
@@ -131,8 +131,7 @@ define( function( require ) {
     AnnotationLayer.prototype.write = function( position ) {
 
         var that = this,
-            coord,
-            tilekey;
+            coord;
 
         // temp for debug writing
         function DEBUG_ANNOTATION( coord ) {
@@ -152,7 +151,6 @@ define( function( require ) {
 
         // get position and tilekey for annotation
         coord = this.map.getCoordFromViewportPixel( position.x, position.y );
-        tilekey = this.map.getTileKeyFromViewportPixel( position.x, position.y );
 
         // write annotation
         $.post( '/v1.0/annotation/',
@@ -164,6 +162,7 @@ define( function( require ) {
             ).then(
                 function() {
                    // TODO: refresh tile
+                    return true;
                 },
                 function( jqXHR, status, error ) {
                     // TODO: handle error
@@ -171,7 +170,6 @@ define( function( require ) {
                 }
             );
     };
-
 
     /**
      * Modify an existing annotation
@@ -186,17 +184,14 @@ define( function( require ) {
             ).then(
                 function() {
                    // TODO: request old and new tile locations in case of failure
+                    return true;
                 },
                 function( jqXHR, status, error ) {
                     // TODO: handle error
                     return true;
                 }
-            ).always( function() {
-                // TODO: request old and new tile locations in case of failure
-                return true;
-            });
+            );
     };
-
 
     /**
      * Remove an existing annotation.

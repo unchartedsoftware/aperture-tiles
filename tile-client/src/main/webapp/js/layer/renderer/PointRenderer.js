@@ -26,7 +26,7 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil');
+    //var RendererUtil = require('./RendererUtil');
 
     function PointRenderer( spec ) {
         var i;
@@ -44,11 +44,13 @@ define( function( require ) {
 
     PointRenderer.prototype.createHtml = function( data ) {
 
-        var spec = this.spec,
-            meta = this.meta[ this.map.getZoom() ],
+        var //spec = this.spec,
+            //meta = this.meta[ this.map.getZoom() ],
             values = data.tile.values,
             positionMap = {},
             positionKey,
+            tilekey,
+            tilePos,
             html = '',
             position,
             offset,
@@ -57,18 +59,23 @@ define( function( require ) {
 
         // for each bin
         for ( i=0; i<values.length; i++ ) {
-            value = values;
+            value = values[i].value;
 
+            if ( value.length === 0 ) {
+                continue;
+            }
             html += '<div class="point-annotation-aggregate">';
 
             for ( j=0; j<value.length; j++ ) {
 
                 // get annotations position in viewport space
-                position = this.map.getViewportPixelFromCoord( value[i].x, value[i].y );
+                tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
+                tilePos = this.map.getTopLeftViewportPixelForTile( tilekey );
+                position = this.map.getViewportPixelFromCoord( value[j].x, value[j].y );
                 // get relative position from tile top left
                 offset = {
-                    x: position.x,
-                    y: this.map.getMapHeight() - position.y
+                    x: position.x - tilePos.x,
+                    y: position.y - tilePos.y
                 };
                 // prevent creating two annotations on the exact same pixel
                 positionKey = Math.floor( offset.x ) + "," + Math.floor( offset.y );

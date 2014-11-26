@@ -29,10 +29,11 @@ require(['./util/Util',
          './layer/BaseLayer',
          './layer/ServerLayer',
          './layer/ClientLayer',
-         './layer/TileCarousel',
+         './layer/AnnotationLayer',
          './layer/renderer/TextScoreRenderer',
          './layer/renderer/WordCloudRenderer',
          './layer/renderer/TextByFrequencyRenderer',
+         './layer/renderer/PointRenderer',
          './layer/renderer/RenderTheme'],
 
         function( Util,
@@ -41,10 +42,11 @@ require(['./util/Util',
                   BaseLayer,
                   ServerLayer,
                   ClientLayer,
-                  TileCarousel,
+                  AnnotationLayer,
                   TextScoreRenderer,
                   WordCloudRenderer,
                   TextByFrequencyRenderer,
+                  PointRenderer,
                   RenderTheme ) {
 
 	        "use strict";
@@ -55,6 +57,7 @@ require(['./util/Util',
                 var map,
                     baseLayer,
                     clientLayer0,
+                    annotationLayer0,
                     serverLayer0;
 
                 baseLayer = new BaseLayer({
@@ -163,6 +166,11 @@ require(['./util/Util',
                     })
                 });
 
+                annotationLayer0 = new AnnotationLayer({
+                    source: layers["parlor-annotations"],
+                    html: new PointRenderer({})
+                });
+
                 /*
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
@@ -200,6 +208,7 @@ require(['./util/Util',
                 map = new Map( "map" );
                 map.add( baseLayer );
                 map.add( serverLayer0 );
+                map.add( annotationLayer0 );
                 map.add( clientLayer0 );
             });
         });

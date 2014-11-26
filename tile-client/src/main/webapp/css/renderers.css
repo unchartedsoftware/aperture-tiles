@@ -1,23 +1,5 @@
 @charset "UTF-8";
 
-
-.testtest {
-	cursor:pointer;
-	background-color:blue;
-}
-
-.testtest:hover {
-	background-color:red;
-}
-
-.aperture-tile {
-	position:relative;
-    -webkit-backface-visibility: hidden;
-	height: 256px;
-	width: 256px;
-}
-
-
 .aperture-tile-title {
 	position: absolute;
 	display: none;
@@ -59,7 +41,6 @@
 /* 		     Meta Data Renderer  	     	*/
 /********************************************/
 
-
 .meta-entry-parent {
 	position: relative;
     float: right;
@@ -80,11 +61,9 @@
 	z-index: 1;
 }
 
-
 /********************************************/
 /* 		     Text Score Renderer  	     	*/
 /********************************************/
-
 
 .text-score-entry-parent {
 	position: relative;
@@ -134,11 +113,9 @@
 	font-size: 0.8em;
 }
 
-
 /********************************************/
 /* 		  Text by Frequency Renderer  	  	*/
 /********************************************/
-
 
 .text-by-frequency-entry {
 	position:absolute;
@@ -192,7 +169,6 @@
             box-sizing: border-box;
 }
 
-
 /********************************************/
 /* 		     Word Cloud Renderer  	     	*/
 /********************************************/
@@ -216,7 +192,6 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-
 
 /********************************************/
 /* 		    Graph Node Renderer    	    	*/
@@ -245,7 +220,6 @@
 /********************************************/
 
 .node-label {
-
 	position:absolute;	
 	width: 256px;
 	padding: 5px 0 5px 0;
@@ -257,11 +231,9 @@
 	text-overflow: ellipsis;
 }
 
-
 /********************************************/
 /* 		             Other     		    	*/
 /********************************************/
-
 
 .clear {
     clear: both;

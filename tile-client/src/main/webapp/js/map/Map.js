@@ -29,12 +29,12 @@ define( function( require ) {
 	var BaseLayer = require('../layer/BaseLayer'),
         ServerLayer = require('../layer/ServerLayer'),
         ClientLayer = require('../layer/ClientLayer'),
+        AnnotationLayer = require('../layer/AnnotationLayer'),
         TileCarousel = require('../layer/TileCarousel'),
         PubSub = require('../util/PubSub'),
 	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
 	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
 	    TileIterator = require('../binning/TileIterator'),
-	    Axis =  require('./Axis'),
 	    TILESIZE = 256,
         setMapCallbacks;
 
@@ -157,6 +157,11 @@ define( function( require ) {
                 this.clientLayers = this.clientLayers || [];
                 layer.activate();
                 this.clientLayers.push( layer );
+            } else if ( layer instanceof AnnotationLayer ) {
+                // annotation layer
+                this.annotationLayers = this.annotationLayers || [];
+                layer.activate();
+                this.annotationLayers.push( layer );
             } else if ( layer instanceof TileCarousel ) {
                 layer.activate();
             }
@@ -200,6 +205,7 @@ define( function( require ) {
             return this.map.layerContainerDiv;
         },
 
+        /*
 		setAxisSpecs: function ( axisConfig, pyramidConfig ) {
 
 			var axes,
@@ -250,6 +256,7 @@ define( function( require ) {
             }
             this.redrawAxes();
 		},
+		*/
 
 		getAxes: function() {
 			return this.axes;
