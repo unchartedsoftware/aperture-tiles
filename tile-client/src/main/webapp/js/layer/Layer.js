@@ -41,6 +41,11 @@ define( function( require ) {
 
     Layer.prototype = {
 
+        /**
+         * Set the opacity of the layer
+         *
+         * @param opacity {float} opacity value from 0 to 1
+         */
         setOpacity: function( opacity ) {
             this.spec.opacity = opacity;
             if ( this.layer ) {
@@ -49,10 +54,18 @@ define( function( require ) {
             }
         },
 
+        /**
+         * Returns the opacity of the layer.
+         */
         getOpacity: function() {
             return this.spec.opacity;
         },
 
+        /**
+         * Set the visibility of the layer.
+         *
+         * @param visibility {boolean} whether the layer is visible or not
+         */
         setVisibility: function( visibility ) {
             this.spec.enabled = visibility;
             if ( this.layer ) {
@@ -61,24 +74,18 @@ define( function( require ) {
             }
         },
 
+        /**
+         * Returns the visibility of the layer.
+         */
         getVisibility: function() {
             return this.spec.enabled;
         },
 
+        /**
+         * Returns the publish/subscribe channel id of this specific layer.
+         */
         getChannel: function () {
             return 'layer.' + this.domain + '.' + this.uuid;
-        },
-
-        getURL: function( bounds ) {
-            var res = this.map.getResolution(),
-                maxBounds = this.maxExtent,
-                tileSize = this.tileSize,
-                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
-                z = this.map.getZoom();
-            if ( x >= 0 && y >= 0 ) {
-                return this.url + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
-            }
         }
     };
     return Layer;

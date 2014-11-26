@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-define( function( require ) {
+define( function() {
     "use strict";
 
     function GraphNodeRenderer( spec ) {

@@ -27,35 +27,30 @@ define( function( require ) {
     "use strict";
 
     var Layer = require('./Layer'),
+        LayerUtil = require('./LayerUtil'),
         PubSub = require('../util/PubSub'),
+        LegendService = require('../rest/LegendService'),
         requestRampImage,
         getLevelMinMax;
 
     /**
-     * Request colour ramp image from server.
+     * Private: Request colour ramp image from server.
      *
-     * @param {Object} layer - The layer object.
+     * @param layer {Object} the layer object
      */
     requestRampImage = function( layer ) {
-        function generateQueryParamString() {
-            var query = {
-                    renderer: layer.spec.renderer,
-                    theme: layer.spec.theme
-                };
-            return '?'+encodeURIComponent( JSON.stringify( query ) );
-        }
-        $.get('rest/v1.0/legend/' + layer.spec.source.id + generateQueryParamString(),
-             'GET',
-             function ( legendString ) {
+        LegendService.getEncodedImage( layer.spec.source.id, {
+                renderer: layer.spec.renderer,
+                theme: layer.spec.theme
+            }, function ( legendString ) {
                  layer.setRampImageUrl( legendString );
-             });
+            });
     };
 
     /**
-     * Returns the layers min and max values for the given zoom level.
+     * Private: Returns the layers min and max values for the given zoom level.
      *
-     * @param {Object} layer - The layer object.
-     * @return {Array} a two component array of the min and max values for the level.
+     * @param layer {Object} the layer object.
      */
     getLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
@@ -99,28 +94,18 @@ define( function( require ) {
         });
 
         function getURL( bounds ) {
-            var res = this.map.getResolution(),
-                maxBounds = this.maxExtent,
-                tileSize = this.tileSize,
-                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
-                z = this.map.getZoom();
-            if ( x >= 0 && y >= 0 ) {
-                return this.url + this.layername
-                    + "/" + z + "/" + x + "/" + y + "."
-                    + this.type + that.getQueryParamString();
-            }
+            return LayerUtil.getURL.call( this, bounds ) + that.getQueryParamString();
         }
 
         // add the new layer
         this.layer = new OpenLayers.Layer.TMS(
-            'Aperture Tile Layers',
+            'Server Rendered Tile Layer',
             this.spec.source.tms,
             {
                 layername: this.spec.source.id,
                 type: 'png',
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
-                                                 20037500,  20037500),
+                    20037500,  20037500),
                 transparent: true,
                 isBaseLayer: false,
                 getURL: getURL
@@ -160,7 +145,6 @@ define( function( require ) {
         {id: "linear", name: "Linear"},
         {id: "log10", name: "Log 10"}
     ];
-
 
     /**
      * @param {number} zIndex - The new z-order value of the layer, where 0 is front.

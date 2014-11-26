@@ -27,6 +27,8 @@ define( function( require ) {
     "use strict";
 
     var Layer = require('./Layer'),
+        LayerUtil = require('./LayerUtil'),
+        AnnotationService = require('../rest/AnnotationService'),
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
@@ -44,31 +46,17 @@ define( function( require ) {
 
     AnnotationLayer.prototype.activate = function() {
 
-        function getURL( bounds ) {
-            var res = this.map.getResolution(),
-                maxBounds = this.maxExtent,
-                tileSize = this.tileSize,
-                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
-                z = this.map.getZoom();
-            if ( x >= 0 && y >= 0 ) {
-                return this.url + this.layername
-                    + "/" + z + "/" + x + "/" + y + "."
-                    + this.type;
-            }
-        }
-
         // add the new layer
         this.layer = new HtmlTileLayer(
-            'Aperture Tile Layers',
+            'Annotation Tile Layer',
             this.spec.source.tms,
             {
                 layername: this.spec.source.id,
                 type: 'json',
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
-                                                  20037500,  20037500),
+                    20037500,  20037500),
                 isBaseLayer: false,
-                getURL: getURL,
+                getURL: LayerUtil.getURL,
                 html: this.spec.html
             });
 
@@ -153,66 +141,39 @@ define( function( require ) {
         coord = this.map.getCoordFromViewportPixel( position.x, position.y );
 
         // write annotation
-        $.post( '/v1.0/annotation/',
-                {
-                    type: "write",
-                    annotation: DEBUG_ANNOTATION( coord ),
-                    layer: this.spec.source.id
-                }
-            ).then(
-                function() {
-                   // TODO: refresh tile
-                    return true;
-                },
-                function( jqXHR, status, error ) {
-                    // TODO: handle error
-                    return true;
-                }
-            );
+        AnnotationService.writeAnnotation(
+            this.spec.source.id,
+            DEBUG_ANNOTATION( coord ),
+            function() {
+               // TODO: refresh tile
+                return true;
+            });
     };
 
     /**
      * Modify an existing annotation
      */
     AnnotationLayer.prototype.modify = function( annotation ) {
-        $.post( '/v1.0/annotation/',
-                {
-                    type: "modify",
-                    annotation: annotation,
-                    layer: this.spec.source.id
-                }
-            ).then(
-                function() {
-                   // TODO: request old and new tile locations in case of failure
-                    return true;
-                },
-                function( jqXHR, status, error ) {
-                    // TODO: handle error
-                    return true;
-                }
-            );
+        AnnotationService.modifyAnnotation(
+            this.spec.source.id,
+            annotation,
+            function() {
+               // TODO: refresh tile
+                return true;
+            });
     };
 
     /**
      * Remove an existing annotation.
      */
     AnnotationLayer.prototype.remove = function( annotation ) {
-        $.post( '/v1.0/annotation/',
-                {
-                    type: "remove",
-                    certificate: annotation.certificate,
-                    layer: this.spec.source.id
-                }
-            ).then(
-                function() {
-                    // TODO: refresh tile
-                    return true;
-                },
-                function( jqXHR, status, error ) {
-                    // TODO: handle error
-                    return true;
-                }
-            );
+        AnnotationService.removeAnnotation(
+            this.spec.source.id,
+            annotation.certificate,
+            function() {
+               // TODO: refresh tile
+                return true;
+            });
     };
 
     return AnnotationLayer;

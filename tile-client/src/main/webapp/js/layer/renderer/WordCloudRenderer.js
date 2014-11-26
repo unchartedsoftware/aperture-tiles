@@ -142,7 +142,7 @@ define( function( require ) {
             fontSize = RendererUtil.getFontSize( count, maxCount, {
                 maxFontSize: 30,
                 minFontSize: 12,
-                bias: -i
+                bias: -i/2
             });
             // get dimensions of word
             dim = getWordDimensions( word, fontSize );

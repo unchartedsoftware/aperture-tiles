@@ -25,7 +25,8 @@
 
 require(['./util/Util',
          './map/Map',
-         './layer/LayerService',
+         './rest/LayerService',
+         './layer/LayerUtil',
          './layer/BaseLayer',
          './layer/ServerLayer',
          './layer/ClientLayer',
@@ -39,6 +40,7 @@ require(['./util/Util',
         function( Util,
                   Map,
                   LayerService,
+                  LayerUtil,
                   BaseLayer,
                   ServerLayer,
                   ClientLayer,
@@ -52,7 +54,10 @@ require(['./util/Util',
 	        "use strict";
 
             // request layers from server
-            LayerService.requestLayers( function( layers ) {
+            LayerService.getLayers( function( layers ) {
+
+                // parse layers into nicer format
+                layers = LayerUtil.parse( layers );
 
                 var map,
                     baseLayer,

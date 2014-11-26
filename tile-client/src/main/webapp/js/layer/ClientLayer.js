@@ -27,6 +27,7 @@ define( function( require ) {
     "use strict";
 
     var Layer = require('./Layer'),
+        LayerUtil = require('./LayerUtil'),
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
@@ -44,31 +45,17 @@ define( function( require ) {
 
     ClientLayer.prototype.activate = function() {
 
-        function getURL( bounds ) {
-            var res = this.map.getResolution(),
-                maxBounds = this.maxExtent,
-                tileSize = this.tileSize,
-                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
-                z = this.map.getZoom();
-            if ( x >= 0 && y >= 0 ) {
-                return this.url + this.layername
-                    + "/" + z + "/" + x + "/" + y + "."
-                    + this.type;
-            }
-        }
-
         // add the new layer
-        this.layer = new HtmlTileLayer( //OpenLayers.Layer.Html(
-            'Aperture Tile Layers',
+        this.layer = new HtmlTileLayer(
+            'Client Rendered Tile Layer',
             this.spec.source.tms,
             {
                 layername: this.spec.source.id,
                 type: 'json',
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
-                                                  20037500,  20037500),
+                    20037500,  20037500),
                 isBaseLayer: false,
-                getURL: getURL,
+                getURL: LayerUtil.getURL,
                 html: this.spec.html
             });
 

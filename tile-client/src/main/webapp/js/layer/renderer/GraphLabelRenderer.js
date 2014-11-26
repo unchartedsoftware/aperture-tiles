@@ -26,8 +26,7 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil'),
-        Util = require('../../util/Util');
+    var RendererUtil = require('./RendererUtil');
 
     function GraphLabelRenderer( spec ) {
         var i;
@@ -120,7 +119,7 @@ define( function( require ) {
                   + 'line-height:' + fontSize + 'px;'
                   + 'margin-top:' + (-fontSize/2) + 'px;'
                   + 'height:' + fontSize + 'px;'
-                  + 'color:' + Util.hexBlend( "#fff", "#000", percent ) + ";"
+                  + 'color:' + RendererUtil.hexBlend( "#fff", "#000", percent ) + ";"
                   + 'z-index:' + Math.floor( fontSize ) + ';'
                   + '">'+label+'</div>';
         }

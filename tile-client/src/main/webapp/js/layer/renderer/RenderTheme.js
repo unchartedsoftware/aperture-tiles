@@ -26,7 +26,7 @@
 define( function( require ) {
     "use strict";
 
-    var Util = require('../../util/Util');
+    var RendererUtil = require('./RendererUtil');
 
     function RenderTheme( spec ) {
         spec = spec || {};
@@ -64,7 +64,7 @@ define( function( require ) {
             greyColor,
             css;
 
-        greyColor = Util.hexBlend( Util.hexGreyscale( spec.color ), spec.blend );
+        greyColor = RendererUtil.hexBlend( RendererUtil.hexGreyscale( spec.color ), spec.blend );
 
         css = '<style id="'+spec.id+'-'+elemClass+'-theme" type="text/css">';
 

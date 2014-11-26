@@ -86,7 +86,7 @@ define( function() {
 	};
 
 	function WebMercatorTilePyramid() {
-        return true;
+        return this;
     }
 
     WebMercatorTilePyramid.prototype.getProjection = function(){
