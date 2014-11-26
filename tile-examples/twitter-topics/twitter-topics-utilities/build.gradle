@@ -1,0 +1,55 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+description = "A library to generate Twitter topic tiles"
+
+// Configure for scala compilation via the scala plugin
+apply plugin: "scala"
+
+// appends scala test functionality to the baseline test task
+test << {
+	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
+	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+			reporter(type: 'stdout')
+	}
+}
+
+// Add a delete to the clean task that will remove the scripts directory if it exists.
+clean {
+	inputs.file "scripts/spark-run"
+	delete "scripts/spark-run"
+}
+
+// aperture config file.  It will run before the jar assembly task.
+task copyFilteredScripts(type: Copy) {
+	from "src/main/filtered-scripts-gradle"
+	into "scripts"
+	filter ReplaceTokens, tokens:[
+		"project.version": version.toString(),
+		"hbase-jars": getHBaseJarStrings().toString()
+	]
+}
+processResources.dependsOn copyFilteredScripts
+ 
+// By default the Gradle scala plugin builds java code before scala code.  This leads to problems
+// in our setup because the scala code in this project is used by the java code (causing 
+// compile errors).  We force the plugin to use an empty source set for java, and then set the
+// scala source to both scala and java.  The scala compiler generates class files for both without
+// issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
+// scala and java in the same project.  
+sourceSets {
+    main {
+        scala {
+            srcDirs = ["src/main/scala", "src/main/java"]
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
+// Jars / projects this project depends on.
+dependencies {
+	compile project(":tile-generation")
+	compile project(":tile-service")
+	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:1.9.1"	
+}
