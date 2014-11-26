@@ -396,7 +396,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
-		List<FilteredBinResults> results = new LinkedList<FilteredBinResults>(); 
+		List<FilteredBinResults> results = new LinkedList<>();
 		for ( AnnotationTile tile : tiles ) {
 			// for each bin
 			FilteredBinResults r = filter.filterBins(tile.getData());
@@ -406,16 +406,21 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		// read data from io
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
+
+        // return null if there are no annotations
+        if ( annotations.size() == 0 ) {
+            return null;
+        }
+
 		// apply filter to annotations
 		List<AnnotationData<?>> filteredAnnotations = filter.filterAnnotations( annotations, results );
 
         // fill array
-		List< List<AnnotationData<?>> > dataByBin = new ArrayList<List<AnnotationData<?>>>(
-                Collections.nCopies(
-                        tileIndex.getXBins()*tileIndex.getYBins(),
-                        new ArrayList<AnnotationData<?>>()
-                )
-        );
+		List< List<AnnotationData<?>> > dataByBin = new ArrayList<>();
+        int totalBins = tileIndex.getXBins()*tileIndex.getYBins();
+        for ( int i=0; i<totalBins; i++ ) {
+            dataByBin.add( new ArrayList<AnnotationData<?>>() );
+        }
 
         // assemble data by bin
 		for ( AnnotationData<?> annotation : filteredAnnotations ) {

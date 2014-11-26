@@ -134,29 +134,31 @@ public class AnnotationResource extends ApertureServerResource {
 		    
 			List<List<AnnotationData<?>>> data = _service.read( layer, index, decodedQueryParams );
 
-            JSONArray valuesArray = new JSONArray();
-            for ( List<AnnotationData<?>> bin : data ) {
-                JSONObject valueJson = new JSONObject();
-                JSONArray annotationArray = new JSONArray();
-                for ( AnnotationData<?> annotation : bin ) {
-                    annotationArray.put( annotation.toJSON() );
-                }
-                valueJson.put( "value", annotationArray );
-                valuesArray.put( valueJson );
-            }
-
-			JSONObject tileJson = new JSONObject();
-            tileJson.put( "values", valuesArray );
-
-		    JSONObject indexJson = new JSONObject();
+            JSONObject result = new JSONObject();
+            JSONObject indexJson = new JSONObject();
 			indexJson.put("level", zoomLevel);
 			indexJson.put("xIndex", x);
 			indexJson.put("yIndex", y);
 
-			JSONObject result = new JSONObject();
 			result.put("index", indexJson );
-			result.put("tile", tileJson );
             result.put("version", version);
+
+            if ( data != null ) {
+                JSONArray valuesArray = new JSONArray();
+                for ( List<AnnotationData<?>> bin : data ) {
+                    JSONObject valueJson = new JSONObject();
+                    JSONArray annotationArray = new JSONArray();
+                    for ( AnnotationData<?> annotation : bin ) {
+                        annotationArray.put( annotation.toJSON() );
+                    }
+                    valueJson.put( "value", annotationArray );
+                    valuesArray.put( valueJson );
+                }
+
+                JSONObject tileJson = new JSONObject();
+                tileJson.put( "values", valuesArray );
+                result.put("tile", tileJson );
+            }
 
 			setStatus(Status.SUCCESS_OK);
 			return new JsonRepresentation( result );
