@@ -42,7 +42,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 import com.oculusinfo.tile.rest.layer.LayerService;
@@ -223,7 +223,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 	
 
-	public Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex index, JSONObject query ) {
+	public List<List<AnnotationData<?>>> read( String layer, TileIndex index, JSONObject query ) {
 
 		_lock.readLock().lock();
 		try {
@@ -385,7 +385,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	}
 
 	
-	private Map<BinIndex, List<AnnotationData<?>>> getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
+	private List< List<AnnotationData<?>> > getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
 		
 		// wrap index into list 
 		List<TileIndex> indices = new LinkedList<>();
@@ -396,7 +396,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 				
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
-		List<FilteredBinResults> results = new LinkedList<FilteredBinResults>(); 
+		List<FilteredBinResults> results = new LinkedList<>();
 		for ( AnnotationTile tile : tiles ) {
 			// for each bin
 			FilteredBinResults r = filter.filterBins(tile.getData());
@@ -406,20 +406,29 @@ public class AnnotationServiceImpl implements AnnotationService {
 		
 		// read data from io
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
-		// apply filter to annotations
-		List<AnnotationData<?>> filteredAnnotations =  filter.filterAnnotations( annotations, results );
 
-		// assemble data by bin
-		Map<BinIndex, List<AnnotationData<?>>> dataByBin =  new HashMap<>();
+        // return null if there are no annotations
+        if ( annotations.size() == 0 ) {
+            return null;
+        }
+
+		// apply filter to annotations
+		List<AnnotationData<?>> filteredAnnotations = filter.filterAnnotations( annotations, results );
+
+        // fill array
+		List< List<AnnotationData<?>> > dataByBin = new ArrayList<>();
+        int totalBins = tileIndex.getXBins()*tileIndex.getYBins();
+        for ( int i=0; i<totalBins; i++ ) {
+            dataByBin.add( new ArrayList<AnnotationData<?>>() );
+        }
+
+        // assemble data by bin
 		for ( AnnotationData<?> annotation : filteredAnnotations ) {
-			// get index 
+			// get index
 			BinIndex binIndex = _indexer.getIndicesByLevel( annotation, tileIndex.getLevel(), pyramid ).get(0).getBin();
-			if (!dataByBin.containsKey( binIndex)) {
-				// no data under this bin, add list to map
-				dataByBin.put( binIndex, new LinkedList<AnnotationData<?>>() );
-			}
+            int index = binIndex.getX() + ( binIndex.getY() * tileIndex.getXBins() );
 			// add data to list, under bin
-			dataByBin.get( binIndex ).add( annotation );
+			dataByBin.get( index ).add( annotation );
 		}
 		return dataByBin;
 	}

@@ -50,7 +50,6 @@ import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -246,8 +245,7 @@ class RDDBinner {
 		 levels: Seq[Int],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
-		 consolidationPartitions: Option[Int] = None,
-		 isDensityStrip: Boolean = false): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int] = None): RDD[TileData[BT]] =
 	{
 		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
 			index => {
@@ -262,7 +260,7 @@ class RDDBinner {
 			}
 
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
-		            mapOverLevels, consolidationPartitions, isDensityStrip)
+		            mapOverLevels, consolidationPartitions)
 	}
 
 
@@ -293,8 +291,7 @@ class RDDBinner {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
-		 consolidationPartitions: Option[Int] = None,
-		 isDensityStrip: Boolean = false): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int] = None): RDD[TileData[BT]] =
 	{
 		// Determine metadata
 		val metaData = processMetaData(data, indexToTiles, dataAnalytics)
@@ -326,7 +323,7 @@ class RDDBinner {
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		consolidate(partitionBins, binAnalytic, tileAnalytics,
-		            metaData, consolidationPartitions, isDensityStrip)
+		            metaData, consolidationPartitions)
 	}
 
 	/**
@@ -383,10 +380,8 @@ class RDDBinner {
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
-		 consolidationPartitions: Option[Int],
-		 isDensityStrip: Boolean): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int]): RDD[TileData[BT]] =
 	{
-		val densityStripLocal = isDensityStrip
 		// We need to consolidate both metadata and binning data, so our result
 		// has two slots, and each half populates one of them.
 		//
@@ -431,8 +426,7 @@ class RDDBinner {
 				val yLimit = index.getYBins()
 
 				// Create our tile
-				val tile = if (densityStripLocal) new DensityStripData[BT](index)
-				else new TileData[BT](index)
+				val tile = new TileData[BT](index)
 
 				// Put the proper default in all bins
 				val defaultBinValue =

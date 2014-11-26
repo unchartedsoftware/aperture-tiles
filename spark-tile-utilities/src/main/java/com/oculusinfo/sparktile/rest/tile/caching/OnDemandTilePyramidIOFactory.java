@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.tile.caching;
+package com.oculusinfo.sparktile.rest.tile.caching;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.spark.SparkContextProvider;
+import com.oculusinfo.sparktile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO;
 
 public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO> {

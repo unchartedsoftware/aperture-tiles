@@ -37,7 +37,7 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.properties.TileIndexProperty;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
@@ -72,6 +72,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     public static final List<String> DATA_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data" ) );
     public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
 	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
+    public static final List<String> REST_ENDPOINT_PATH = Collections.unmodifiableList( Arrays.asList( "private" ) );
 
     public static final String DEFAULT_VERSION = "v1.0";
 
@@ -81,6 +82,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     public static final StringProperty DATA_ID = new StringProperty("id",
         "The ID of the data source of the layer; exact format depends on how the layer is stored.",
         null);
+    public static final StringProperty REST_ENDPOINT = new StringProperty("restEndpoint",
+	    "The REST endpoint used for the layer, defaults to 'tile'",
+	    "tile");
 	public static final IntegerProperty COARSENESS = new IntegerProperty("coarseness",
 	    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
 	    1);
@@ -142,13 +146,13 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		super( name, LayerConfiguration.class, parent, path );
 
 		addProperty(LAYER_ID);
+        addProperty(REST_ENDPOINT, REST_ENDPOINT_PATH);
         addProperty(OUTPUT_WIDTH);
 		addProperty(OUTPUT_HEIGHT);
         addProperty(DATA_ID, DATA_PATH);
 		addProperty(COARSENESS, RENDERER_PATH);
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
-
 		addProperty(TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);

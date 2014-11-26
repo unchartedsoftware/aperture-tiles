@@ -66,6 +66,8 @@ public class LayerResource extends ApertureServerResource {
         try {
             // full layer config
             JSONObject layerConfig = JsonUtilities.deepClone( _service.getLayerJSON( layerId ) );
+            // get layer config factory
+            LayerConfiguration config = _service.getLayerConfiguration( layerId, null );
             // we only need public section
             JSONObject layer = layerConfig.getJSONObject("public");
             // append id
@@ -80,7 +82,6 @@ public class LayerResource extends ApertureServerResource {
             JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
             // try to add images per tile to meta
             try {
-                LayerConfiguration config = _service.getLayerConfiguration( layerId, null );
                 TileDataImageRenderer renderer = config.produce( TileDataImageRenderer.class );
                 if ( null != renderer ) {
                     metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
@@ -89,9 +90,10 @@ public class LayerResource extends ApertureServerResource {
                 // If we have to skip images per tile, it's not a huge deal
                 LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
             }
+            // add meta data
             layer.put("meta", metaData );
-            layer.put("tms", host + "tile/");
-            layer.put("apertureservice", "/tile/");
+            // set tms url with correct endpoint
+            layer.put("tms", host + config.getPropertyValue( LayerConfiguration.REST_ENDPOINT ) + "/");
             return layer;
         } catch (JSONException e) {
             throw new JSONException( "Bad layer request, layer " + layerId + " does not exist" );

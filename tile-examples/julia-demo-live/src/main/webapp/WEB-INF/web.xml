@@ -26,8 +26,10 @@
 			<!-- For standard, pre-batched tiling -->
 			<!-- Standard implementation -->
 			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+			
 			<!-- For tiling requiring a spark connection -->
-			com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
+			com.oculusinfo.sparktile.init.SparkAwarePyramidIOFactoryModule:
+
 			<!-- Tile Transformer factory module - override to add custom tile
 			     Transformer -->
 			com.oculusinfo.tile.init.TileTransformerFactoryModule:
@@ -36,7 +38,8 @@
 			com.oculusinfo.tile.init.CachingLayerConfigurationModule:
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data) -->
-			com.oculusinfo.tile.spark.SparkModule:
+			com.oculusinfo.sparktile.spark.SparkModule:
+
 			<!-- Sets up the REST interface by which clients can retrieve tiles -->
 			com.oculusinfo.tile.rest.RestConfigModule:
 			<!-- Sets up the tile-rendering service -->
@@ -68,5 +71,4 @@
 		<!-- Required with a spark connection, harmless in all other cases -->
 		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
 	</listener>
-
 </web-app>
