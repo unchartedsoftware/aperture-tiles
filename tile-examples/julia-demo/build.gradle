@@ -1,0 +1,9 @@
+description = "A demo project to display user-generated Julia set data."
+
+// Plugin setup
+apply plugin: "war"
+apply plugin: "jetty"
+
+// Flag this as a web client project so that the top level build file
+// can inject client build setup 
+ext.clientProject = true

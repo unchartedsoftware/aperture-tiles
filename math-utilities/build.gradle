@@ -14,12 +14,14 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	classifier = "javadoc"
 	from javadoc.destinationDir
 }
- 
+
+// Defines the artifacts produced when this project is built 
 artifacts {
 	archives sourcesJar
 	archives javadocJar
 }
 
+// Dependencies on other projects / jars
 dependencies {
 	testCompile "junit:junit:4.8.1"
 }

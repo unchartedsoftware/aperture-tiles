@@ -1,0 +1,4 @@
+description = "Example sub projects"
+
+// While this file really doesn't do anything, it needs to be here so that Gradle
+// can properly identify the build hierarchy.

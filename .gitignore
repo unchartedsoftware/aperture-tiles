@@ -9,7 +9,9 @@ phantomjs.exe
 *.iml
 docs/_site
 *.*~
+*~
 build
 test-output
 .gradle
 bin
+/**/data/aperture-config.json
