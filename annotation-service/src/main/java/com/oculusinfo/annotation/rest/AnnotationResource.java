@@ -132,30 +132,30 @@ public class AnnotationResource extends ApertureServerResource {
 
 			TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
 		    
-			Map<BinIndex, List<AnnotationData<?>>> data = _service.read( layer, index, decodedQueryParams );
+			List<List<AnnotationData<?>>> data = _service.read( layer, index, decodedQueryParams );
 
-			// annotations by bin
-			JSONObject binsJson = new JSONObject();
-			for (Map.Entry<BinIndex, List<AnnotationData<?>>> entry : data.entrySet() ) {
-				
-				BinIndex binIndex = entry.getKey();
-				List<AnnotationData<?>> annotations = entry.getValue();
-		    	
-				JSONArray annotationArray = new JSONArray();
-                for ( AnnotationData<?> annotation : annotations ) {
-					annotationArray.put( annotation.toJSON() );                    
-				}
-				binsJson.put( binIndex.toString(), annotationArray );
-			}
+            JSONArray valuesArray = new JSONArray();
+            for ( List<AnnotationData<?>> bin : data ) {
+                JSONObject valueJson = new JSONObject();
+                JSONArray annotationArray = new JSONArray();
+                for ( AnnotationData<?> annotation : bin ) {
+                    annotationArray.put( annotation.toJSON() );
+                }
+                valueJson.put( "value", annotationArray );
+                valuesArray.put( valueJson );
+            }
 
-		    JSONObject tileJson = new JSONObject();
-			tileJson.put("level", zoomLevel);
-			tileJson.put("xIndex", x);
-			tileJson.put("yIndex", y);
+			JSONObject tileJson = new JSONObject();
+            tileJson.put( "values", valuesArray );
+
+		    JSONObject indexJson = new JSONObject();
+			indexJson.put("level", zoomLevel);
+			indexJson.put("xIndex", x);
+			indexJson.put("yIndex", y);
 
 			JSONObject result = new JSONObject();
+			result.put("index", indexJson );
 			result.put("tile", tileJson );
-			result.put( "annotations", binsJson );
             result.put("version", version);
 
 			setStatus(Status.SUCCESS_OK);

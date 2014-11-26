@@ -34,7 +34,7 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 trait IndexScheme[T] {
 	def toCartesian (t: T): (Double, Double)
 	
-	//TODO -- toCartesianEndpoints is only used for RDDLineBinner 
+	//TODO -- toCartesianEndpoints is only used for RDDLineBinner
 	//so ideally this should be moved to LineSegmentIndexScheme in RDDLineBinner?
 	def toCartesianEndpoints (t: T): (Double, Double, Double, Double)
 }
@@ -42,6 +42,11 @@ trait IndexScheme[T] {
 class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
 	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
 	def toCartesianEndpoints (coords: (Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._1, coords._2, coords._2) 	//TODO -- redundant, see note above
+}
+
+class DensityStripIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
+	def toCartesian(coords: (Double, Double)): (Double, Double) = (coords._1, 0)
+	def toCartesianEndpoints (coords: (Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._1, 0, 0)
 }
 
 object IPv4ZCurveIndexScheme {

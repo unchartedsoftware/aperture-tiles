@@ -39,7 +39,6 @@ import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
@@ -52,8 +51,6 @@ class LiveTileGenerator[PT: ClassTag,
                                        binAnalytic: BinningAnalytic[PT, BT],
                                        numXBins: Int = 256,
                                        numYBins: Int = 256) {
-	var densityStrip: Boolean = false
-
 	def getTile (tileLevel: Int, tileX: Int, tileY: Int): TileData[BT] = {
 		// Localize some of our fields to avoid the need for serialization
 		val localPyramidScheme = pyramidScheme
@@ -72,8 +69,7 @@ class LiveTileGenerator[PT: ClassTag,
 			}
 		).reduceByKey(localBinAnalytic.aggregate(_, _)).collect()
 
-		val tile = if (densityStrip) new DensityStripData[BT](targetTile)
-		else new TileData[BT](targetTile)
+		val tile = new TileData[BT](targetTile)
 		val defaultBinValue = localBinAnalytic.finish(localBinAnalytic.defaultProcessedValue)
 		for (x <- 0 until numXBins) {
 			for (y <- 0 until numYBins) {

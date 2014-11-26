@@ -47,8 +47,7 @@ import java.util.Map;
 
 
 public class AnnotationSerializationTest {
-	
-	static final boolean VERBOSE = false;
+
     static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
     static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
     static final int NUM_ENTRIES = 50;
@@ -80,11 +79,8 @@ public class AnnotationSerializationTest {
 		List<AnnotationData<?>> before = generator.generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationData<?>> after = new ArrayList<>();
 			
-		if (VERBOSE) {
-			System.out.println( "*** Before ***");
-			AnnotationUtil.printData( before );
-		}
-		
+		AnnotationUtil.printData( before );
+
 		for ( AnnotationData<?> annotation : before ) {
 			
 			// serialize
@@ -101,14 +97,10 @@ public class AnnotationSerializationTest {
 			after.add( anno );
 			bais.close();
             
-			Assert.assertTrue( AnnotationUtil.compareData( annotation, anno, true ) );
+			Assert.assertTrue( AnnotationUtil.compareData( annotation, anno ) );
 		}
-		
-		
-		if (VERBOSE) {
-			System.out.println( "*** After ***");
-			AnnotationUtil.printData( after );
-		}
+
+        AnnotationUtil.printData( after );
 	}
 	
 	
@@ -120,11 +112,8 @@ public class AnnotationSerializationTest {
 		List<AnnotationTile> before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
 		List<AnnotationTile> after = new ArrayList<>();
 
-		if (VERBOSE) {
-			System.out.println( "*** Before ***");
-			AnnotationUtil.printTiles( before );
-		}
-		
+		AnnotationUtil.printTiles( before );
+
 		for ( AnnotationTile tile : before ) {
 			
 			// serialize
@@ -142,11 +131,8 @@ public class AnnotationSerializationTest {
 			bais.close();   
 		}
 				
-		if (VERBOSE) {
-			System.out.println( "*** After ***");
-			AnnotationUtil.printTiles( after );
-		}
+		AnnotationUtil.printTiles( after );
 		
-		Assert.assertTrue( AnnotationUtil.compareTiles( before, after, true ) );
+		Assert.assertTrue( AnnotationUtil.compareTiles( before, after ) );
 	}
 }

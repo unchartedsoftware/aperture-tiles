@@ -35,13 +35,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class JSONAnnotationTest {
-	
-	static final boolean VERBOSE = false;
+
     private static double [] BOUNDS = { 180, 85.05, -180, -85.05};
     private static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
     static final int NUM_ENTRIES = 50;
@@ -67,23 +68,17 @@ public class JSONAnnotationTest {
         AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
 		List<AnnotationData<?>> before = generator.generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationData<?>> after = new ArrayList<>();
-			
-		if (VERBOSE) {
-			System.out.println( "*** Before ***");
-			AnnotationUtil.printData( before );
-		}
+
+		AnnotationUtil.printData( before );
 		
 		for ( AnnotationData<?> annotation : before ) {
 			JSONObject json = annotation.toJSON();
 			after.add( JSONAnnotation.fromJSON(json) );
 		}
 		
-		if (VERBOSE) {
-			System.out.println( "*** After ***");
-			AnnotationUtil.printData( after );
-		}
+		AnnotationUtil.printData( after );
 		
-		Assert.assertTrue( AnnotationUtil.compareData( before, after, false ) );
+		Assert.assertTrue( AnnotationUtil.compareData( before, after ) );
     }
 
 
@@ -99,22 +94,16 @@ public class JSONAnnotationTest {
 		List< AnnotationTile > before = generator.generateTiles( generator.generateJSONAnnotations( NUM_ENTRIES ), _indexer, _pyramid );
 		List< AnnotationTile > after = new ArrayList<>();
 
-		if (VERBOSE) {
-			System.out.println( "*** Before ***");
-			AnnotationUtil.printTiles( before );
-		}
+		AnnotationUtil.printTiles( before );
 
 		for ( AnnotationTile tile : before ) {
 			JSONObject json = AnnotationUtil.tileToJSON( tile );
 			after.add( AnnotationUtil.getTileFromJSON( json ) );
 		}
 
-		if (VERBOSE) {
-			System.out.println( "*** After ***");
-			AnnotationUtil.printTiles( after );
-		}
+		AnnotationUtil.printTiles( after );
 		
-		Assert.assertTrue( AnnotationUtil.compareTiles( before, after, false ) );
+		Assert.assertTrue( AnnotationUtil.compareTiles( before, after ) );
     }
 	
 }
