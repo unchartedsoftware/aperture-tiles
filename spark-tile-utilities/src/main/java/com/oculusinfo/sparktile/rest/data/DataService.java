@@ -21,32 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning;
+package com.oculusinfo.sparktile.rest.data;
+
+
+
+import org.json.JSONObject;
 
 
 
 /**
- * A tile for use in density strips. Density strips are intended for tiling
- * one-dimensional data, but in a way that the standard two-dimensional
- * visualizations that display two-dimensional tiles can use. To do this, they
- * make an equivalency class of each column in the tile - so if a value is set
- * for one point, it is set for the whole column.
+ * A simple service for direct retrieval of data from the server.
  * 
  * @author nkronenfeld
+ * 
  */
-public class DensityStripData<T> extends TileData<T> {
-	private static final long serialVersionUID = -6730290410026585691L;
-
-
-
-	public DensityStripData (TileIndex definition) {
-		super(definition);
-	}
-
-	@Override
-	public void setBin (int x, int y, T value) {
-		for (int i = 0; i < getDefinition().getYBins(); ++i) {
-			super.setBin(x, i, value);
-		}
-	}
+public interface DataService {
+	/**
+	 * Get raw data based on the input arguments.
+	 * 
+	 * @param dataset A description of the dataset to query
+	 * @param query A description of which data are desired.
+	 * @param getCount True if a count of the total records matching the query
+	 * @param getData True if data records should be retrieved; if false,
+	 *            getCount should be true, and matching records are counted but
+	 *            not returned.
+	 * @param requestCount The maximum number of records to return, if getData
+	 *            is true. If getData is false, this parameter is ignored.
+	 */
+	JSONObject getData (JSONObject dataset, JSONObject query, boolean getCount,
+	                    boolean getData, int requestCount);
 }

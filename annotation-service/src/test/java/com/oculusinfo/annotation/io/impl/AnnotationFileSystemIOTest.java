@@ -43,13 +43,17 @@ import com.oculusinfo.binning.util.Pair;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 public class AnnotationFileSystemIOTest {
-	
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationFileSystemIOTest.class );
+
 	private static final String ROOT_PATH = ".\\";
 	private static final String BASE_PATH = "annotation-unit-test";
 	private static final String TILE_EXT = "json";
@@ -76,16 +80,16 @@ public class AnnotationFileSystemIOTest {
 			_tileIO = new FileSystemPyramidIO(ROOT_PATH, TILE_EXT);
     		
 		} catch (Exception e) {
-    		
-			System.out.println("Error: " + e.getMessage());
+
+			LOGGER.debug("Error: " + e.getMessage());
 			
 		}
     	
 		_pyramid = new WebMercatorTilePyramid();
 		_indexer = new AnnotationIndexerImpl();
 		_tileSerializer = new StringLongPairArrayMapJsonSerializer();
-		_dataSerializer = new JSONAnnotationDataSerializer();  	
-	
+		_dataSerializer = new JSONAnnotationDataSerializer();
+
 	}
 
 	
@@ -105,28 +109,24 @@ public class AnnotationFileSystemIOTest {
 			/*
 			 *  Write annotations
 			 */
-			if (VERBOSE)
-				System.out.println("Writing "+NUM_ENTRIES+" to file system");
+			LOGGER.debug("Writing "+NUM_ENTRIES+" to file system");
 			_tileIO.writeTiles(BASE_PATH, _tileSerializer, AnnotationTile.convertToRaw(tiles) );
 			_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
 	        
 			/*
 			 *  Read and check all annotations
 			 */
-			if (VERBOSE)
-				System.out.println( "Reading all annotations" );
+			LOGGER.debug( "Reading all annotations" );
 			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices));
 			List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
-			if (VERBOSE) AnnotationUtil.printTiles( allTiles );
-			if (VERBOSE) AnnotationUtil.printData( allData );
+			AnnotationUtil.printTiles( allTiles );
+			AnnotationUtil.printData( allData );
 
-			if (VERBOSE)
-				System.out.println( "Comparing annotations" );
-			Assert.assertTrue( AnnotationUtil.compareTiles( allTiles, tiles, true ) );
-			Assert.assertTrue( AnnotationUtil.compareData( allData, annotations, true ) );
+			LOGGER.debug( "Comparing annotations" );
+			Assert.assertTrue( AnnotationUtil.compareTiles( allTiles, tiles ) );
+			Assert.assertTrue( AnnotationUtil.compareData( allData, annotations ) );
 
-			if (VERBOSE)
-				System.out.println("Removing "+NUM_ENTRIES+" from file system");
+			LOGGER.debug("Removing "+NUM_ENTRIES+" from file system");
 			_tileIO.removeTiles(BASE_PATH, tileIndices );
 			_dataIO.removeData(BASE_PATH, dataIndices );
 	       
@@ -136,18 +136,16 @@ public class AnnotationFileSystemIOTest {
 			Assert.assertTrue( allTiles.size() == 0 );
 			Assert.assertTrue( allData.size() == 0 );
 
-			if (VERBOSE)
-				System.out.println( "Complete" );
+			LOGGER.debug( "Complete" );
 	    	
 	
 		} catch (Exception e) {
     		
-			System.out.println("Error: " + e.getMessage());
+			LOGGER.debug("Error: " + e.getMessage());
 			
 		} finally {
 
-			if (VERBOSE)
-				System.out.println("Deleting temporary directories");
+			LOGGER.debug("Deleting temporary directories");
 
 			try {
 				File testDir = new File( ROOT_PATH + BASE_PATH );

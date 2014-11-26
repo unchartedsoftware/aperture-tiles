@@ -125,8 +125,7 @@ public class TileRegistrator implements KryoRegistrator {
 		kryo.register(TileData[].class);
 		kryo.register(java.util.ArrayList.class);
 		kryo.register(TileIndex.class);
-		kryo.register(DensityStripData.class);
-        
+
 		// com.oculusinfo.binning.impl
 		kryo.register(AOITilePyramid.class);
 		kryo.register(WebMercatorTilePyramid.class);

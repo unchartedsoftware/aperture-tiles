@@ -21,15 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init.providers;
+package com.oculusinfo.sparktile.init.providers;
 
 
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.rest.tile.caching.OnDemandTilePyramidIOFactory;
-import com.oculusinfo.tile.spark.SparkContextProvider;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.sparktile.rest.tile.caching.OnDemandTilePyramidIOFactory;
+import com.oculusinfo.sparktile.spark.SparkContextProvider;
 
 import java.util.List;
 

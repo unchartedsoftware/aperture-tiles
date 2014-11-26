@@ -57,7 +57,7 @@ public interface AnnotationService {
 	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 
     /**
-     * Read annotations from the storage service
+     * Read annotations from the storage service, if no annotations are in the tile, returns null
      *
      * @param layer The layer identification string.
      * @param tile The tile index to read.
@@ -65,7 +65,7 @@ public interface AnnotationService {
      *
      * @throws IllegalArgumentException
      */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
+	public abstract List<List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
 
     /**
      * Remove an annotation from the storage service

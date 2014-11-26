@@ -21,13 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.data;
+package com.oculusinfo.sparktile.rest.data;
 
 
 import com.google.inject.Inject;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.math.statistics.StatTracker;
-import com.oculusinfo.tile.spark.SparkContextProvider;
+import com.oculusinfo.sparktile.spark.SparkContextProvider;
 import com.oculusinfo.tilegen.datasets.CSVDataset;
 import com.oculusinfo.tilegen.datasets.FilterFunctions;
 import org.apache.spark.SparkContext;

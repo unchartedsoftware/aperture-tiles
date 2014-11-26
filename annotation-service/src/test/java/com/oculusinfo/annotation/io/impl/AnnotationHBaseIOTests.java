@@ -45,17 +45,20 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 @Ignore
 public class AnnotationHBaseIOTests {
-	
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationHBaseIOTests.class );
+
 	private static final String  TABLE_NAME = "annotation.hbase.test";
     private static double [] BOUNDS = { 180, 85.05, -180, -85.05};
     private static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
-	private static final boolean VERBOSE = false;
     private int NUM_ENTRIES = 50;
 	private AnnotationIO _dataIO;
 	private PyramidIO _tileIO;
@@ -77,7 +80,7 @@ public class AnnotationHBaseIOTests {
 			                             "THESE");
 		} catch (Exception e) {
     		
-			System.out.println("Error: " + e.getMessage());
+			LOGGER.error("Error: " + e.getMessage());
 			
 		}
     	
@@ -104,30 +107,30 @@ public class AnnotationHBaseIOTests {
 			/*
 			 *  Create Table
 			 */
-			System.out.println("Creating table");
+			LOGGER.debug("Creating table");
 			_tileIO.initializeForWrite( TABLE_NAME );
 			_dataIO.initializeForWrite( TABLE_NAME );
 			/*
 			 *  Write annotations
 			 */ 	
-			System.out.println("Writing "+NUM_ENTRIES+" to table");	
+			LOGGER.debug("Writing "+NUM_ENTRIES+" to table");
 			_tileIO.writeTiles(TABLE_NAME, _tileSerializer, AnnotationTile.convertToRaw( tiles ) );
 			_dataIO.writeData(TABLE_NAME, _dataSerializer, annotations );
 	        
 			/*
 			 *  Read and check all annotations
 			 */
-			System.out.println( "Reading all annotations" );
+			LOGGER.debug( "Reading all annotations" );
 			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(TABLE_NAME, _tileSerializer, tileIndices));
 			List<AnnotationData<?>> allData = _dataIO.readData( TABLE_NAME, _dataSerializer, dataIndices );
-			if (VERBOSE) AnnotationUtil.printTiles( allTiles );
-			if (VERBOSE) AnnotationUtil.printData( allData );
+			AnnotationUtil.printTiles( allTiles );
+			AnnotationUtil.printData( allData );
 	    	
-			System.out.println( "Comparing annotations" );	    	
-			Assert.assertTrue( AnnotationUtil.compareTiles( allTiles, tiles, true ) );
-			Assert.assertTrue( AnnotationUtil.compareData( allData, annotations, true ) );
+			LOGGER.debug( "Comparing annotations" );
+			Assert.assertTrue( AnnotationUtil.compareTiles( allTiles, tiles ) );
+			Assert.assertTrue( AnnotationUtil.compareData( allData, annotations ) );
 	    	
-			System.out.println("Removing "+NUM_ENTRIES+" from table");
+			LOGGER.debug("Removing "+NUM_ENTRIES+" from table");
 			_tileIO.removeTiles(TABLE_NAME, tileIndices );
 			_dataIO.removeData(TABLE_NAME, dataIndices );
 	       
@@ -137,17 +140,17 @@ public class AnnotationHBaseIOTests {
 			Assert.assertTrue( allTiles.size() == 0 );
 			Assert.assertTrue( allData.size() == 0 );
 	    	
-			System.out.println( "Complete" );
+			LOGGER.debug( "Complete" );
 	
 		} catch (Exception e) {
     		
-			System.out.println("Error: " + e.getMessage());
+			LOGGER.error( "Error: " + e.getMessage() );
 			
 		} finally {
 			/*
 			 * Drop table
 			 */
-			System.out.println("Disabling and dropping table");
+			LOGGER.debug("Disabling and dropping table");
 			((HBasePyramidIO)_tileIO).dropTable(TABLE_NAME);
 			((HBaseAnnotationIO)_dataIO).dropTable(TABLE_NAME);
 		}
