@@ -254,15 +254,17 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 		// For each file, attempt create an RDD, then immediately force an
 		// exception in the case it does not exist. Union all RDDs together.
 		getDataFiles.map{ file =>
-		  Try({
-		    var tmp = if ( getIdealPartitions.isDefined ) {
-		      sc.textFile( file, getIdealPartitions.get )
-		    } else {
-		      sc.textFile( file )
-		    }
-		    tmp.partitions // force exception if file does not exist
-		    tmp
-		  }).getOrElse( sc.emptyRDD )
+			Try(
+				{
+					var tmp = if ( getIdealPartitions.isDefined ) {
+					    sc.textFile( file, getIdealPartitions.get )
+				    } else {
+					    sc.textFile( file )
+				    }
+				    tmp.partitions // force exception if file does not exist
+				    tmp
+			    }
+			).getOrElse( sc.emptyRDD )
 		}.reduce(_ union _)
 }
 
@@ -455,8 +457,6 @@ abstract class CSVDatasetBase[IT: ClassTag,
 	def getValueScheme: ValueDescription[BT] = valuer
 	
 	def getBinningAnalytic: BinningAnalytic[PT, BT] = valuer.getBinningAnalytic
-
-	override def isDensityStrip = indexer.isDensityStrip
 
 	def getDataAnalytics: Option[AnalysisDescription[(IT, PT), DT]] = dataAnalytics
 	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]] = tileAnalytics

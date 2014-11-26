@@ -39,7 +39,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
@@ -86,7 +85,7 @@ object RDDLineBinner {
 	 *         coordinates) between the two endpoint bins
 	 */
 	protected def universalBinsToTiles[PT](baseTile: TileIndex, bins: IndexedSeq[(BinIndex, PT)],
-	                                   uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices):
+	                                       uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices):
 			Traversable[TileIndex] =
 	{
 		bins.map(b =>
@@ -108,23 +107,23 @@ object RDDLineBinner {
 	 *         endoint bins.
 	 */
 	protected def universalBinsToBins[PT](tile: TileIndex, bins: IndexedSeq[(BinIndex, PT)],
-	                                  uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices):
+	                                      uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices):
 			IndexedSeq[(BinIndex, PT)] =
 	{
 		//get tile/bin and line-scale pairs
-		val tb_scale = bins.map(b => {	
-			val (ubin, value) = b
-			val tb = uniBinToTB(tile, ubin)
-			(tb, value)
-		})
+		val tb_scale = bins.map(b => {
+			                        val (ubin, value) = b
+			                        val tb = uniBinToTB(tile, ubin)
+			                        (tb, value)
+		                        })
 		
 		// filter results so only ones for current tile remain
 		tb_scale.filter(_._1.getTile().equals(tile))
-				.map(b => {
-					val bin = b._1.getBin	//bin result
-					val value = b._2		// and corresponding line scale value for this bin
-					(bin, value)
-				})
+			.map(b => {
+				     val bin = b._1.getBin	//bin result
+				     val value = b._2		// and corresponding line scale value for this bin
+				     (bin, value)
+			     })
 	}
 }
 
@@ -132,7 +131,7 @@ object RDDLineBinner {
 
 class RDDLineBinner(minBins: Int = 2,
                     maxBins: Int = 1024,		// 1<<10 = 1024  256*4 = 4 tile widths
-                    bDrawLineEnds: Boolean = false) {	
+                    bDrawLineEnds: Boolean = false) {
 	var debug: Boolean = true
 
 	def transformData[RT: ClassTag, IT: ClassTag, PT: ClassTag, DT: ClassTag]
@@ -288,9 +287,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	= 
-			 new EndPointsToLine().endpointsToLineBins,	 
-		 isDensityStrip: Boolean = false,
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	=
+			 new EndPointsToLine().endpointsToLineBins,
 		 usePointBinner: Boolean = true,
 		 linesAsArcs: Boolean = false):
 			RDD[TileData[BT]] =
@@ -342,7 +340,7 @@ class RDDLineBinner(minBins: Int = 2,
 
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
 		            mapOverLevels, xBins, yBins, consolidationPartitions, calcLinePixels,
-		            isDensityStrip, usePointBinner, linesAsArcs)
+		            usePointBinner, linesAsArcs)
 	}
 
 
@@ -390,9 +388,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] = 
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
 			 new EndPointsToLine().endpointsToLineBins,
-		 isDensityStrip: Boolean = false,
 		 usePointBinner: Boolean = true,
 		 linesAsArcs: Boolean = false): RDD[TileData[BT]] =
 	{
@@ -430,17 +427,17 @@ class RDDLineBinner(minBins: Int = 2,
 			if (linesAsArcs)
 				(TileIndex.universalBinIndexToTileBinIndexClipped)_	// need to clip arc pts that go outside valid tile/bin bounds
 			else
-				(TileIndex.universalBinIndexToTileBinIndex)_	
+				(TileIndex.universalBinIndexToTileBinIndex)_
 		}
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		if (usePointBinner) {
 			consolidateByPoints(partitionBins, binAnalytic, tileAnalytics,
-			                    metaData, consolidationPartitions, isDensityStrip, 
+			                    metaData, consolidationPartitions,
 			                    xBins, yBins, uniBinToTileBin, calcLinePixels)
 		} else {
 			consolidateByTiles(partitionBins, binAnalytic, tileAnalytics,
-			                   metaData, consolidationPartitions, isDensityStrip, 
+			                   metaData, consolidationPartitions,
 			                   xBins, yBins, uniBinToTileBin, calcLinePixels)
 		}
 	}
@@ -508,16 +505,12 @@ class RDDLineBinner(minBins: Int = 2,
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
 		 consolidationPartitions: Option[Int],
-		 isDensityStrip: Boolean,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 uniBinToTileBin: (TileIndex, BinIndex) => TileAndBinIndices,
-		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]): 
-			 RDD[TileData[BT]] =
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]):
+			RDD[TileData[BT]] =
 	{
-				
-		val densityStripLocal = isDensityStrip
-		
 		// Do reduceByKey to account for duplicate lines at a given level
 		// (not really necessary, but might speed things up?)
 		// val reduced1 = data.reduceByKey(binAnalytic.aggregate(_, _),
@@ -541,7 +534,7 @@ class RDDLineBinner(minBins: Int = 2,
 				val ((lineStart, lineEnd, tile), procValue) = p
 				calcLinePixels(lineStart, lineEnd, procValue).map(b =>
 					{
-						val (bin, scaledValue) = b									
+						val (bin, scaledValue) = b
 						val tb = uniBinToTileBin(tile, bin)
 						((tb.getTile(), tb.getBin()), scaledValue)
 					}
@@ -582,8 +575,7 @@ class RDDLineBinner(minBins: Int = 2,
 				val yLimit = index.getYBins()
 
 				// Create our tile
-				val tile = if (densityStripLocal) new DensityStripData[BT](index)
-				else new TileData[BT](index)
+				val tile = new TileData[BT](index)
 
 				// Put the proper default in all bins
 				val defaultBinValue =
@@ -640,7 +632,6 @@ class RDDLineBinner(minBins: Int = 2,
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
 		 consolidationPartitions: Option[Int],
-		 isDensityStrip: Boolean,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 uniBinToTileBin: (TileIndex, BinIndex) => TileAndBinIndices,
@@ -648,8 +639,6 @@ class RDDLineBinner(minBins: Int = 2,
 			RDD[TileData[BT]] = {
 		
 
-		val densityStripLocal = isDensityStrip
-		
 		// Do reduceByKey to account for duplicate lines at a given level (not
 		// really necessary, but might speed things up?)
 		// val reduced1 = data.reduceByKey(binDesc.aggregateBins(_, _),
@@ -747,8 +736,7 @@ class RDDLineBinner(minBins: Int = 2,
 				
 				// convert aggregated bin values from type PT to BT, and save tile results
 				// Create our tile
-				val tile = if (densityStripLocal) new DensityStripData[BT](index)
-				else new TileData[BT](index)
+				val tile = new TileData[BT](index)
 
 				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {
