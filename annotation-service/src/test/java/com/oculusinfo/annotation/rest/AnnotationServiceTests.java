@@ -56,14 +56,16 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
 
 
 public class AnnotationServiceTests {
-	
-	static final boolean VERBOSE = true;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationServiceTests.class );
 	static final int NUM_THREADS = 8;
     static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
     static final String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
@@ -269,8 +271,7 @@ public class AnnotationServiceTests {
 			_service.write( _layerId, annotation.clone() );
 			long end = System.currentTimeMillis();
 			double time = ((end-start)/1000.0);
-			if ( VERBOSE )
-				System.out.println( "Thread " + _name + " successfully wrote " + clone.getUUID() + " in " + time + " sec" );
+			LOGGER.debug( "Thread " + _name + " successfully wrote " + clone.getUUID() + " in " + time + " sec" );
 			addAnnotationToPublic( annotation );
 		}
 
@@ -281,8 +282,7 @@ public class AnnotationServiceTests {
 			List<AnnotationData<?>> scan = readTile( tile );
 			long end = System.currentTimeMillis();
 			double time = ((end-start)/1000.0);
-			if ( VERBOSE )
-				System.out.println( "Thread " + _name + " read " + scan.size() + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
+			LOGGER.debug( "Thread " + _name + " read " + scan.size() + " entries from " + tile.getLevel() + ", " + tile.getX() + ", " + tile.getY() + " in " + time + " sec" );
 		}
 
 		private void modify( AnnotationWrapper annotation ) {
@@ -296,13 +296,11 @@ public class AnnotationServiceTests {
 				long end = System.currentTimeMillis();
 				double time = ((end-start)/1000.0);
 				annotation.update( newAnnotation );
-				if ( VERBOSE )
-					System.out.println( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() + " in " + time + " sec" );
+				LOGGER.debug( "Thread " + _name + " successfully modified " + newAnnotation.getUUID() + " in " + time + " sec" );
 
 			} catch (Exception e) {
 
-				if ( VERBOSE )
-					System.out.println( "Thread " + _name + " unsuccessfully modified " + newAnnotation.getUUID() );
+				LOGGER.debug( "Thread " + _name + " unsuccessfully modified " + newAnnotation.getUUID() );
 			}
 
 		}
@@ -316,13 +314,11 @@ public class AnnotationServiceTests {
 				long end = System.currentTimeMillis();
 				double time = ((end-start)/1000.0);
 				removeAnnotationFromPublic(annotation);
-				if ( VERBOSE )
-					System.out.println("Thread " + _name + " successfully removed " + clone.getUUID() + " in " + time + " sec");
+				LOGGER.debug("Thread " + _name + " successfully removed " + clone.getUUID() + " in " + time + " sec");
 
 			} catch (Exception e) {
 
-				if ( VERBOSE )
-					System.out.println("Thread " + _name + " unsuccessfully removed " + clone.getUUID() );
+				LOGGER.debug("Thread " + _name + " unsuccessfully removed " + clone.getUUID() );
 			}
 		}
 
@@ -393,8 +389,7 @@ public class AnnotationServiceTests {
 
 			long end = System.currentTimeMillis();
 			double time = ((end - start) / 1000.0);
-			if ( VERBOSE )
-				System.out.println("Completed in " + time + " seconds");
+			LOGGER.debug("Completed in " + time + " seconds");
 
 		} finally {
 
@@ -404,20 +399,17 @@ public class AnnotationServiceTests {
 				PyramidIO tileIo = config.produce( PyramidIO.class );
 				AnnotationIO dataIo = config.produce( AnnotationIO.class );
 				if ( tileIo instanceof HBasePyramidIO ) {
-					if ( VERBOSE )
-						System.out.println("Dropping tile HBase table");
+					LOGGER.debug("Dropping tile HBase table");
 					((HBasePyramidIO)tileIo).dropTable( _dataId );
 				}
 				if ( dataIo instanceof HBaseAnnotationIO ) {
-					if ( VERBOSE )
-						System.out.println("Dropping data HBase table");
+					LOGGER.debug("Dropping data HBase table");
 					((HBaseAnnotationIO)dataIo).dropTable( _dataId );
 				}
 
 				if ( tileIo instanceof FileSystemPyramidIO &&
 				     dataIo instanceof FileSystemAnnotationIO ) {
-					if ( VERBOSE )
-						System.out.println("Deleting temporary file system folders");
+					LOGGER.debug("Deleting temporary file system folders");
 					try {
 						File testDir = new File( ".\\" + _dataId );
 						for ( File f : testDir.listFiles() ) {

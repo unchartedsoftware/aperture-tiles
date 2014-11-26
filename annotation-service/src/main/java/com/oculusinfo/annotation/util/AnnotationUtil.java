@@ -34,12 +34,15 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 
 public class AnnotationUtil {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationUtil.class );
 
 	public static void printData( Map<BinIndex, List<AnnotationData<?>>> dataMap ) {
 		for ( List<AnnotationData<?>> annotations : dataMap.values() ) {
@@ -51,7 +54,7 @@ public class AnnotationUtil {
 		
 		for ( AnnotationData<?> annotation : annotations ) {				
 			try {
-				System.out.println( annotation.toJSON().toString( 4 ) );	
+				LOGGER.debug( annotation.toJSON().toString( 4 ) );
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}	
@@ -62,31 +65,31 @@ public class AnnotationUtil {
 		
 		for ( AnnotationTile tile : tiles ) {
 			try {
-				System.out.println( tileToJSON( tile ).toString( 4 ) );
+				LOGGER.debug( tileToJSON( tile ).toString( 4 ) );
 			} catch ( Exception e ) { e.printStackTrace(); }
 					
 		}
 	}
 	
 	
-	public static boolean compareData( List<AnnotationData<?>> as, List<AnnotationData<?>> bs, boolean verbose ) {
+	public static boolean compareData( List<AnnotationData<?>> as, List<AnnotationData<?>> bs ) {
 		
 		for ( AnnotationData<?> a : as ) {
 			int foundCount = 0;
 			for ( AnnotationData<?> b : bs ) {				
-				if ( compareData(a, b, false ) ) {
+				if ( compareData(a, b ) ) {
 					foundCount++;
 				}
 			}	
 			if ( foundCount != 1 ) {
-				if ( verbose ) System.out.println( "Data lists do not match" );
+				LOGGER.debug( "Data lists do not match" );
 				return false;
 			}
 		}
 		return true;
 	}
 	
-	public static boolean compareTiles( List<AnnotationTile> as, List< AnnotationTile > bs, boolean verbose ) {
+	public static boolean compareTiles( List<AnnotationTile> as, List< AnnotationTile > bs ) {
 		
 		for ( AnnotationTile a : as ) {
 			int foundCount = 0;
@@ -96,7 +99,7 @@ public class AnnotationUtil {
 				}
 			}	
 			if ( foundCount != 1 ) {
-				if ( verbose ) System.out.println( "Tile lists do not match" );
+				LOGGER.debug( "Tile lists do not match" );
 				return false;
 			}
 		}
@@ -113,50 +116,50 @@ public class AnnotationUtil {
     }
 	
 	
-	public static boolean compareData( AnnotationData<?> a, AnnotationData<?> b, boolean verbose ) {
+	public static boolean compareData( AnnotationData<?> a, AnnotationData<?> b ) {
 		
 		if ( !a.getUUID().equals( b.getUUID() ) ) {
-			if ( verbose ) System.out.println( "UUID are not equal" );
+			LOGGER.debug( "UUID are not equal" );
 			return false;
 		}
 
         if ( !compareAttributes( a.getX(), b.getX() ) ) {
-            if ( verbose ) System.out.println( "X values are not equal" );
+            LOGGER.debug( "X values are not equal" );
             return false;
 		}
 
         if ( !compareAttributes( a.getY(), b.getY() ) ) {
-            if ( verbose ) System.out.println( "Y values are not equal" );
+            LOGGER.debug( "Y values are not equal" );
             return false;
         }
 
         if ( !compareAttributes( a.getX0(), b.getX0() ) ) {
-            if ( verbose ) System.out.println( "X0 values are not equal" );
+            LOGGER.debug( "X0 values are not equal" );
             return false;
         }
 
         if ( !compareAttributes( a.getY0(), b.getY0() ) ) {
-            if ( verbose ) System.out.println( "Y0 values are not equal" );
+            LOGGER.debug( "Y0 values are not equal" );
             return false;
         }
 
         if ( !compareAttributes( a.getX1(), b.getX1() ) ) {
-            if ( verbose ) System.out.println( "X1 values are not equal" );
+            LOGGER.debug( "X1 values are not equal" );
             return false;
         }
 
         if ( !compareAttributes( a.getY1(), b.getY1() ) ) {
-            if ( verbose ) System.out.println( "Y1 values are not equal" );
+            LOGGER.debug( "Y1 values are not equal" );
             return false;
         }
 
 		if ( !a.getLevel().equals( b.getLevel() ) ) {
-			if ( verbose ) System.out.println( "Level values are not equal" );
+			LOGGER.debug( "Level values are not equal" );
 			return false;
 		}
 		
 		if ( !a.getData().toString().equals( b.getData().toString() ) ) {
-			if ( verbose ) System.out.println( "Data objects are not equal" );
+			LOGGER.debug( "Data objects are not equal" );
 			return false;
 		}		
 		return true;
@@ -169,12 +172,12 @@ public class AnnotationUtil {
 		List<Pair<String, Long>> bReferences = b.getAllCertificates();
 		
 		if ( !a.getDefinition().equals( b.getDefinition() ) ) {
-			if ( verbose ) System.out.println( "Bin indices are not equal");
+			LOGGER.debug( "Bin indices are not equal");
 			return false;
 		}
 		
 		if ( aReferences.size() != bReferences.size() ) {
-			if ( verbose ) System.out.println( "Reference counts are not equal");
+			LOGGER.debug( "Reference counts are not equal");
 			return false;		
 		}
 			
@@ -186,7 +189,7 @@ public class AnnotationUtil {
 				}
 			}		
 			if ( foundCount != 1 ) {
-				if ( verbose ) System.out.println( "Reference lists are not equal");
+				LOGGER.debug( "Reference lists are not equal");
 				return false;
 			}			
 		}
