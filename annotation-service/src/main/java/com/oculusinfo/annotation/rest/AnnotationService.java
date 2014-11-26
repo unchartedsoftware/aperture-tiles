@@ -57,7 +57,7 @@ public interface AnnotationService {
 	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
 
     /**
-     * Read annotations from the storage service
+     * Read annotations from the storage service, if no annotations are in the tile, returns null
      *
      * @param layer The layer identification string.
      * @param tile The tile index to read.

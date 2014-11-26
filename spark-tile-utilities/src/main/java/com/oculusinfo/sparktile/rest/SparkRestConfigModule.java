@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2013 Oculus Info Inc.
+/*
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -22,13 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.spark;
+package com.oculusinfo.sparktile.rest;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
+import com.oculusinfo.sparktile.rest.data.DataResource;
+import oculus.aperture.common.rest.ResourceDefinition;
 
-public class SparkModule extends AbstractModule {
+public class SparkRestConfigModule extends AbstractModule {
 	@Override
-	protected void configure () {
-		bind(SparkContextProvider.class).to(SparkContextProviderImpl.class);
+	protected void configure() {
+
+		// Bind REST endpoints for clients.
+		MapBinder<String, ResourceDefinition> resourceBinder =
+			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
+
+		resourceBinder.addBinding("/data").toInstance(new ResourceDefinition(DataResource.class));
 	}
 }

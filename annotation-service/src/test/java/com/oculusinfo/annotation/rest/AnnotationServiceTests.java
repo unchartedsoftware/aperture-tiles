@@ -45,8 +45,8 @@ import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.DefaultTileSerializerFactoryProvider;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.layer.LayerService;
@@ -429,10 +429,13 @@ public class AnnotationServiceTests {
     private List<AnnotationData<?>> readTile( TileIndex tile ) {
         List<AnnotationData<?>> annotations = new ArrayList<>();
         List<List<AnnotationData<?>>> data = _service.read( _layerId, tile, null );
-        for ( List<AnnotationData<?>> bin : data ) {
-            for ( AnnotationData<?> annotation : bin ) {
-                annotations.add( annotation );
+        if ( data != null ) {
+            for ( List<AnnotationData<?>> bin : data ) {
+                for ( AnnotationData<?> annotation : bin ) {
+                    annotations.add( annotation );
+                }
             }
+            Assert.assertTrue( validateTile( annotations ) );
         }
 		return annotations;
 	}
@@ -441,6 +444,19 @@ public class AnnotationServiceTests {
 		// scan all
 		return readTile( new TileIndex( 0, 0, 0 ) );
 	}
+
+    private boolean validateTile( List<AnnotationData<?>> annotations ) {
+        for ( int  i=0; i<annotations.size(); i++ ) {
+            for ( int  j=i+1; j<annotations.size(); j++ ) {
+                if ( annotations.get(i) == annotations.get(j) ) {
+                    // duplicate found
+                    LOGGER.error( "Duplicate instance of annotation found in same tile" );
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
 	private TileIndex getRandomTile() {
 		final int MAX_DEPTH = 4;

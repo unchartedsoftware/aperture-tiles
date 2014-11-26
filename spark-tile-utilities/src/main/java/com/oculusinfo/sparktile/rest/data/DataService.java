@@ -21,32 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init.providers;
-
-
-import com.google.inject.Inject;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.rest.tile.caching.OnDemandTilePyramidIOFactory;
-import com.oculusinfo.tile.spark.SparkContextProvider;
-
-import java.util.List;
+package com.oculusinfo.sparktile.rest.data;
 
 
 
-public class SparkAwarePyramidIOFactoryProvider implements DelegateFactoryProviderTarget<PyramidIO> {
-	@Inject
-	private SparkContextProvider _contextProvider;
+import org.json.JSONObject;
 
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-		return new OnDemandTilePyramidIOFactory(null, path, _contextProvider);
-	}
-	
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new OnDemandTilePyramidIOFactory(parent, path, _contextProvider);
-	}
+
+
+/**
+ * A simple service for direct retrieval of data from the server.
+ * 
+ * @author nkronenfeld
+ * 
+ */
+public interface DataService {
+	/**
+	 * Get raw data based on the input arguments.
+	 * 
+	 * @param dataset A description of the dataset to query
+	 * @param query A description of which data are desired.
+	 * @param getCount True if a count of the total records matching the query
+	 * @param getData True if data records should be retrieved; if false,
+	 *            getCount should be true, and matching records are counted but
+	 *            not returned.
+	 * @param requestCount The maximum number of records to return, if getData
+	 *            is true. If getData is false, this parameter is ignored.
+	 */
+	JSONObject getData (JSONObject dataset, JSONObject query, boolean getCount,
+	                    boolean getData, int requestCount);
 }

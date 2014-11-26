@@ -22,20 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.sparktile.init;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.tile.init.providers.SparkAwarePyramidIOFactoryProvider;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.sparktile.init.GraphTileSerializationFactory.GraphTileSerializationFactoryDelegate;
 
-public class SparkAwarePyramidIOFactoryModule extends AbstractModule {
-
+public class GraphSerializationFactoryModule extends AbstractModule {
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
-		factoryProviderBinder.addBinding().to(SparkAwarePyramidIOFactoryProvider.class);
+		Multibinder<DelegateFactoryProviderTarget<TileSerializer<?>>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<TileSerializer<?>>>(){});
+
+		factoryProviderBinder.addBinding().toInstance(new GraphTileSerializationFactoryDelegate());
 	}
-	
 }
