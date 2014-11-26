@@ -36,16 +36,6 @@
 			<!-- LayerConfiguration factory module - override to add custom layer configuration 
 			     parameters -->
 			com.oculusinfo.tile.init.CachingLayerConfigurationModule:
-			<!-- Annotation IO factory module - override to add custom AnnotationIO 
-			     implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
-			<!-- Annotation filter factory module - override to add custom AnnotationFilter 
-			     implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
-			<!-- Sets up the REST interface by which clients can retrieve tiles -->
-	      	com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
-		      <!-- Sets up the annotation service -->
-		    com.oculusinfo.annotation.rest.AnnotationServiceModule:
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data) -->
 			com.oculusinfo.sparktile.spark.SparkModule:
@@ -78,10 +68,7 @@
 
 	<!-- Servlet config must run on app deployment -->
 	<listener>
-		<!-- Required for some tile services, harmless in all other cases -->
-		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
 		<!-- Required with a spark connection, harmless in all other cases -->
-		<listener-class>com.oculusinfo.sparktile.SparkTileServiceConfiguration</listener-class>
+		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
 	</listener>
-
 </web-app>

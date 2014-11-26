@@ -27,6 +27,8 @@ package com.oculusinfo.sparktile.spark;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.ServletContextEvent;
 
 import org.apache.log4j.Level;
@@ -41,8 +43,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.sparktile.ServletLifecycleListener;
-import com.oculusinfo.sparktile.SparkTileServerConfiguration;
 import com.oculusinfo.tile.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
 
@@ -89,7 +89,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	                                 @Named("org.apache.spark.jobName") String jobName,
 	                                 @Named("org.apache.spark.home") String sparkHome,
 	                                 @Named("org.apache.spark.jars") String extraJars,
-	                                 SparkTileServerConfiguration config) {
+	                                 TileServiceConfiguration config) {
 		_master = master;
 		_jobName = jobName;
 		_sparkHome = sparkHome;
@@ -126,7 +126,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	}
 
 	private String getJarPathForClass (Class<?> type) {
-s	    String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
+	    String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
 	    // This whole "classes" case is to account for when we're trying to 
 	    // run from an IDE, which automatically adds projects to the class 
 	    // path.  we need class directories replaced with jars.  Note that 

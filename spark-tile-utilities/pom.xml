@@ -13,99 +13,17 @@
 	</parent>
 
 	<dependencies>
-		
 		<dependency>
-			<groupId>oculus.aperture.service</groupId>
-			<artifactId>aperture-cms</artifactId>
-			<version>${aperture-version}</version>
-			<type>jar</type>
-		</dependency>		
-			
-		<dependency>
-			<groupId>oculus.aperture</groupId>
-			<artifactId>aperture-server-core</artifactId>
-			<version>${aperture-version}</version>
-			<type>jar</type>
-		</dependency>
-		
-		<dependency>
+			<artifactId>tile-service</artifactId>
 			<groupId>com.oculusinfo</groupId>
-			<artifactId>tile-generation</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_${dependency-scala-version}</artifactId>
-			<version>${spark-version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming_${dependency-scala-version}</artifactId>
-			<version>${spark-version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-graphx_${dependency-scala-version}</artifactId>
-			<version>${spark-version}</version>
+			<classifier>classes</classifier>
 		</dependency>
 
 		<dependency>
-			<groupId>com.google.inject</groupId>
-			<artifactId>guice</artifactId>
-			<version>3.0</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.google.inject.extensions</groupId>
-			<artifactId>guice-multibindings</artifactId>
-			<version>3.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- RESTLET -->
-		<dependency>
-			<groupId>org.restlet.jee</groupId>
-			<artifactId>org.restlet</artifactId>
-			<version>2.1.2</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.restlet.jee</groupId>
-			<artifactId>org.restlet.ext.servlet</artifactId>
-			<version>2.1.2</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.5</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jul-to-slf4j</artifactId>
-			<version>1.7.5</version>
-		</dependency>
-
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.16</version>
+			<artifactId>tile-generation</artifactId>
+			<groupId>com.oculusinfo</groupId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
