@@ -24,4 +24,3 @@ grep Stage ${FILE} | grep finished | awk '\
 
 	print task, "\t", stage, "\t", time
 }'
-

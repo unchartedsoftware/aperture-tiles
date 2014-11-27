@@ -31,7 +31,7 @@
                  Transformer -->
             com.oculusinfo.tile.init.TileTransformerFactoryModule:
 			<!-- For tiling requiring a spark connection
-			     com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
+			     com.oculusinfo.sparktile.init.SparkAwarePyramidIOFactoryModule:
 			-->
 			<!-- LayerConfiguration factory module - override to add custom layer configuration 
 			     parameters -->
@@ -39,7 +39,7 @@
 
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data)
-			     com.oculusinfo.tile.spark.SparkModule:
+			     com.oculusinfo.sparktile.spark.SparkModule:
 			-->
 
 			<!-- Sets up the REST interface by which clients can retrieve tiles -->
@@ -49,11 +49,11 @@
 
 			<!-- Annotation IO factory module - override to add custom AnnotationIO 
 			implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
+			com.oculusinfo.tile.init.StandardAnnotationIOFactoryModule:
 			<!-- Sets up the REST interface by which clients can retrieve annotations -->
-			com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
+			com.oculusinfo.tile.rest.AnnotationRestConfigModule:
 			<!-- Sets up the annotation service -->
-			com.oculusinfo.annotation.rest.AnnotationServiceModule
+			com.oculusinfo.tile.rest.AnnotationServiceModule
 		</param-value>
 	</context-param>
 

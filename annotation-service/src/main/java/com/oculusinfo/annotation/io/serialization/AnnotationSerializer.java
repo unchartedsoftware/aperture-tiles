@@ -23,7 +23,7 @@
  */
 package com.oculusinfo.annotation.io.serialization;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import java.io.Serializable;
 
 public interface AnnotationSerializer extends Serializable {
 	
-    public AnnotationData<?> deserialize ( InputStream rawData ) throws IOException;
-    public void serialize (AnnotationData<?> annotation, OutputStream ouput) throws IOException;
+    public AnnotationData<?> deserialize( InputStream rawData ) throws IOException;
+    public void serialize( AnnotationData<?> annotation, OutputStream output ) throws IOException;
     
 }

@@ -144,8 +144,7 @@ object CSVBinner {
 					                                      levels,
 					                                      dataset.getNumXBins,
 					                                      dataset.getNumYBins,
-					                                      dataset.getConsolidationPartitions,
-					                                      dataset.isDensityStrip)
+					                                      dataset.getConsolidationPartitions)
 
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,

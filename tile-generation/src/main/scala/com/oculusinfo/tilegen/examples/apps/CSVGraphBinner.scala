@@ -201,19 +201,19 @@ object CSVGraphBinner {
 	}
 
 //	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
-//		
+//
 //		_graphDataType = properties.getString("oculus.binning.graph.data",
 //		                                      "The type of graph data to tile (nodes or edges). "+
 //			                                      "Default is nodes.",
 //		                                      Some("nodes"))
-//		
+//
 //		// NOTE!  currently, indexType is assumed to be cartesian for graph data
 //		//		val indexType = properties.getString("oculus.binning.index.type",
 //		//		                                     "The type of index to use in the data.  Currently "+
 //		//			                                     "suppoted options are cartesian (the default) "+
 //		//			                                     "and ipv4.",
 //		//		                                     Some("cartesian"))
-//		
+//
 //		_graphDataType match {
 //			case "nodes" => {
 //				val xVar = properties.getString("oculus.binning.xField",
@@ -261,7 +261,7 @@ object CSVGraphBinner {
 			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins, _bDrawLineEnds)
 			
 			val lenThres = if (_bDrawLineEnds) _lineMaxBins else Int.MaxValue
-			val lineDrawer = new EndPointsToLine(lenThres, dataset.getNumXBins, dataset.getNumYBins) 
+			val lineDrawer = new EndPointsToLine(lenThres, dataset.getNumXBins, dataset.getNumYBins)
 			
 			binner.debug = true
 			dataset.getLevels.map(levels =>
@@ -282,20 +282,20 @@ object CSVGraphBinner {
 						// (to be passed into processDataByLevel func)
 						val calcLinePixels = if (dataset.binTypeTag == scala.reflect.classTag[Double])	{
 							// PT is type Double, so assign line drawing func (using hard-casting)
-							val lineDrawFcn = if (_bLinesAsArcs)	
-											  	lineDrawer.endpointsToArcBins
-											  else
-												lineDrawer.endpointsToLineBins
+							val lineDrawFcn = if (_bLinesAsArcs)
+								lineDrawer.endpointsToArcBins
+							else
+								lineDrawer.endpointsToLineBins
 							lineDrawFcn.asInstanceOf[(BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]]
 						}
 						else {
 							// PT is not type Double, so don't draw lines.  Simply pass-through endpoints.
 							val passTroughFcn: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
-							(start, end, PT) => {
-								IndexedSeq((start, PT), (end, PT))
-							}
+								(start, end, PT) => {
+									IndexedSeq((start, PT), (end, PT))
+								}
 							passTroughFcn
-						}	
+						}
 						
 						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
 						
@@ -310,7 +310,6 @@ object CSVGraphBinner {
 						                                      dataset.getNumYBins,
 						                                      dataset.getConsolidationPartitions,
 						                                      calcLinePixels,
-						                                      dataset.isDensityStrip,
 						                                      bUsePointBinner,
 						                                      _bLinesAsArcs)
 						tileIO.writeTileSet(dataset.getTilePyramid,
@@ -351,8 +350,7 @@ object CSVGraphBinner {
 						                                      levels,
 						                                      dataset.getNumXBins,
 						                                      dataset.getNumYBins,
-						                                      dataset.getConsolidationPartitions,
-						                                      dataset.isDensityStrip)
+						                                      dataset.getConsolidationPartitions)
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
@@ -416,10 +414,10 @@ object CSVGraphBinner {
 			propStream.close()
 			
 			
-			// init type of graph tile generation job (nodes or edges) 
+			// init type of graph tile generation job (nodes or edges)
 			_graphDataType = Try(props.getProperty("oculus.binning.graph.data",
-		                                      "The type of graph data to tile (nodes or edges). "+
-			                                      "Default is nodes.")).getOrElse("nodes")
+			                                       "The type of graph data to tile (nodes or edges). "+
+				                                       "Default is nodes.")).getOrElse("nodes")
 
 			// init parameters for binning graph edges (note, not used for
 			// binning graph's nodes)

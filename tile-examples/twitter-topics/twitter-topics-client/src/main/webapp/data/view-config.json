@@ -1,0 +1,10 @@
+[
+	{
+		"name": "Twitter Topics",
+		"layers": [
+			"twitter-keywords-layer",
+			"twitter-heatmap-layer"
+		],
+		"map": "geographic-map"
+	}
+]

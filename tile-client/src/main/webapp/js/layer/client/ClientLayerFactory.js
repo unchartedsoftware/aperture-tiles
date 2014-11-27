@@ -31,6 +31,7 @@ define( function (require) {
 
 	var LayerFactory = require('../LayerFactory'),
 	    ClientLayer = require('./ClientLayer'),
+        TileService = require('./TileService'),
 	    loadModule,
 	    loadAllModules,
 	    assembleViews,
@@ -118,6 +119,7 @@ define( function (require) {
             renderer,
             detailsSpec,
             details,
+            service,
             view,
             views = [],
             i;
@@ -138,13 +140,27 @@ define( function (require) {
 
         for (i=0; i<layerJSON.views.length; i++) {
             view = layerJSON.views[i];
+
+            // create details object
             detailsSpec = view.details;
             details = assembleDetails( detailsSpec );
+            if ( details ) {
+                // if details is available, add meta
+                details.meta = view.source.meta.meta;
+            }
+
+            // create renderer object
             rendererSpec = view.renderer;
             rendererSpec.spec.details = details;
             renderer = new loadedModules[ rendererSpec.type ]( map, rendererSpec.spec );
+            renderer.meta = view.source.meta.meta;
+
+            // create tile service object
+            service = new TileService( view.source, map.getPyramid() );
+
             views.push({
-                id: view.layer,
+                service: service,
+                source: view.source,
                 details: details,
                 renderer: renderer
             });
@@ -174,11 +190,7 @@ define( function (require) {
                 views = assembleViews( layerJSON, map );
                 // create the layer
                 clientLayer = new ClientLayer( layerJSON, views, map );
-                // send configuration request
-                clientLayer.configure( function() {
-                    // resolve deferred
-                    clientLayerDeferred.resolve( clientLayer );
-                });
+                clientLayerDeferred.resolve( clientLayer );
             });
 
             return clientLayerDeferred;

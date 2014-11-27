@@ -39,12 +39,12 @@ import java.util.Map;
  * Fluent tool for loading up a set of avro schemas and generating a composite
  * from them based on alias resolution
  * 
- * Usage notes: Schemas may not be mutually recursive Leaf schemas must be fully
- * defined Schemas must be inserted from leaves up Alias references must be
- * fully qualified
+ * Usage notes: Schemas may not be mutually recursive. Leaf schemas must be fully
+ * defined. Schemas must be inserted from leaves up. Alias references must be
+ * fully qualified.
  * 
  * Based on http://www.infoq.com/articles/ApacheAvro.
- * **/
+ */
 public class AvroSchemaComposer {
 
 	private final Map<String, Schema> schemas    = new HashMap<String, Schema>();

@@ -23,16 +23,13 @@
  */
 package com.oculusinfo.annotation.filter;
 
-import java.util.List;
-
-import com.oculusinfo.annotation.data.AnnotationBin;
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationBin;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.filter.impl.FilteredBinResults;
 
+import java.util.List;
 
-/**
- * This class represents a single annotation
- */
+
 public interface AnnotationFilter {
     
 	public FilteredBinResults filterBins( List<AnnotationBin> bin );

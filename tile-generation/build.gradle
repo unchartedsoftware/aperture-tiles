@@ -1,5 +1,8 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 description = "A Spark-based library to aid in easy tile and tile pyramid generation"
 
+// Configure for scala compilation via the scala plugin
 apply plugin: "scala"
 
 // appends scala test functionality to the baseline test task
@@ -10,7 +13,7 @@ test << {
 	}
 }
 
-// Task to create a JAR from all source
+// Task to create a JAR from all source (scala and java)
 task sourcesJar(type: Jar, dependsOn: classes) {
 	classifier = "sources"
 	from sourceSets.main.allSource
@@ -33,7 +36,7 @@ task testJar(type: Jar) {
 	classifier = "tests"
 	from sourceSets.test.output
 }
- 
+
 // produce artifacts using the tasks above
 artifacts {
 	archives sourcesJar
@@ -42,11 +45,54 @@ artifacts {
 	archives testJar
 }
 
+// Add a delete to the clean task that will remove the scripts directory if it exists.  Would
+// be better to be able to do this using wildcards, but it doesn't seem to be supported by the 
+// Gradle API.  One alternative would be to use the fileset api, which allows for a filtering
+// operation. 
+clean {
+	inputs.files "src/main/resources/build.properties", 
+		"scripts/spark-run", 
+		"scripts/spark-run.cmd", 
+		"scripts/spark-shell"
+	delete "src/main/resources/build.properties",
+		"scripts/spark-run",
+		"scripts/spark-run.cmd",
+		"scripts/spark-shell"
+}
+
+// Copy and filter resources files.  This uses a baseline copy task, and applies
+// Ant's token functionality to filter values.
+task copyFilteredResources(type: Copy) {	
+	from "src/main/filtered-resources-gradle"
+	into "src/main/resources"
+	filter ReplaceTokens, tokens:[
+		"project-version": version.toString(),
+		"hadoop-core-version": hadoopCoreVersion.toString(),
+		"hbase-version": hbaseVersion.toString()		
+	]
+}
+
+task copyFilteredScripts (type: Copy) {
+	from "src/main/filtered-scripts-gradle"
+	into "scripts"
+	filter ReplaceTokens, tokens:[
+		"project-version": version.toString(),
+		"hbase-version": hbaseVersion.toString(),
+		"scala-version": hbaseVersion.toString(),
+		"hbase-jars": getHBaseJarStrings().toString()
+	]
+}
+// Make sure the above tasks run before resource processing.
+processResources.dependsOn copyFilteredResources, copyFilteredScripts
+
+
+ 
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
 // in our setup because the scala code in this project is used by the java code (causing 
 // compile errors).  We force the plugin to use an empty source set for java, and then set the
 // scala source to both scala and java.  The scala compiler generates class files for both without
-// issue.  
+// issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
+// scala and java in the same project.  
 sourceSets {
     main {
         scala {
@@ -58,6 +104,7 @@ sourceSets {
     }
 }
 
+// Jars / projects this project depends on.
 dependencies {
 	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
@@ -65,6 +112,10 @@ dependencies {
 	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
 	compile "org.scala-lang:scala-library:$scalaVersion"
 	compile project(":binning-utilities")
+	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:1.9.1"	
+	
+	// Call for special handling for hbase dependencies - see top level build file for
+	// definition and explanation.
+	addHBaseDependencies()
 }
-addHBaseDependencies(project)

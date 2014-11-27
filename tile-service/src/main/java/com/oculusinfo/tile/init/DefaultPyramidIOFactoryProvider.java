@@ -36,6 +36,7 @@ import com.oculusinfo.binning.io.impl.ResourcePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.ZipPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 
 
 
@@ -60,42 +61,42 @@ public enum DefaultPyramidIOFactoryProvider implements DelegateFactoryProviderTa
 				return new HBasePyramidIOFactory(parent, path);
 			}
 		}),
-		FILE(new Constructor() {
-				@Override
-				public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-					return new FileSystemPyramidIOFactory(parent, path);
-				}
-			}),
-		JDBC(new Constructor() {
-				@Override
-				public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-					return new JDBCPyramidIOFactory(parent, path);
-				}
-			}),
-		RESOURCE(new Constructor() {
-				@Override
-				public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-					return new ResourcePyramidIOFactory(parent, path);
-				}
-			}),
-		ZIP(new Constructor() {
-				@Override
-				public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-					return new ZipPyramidIOFactory(parent, path);
-				}
-			}),
-		SQLITE(new Constructor() {
-				@Override
-				public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-					return new SQLitePyramidIOFactory(parent, path);
-				}
-			}),
-		DUMMY(new Constructor() {
-				@Override
-				public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-					return new DummyPyramidIOFactory(parent, path);
-				}
-			});
+    FILE(new Constructor() {
+            @Override
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+                return new FileSystemPyramidIOFactory(parent, path);
+            }
+        }),
+    JDBC(new Constructor() {
+            @Override
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+                return new JDBCPyramidIOFactory(parent, path);
+            }
+        }),
+    RESOURCE(new Constructor() {
+            @Override
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+                return new ResourcePyramidIOFactory(parent, path);
+            }
+        }),
+    ZIP(new Constructor() {
+            @Override
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+                return new ZipPyramidIOFactory(parent, path);
+            }
+        }),
+    SQLITE(new Constructor() {
+            @Override
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+                return new SQLitePyramidIOFactory(parent, path);
+            }
+        }),
+    DUMMY(new Constructor() {
+            @Override
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+                return new DummyPyramidIOFactory(parent, path);
+            }
+        });
 
 
 	// -------------------------------------

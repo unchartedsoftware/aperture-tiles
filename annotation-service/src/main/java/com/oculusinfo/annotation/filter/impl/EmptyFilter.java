@@ -23,14 +23,14 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
+import com.oculusinfo.annotation.AnnotationBin;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.filter.AnnotationFilter;
+import com.oculusinfo.binning.util.Pair;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import com.oculusinfo.annotation.data.AnnotationBin;
-import com.oculusinfo.annotation.data.AnnotationData;
-import com.oculusinfo.annotation.filter.AnnotationFilter;
-import com.oculusinfo.binning.util.Pair;
 
 
 /**

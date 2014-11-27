@@ -9,7 +9,6 @@
 			backface-visibility: hidden;
 }
 
-
 .topics-label {
 	position: absolute;
 	width: 100%;
@@ -18,28 +17,42 @@
 	font-size: 28px;
 	line-height: 18px;
 	height:18px;
-	color: white;
-	-webkit-transition: -webkit-transform 0.1s ease-in-out;
-       -moz-transition:    -moz-transform 0.1s ease-in-out;
-       	-ms-transition:     -ms-transform 0.1s ease-in-out;
-            transition:         transform 0.1s ease-in-out;
-	-webkit-transform: scale(0.75);
-       -moz-transform: scale(0.75);
-        -ms-transform: scale(0.75);
-            transform: scale(0.75);
 }
 
+.dark-theme .topics-label {
+	color: #fff;
+	text-shadow: -1px -1px 0 #000,
+	              1px -1px 0 #000,
+	             -1px  1px 0 #000,
+	              1px  1px 0 #000,
+	              1px  0   0 #000,
+	             -1px  0   0 #000,
+	              0    1px 0 #000,
+	              0   -1px 0 #000;
+}
+
+.light-theme .topics-label {
+	color: #000;
+	text-shadow: -1px -1px 0 #fff,
+	              1px -1px 0 #fff,
+	             -1px  1px 0 #fff,
+	              1px  1px 0 #fff,
+	              1px  0   0 #fff,
+	             -1px  0   0 #fff,
+	              0    1px 0 #fff,
+	              0   -1px 0 #fff;
+}
 
 .topics-label:hover {
 	cursor: pointer;
-	-webkit-filter: grayscale(0) brightness(1);
-	-webkit-transform: scale(1);
-       -moz-transform: scale(1);
-        -ms-transform: scale(1);
-            transform: scale(1);
+	color: #D33CFF;
 }
 
-.clicked {
-
-	color: blue;
+.dark-theme .topics-label.clicked {
+	color: #09CFFF;
 }
+
+.light-theme .topics-label.clicked {
+	color: #09CFFF;
+}
+

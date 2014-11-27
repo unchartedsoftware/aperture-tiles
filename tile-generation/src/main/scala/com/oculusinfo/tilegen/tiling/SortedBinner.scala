@@ -40,7 +40,6 @@ import org.apache.spark.rdd.RDD
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.datasets.Dataset
@@ -94,8 +93,7 @@ class SortedBinner {
 		 levels: Seq[Int],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
-		 consolidationPartitions: Option[Int] = None,
-		 isDensityStrip: Boolean = false):
+		 consolidationPartitions: Option[Int] = None):
 			RDD[TileData[BT]] =
 	{
 		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
@@ -110,7 +108,7 @@ class SortedBinner {
 				)
 			}
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
-		            mapOverLevels, xBins, yBins, consolidationPartitions, isDensityStrip)
+		            mapOverLevels, xBins, yBins, consolidationPartitions)
 	}
 
 
@@ -140,8 +138,7 @@ class SortedBinner {
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
-		 consolidationPartitions: Option[Int] = None,
-		 isDensityStrip: Boolean = false):
+		 consolidationPartitions: Option[Int] = None):
 			RDD[TileData[BT]] =
 	{
 		// Combine two tiles, assuming they have the same tile index

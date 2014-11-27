@@ -23,18 +23,13 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONObject;
-
-import com.oculusinfo.annotation.data.AnnotationBin;
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationBin;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.binning.util.Pair;
+import org.json.JSONObject;
+
+import java.util.*;
 
 public class NMostRecentByGroupFilter implements AnnotationFilter {
 

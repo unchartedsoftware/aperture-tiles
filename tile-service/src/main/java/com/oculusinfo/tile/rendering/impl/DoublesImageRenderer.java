@@ -36,7 +36,7 @@ import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +49,7 @@ import java.util.List;
  * @author  dgray
  */
 public class DoublesImageRenderer implements TileDataImageRenderer {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 	public static Class<Double> getRuntimeBinClass () {
@@ -75,10 +76,10 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	 */
 	@Override
 	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
 		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<Double, Double>(minimumValue,  maximumValue);
+		return new Pair<>(minimumValue,  maximumValue);
 	}
 
 	/* (non-Javadoc)
@@ -87,7 +88,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	@Override
 	public BufferedImage render (LayerConfiguration config) {
 		BufferedImage bi;
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
+		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
+        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
 			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -99,7 +101,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-			IValueTransformer t = config.produce(IValueTransformer.class);
+            @SuppressWarnings("unchecked")
+			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 
 			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
@@ -116,13 +119,13 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			// Get the coarseness-scaled true tile index
 			TileIndex scaleLevelIndex = null;
-			// need to get the tile data for the level of the base level minus the courseness
-			for (int coursenessLevel = coarseness - 1; coursenessLevel >= 0; --coursenessLevel) {
-				scaleLevelIndex = new TileIndex(index.getLevel() - coursenessLevel,
+			// need to get the tile data for the level of the base level minus the coarseness
+			for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
+				scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
 				                                (int)Math.floor(index.getX() / coarsenessFactor),
 				                                (int)Math.floor(index.getY() / coarsenessFactor));
 
-				tileDatas = pyramidIO.readTiles(layer, serializer, Collections.singleton(scaleLevelIndex));
+				tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
 				if (tileDatas.size() >= 1) {
 					//we got data for this level so use it
 					break;
@@ -131,7 +134,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
 			if (tileDatas.size() < 1) {
-				LOGGER.info("Missing tile " + index + " for layer " + layer);
+				LOGGER.info("Missing tile " + index + " for layer " + layerId);
 				return null;
 			}
 
@@ -192,7 +195,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 		} catch (Exception e) {
-			LOGGER.debug("Tile is corrupt: " + layer + ":" + index);
+			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
 			LOGGER.debug("Tile error: ", e);
 			bi = null;
 		}
