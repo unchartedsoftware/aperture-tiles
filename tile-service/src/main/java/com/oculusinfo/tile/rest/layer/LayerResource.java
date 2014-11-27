@@ -38,7 +38,6 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,34 +131,6 @@ public class LayerResource extends ApertureServerResource {
         } catch (JSONException e) {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
                                         "Unable to create JSON object from supplied options string",
-                                        e);
-        }
-    }
-
-    /**
-     * POST request. Saves a configuration state on the server. Returns a deterministic
-     * SHA-256 hash of the layer configuration.
-     */
-    @Post
-    public Representation configureLayer( String jsonArguments ) {
-        try {
-            String version = (String) getRequest().getAttributes().get("version");
-            if ( version == null ) {
-                version = LayerConfiguration.DEFAULT_VERSION;
-            }
-            String layerURN = (String) getRequest().getAttributes().get("layer");
-            JSONObject arguments = new JSONObject(jsonArguments);
-            String sha = _service.configureLayer( layerURN, arguments );
-
-            JSONObject result = new JSONObject();
-            result.put( "sha", sha );
-            result.put( "version", version );
-            return new JsonRepresentation( result );
-
-        } catch ( Exception e ) {
-            LOGGER.warn("Bad layers request: {}", jsonArguments, e);
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                                        "Unable to configure service options string",
                                         e);
         }
     }

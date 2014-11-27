@@ -70,7 +70,14 @@ public interface LayerService {
      * @param layerId The layer identification string
      * @param overrideConfiguration Additional query parameters to override
      */
-    public String configureLayer( String layerId, JSONObject overrideConfiguration ) throws Exception;
+    public String saveLayerState( String layerId, JSONObject overrideConfiguration ) throws Exception;
+
+    /**
+     * Returns a JSONObject containing the default configuration and all saved configurations
+     * under the provided layer id.
+     * @param layerId The layer identification string
+     */
+    public JSONObject getLayerStates( String layerId );
 
     /**
      * Returns the meta-data associated with the given layer

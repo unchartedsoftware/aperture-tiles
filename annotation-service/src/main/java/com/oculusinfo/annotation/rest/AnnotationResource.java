@@ -123,7 +123,7 @@ public class AnnotationResource extends ApertureServerResource {
 
             JSONObject decodedQueryParams = null;
             if ( getRequest().getResourceRef().hasQuery() ) {
-                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
+                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery() );
             }
 
 			int zoomLevel = Integer.parseInt(levelDir);
