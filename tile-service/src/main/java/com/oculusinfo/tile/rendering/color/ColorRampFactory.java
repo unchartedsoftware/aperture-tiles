@@ -49,7 +49,7 @@ import com.oculusinfo.tile.rendering.color.impl.WareColorRamp;
 
 public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 
-	public static final StringProperty RAMP_TYPE = new StringProperty("ramp", "The desired type of color ramp", "ware");
+	public static final StringProperty RAMP_TYPE = new StringProperty("ramp", "The desired type of color ramp", "spectral");
 	public static final DoubleProperty OPACITY = new DoubleProperty("opacity", "The opacity with which a layer is displayed.", 1.0);
 	public static final StringProperty COLOR1 = new StringProperty("from", "A standard HTML description of the primary color for this ramp.  Used by flat and single-gradient ramp types.", "0xffffff");
 	public static final IntegerProperty ALPHA1 = new IntegerProperty("from-alpha", "The opacity (0-255) of the primary color for this ramp.  Used by single-gradient ramps only.  -1 to use the base opacity.", -1);
