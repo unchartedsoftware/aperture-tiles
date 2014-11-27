@@ -86,8 +86,9 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
       TileIndex index,
       int outputWidth,
       int outputHeight,
-      int rangeMax,
       int rangeMin,
+      int rangeMax,
+      double minimumValue,
       double maximumValue,
       TileIndex scaleLevelIndex,
       ValueTransformer<Double> t,
@@ -97,8 +98,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
   ) throws Exception {
     int[] rgbArray = new int[outputWidth * outputHeight];
 
-    double scaledLevelMaxFreq = t.transform(maximumValue) * rangeMax / 100;
-    double scaledLevelMinFreq = t.transform(maximumValue) * rangeMin / 100;
+    double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
+    double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 
     int xBins = data.getDefinition().getXBins();
     int yBins = data.getDefinition().getYBins();
@@ -172,13 +173,10 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 			double maximumValue = getLevelExtrema(config).getSecond();
+      double minimumValue = getLevelExtrema(config).getFirst();
 
       @SuppressWarnings("unchecked")
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
-			int[] rgbArray = new int[outputWidth*outputHeight];
-
-			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
 
 			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
 
@@ -214,7 +212,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			TileData<Double> data = tileDatas.get(0);
       BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
-      renderToBuffer(index, outputWidth, outputHeight, rangeMax, rangeMin, maximumValue, scaleLevelIndex, t, data, colorRamp, bi);
+      renderToBuffer(index, outputWidth, outputHeight, rangeMin, rangeMax, minimumValue, maximumValue, scaleLevelIndex, t, data, colorRamp, bi);
       return bi;
 		} catch (Exception e) {
 			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);

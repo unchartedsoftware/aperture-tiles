@@ -100,8 +100,9 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             TileIndex index,
             int outputWidth,
             int outputHeight,
-            int rangeMax,
             int rangeMin,
+            int rangeMax,
+            double minimumValue,
             double maximumValue,
             TileIndex scaleLevelIndex,
             ValueTransformer<Double> t,
@@ -113,8 +114,8 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 
         int[] rgbArray = new int[outputWidth * outputHeight];
 
-        double scaledLevelMaxFreq = t.transform(maximumValue) * rangeMax / 100;
-        double scaledLevelMinFreq = t.transform(maximumValue) * rangeMin / 100;
+        double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
+        double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
 
         @SuppressWarnings("unchecked")
         TileData<List<Double>> transformedContents = tileTransformer.transform(data);
@@ -199,6 +200,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
             int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
             double maximumValue = getLevelExtrema(config).getSecond();
+            double minimumValue = getLevelExtrema(config).getFirst();
 
             @SuppressWarnings("unchecked")
             ValueTransformer<Double> t = config.produce(ValueTransformer.class);
@@ -240,7 +242,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
               return null;
             }
 
-            renderToBuffer(index, outputWidth, outputHeight, rangeMax, rangeMin, maximumValue, scaleLevelIndex, t, tileDatas.get(0), tileTransformer, colorRamp, bi);
+            renderToBuffer(index, outputWidth, outputHeight, rangeMin, rangeMax, minimumValue, maximumValue, scaleLevelIndex, t, tileDatas.get(0), tileTransformer, colorRamp, bi);
             return bi;
         } catch (Exception e) {
             LOGGER.error("Tile error: " + layerId + ":" + index, e);
