@@ -225,7 +225,7 @@ public class LayerServiceImpl implements LayerService {
             for ( Map.Entry<String, JSONObject> entry : _layersBySha.entrySet() ) {
                 String key = entry.getKey();
                 JSONObject value = entry.getValue();
-                states.put( key, getLayerConfiguration( layerId, value )
+                states.put( key, getLayerConfiguration( layerId, value.getJSONObject("public") )
                         .getExplicitConfiguration()
                         .getJSONObject("public") ); // only return public node
             }
