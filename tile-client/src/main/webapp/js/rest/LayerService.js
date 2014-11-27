@@ -77,11 +77,27 @@ define( function() {
          * @param params    {Object}   layer configuration parameters
          * @param [success] {Function} function called after success received (optional)
          */
-        configureLayer: function( layerId, params, success ) {
+        saveLayerState: function( layerId, params, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/layer/' + layerId,
-                params
+                'rest/v1.0/layer/' + layerId + '/state',
+                JSON.stringify( params )
+            ).then(
+                _success,
+                handleError
+            );
+        },
+
+        /**
+         * Get all configuration states for a layer on the server.
+         *
+         * @param layerId   {String}   layer id
+         * @param [success] {Function} function called after success received (optional)
+         */
+        getLayerStates: function( layerId, success ) {
+            var _success = ( typeof success === "function" ) ? success : null;
+            $.get(
+                'rest/v1.0/layer/' + layerId + '/state'
             ).then(
                 _success,
                 handleError

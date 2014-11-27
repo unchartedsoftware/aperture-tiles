@@ -62,11 +62,11 @@ define( function() {
                 this.dataRequest = $.ajax({
                     url: this.url
                 }).then(
-                    function(data) {
+                    function( data ) {
                         that.tileData = data;
                         that.renderTile( that.div, that.tileData );
                     },
-                    function(jqXHR, status, error) {
+                    function( xhr, status, error ) {
                         // TODO handle error
                         return true;
                     }

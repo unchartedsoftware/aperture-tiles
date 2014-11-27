@@ -40,8 +40,7 @@ define( function( require ) {
      */
     requestRampImage = function( layer ) {
         LegendService.getEncodedImage( layer.spec.source.id, {
-                renderer: layer.spec.renderer,
-                theme: layer.spec.theme
+                renderer: layer.spec.renderer
             }, function ( legendString ) {
                  layer.setRampImageUrl( legendString );
             });
@@ -305,13 +304,29 @@ define( function( require ) {
      * Generate query parameters based on state of layer
      */
     ServerLayer.prototype.getQueryParamString = function() {
+        function encodeQueryParams( params ) {
+            var query;
+            function traverseParams( params, query ) {
+                var result = "";
+                _.forIn( params, function( value, key ) {
+                    if ( typeof value !== "object" ) {
+                        result += query + key + '=' + value + "&";
+                    } else {
+                        result += traverseParams( params[ key ], query + key + "." );
+                    }
+                });
+                return result;
+            }
+            query = "?" + traverseParams( params, '' );
+            return query.slice( 0, query.length - 1 );
+        }
         var query = {
                 renderer: this.spec.renderer,
                 tileTransform: this.spec.tileTransform,
-                valueTransform: this.spec.valueTransform,
-                theme: this.spec.theme
+                valueTransform: this.spec.valueTransform
             };
-        return '?'+encodeURIComponent( JSON.stringify( query ) );
+
+        return encodeQueryParams( query );
     };
 
     return ServerLayer;

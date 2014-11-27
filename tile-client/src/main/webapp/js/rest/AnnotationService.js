@@ -27,12 +27,28 @@ define( function() {
     "use strict";
 
     /**
-     * Private: encodes parameter object into query parameter string.
+     * Private: encodes parameter object into a dot notation query
+     * parameter string.
      *
      * @param params {Object} parameter object
      */
     function encodeQueryParams( params ) {
-        return params ? '?' + encodeURIComponent( JSON.stringify( params ) ) : '';
+        var query;
+        function traverseParams( params, query ) {
+            var result = "";
+            _.forIn( params, function( value, key ) {
+                if ( value instanceof Array ) {
+                    result += query + key + '=' + value.join(',') + "&";
+                } else if ( typeof value !== "object" ) {
+                    result += query + key + '=' + value + "&";
+                } else {
+                    result += traverseParams( params[ key ], query + key + "." );
+                }
+            });
+            return result;
+        }
+        query = "?" + traverseParams( params, '' );
+        return query.slice( 0, query.length - 1 );
     }
 
     /**
@@ -83,11 +99,11 @@ define( function() {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
                 'rest/v1.0/annotation/',
-                {
+                JSON.stringify({
                     type: "write",
                     annotation: annotation,
                     layer: layerId
-                }
+                })
             ).then(
                 _success,
                 handleError
@@ -105,11 +121,11 @@ define( function() {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
                 'rest/v1.0/annotation/',
-                {
+                JSON.stringify({
                     type: "modify",
                     annotation: annotation,
                     layer: layerId
-                }
+                })
             ).then(
                 _success,
                 handleError
@@ -127,11 +143,11 @@ define( function() {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
                 'rest/v1.0/annotation/',
-                {
+                JSON.stringify({
                     type: "remove",
                     certificate: certificate,
                     layer: layerId
-                }
+                })
             ).then(
                 _success,
                 handleError
