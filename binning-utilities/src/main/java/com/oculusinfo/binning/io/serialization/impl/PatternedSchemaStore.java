@@ -25,18 +25,25 @@
 package com.oculusinfo.binning.io.serialization.impl;
 
 import com.oculusinfo.binning.io.serialization.AvroSchemaComposer;
+
 import org.apache.avro.Schema;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This class stores, retrieves, and constructs standardized, patterned schema
  * based on passed-in arguments, only constructing them as necessary.
  */
 public class PatternedSchemaStore {
-    private String _pattern;
+    private String              _pattern;
     private Map<Object, Schema> _schema;
+    private ReadWriteLock       _lock;
+
+
 
     /**
      * Create a schema store based off a given pattern.
@@ -48,6 +55,7 @@ public class PatternedSchemaStore {
     public PatternedSchemaStore(String pattern) {
         _pattern = pattern;
         _schema = new HashMap<>();
+        _lock = new ReentrantReadWriteLock();
     }
 
     /**
@@ -60,15 +68,27 @@ public class PatternedSchemaStore {
      * @return A schema based of our pattern and the given arguments.
      */
     public Schema getSchema (Object key, Object... arguments) {
-        if (!_schema.containsKey(key)) {
-            synchronized (this) {
-                if (!_schema.containsKey(key)) {
-                    String substituted = String.format(_pattern, arguments);
-                    Schema resolved = new AvroSchemaComposer().add(substituted).resolved();
-                    _schema.put(key, resolved);
+        _lock.readLock().lock();
+        try {
+            if (!_schema.containsKey(key)) {
+                // Can't upgrade lock - must release and re-obtain.
+                _lock.readLock().unlock();
+                _lock.writeLock().lock();
+                try {
+                    if (!_schema.containsKey(key)) {
+                        String substituted = String.format(_pattern, arguments);
+                        Schema resolved = new AvroSchemaComposer().add(substituted).resolved();
+                        _schema.put(key, resolved);
+                    }
+                } finally {
+                    // but we can down-grade the lock when we're done, so we leave this if block in the same state we entered.
+                    _lock.readLock().lock();
+                    _lock.writeLock().unlock();
                 }
             }
+            return _schema.get(key);
+        } finally {
+            _lock.readLock().unlock();
         }
-        return _schema.get(key);
     }
 }
