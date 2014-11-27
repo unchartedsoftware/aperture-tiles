@@ -60,7 +60,7 @@ public class StateResource extends ApertureServerResource {
             JSONObject result = new JSONObject();
             result.put( "states", _service.getLayerStates( layerId ) );
             result.put( "version", version );
-            setStatus(Status.SUCCESS_OK);
+            setStatus(Status.SUCCESS_CREATED);
             return new JsonRepresentation( result );
         } catch ( Exception e ) {
             LOGGER.warn("Bad layer states request: ", e);
