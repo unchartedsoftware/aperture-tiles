@@ -163,8 +163,8 @@ public class LayerServiceImpl implements LayerService {
             // first check if the query parameters contains a SHA-256 hash. If so
             // load the configured JSONObject. Otherwise take the server default.
             JSONObject layerConfig;
-            if ( requestParams != null && requestParams.has("sha") ) {
-                layerConfig = _layersBySha.get( requestParams.getString("sha") );
+            if ( requestParams != null && requestParams.has("state") ) {
+                layerConfig = _layersBySha.get( requestParams.getString("state") );
             } else {
                 layerConfig = _layersById.get( layerId );
             }
