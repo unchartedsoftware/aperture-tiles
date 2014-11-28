@@ -57,7 +57,19 @@ require(['./util/Util',
             LayerService.getLayers( function( layers ) {
 
                 // parse layers into nicer format
-                layers = LayerUtil.parse( layers );
+                layers = LayerUtil.parse( layers.layers );
+
+                LayerService.getLayerStates( "tweet-heatmap", function( data ) {
+                    console.log( "before save: ");
+                    console.log( JSON.stringify( data.states ) );
+                });
+
+                LayerService.saveLayerState( "tweet-heatmap", { renderer: { ramp: 'hot' } }, function( data ) {
+                    LayerService.getLayerStates( "tweet-heatmap", function( data ) {
+                        console.log( "after save: ");
+                        console.log( JSON.stringify( data.states ) );
+                    });
+                });
 
                 var map,
                     baseLayer,

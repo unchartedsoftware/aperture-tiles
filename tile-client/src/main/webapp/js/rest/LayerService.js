@@ -46,7 +46,7 @@ define( function() {
         getLayers: function( success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.get(
-                'rest/v1.0/layer'
+                'rest/v1.0/layers'
             ).then(
                 _success,
                 handleError
@@ -63,7 +63,7 @@ define( function() {
         getLayer: function( layerId, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.get(
-                'rest/v1.0/layer/' + layerId
+                'rest/v1.0/layers/' + layerId
             ).then(
                 _success,
                 handleError
@@ -80,7 +80,7 @@ define( function() {
         saveLayerState: function( layerId, params, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/layer/' + layerId + '/state',
+                'rest/v1.0/layers/' + layerId + '/states',
                 JSON.stringify( params )
             ).then(
                 _success,
@@ -97,7 +97,7 @@ define( function() {
         getLayerStates: function( layerId, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.get(
-                'rest/v1.0/layer/' + layerId + '/state'
+                'rest/v1.0/layers/' + layerId + '/states'
             ).then(
                 _success,
                 handleError
