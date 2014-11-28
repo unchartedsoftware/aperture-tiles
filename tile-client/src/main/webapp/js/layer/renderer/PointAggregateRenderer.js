@@ -28,25 +28,34 @@ define( function( require ) {
 
     var Renderer = require('./Renderer');
 
-    function PointRenderer( spec ) {
+    function PointAggregateRenderer( spec ) {
         Renderer.call( this, spec );
         this.setStyles();
     }
 
-    PointRenderer.prototype = Object.create( Renderer.prototype );
+    PointAggregateRenderer.prototype = Object.create( Renderer.prototype );
 
-    PointRenderer.prototype.setStyles = function() {
+    PointAggregateRenderer.prototype.setStyles = function() {
         var i;
         if ( this.spec.point.themes ) {
             for (i = 0; i < this.spec.point.themes.length; i++) {
                 this.spec.point.themes[i].injectTheme({
-                    selector: ".point-annotation"
+                    selector: ".point-annotation-fill",
+                    parentSelector: ".point-annotation-aggregate"
+                });
+            }
+        }
+        if ( this.spec.aggregate.themes ) {
+            for (i = 0; i < this.spec.aggregate.themes.length; i++) {
+                this.spec.aggregate.themes[i].injectTheme({
+                    selector: ".point-annotation-border",
+                    parentSelector: ".point-annotation-aggregate"
                 });
             }
         }
     };
 
-    PointRenderer.prototype.createHtml = function( data ) {
+    PointAggregateRenderer.prototype.createHtml = function( data ) {
 
         var //spec = this.spec,
             //meta = this.meta[ this.map.getZoom() ],
@@ -68,6 +77,7 @@ define( function( require ) {
             if ( value.length === 0 ) {
                 continue;
             }
+            html += '<div class="point-annotation-aggregate">';
 
             for ( j=0; j<value.length; j++ ) {
 
@@ -84,15 +94,21 @@ define( function( require ) {
                 positionKey = Math.floor( offset.x ) + "," + Math.floor( offset.y );
                 if ( !positionMap[ positionKey ] ) {
                     positionMap[ positionKey ] = true;
-                    html += '<div class="point-annotation point-annotation-single" style="'
+                    html += '<div class="point-annotation point-annotation-fill" style="'
+                          + 'left:' + offset.x + 'px;'
+                          + 'top:' + offset.y + 'px;'
+                          + 'border-width: 2px;"></div>'
+                          + '<div class="point-annotation point-annotation-border" style="'
                           + 'left:' + offset.x + 'px;'
                           + 'top:' + offset.y + 'px;'
                           + 'border-width: 2px"></div>';
                 }
             }
+
+            html += '</div>';
         }
         return html;
     };
 
-    return PointRenderer;
+    return PointAggregateRenderer;
 });

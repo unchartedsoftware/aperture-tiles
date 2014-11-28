@@ -10,8 +10,17 @@ div.olMapViewport {
 }
 
 div.olLayerDiv {
+    pointer-events: none;
    -moz-user-select: none;
    -khtml-user-select: none;
+}
+
+.olLayerGrid .olTileImage {
+    pointer-events: none;
+}
+
+.olLayerGrid .olTileHtml {
+    pointer-events: none;
 }
 
 .olLayerGoogleCopyright {
@@ -477,6 +486,13 @@ a.olControlZoomOut {
  */
 
 .olLayerGrid .olTileImage {
+    -webkit-transition: opacity 0.2s linear;
+    -moz-transition: opacity 0.2s linear;
+    -o-transition: opacity 0.2s linear;
+    transition: opacity 0.2s linear;
+}
+
+.olLayerGrid .olTileHtml {
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;

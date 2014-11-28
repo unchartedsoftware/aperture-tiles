@@ -33,8 +33,10 @@ define( function( require ) {
         this.getURL = options.getURL;
         this.layername = options.layername;
         this.type = options.type;
-        this.tileClass = HtmlTile; //OpenLayers.Tile.Html;
+        this.tileClass = HtmlTile;
         this.html = options.html;
+        this.renderer = options.renderer;
+        this.entry = options.entry;
         this.CLASS_NAME = 'OpenLayers.Layer.Html';
     };
 

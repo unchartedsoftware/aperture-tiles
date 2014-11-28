@@ -26,36 +26,44 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil'),
+    var Renderer = require('./Renderer'),
+        RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 8;
 
     function TextByFrequencyRenderer( spec ) {
+        Renderer.call( this, spec );
+        this.setStyles();
+    }
+
+    TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
+
+    TextByFrequencyRenderer.prototype.setStyles = function() {
         var i;
-        this.spec = spec;
-        if ( spec.themes ) {
-            for ( i=0; i<spec.themes.length; i++ ) {
-                spec.themes[i].injectTheme({
-                    elemClass: "text-by-frequency-label",
-                    parentClass: "text-by-frequency-entry",
-                    attribute: "color"
-                });
-                spec.themes[i].injectTheme({
-                    elemClass: "text-by-frequency-bar",
-                    parentClass: "text-by-frequency-entry",
-                    attribute: "background-color"
+        if ( this.spec.text.themes ) {
+            for (i = 0; i < this.spec.text.themes.length; i++) {
+                this.spec.text.themes[i].injectTheme({
+                    selector: ".text-by-frequency-label",
+                    parentSelector: ".text-by-frequency-entry"
                 });
             }
         }
-    }
+        if ( this.spec.frequency.themes ) {
+            for (i = 0; i < this.spec.frequency.themes.length; i++) {
+                this.spec.frequency.themes[i].injectTheme({
+                    selector: ".text-by-frequency-bar",
+                    parentSelector: ".text-by-frequency-entry"
+                });
+            }
+        }
+    };
 
     TextByFrequencyRenderer.prototype.createHtml = function( data ) {
 
-        var spec = this.spec,
+        var textKey = this.spec.text.textKey,
+            countKey = this.spec.frequency.countKey,
             values = data.tile.values[0].value,
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
-            textKey = spec.textKey,
-            countKey = spec.countKey,
-            html,
+            html = '',
             value,
             entryText,
             maxPercentage,
@@ -125,8 +133,6 @@ define( function( require ) {
             return maxPercent;
         }
 
-        html = '<div>';
-
         for (i=0; i<numEntries; i++) {
 
             value = values[i];
@@ -158,8 +164,6 @@ define( function( require ) {
             html += '</div>';
             html += '</div>';
         }
-
-        html += '</div>';
 
         return html;
     };

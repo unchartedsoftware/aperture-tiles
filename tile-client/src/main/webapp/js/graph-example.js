@@ -97,26 +97,26 @@ require(['./util/Util',
 
                 clientLayer0 = new ClientLayer({
                     source: layers["graph-labels"],
-                    html: new GraphLabelRenderer({
-                        idKey: "id",
-                        node : {
+                    renderer: new GraphLabelRenderer({
+                        text: {
+                            idKey: "id",
                             x : "x",
-                            y : "y"
-                        },
-                        themes: [
-                            new RenderTheme({
-                                id: "dark-theme",
-                                color: "#FFFFFF",
-                                hoverColor: "#09CFFF",
-                                outline: "#000"
-                            })
-                        ]
+                            y : "y",
+                            themes: [
+                                new RenderTheme({
+                                    id: "dark-theme",
+                                    color: "#FFFFFF",
+                                    hoverColor: "#09CFFF",
+                                    outline: "#000"
+                                })
+                            ]
+                        }
                     })
                 });
 
                 clientLayer1 = new ClientLayer({
                     source: layers["graph-nodes"],
-                    html: new GraphNodeRenderer({
+                    renderer: new GraphNodeRenderer({
                         node : {
                             x : "x",
                             y : "y",

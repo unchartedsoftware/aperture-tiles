@@ -26,7 +26,8 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil'),
+    var Renderer = require('./Renderer'),
+        RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 10,
         HORIZONTAL_OFFSET = 10,
         VERTICAL_OFFSET = 24,
@@ -178,27 +179,32 @@ define( function( require ) {
     };
 
     function WordCloudRenderer( spec ) {
+        Renderer.call( this, spec );
+        this.setStyles();
+    }
+
+    WordCloudRenderer.prototype = Object.create( Renderer.prototype );
+
+    WordCloudRenderer.prototype.setStyles = function() {
         var i;
-        this.spec = spec;
-        if ( spec.themes ) {
-            for ( i=0; i<spec.themes.length; i++ ) {
-                spec.themes[i].injectTheme({
-                    elemClass: "word-cloud-label",
-                    attribute: "color"
+        if ( this.spec.text.themes ) {
+            for ( i=0; i<this.spec.text.themes.length; i++ ) {
+                this.spec.text.themes[i].injectTheme({
+                    selector: ".word-cloud-label"
                 });
             }
         }
-    }
+    };
 
     WordCloudRenderer.prototype.createHtml = function( data ) {
 
-        var spec = this.spec,
+        var text = this.spec.text,
+            textKey = text.textKey,
+            countKey = text.countKey,
             meta = this.meta[ this.map.getZoom() ],
             values = data.tile.values[0].value,
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
-            textKey = spec.textKey,
-            countKey = spec.countKey,
-            html,
+            html = '',
             wordCounts = [],
             maxCount,
             value,
@@ -219,9 +225,7 @@ define( function( require ) {
 
         cloud = createWordCloud( wordCounts, maxCount );
 
-        html = '<div>';
-
-        for ( i=cloud.length-1; i>=0; i-- ) {
+        for ( i=0; i<cloud.length; i++ ) {
 
             word = cloud[i];
             value = values[i];
@@ -233,8 +237,6 @@ define( function( require ) {
                     + 'width:'+word.width+'px;'
                     + 'height:'+word.height+'px;">'+word.word+'</div>';
         }
-
-        html += '</div>';
 
         return html;
     };

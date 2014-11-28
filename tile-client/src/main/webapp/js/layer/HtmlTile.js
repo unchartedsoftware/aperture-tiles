@@ -23,6 +23,7 @@
  * SOFTWARE.
  */
 
+/*global HTMLElement */
 define( function() {
     "use strict";
 
@@ -39,12 +40,12 @@ define( function() {
         if ( shouldDraw ) {
             this.positionTile();
             dataUrl = this.layer.getURL( this.bounds );
-            if (dataUrl !== this.url) {
+            if ( dataUrl !== this.url ) {
 
                 this.url = dataUrl;
                 this.tileData = null;
 
-                // New url to render
+                // new url to render
                 if (this.isLoading) {
                     this.dataRequest.abort();
                     this.dataRequest = null;
@@ -56,7 +57,7 @@ define( function() {
                     return;
                 }
 
-                // Hide tile contents until have data
+                // hide tile contents until have data
                 this.div.style.visibility = 'hidden';
 
                 this.dataRequest = $.ajax({
@@ -70,13 +71,13 @@ define( function() {
                         // TODO handle error
                         return true;
                     }
-                ).always(function() {
+                ).always( function() {
                     that.isLoading = false;
                     that.dataRequest = null;
                 });
 
             } else {
-                // Already have right data, just render
+                // already have right data, just render
                 this.renderTile( this.div, this.tileData );
             }
 
@@ -89,24 +90,24 @@ define( function() {
     OpenLayers.Tile.Html.prototype.positionTile = function() {
 
         if ( !this.div ) {
-            this.div = document.createElement('div');
+            this.div = document.createElement( 'div' );
             this.div.style.position = 'absolute';
-            this.div.className = 'olTileImage';
+            this.div.className = 'olTileHtml';
             this.layer.div.appendChild( this.div );
         }
 
         var style = this.div.style,
-            size = this.layer.getImageSize(this.bounds),
+            size = this.layer.getImageSize( this.bounds ),
             ratio = 1;
 
-        if (this.layer instanceof OpenLayers.Layer.Grid) {
+        if ( this.layer instanceof OpenLayers.Layer.Grid ) {
             ratio = this.layer.getServerResolution() / this.layer.map.getResolution();
         }
 
         style.left = this.position.x + 'px';
         style.top = this.position.y + 'px';
-        style.width = Math.round(ratio * size.w) + 'px';
-        style.height = Math.round(ratio * size.h) + 'px';
+        style.width = Math.round( ratio * size.w ) + 'px';
+        style.height = Math.round( ratio * size.h ) + 'px';
     };
 
     OpenLayers.Tile.Html.prototype.clear = function() {
@@ -120,20 +121,48 @@ define( function() {
     };
 
     OpenLayers.Tile.Html.prototype.renderTile = function(container, data) {
-        var html = this.layer.html;
+        var renderer = this.layer.renderer,
+            html = this.layer.html,
+            entry = this.layer.entry,
+            entries,
+            i;
         if ( this.div && data.tile ) {
-            if ( typeof html === "object") {
-                html = html.createHtml( data);
+            if ( renderer ) {
+                // if renderer is attached, use it
+                html = renderer.createHtml( data );
+            } else {
+                // else execute html
+                if ( typeof html === "function" ) {
+                    html = html( data );
+                }
             }
-            if ( typeof html === "function" ) {
-                html = html( data );
-            }
+            // if generated a jquery object, get html text
             if ( html instanceof jQuery ) {
                 html = html[0].outerHTML;
+            }
+            // if generated an HTMLElement, get html text
+            if ( html instanceof HTMLElement ) {
+                html = html.outerHTML;
             }
             this.div.innerHTML = html;
             this.div.style.visibility = 'inherit';
             this.div.style.opacity = 'inherit';
+
+            // set pointer-events on tile elements to 'all'
+            entries = this.div.children;
+            for ( i=0; i<entries.length; i++ ) {
+                entries[i].style['pointer-events'] = 'all';
+            }
+
+            if ( entry && typeof entry === "function" ) {
+                entries = $( this.div.children );
+                if ( renderer.getEntrySelector() ) {
+                    entries = entries.find( renderer.getEntrySelector() );
+                }
+                entries.each( function( index, elem ) {
+                    entry( data, elem );
+                });
+            }
         }
     };
 

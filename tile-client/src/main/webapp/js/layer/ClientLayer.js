@@ -56,7 +56,9 @@ define( function( require ) {
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: LayerUtil.getURL,
-                html: this.spec.html
+                html: this.spec.html,
+                renderer: this.spec.renderer,
+                entry: this.spec.entry
             });
 
         this.map.map.addLayer( this.layer );
@@ -66,10 +68,10 @@ define( function( require ) {
         this.setVisibility( this.spec.enabled );
         this.setTheme( this.map.getTheme() );
 
-        if ( typeof this.spec.html === "object" ) {
-            this.spec.html.meta = this.spec.source.meta.meta;
-            this.spec.html.map = this.map;
-            this.spec.html.parent = this;
+        if ( this.spec.renderer ) {
+            this.spec.renderer.meta = this.spec.source.meta.meta;
+            this.spec.renderer.map = this.map;
+            this.spec.renderer.parent = this;
         }
     };
 

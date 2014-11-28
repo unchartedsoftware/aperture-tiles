@@ -26,60 +26,92 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil');
+    var getOutlineCss;
 
-    function RenderTheme( spec ) {
+    getOutlineCss = function( type, value ) {
+        function isColor( val ) {
+            var split = val.replace(/\s+/g, '').split(/[\(\)]/);
+            if ( split[0] === "rgb" || split[0] === "rgba" ) {
+                return val;
+            }
+            return val[0] === "#" && ( val.length === 4 || val.length === 7 );
+        }
+
+        if ( !value ) {
+            return "";
+        }
+
+        if ( type === "text-shadow" ) {
+            if ( isColor( value ) ) {
+                return "text-shadow:"
+                    + "-1px -1px 0 " + value + ","
+                    + " 1px -1px 0 " + value + ","
+                    + "-1px  1px 0 " + value + ","
+                    + " 1px  1px 0 " + value + ","
+                    + " 1px  0   0 " + value + ","
+                    + "-1px  0   0 " + value + ","
+                    + " 0    1px 0 " + value + ","
+                    + " 0   -1px 0 " + value;
+            }
+            return "text-shadow:" + value + ";";
+        }
+        if ( type === "border" ) {
+            if ( isColor( value ) ) {
+                return "border: 1px solid " + value;
+            }
+            return "border:" + value + ";";
+        }
+        return "";
+    };
+
+    function RenderTheme( selector, spec ) {
         spec = spec || {};
-        spec.color = spec.color || "#fff";
-        spec.hoverColor = spec.hoverColor || "#09CFFF";
-        spec.blend = spec.blend || "#000";
+        this.selector = selector;
         this.spec = spec;
     }
 
     RenderTheme.prototype.injectTheme = function( options ) {
-
-        function outlineCss( outline, attribute ) {
-            if ( !outline ) {
-                return "";
-            }
-            if ( attribute === "color" ) {
-                return "text-shadow:"
-                     +"-1px -1px 0 "+outline+","
-                     +" 1px -1px 0 "+outline+","
-                     +"-1px  1px 0 "+outline+","
-                     +" 1px  1px 0 "+outline+","
-                     +" 1px  0   0 "+outline+","
-                     +"-1px  0   0 "+outline+","
-                     +" 0    1px 0 "+outline+","
-                     +" 0   -1px 0 "+outline;
-            }
-            return "border: 1px solid " + outline;
-        }
-
-        var spec = this.spec,
-            elemClass = options.elemClass,
-            parentClass = options.parentClass,
-            attribute = options.attribute,
-            outline = outlineCss( spec.outline, attribute ),
-            greyColor,
+        var theme = this.selector,
+            spec = this.spec,
+            selector = options.selector,
+            parentSelector = options.parentSelector,
             css;
+        css = '<style class="render-theme" type="text/css">';
 
-        greyColor = RendererUtil.hexBlend( RendererUtil.hexGreyscale( spec.color ), spec.blend );
-
-        css = '<style id="'+spec.id+'-'+elemClass+'-theme" type="text/css">';
-
-        css += '.'+spec.id + ' .'+elemClass+' {'+attribute+':'+spec.color+';'+outline+';}';
-        if ( parentClass ) {
-            css += '.'+spec.id + ' .'+parentClass+':hover .'+elemClass+' {'+attribute+':'+spec.hoverColor+';'+outline+';}';
-        } else {
-            css += '.'+spec.id + ' .'+elemClass+':hover {'+attribute+':'+spec.hoverColor+';'+outline+';}';
+        // set color
+        if ( spec['background-color'] ) {
+            css += theme + ' ' + selector + '{background-color:'+spec['background-color']+';}';
         }
-        css += '.'+spec.id + ' .greyed .'+elemClass+'{'+attribute+':'+greyColor+';'+outline+';}';
-        css += '.'+spec.id + ' .clicked-secondary .'+elemClass+' {'+attribute+':'+spec.color+';'+outline+';}';
-        css += '.'+spec.id + ' .clicked-primary .'+elemClass+' {'+attribute+':'+spec.hoverColor+';'+outline+';}';
+        if ( spec.color ) {
+            css += theme + ' ' + selector + '{color:' + spec.color + ';}';
+        }
 
+        // set :hover color
+        if ( parentSelector ) {
+            if ( spec['background-color:hover'] ) {
+                css += theme + ' '+parentSelector+':hover '+selector+' {background-color:'+spec['background-color:hover']+';}';
+            }
+            if ( spec['color:hover'] ) {
+                css += theme + ' '+parentSelector+':hover '+selector+' {color:'+spec['color:hover']+';}';
+            }
+        } else {
+            if ( spec['background-color:hover'] ) {
+                css += theme + ' '+selector+':hover {background-color:'+spec['background-color:hover']+';}';
+            }
+            if ( spec['color:hover'] ) {
+                css += theme + ' '+selector+':hover {color:'+spec['color:hover']+';}';
+            }
+        }
+
+        // set borders
+        if ( spec['text-shadow'] ) {
+            css += theme + ' ' + selector + '{' + getOutlineCss( 'text-shadow', spec['text-shadow'] ) + ';}';
+        }
+
+        if ( spec.border ) {
+            css += theme + ' ' + selector + '{' + getOutlineCss( 'border', spec.border ) + ';}';
+        }
         css += '</style>';
-
         $( document.body ).prepend( css );
     };
 

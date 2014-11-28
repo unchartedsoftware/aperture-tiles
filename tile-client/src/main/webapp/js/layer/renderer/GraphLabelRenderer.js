@@ -26,30 +26,37 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil');
+    var Renderer = require('./Renderer'),
+        RendererUtil = require('./RendererUtil');
 
     function GraphLabelRenderer( spec ) {
+        Renderer.call( this, spec );
+        this.setStyles();
+    }
+
+    GraphLabelRenderer.prototype = Object.create( Renderer.prototype );
+
+    GraphLabelRenderer.prototype.setStyles = function() {
         var i;
-        this.spec = spec;
-        if ( spec.themes ) {
-            for ( i=0; i<spec.themes.length; i++ ) {
-                spec.themes[i].injectTheme({
+        if ( this.spec.text.themes ) {
+            for ( i=0; i<this.spec.text.themes.length; i++ ) {
+                this.spec.text.themes[i].injectTheme({
                     elemClass: "node-label",
                     attribute: "color"
                 });
             }
         }
-    }
+    };
 
     GraphLabelRenderer.prototype.createHtml = function( data ) {
 
         var GRAPH_COORD_RANGE = 256,
-            spec = this.spec,
+            text = this.spec.text,
             meta = this.meta[ this.map.getZoom() ],
             communities = data.tile.values[0].value[0].communities,
             scale = Math.pow( 2, this.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
-            labelIndex = ( spec.labelIndex !== undefined ) ? spec.labelIndex : 0,
+            labelIndex = ( text.labelIndex !== undefined ) ? text.labelIndex : 0,
             metaCommunities,
             community,
             html = "",
@@ -100,8 +107,8 @@ define( function( require ) {
             }
 
             // get label position
-            x = ( community[ spec.node.x ] % range ) * scale;
-            y = ( community[ spec.node.y ] % range ) * scale;
+            x = ( community[ text.x ] % range ) * scale;
+            y = ( community[ text.y ] % range ) * scale;
 
             // capitalize label
             label = capitalize( split[ labelIndex ].toLowerCase() );

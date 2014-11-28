@@ -35,6 +35,7 @@ require(['./util/Util',
          './layer/renderer/WordCloudRenderer',
          './layer/renderer/TextByFrequencyRenderer',
          './layer/renderer/PointRenderer',
+         './layer/renderer/PointAggregateRenderer',
          './layer/renderer/RenderTheme'],
 
         function( Util,
@@ -49,6 +50,7 @@ require(['./util/Util',
                   WordCloudRenderer,
                   TextByFrequencyRenderer,
                   PointRenderer,
+                  PointAggregateRenderer,
                   RenderTheme ) {
 
 	        "use strict";
@@ -58,18 +60,6 @@ require(['./util/Util',
 
                 // parse layers into nicer format
                 layers = LayerUtil.parse( layers.layers );
-
-                LayerService.getLayerStates( "tweet-heatmap", function( data ) {
-                    console.log( "before save: ");
-                    console.log( JSON.stringify( data.states ) );
-                });
-
-                LayerService.saveLayerState( "tweet-heatmap", { renderer: { ramp: 'hot' } }, function( data ) {
-                    LayerService.getLayerStates( "tweet-heatmap", function( data ) {
-                        console.log( "after save: ");
-                        console.log( JSON.stringify( data.states ) );
-                    });
-                });
 
                 var map,
                     baseLayer,
@@ -169,55 +159,98 @@ require(['./util/Util',
 
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
-                    html: new WordCloudRenderer({
-                        textKey: "topic",
-                        countKey : "countMonthly",
-                        themes: [
-                            new RenderTheme({
-                                id: "dark-theme",
-                                color: "#FFFFFF",
-                                hoverColor: "#09CFFF",
-                                outline: "#000"
-                            })
-                        ]
-                    })
+                    renderer: new WordCloudRenderer({
+                        text: {
+                            textKey: "topic",
+                            countKey: "countMonthly",
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'color': "#FFFFFF",
+                                    'color:hover': "#09CFFF",
+                                    'text-shadow': "#000"
+                                })
+                            ]
+                        }
+                    }),
+                    entry: function( data, elem ) {
+                        elem.onclick = function() {
+                            console.log( elem );
+                            console.log( data );
+                        };
+                    }
                 });
 
                 annotationLayer0 = new AnnotationLayer({
                     source: layers["parlor-annotations"],
-                    html: new PointRenderer({})
+                    renderer: new PointAggregateRenderer({
+                        point: {
+                            x: "x",
+                            y: "y",
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'background-color': "rgba( 9, 207, 255, 0.5 )",
+                                    'background-color:hover': "rgba( 9, 207, 255, 0.75 )"
+                                })
+                            ]
+                        },
+                        aggregate: {
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'background-color': "rgba(0,0,0,0)",
+                                    'border': "#000"
+                                })
+                            ]
+                        }
+                    }),
+                    entry: function( data, elem ) {
+                        elem.onclick = function() {
+                            console.log( elem );
+                            console.log( data );
+                        };
+                    }
                 });
 
                 /*
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
-                    html: new TextScoreRenderer({
-                        textKey: "topic",
-                        countKey : "countMonthly",
-                        themes: [
-                            new RenderTheme({
-                                id: "dark-theme",
-                                color: "#FFFFFF",
-                                hoverColor: "#09CFFF",
-                                outline: "#000"
-                            })
-                        ]
+                    renderer: new TextScoreRenderer({
+                        text: {
+                            textKey: "topic",
+                            countKey : "countMonthly",
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'color': "#FFFFFF",
+                                    'color:hover': "#09CFFF",
+                                    'text-shadow': "#000"
+                                })
+                            ]
+                        }
                     })
                 });
 
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
-                    html: new TextByFrequencyRenderer({
-                        textKey: "topic",
-                        countKey : "countPerHour",
-                        themes: [
-                            new RenderTheme({
-                                id: "dark-theme",
-                                color: "#FFFFFF",
-                                hoverColor: "#09CFFF",
-                                outline: "#000"
-                            })
-                        ]
+                    renderer: new TextByFrequencyRenderer({
+                        text: {
+                            textKey: "topic",
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'color': "#FFFFFF",
+                                    'color:hover': "#09CFFF",
+                                    'text-shadow': "#000"
+                                })
+                            ]
+                        },
+                        frequency: {
+                            countKey: "countPerHour",
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'background-color': "#FFFFFF",
+                                    'background-color:hover': "#09CFFF",
+                                    'border': "#000"
+                                })
+                            ]
+                        }
                     })
                 });
                 */

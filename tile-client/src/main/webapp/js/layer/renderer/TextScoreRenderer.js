@@ -26,32 +26,44 @@
 define( function( require ) {
     "use strict";
 
-    var RendererUtil = require('./RendererUtil'),
+    var Renderer = require('./Renderer'),
+        RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 5;
 
     function TextScoreRenderer( spec ) {
+        Renderer.call( this, spec );
+        this.setStyles();
+    }
+
+    TextScoreRenderer.prototype = Object.create( Renderer.prototype );
+
+    TextScoreRenderer.prototype.setStyles = function() {
         var i;
-        this.spec = spec;
-        if ( spec.themes ) {
-            for ( i=0; i<spec.themes.length; i++ ) {
-                spec.themes[i].injectTheme({
-                    elemClass: "text-score-label",
-                    parentClass: "text-score-entry",
-                    attribute: "color"
+        if ( this.spec.text.themes ) {
+            for ( i=0; i<this.spec.text.themes.length; i++ ) {
+                this.spec.text.themes[i].injectTheme({
+                    selector: ".text-score-label",
+                    parentSelector: ".text-score-entry"
                 });
             }
         }
-    }
+    };
+
+    TextScoreRenderer.prototype.getEntrySelector = function() {
+        return ".text-score-entry";
+    };
 
     TextScoreRenderer.prototype.createHtml = function( data ) {
 
-        var spec = this.spec,
+        var text = this.spec.text,
+            textKey = text.textKey,
+            countKey = text.countKey,
             meta = this.meta[ this.map.getZoom() ],
             values = data.tile.values[0].value,
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             totalCount,
             yOffset,
-            html,
+            html = '',
             value,
             textEntry,
             fontSize,
@@ -60,16 +72,14 @@ define( function( require ) {
             i;
 
          // get maximum count for layer if it exists in meta data
-        totalCount = meta.minMax.max[ spec.countKey ];
+        totalCount = meta.minMax.max[ countKey ];
         yOffset = RendererUtil.getYOffset( numEntries, 36, 122 );
-
-        html = '<div>';
 
         for (i=0; i<numEntries; i++) {
 
             value = values[i];
-            textEntry = RendererUtil.getAttributeValue( value, spec.textKey );
-            textCount = RendererUtil.getAttributeValue( value, spec.countKey );
+            textEntry = RendererUtil.getAttributeValue( value, textKey );
+            textCount = RendererUtil.getAttributeValue( value, countKey );
             fontSize = RendererUtil.getFontSize( textCount, totalCount );
             labelClass = "text-score-label";
 

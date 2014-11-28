@@ -26,28 +26,42 @@
 define( function() {
     "use strict";
 
+    var Renderer = require('./Renderer');
+
     function GraphNodeRenderer( spec ) {
-        var i;
-        this.spec = spec;
-        for ( i=0; i<spec.node.themes.length; i++ ) {
-            spec.node.themes[i].injectTheme({
-                elemClass: "community-node",
-                attribute: "background-color"
-            });
-        }
-        for ( i=0; i<spec.criticalNode.themes.length; i++ ) {
-            spec.criticalNode.themes[i].injectTheme({
-                elemClass: "community-node community-critical-node",
-                attribute: "background-color"
-            });
-        }
-        for ( i=0; i<spec.parentNode.themes.length; i++ ) {
-            spec.parentNode.themes[i].injectTheme({
-                elemClass: "community-parent-node",
-                attribute: "background-color"
-            });
-        }
+        Renderer.call( this, spec );
+        this.setStyles();
     }
+
+    GraphNodeRenderer.prototype = Object.create( Renderer.prototype );
+
+    GraphNodeRenderer.prototype.setStyles = function() {
+        var i;
+        if ( this.spec.node.themes ) {
+            for (i = 0; i < this.spec.node.themes.length; i++) {
+                this.spec.node.themes[i].injectTheme({
+                    elemClass: "community-node",
+                    attribute: "background-color"
+                });
+            }
+        }
+        if ( this.spec.criticalNode.themes ) {
+            for (i = 0; i < this.spec.criticalNode.themes.length; i++) {
+                this.spec.criticalNode.themes[i].injectTheme({
+                    elemClass: "community-node community-critical-node",
+                    attribute: "background-color"
+                });
+            }
+        }
+        if ( this.spec.parentNode.themes ) {
+            for (i = 0; i < this.spec.parentNode.themes.length; i++) {
+                this.spec.parentNode.themes[i].injectTheme({
+                    elemClass: "community-parent-node",
+                    attribute: "background-color"
+                });
+            }
+        }
+    };
 
     GraphNodeRenderer.prototype.createHtml = function( data ) {
 

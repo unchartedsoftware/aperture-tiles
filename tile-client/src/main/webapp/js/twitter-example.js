@@ -30,10 +30,11 @@ require(['./util/Util',
          './layer/BaseLayer',
          './layer/ServerLayer',
          './layer/ClientLayer',
-         './layer/TileCarousel',
+         './layer/AnnotationLayer',
          './layer/renderer/TextScoreRenderer',
          './layer/renderer/WordCloudRenderer',
          './layer/renderer/TextByFrequencyRenderer',
+         './layer/renderer/PointRenderer',
          './layer/renderer/RenderTheme'],
 
         function( Util,
@@ -43,19 +44,20 @@ require(['./util/Util',
                   BaseLayer,
                   ServerLayer,
                   ClientLayer,
-                  TileCarousel,
+                  AnnotationLayer,
                   TextScoreRenderer,
                   WordCloudRenderer,
                   TextByFrequencyRenderer,
+                  PointRenderer,
                   RenderTheme ) {
 
 	        "use strict";
 
             // request layers from server
-            LayerService.requestLayers( function( layers ) {
+            LayerService.getLayers( function( layers ) {
 
                 // parse layers into nicer format
-                layers = LayerUtil.parse( layers );
+                layers = LayerUtil.parse( layers.layers );
 
                 var map,
                     baseLayer,
@@ -154,7 +156,7 @@ require(['./util/Util',
 
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
-                    html: new WordCloudRenderer({
+                    renderer: new WordCloudRenderer({
                         textKey: "topic",
                         countKey : "countMonthly",
                         themes: [
@@ -165,13 +167,19 @@ require(['./util/Util',
                                 outline: "#000"
                             })
                         ]
-                    })
+                    }),
+                    entry: function( data, elem ) {
+                        elem.onclick = function() {
+                            console.log( elem );
+                            console.log( data );
+                        };
+                    }
                 });
 
                 /*
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
-                    html: new TextScoreRenderer({
+                    renderer: new TextScoreRenderer({
                         textKey: "topic",
                         countKey : "countMonthly",
                         themes: [
@@ -187,7 +195,7 @@ require(['./util/Util',
 
                 clientLayer0 = new ClientLayer({
                     source: layers["top-tweets"],
-                    html: new TextByFrequencyRenderer({
+                    renderer: new TextByFrequencyRenderer({
                         textKey: "topic",
                         countKey : "countPerHour",
                         themes: [
