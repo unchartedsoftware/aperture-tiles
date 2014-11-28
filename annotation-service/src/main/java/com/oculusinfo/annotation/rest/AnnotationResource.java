@@ -36,6 +36,7 @@ import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.data.CacheDirective;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -161,6 +162,7 @@ public class AnnotationResource extends ApertureServerResource {
             }
 
 			setStatus(Status.SUCCESS_OK);
+            getResponse().getCacheDirectives().add( CacheDirective.noCache() );
 			return new JsonRepresentation( result );
 
 		} catch (Exception e){

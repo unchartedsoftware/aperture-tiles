@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONObject;
+import org.restlet.data.CacheDirective;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -60,7 +61,8 @@ public class StateResource extends ApertureServerResource {
             JSONObject result = new JSONObject();
             result.put( "states", _service.getLayerStates( layerId ) );
             result.put( "version", version );
-            setStatus(Status.SUCCESS_CREATED);
+            setStatus( Status.SUCCESS_OK );
+            getResponse().getCacheDirectives().add( CacheDirective.noCache() );
             return new JsonRepresentation( result );
         } catch ( Exception e ) {
             LOGGER.warn("Bad layer states request: ", e);
@@ -84,13 +86,11 @@ public class StateResource extends ApertureServerResource {
             String layerId = (String) getRequest().getAttributes().get("layer");
             JSONObject arguments = new JSONObject( jsonArguments );
             String sha = _service.saveLayerState( layerId, arguments );
-
             JSONObject result = new JSONObject();
-            result.put( "sha", sha );
+            result.put( "state", sha );
             result.put( "version", version );
-            setStatus(Status.SUCCESS_OK);
+            setStatus( Status.SUCCESS_CREATED );
             return new JsonRepresentation( result );
-
         } catch ( Exception e ) {
             LOGGER.warn("Bad layer states request: {}", jsonArguments, e);
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,

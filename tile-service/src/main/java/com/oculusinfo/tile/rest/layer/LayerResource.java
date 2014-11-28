@@ -113,6 +113,7 @@ public class LayerResource extends ApertureServerResource {
                 version = LayerConfiguration.DEFAULT_VERSION;
             }
             String layerURN = (String) getRequest().getAttributes().get("layer");
+            JSONObject result = new JSONObject();
             if ( layerURN == null ) {
                  // if not, return all layers
                 JSONArray jsonLayers = new JSONArray();
@@ -120,14 +121,14 @@ public class LayerResource extends ApertureServerResource {
                 for (int i=0; i<layerIds.size(); ++i) {
                     jsonLayers.put( i, getLayerInformation( layerIds.get(i), version ) );
                 }
-                setStatus(Status.SUCCESS_OK);
-                return new JsonRepresentation( jsonLayers );
+                result.put( "layers", jsonLayers );
             } else {
                  // if so, return specific layers
-                JSONObject jsonLayer = getLayerInformation( layerURN, version );
-                setStatus(Status.SUCCESS_OK);
-                return new JsonRepresentation( jsonLayer );
+                result.put( "layer", getLayerInformation( layerURN, version ) );
             }
+            setStatus(Status.SUCCESS_OK);
+            result.put( "version", version );
+            return new JsonRepresentation( result );
         } catch (JSONException e) {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL,
                                         "Unable to create JSON object from supplied options string",

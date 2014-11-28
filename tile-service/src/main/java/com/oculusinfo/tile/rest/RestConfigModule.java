@@ -40,14 +40,14 @@ public class RestConfigModule extends AbstractModule {
 		MapBinder<String, ResourceDefinition> resourceBinder =
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
 
-        resourceBinder.addBinding("/{version}/layer").toInstance(new ResourceDefinition(LayerResource.class));
-        resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(LayerResource.class));
+        resourceBinder.addBinding("/{version}/layers").toInstance(new ResourceDefinition(LayerResource.class));
+        resourceBinder.addBinding("/layers").toInstance(new ResourceDefinition(LayerResource.class));
 
-        resourceBinder.addBinding("/{version}/layer/{layer}/state").toInstance(new ResourceDefinition(StateResource.class));
-        resourceBinder.addBinding("/layer/{layer}/state").toInstance(new ResourceDefinition(StateResource.class));
+        resourceBinder.addBinding("/{version}/layers/{layer}/states").toInstance(new ResourceDefinition(StateResource.class));
+        resourceBinder.addBinding("/layers/{layer}/states").toInstance(new ResourceDefinition(StateResource.class));
 
-        resourceBinder.addBinding("/{version}/layer/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
-        resourceBinder.addBinding("/layer/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
+        resourceBinder.addBinding("/{version}/layers/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
+        resourceBinder.addBinding("/layers/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
 
         resourceBinder.addBinding("/{version}/tile/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
         resourceBinder.addBinding("/tile/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
