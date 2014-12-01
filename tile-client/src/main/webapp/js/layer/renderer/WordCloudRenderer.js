@@ -36,7 +36,19 @@ define( function( require ) {
         overlapTest,
         intersectWord,
         getWordDimensions,
-        createWordCloud;
+        createWordCloud,
+        injectCss;
+
+    injectCss = function( spec ) {
+        var i;
+        if ( spec.text.themes ) {
+            for ( i = 0; i < spec.text.themes.length; i++ ) {
+                spec.text.themes[i].injectTheme({
+                    selector: ".word-cloud-label"
+                });
+            }
+        }
+    };
 
     /**
      * Given an initial position, return a new position, incrementally spiralled
@@ -180,23 +192,12 @@ define( function( require ) {
 
     function WordCloudRenderer( spec ) {
         Renderer.call( this, spec );
-        this.setStyles();
+        injectCss( this.spec );
     }
 
     WordCloudRenderer.prototype = Object.create( Renderer.prototype );
 
-    WordCloudRenderer.prototype.setStyles = function() {
-        var i;
-        if ( this.spec.text.themes ) {
-            for ( i=0; i<this.spec.text.themes.length; i++ ) {
-                this.spec.text.themes[i].injectTheme({
-                    selector: ".word-cloud-label"
-                });
-            }
-        }
-    };
-
-    WordCloudRenderer.prototype.createHtml = function( data ) {
+    WordCloudRenderer.prototype.render = function( data ) {
 
         var text = this.spec.text,
             textKey = text.textKey,
@@ -206,6 +207,7 @@ define( function( require ) {
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
             html = '',
             wordCounts = [],
+            entries = [],
             maxCount,
             value,
             word,
@@ -217,6 +219,7 @@ define( function( require ) {
 
         for (i=0; i<numEntries; i++) {
             value = values[i];
+            entries.push( value );
             wordCounts.push({
                 word: RendererUtil.getAttributeValue( value, textKey ),
                 count: RendererUtil.getAttributeValue( value, countKey )
@@ -238,7 +241,10 @@ define( function( require ) {
                     + 'height:'+word.height+'px;">'+word.word+'</div>';
         }
 
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return WordCloudRenderer;

@@ -28,28 +28,22 @@ define( function( require ) {
 
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
-        MAX_WORDS_DISPLAYED = 8;
+        MAX_WORDS_DISPLAYED = 8,
+        injectCss;
 
-    function TextByFrequencyRenderer( spec ) {
-        Renderer.call( this, spec );
-        this.setStyles();
-    }
-
-    TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
-
-    TextByFrequencyRenderer.prototype.setStyles = function() {
+    injectCss = function( spec ) {
         var i;
-        if ( this.spec.text.themes ) {
-            for (i = 0; i < this.spec.text.themes.length; i++) {
-                this.spec.text.themes[i].injectTheme({
+        if ( spec.text.themes ) {
+            for (i = 0; i < spec.text.themes.length; i++) {
+                spec.text.themes[i].injectTheme({
                     selector: ".text-by-frequency-label",
                     parentSelector: ".text-by-frequency-entry"
                 });
             }
         }
-        if ( this.spec.frequency.themes ) {
-            for (i = 0; i < this.spec.frequency.themes.length; i++) {
-                this.spec.frequency.themes[i].injectTheme({
+        if ( spec.frequency.themes ) {
+            for (i = 0; i < spec.frequency.themes.length; i++) {
+                spec.frequency.themes[i].injectTheme({
                     selector: ".text-by-frequency-bar",
                     parentSelector: ".text-by-frequency-entry"
                 });
@@ -57,13 +51,21 @@ define( function( require ) {
         }
     };
 
-    TextByFrequencyRenderer.prototype.createHtml = function( data ) {
+    function TextByFrequencyRenderer( spec ) {
+        Renderer.call( this, spec );
+        injectCss( this.spec );
+    }
+
+    TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
+
+    TextByFrequencyRenderer.prototype.render = function( data ) {
 
         var textKey = this.spec.text.textKey,
             countKey = this.spec.frequency.countKey,
             values = data.tile.values[0].value,
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             html = '',
+            entries = [],
             value,
             entryText,
             maxPercentage,
@@ -136,6 +138,7 @@ define( function( require ) {
         for (i=0; i<numEntries; i++) {
 
             value = values[i];
+            entries.push( value );
             entryText = RendererUtil.getAttributeValue( value, textKey );
             chartSize = getChartSize( value, countKey );
             maxPercentage = getMaxPercentage( value, countKey );
@@ -165,7 +168,10 @@ define( function( require ) {
             html += '</div>';
         }
 
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return TextByFrequencyRenderer;

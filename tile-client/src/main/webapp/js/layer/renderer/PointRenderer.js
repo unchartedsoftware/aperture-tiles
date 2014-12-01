@@ -26,31 +26,33 @@
 define( function( require ) {
     "use strict";
 
-    var Renderer = require('./Renderer');
+    var Renderer = require('./Renderer'),
+         injectCss;
 
-    function PointRenderer( spec ) {
-        Renderer.call( this, spec );
-        this.setStyles();
-    }
-
-    PointRenderer.prototype = Object.create( Renderer.prototype );
-
-    PointRenderer.prototype.setStyles = function() {
+    injectCss = function( spec ) {
         var i;
-        if ( this.spec.point.themes ) {
-            for (i = 0; i < this.spec.point.themes.length; i++) {
-                this.spec.point.themes[i].injectTheme({
+        if ( spec.point.themes ) {
+            for (i = 0; i < spec.point.themes.length; i++) {
+                spec.point.themes[i].injectTheme({
                     selector: ".point-annotation"
                 });
             }
         }
     };
 
-    PointRenderer.prototype.createHtml = function( data ) {
+    function PointRenderer( spec ) {
+        Renderer.call( this, spec );
+        injectCss( this.spec );
+    }
+
+    PointRenderer.prototype = Object.create( Renderer.prototype );
+
+    PointRenderer.prototype.render = function( data ) {
 
         var //spec = this.spec,
             //meta = this.meta[ this.map.getZoom() ],
             values = data.tile.values,
+            entries = [],
             positionMap = {},
             positionKey,
             tilekey,
@@ -63,6 +65,7 @@ define( function( require ) {
 
         // for each bin
         for ( i=0; i<values.length; i++ ) {
+
             value = values[i].value;
 
             if ( value.length === 0 ) {
@@ -70,6 +73,8 @@ define( function( require ) {
             }
 
             for ( j=0; j<value.length; j++ ) {
+
+                entries.push( value[j] );
 
                 // get annotations position in viewport space
                 tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
@@ -91,7 +96,10 @@ define( function( require ) {
                 }
             }
         }
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return PointRenderer;

@@ -28,20 +28,14 @@ define( function( require ) {
 
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
-        MAX_WORDS_DISPLAYED = 5;
+        MAX_WORDS_DISPLAYED = 5,
+        injectCss;
 
-    function TextScoreRenderer( spec ) {
-        Renderer.call( this, spec );
-        this.setStyles();
-    }
-
-    TextScoreRenderer.prototype = Object.create( Renderer.prototype );
-
-    TextScoreRenderer.prototype.setStyles = function() {
+    injectCss = function( spec ) {
         var i;
-        if ( this.spec.text.themes ) {
-            for ( i=0; i<this.spec.text.themes.length; i++ ) {
-                this.spec.text.themes[i].injectTheme({
+        if ( spec.text.themes ) {
+            for ( i=0; i<spec.text.themes.length; i++ ) {
+                spec.text.themes[i].injectTheme({
                     selector: ".text-score-label",
                     parentSelector: ".text-score-entry"
                 });
@@ -49,11 +43,18 @@ define( function( require ) {
         }
     };
 
+    function TextScoreRenderer( spec ) {
+        Renderer.call( this, spec );
+        injectCss( this.spec );
+    }
+
+    TextScoreRenderer.prototype = Object.create( Renderer.prototype );
+
     TextScoreRenderer.prototype.getEntrySelector = function() {
         return ".text-score-entry";
     };
 
-    TextScoreRenderer.prototype.createHtml = function( data ) {
+    TextScoreRenderer.prototype.render = function( data ) {
 
         var text = this.spec.text,
             textKey = text.textKey,
@@ -61,6 +62,7 @@ define( function( require ) {
             meta = this.meta[ this.map.getZoom() ],
             values = data.tile.values[0].value,
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
+            entries = [],
             totalCount,
             yOffset,
             html = '',
@@ -68,7 +70,6 @@ define( function( require ) {
             textEntry,
             fontSize,
             textCount,
-            labelClass,
             i;
 
          // get maximum count for layer if it exists in meta data
@@ -78,10 +79,10 @@ define( function( require ) {
         for (i=0; i<numEntries; i++) {
 
             value = values[i];
+            entries.push( value );
             textEntry = RendererUtil.getAttributeValue( value, textKey );
             textCount = RendererUtil.getAttributeValue( value, countKey );
             fontSize = RendererUtil.getFontSize( textCount, totalCount );
-            labelClass = "text-score-label";
 
             // parent
             html += '<div class="text-score-entry-parent" style="top:' + yOffset + 'px;">';
@@ -89,17 +90,19 @@ define( function( require ) {
             // create entry
             html += '<div class="text-score-entry">';
             // create label
-            html += '<div class="text-score-label '+labelClass+'" style="'
+            html += '<div class="text-score-label" style="'
                   + 'font-size:'+ fontSize +'px;'
                   + 'line-height:'+ fontSize +'px;">'+textEntry+'</div>';
             html += '</div>';
             html += '</div>';
 
             html += '<div class="clear"></div>';
-
         }
 
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return TextScoreRenderer;

@@ -26,41 +26,42 @@
 define( function( require ) {
     "use strict";
 
-    var Renderer = require('./Renderer');
+    var Renderer = require('./Renderer'),
+        injectCss;
 
-    function GraphNodeRenderer( spec ) {
-        Renderer.call( this, spec );
-        this.setStyles();
-    }
-
-    GraphNodeRenderer.prototype = Object.create( Renderer.prototype );
-
-    GraphNodeRenderer.prototype.setStyles = function() {
+    injectCss = function( spec ) {
         var i;
-        if ( this.spec.node.themes ) {
-            for (i = 0; i < this.spec.node.themes.length; i++) {
-                this.spec.node.themes[i].injectTheme({
+        if ( spec.node.themes ) {
+            for (i = 0; i < spec.node.themes.length; i++) {
+                spec.node.themes[i].injectTheme({
                     selector: ".community-node"
                 });
             }
         }
-        if ( this.spec.criticalNode.themes ) {
-            for (i = 0; i < this.spec.criticalNode.themes.length; i++) {
-                this.spec.criticalNode.themes[i].injectTheme({
+        if ( spec.criticalNode.themes ) {
+            for (i = 0; i < spec.criticalNode.themes.length; i++) {
+                spec.criticalNode.themes[i].injectTheme({
                     selector: ".community-node.community-critical-node"
                 });
             }
         }
-        if ( this.spec.parentNode.themes ) {
-            for (i = 0; i < this.spec.parentNode.themes.length; i++) {
-                this.spec.parentNode.themes[i].injectTheme({
+        if ( spec.parentNode.themes ) {
+            for (i = 0; i < spec.parentNode.themes.length; i++) {
+                spec.parentNode.themes[i].injectTheme({
                     selector: ".community-parent-node"
                 });
             }
         }
     };
 
-    GraphNodeRenderer.prototype.createHtml = function( data ) {
+    function GraphNodeRenderer( spec ) {
+        Renderer.call( this, spec );
+        injectCss( this.spec );
+    }
+
+    GraphNodeRenderer.prototype = Object.create( Renderer.prototype );
+
+    GraphNodeRenderer.prototype.render = function( data ) {
 
         var GRAPH_COORD_RANGE = 256,
             BORDER_WIDTH = 2,
@@ -75,11 +76,13 @@ define( function( require ) {
             parentRadius,
             parentDiameter,
             html = '',
+            entries = [],
             i, x, y, px, py;
 
-        for (i=0; i<communities.length; i++) {
+        for ( i=0; i<communities.length; i++ ) {
 
             community = communities[i];
+            entries.push( community );
 
             // get node position, radius, and diameter
             x = ( community[ spec.node.x ] % range ) * scale;
@@ -130,8 +133,10 @@ define( function( require ) {
                       + '"></div>';
             }
         }
-
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return GraphNodeRenderer;

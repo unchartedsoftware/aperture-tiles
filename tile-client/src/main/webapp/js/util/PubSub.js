@@ -57,7 +57,7 @@
                 [ a.a.c -> null )
 */
 
-define(function (require) {
+define( function() {
 
     "use strict";
 
@@ -65,6 +65,9 @@ define(function (require) {
 
         /**
          * Subscribe a listener function to the specific channel path.
+         *
+         * @param channelPath {string}   A '.' delimited channel path.
+         * @param subscriber  {Function} The subscriber function associated with the provided path.
          */
         subscribe: function( channelPath, subscriber ) {
 
@@ -93,10 +96,14 @@ define(function (require) {
             channel.subscribers.push( subscriber );
         },
 
-
         /**
-         * Publish a message to a channel path. All sub-channels will also
-         * received message.
+         * Publish a message to a channel path. Publishing to a target channel will propagate the message
+         *   breadth first as follows:
+         *      1) from the root of the hierarchy to the target channel
+         *      2) from the target channel to all existing sub-channels
+         *
+         * @param channelPath {string}   A '.' delimited channel path.
+         * @param message  {*}       The messsage to be published.
          */
         publish: function( channelPath, message ) {
 

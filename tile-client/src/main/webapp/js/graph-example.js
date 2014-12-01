@@ -48,10 +48,10 @@ require(['./util/Util',
 	        "use strict";
 
             // request layers from server
-            LayerService.requestLayers( function( layers ) {
+            LayerService.getLayers( function( layers ) {
 
                 // parse layers into nicer format
-                layers = LayerUtil.parse( layers );
+                layers = LayerUtil.parse( layers.layers );
 
                 var map,
                     baseLayer,
@@ -105,10 +105,15 @@ require(['./util/Util',
                             themes: [
                                 new RenderTheme( ".dark-theme", {
                                     'color': "#FFFFFF",
-                                    'color:hover': "#09CFFF",
                                     'text-shadow': "#000"
                                 })
                             ]
+                        },
+                        entry: function( elem, entry, entries, data ) {
+                            elem.onclick = function() {
+                                console.log( elem );
+                                console.log( entry );
+                            };
                         }
                     })
                 });
@@ -121,7 +126,7 @@ require(['./util/Util',
                             y : "y",
                             radius: "r",
                             themes: [
-                                new RenderTheme( ",dark-theme", {
+                                new RenderTheme( ".dark-theme", {
                                     'background-color' : "rgba(0,0,0,0)",
                                     'border' : "rgb(78,205,196)",
                                     'background-color:hover' : "rgba(78,205,196,0.2)"
@@ -151,6 +156,12 @@ require(['./util/Util',
                                     'background-color:hover' : "rgba(0,0,0,0)"
                                 })
                             ]
+                        },
+                        entry: function( elem, entry, entries, data ) {
+                            elem.onclick = function() {
+                                console.log( elem );
+                                console.log( entry );
+                            };
                         }
                     })
                 });

@@ -26,28 +26,22 @@
 define( function( require ) {
     "use strict";
 
-    var Renderer = require('./Renderer');
+    var Renderer = require('./Renderer'),
+        injectCss;
 
-    function PointAggregateRenderer( spec ) {
-        Renderer.call( this, spec );
-        this.setStyles();
-    }
-
-    PointAggregateRenderer.prototype = Object.create( Renderer.prototype );
-
-    PointAggregateRenderer.prototype.setStyles = function() {
+    injectCss = function( spec ) {
         var i;
-        if ( this.spec.point.themes ) {
-            for (i = 0; i < this.spec.point.themes.length; i++) {
-                this.spec.point.themes[i].injectTheme({
+        if ( spec.point.themes ) {
+            for ( i = 0; i < spec.point.themes.length; i++ ) {
+                spec.point.themes[i].injectTheme({
                     selector: ".point-annotation-fill",
                     parentSelector: ".point-annotation-aggregate"
                 });
             }
         }
-        if ( this.spec.aggregate.themes ) {
-            for (i = 0; i < this.spec.aggregate.themes.length; i++) {
-                this.spec.aggregate.themes[i].injectTheme({
+        if ( spec.aggregate.themes ) {
+            for ( i = 0; i < spec.aggregate.themes.length; i++ ) {
+                spec.aggregate.themes[i].injectTheme({
                     selector: ".point-annotation-border",
                     parentSelector: ".point-annotation-aggregate"
                 });
@@ -55,11 +49,19 @@ define( function( require ) {
         }
     };
 
-    PointAggregateRenderer.prototype.createHtml = function( data ) {
+    function PointAggregateRenderer( spec ) {
+        Renderer.call( this, spec );
+        injectCss( this.spec );
+    }
+
+    PointAggregateRenderer.prototype = Object.create( Renderer.prototype );
+
+    PointAggregateRenderer.prototype.render = function( data ) {
 
         var //spec = this.spec,
             //meta = this.meta[ this.map.getZoom() ],
             values = data.tile.values,
+            entries = [],
             positionMap = {},
             positionKey,
             tilekey,
@@ -72,11 +74,14 @@ define( function( require ) {
 
         // for each bin
         for ( i=0; i<values.length; i++ ) {
+
             value = values[i].value;
 
             if ( value.length === 0 ) {
                 continue;
             }
+            entries.push( value );
+
             html += '<div class="point-annotation-aggregate">';
 
             for ( j=0; j<value.length; j++ ) {
@@ -107,7 +112,10 @@ define( function( require ) {
 
             html += '</div>';
         }
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return PointAggregateRenderer;

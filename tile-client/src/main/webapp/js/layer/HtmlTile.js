@@ -27,13 +27,13 @@
 define( function() {
     "use strict";
 
-    OpenLayers.Tile.Html = function() {
+    OpenLayers.Tile.HTML = function() {
         OpenLayers.Tile.apply( this, arguments );
     };
 
-    OpenLayers.Tile.Html.prototype = Object.create( OpenLayers.Tile.prototype );
+    OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
 
-    OpenLayers.Tile.Html.prototype.draw = function() {
+    OpenLayers.Tile.HTML.prototype.draw = function() {
         var that = this,
             shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments),
             dataUrl;
@@ -87,7 +87,7 @@ define( function() {
         return shouldDraw;
     };
 
-    OpenLayers.Tile.Html.prototype.positionTile = function() {
+    OpenLayers.Tile.HTML.prototype.positionTile = function() {
 
         if ( !this.div ) {
             this.div = document.createElement( 'div' );
@@ -110,7 +110,7 @@ define( function() {
         style.height = Math.round( ratio * size.h ) + 'px';
     };
 
-    OpenLayers.Tile.Html.prototype.clear = function() {
+    OpenLayers.Tile.HTML.prototype.clear = function() {
         OpenLayers.Tile.prototype.clear.apply( this, arguments );
         this.tileData = null;
         this.url = null;
@@ -120,52 +120,55 @@ define( function() {
         }
     };
 
-    OpenLayers.Tile.Html.prototype.renderTile = function(container, data) {
+    OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
         var renderer = this.layer.renderer,
             html = this.layer.html,
-            entry = this.layer.entry,
+            render,
             entries,
+            elements,
             i;
+
         if ( this.div && data.tile ) {
+
             if ( renderer ) {
                 // if renderer is attached, use it
-                html = renderer.createHtml( data );
+                render = renderer.render( data );
+                html = render.html;
+                entries = render.entries;
             } else {
                 // else execute html
                 if ( typeof html === "function" ) {
                     html = html( data );
                 }
             }
-            // if generated a jquery object, get html text
+
             if ( html instanceof jQuery ) {
-                html = html[0].outerHTML;
+                // if generated a jquery object, append it
+                $( this.div ).append( html );
+            } else if ( html instanceof HTMLElement ) {
+                // if generated an HTMLElement, get html text
+                this.div.appendChild( html );
+            } else {
+                // if generated string, set inner html
+                this.div.innerHTML = html;
             }
-            // if generated an HTMLElement, get html text
-            if ( html instanceof HTMLElement ) {
-                html = html.outerHTML;
-            }
-            this.div.innerHTML = html;
+
             this.div.style.visibility = 'inherit';
             this.div.style.opacity = 'inherit';
             this.div.style['pointer-events'] = 'none';
 
             // set pointer-events on tile elements to 'all'
-            entries = this.div.children;
-            for ( i=0; i<entries.length; i++ ) {
-                entries[i].style['pointer-events'] = 'all';
+            elements = this.div.children;
+            for ( i=0; i<elements.length; i++ ) {
+                elements[i].style['pointer-events'] = 'all';
             }
 
-            if ( entry && typeof entry === "function" ) {
-                entries = $( this.div.children );
-                if ( renderer.getEntrySelector() ) {
-                    entries = entries.find( renderer.getEntrySelector() );
-                }
-                entries.each( function( index, elem ) {
-                    entry( data, elem );
-                });
+            if ( renderer ) {
+                // if renderer is attached, call hook function
+                renderer.hook( elements, entries, data );
             }
         }
     };
 
-    return OpenLayers.Tile.Html;
+    return OpenLayers.Tile.HTML;
 });

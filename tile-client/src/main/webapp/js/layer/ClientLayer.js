@@ -95,7 +95,7 @@ define( function( require ) {
     };
 
     /**
-     * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
+     * @param zIndex {number} The new z-order value of the layer, where 0 is front.
      */
     ClientLayer.prototype.setZIndex = function ( zIndex ) {
         // we by-pass the OpenLayers.Map.setLayerIndex() method and manually

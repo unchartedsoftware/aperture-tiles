@@ -27,27 +27,28 @@ define( function( require ) {
     "use strict";
 
     var Renderer = require('./Renderer'),
-        RendererUtil = require('./RendererUtil');
+        RendererUtil = require('./RendererUtil'),
+        injectCss;
 
-    function GraphLabelRenderer( spec ) {
-        Renderer.call( this, spec );
-        this.setStyles();
-    }
-
-    GraphLabelRenderer.prototype = Object.create( Renderer.prototype );
-
-    GraphLabelRenderer.prototype.setStyles = function() {
+    injectCss = function( spec ) {
         var i;
-        if ( this.spec.text.themes ) {
-            for ( i=0; i<this.spec.text.themes.length; i++ ) {
-                this.spec.text.themes[i].injectTheme({
+        if ( spec.text.themes ) {
+            for ( i=0; i<spec.text.themes.length; i++ ) {
+                spec.text.themes[i].injectTheme({
                     selector: ".node-label"
                 });
             }
         }
     };
 
-    GraphLabelRenderer.prototype.createHtml = function( data ) {
+    function GraphLabelRenderer( spec ) {
+        Renderer.call( this, spec );
+        injectCss( this.spec );
+    }
+
+    GraphLabelRenderer.prototype = Object.create( Renderer.prototype );
+
+    GraphLabelRenderer.prototype.render = function( data ) {
 
         var GRAPH_COORD_RANGE = 256,
             text = this.spec.text,
@@ -67,6 +68,7 @@ define( function( require ) {
             percent,
             hierLevel,
             parentIDarray = [],
+            entries = [],
             x, y, i;
 
         function capitalize( str ) {
@@ -83,9 +85,10 @@ define( function( require ) {
         // else normalize label attributes by num internal nodes
         countNorm = ( hierLevel === 0 ) ? metaCommunities.degree/2 : metaCommunities.numNodes/2;
 
-        for (i=0; i<communities.length; i++) {
+        for ( i=0; i<communities.length; i++ ) {
 
             community = communities[i];
+            entries.push( community );
 
             // capitalize label array, split by comma
             split = community.metadata.split(",");
@@ -127,12 +130,13 @@ define( function( require ) {
                   + 'margin-top:' + (-fontSize/2) + 'px;'
                   + 'height:' + fontSize + 'px;'
                   + 'opacity:' + percent + ';'
-                  // + 'color:' + RendererUtil.hexBlend( "#fff", "#000", percent ) + ";"
                   + 'z-index:' + Math.floor( fontSize ) + ';'
                   + '">'+label+'</div>';
         }
-
-        return html;
+        return {
+            html: html,
+            entries: entries
+        };
     };
 
     return GraphLabelRenderer;

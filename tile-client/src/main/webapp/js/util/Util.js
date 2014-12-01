@@ -23,11 +23,33 @@
  * SOFTWARE.
  */
 
-define( function () {
+define( function() {
     "use strict";
+
+    var propagateEvent;
+
+    propagateEvent = function( event ) {
+        var newEvent = new event.constructor( event.type, event ),
+            element,
+            before,
+            below;
+
+        element = event.currentTarget;
+        before = element.style['pointer-events'];
+        element.style['pointer-events'] = 'none';
+        below = document.elementFromPoint( event.clientX, event.clientY );
+        if ( below ) {
+            below.dispatchEvent( newEvent );
+        }
+        element.style['pointer-events'] = before;
+    };
 
     return {
 
+        /**
+         * Generates an RFC4122 version 4 compliant UUID string.
+         * @returns {string}
+         */
         generateUuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = (c === 'x') ? r : (r&0x3|0x8);
@@ -35,67 +57,56 @@ define( function () {
             });
         },
 
-
         /**
          * Allows the given DOM element or jQuery object events to propagate through
          * and interact with underlying elements
+         *
+         * @param elem   {HTMLElement || jQuery} The DOM element.
+         * @param events {Array}                 Array of events to propagate through.
          */
         enableEventPropagation: function( elem, events ) {
 
             var domElement = ( elem instanceof jQuery ) ? elem[0] : elem,
                 i;
 
-            function propagateEvent( event ) {
-                var newEvent = new event.constructor( event.type, event ),
-                    $elem,
-                    before,
-                    below;
-
-                $elem = $( event.currentTarget );
-                before = $elem.css( 'pointer-events' );
-                $elem.css( 'pointer-events', 'none' );
-                below = document.elementFromPoint( event.clientX, event.clientY );
-                if ( below ) {
-                    below.dispatchEvent( newEvent );
-                }
-                $elem.css( 'pointer-events', before );
-            }
-
-            $( domElement ).addClass( 'propagate' );
-
             if ( !events ) {
-                domElement.onmousedown = propagateEvent;
-                domElement.onmouseup = propagateEvent;
-                domElement.onmousemove = propagateEvent;
-                domElement.onwheel = propagateEvent;
-                domElement.onscroll = propagateEvent;
-                domElement.onclick = propagateEvent;
-                domElement.ondblclick = propagateEvent;
+                domElement.addEventListener( 'mousedown', propagateEvent );
+                domElement.addEventListener( 'mouseup', propagateEvent );
+                domElement.addEventListener( 'mousemove', propagateEvent );
+                domElement.addEventListener( 'wheel', propagateEvent );
+                domElement.addEventListener( 'scroll', propagateEvent );
+                domElement.addEventListener( 'click', propagateEvent );
+                domElement.addEventListener( 'dblclick', propagateEvent );
             } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = propagateEvent;
+                events = ( events instanceof Array ) ? events : [events];
+                for ( i=0; i<events.length; i++ ) {
+                    domElement.addEventListener( events[i], propagateEvent );
                 }
             }
         },
 
-
+        /**
+         * Removes previously enabled event propagation.
+         *
+         * @param elem   {HTMLElement || jQuery} The DOM element.
+         * @param events {Array}                 Array of events to remove.
+         */
         disableEventPropagation: function( elem, events ) {
 
-            var domElement = (elem instanceof jQuery) ? elem[0] : elem,
+            var domElement = ( elem instanceof jQuery ) ? elem[0] : elem,
                 i;
             if ( !events ) {
-                domElement.onmousedown = null;
-                domElement.onmouseup = null;
-                domElement.onmousemove = null;
-                domElement.onwheel = null;
-                domElement.onscroll = null;
-                domElement.onclick = null;
-                domElement.ondblclick = null;
+                domElement.removeEventListener( 'mousedown', propagateEvent );
+                domElement.removeEventListener( 'mouseup', propagateEvent );
+                domElement.removeEventListener( 'mousemove', propagateEvent );
+                domElement.removeEventListener( 'wheel', propagateEvent );
+                domElement.removeEventListener( 'scroll', propagateEvent );
+                domElement.removeEventListener( 'click', propagateEvent );
+                domElement.removeEventListener( 'dblclick', propagateEvent );
             } else {
-                events = ($.isArray) ? events : [events];
-                for (i=0; i<events.length; i++) {
-                    domElement[events[i]] = null;
+                events = ( events instanceof Array ) ? events : [events];
+                for ( i=0; i<events.length; i++ ) {
+                    domElement.removeEventListener( events[i], propagateEvent );
                 }
             }
         },
@@ -105,42 +116,55 @@ define( function () {
          * involve a map drag. Since the map is moving under the mouse cursor
          * the browser will still register a click despite mouse movement. This
          * guards against that.
+         *
+         * @param element     {HTMLElement} The DOM element to attach the event.
+         * @param callback    {Function}    The callback function.
+         * @param [threshold] {int}         The movement threshold (optional).
          */
-        dragSensitiveClick : function( node, handler, threshold ) {
+        dragSensitiveClick : function( element, callback, threshold ) {
             var dragStart = {x: null, y: null};
 
             threshold = threshold || 10;
 
-            node.on('mousedown', function(evt) {
+            element.onmousedown = function( evt ) {
                 dragStart.x = evt.pageX;
                 dragStart.y = evt.pageY;
-            });
+            };
 
-            node.on('click', function(evt) {
-                if (Math.abs(dragStart.x-evt.pageX) < threshold &&
-                    Math.abs(dragStart.y-evt.pageY) < threshold ) {
-                    handler.call(this, evt);
+            element.onclick = function( evt ) {
+                if (Math.abs( dragStart.x - evt.pageX ) < threshold &&
+                    Math.abs( dragStart.y - evt.pageY ) < threshold ) {
+                    callback.call( this, evt );
                 }
-            });
+            };
         },
 
-
-
-
-
-        getURLParameter: function (key) {
+        /**
+         * Return an object containing all parameters and values in the current
+         * URL.
+         * @returns {Object}
+         */
+        getURLParameters: function() {
             var url = window.location.search.substring(1),
                 urlVars = url.split('&'),
-                i, varKey,
-                result = 0;
-            for (i=0; i<urlVars.length; ++i) {
-                varKey = urlVars[i].split('=');
-                if (key === varKey[0]) {
-                    result = varKey[1];
-                    break;
-                }
+                result = {},
+                keyValue,
+                i;
+            for  (i=0; i<urlVars.length; ++i ) {
+                keyValue = urlVars[i].split('=');
+                result[ keyValue[0] ] = keyValue[1];
             }
             return result;
+        },
+
+        /**
+         * Return the value of a specific parameters in the current URL.
+         *
+         * @param key {string} The url parameter key.
+         * @returns {string}
+         */
+        getURLParameter: function( key ) {
+            return this.getURLParameters()[ key ];
         }
 
     };

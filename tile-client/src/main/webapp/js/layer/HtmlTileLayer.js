@@ -28,7 +28,7 @@ define( function( require ) {
 
     var HtmlTile = require('./HtmlTile');
 
-    OpenLayers.Layer.Html = function( name, url, options ) {
+    OpenLayers.Layer.HTML = function( name, url, options ) {
         OpenLayers.Layer.Grid.call( this, name, url, options );
         this.getURL = options.getURL;
         this.layername = options.layername;
@@ -36,11 +36,10 @@ define( function( require ) {
         this.tileClass = HtmlTile;
         this.html = options.html;
         this.renderer = options.renderer;
-        this.entry = options.entry;
-        this.CLASS_NAME = 'OpenLayers.Layer.Html';
+        this.CLASS_NAME = 'OpenLayers.Layer.HTML';
     };
 
-    OpenLayers.Layer.Html.prototype = Object.create( OpenLayers.Layer.Grid.prototype );
+    OpenLayers.Layer.HTML.prototype = Object.create( OpenLayers.Layer.Grid.prototype );
 
-    return OpenLayers.Layer.Html;
+    return OpenLayers.Layer.HTML;
 });
