@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest.legend;
 import com.google.inject.Inject;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
+import com.oculusinfo.tile.rest.QueryParamDecoder;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
@@ -69,10 +70,7 @@ public class LegendResource extends ApertureServerResource {
 		try {
 
             // decode the query parameters
-            JSONObject decodedQueryParams = new JSONObject();
-            if ( getRequest().getResourceRef().hasQuery() ) {
-                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
-            }
+            JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
 
             String outputType = decodedQueryParams.optString("output", "uri");
 			int width = decodedQueryParams.optInt("width", 128);

@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
+import com.oculusinfo.tile.rest.QueryParamDecoder;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,9 +40,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import java.awt.image.BufferedImage;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class TileResource extends ApertureServerResource {
 
@@ -138,6 +137,11 @@ public class TileResource extends ApertureServerResource {
 		return indices;
 	}
 
+
+    /**
+     * GET request. Returns a tile from a layer at specified level, xIndex, yIndex. Currently
+     * supports png/jpg image formats and JSON data tiles.
+     */
 	@Get
 	public Representation getTile() throws ResourceException {
 
@@ -159,10 +163,8 @@ public class TileResource extends ApertureServerResource {
 			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 
             // decode and build JSONObject from request parameters
-            JSONObject decodedQueryParams = null;
-            if ( getRequest().getResourceRef().hasQuery() ) {
-                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
-            }
+            JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
+
             // parse parameters for tile sets or tile bounds
 			Collection<TileIndex> tileSet = parseTileSetDescription( decodedQueryParams );
 			tileSet.add(index);

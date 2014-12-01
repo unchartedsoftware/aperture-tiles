@@ -163,8 +163,8 @@ public class LayerServiceImpl implements LayerService {
             // first check if the query parameters contains a SHA-256 hash. If so
             // load the configured JSONObject. Otherwise take the server default.
             JSONObject layerConfig;
-            if ( requestParams != null && requestParams.has("sha") ) {
-                layerConfig = _layersBySha.get( requestParams.getString("sha") );
+            if ( requestParams != null && requestParams.has("state") ) {
+                layerConfig = _layersBySha.get( requestParams.getString("state") );
             } else {
                 layerConfig = _layersById.get( layerId );
             }
@@ -194,7 +194,7 @@ public class LayerServiceImpl implements LayerService {
 	}
 
     @Override
-	public String configureLayer( String layerId, JSONObject overrideConfiguration ) throws Exception {
+	public String saveLayerState( String layerId, JSONObject overrideConfiguration ) throws Exception {
         try {
             // use the layer config to produce the string rather than the config json itself,
             // this ensures that ALL configurable properties are used in sha generation, rather
@@ -212,6 +212,28 @@ public class LayerServiceImpl implements LayerService {
             throw e;
 		}
 	}
+
+    @Override
+    public JSONObject getLayerStates( String layerId ) {
+        JSONObject states = new JSONObject();
+        try {
+            // add default
+            states.put( "default", getLayerConfiguration( layerId, null )
+                    .getExplicitConfiguration()
+                    .getJSONObject("public") ); // only return public node
+            // add saved
+            for ( Map.Entry<String, JSONObject> entry : _layersBySha.entrySet() ) {
+                String key = entry.getKey();
+                JSONObject value = entry.getValue();
+                states.put( key, getLayerConfiguration( layerId, value.getJSONObject("public") )
+                        .getExplicitConfiguration()
+                        .getJSONObject("public") ); // only return public node
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return states;
+    }
 
 	private File[] getConfigurationFiles (String location) {
 		try {
