@@ -26,6 +26,8 @@ package com.oculusinfo.factory;
 import java.io.PrintStream;
 import java.security.MessageDigest;
 import java.util.*;
+
+import org.apache.commons.codec.binary.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -213,15 +215,10 @@ abstract public class ConfigurableFactory<T> {
             MessageDigest md = MessageDigest.getInstance( "SHA-256" );
             md.update( propertyString.getBytes( "UTF-8" ) );
             byte[] digest = md.digest();
-
             // convert SHA-256 bytes to hex string
-            StringBuilder sb2 = new StringBuilder();
-            for ( byte b : digest ) {
-                sb2.append( Integer.toString( ( b & 0xff ) + 0x100, 16 ).substring( 1 ) );
-            }
-            return sb2.toString();
+            return Hex.encodeHexString( digest );
         } catch ( Exception e ) {
-			LOGGER.warn("Error registering configuration to SHA");
+			LOGGER.warn( "Error registering configuration to SHA", e );
             return "";
 		}
     }
@@ -526,34 +523,25 @@ abstract public class ConfigurableFactory<T> {
         return sb.toString();
     }
 
-    private JSONObject addJSONPath( JSONObject config, List<String> path ) {
+    private JSONObject addJSONPath( JSONObject config, List<String> path ) throws JSONException {
 
         List<String> fullPath = new ArrayList<>( getRootPath() );
         fullPath.addAll( path );
-        try {
-            JSONObject node = config;
-            for ( int i=0; i<fullPath.size(); i++ ) {
-                String subpath = fullPath.get( i );
-                if ( !node.has( subpath ) ) {
-                    node.put( subpath, new JSONObject() );
-                }
-                node = node.getJSONObject( subpath );
+        JSONObject node = config;
+        for ( int i=0; i<fullPath.size(); i++ ) {
+            String subpath = fullPath.get( i );
+            if ( !node.has( subpath ) ) {
+                node.put( subpath, new JSONObject() );
             }
-            return node;
-        } catch ( Exception e ) {
-            e.printStackTrace();
+            node = node.getJSONObject( subpath );
         }
-        return null;
+        return node;
     }
 
-    private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) {
-        try {
-            List<String> path = _pathsByProperty.get( property.getName() );
-            JSONObject node = addJSONPath( config, path );
-            node.put( property.getName(), getPropertyValue( property ) );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
+    private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
+        List<String> path = _pathsByProperty.get( property.getName() );
+        JSONObject node = addJSONPath( config, path );
+        node.put( property.getName(), getPropertyValue( property ) );
     }
 
     private JSONObject generateConfigurationObj( JSONObject config ) {
@@ -565,8 +553,8 @@ abstract public class ConfigurableFactory<T> {
                 addJSONPath( config, child.getRootPath() );
                 child.generateConfigurationObj( config );
             }
-        } catch ( Exception e ) {
-            e.printStackTrace();
+        } catch ( JSONException e ) {
+            LOGGER.warn( "Error occurred while generating configuration JSON", e );
         }
         return config;
     }

@@ -138,53 +138,10 @@ public class TileResource extends ApertureServerResource {
 	}
 
 
-    public JSONObject decodeQueryParams( String params ) {
-
-        JSONObject query = new JSONObject();
-        List<String> paramArray = Arrays.asList( params.split( "&" ) );
-        try {
-            for ( String param : paramArray ) {
-
-                // break param into key value pair
-                List<String> keyValue = Arrays.asList( param.split( "=" ) );
-                String key = keyValue.get( 0 );
-
-                List<String> value =  Arrays.asList( keyValue.get( 1 ).split( "," ) );
-
-                // split key into array of sub paths
-                List<String> paramPath = Arrays.asList( key.split( "\\." ) );
-
-                JSONObject node = query;
-                for ( int i=0; i<paramPath.size(); i++ ) {
-                    String subpath = paramPath.get( i );
-                    if ( i != paramPath.size()-1 ) {
-                        if ( !query.has( subpath ) ) {
-                            query.put( subpath, new JSONObject() );
-                        }
-                        node = query.getJSONObject( subpath );
-                    } else {
-                        if ( value.size() == 0 ) {
-                            // single value
-                            node.put( subpath, value.get( 0 ) );
-                        } else {
-                            // array value
-                            JSONArray valueArray = new JSONArray();
-                            for ( String val : value ) {
-                                valueArray.put( val );
-                            }
-                            node.put( subpath, valueArray );
-                        }
-                    }
-                }
-            }
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-
-        return query;
-    }
-
-
+    /**
+     * GET request. Returns a tile from a layer at specified level, xIndex, yIndex. Currently
+     * supports png/jpg image formats and JSON data tiles.
+     */
 	@Get
 	public Representation getTile() throws ResourceException {
 
