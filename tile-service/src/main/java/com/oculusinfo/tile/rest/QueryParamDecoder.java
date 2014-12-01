@@ -35,6 +35,20 @@ public class QueryParamDecoder {
      * @param params query parameter string
      * @return the JSON object the query parameter string represents. Returns null if
      * there is no parameters, or if there is invalid input.
+     *
+     * Example:
+     *
+     *  "renderer.ramp=spectral&renderer.coarseness=2&valueTransform.type=log10"
+     *
+     *  {
+     *      renderer: {
+     *          ramp: "spectral",
+     *          coarseness: 2
+     *      },
+     *      valueTransform: {
+     *          type: "log10"
+     *      }
+     *  }
      */
     static public JSONObject decode( String params ) {
         if ( params == null ) {
