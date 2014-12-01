@@ -103,11 +103,10 @@ require(['./util/Util',
                             x : "x",
                             y : "y",
                             themes: [
-                                new RenderTheme({
-                                    id: "dark-theme",
-                                    color: "#FFFFFF",
-                                    hoverColor: "#09CFFF",
-                                    outline: "#000"
+                                new RenderTheme( ".dark-theme", {
+                                    'color': "#FFFFFF",
+                                    'color:hover': "#09CFFF",
+                                    'text-shadow': "#000"
                                 })
                             ]
                         }
@@ -122,11 +121,10 @@ require(['./util/Util',
                             y : "y",
                             radius: "r",
                             themes: [
-                                new RenderTheme({
-                                    id: "dark-theme",
-                                    color : "rgba(0,0,0,0)",
-                                    outline : "rgb(78,205,196)",
-                                    hoverColor : "rgba(78,205,196,0.2)"
+                                new RenderTheme( ",dark-theme", {
+                                    'background-color' : "rgba(0,0,0,0)",
+                                    'border' : "rgb(78,205,196)",
+                                    'background-color:hover' : "rgba(78,205,196,0.2)"
                                 })
                             ]
                         },
@@ -134,11 +132,10 @@ require(['./util/Util',
                             flag : "isPrimaryNode",
                             y : "y",
                             themes: [
-                                new RenderTheme({
-                                    id: "dark-theme",
-                                    color : "rgba(0,0,0,0)",
-                                    outline : "rgb(255,255,255)",
-                                    hoverColor : "rgba(255,255,255,0.2)"
+                                new RenderTheme( ".dark-theme", {
+                                    'background-color' : "rgba(0,0,0,0)",
+                                    'border' : "rgb(255,255,255)",
+                                    'background-color:hover' : "rgba(255,255,255,0.2)"
                                 })
                             ]
                         },
@@ -148,11 +145,10 @@ require(['./util/Util',
                             x: "parentX",
                             y: "parentY",
                             themes: [
-                                new RenderTheme({
-                                    id: "dark-theme",
-                                    color : "rgba(0,0,0,0)",
-                                    outline : "#555",
-                                    hoverColor : "rgba(0,0,0,0)"
+                                new RenderTheme( ".dark-theme", {
+                                    'background-color' : "rgba(0,0,0,0)",
+                                    'border' : "#555",
+                                    'background-color:hover' : "rgba(0,0,0,0)"
                                 })
                             ]
                         }

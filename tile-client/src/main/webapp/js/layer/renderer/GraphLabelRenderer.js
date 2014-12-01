@@ -41,8 +41,7 @@ define( function( require ) {
         if ( this.spec.text.themes ) {
             for ( i=0; i<this.spec.text.themes.length; i++ ) {
                 this.spec.text.themes[i].injectTheme({
-                    elemClass: "node-label",
-                    attribute: "color"
+                    selector: ".node-label"
                 });
             }
         }

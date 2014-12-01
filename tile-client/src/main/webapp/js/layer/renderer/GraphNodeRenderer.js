@@ -40,24 +40,21 @@ define( function() {
         if ( this.spec.node.themes ) {
             for (i = 0; i < this.spec.node.themes.length; i++) {
                 this.spec.node.themes[i].injectTheme({
-                    elemClass: "community-node",
-                    attribute: "background-color"
+                    selector: ".community-node"
                 });
             }
         }
         if ( this.spec.criticalNode.themes ) {
             for (i = 0; i < this.spec.criticalNode.themes.length; i++) {
                 this.spec.criticalNode.themes[i].injectTheme({
-                    elemClass: "community-node community-critical-node",
-                    attribute: "background-color"
+                    selector: ".community-node .community-critical-node"
                 });
             }
         }
         if ( this.spec.parentNode.themes ) {
             for (i = 0; i < this.spec.parentNode.themes.length; i++) {
                 this.spec.parentNode.themes[i].injectTheme({
-                    elemClass: "community-parent-node",
-                    attribute: "background-color"
+                    selector: ".community-parent-node"
                 });
             }
         }
