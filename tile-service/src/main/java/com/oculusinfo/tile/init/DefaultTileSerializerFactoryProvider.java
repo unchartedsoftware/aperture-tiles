@@ -25,29 +25,22 @@ package com.oculusinfo.tile.init;
 
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardsCompatibilitySerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.FloatArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.FloatAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.IntegerArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.LongArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.LongAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringDoublePairArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringFloatPairArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
 import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.ConfigurableFactory;
-
 
 
 /**
@@ -55,6 +48,10 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
+ *
+ * This isn't really an enum, but acts like one in all ways except 
+ * initialization; it is not one to allow us to use loops and generification 
+ * during initialization.
  * 
  * <pre>
  * <code>
@@ -62,137 +59,49 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * </code>
  * </pre>
  */
-public enum DefaultTileSerializerFactoryProvider
-	implements DelegateFactoryProviderTarget<TileSerializer<?>>
+public final class DefaultTileSerializerFactoryProvider
+	implements DelegateFactoryProviderTarget<TileSerializer<?>>,
+	           Comparable<DefaultTileSerializerFactoryProvider>
 {
-	LEGACY(new Constructor() {
-			@Override
-			public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-			                                                                List<String> path) {
-				return new BackwardsCompatibilitySerializerFactory(parent, path);
-			}
-		}),
-		DOUBLE_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new DoubleAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		FLOAT_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new FloatAvroSerializerFactory(parent, path);
-				}
+	private static int __currentOrdinal                                        = 0;
+	private static List<DefaultTileSerializerFactoryProvider> __values         = new ArrayList<>();
+	private static Map<String, DefaultTileSerializerFactoryProvider> __reverse = new HashMap<>();
 
-			}),
-		INTEGER_AVRO(new Constructor() {
+
+	// Specific, un-generified serializer types
+
+	// Our old pre-avro serializer
+	@Deprecated
+	public static final DefaultTileSerializerFactoryProvider LEGACY =
+		new DefaultTileSerializerFactoryProvider("legacy", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
-					return new IntegerAvroSerializerFactory(parent, path);
+					return new com.oculusinfo.binning.io.serialization.impl.BackwardsCompatibilitySerializerFactory(parent, path);
 				}
-        
-			}),
-		LONG_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new LongAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		DOUBLE_JSON(new Constructor() {
+			});
+
+	// JSON serializers
+	public static final DefaultTileSerializerFactoryProvider DOUBLE_JSON =
+		new DefaultTileSerializerFactoryProvider("double_json", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
 					return new DoubleJsonSerializerFactory(parent, path);
 				}
-        
-			}),
-		DOUBLE_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new DoubleArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		FLOAT_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new FloatArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		INTEGER_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new IntegerArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		LONG_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new LongArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		STRING_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new StringArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		STRING_DOUBLE_PAIR_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new StringDoublePairArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		STRING_FLOAT_PAIR_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new StringFloatPairArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		STRING_INT_PAIR_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new StringIntPairArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		STRING_LONG_PAIR_ARRAY_AVRO(new Constructor() {
-				@Override
-				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
-					return new StringLongPairArrayAvroSerializerFactory(parent, path);
-				}
-        
-			}),
-		STRING_INT_PAIR_ARRAY_JSON(new Constructor() {
+			});
+
+	public static final DefaultTileSerializerFactoryProvider STRING_INT_PAIR_ARRAY_JSON =
+		new DefaultTileSerializerFactoryProvider("string_int_pair_array_json", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
 					return new StringIntPairArrayJsonSerializerFactory(parent, path);
 				}
-        
-			}),
-		STRING_LONG_PAIR_ARRAY_MAP_JSON(new Constructor() {
+			});
+
+	public static final DefaultTileSerializerFactoryProvider STRING_LONG_PAIR_ARRAY_MAP_JSON =
+		new DefaultTileSerializerFactoryProvider("string_long_pair_array_map_json", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 				                                                                List<String> path) {
@@ -200,16 +109,89 @@ public enum DefaultTileSerializerFactoryProvider
 				}
 			});
 
+
+
+	// Generified serializer types
+	// Single-value serialziers
+	public static final List<DefaultTileSerializerFactoryProvider> PRIMITIVES =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
+				{
+					for (final Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String name = PrimitiveAvroSerializer.getAvroType(type)+"_avro";
+						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+								@Override
+								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+								                                                                List<String> path) {
+									return new PrimitiveAvroSerializerFactory<>(parent, path, type);
+								}
+							}));
+					}
+				}
+			});
+
+	// Array serializers
+	public static final List<DefaultTileSerializerFactoryProvider> PRIMITIVE_ARRAYS =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
+				{
+					for (final Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String name = PrimitiveAvroSerializer.getAvroType(type)+"_array_avro";
+						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+								@Override
+								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+								                                                                List<String> path) {
+									return new PrimitiveArrayAvroSerializerFactory<>(parent, path, type);
+								}
+							}));
+					}
+				}
+			});
+
+	// Array of Pair (can be used for maps) serializers
+	public static final List<DefaultTileSerializerFactoryProvider> PAIRS =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
+
+				{
+					for (final Class<?> keyType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String keyName = PrimitiveAvroSerializer.getAvroType(keyType);
+						for (final Class<?> valueType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+							String name = keyName+"_"+PrimitiveAvroSerializer.getAvroType(valueType)+"_pair_array_avro";
+							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+									@Override
+									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+									                                                                List<String> path) {
+										return new PairArrayAvroSerializerFactory<>(parent, path, keyType, valueType);
+									}
+								}));
+						}
+					}
+				}
+			});
+
+
+	
 	// -------------------------------------
 
+	private final String      _name;
 	private final Constructor _constructor;
+	private final int         _ordinal;
 
 
 
-	private DefaultTileSerializerFactoryProvider (Constructor constructor) {
+	private DefaultTileSerializerFactoryProvider (String name, Constructor constructor) {
+		_name = name;
 		_constructor = constructor;
+		_ordinal = __currentOrdinal;
+		__currentOrdinal = __currentOrdinal+1;
+		__values.add(this);
+		__reverse.put(name, this);
 	}
 
+	public int oridinal () {
+		return _ordinal;
+	}
 
 	@Override
 	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (List<String> path) {
@@ -220,6 +202,47 @@ public enum DefaultTileSerializerFactoryProvider
 	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
 		 List<String> path) {
 		return _constructor.create(parent, path);
+	}
+
+	// Enum mimics
+	@Override
+	public String toString () {
+		return _name;
+	}
+
+	@Override
+	protected Object clone () throws CloneNotSupportedException {
+		throw new CloneNotSupportedException("Default Tile Serializer Factory Providers should be treated like enums.");
+	}
+
+	@Override
+	public int compareTo (DefaultTileSerializerFactoryProvider that) {
+		return this._ordinal - that._ordinal;
+	}
+
+	public final Class<DefaultTileSerializerFactoryProvider> getDeclaringClass () {
+		return DefaultTileSerializerFactoryProvider.class;
+	}
+
+	@Override
+	public final boolean equals (Object that) {
+		return this == that;
+	}
+
+	@Override
+	public final int hashCode () {
+		return super.hashCode();
+	}
+
+
+
+	// Enum static mimics
+	public static DefaultTileSerializerFactoryProvider valueOf (String name) {
+		return __reverse.get(name.toLowerCase());
+	}
+
+	public static List<DefaultTileSerializerFactoryProvider> values () {
+		return __values;
 	}
 
 

@@ -41,12 +41,12 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.StringArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
 
+@SuppressWarnings("deprecation")
 public class SerializationTests {
 	//@Test
 	public void testBackwardCompatbilitySerialize() throws IOException{
@@ -112,7 +112,7 @@ public class SerializationTests {
 			}
 		}
 		PyramidIO io = new TestPyramidIO();
-		TileSerializer<Double> serializer = new DoubleAvroSerializer(CodecFactory.nullCodec());
+		TileSerializer<Double> serializer = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
 		List<TileData<Double>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
@@ -135,7 +135,7 @@ public class SerializationTests {
 			}
 		}
 		PyramidIO io = new TestPyramidIO();
-		TileSerializer<List<Double>> serializer = new DoubleArrayAvroSerializer(CodecFactory.nullCodec());
+		TileSerializer<List<Double>> serializer = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
 		List<TileData<List<Double>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
@@ -161,7 +161,7 @@ public class SerializationTests {
 			}
 		}
 		PyramidIO io = new TestPyramidIO();
-		TileSerializer<List<String>> serializer = new StringArrayAvroSerializer(CodecFactory.nullCodec());
+		TileSerializer<List<String>> serializer = new PrimitiveArrayAvroSerializer<>(String.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
 		List<TileData<List<String>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
