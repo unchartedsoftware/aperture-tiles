@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-define( function() {
+define( function( require ) {
     "use strict";
 
     var Renderer = require('./Renderer');
@@ -47,7 +47,7 @@ define( function() {
         if ( this.spec.criticalNode.themes ) {
             for (i = 0; i < this.spec.criticalNode.themes.length; i++) {
                 this.spec.criticalNode.themes[i].injectTheme({
-                    selector: ".community-node .community-critical-node"
+                    selector: ".community-node.community-critical-node"
                 });
             }
         }

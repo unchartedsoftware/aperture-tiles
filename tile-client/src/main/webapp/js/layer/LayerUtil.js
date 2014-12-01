@@ -90,17 +90,18 @@ define( function () {
          * @param layerData {Object|Array} layer data object or array of layer data objects
          */
         parse: function( layerData ) {
-            var layerMap,
+            var layers = layerData.layers || layerData.layer,
+                layerMap,
                 i;
-            if ( !(layerData instanceof Array) ) {
-                layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+            if ( !(layers instanceof Array) ) {
+                layers.meta.minMax = parseLevelsMinMax( layers.meta );
                 return layerData;
             }
             // if given an array, convert it into a map keyed by layerId
             layerMap = {};
-            for ( i=0; i<layerData.length; i++ ) {
-                layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
-                layerMap[ layerData[i].id ] = layerData[i];
+            for ( i=0; i<layers.length; i++ ) {
+                layers[i].meta.minMax = parseLevelsMinMax( layers[i].meta );
+                layerMap[ layers[i].id ] = layers[i];
             }
             return layerMap;
         },

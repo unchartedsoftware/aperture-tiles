@@ -116,6 +116,7 @@ define( function( require ) {
             fontScale = ( hierLevel === 0 ) ? community.degree : community.numNodes;
             fontSize = RendererUtil.getFontSize( fontScale, countNorm );
 
+            //
             percent = Math.min( 1, fontScale / countNorm ) + 0.5;
 
             html += '<div class="node-label" style="'
@@ -125,7 +126,8 @@ define( function( require ) {
                   + 'line-height:' + fontSize + 'px;'
                   + 'margin-top:' + (-fontSize/2) + 'px;'
                   + 'height:' + fontSize + 'px;'
-                  + 'color:' + RendererUtil.hexBlend( "#fff", "#000", percent ) + ";"
+                  + 'opacity:' + percent + ';'
+                  // + 'color:' + RendererUtil.hexBlend( "#fff", "#000", percent ) + ";"
                   + 'z-index:' + Math.floor( fontSize ) + ';'
                   + '">'+label+'</div>';
         }

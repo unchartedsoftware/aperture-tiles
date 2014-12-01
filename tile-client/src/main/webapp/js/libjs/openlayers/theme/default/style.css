@@ -10,7 +10,6 @@ div.olMapViewport {
 }
 
 div.olLayerDiv {
-    pointer-events: none;
    -moz-user-select: none;
    -khtml-user-select: none;
 }

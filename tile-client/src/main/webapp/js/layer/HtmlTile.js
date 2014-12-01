@@ -147,6 +147,7 @@ define( function() {
             this.div.innerHTML = html;
             this.div.style.visibility = 'inherit';
             this.div.style.opacity = 'inherit';
+            this.div.style['pointer-events'] = 'none';
 
             // set pointer-events on tile elements to 'all'
             entries = this.div.children;
