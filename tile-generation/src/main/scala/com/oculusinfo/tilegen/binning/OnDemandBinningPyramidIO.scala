@@ -54,7 +54,6 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 

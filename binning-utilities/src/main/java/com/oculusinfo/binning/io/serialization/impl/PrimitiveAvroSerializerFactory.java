@@ -24,32 +24,45 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import java.util.List;
-
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 
+import java.util.List;
+
 /**
  * This serializer factory constructs a
- * {@link com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer},
- * for use with tiles whose bin values are doubles.
+ * {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer},
+ * for use with tiles whose bin values are the basic avro primitive value types.
+ *
+ * See {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer}
+ * for information about what primitives are supported, and how.
  */
-public class DoubleAvroSerializerFactory extends ConfigurableFactory<TileSerializer<Double>> {
-	public static final String NAME = "double-a";
-
+public class PrimitiveAvroSerializerFactory<T> extends ConfigurableFactory<TileSerializer<T>> {
+	private static <T> String getName (Class<? extends T> type) {
+		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
+			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
+		return type.getSimpleName().toLowerCase()+"-a";
+	}
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Class<TileSerializer<Double>> getGenericSerializerClass () {
+	private static <ST> Class<TileSerializer<ST>> getGenericSerializerClass (Class<? extends ST> type) {
+		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
+			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
 		return (Class) TileSerializer.class;
 	}
 
-	public DoubleAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
-		super(NAME, getGenericSerializerClass(), parent, path);
+
+
+	private Class<? extends T> _type;
+
+	public PrimitiveAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path, Class<? extends T> type) {
+		super(getName(type), getGenericSerializerClass(type), parent, path);
+		_type = type;
 	}
 
 	@Override
-	protected TileSerializer<Double> create () {
-		return new DoubleAvroSerializer(TileSerializerFactory.getCodecFactory(this));
+	protected TileSerializer<T> create () {
+		return new PrimitiveAvroSerializer<>(_type, TileSerializerFactory.getCodecFactory(this));
 	}
 }

@@ -33,7 +33,7 @@ import org.json.JSONObject;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO;
 
@@ -118,7 +118,7 @@ public class JuliaLiveTest extends JFrame {
 	}
 
 	private void setupTileSerializer () {
-		_serializer = new DoubleAvroSerializer(CodecFactory.bzip2Codec());
+		_serializer = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
 	}
 
 	private void setupUI () {

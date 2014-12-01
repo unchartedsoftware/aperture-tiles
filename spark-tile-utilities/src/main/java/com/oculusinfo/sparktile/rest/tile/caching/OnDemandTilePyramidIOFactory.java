@@ -45,6 +45,7 @@ public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO>
 	public OnDemandTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
 		super("live", PyramidIO.class, parent, path);
 		_contextProvider = contextProvider;
+		addProperty(PyramidIOFactory.INITIALIZATION_DATA);
 	}
 
 	@Override
