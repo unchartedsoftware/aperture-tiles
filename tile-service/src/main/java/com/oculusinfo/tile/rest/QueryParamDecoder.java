@@ -37,18 +37,26 @@ public class QueryParamDecoder {
      * there is no parameters, or if there is invalid input.
      *
      * Example:
+     * <pre>
+     * <code>
      *
-     *  "renderer.ramp=spectral&renderer.coarseness=2&valueTransform.type=log10"
+     *     String query = "renderer.ramp=spectral&renderer.coarseness=2&valueTransform.type=log10";
+     *     JSONObject queryObject = QueryParamDecoder.decode( query );
+     *     System.out.println( queryObject.toString( 4 ) );
      *
-     *  {
-     *      renderer: {
-     *          ramp: "spectral",
-     *          coarseness: 2
-     *      },
-     *      valueTransform: {
-     *          type: "log10"
-     *      }
-     *  }
+     *     Output:
+     *
+     *     {
+     *         renderer: {
+     *             ramp: "spectral",
+     *             coarseness: 2
+     *         },
+     *         valueTransform: {
+     *             type: "log10"
+     *         }
+     *     }
+     *  </code>
+     *  </pre>
      */
     static public JSONObject decode( String params ) {
         if ( params == null ) {
