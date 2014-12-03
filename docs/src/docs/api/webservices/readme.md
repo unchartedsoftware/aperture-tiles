@@ -111,19 +111,30 @@ Example response:
 
 ```json
 {
-	“tile” : {
-		“level”: 7,
-		“xIndex”: 8,
-		“yIndex”: 4
+	"index" : {
+		"level": 7,
+		"xIndex": 8,
+		"yIndex": 4
 	},
-	“annotations” : {
-		“[0,0]”: [{
-			“level”: 7,
-			“x”: 73.35,
-			“y”: -125.6,
-			“range”: {
-					“min”: 0,
-					“max”: 9
+	"tile" : {
+		"values": [
+			{
+				value: [
+					"level": 7,
+					"x": 73.35,
+					"y": -125.6,
+					"range": {
+						"min": 0,
+						"max": 9
+					}
+					"group": "Urgent",   
+					"data": {
+						"comment": … ,
+						"author": … ,
+						"date": … 
+					},
+					"certificate": { … }
+				]
 			}
 		]
 	}
