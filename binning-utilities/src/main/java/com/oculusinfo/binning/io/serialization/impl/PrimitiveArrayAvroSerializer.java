@@ -53,14 +53,15 @@ public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<
 
 
 
-	private Schema _schema;
-	private boolean _toString; // A bit of a hack to handle string tiles as strings rather than Utf8s
+	private Class<? extends T>          _type;
+	private transient Schema            _schema          = null;
+	// A bit of a hack to handle string tiles as strings rather than Utf8s
+	private boolean                     _toString;
 
 	public PrimitiveArrayAvroSerializer (Class<? extends T> type, CodecFactory compressionCodec) {
 		super(compressionCodec, PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(type));
 
-		String typeName = PrimitiveAvroSerializer.getAvroType(type);
-		_schema = __schemaStore.getSchema(type, typeName);
+		_type = type;
 		_toString = (String.class.equals(type));
 	}
 
@@ -71,6 +72,10 @@ public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<
 
 	@Override
 	protected Schema createEntrySchema () {
+		if (null == _schema) {
+			String typeName = PrimitiveAvroSerializer.getAvroType(_type);
+			_schema = __schemaStore.getSchema(_type, typeName);
+		}
 		return _schema;
 	}
 
