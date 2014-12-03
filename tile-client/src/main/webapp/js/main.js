@@ -258,10 +258,11 @@ require(['./util/Util',
                 });
                 */
 
-                /*
+
                 axis = new Axis({
                     position: 'bottom',
                     title: 'Longitude',
+                    repeat: true,
                     intervals: {
                         type: 'fixed',
                         increment: 120
@@ -270,14 +271,36 @@ require(['./util/Util',
                         type: 'degrees'
                     }
                 });
-                */
+
 
                 map = new Map( "map" );
                 map.add( baseLayer );
-                //map.add( serverLayer0 );
-                //map.add( annotationLayer0 );
-                //map.add( clientLayer0 );
-                //map.addAxis( axis );
-
+                map.add( serverLayer0 );
+                map.add( annotationLayer0 );
+                map.add( clientLayer0 );
+                map.addAxis( new Axis({
+                    position: 'bottom',
+                    title: 'Longitude',
+                    repeat: true,
+                    intervals: {
+                        type: 'fixed',
+                        increment: 120
+                    },
+                    units: {
+                        type: 'degrees'
+                    }
+                }));
+                map.addAxis( new Axis({
+                    position: 'left',
+                    title: 'Latitude',
+                    repeat: true,
+                    intervals: {
+                        type: 'fixed',
+                        increment: 60
+                    },
+                    units: {
+                        type: 'degrees'
+                    }
+                }));
             });
         });

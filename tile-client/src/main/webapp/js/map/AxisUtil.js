@@ -197,13 +197,24 @@ define({
         return rollover;
     },
 
+
+    getMarker: function( axis, vx, vy ) {
+        var xOrY = axis.isXAxis ? 'x' : 'y',
+            pixel = ( axis.isXAxis ) ? vx : vy,
+            value = axis.map.getCoordFromViewportPixel( vx, vy )[ xOrY ];
+        return {
+            label : this.getMarkerRollover( axis, value ),
+            pixel : pixel
+        };
+    },
+
     /**
      * Generates all visible marker values, returns array of objects, containing
      * labels and pixel locations
      *
      * @param axis {Axis} the axis object.
      */
-    getMarkers : function( axis ) {
+    getMarkers: function( axis ) {
         "use strict";
 
         // generates all increments between min and max using specified interval

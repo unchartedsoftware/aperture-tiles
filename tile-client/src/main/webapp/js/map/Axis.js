@@ -429,26 +429,19 @@ define(function (require) {
         this.$map = $( this.map.getElement() );
 
         // axis will redraw on map movement
-        /*
+
         this.map.on('move', function() {
             console.log("derp");
             that.redraw();
         });
         this.map.on('mousemove', function( event ) {
-            console.log("derp");
             if ( !that.enabled ) {
                 return;
             }
-            var xOrY = that.isXAxis ? 'x' : 'y',
-                value = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y )[xOrY],
-                marker = {
-                    label : AxisUtil.getMarkerRollover( that, value ),
-                    pixel : event.xy[xOrY]
-                };
+            var marker = AxisUtil.getMarker( that, event.xy.x, event.xy.y );
             that.$content.find('.mouse-marker').remove();
             that.$content.append( $( createLargeMarkerHTML( that, marker ) ).addClass('mouse-marker') );
         });
-        */
 
         // generate the core html elements
         this.$axis = createAxis( this );

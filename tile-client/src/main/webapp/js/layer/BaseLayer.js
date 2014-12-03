@@ -55,39 +55,39 @@ define( function( require ) {
 
             case "Blank":
 
-                this.layer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
+                this.olLayer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
                 this.map.getElement().style['background-color'] = spec.options.color;
                 break;
 
             case "Google":
 
-                this.layer = new OpenLayers.Layer.Google( "BaseLayer", spec.options );
+                this.olLayer = new OpenLayers.Layer.Google( "BaseLayer", spec.options );
                 break;
 
             case "TMS":
 
-                this.layer = new OpenLayers.Layer.TMS( "BaseLayer", spec.url, spec.options );
+                this.olLayer = new OpenLayers.Layer.TMS( "BaseLayer", spec.url, spec.options );
                 break;
         }
 
-        this.map.map.addLayer( this.layer );
-        this.map.map.setBaseLayer( this.layer );
+        this.map.olMap.addLayer( this.olLayer );
+        this.map.olMap.setBaseLayer( this.olLayer );
 
         if ( spec.options.type === 'styled' ) {
             styledMapType = new google.maps.StyledMapType( spec.options.style, {name: 'Styled Map'} );
-            this.layer.mapObject.mapTypes.set( 'styled', styledMapType );
+            this.olLayer.mapObject.mapTypes.set( 'styled', styledMapType );
         }
 
         // ensure baselayer remains bottom layer
-        this.map.map.setLayerIndex( this.layer, -1 );
+        this.map.olMap.setLayerIndex( this.olLayer, -1 );
 
         this.setOpacity( this.getOpacity() );
         this.setVisibility( this.getVisibility() );
     };
 
     BaseLayer.prototype.deactivate = function() {
-        this.map.removeLayer( this.layer );
-        this.layer.destroy();
+        this.map.olMap.removeLayer( this.olLayer );
+        this.olLayer.destroy();
         this.map.getElement().style['background-color'] = '';
     };
 

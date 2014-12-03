@@ -47,7 +47,7 @@ define( function( require ) {
     AnnotationLayer.prototype.activate = function() {
 
         // add the new layer
-        this.layer = new HtmlTileLayer(
+        this.olLayer = new HtmlTileLayer(
             'Annotation Tile Layer',
             this.spec.source.tms,
             {
@@ -62,7 +62,7 @@ define( function( require ) {
                 entry: this.spec.entry
             });
 
-        this.map.map.addLayer( this.layer );
+        this.map.olMap.addLayer( this.olLayer );
 
         this.setZIndex( this.spec.zIndex );
         this.setOpacity( this.spec.opacity );
@@ -77,8 +77,8 @@ define( function( require ) {
     };
 
     AnnotationLayer.prototype.deactivate = function() {
-        // TODO: implement
-        return true;
+        this.map.olMap.removeLayer( this.olLayer );
+        this.olLayer.destroy();
     };
 
     /**
@@ -104,7 +104,7 @@ define( function( require ) {
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
         this.spec.zIndex = zIndex;
-        $( this.layer.div ).css( 'z-index', zIndex );
+        $( this.olLayer.div ).css( 'z-index', zIndex );
         PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
 

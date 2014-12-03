@@ -67,7 +67,6 @@ define( function( require ) {
     function ServerLayer( spec ) {
         // set reasonable defaults
         spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
-
         spec.renderer = spec.renderer || {};
         spec.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ?  spec.renderer.coarseness : 1;
         spec.renderer.ramp = spec.renderer.ramp || "spectral";
@@ -87,7 +86,7 @@ define( function( require ) {
 
         // set callback to update ramp min/max on zoom
         this.map.on("zoomend", function() {
-            if ( that.layer ) {
+            if ( that.olLayer ) {
                 that.setLevelMinMax( getLevelMinMax( that ) );
             }
         });
@@ -97,7 +96,7 @@ define( function( require ) {
         }
 
         // add the new layer
-        this.layer = new OpenLayers.Layer.TMS(
+        this.olLayer = new OpenLayers.Layer.TMS(
             'Server Rendered Tile Layer',
             this.spec.source.tms,
             {
@@ -109,7 +108,7 @@ define( function( require ) {
                 isBaseLayer: false,
                 getURL: getURL
             });
-        this.map.map.addLayer( this.layer );
+        this.map.olMap.addLayer( this.olLayer );
 
         requestRampImage( this );
         this.setZIndex( this.spec.zIndex );
@@ -120,8 +119,8 @@ define( function( require ) {
     };
 
     ServerLayer.prototype.deactivate = function() {
-        // TODO: implement
-        return true;
+        this.map.olMap.removeLayer( this.olLayer );
+        this.olLayer.destroy();
     };
 
     /**
@@ -154,8 +153,8 @@ define( function( require ) {
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
         this.spec.zIndex = zIndex;
-        if ( this.layer ) {
-            $( this.layer.div ).css( 'z-index', zIndex );
+        if ( this.olLayer ) {
+            $( this.olLayer.div ).css( 'z-index', zIndex );
             PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         }
     };
@@ -174,7 +173,7 @@ define( function( require ) {
         var that = this;
         this.spec.renderer.ramp = rampType;
         requestRampImage( that );
-        this.layer.redraw();
+        this.olLayer.redraw();
     };
 
     /**
@@ -191,7 +190,7 @@ define( function( require ) {
         var that = this;
         this.spec.renderer.theme = theme;
         requestRampImage( that );
-        this.layer.redraw();
+        this.olLayer.redraw();
         this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
     };
 
@@ -240,7 +239,7 @@ define( function( require ) {
      */
     ServerLayer.prototype.setRampFunction = function ( rampFunction ) {
         this.spec.valueTransform = { type: rampFunction };
-        this.layer.redraw();
+        this.olLayer.redraw();
         PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
     };
 
@@ -256,7 +255,7 @@ define( function( require ) {
      */
     ServerLayer.prototype.setTransformerType = function ( transformerType ) {
         this.spec.tileTransform.type = transformerType;
-        this.layer.redraw();
+        this.olLayer.redraw();
         PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
     };
 
@@ -272,7 +271,7 @@ define( function( require ) {
      */
     ServerLayer.prototype.setTransformerData = function ( transformerData ) {
         this.spec.tileTransform.data = transformerData;
-        this.layer.redraw();
+        this.olLayer.redraw();
         PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
     };
 
@@ -289,7 +288,7 @@ define( function( require ) {
     ServerLayer.prototype.setCoarseness = function( coarseness ) {
         this.spec.renderer.coarseness = coarseness;
         this.setLevelMinMax( getLevelMinMax( this ) );
-        this.layer.redraw();
+        this.olLayer.redraw();
         PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
     };
 

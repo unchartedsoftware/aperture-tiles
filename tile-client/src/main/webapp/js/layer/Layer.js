@@ -48,8 +48,8 @@ define( function( require ) {
          */
         setOpacity: function( opacity ) {
             this.spec.opacity = opacity;
-            if ( this.layer ) {
-                this.layer.setOpacity ( opacity );
+            if ( this.olLayer ) {
+                this.olLayer.setOpacity ( opacity );
                 PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
             }
         },
@@ -68,8 +68,8 @@ define( function( require ) {
          */
         setVisibility: function( visibility ) {
             this.spec.enabled = visibility;
-            if ( this.layer ) {
-                this.layer.setVisibility(visibility);
+            if ( this.olLayer ) {
+                this.olLayer.setVisibility(visibility);
                 PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility } );
             }
         },
@@ -79,6 +79,13 @@ define( function( require ) {
          */
         getVisibility: function() {
             return this.spec.enabled;
+        },
+
+        /**
+         * Returns the UUID that uniquely identifies this layer.
+         */
+        getUUID: function() {
+            return this.uuid;
         },
 
         /**
