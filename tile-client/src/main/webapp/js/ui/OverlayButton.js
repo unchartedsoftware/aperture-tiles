@@ -29,6 +29,11 @@ define( function() {
     var DURATION = 300,
         getMaxContentHeight;
 
+    /**
+     * Private: Function constant that caps the maximum height of the overlay element.
+     *
+     * @returns {int} The maximum height.
+     */
     getMaxContentHeight = function() {
         return  Math.floor( $(window).height() / 2 );
     };
@@ -183,6 +188,7 @@ define( function() {
 
     /**
      * Returns the header DOM element.
+     *
      * @returns {jQuery|HTMLElement}
      */
     OverlayButton.prototype.getHeaderElement = function() {
@@ -191,6 +197,7 @@ define( function() {
 
     /**
      * Returns the content DOM element.
+     *
      * @returns {jQuery|HTMLElement}
      */
     OverlayButton.prototype.getContentElement = function() {
@@ -199,11 +206,12 @@ define( function() {
 
     /**
      * Returns the container DOM element.
+     *
      * @returns {jQuery|HTMLElement}
      */
     OverlayButton.prototypegetContainerElement = function() {
         return this.$container;
-    }
+    };
 
     return OverlayButton;
 });

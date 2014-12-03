@@ -86,6 +86,10 @@ define( function() {
 	};
 
 	function WebMercatorTilePyramid() {
+        this.minX = -180.0;
+        this.minY = -85.05;
+        this.maxX = 180.0;
+        this.maxY = 85.05;
         return this;
     }
 

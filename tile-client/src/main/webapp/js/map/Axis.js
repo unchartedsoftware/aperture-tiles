@@ -26,10 +26,7 @@
 define(function (require) {
     "use strict";
 
-
-
-    var Class = require('../class'),
-        Util = require('../util/Util'),
+    var Util = require('../util/Util'),
         AxisUtil = require('./AxisUtil'),
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
@@ -43,25 +40,23 @@ define(function (require) {
         AXIS_MARKER_SUFFIX = "-axis-marker",
         AXIS_POSITION_SUFFIX = "-axis",
         SPACING_BETWEEN_MARKER_AND_LABEL = 5,
-        Axis;
-
+        Z_INDEX = 2001;
 
     /**
-     * Creates and returns a dummy marker label element to measure. This function
+     * Private: Creates and returns a dummy marker label element to measure. This function
      * is used for measuring, as the real label func sizes the labels to the current
      * max measurements
      */
     function createDummyMarkerLabelHTML( that, marker) {
-
         return '<div class="' + AXIS_LABEL_CLASS
-               + ' ' + that.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
-               + 'style="position:absolute;">'
-               + AxisUtil.formatText( marker.label, that.unitSpec )
-               + '</div>';
+            + ' ' + that.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
+            + 'style="position:absolute;">'
+            + AxisUtil.formatText( marker.label, that.units )
+            + '</div>';
     }
 
     /**
-     * Creates and returns a marker label element with proper CSS
+     * Private: Creates and returns a marker label element with proper CSS
      */
     function createMarkerLabelHTML( that, marker ) {
 
@@ -88,7 +83,7 @@ define(function (require) {
             + 'line-height: ' + that.MAX_LABEL_HEIGHT + 'px;'   // center text vertically
             + that.leftOrTop + ":" + primaryPosition + 'px;'
             + that.oppositePosition + ":" + secondaryPosition + 'px;">'
-            + AxisUtil.formatText( marker.label, that.unitSpec )
+            + AxisUtil.formatText( marker.label, that.units )
             +'</div>';
     }
 
@@ -96,26 +91,24 @@ define(function (require) {
      * Creates and returns a large marker element with proper CSS
      */
     function createLargeMarkerHTML( that, marker ) {
-
         return '<div class="' + AXIS_MARKER_CLASS
-               + ' large-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
-               + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
-               + 'style="position:absolute;'
-               + that.leftOrTop + ":" + (marker.pixel - that.LARGE_MARKER_HALF_WIDTH) + 'px;">'
-               + '</div>';
+            + ' large-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
+            + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+            + 'style="position:absolute;'
+            + that.leftOrTop + ":" + (marker.pixel - that.LARGE_MARKER_HALF_WIDTH) + 'px;">'
+            + '</div>';
     }
 
     /**
      * Creates and returns a major marker element with proper CSS
      */
     function createMediumMarkerHTML( that, marker ) {
-
         return '<div class="' + AXIS_MARKER_CLASS
-               + ' medium-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
-               + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
-               + 'style="position:absolute;'
-               + that.leftOrTop + ":" + (marker.pixel - that.MEDIUM_MARKER_HALF_WIDTH) + 'px;">'
-               + '</div>';
+            + ' medium-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
+            + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+            + 'style="position:absolute;'
+            + that.leftOrTop + ":" + (marker.pixel - that.MEDIUM_MARKER_HALF_WIDTH) + 'px;">'
+            + '</div>';
     }
 
 
@@ -123,13 +116,12 @@ define(function (require) {
      * Creates and returns a major marker element with proper CSS
      */
     function createSmallMarkerHTML( that, marker ) {
-
         return '<div class="' + AXIS_MARKER_CLASS
-               + ' small-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
-               + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
-               + 'style="position:absolute;'
-               + that.leftOrTop + ":" + (marker.pixel - that.SMALL_MARKER_HALF_WIDTH) + 'px;">'
-               + '</div>';
+            + ' small-' + that.horizontalOrVertical + AXIS_MARKER_SUFFIX
+            + ' ' + that.position + AXIS_POSITION_SUFFIX + '"'
+            + 'style="position:absolute;'
+            + that.leftOrTop + ":" + (marker.pixel - that.SMALL_MARKER_HALF_WIDTH) + 'px;">'
+            + '</div>';
     }
 
 
@@ -216,7 +208,7 @@ define(function (require) {
 
         var rotation = "",
             transformOrigin ="";
-        if (!that.isXAxis) {
+        if ( !that.isXAxis ) {
             if (that.position === "left") {
                 rotation = "rotate(" + (-90) + "deg)";
                 transformOrigin = "top left";
@@ -260,7 +252,7 @@ define(function (require) {
         }
         // return jquery element
         return $('<div class="'+ AXIS_HEADER_CLASS + " " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
-               + 'style="z-index:'+(that.Z_INDEX+2)+';'
+               + 'style="z-index:'+(Z_INDEX+2)+';'
                + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;"></div>');
     }
 
@@ -272,7 +264,7 @@ define(function (require) {
 
         // return jquery element
         return $('<div class="'+ AXIS_HEADER_CLASS + " " + AXIS_HEADER_CLASS + "-back " + that.position + AXIS_HEADER_CLASS_SUFFIX + '"'
-               + 'style="z-index:'+(that.Z_INDEX+1)+';"></div>' );
+               + 'style="z-index:'+(Z_INDEX+1)+';"></div>' );
     }
 
 
@@ -283,7 +275,7 @@ define(function (require) {
 
         return $('<div class="'+ AXIS_CONTENT_CLASS
                + " " + that.position + AXIS_CONTENT_CLASS_SUFFIX
-               + '"  style="z-index:'+that.Z_INDEX+';"></div>');
+               + '"  style="z-index:'+Z_INDEX+';"></div>');
     }
 
 
@@ -317,14 +309,14 @@ define(function (require) {
             that.setContentDimension();
             disableSlide();
             that.$content.animate({width: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
-            that.map.redrawAxes();
+            //that.map.redrawAxes();
         };
         verticalSlide = function() {
             that.setEnabled( !that.isEnabled() );
             that.setContentDimension();
             disableSlide();
             that.$content.animate({height: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
-            that.map.redrawAxes();
+            //that.map.redrawAxes();
         };
 
         // create axis title, header, and container and append them to root
@@ -398,177 +390,142 @@ define(function (require) {
         that.$content[0].innerHTML = markersHTML;
     }
 
+    function Axis( spec ) {
 
-    Axis = Class.extend({
+        this.position = ( spec.position !== undefined ) ? spec.position.toLowerCase() : 'bottom';
+        this.repeat = ( spec.repeat !== undefined ) ? spec.repeat : false;
+        this.title = spec.title || 'Axis';
+        this.isOpen = ( spec.isOpen !== undefined ) ? spec.isOpen : true;
 
-        Z_INDEX: 2001,
+        spec.intervals = spec.intervals || {};
+        this.intervals = {};
+        this.intervals.type = ( spec.intervals.type !== undefined ) ? spec.intervals.type.toLowerCase() : 'percentage';
+        this.intervals.increment = spec.intervals.increment || 10;
+        this.intervals.pivot = ( spec.intervals.pivot !== undefined ) ? spec.intervals.pivot : 0;
+        this.intervals.scaleByZoom = ( spec.intervals.scaleByZoom !== undefined ) ? spec.intervals.scaleByZoom : true;
 
-        /**
-         * Construct an axis
-         * @param spec Axis specification object:
-         */
-        init: function (spec) {
+        spec.units = spec.units || {};
+        this.units = {};
+        this.units.type = ( spec.units.type !== undefined ) ? spec.units.type.toLowerCase() : 'decimal';
+        this.units.divisor = spec.units.divisor || 1000;
+        this.units.decimals = spec.units.decimals || 2;
+        this.units.stepDown = ( spec.units.stepDown !== undefined ) ? spec.units.stepDown : true;
 
-            var that = this,
-                defaults = {
-                    title : "Default Axis Title",
-                    position : "bottom",
-                    repeat: false,
-                    isOpen : true,
-                    intervalSpec : {
-                        type: "percentage",
-                        increment: 10,
-                        pivot: 0,
-                        allowScaleByZoom: true
-                    },
-                    unitSpec : {
-                        type: 'decimal',
-                        divisor: 1000,
-                        decimals: 2,
-                        allowStepDown: true
-                    }
-                },
-                isOpen = ( spec.isOpen !== undefined ) ? spec.isOpen : defaults.isOpen;
+        // generate more attributes
+        this.isXAxis = ( this.position === 'top' || this.position === 'bottom' );
+        this.axisWidthOrHeight = this.isXAxis ? "width" : "height";
+        this.markerWidthOrHeight = this.isXAxis ? "height" : "width";
+        this.leftOrTop = this.isXAxis ? "left" : "top";
+        this.horizontalOrVertical = (this.isXAxis) ? 'horizontal' : 'vertical';
+        this.oppositePosition = (this.position === 'left') ? 'right' :
+                                    (this.position === 'right') ? 'left' :
+                                        (this.position === 'top') ? 'bottom' : 'top';
+    }
 
-            this.mapId = spec.mapId;
-            this.map = spec.map;
-            this.$map = this.map.getElement();
+    Axis.prototype.activate = function() {
 
-            this.min = spec.min;
-            this.max = spec.max;
-            this.repeat = spec.repeat || defaults.repeat;
+        var that = this;
 
-            this.position = spec.position || defaults.position;
-            this.id = spec.id || ( this.mapId + "-" + this.position + "-axis" );
+        this.$map = $( this.map.getElement() );
 
-            this.title = spec.title || defaults.title;
-
-            this.intervalSpec = spec.intervalSpec || {};
-            this.intervalSpec.type = spec.intervalSpec.type || defaults.intervalSpec.type;
-            this.intervalSpec.increment = spec.intervalSpec.increment || defaults.intervalSpec.increment;
-            this.intervalSpec.pivot = spec.intervalSpec.pivot || defaults.intervalSpec.pivot;
-            this.intervalSpec.allowScaleByZoom = spec.intervalSpec.allowScaleByZoom || defaults.intervalSpec.allowScaleByZoom;
-
-            this.unitSpec = spec.unitSpec || {};
-            this.unitSpec.type = spec.unitSpec.type || defaults.unitSpec.type;
-            this.unitSpec.divisor = spec.unitSpec.divisor || defaults.unitSpec.divisor;
-            this.unitSpec.decimals = spec.unitSpec.decimals || defaults.unitSpec.decimals;
-            this.unitSpec.allowStepDown = spec.unitSpec.allowStepDown || defaults.unitSpec.allowStepDown;
-
-            // generate more attributes
-            this.isXAxis = (this.position === 'top' || this.position === 'bottom');
-            this.axisWidthOrHeight = this.isXAxis ? "width" : "height";
-            this.markerWidthOrHeight = this.isXAxis ? "height" : "width";
-            this.leftOrTop = this.isXAxis ? "left" : "top";
-            this.horizontalOrVertical = (this.isXAxis) ? 'horizontal' : 'vertical';
-            this.oppositePosition = (this.position === 'left') ? 'right' :
-                                        (this.position === 'right') ? 'left' :
-                                            (this.position === 'top') ? 'bottom' : 'top';
-
-            // axis will redraw on map movement
-            this.map.on('move', function() {
-                that.redraw();
-            });
-
-            this.map.on('mousemove', function( event ) {
-
-                if ( !that.enabled ) {
-                    return;
-                }
-
-                var xOrY = that.isXAxis ? 'x' : 'y',
-                    value = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y )[xOrY],
-                    marker = {
-                        label : AxisUtil.getMarkerRollover( that, value ),
-                        pixel : event.xy[xOrY]
-                    };
-
-                that.$content.find('.mouse-marker').remove();
-                that.$content.append( $( createLargeMarkerHTML( that, marker ) ).addClass('mouse-marker') );
-
-                //that.$content.find('.mouse-marker-label').remove();
-                //that.$content.append( $( createMarkerLabelHTML( that, marker ) ).addClass('mouse-marker-label') );
-
-            });
-
-            // generate the core html elements
-            this.$axis = createAxis( this );
-            this.$map.append( this.$axis );
-            // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
-            this.enabled = true;
-            // calculate the dimensions of the individual elements once
-            calcElementDimensions( this );
-            // check if axis starts open or closed
-            if ( !isOpen ) {
-                // trigger close and skip animation;
-                this.$header.click();
-                this.$content.finish();
-            }
-            // allow events to propagate below to map except 'click'
-            Util.enableEventPropagation( this.$axis );
-            Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
-        },
-
-
-        /**
-         *  Returns true if the axis is currently enabled, false if not
-         */
-        isEnabled: function() {
-            return this.enabled;
-        },
-
-
-        /**
-         *  Enable or disable the axis
-         */
-        setEnabled: function( enabled ) {
-            this.enabled = enabled;
-        },
-
-
-        /**
-         *  Returns the dimension of the content div of the axis
-         */
-        getContentDimension: function() {
-            var dim = this.isXAxis ? this.MAX_LABEL_HEIGHT : this.MAX_LABEL_WIDTH;
-            return dim + SPACING_BETWEEN_MARKER_AND_LABEL*2 + this.LARGE_MARKER_LENGTH + this.HEADER_WIDTH;
-        },
-
-
-        /**
-         * Iterates over all axes on the map, determines the max content size, and sets the content dimension
-         * to that size.
-         */
-        setContentDimension: function() {
-
-            var axes = this.map.getAxes(),
-                dim = this.isXAxis ? 'height' : 'width',
-                maxAxisLabelDim = 0,
-                i;
-            for (i=0; i<axes.length; i++) {
-                maxAxisLabelDim = Math.max( axes[i].getContentDimension() || 0, maxAxisLabelDim );
-            }
-            this.$content[dim]( maxAxisLabelDim );
-        },
-
-
-        /**
-         * Checks if the mutable spec attributes have changed, if so, redraws
-         * that.
-         */
-        redraw: function() {
-
-            // always update title position (in case of window resize)
-            updateAxisTitle( this );
-            // exit early if no markers are visible
-            if ( !this.isEnabled() ) {
+        // axis will redraw on map movement
+        /*
+        this.map.on('move', function() {
+            console.log("derp");
+            that.redraw();
+        });
+        this.map.on('mousemove', function( event ) {
+            console.log("derp");
+            if ( !that.enabled ) {
                 return;
             }
-            // add each marker to correct pixel location in axis DOM elements
-            updateAxisContent( this );
-        }
+            var xOrY = that.isXAxis ? 'x' : 'y',
+                value = that.map.getCoordFromViewportPixel( event.xy.x, event.xy.y )[xOrY],
+                marker = {
+                    label : AxisUtil.getMarkerRollover( that, value ),
+                    pixel : event.xy[xOrY]
+                };
+            that.$content.find('.mouse-marker').remove();
+            that.$content.append( $( createLargeMarkerHTML( that, marker ) ).addClass('mouse-marker') );
+        });
+        */
 
-    });
+        // generate the core html elements
+        this.$axis = createAxis( this );
+        this.$map.append( this.$axis );
+
+        // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
+        this.enabled = true;
+
+        // calculate the dimensions of the individual elements once
+        calcElementDimensions( this );
+        // check if axis starts open or closed
+
+        if ( !this.isOpen ) {
+            // trigger close and skip animation;
+            this.$header.click();
+            this.$content.finish();
+        }
+        /*
+        // allow events to propagate below to map except 'click'
+        Util.enableEventPropagation( this.$axis );
+        Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
+        */
+    };
+
+    /**
+     *  Returns true if the axis is currently enabled, false if not
+     */
+    Axis.prototype.isEnabled = function() {
+        return this.enabled;
+    };
+
+
+    /**
+     *  Enable or disable the axis
+     */
+    Axis.prototype.setEnabled = function( enabled ) {
+        this.enabled = enabled;
+    };
+
+
+    /**
+     *  Returns the dimension of the content div of the axis
+     */
+    Axis.prototype.getContentDimension = function() {
+        var dim = this.isXAxis ? this.MAX_LABEL_HEIGHT : this.MAX_LABEL_WIDTH;
+        return dim + SPACING_BETWEEN_MARKER_AND_LABEL*2 + this.LARGE_MARKER_LENGTH + this.HEADER_WIDTH;
+    };
+
+
+    /**
+     * Iterates over all axes on the map, determines the max content size, and sets the content dimension
+     * to that size.
+     */
+    Axis.prototype.setContentDimension = function() {
+        var dim = this.isXAxis ? 'height' : 'width',
+            maxAxisLabelDim = 0;
+        _.forIn( this.map.axes, function( value ) {
+            maxAxisLabelDim = Math.max( value.getContentDimension() || 0, maxAxisLabelDim );
+        });
+        this.$content[ dim ]( maxAxisLabelDim );
+    };
+
+
+    /**
+     * Checks if the mutable spec attributes have changed, if so, redraws
+     * that.
+     */
+    Axis.prototype.redraw = function() {
+        // always update title position (in case of window resize)
+        updateAxisTitle( this );
+        // exit early if no markers are visible
+        if ( !this.isEnabled() ) {
+            return;
+        }
+        // add each marker to correct pixel location in axis DOM elements
+        updateAxisContent( this );
+    };
 
     return Axis;
 });

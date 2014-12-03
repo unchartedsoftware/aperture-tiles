@@ -30,10 +30,10 @@ define({
     /**
      * Formats axis marker label text
      *
-     * @param value         the value of the label
-     * @param labelSpec     format spec of label
+     * @param value {number} value of the label
+     * @param units {Object} unit specification of the axis.
      */
-    formatText : function(value, unitSpec){
+    formatText : function( value, units ){
         "use strict";
 
         function formatInteger (value) {
@@ -121,38 +121,38 @@ define({
             return formatNumber(value, decimals) + "\u00b0";
         }
 
-        if (unitSpec){
+        if (units){
 
-            switch ( unitSpec.type.toLowerCase() ) {
+            switch ( units.type.toLowerCase() ) {
 
                 case 'degrees':
                 case 'degree':
                 case 'deg':
 
-                    return formatDegrees(value, unitSpec.decimals );
+                    return formatDegrees(value, units.decimals );
 
                 case 'time':
                 case 'date':
 
-                    return formatTime(value, unitSpec.divisor);
+                    return formatTime(value, units.divisor);
 
                 case 'k':
                 case 'thousand':
                 case 'thousands':
 
-                    return formatThousand(value, unitSpec.decimals, unitSpec.allowStepDown);
+                    return formatThousand(value, units.decimals, units.stepDown);
 
                 case 'm':
                 case 'million':
                 case 'millions':
 
-                    return formatMillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+                    return formatMillion(value, units.decimals, units.stepDown);
 
                 case 'b':
                 case 'billion':
                 case 'billions':
 
-                    return formatBillion(value, unitSpec.decimals, unitSpec.allowStepDown);
+                    return formatBillion(value, units.decimals, units.stepDown);
 
                 case 'i':
                 case 'int':
@@ -164,7 +164,7 @@ define({
                 //case 'd':
                 default:
 
-                    return formatNumber(value, unitSpec.decimals);
+                    return formatNumber(value, units.decimals);
             }
         }
 
@@ -175,13 +175,13 @@ define({
      * Given a value that is outside of the min and max of axis,
      * ensure the values rollover properly
      *
-     * @param axis      axis object
-     * @param value     original value
+     * @param axis  {Axis}   the axis object.
+     * @param value {number} original value.
      */
-    getMarkerRollover: function(axis, value) {
+    getMarkerRollover: function( axis, value ) {
         "use strict";
         var rollover;
-        if (axis.repeat) {
+        if ( axis.repeat ) {
             // if repeat enabled ensure label value wraps past min/max properly
             if (value > axis.max) {
                 rollover = value - axis.max + axis.min;
@@ -201,11 +201,9 @@ define({
      * Generates all visible marker values, returns array of objects, containing
      * labels and pixel locations
      *
-     * @param axis      axis object
-     * @param vx        viewport x pixel of mouse
-     * @param vy        viewport y pixel of mouse
+     * @param axis {Axis} the axis object.
      */
-    getMarkers : function(axis) {
+    getMarkers : function( axis ) {
         "use strict";
 
         // generates all increments between min and max using specified interval
@@ -217,7 +215,7 @@ define({
             pivot;
 
         function roundToDecimals( num ) {
-            var numDec = axis.unitSpec.decimals || 2,
+            var numDec = axis.units.decimals || 2,
                 pow10 = Math.pow( 10, numDec );
             return Math.round( num * pow10) / pow10;
         }
@@ -225,7 +223,7 @@ define({
         function getPixelPosition( value ) {
             // given an axis value, get the pixel position on the page
             var pixelPosition;
-            if (axis.isXAxis) {
+            if ( axis.isXAxis ) {
                 pixelPosition = axis.map.getViewportPixelFromCoord( value, 0 ).x;
             } else {
                 pixelPosition = axis.map.getViewportPixelFromCoord( 0, value ).y;
@@ -238,7 +236,7 @@ define({
             var minCull,      // exact value of cull point, any value less will be culled from view
                 minIncrement; // the minimum increment that is visible
 
-            if (axis.isXAxis) {
+            if ( axis.isXAxis ) {
                 minCull = axis.map.getCoordFromViewportPixel( 0, 0 ).x;
             } else {
                 minCull = axis.map.getCoordFromViewportPixel( 0, axis.map.getViewportHeight() ).y;
@@ -253,16 +251,16 @@ define({
 
             // because the marker increments go from min to max, we need to ensure that the
             // marker type is correct for the first thick, this is set with 'startingMarkerTypeIndex'
-            if (pivot < minCull) {
+            if ( pivot < minCull ) {
                 // cull above pivot
-                while (minIncrement < minCull) {
+                while ( minIncrement < minCull ) {
                     minIncrement += subIncrement;
                     startingMarkerTypeIndex++;
                 }
             } else {
                 // cull below pivot
                 // NOTE: rounding here to prevent accumulated precision errors that truncate first axis 'tick'
-                while ( roundToDecimals(minIncrement-subIncrement) >= minCull) {
+                while ( roundToDecimals( minIncrement-subIncrement ) >= minCull ) {
                     minIncrement -= subIncrement;
                     startingMarkerTypeIndex--;
                 }
@@ -288,15 +286,15 @@ define({
 
             maxIncrement = pivot;
 
-            if (pivot > maxCull) {
+            if ( pivot > maxCull ) {
                 // cull below pivot
-                while (maxIncrement > maxCull) {
+                while ( maxIncrement > maxCull ) {
                     maxIncrement -= subIncrement;
                 }
             } else {
                 // cull above pivot
                 // NOTE: rounding here to prevent accumulated precision errors that truncate last axis 'tick'
-                while ( roundToDecimals(maxIncrement+subIncrement) <= maxCull) {
+                while ( roundToDecimals( maxIncrement+subIncrement ) <= maxCull) {
                     maxIncrement += subIncrement;
                 }
             }
@@ -304,7 +302,7 @@ define({
             return maxIncrement;
         }
 
-        function fillArrayByIncrement(start, end) {
+        function fillArrayByIncrement( start, end ) {
 
             var markers = {
                     large: [],
@@ -312,7 +310,7 @@ define({
                     small: []
                 },
                 mod = function(val, n) {
-                    // this modulos works correctly for negative numbers
+                    // this modulo works correctly for negative numbers
                     return ((val%n)+n)%n;
                 },
                 i = mod( startingMarkerTypeIndex, that.MARKER_TYPE_ORDER.length ),
@@ -330,37 +328,37 @@ define({
             return markers;
         }
 
-        switch (axis.intervalSpec.type.toLowerCase()) {
+        switch ( axis.intervals.type ) {
 
             case "value":
             case "fixed":
             case "#":
                 // use fixed interval
-                increment = axis.intervalSpec.increment;
-                pivot = axis.intervalSpec.pivot;
+                increment = axis.intervals.increment;
                 break;
 
-            //case "percent":
-            //case " percentage":
-            //case "%":
             default:
                 // use percentage
-                increment = (axis.max-axis.min)*(axis.intervalSpec.increment * 0.01);
-                pivot = (axis.max-axis.min)*(axis.intervalSpec.pivot*0.01) + axis.min;
+                increment = ( axis.intervals.increment > 1 )
+                    ? axis.intervals.increment * 0.01
+                    : axis.intervals.increment;
+                increment = ( axis.max - axis.min ) * increment;
                 break;
         }
 
+        // set pivot
+        pivot = axis.intervals.pivot;
+
         // scale increment if specified
-        if ( axis.intervalSpec.allowScaleByZoom ) {
+        if ( axis.intervals.scaleByZoom ) {
             // scale increment by zoom
-            increment = increment/Math.pow(2, Math.max( axis.map.getZoom()-1, 0 ) );
+            increment = increment/Math.pow( 2, Math.max( axis.map.getZoom()-1, 0 ) );
         }
 
         // get sub increment for small / medium label-less ticks
         subIncrement = increment / that.MARKER_TYPE_ORDER.length;
 
         // add all points between minimum visible value and maximum visible value
-        return fillArrayByIncrement( getMinIncrement(), getMaxIncrement());
-
+        return fillArrayByIncrement( getMinIncrement(), getMaxIncrement() );
     }
 });

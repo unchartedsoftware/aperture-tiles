@@ -28,12 +28,16 @@ define( function() {
 
     var propagateEvent;
 
+    /**
+     * Private: A propagation handler that will temporarily de-activate the
+     * DOM element and propagate the event through to any underlying element.
+     * @param event {Event} The event object.
+     */
     propagateEvent = function( event ) {
         var newEvent = new event.constructor( event.type, event ),
             element,
             before,
             below;
-
         element = event.currentTarget;
         before = element.style['pointer-events'];
         element.style['pointer-events'] = 'none';
@@ -61,8 +65,8 @@ define( function() {
          * Allows the given DOM element or jQuery object events to propagate through
          * and interact with underlying elements
          *
-         * @param elem   {HTMLElement || jQuery} The DOM element.
-         * @param events {Array}                 Array of events to propagate through.
+         * @param elem     {HTMLElement | jQuery} The DOM element.
+         * @param [events] {Array}                 Array of events to propagate through (optional).
          */
         enableEventPropagation: function( elem, events ) {
 
@@ -88,8 +92,8 @@ define( function() {
         /**
          * Removes previously enabled event propagation.
          *
-         * @param elem   {HTMLElement || jQuery} The DOM element.
-         * @param events {Array}                 Array of events to remove.
+         * @param elem     {HTMLElement | jQuery} The DOM element.
+         * @param [events] {Array}               Array of events to remove (optional).
          */
         disableEventPropagation: function( elem, events ) {
 

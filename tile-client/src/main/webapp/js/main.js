@@ -25,6 +25,7 @@
 
 require(['./util/Util',
          './map/Map',
+         './map/Axis',
          './rest/LayerService',
          './layer/LayerUtil',
          './layer/BaseLayer',
@@ -40,6 +41,7 @@ require(['./util/Util',
 
         function( Util,
                   Map,
+                  Axis,
                   LayerService,
                   LayerUtil,
                   BaseLayer,
@@ -62,6 +64,7 @@ require(['./util/Util',
                 layers = LayerUtil.parse( layers.layers );
 
                 var map,
+                    axis,
                     baseLayer,
                     clientLayer0,
                     annotationLayer0,
@@ -255,10 +258,26 @@ require(['./util/Util',
                 });
                 */
 
+                /*
+                axis = new Axis({
+                    position: 'bottom',
+                    title: 'Longitude',
+                    intervals: {
+                        type: 'fixed',
+                        increment: 120
+                    },
+                    units: {
+                        type: 'degrees'
+                    }
+                });
+                */
+
                 map = new Map( "map" );
                 map.add( baseLayer );
-                map.add( serverLayer0 );
-                map.add( annotationLayer0 );
-                map.add( clientLayer0 );
+                //map.add( serverLayer0 );
+                //map.add( annotationLayer0 );
+                //map.add( clientLayer0 );
+                //map.addAxis( axis );
+
             });
         });
