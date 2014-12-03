@@ -367,6 +367,16 @@ pre {
 	border:	1px solid $txt-block-border;
 	line-height: 1.4em;
 }
+.content-image {
+	text-align:	center;
+	padding: 0 30px;
+	margin: 41px;
+	font-size: 16px;
+	background: $content-body-bg-color;
+	border:	1px solid $txt-block-border;
+	line-height: 1.4em;
+	display: inline-block;
+}
 
 .git {
 	display: none;

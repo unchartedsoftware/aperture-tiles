@@ -1,34 +1,36 @@
-<ul class="toc right">
-	<div id="toc-header">Contents</div>
-	
-	{% if page.chapter == 'Overview' %}
-		<li>Overview</li>
-	{% else %}
-		<li><a href="{{ site.baseurl }}/docs/api/">Overview</a></li>
-	{% endif %}
-	
-	{% if page.chapter == 'Data Types' %}
-		<li>Data Types
-	{% else %}
-		<li><a href="{{ site.baseurl }}/docs/api/datatypes">Data Types</a>
-		{% endif %}
-			<ul>
-				<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation">Annotation</a></li>
-				<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation-tile">Annotation Tile</a></li>
-				<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation-certificate">Annotation Certificate</a></li>
-			</ul>
-		</li>
+<div class="toc right">
+	<ul id="toc-body">
+		<div id="toc-header">Contents</div>
 		
-	{% if page.chapter == 'Web Services' %}
-		<li>Web Services
-	{% else %}
-		<li><a href="{{ site.baseurl }}/docs/api/webservices">Web Services</a>
-	{% endif %}
-			<ul>
-				<li><a href="{{ site.baseurl }}/docs/api/webservices/#read-annotation-tile">Read Annotation Tile</a></li>
-				<li><a href="{{ site.baseurl }}/docs/api/webservices/#write-annotation">Write Annotation</a></li>
-				<li><a href="{{ site.baseurl }}/docs/api/webservices/#modify-annotation">Modify Annotation</a></li>
-				<li><a href="{{ site.baseurl }}/docs/api/webservices/#remove-annotation">Remove Annotation </a></li>
-			</ul>
-		</li>		
-</ul>
+		{% if page.chapter == 'Overview' %}
+			<li>Overview</li>
+		{% else %}
+			<li><a href="{{ site.baseurl }}/docs/api/">Overview</a></li>
+		{% endif %}
+		
+		{% if page.chapter == 'Data Types' %}
+			<li>Data Types
+		{% else %}
+			<li><a href="{{ site.baseurl }}/docs/api/datatypes">Data Types</a>
+			{% endif %}
+				<ul>
+					<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation">Annotation</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation-tile">Annotation Tile</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation-certificate">Annotation Certificate</a></li>
+				</ul>
+			</li>
+			
+		{% if page.chapter == 'Web Services' %}
+			<li>Web Services
+		{% else %}
+			<li><a href="{{ site.baseurl }}/docs/api/webservices">Web Services</a>
+		{% endif %}
+				<ul>
+					<li><a href="{{ site.baseurl }}/docs/api/webservices/#read-annotation-tile">Read Annotation Tile</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/webservices/#write-annotation">Write Annotation</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/webservices/#modify-annotation">Modify Annotation</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/webservices/#remove-annotation">Remove Annotation </a></li>
+				</ul>
+			</li>
+	</ul>
+</div>
