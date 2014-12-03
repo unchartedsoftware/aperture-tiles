@@ -88,7 +88,7 @@ allprojects {
 // General definitions pushed down to all sub-projects - this code is executed within the context
 // of each subproject.
 subprojects {				
-	
+
 	// Allows for eclipse project files to be generated
 	apply plugin: "eclipse"
 	// Support for reading from / writing to maven repositories
@@ -123,21 +123,24 @@ subprojects {
 	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
 	// to multiple jars in later.  CDH5.x picks up the new split HBase jar, while CDH4.x needs the
 	// unified jar.
-	ext.addHBaseDependencies = {
+	ext.addHBaseDependencies = { config ->
+		if (config == null || config == "") {
+			config = "compile"
+		}
 		// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
 		if (checkHBaseSplit) {
 			logger.info("Matched CDH5x cloudera version - using new-style jars")
-			getDependencies().add("compile", "org.apache.hbase:hbase-common:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase-common:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 			})
-			getDependencies().add("compile", "org.apache.hbase:hbase-client:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 			})
-			getDependencies().add("compile", "org.apache.hbase:hbase-server:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
@@ -145,7 +148,7 @@ subprojects {
 			})
 		} else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
-			getDependencies().add("compile", "org.apache.hbase:hbase:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"

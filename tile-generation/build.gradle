@@ -85,8 +85,24 @@ task copyFilteredScripts (type: Copy) {
 // Make sure the above tasks run before resource processing.
 processResources.dependsOn copyFilteredResources, copyFilteredScripts
 
+// Create a configuration to hold jars that we need to roll into our fat jar.  Disable transitive dependency
+// resolution, since we only want the jars we specifically list.
+configurations {
+	fatJarReq {
+		transitive = false
+	}
+}
 
- 
+// Configure the jar task to build a fat jar that includes
+// dependencies added ot the fatJarReq config.
+jar {
+	from {
+		configurations.fatJarReq.collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+}
+
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
 // in our setup because the scala code in this project is used by the java code (causing 
 // compile errors).  We force the plugin to use an empty source set for java, and then set the
@@ -106,6 +122,7 @@ sourceSets {
 
 // Jars / projects this project depends on.
 dependencies {
+	// Compile config - needed to build
 	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
@@ -118,4 +135,11 @@ dependencies {
 	// Call for special handling for hbase dependencies - see top level build file for
 	// definition and explanation.
 	addHBaseDependencies()
+
+	// FatJarReq config - these get rolled into the fatjar as they aren't provided by CDH/Spark
+	// at runtime.
+	fatJarReq project (":geometric-utilities")
+	fatJarReq project (":binning-utilities")
+	fatJarReq "org.json:json:20090211"
+	addHBaseDependencies("fatJarReq")
 }

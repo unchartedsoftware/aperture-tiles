@@ -1,8 +1,4 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
-apply plugin: 'java-library-distribution'
-
-distributions {
+task  {
 		main {
 				baseName = 'tile-generator'
 				contents {
@@ -21,23 +17,6 @@ configurations.all {
 	transitive = false
 }
 
-// Copy the run script over, filtering in the correct hbase references as needed.
-task copyFilteredScripts(type: Copy) {
-	from "src/filtered-scripts"
-	into "src/bin"
-	filter ReplaceTokens, tokens:[
-		"hbase-jars": getHBaseClasspathEntries().toString()
-	]
-}
-processResources.dependsOn copyFilteredScripts
-
 dependencies {
-	compile project(":tile-generation")	
-	compile project(":binning-utilities")	
-	compile project(":geometric-utilities")	
-	compile project(":math-utilities")
-	compile "org.scala-lang:scala-library:$scalaVersion"	
-	// Call for special handling for hbase dependencies - see top level build file for
-	// definition and explanation.
-	addHBaseDependencies()
+	compile project(":tile-generation")
 }
