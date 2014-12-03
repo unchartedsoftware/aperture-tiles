@@ -104,17 +104,17 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 
 
 
-	private Schema _schema;
-	private boolean _toString; // A bit of a hack to handle string tiles as strings rather than Utf8s
+	private Class<? extends T>          _type;
+	private transient Schema            _schema = null;
+	// A bit of a hack to handle string tiles as strings rather than Utf8s
+	private boolean                     _toString;
 
 	public PrimitiveAvroSerializer (Class<? extends T> type, CodecFactory compressionCodec) {
 		super(compressionCodec, getPrimitiveTypeDescriptor(type));
 
-		String typeName = getAvroType(type);
-		_schema = __schemaStore.getSchema(type, typeName);
+		_type = type;
 		_toString = (String.class.equals(type));
 	}
-
 
 	@Override
 	protected String getRecordSchemaFile () {
@@ -123,6 +123,10 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 
 	@Override
 	protected Schema createRecordSchema () throws IOException {
+		if (null == _schema) {
+			String typeName = getAvroType(_type);
+			_schema = __schemaStore.getSchema(_type, typeName);
+		}
 		return _schema;
 	}
 
