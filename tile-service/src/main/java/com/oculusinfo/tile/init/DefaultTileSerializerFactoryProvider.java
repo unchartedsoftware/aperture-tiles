@@ -242,7 +242,7 @@ public final class DefaultTileSerializerFactoryProvider
 	}
 
 	public static DefaultTileSerializerFactoryProvider[] values () {
-	    return __values.toArray(null);
+	    return __values.toArray(new DefaultTileSerializerFactoryProvider[__values.size()]);
 	}
 
 
