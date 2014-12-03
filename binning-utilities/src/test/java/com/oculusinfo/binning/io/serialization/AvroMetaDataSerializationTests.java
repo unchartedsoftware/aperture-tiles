@@ -34,7 +34,7 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializer;
 
 
@@ -65,7 +65,7 @@ public class AvroMetaDataSerializationTests {
 
 	@Test
 	public void testAvroMetaDataSerialization () throws Exception {
-		TileSerializer<Double> serializer = new DoubleAvroSerializer(CodecFactory.nullCodec());
+		TileSerializer<Double> serializer = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.nullCodec());
 
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		serializer.serialize(_tile, output);

@@ -28,19 +28,16 @@ import com.google.inject.AbstractModule;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.annotation.io.serialization.impl.JSONAnnotationDataSerializer;
-import com.oculusinfo.annotation.rest.impl.AnnotationServiceImpl;
+import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 
 
 public class AnnotationServiceModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		
 		bind(AnnotationSerializer.class).to(JSONAnnotationDataSerializer.class);
 		bind(AnnotationIndexer.class).to(AnnotationIndexerImpl.class);
 		bind(AnnotationService.class).to(AnnotationServiceImpl.class);
-
 	}
 
 }

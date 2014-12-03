@@ -13,7 +13,6 @@
 		<param-value>
 			<!-- A :-separated list of modules, so there must be a : after all but 
 			     the last module listed. -->
-
 			<!-- Pyramid factory module - override to add custom TilePyramids -->
 			com.oculusinfo.tile.init.TilePyramidFactoryModule:
 			<!-- Renderer factory module - override to add custom server-side 
@@ -27,36 +26,24 @@
 			<!-- For standard, pre-batched tiling -->
 			<!-- Standard implementation -->
 			com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
+			
 			<!-- For tiling requiring a spark connection -->
-			com.oculusinfo.tile.init.SparkAwarePyramidIOFactoryModule:
+			com.oculusinfo.sparktile.init.SparkAwarePyramidIOFactoryModule:
 
 			<!-- Tile Transformer factory module - override to add custom tile
 			     Transformer -->
 			com.oculusinfo.tile.init.TileTransformerFactoryModule:
-
 			<!-- LayerConfiguration factory module - override to add custom layer configuration 
 			     parameters -->
 			com.oculusinfo.tile.init.CachingLayerConfigurationModule:
-
 			<!-- For any operation requiring a spark connection (including live
 			     tiling or drill-through to raw data) -->
-			com.oculusinfo.tile.spark.SparkModule:
+			com.oculusinfo.sparktile.spark.SparkModule:
 
 			<!-- Sets up the REST interface by which clients can retrieve tiles -->
 			com.oculusinfo.tile.rest.RestConfigModule:
 			<!-- Sets up the tile-rendering service -->
-			com.oculusinfo.tile.rest.TileModule:
-
-			<!-- Annotation IO factory module - override to add custom AnnotationIO 
-			     implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
-			<!-- Annotation filter factory module - override to add custom AnnotationFilter 
-			     implementations -->
-			com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
-			<!-- Sets up the REST interface by which clients can retrieve annotations -->
-			com.oculusinfo.annotation.rest.AnnotationRestConfigModule:
-			<!-- Sets up the annotation service -->
-			com.oculusinfo.annotation.rest.AnnotationServiceModule
+			com.oculusinfo.tile.rest.TileModule:	
 		</param-value>
 	</context-param>
 
@@ -84,5 +71,4 @@
 		<!-- Required with a spark connection, harmless in all other cases -->
 		<listener-class>com.oculusinfo.tile.TileServiceConfiguration</listener-class>
 	</listener>
-
 </web-app>

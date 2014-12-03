@@ -48,12 +48,12 @@ define(function (require) {
 	Map = Class.extend({
 		ClassName: "Map",
 
-		init: function (id, spec) {
+		init: function( id, spec ) {
 
-            var mapConfig = spec.MapConfig,
-                pyramidConfig = spec.PyramidConfig,
-                axisConfig = spec.AxisConfig,
-                that = this;
+            var that = this,
+                mapConfig = spec.map,
+                pyramidConfig = spec.pyramid,
+                axisConfig = spec.axes;
 
             this.id = id;
             this.uuid = Util.generateUuid();
@@ -61,7 +61,7 @@ define(function (require) {
             this.domain = 'base';
             this.$map = $( "#" + this.id );
             this.axes = [];
-            this.pyramid = PyramidFactory.createPyramid( spec.PyramidConfig );
+            this.pyramid = PyramidFactory.createPyramid( pyramidConfig );
             this.baseLayers = ( $.isArray( mapConfig.baseLayer ) ) ? mapConfig.baseLayer : [mapConfig.baseLayer];
             this.BASE_LAYERS = this.baseLayers;
 
@@ -103,7 +103,7 @@ define(function (require) {
             // set basic map properties
             this.setZIndex( -1 );
             this.setVisibility( true );
-            this.setOpacity( 1.0 );
+            this.setOpacity( mapConfig.opacity || 1.0 );
 			this.setBaseLayerIndex( mapConfig.baseLayerIndex !== undefined ? parseInt( mapConfig.baseLayerIndex, 10 ) : 0 );
 
             // create div root layer

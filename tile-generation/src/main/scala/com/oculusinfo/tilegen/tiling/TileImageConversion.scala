@@ -29,24 +29,14 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
-
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-
-
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
-
-
-
 import org.apache.spark._
 import org.apache.spark.SparkContext._
-
 import org.apache.avro.file.CodecFactory
-
-
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
@@ -54,13 +44,12 @@ import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.DoubleArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.MissingArgumentException
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 
 
 
@@ -109,7 +98,7 @@ object TileToTextConverter {
 			val t = argParser.getInt("t", "The number in the series of values to display")
 
 			val sc = connector.getSparkContext("Convert tile pyramid to images")
-			val serializer = new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec())
+			val serializer = new PrimitiveArrayAvroSerializer(classOf[Double], CodecFactory.bzip2Codec())
 			val tiles = tileIO.readTileSet(sc, serializer, source, List(level))
 			val tile = tiles.filter(tile =>
 				{
@@ -226,12 +215,12 @@ object TileToImageConverter {
 
 				case "double" =>
 					convertDoubleTiles(sc, tileIO, tilePyramid,
-					                   new DoubleAvroSerializer(CodecFactory.bzip2Codec()),
+					                   new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
 					                   source, destination, scale, levels, metaData)
 
 				case "doublearray" =>
 					convertVectorTiles(sc, tileIO, tilePyramid,
-					                   new DoubleArrayAvroSerializer(CodecFactory.bzip2Codec()),
+					                   new PrimitiveArrayAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
 					                   source, destination, scale, levels, metaData)
 			}
 		} catch {

@@ -36,7 +36,7 @@ import java.io.InputStream;
 
 public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 
-	private final Logger _logger = LoggerFactory.getLogger(getClass());
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	private ZipFile      _tileSetArchive;
 	private String       _tileExtension;
@@ -48,7 +48,7 @@ public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 			_tileSetArchive = new ZipFile(zipFilePath);
 			_tileExtension = tileExtension;
 		} catch (IOException e) {
-			_logger.warn("Could not create zip file for " + zipFilePath, e);
+			LOGGER.warn("Could not create zip file for " + zipFilePath, e);
 		}
 	}
 	

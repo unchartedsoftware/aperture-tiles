@@ -31,29 +31,31 @@
         1) from the root of the hierarchy to the target channel,
         2) from the target channel to all existing sub-channels
 
-    Ex. Hierarchy:
+    Ex.
+
+        Hierarchy:
 
             a -> [ a.a, a.ab ] -> [ a.a.a, a.a.b, a.a.c ]
 
-        Publishing to a.a will publish to
+        Publishing to a.a will publish:
 
             1) from root to target
 
-                a -> a.a
+                [ a -> a.a )
 
             2) from target to all sub-channels
 
-                a.a -> a.a.a -> a.a.b -> a.a.c
+                [ a.a -> a.a.a -> a.a.b -> a.a.c )
 
-        Publishing to a.a.c will publish
+        Publishing to a.a.c will publish:
 
             1) from root to target
 
-                a -> a.a -> a.a.c
+                [ a -> a.a -> a.a.c )
 
             2) from target to all sub-channels
 
-                a.a.c -> null
+                [ a.a.c -> null )
 */
 
 define(function (require) {

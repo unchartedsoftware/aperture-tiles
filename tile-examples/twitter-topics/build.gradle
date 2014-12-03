@@ -1,0 +1,4 @@
+description = "A project for custom binning and display of twitter data."
+
+// While this file really doesn't do anything, it needs to be here so that Gradle
+// can properly identify the build hierarchy.

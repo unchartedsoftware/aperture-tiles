@@ -23,7 +23,7 @@
  */
 package com.oculusinfo.annotation.filter.impl;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;

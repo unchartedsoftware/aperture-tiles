@@ -38,7 +38,7 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.IntegerAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 
 //@Ignore
 public class HBaseAvroPyramidIOTest {
@@ -70,7 +70,7 @@ public class HBaseAvroPyramidIOTest {
 	@Test 
 	public void writeReadAvroRoundTripTest () {
 		PyramidIO io = new TestPyramidIO();
-		TileSerializer<Integer> serializer = new IntegerAvroSerializer(CodecFactory.nullCodec());
+		TileSerializer<Integer> serializer = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
 
 		ArrayList<TileData<Integer>> writeTiles = new ArrayList<TileData<Integer>>();
 

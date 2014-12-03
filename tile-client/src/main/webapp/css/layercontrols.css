@@ -47,6 +47,15 @@
     font-size: 12px;
 }
 
+.layers-container {
+    position:relative;
+    overflow:hidden; 
+    margin-left:-24px;
+    padding-left:24px;
+    margin-right:-24px;
+    padding-right:24px;
+}
+
 .light-theme #layer-controls-content {
 	background-color: #fff;
     color: #000;

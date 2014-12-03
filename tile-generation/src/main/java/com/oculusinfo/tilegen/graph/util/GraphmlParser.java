@@ -77,6 +77,7 @@ public class GraphmlParser {
     private List<String> _nodeCoordAttr = null;
     private String _graphmlInput = null;
     private String _filenameOut = null;
+    private String _filenameOutReadme = null;
     private String _nodeCoordConvert = null;
     
     private HashMap<String, double[]> _nodemap = new HashMap<String, double[]>();
@@ -86,12 +87,17 @@ public class GraphmlParser {
     private boolean _bLongIDs = false;
     
     private BufferedWriter _outBuffWriter;
+    private BufferedWriter _outBuffWriterReadme;
+    
+    private ArrayList<String> nodeAttrList = new ArrayList<String>();
+    private ArrayList<String> edgeAttrList = new ArrayList<String>();    
 	
     //-----------
 	public GraphmlParser(HashMap<String, String> argMap) {
 			    
 	    _graphmlInput = argMap.get("in");	 //in, Path and filename of graphML input file
 	    _filenameOut = argMap.get("out");	 //out, Path and filename of tab-delimited output file
+	    _filenameOutReadme = _filenameOut + "_readme";
 	    
 	    String stringTemp = argMap.get("nAttr"); //nAttr, "Node attributes to parse (attribute ID tags separated by commas)"
 	    if (stringTemp!=null) {					 // Default = parse all existing attributes.
@@ -138,8 +144,6 @@ public class GraphmlParser {
 							    
 		    DefaultHandler handler = new DefaultHandler() {
 		    			    	
-			    ArrayList<String> nodeAttrList = new ArrayList<String>();
-			    ArrayList<String> edgeAttrList = new ArrayList<String>();
 			    ArrayList<String> nodeAttrValues = new ArrayList<String>();
 			    ArrayList<String> edgeAttrValues = new ArrayList<String>();
 						    	
@@ -358,9 +362,46 @@ public class GraphmlParser {
 		    };
 		    
 			saxParser.parse(_graphmlInput, handler);
-	
+			
 			_outBuffWriter.close();
 			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			// save column labels to a readme file
+			FileWriter fstream;
+		    fstream = new FileWriter(_filenameOutReadme);
+		    _outBuffWriterReadme = new BufferedWriter(fstream);
+		    
+		    _outBuffWriterReadme.write("This readme file contains column labels for tab-delimited graph data in \n" + _filenameOut + "\n\n");
+		    _outBuffWriterReadme.write("Column labels for nodes are as follows:\n\n");
+			
+			if (_bLongIDs) {
+				// write out the unique Long ID for this node as well as the 'original' nodeID
+				_outBuffWriterReadme.write("node\tnode ID\toriginal node ID");
+			}
+			else {
+				_outBuffWriterReadme.write("node\tnode ID");
+			}
+			
+			for (int i=0; i<nodeAttrList.size(); i++) {
+				_outBuffWriterReadme.write("\t" + nodeAttrList.get(i));
+			}
+			_outBuffWriterReadme.write("\n\n");				
+
+		    _outBuffWriterReadme.write("Column labels for edges are as follows:\n\n");
+		    
+			_outBuffWriterReadme.write("edge\tsource ID\tdestination ID");
+
+			for (int i=0; i<edgeAttrList.size(); i++) {
+				_outBuffWriterReadme.write("\t" + edgeAttrList.get(i));
+			}
+			_outBuffWriterReadme.write("\n");
+			
+			_outBuffWriterReadme.close();
+		    
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -369,6 +410,8 @@ public class GraphmlParser {
 		System.out.println("Total number of nodes = " + _numNodes);
 		System.out.println("Total number of edges = " + _numEdges);
 		System.out.println("");
+		System.out.println("Results saved at " + _filenameOut);
+		System.out.println("Column labels saved at " + _filenameOutReadme);
 		
 		
 	}

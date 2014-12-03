@@ -106,6 +106,12 @@ h3 {
 			color: $color-api-sidebar-link-hover;
 		}
 	}
+	&.sectionTitle {
+		font-size: 20px;
+		color: $color-api-section-title;
+		margin-top: 10px;
+		padding: 0 10px 10px 0;
+	}
 }
 h4 {
 	@include heading(20px,0px,$color-sub-h1);
@@ -467,7 +473,7 @@ th {
 	font-size: 14px;
 	font-weight: normal;
 	line-height: 19.6px;
-	padding: 0 10px 10px 10px;
+	padding: 10px;
 	margin: 0;
 }
 table.summaryTable {
@@ -479,11 +485,16 @@ table.summaryTable {
 td.attributes {
 	padding:0 10px 10px 10px;
 	font-size:14px;
-	line-height:19.6px
+	line-height:19.6px;
+    vertical-align: text-top;
+}
+
+td.nameDescription {
+    vertical-align: text-top;
 }
 
 div.description {
 	padding:0 10px 10px 10px;
 	font-size:14px;
-	line-height:19.6px
+	line-height:19.6px;
 }

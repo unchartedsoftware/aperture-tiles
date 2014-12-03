@@ -29,8 +29,8 @@ import com.google.inject.Singleton;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.AnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.DelegateFactoryProviderTarget;
-import com.oculusinfo.tile.init.providers.StandardUberFactoryProvider;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 
 import java.util.List;
 import java.util.Set;

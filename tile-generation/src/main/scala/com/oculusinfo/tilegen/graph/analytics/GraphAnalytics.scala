@@ -34,8 +34,8 @@ import org.apache.spark.SparkContext
 
 import com.oculusinfo.binning.TileIndex
 //import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord
-import com.oculusinfo.tilegen.tiling.TileAnalytic
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.TileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 
 
 class GraphMaxRecordAnalytic extends TileAnalytic[List[GraphAnalyticsRecord]] {
@@ -71,15 +71,8 @@ object GraphListAnalysis {
 	val convertFcn: JavaList[GraphAnalyticsRecord] => List[GraphAnalyticsRecord] =
 		a => a.asScala.toList
 }
-class GraphListAnalysis
-	(sc: SparkContext,
-	 analytic: TileAnalytic[List[GraphAnalyticsRecord]],
-	 globalMetaData: Map[String, TileIndex => Boolean])
-		extends AnalysisDescriptionTileWrapper
-	[JavaList[GraphAnalyticsRecord],
-	 List[GraphAnalyticsRecord]] (sc,
-	                            GraphListAnalysis.convertFcn,
-	                            analytic,
-	                            globalMetaData)
+class GraphListAnalysis(analytic: TileAnalytic[List[GraphAnalyticsRecord]])
+		extends AnalysisDescriptionTileWrapper[JavaList[GraphAnalyticsRecord],
+		                                       List[GraphAnalyticsRecord]](GraphListAnalysis.convertFcn, analytic)
 {
 }

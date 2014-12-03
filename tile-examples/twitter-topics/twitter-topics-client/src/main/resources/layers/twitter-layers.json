@@ -1,87 +1,43 @@
-{
-    "_comment": [
-        "This json configuration file specifies all layers associated with the bitcoin ",
-        "dataset, organized hierarchically according to two things: primarily, ability ",
-        "to go on the same map, and secondarily, by interest to the user.  This means ",
-        "that if two layers can go on the same map, using the same axes, they should fall ",
-        "under the same node in the hierarchy, and that the axes should be noted on the ",
-        "joint parent node under which they both fall.  However, as long as layers that ",
-        "can and should share a map are so grouped, any further organization is completely ",
-        "open, and should be used simply to present the layers to the user in a way that ",
-        "makes sense.",
-        "",
-        "Leaf nodes should all specify actual layers that can be displayed on a map, and ",
-        "all layers that can be so displayed should be leaf nodes.  Non-leaf nodes exist ",
-        "solely to organize and group layers as described above.",
-        "",
-        "NOTE: Local tile sets are stored at //kraken/xdata/data/twitter/tiles/2014.02-0.4.SA" 
-    ],
-    "layers": [
-        {
-            "id": "twitter",
-            "name": "All Twitter Layers",
-            "children": [
-                {
-                    "id": "twitter.2014.02-04.SA.twitter.longitude.latitude",
-                    "name": "Tweet count heatmap",
-                    "pyramid": {
-                        "type": "WebMercator"
-                    },
-                    "data" : {
-                        "pyramidio" : {
-                            "type" : "zip",
-                            "root.path" : "/twitter.2014.02-04.SA.twitter.longitude.latitude.zip",
-                            "extension" : "avro"
-                        }
-                    },
-                    "renderers": [
-                        {
-                            "domain": "server",
-                            "renderer": {
-                                "type": "heatmap",
-                                "ramp": "spectral",
-                                "opacity": 0.85
-                            },
-                            "transform": {
-                                "name": "log10"
-                            }
-                        }
-                    ]
-                },               
-                {
-                    "id": "twittertopicstargeted.L12.march.2014-05-14",
-                    "name": "Twitter most common words",
-                    "pyramid": {
-                        "type": "WebMercator"
-                    },
-                    "data": {
-                        "pyramidio" : {
-                            "type" : "zip",
-                            "root.path" : "/twittertopicstargeted.L12.march.2014-05-14.zip",
-                            "extension" : "avro"
-                        },
-                        "serializer": {
-                            "type": "[twitterdemorecord]-a"
-                        }
-                    },
-                    "renderers": [
-                        {
-                            "domain": "client",
-                            "renderers": [ 
-                                {
-                                    "type":"TopTopicsHtml",
-                                    "spec": {}
-                                },
-                                {
-                                    "type":"TopTopicsAperture",
-                                    "spec": {}
-                                }
-                            ]
-                        }
-                    ]
+[
+    {
+        "id":"tweet-heatmap",
+        "public": {
+            "pyramid": {
+                "type": "WebMercator"
+            }
+        },
+        "private": {
+           "data" : {
+                "id": "twitter.2014.02-04.SA.twitter.longitude.latitude",
+                "pyramidio" : {
+                    "type" : "zip",
+                    "root.path" : "/twitter.2014.02-04.SA.twitter.longitude.latitude.zip",
+                    "extension" : "avro"
                 }
-            ]
+            }
         }
-    ]
-}
+    },
+    {
+        "id": "top-tweets",
+        "public": {
+            "pyramid": {
+                "type": "WebMercator"
+            }
+        },
+        "private": {
+           "data" : {
+                "id": "twittertopicstargeted.L12.march.2014-05-14",
+                "pyramidio" : {
+                    "type" : "zip",
+                    "root.path" : "/twittertopicstargeted.L12.march.2014-05-14.zip",
+                    "extension" : "avro"
+                },
+                "serializer": {
+                    "type": "[twitterdemorecord]-a"
+                }
+            }
+        }
+    }
+]
+
 

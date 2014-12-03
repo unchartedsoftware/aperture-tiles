@@ -5,7 +5,8 @@ BASE_DIR="$(cd `dirname $0`/..; pwd)"
 
 # Set up the Spark classpath to include Aperture-tiles libraries
 LIB=${BASE_DIR}/lib
-export SPARK_CLASSPATH=${LIB}/tile-generation.jar:${LIB}/binning-utilities.jar:${LIB}/hbase.jar:${LIB}/scala-library.jar:${LIB}/math-utilities.jar:${LIB}/json.jar
+export SPARK_CLASSPATH=${LIB}/tile-generation.jar:${LIB}/binning-utilities.jar:${LIB}/scala-library.jar:${LIB}/math-utilities.jar:${LIB}/json.jar
+export SPARK_CLASSPATH=${SPARK_CLASSPATH}:${LIB}/hbase.jar
 
 # Make sure Spark environment is set
 if [ "a" == "a""$SPARK_HOME" ]; then

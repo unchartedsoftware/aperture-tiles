@@ -34,20 +34,19 @@ import java.util.{List => JavaList}
 import scala.reflect.ClassTag
 
 import org.apache.spark.rdd.RDD
+import scala.util.Try
 
 import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 
 import com.oculusinfo.tilegen.spark.MavenReference
 import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
 import com.oculusinfo.tilegen.util.ArgumentParser
-
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 
 
@@ -70,9 +69,6 @@ object TwitterTopicBinner {
 		val levelSets = argParser.getString("levels",
 		                                    "The level sets (;-separated) of ,-separated levels to bin.")
 			.split(";").map(_.split(",").map(_.toInt))
-		val levelBounds = levelSets.map(_.map(a => (a, a))
-			                                .reduce((a, b) => (a._1 min b._1, a._2 max b._2)))
-			.reduce((a, b) => (a._1 min b._1, a._2 max b._2))
 
 		val pyramidId = argParser.getString("id", "An ID by which to identify the finished pyramid.")
 		val pyramidName = argParser.getString("name", "A name with which to label the finished pyramid").replace("_", " ")
@@ -82,31 +78,30 @@ object TwitterTopicBinner {
 
 		val tileIO = TileIO.fromArguments(argParser)
 
-		val rawData = if (0 == partitions) {
-			sc.textFile(source)
-		} else {
-			sc.textFile(source, partitions)
-		}
+		val files = source.split(",")
+		// For each file, attempt create an RDD, then immediately force an
+		// exception in the case it does not exist. Union all RDDs together.
+		val rawData = files.map { file =>
+		    Try({
+		        var tmp = if (0 == partitions) {
+		            sc.textFile( file )
+		        } else {
+		            sc.textFile( file , partitions)
+		        }
+		        tmp.partitions // force exception if file does not exist
+		        tmp
+		    }).getOrElse( sc.emptyRDD )
+		}.reduce(_ union _)
 
 		val minAnalysis:
 				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
 				                    List[TwitterDemoTopicRecord]] =
-			new TwitterTopicListAnalysis(
-				sc, new TwitterMinRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.min" -> ((index: TileIndex) => true))
-			)
+			new TwitterTopicListAnalysis(new TwitterMinRecordAnalytic)
 
 		val maxAnalysis:
 				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
 				                    List[TwitterDemoTopicRecord]] =
-			new TwitterTopicListAnalysis(
-				sc, new TwitterMaxRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.max" -> ((index: TileIndex) => true))
-			)
+			new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
 
 		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
 		                                              (List[TwitterDemoTopicRecord],
@@ -183,12 +178,26 @@ object TwitterTopicBinner {
 		binner.debug = true
 		val tilePyramid = new WebMercatorTilePyramid
 
+		// Add global analytic accumulators
+		val sc = rawData.context
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
 		levelSets.foreach(levelSet =>
 			{
 				println()
 				println()
 				println()
 				println("Starting binning levels "+levelSet.mkString("[", ",", "]")+" at "+new Date())
+
+				// Add whole-level analytic accumulators for these levels
+				tileAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+
+				// Do actual binning
 				val taskStart = System.currentTimeMillis
 				val tiles = binner.processDataByLevel(data,
 				                                      new CartesianIndexScheme,

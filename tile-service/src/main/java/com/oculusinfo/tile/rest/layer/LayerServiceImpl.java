@@ -27,19 +27,15 @@ package com.oculusinfo.tile.rest.layer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.EmptyConfigurableFactory;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
-import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rest.RequestParamsFactory;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
 import org.json.JSONArray;
@@ -49,76 +45,90 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.util.*;
 
 @Singleton
 public class LayerServiceImpl implements LayerService {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
 
-
-
-	private List<LayerInfo>                     _layers;
-	private Map<String, LayerInfo>              _layersById;
-	private Map<String, JSONObject>             _metaDataCache;
-	private Map<UUID, JSONObject>               _configurationssByUuid;
-	private FactoryProvider<LayerConfiguration> _layerConfigurationProvider;
-
-
+	private List< JSONObject > _layers;
+	private Map< String, JSONObject > _layersById;
+    private Map< String, JSONObject > _layersBySha;
+	private Map< String, JSONObject > _metaDataCache;
+    private FactoryProvider< LayerConfiguration > _layerConfigurationProvider;
 
 	@Inject
-	public LayerServiceImpl (@Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
-	                         FactoryProvider<LayerConfiguration> layerConfigurationProvider) {
+	public LayerServiceImpl( @Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
+	                         FactoryProvider<LayerConfiguration> layerConfigProvider ) {
 		_layers = new ArrayList<>();
 		_layersById = new HashMap<>();
+        _layersBySha = new HashMap<>();
 		_metaDataCache = new HashMap<>();
-		_configurationssByUuid = new HashMap<>();
-		_layerConfigurationProvider = layerConfigurationProvider;
+        _layerConfigurationProvider = layerConfigProvider;
 
-		if (_layerConfigurationProvider instanceof CachingLayerConfigurationProvider) {
-			((CachingLayerConfigurationProvider) _layerConfigurationProvider).addLayerListener(new LayerDataChangedListener () {
-					public void onLayerDataChanged (String layerId) {
-						_metaDataCache.remove(layerId);
-					}
-				});
+		if (layerConfigProvider instanceof CachingLayerConfigurationProvider) {
+            CachingLayerConfigurationProvider caching = (CachingLayerConfigurationProvider)layerConfigProvider;
+			caching.addLayerListener( new LayerDataChangedListener() {
+                public void onLayerDataChanged( String layerId ) {
+                    _metaDataCache.remove( layerId );
+                }
+            } );
 		}
-
-		readConfigFiles(getConfigurationFiles(layerConfigurationLocation));
+		readConfigFiles( getConfigurationFiles( layerConfigurationLocation ) );
 	}
 
-
-
 	@Override
-	public List<LayerInfo> listLayers () {
+	public List< JSONObject > getLayerJSONs() {
 		return _layers;
 	}
 
+    @Override
+	public JSONObject getLayerJSON( String layerId ) {
+		return _layersById.get( layerId );
+	}
+
+    @Override
+	public List< String > getLayerIds() {
+        List< String > layers = new ArrayList<>();
+        try {
+            for ( JSONObject layerConfig : _layers ) {
+                layers.add( layerConfig.getString( LayerConfiguration.LAYER_ID.getName() ) );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+		return layers;
+	}
+
 	@Override
-	public PyramidMetaData getMetaData (String layerId) {
+	public PyramidMetaData getMetaData( String layerId ) {
 		try {
-			LayerConfiguration config = getLayerConfiguration(layerId);
-			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			return getMetaData(layerId, pyramidIO);
+			LayerConfiguration config = getLayerConfiguration( layerId, null );
+            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			PyramidIO pyramidIO = config.produce( PyramidIO.class );
+			return getMetaData( layerId, dataId, pyramidIO );
 		} catch (ConfigurationException e) {
-			LOGGER.error("Couldn't determine pyramid I/O method for {}", layerId, e);
+			LOGGER.error( "Couldn't determine pyramid I/O method for {}", layerId, e );
 			return null;
 		}
 	}
     
-	private PyramidMetaData getMetaData (String layerId, PyramidIO pyramidIO) {
+	private PyramidMetaData getMetaData( String layerId, String dataId, PyramidIO pyramidIO ) {
 		try {
-			JSONObject metadata = _metaDataCache.get(layerId);
-			if (metadata == null){
-				String s = pyramidIO.readMetaData(layerId);
-
-				metadata = new JSONObject(s);
-				_metaDataCache.put(layerId, metadata);
+			JSONObject metadata = _metaDataCache.get( layerId );
+			if ( metadata == null ) {
+				String s = pyramidIO.readMetaData( dataId );
+				if ( s == null ) {
+                    metadata = new JSONObject();
+				} else {
+                    metadata = new JSONObject( s );
+                }
+				_metaDataCache.put( layerId, metadata );
 			}
-			return new PyramidMetaData(metadata);
+			return new PyramidMetaData( metadata );
 		} catch (JSONException e) {
 			LOGGER.error("Metadata file for layer is missing or corrupt: {}", layerId, e);
 		} catch (IOException e) {
@@ -127,233 +137,114 @@ public class LayerServiceImpl implements LayerService {
 		return null;
 	}
 
-	/*
-	 * Gets the base configuration - the combination of the renderer configuration and the data configuration.
-	 */
-	private JSONObject getBaseConfiguration (String layerId, String rendererType, boolean choiceIsError) {
-		LayerInfo info = _layersById.get(layerId);
-		if (null == info) {
-			throw new IllegalArgumentException("Attempt to configure unknown layer "+layerId);
-		}
-
-		// Figure out which renderer config to use
-		List<JSONObject> rendererConfigs = info.getRendererConfigurations();
-		JSONObject rendererConfig = null;
-		if (0 == rendererConfigs.size()) {
-			// Default to client rendering if none specified.
-			LOGGER.info("No renderer configuration found for layer " + layerId + ".  Defaulting to client.");
-			try {
-				rendererConfig = new JSONObject().put("domain", "client");
-			} catch (JSONException e) {
-				LOGGER.error("Malformed default renderer config", e);
-			}
-		} else if (1 == rendererConfigs.size()) {
-			// Only one possible base configuration (the usual case, at the moment)
-			rendererConfig = rendererConfigs.get(0);
-		} else if (null == rendererType) {
-			if (choiceIsError) {
-				throw new IllegalArgumentException("No way to choose between "+rendererConfigs.size()+" configurations - no renderer given");
-			}
-			// Just pick the first one - we're not actually rendering, so it shouldn't matter.
-			rendererConfig = rendererConfigs.get(0);
-		} else {
-			for (JSONObject config: rendererConfigs) {
-				try {
-					ImageRendererFactory baseFactory = new ImageRendererFactory(null, null);
-					baseFactory.readConfiguration(ConfigurableFactory.getLeafNode(config,
-					                                                              LayerConfiguration.RENDERER_PATH));
-					String configType = baseFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
-					if (rendererType.equals(configType)) {
-						rendererConfig =  config;
-						break;
-					}
-				} catch (ConfigurationException e) {
-					LOGGER.warn("Could not determine renderer from configuration {}", config, e);
-				}
-			}
-			if (null == rendererConfig)
-				throw new IllegalArgumentException("Attempt to configure unknown renderer "+rendererType);
-		}
-
-		// Combine the renderer configuration with the data configuration
-		JSONObject dataConfig = info.getDataConfiguration();
-		JSONObject totalConfig = JsonUtilities.deepClone(dataConfig);
-		try {
-			totalConfig.put("renderer", JsonUtilities.deepClone(rendererConfig));
-		} catch (JSONException e) {
-			LOGGER.warn("Attempt to combine renderer and data configurations failed for layer {}", layerId, e);
-		}
-		return totalConfig;
-	}
-
-	@Override
-	public UUID configureLayer (String layerId, JSONObject overrideConfiguration) {
-		// Figure out which renderer to match, if a choice is necessary
-		//
-		// This is necessary because we need to return the total number of
-		// images available, which at the moment, only the renderer knows. If we
-		// can figure out a way to do this without going through the renderer
-		// (say, using the serializer), we can get rid of this part where it has
-		// to find a renderer, which really shouldn't be at this point in the
-		// code.
-		ImageRendererFactory overrideFactory = new ImageRendererFactory(null, null);
-		String overrideRenderer = null;
-		boolean rendererChoiceIsError = false;
-		try {
-			overrideFactory.readConfiguration(ConfigurableFactory.getLeafNode(overrideConfiguration,
-			                                                                  LayerConfiguration.RENDERER_PATH));
-			overrideRenderer = overrideFactory.getPropertyValue(ImageRendererFactory.RENDERER_TYPE);
-		} catch (ConfigurationException e) {
-			// No renderer is allowed, if there is only one renderer listed; otherwise, it's an error.
-			rendererChoiceIsError = true;
-		}
-
-		// Get our base configuration - a combination of renderer and data configurations.
-		JSONObject configuration = getBaseConfiguration(layerId, overrideRenderer, rendererChoiceIsError);
-		JsonUtilities.overlayInPlace(configuration, overrideConfiguration);
-        
-		UUID uuid = UUID.randomUUID();
-		_configurationssByUuid.put(uuid, configuration);
-
-		return uuid;
-	}
-
 	/**
 	 * Wraps the options and query {@link JSONObject}s together into a new object.
 	 */
 	private JSONObject mergeQueryConfigOptions(JSONObject options, JSONObject query) {
-		JSONObject ret = new JSONObject();
-		try {
-			if (options != null)
-				ret.put("config", options);
-			if (query != null)
-				ret.put("request", query);
-		}
-		catch (Exception e) {
+
+        JSONObject result = JsonUtilities.deepClone( options );
+        try {
+            // all client configurable properties exist under an unseen 'public' node,
+            // create this node before overlay query parameters onto server config
+            if ( query != null ) {
+                JSONObject publicNode = new JSONObject();
+                publicNode.put( "public", query );
+                result = JsonUtilities.overlayInPlace( result, publicNode );
+            }
+        } catch (Exception e) {
 			LOGGER.error("Couldn't merge query options with main options.", e);
 		}
-		return ret;
+		return result;
 	}
-	
 
-	@Override
-	public LayerConfiguration getRenderingConfiguration (UUID uuid, TileIndex tile, JSONObject requestParams) {
+    @Override
+	public LayerConfiguration getLayerConfiguration( String layerId, JSONObject requestParams ) {
 		try {
-			//the root factory that does nothing
-			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
-			
-			//add another factory that will handle query params
-			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.<String>emptyList());
-			rootFactory.addChildFactory(queryParamsFactory);
-			
-			//add the layer configuration factory under the path 'config'
-			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(rootFactory, Collections.singletonList("config"));
-			rootFactory.addChildFactory(factory);
-	        
-			JSONObject rawConfiguration = _configurationssByUuid.get(uuid);
-			if (null == rawConfiguration)
-				throw new IllegalArgumentException("Unknown configuration: "+uuid);
-
-			rootFactory.readConfiguration(mergeQueryConfigOptions(rawConfiguration, requestParams));
-			LayerConfiguration config = rootFactory.produce(LayerConfiguration.class);
-			String layerId = config.getPropertyValue(LayerConfiguration.LAYER_NAME);
-			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-
-			// Initialize the PyramidIO for reading
-			JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-			if (null != initJSON) {
+            // first check if the query parameters contains a SHA-256 hash. If so
+            // load the configured JSONObject. Otherwise take the server default.
+            JSONObject layerConfig;
+            if ( requestParams != null && requestParams.has("state") ) {
+                layerConfig = _layersBySha.get( requestParams.getString("state") );
+            } else {
+                layerConfig = _layersById.get( layerId );
+            }
+			// create layer configuration factory
+			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory( null, new ArrayList<String>() );
+			// override the server configuration with supplied query parameters, this simply overlays
+            // the query parameter JSON over the server default JSON, then sets the factory upp
+            // to build our layer configuration object.
+            factory.readConfiguration( mergeQueryConfigOptions( layerConfig, requestParams ) );
+            // produce the layer configuration
+			LayerConfiguration config = factory.produce( LayerConfiguration.class );
+			// initialize the PyramidIO for reading
+			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+            PyramidIO pyramidIO = config.produce( PyramidIO.class );
+			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
+            if ( initJSON != null ) {
 				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-
-				pyramidIO.initializeForRead(layerId, width, height, initProps);
+				pyramidIO.initializeForRead( dataId, width, height, initProps);
 			}
-
-			// Set level-specific properties in the configuration
-			if (null != tile) {
-				PyramidMetaData metadata = getMetaData(layerId, pyramidIO);
-				String minimum = metadata.getCustomMetaData(""+tile.getLevel(), "minimum");
-				String maximum = metadata.getCustomMetaData(""+tile.getLevel(), "maximum");
-				config.setLevelProperties(tile, minimum, maximum);
-			}
-
 			return config;
-		} catch (ConfigurationException e) {
-			LOGGER.warn("Error configuring rendering for {}", uuid, e);
+		} catch ( Exception e ) {
+			LOGGER.warn("Error configuring rendering for", e);
 			return null;
 		}
 	}
 
-	/*
-	 * Get a layer configuration not suitable for rendering.
-	 * 
-	 * For internal use only, basically just for getting metadata, which
-	 * shouldn't depend on anything but the pyramidIO.
-	 * 
-	 * While there is no theoretical reason the PyramidIO should necessarily be
-	 * the same across all possible ways of looking at a layer, for the moment,
-	 * we simply stipulate that it will be so this will work. If you want to
-	 * look at some data both live and batched (to compare, say), configure them
-	 * as separate layers, with separate IDs.
-	 */
-	private LayerConfiguration getLayerConfiguration (String layerId) {
-		try {
-			//the root factory that does nothing
-			EmptyConfigurableFactory rootFactory = new EmptyConfigurableFactory(null, null, null);
-			
-			//add another factory that will handle query params
-			RequestParamsFactory queryParamsFactory = new RequestParamsFactory(null, rootFactory, Collections.singletonList("request"));
-			rootFactory.addChildFactory(queryParamsFactory);
-			
-			//add the layer configuration factory under the path 'config'
-			ConfigurableFactory<LayerConfiguration> factory = _layerConfigurationProvider.createFactory(rootFactory, Collections.singletonList("config"));
-			rootFactory.addChildFactory(factory);
-            
-			JSONObject baseConfiguration = getBaseConfiguration(layerId, null, false);
-			if (null == baseConfiguration)
-				throw new IllegalArgumentException("Unknown configuration: "+layerId);
+    @Override
+	public String saveLayerState( String layerId, JSONObject overrideConfiguration ) throws Exception {
+        try {
+            // use the layer config to produce the string rather than the config json itself,
+            // this ensures that ALL configurable properties are used in sha generation, rather
+            // than those only specified in the JSON
+            LayerConfiguration config = getLayerConfiguration( layerId, overrideConfiguration );
 
-			rootFactory.readConfiguration(mergeQueryConfigOptions(baseConfiguration, null));
-			LayerConfiguration config = rootFactory.produce(LayerConfiguration.class);
+            // get SHA-256 hash of state
+            String shaHex = config.generateSHA256();
 
-			// Initialize the PyramidIO for reading
-			JSONObject initJSON = config.getProducer(PyramidIO.class).getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-			if (null != initJSON) {
-				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-
-				PyramidIO pyramidIO = config.produce(PyramidIO.class);
-				pyramidIO.initializeForRead(layerId, width, height, initProps);
-			}
-			return config;
-		} catch (ConfigurationException e) {
-			LOGGER.warn("Error configuring rendering for {}", layerId, e);
-			return null;
+            // store the config under the SHA-256
+            _layersBySha.put( shaHex, mergeQueryConfigOptions( _layersById.get( layerId ), overrideConfiguration ) );
+            return shaHex;
+        } catch ( Exception e ) {
+			LOGGER.warn("Error registering configuration to SHA");
+            throw e;
 		}
 	}
 
-	@Override
-	public void forgetConfiguration (UUID uuid) {
-		_configurationssByUuid.remove(uuid);
-	}
+    @Override
+    public JSONObject getLayerStates( String layerId ) {
+        JSONObject states = new JSONObject();
+        try {
+            // add default
+            states.put( "default", getLayerConfiguration( layerId, null )
+                    .getExplicitConfiguration()
+                    .getJSONObject("public") ); // only return public node
+            // add saved
+            for ( Map.Entry<String, JSONObject> entry : _layersBySha.entrySet() ) {
+                String key = entry.getKey();
+                JSONObject value = entry.getValue();
+                states.put( key, getLayerConfiguration( layerId, value.getJSONObject("public") )
+                        .getExplicitConfiguration()
+                        .getJSONObject("public") ); // only return public node
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return states;
+    }
 
-
-
-	// ////////////////////////////////////////////////////////////////////////
-	// Section: Configuration reading methods
-	//
 	private File[] getConfigurationFiles (String location) {
 		try {
 			// Find our configuration file.
-			URI path = null;
+			URI path;
 			if (location.startsWith("res://")) {
 				location = location.substring(6);
 				path = LayerServiceImpl.class.getResource(location).toURI();
 			} else {
 				path = new File(location).toURI();
 			}
-
 			File configRoot = new File(path);
 			if (!configRoot.exists())
 				throw new Exception(location+" doesn't exist");
@@ -369,49 +260,23 @@ public class LayerServiceImpl implements LayerService {
 		}
 	}
 
-	private void readConfigFiles (File[] files) {
+	private void readConfigFiles( File[] files ) {
 		for (File file: files) {
 			try {
-				JSONObject contents = new JSONObject(new JSONTokener(new FileReader(file)));
-				JSONArray configurations = contents.getJSONArray("layers");
-				for (int i=0; i<configurations.length(); ++i) {
-					LayerInfo info = new LayerInfo(configurations.getJSONObject(i));
-					addTopLevelConfiguration(info);
-				}
+				JSONArray contents = new JSONArray( new JSONTokener(new FileReader(file)) );
+                for ( int i=0; i<contents.length(); i++ ) {
+                    if( contents.get(i) instanceof JSONObject ) {
+                        JSONObject layerJSON = contents.getJSONObject(i);
+                        _layersById.put( layerJSON.getString( LayerConfiguration.LAYER_ID.getName() ), layerJSON );
+                        _layers.add( layerJSON );
+                    }
+                }
 			} catch (FileNotFoundException e) {
 				LOGGER.error("Cannot find layer configuration file {} ", file, e);
 				return;
 			} catch (JSONException e) {
 				LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
 			}
-		}
-		debugConfiguration();
-	}
-
-	private void addTopLevelConfiguration (LayerInfo info) {
-		// Only add the top-level layer to the layers list...
-		_layers.add(info);
-		// But add it and all sub-layers to the layersById map
-		storeLayerById(info);
-	}
-
-	private void storeLayerById (LayerInfo info) {
-		_layersById.put(info.getID(), info);
-		for (LayerInfo child: info.getChildren()) {
-			storeLayerById(child);
-		}
-	}
-
-	private void debugConfiguration () {
-		System.out.println("Configuration layers for server:");
-		for (LayerInfo layer: _layers) {
-			debugLayer(layer, "  ");
-		}
-	}
-	private void debugLayer (LayerInfo layer, String prefix) {
-		System.out.println(prefix+layer.getID()+": "+layer.getName());
-		for (LayerInfo child: layer.getChildren()) {
-			debugLayer(child, prefix+"  ");
 		}
 	}
 }

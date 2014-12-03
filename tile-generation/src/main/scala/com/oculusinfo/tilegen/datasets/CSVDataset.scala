@@ -49,11 +49,10 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.BinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.PropertiesWrapper
-
 
 
 /**
@@ -249,14 +248,24 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 	/**
 	 * Actually retrieve the data.
 	 * This can be overridden if the data is not a simple file or set of files,
-	 * but normally shouldn't be touched.
+	 * but normally shouldn't be touched. 
 	 */
 	def getData (sc: SparkContext): RDD[String] =
-		if (getIdealPartitions.isDefined) {
-			getDataFiles.map(sc.textFile(_, getIdealPartitions.get)).reduce(_ union _)
-		} else {
-			getDataFiles.map(sc.textFile(_)).reduce(_ union _)
-		}
+		// For each file, attempt create an RDD, then immediately force an
+		// exception in the case it does not exist. Union all RDDs together.
+		getDataFiles.map{ file =>
+			Try(
+				{
+					var tmp = if ( getIdealPartitions.isDefined ) {
+					    sc.textFile( file, getIdealPartitions.get )
+				    } else {
+					    sc.textFile( file )
+				    }
+				    tmp.partitions // force exception if file does not exist
+				    tmp
+			    }
+			).getOrElse( sc.emptyRDD )
+		}.reduce(_ union _)
 }
 
 
@@ -449,8 +458,6 @@ abstract class CSVDatasetBase[IT: ClassTag,
 	
 	def getBinningAnalytic: BinningAnalytic[PT, BT] = valuer.getBinningAnalytic
 
-	override def isDensityStrip = indexer.isDensityStrip
-
 	def getDataAnalytics: Option[AnalysisDescription[(IT, PT), DT]] = dataAnalytics
 	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]] = tileAnalytics
 }
@@ -537,7 +544,7 @@ class CSVStaticProcessingStrategy[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag]
 		).filter(r =>
 			// Filter out unsuccessful parsings
 			r.isSuccess
-		).map(_.get).mapPartitions(iter =>
+		).map(_.get).mapPartitions((iter: Iterator[List[Any]]) =>
 			{
 				val extractor = new CSVFieldExtractor(localProperties)
 				// Determine which fields we need
@@ -687,4 +694,3 @@ class StreamingCSVDataset[IT: ClassTag, PT: ClassTag, BT, DT: ClassTag, AT: Clas
 		}
 	}
 }
-

@@ -46,11 +46,10 @@ import org.apache.spark.streaming.Time
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.BinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 import com.oculusinfo.tilegen.tiling.IndexScheme
 
 
@@ -90,8 +89,6 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, B
 
 	def getConsolidationPartitions: Option[Int] = None
 	
-	def isDensityStrip: Boolean = false
-
 	def getIndexScheme: IndexScheme[IT]
 	def getValueScheme: ValueDescription[BT]
 
@@ -301,12 +298,17 @@ object DatasetFactory {
 	                                              levels: Seq[Seq[Int]],
 	                                              properties: CSVRecordPropertiesWrapper):
 			CSVDataset[IT, PT, _, _, BT] = {
-		val dataAnalytic =
-			CSVDataAnalyticExtractor.fromProperties(properties,
-			                                        indexer.indexTypeTag,
-			                                        valuer.valueTypeTag)
-		val tileAnalytic =
-			CSVTileAnalyticExtractor.fromProperties(sc, properties, indexer, valuer, levels)
+		val indexDataAnalytics =
+			indexer.getDataAnalytics.asInstanceOf[Seq[AnalysisDescription[(IT, PT), _]]]
+		val valueDataAnalytics =
+			valuer.getDataAnalytics.asInstanceOf[Seq[AnalysisDescription[(IT, PT), _]]]
+		val dataAnalyticDescs = indexDataAnalytics ++ valueDataAnalytics
+		val dataAnalytic = CSVDataAnalyticExtractor.consolidate(properties, dataAnalyticDescs)
+
+		val tileAnalyticDescs: Seq[AnalysisDescription[TileData[BT], _]] =
+			(indexer.getTileAnalytics.asInstanceOf[Seq[AnalysisDescription[TileData[BT], _]]] ++
+				 valuer.getTileAnalytics.asInstanceOf[Seq[AnalysisDescription[TileData[BT], _]]])
+		val tileAnalytic = CSVTileAnalyticExtractor.consolidate(properties, tileAnalyticDescs)
 
 		addGenericAnalytics(sc, cacheRaw, cacheFilterable, cacheProcessed,
 		                    indexer, valuer, tileWidth, tileHeight, levels, properties,
@@ -340,6 +342,10 @@ object DatasetFactory {
 		).filter(levelSeq =>
 			levelSeq != Seq[Int]()	// discard empty entries
 		)
+		// Determine index and value information
+		val indexer = CSVIndexExtractor.fromProperties(properties)
+		val valuer = CSVValueExtractor.fromProperties(properties, CSVValueExtractor.standardFactories)
+
 		val cacheRaw = properties.getBoolean("oculus.binning.caching.raw",
 		                                     "Whether or not to cache the raw data for multiple raw "+
 			                                     "data requests.",
@@ -354,13 +360,10 @@ object DatasetFactory {
 		                                           Some(false))
 		val xBins = width.getOrElse(properties.getInt("oculus.binning.xbins",
 		                                              "The number of bins per tile along the horizontal axis",
-		                                              Some(256)))
+		                                              Some(indexer.getDefaultXBins)))
 		val yBins = height.getOrElse(properties.getInt("oculus.binning.ybins",
 		                                               "The number of bins per tile along the vertical axis",
-		                                               Some(256)))
-		// Determine index and value information
-		val indexer = CSVIndexExtractor.fromProperties(properties)
-		val valuer = CSVValueExtractor.fromProperties(properties, CSVValueExtractor.standardFactories)
+		                                               Some(indexer.getDefaultYBins)))
 
 		println("Creating dataset")
 		println("\tRaw data caching: "+cacheRaw)

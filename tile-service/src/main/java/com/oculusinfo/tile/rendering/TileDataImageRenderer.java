@@ -41,8 +41,8 @@ public interface TileDataImageRenderer {
 	/**
 	 * Render an individual tile based on the given input parameters
 	 * 
-	 * @param parameter
-	 * @return
+	 * @param config The layer configuration object.
+	 * @return The buffered image.
 	 */
 	public abstract BufferedImage render (LayerConfiguration config);
 
@@ -50,8 +50,7 @@ public interface TileDataImageRenderer {
 	 * Determine how many images are available to be rendered given a set of
 	 * input parameters
 	 * 
-	 * @param parameter
-	 *            The input parameters
+	 * @param metadata The layers meta data pyramid.
 	 * @return The number of available images
 	 */
 	public int getNumberOfImagesPerTile (PyramidMetaData metadata);

@@ -1,0 +1,43 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+apply plugin: 'java-library-distribution'
+
+distributions {
+		main {
+				baseName = 'tile-generator'
+				contents {
+					// Copy everything under the dist directory over
+					from "src/dist"
+					// Strip versions out of artifacts on copy
+					rename "(.*)-$version(.*)", "\$1\$2"
+				}
+		}
+}
+
+// Disable transitive dependencies.  Spark's run script will add almost everything
+// we need to the classpath at runtime, it's really just HBase and our own jars
+// that need to be included.
+configurations.all {
+	transitive = false
+}
+
+// Copy the run script over, filtering in the correct hbase references as needed.
+task copyFilteredScripts(type: Copy) {
+	from "src/filtered-scripts"
+	into "src/bin"
+	filter ReplaceTokens, tokens:[
+		"hbase-jars": getHBaseClasspathEntries().toString()
+	]
+}
+processResources.dependsOn copyFilteredScripts
+
+dependencies {
+	compile project(":tile-generation")	
+	compile project(":binning-utilities")	
+	compile project(":geometric-utilities")	
+	compile project(":math-utilities")
+	compile "org.scala-lang:scala-library:$scalaVersion"	
+	// Call for special handling for hbase dependencies - see top level build file for
+	// definition and explanation.
+	addHBaseDependencies()
+}

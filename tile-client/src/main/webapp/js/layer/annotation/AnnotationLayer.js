@@ -125,6 +125,14 @@ define(function (require) {
             // and as such this attribute will hold the organized data
             this.dataMap = {};
 
+             // pass parent layer (this) along with meta data to the renderer / details
+            this.renderer.parent = this;
+            this.renderer.meta = spec.source.meta.meta;
+            this.details.parent = this;
+            this.details.meta = spec.source.meta.meta;
+            // subscribe renderer to pubsub AFTER it has its parent reference
+            this.renderer.subscribeRenderer();
+
             this.map.on('moveend', $.proxy( this.update, this ) );
 
             // clear click state if map is clicked
@@ -141,6 +149,7 @@ define(function (require) {
             this.setZIndex( spec.zIndex );
             this.setOpacity( spec.opacity );
             this.setVisibility( spec.enabled );
+            this.update();
         },
 
         /**
@@ -284,7 +293,7 @@ define(function (require) {
             coord = this.map.getCoordFromViewportPixel( position.x, position.y );
             tilekey = this.map.getTileKeyFromViewportPixel( position.x, position.y );
             // write annotation
-            AnnotationService.writeAnnotation( this.layerInfo,
+            AnnotationService.writeAnnotation( this.layerSpec.source,
                                                DEBUG_ANNOTATION( coord ),
                                                this.updateCallback(tilekey) );
         },
@@ -297,7 +306,7 @@ define(function (require) {
          */
         modifyAnnotation: function( annotation ) {
 
-            AnnotationService.modifyAnnotation( this.layerInfo, annotation, function() {
+            AnnotationService.modifyAnnotation( this.layerSpec.source, annotation, function() {
                 // TODO: request old and new tile locations in case of failure
                 return true;
             });
@@ -311,7 +320,7 @@ define(function (require) {
         removeAnnotation: function( annotation ) {
             var  pixel = this.map.getViewportPixelFromCoord( annotation.x, annotation.y ),
                  tilekey = this.map.getTileKeyFromViewportPixel( pixel.x, pixel.y );
-            AnnotationService.removeAnnotation( this.layerInfo, annotation.certificate, this.updateCallback(tilekey) );
+            AnnotationService.removeAnnotation( this.layerSpec.source, annotation.certificate, this.updateCallback(tilekey) );
         },
 
 
@@ -325,13 +334,10 @@ define(function (require) {
             var that = this;
 
             return function( data ) {
-                if ( !that.layerInfo ) {
-                    return;
-                }
                 // set as pending
                 that.pendingTiles[tilekey] = true;
                 // set force update flag to ensure this tile overrides any other pending requests
-                AnnotationService.getAnnotations( this.layerInfo, [tilekey], that.getCallback( true ) );
+                AnnotationService.getAnnotations( this.layerSpec.source, [tilekey], that.getCallback( true ) );
             };
         },
 
@@ -349,7 +355,7 @@ define(function (require) {
                 defunctTiles = {},
                 i, tile, tilekey;
 
-            if ( !this.layerInfo || !this.layerSpec.accessibility.read || this.getVisibility() === false ) {
+            if ( !this.layerSpec.accessibility.read || this.getVisibility() === false ) {
                 return;
             }
 
@@ -401,7 +407,7 @@ define(function (require) {
             }
 
             // Request needed tiles from service
-            AnnotationService.getAnnotations( this.layerInfo, neededTiles, this.getCallback() );
+            AnnotationService.getAnnotations( this.layerSpec.source, neededTiles, this.getCallback() );
         },
 
 
@@ -531,40 +537,6 @@ define(function (require) {
                 that.redraw( dataArray );
             };
 
-        },
-
-
-        /**
-         * Configure the layer, this involves sending the layer specification
-         * object to the server in a POST request. The server will respond
-         * with a meta data object containing the layer configuration uuid. If a previous
-         * uuid exists, the server will automatically send an unconfigure request to
-         * free the previous configuration.
-         */
-        configure: function( callback ) {
-
-            var that = this;
-
-            AnnotationService.configureLayer( this.layerSpec, function( layerInfo, statusInfo ) {
-                if (statusInfo.success) {
-                    if ( that.layerInfo ) {
-                        // if a previous configuration exists, release it
-                        AnnotationService.unconfigureLayer( that.layerInfo, function() {
-                            return true;
-                        });
-                    }
-                    // set layer info
-                    that.layerInfo = layerInfo;
-                    // pass parent layer (this) along with meta data to the renderer / details
-                    that.renderer.parent = that;
-                    that.renderer.meta = layerInfo.meta;
-                    that.details.parent = that;
-                    that.details.meta = layerInfo.meta;
-                    // subscribe renderer to pubsub AFTER it has its parent reference
-                    that.renderer.subscribeRenderer();
-                }
-                callback( layerInfo, statusInfo );
-            });
         },
 
 

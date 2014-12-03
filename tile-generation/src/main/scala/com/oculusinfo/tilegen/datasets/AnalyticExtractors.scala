@@ -41,95 +41,63 @@ import org.apache.spark.SparkContext
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.AnalysisDescriptionTileWrapper
-import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
-import com.oculusinfo.tilegen.tiling.CustomGlobalMetadata
-import com.oculusinfo.tilegen.tiling.IPv4Analytics
-import com.oculusinfo.tilegen.tiling.MinimumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleTileAnalytic
-import com.oculusinfo.tilegen.tiling.MinimumDoubleArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.MaximumDoubleArrayTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
+import com.oculusinfo.tilegen.tiling.analytics.IPv4Analytics
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 
 object CSVDataAnalyticExtractor {
-	def fromProperties[IT, PT] (properties: PropertiesWrapper,
-	                            indexType: ClassTag[IT],
-	                            processingType: ClassTag[PT]):
+	def consolidate[IT, PT] (properties: PropertiesWrapper,
+	                         dataAnalytics: Seq[AnalysisDescription[(IT, PT), _]]):
 			AnalysisWithTag[(IT, PT), _] = {
-		val analysis: Option[AnalysisDescription[(IT, PT), Int]] = None
-		new AnalysisWithTag[(IT, PT), Int](analysis)
+		// Load up any data analytics specified in the properties file, and add them to
+		// the passed-in list of standard data analytics to run.
+		val classLoader = classOf[AnalysisDescription[_, _]].getClassLoader
+		val customAnalyses = properties.getStringPropSeq("oculus.binning.analytics.data",
+		                                                 "A list of custom data analysis descriptions to "+
+			                                                 "run on the data")
+		val allAnalytics: Seq[AnalysisDescription[(IT, PT), _]] =
+			customAnalyses.map(className =>
+				classLoader.loadClass(className).newInstance
+					.asInstanceOf[AnalysisDescription[(IT, PT), _]]
+			) ++ dataAnalytics
+
+		// Combine all data analytics into one, for the binner
+		if (allAnalytics.isEmpty) {
+			new AnalysisWithTag[(IT, PT), Int](None)
+		} else {
+			new AnalysisWithTag(Some(allAnalytics.reduce((a, b) =>
+				                         new CompositeAnalysisDescription(a, b))))
+		}
 	}
 }
 
 object CSVTileAnalyticExtractor {
-	def fromProperties[IT, PT, BT] (sc: SparkContext,
-	                                properties: PropertiesWrapper,
-	                                indexer: CSVIndexExtractor[IT],
-	                                valuer: CSVValueExtractor[_, BT],
-	                                levels: Seq[Seq[Int]]):
+	def consolidate[IT, PT, BT] (properties: PropertiesWrapper,
+	                             tileAnalytics: Seq[AnalysisDescription[TileData[BT], _]]):
 			AnalysisWithTag[TileData[BT], _] =
 	{
-		val metaDataKeys = (levels.flatMap(lvls => lvls).toSet.map((level: Int) =>
-			                    (""+level -> ((index: TileIndex) => (index.getLevel == level)))
-		                    ) + ("global" -> ((index: TileIndex) => true))
-		).toMap
+		// Load up any tile analytics specified in the properties file, and add them to
+		// the passed-in list of standard tile analytics to run.
+		val classLoader = classOf[AnalysisDescription[_, _]].getClassLoader
+		val customAnalyses = properties.getStringPropSeq("oculus.binning.analytics.tile",
+		                                                 "A list of custom tile analytic descriptions "+
+			                                                 "to run on the tiles produced")
+		val allAnalytics: Seq[AnalysisDescription[TileData[BT], _]] =
+			customAnalyses.map(className =>
+				classLoader.loadClass(className).newInstance
+					.asInstanceOf[AnalysisDescription[TileData[BT], _]]
+			) ++ tileAnalytics
 
-		val binType = ClassTag.unapply(valuer.valueTypeTag).get
-
-		val analyses = Buffer[AnalysisDescription[TileData[BT], _]]()
-
-		if (indexer.isInstanceOf[IPv4IndexExtractor]) {
-			analyses += IPv4Analytics.getCIDRBlockAnalysis[BT](sc)
-			analyses += IPv4Analytics.getMinIPAddressAnalysis[BT](sc)
-			analyses += IPv4Analytics.getMaxIPAddressAnalysis[BT](sc)
-		}
-		if (binType == classOf[Double]) {
-			val convertFcn: BT => Double = bt => bt.asInstanceOf[Double]
-			val minAnalytic =
-				new AnalysisDescriptionTileWrapper[BT, Double](sc,
-				                                               convertFcn,
-				                                               new MinimumDoubleTileAnalytic,
-				                                               metaDataKeys)
-			val maxAnalytic =
-				new AnalysisDescriptionTileWrapper[BT, Double](sc,
-				                                               convertFcn,
-				                                               new MaximumDoubleTileAnalytic,
-				                                               metaDataKeys)
-
-			analyses += minAnalytic
-			analyses += maxAnalytic
-		} else if (valuer.isInstanceOf[SeriesValueExtractor]
-			           || valuer.isInstanceOf[MultiFieldValueExtractor]) {
-			val convertFcn: BT => Seq[Double] = { bt =>
-				for (b <- bt.asInstanceOf[JavaList[JavaDouble]]) yield b.asInstanceOf[Double]
-			}
-			val minAnalytic =
-				new AnalysisDescriptionTileWrapper[BT, Seq[Double]](sc,
-				                                                    convertFcn,
-				                                                    new MinimumDoubleArrayTileAnalytic,
-				                                                    metaDataKeys)
-			val maxAnalytic =
-				new AnalysisDescriptionTileWrapper[BT, Seq[Double]](sc,
-				                                                    convertFcn,
-				                                                    new MaximumDoubleArrayTileAnalytic,
-				                                                    metaDataKeys)
-			analyses += minAnalytic
-			analyses += maxAnalytic
-
-			if (valuer.isInstanceOf[SeriesValueExtractor]) {
-				val seriesValuer = valuer.asInstanceOf[SeriesValueExtractor]
-				analyses += new CustomGlobalMetadata(
-					Map("variables" -> seriesValuer.fields.toSeq.asJava))
-			}
-		}
-
-		if (analyses.isEmpty) {
+		// Combine all tile analytics into one, for the binner
+		if (allAnalytics.isEmpty) {
 			new AnalysisWithTag[TileData[BT], Int](None)
 		} else {
-			new AnalysisWithTag(Some(analyses.reduce((a, b) =>
+			new AnalysisWithTag(Some(allAnalytics.reduce((a, b) =>
 				                         new CompositeAnalysisDescription(a, b))))
 		}
 	}

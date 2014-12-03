@@ -35,7 +35,7 @@ import java.io.Serializable;
  * 
  * @author nkronenfeld
  */
-public class Pair<S extends Serializable, T extends Serializable> implements Serializable {
+public class Pair<S, T> implements Serializable {
 	private static final long serialVersionUID = -7793621678311661841L;
 
 

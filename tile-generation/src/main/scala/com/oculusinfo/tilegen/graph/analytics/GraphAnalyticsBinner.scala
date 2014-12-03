@@ -46,9 +46,11 @@ import com.oculusinfo.tilegen.datasets.DatasetFactory
 import org.apache.spark.SparkContext
 import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import java.util.{List => JavaList}
-import com.oculusinfo.tilegen.tiling.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
+import org.apache.spark.graphx._
+import scala.collection.JavaConverters._
 
 
 /**
@@ -62,10 +64,6 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
  * The following properties control how the application runs: 
  * (See code comments in CSVDataset.scala for more info and settings)
  * 
- * 
- *  oculus.binning.graph.data=nodes
- *      The type of graph data to use for tile generation.  Set to "nodes" to generate analytics of a graph's
- *      nodes.
  *            
  *  oculus.binning.hierarchical.clusters
  *  	To configure tile generation of hierarchical clustered data.  Set to false [default] for 'regular'
@@ -82,16 +80,14 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
  *     	to oculus.binning.source.levels.0 will be used to generate tiles for all tiles given in the 
  *     	oculus.binning.levels.0 set of zoom levels, and so on for other level 'orders'.
  *      
- *  oculus.binning.xField
- *      The field name to use as the X axis coord for graph communities/nodes
- * 
- *  oculus.binning.yField
- *      The field name to use as the Y axis coord for graph communities/nodes 
- *      Defaults to zero (i.e., a density strip of x data)     
  *      
- *  oculus.binning.parsing.<field>.index
- *      The column number of the described field (i.e., for xField and yField above)
- *      This field is mandatory for every field type to be used
+ *  ----- Parameters for parsing graph community information [required]    
+ *      
+ *  oculus.binning.graph.x.index
+ *      The column number of X axis coord of each graph community/node (Double)
+ *      
+ *  oculus.binning.graph.y.index
+ *      The column number of Y axis coord of each graph community/node (Double)    
  *      
  *  oculus.binning.graph.id.index
  *      The column number of Long ID of each graph community/node (Long)
@@ -118,8 +114,32 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
  *      The column number of X coordinate of a given parent community (Double) 
  *                                                           
  *  oculus.binning.graph.parentY.index
- *      The column number of Y coordinate of a given parent community (Double)                                                                   
+ *      The column number of Y coordinate of a given parent community (Double)
  *         
+ *  oculus.binning.graph.maxcommunities
+ *  	The max number of communities to store per tile (ranked by community size). Default is 25.
+ *   
+ *   
+ *  ----- Parameters for parsing graph edge information [optional].
+ *  	  NOTE: If edge parameters are not specified then analytics will ONLY be calculated
+ *        for the graph's communities/nodes (NOT edges).
+ *        
+ *  oculus.binning.graph.edge.srcID.index
+ *  	The column number of source ID of each graph edge (Long)
+ *   
+ *  oculus.binning.graph.edges.dstID.index
+ *  	The column number of destination ID of each graph edge (Long)
+ *     
+ *  oculus.binning.graph.edges.weight.index
+ *  	The column number of the weight of each graph edge (Long).
+ *   	Default is all edges are given a weiight of 1 (unweighted).
+ *  
+ *  oculus.binning.graph.edges.type.index
+ *      The column number of a boolean specifying each edge as an inter-community edge (=1) or an intra-community edge (=0)
+ *      
+ *  oculus.binning.graph.maxedges
+ *  	The max number of both inter-community and intra-community edges to 
+ *   	store per community (ranked by weight). Default is 10.              
  *  -----    
  *      
  *  hbase.zookeeper.quorum
@@ -158,41 +178,8 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 
 
 object GraphAnalyticsBinner {
-	private var _graphDataType = "nodes"
 	private var _hierlevel = 0
 		
-//	def getTileIO(properties: PropertiesWrapper): TileIO = {
-//		properties.getString("oculus.tileio.type",
-//		                     "Where to put tiles",
-//		                     Some("hbase")) match {
-//			case "hbase" => {
-//				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
-//				                                        "The HBase zookeeper quorum").get
-//				val port = properties.getString("hbase.zookeeper.port",
-//				                                "The HBase zookeeper port",
-//				                                Some("2181"))
-//				val master = properties.getStringOption("hbase.master",
-//				                                        "The HBase master").get
-//				new HBaseTileIO(quorum, port, master)
-//			}
-//			case "sqlite" => {
-//				val path =
-//					properties.getString("oculus.tileio.sqlite.path",
-//					                     "The path to the database",
-//					                     Some(""))
-//				new SqliteTileIO(path)
-//				
-//			}
-//			case _ => {
-//				val extension =
-//					properties.getString("oculus.tileio.file.extension",
-//					                     "The extension with which to write tiles",
-//					                     Some("avro"))
-//				new LocalTileIO(extension)
-//			}
-//		}
-//	}
-//	
 	//------------------
 	def importAndProcessData (sc: SparkContext,
 	                   dataDescription: Properties,
@@ -242,22 +229,12 @@ object GraphAnalyticsBinner {
 		val minAnalysis:
 				AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]],
 				                    List[GraphAnalyticsRecord]] =
-			new GraphListAnalysis(
-				sc, new GraphMinRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".min" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.min" -> ((index: TileIndex) => true))
-			)
+			new GraphListAnalysis(new GraphMinRecordAnalytic)
 
 		val maxAnalysis:
 				AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]],
 				                    List[GraphAnalyticsRecord]] =
-			new GraphListAnalysis(
-				sc, new GraphMaxRecordAnalytic,
-				Range(levelBounds._1, levelBounds._2+1).map(level =>
-					(level+".max" -> ((index: TileIndex) => (level == index.getLevel())))
-				).toMap + ("global.max" -> ((index: TileIndex) => true))
-			)
+			new GraphListAnalysis(new GraphMaxRecordAnalytic)
 
 		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]],
 		                                              (List[GraphAnalyticsRecord],
@@ -268,13 +245,14 @@ object GraphAnalyticsBinner {
 		val dataAnalytics: Option[AnalysisDescription[((Double, Double), GraphAnalyticsRecord),
 		                                              Int]] = None  	                                              
 		// process data                                              
-		genericProcessData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)		
+		genericProcessData(sc, rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)		
 		
 	}
 	
 	//------------
 	private def genericProcessData[AT, DT]
-		(rawData: RDD[String],
+		(sc: SparkContext,
+		 rawData: RDD[String],
 		 levelSets: Seq[Seq[Int]],
 		 tileIO: TileIO,
 		 tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]], AT]],
@@ -287,13 +265,14 @@ object GraphAnalyticsBinner {
 		val tileAnalyticsTag: ClassTag[AT] = tileAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
 		val dataAnalyticsTag: ClassTag[DT] = dataAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
 
-		processData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)(tileAnalyticsTag, dataAnalyticsTag)
+		processData(sc, rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)(tileAnalyticsTag, dataAnalyticsTag)
 		
 	}
 	
 	//------------
 	private def processData[AT: ClassTag, DT: ClassTag]
-		(rawData: RDD[String],
+		(sc: SparkContext,
+		 rawData: RDD[String],
 		 levelSets: Seq[Seq[Int]],
 		 tileIO: TileIO,
 		 tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]], AT]],
@@ -303,25 +282,46 @@ object GraphAnalyticsBinner {
 		 properties: CSVRecordPropertiesWrapper,
 		 hierarchyLevel: Int = 0) =
 	{
-				
-		val data = rawData.mapPartitions(i =>
-			{
-				val recordParser = new GraphAnalyticsRecordParser(hierarchyLevel, properties)
-				i.flatMap(line =>
-					{
-						recordParser.getGraphRecords(line)
-					}
-				)
-			}
-		).map(record => (record._1, record._2, dataAnalytics.map(_.convert(record))))
+		val recordParser = new GraphAnalyticsRecordParser(hierarchyLevel, properties)
+		val edgeMatcher = new EdgeMatcher
+		
+		// parse edge data
+		val edgeData = rawData.flatMap(line => recordParser.getEdges(line))
+		
+		// parse node/community data
+		val nodeData = rawData.flatMap(line => recordParser.getNodes(line))
+		
+		// match edges with corresponding graph communities
+		val nodesWithEdges = edgeMatcher.matchEdgesWithCommunities(nodeData, edgeData)
+		
+		//convert parsed graph communities into GraphAnalyticsRecord objects for processing with RDDBinner
+		val data = nodesWithEdges.map(record => {		
+			val (xy, community) = record
+			val graphRecord = new GraphAnalyticsRecord(1, List(community).asJava)
+			(xy, graphRecord, dataAnalytics.map(_.convert((xy, graphRecord))))
+		})
 		data.cache
 
 		val binner = new RDDBinner
 		binner.debug = true
-		val tilePyramid = getTilePyramid(properties)		
+		val tilePyramid = getTilePyramid(properties)	
+		
+		println("\tTile analytics: "+tileAnalytics)
+		println("\tData analytics: "+dataAnalytics)
+
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))		
 
 		levelSets.foreach(levelSet =>
-			{
+			{			
+				// Add level accumulators for all analytics for these levels (for now at least)
+				tileAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+						
 				println()
 				println()
 				println()
@@ -422,11 +422,6 @@ object GraphAnalyticsBinner {
 			val propStream = new FileInputStream(args(argIdx))
 			props.load(propStream)
 			propStream.close()
-			
-			// init type of graph tile generation job (nodes or edges) 
-			_graphDataType = Try(props.getProperty("oculus.binning.graph.data",
-		                                      "The type of graph data to tile (nodes or edges). "+
-			                                      "Default is nodes.")).getOrElse("nodes")
 			                                      
 			// check if hierarchical mode is enabled
 			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");

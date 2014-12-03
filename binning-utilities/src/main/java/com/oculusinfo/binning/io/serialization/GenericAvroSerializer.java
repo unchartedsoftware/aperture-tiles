@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
@@ -52,10 +53,34 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 5775555328063499845L;
 
 
-	private CodecFactory _compressionCodec;
+
+	// Functions to encode and decode codecs as strings, so we can serialize
+	// them accross the network or accross machines.  Unfortunately, we cannot
+	// simply use CodecFactory.toString and CodecFactory.fromString, as they
+	// fail to reverse each other for deflate codecs.
+	private static CodecFactory descriptionToCodec (String codecDescription) {
+		if (codecDescription.startsWith("deflate")) {
+			// Knock off the initial "deflate-"
+			int deflateLevel = Integer.parseInt(codecDescription.substring(8));
+			return CodecFactory.deflateCodec(deflateLevel);
+		} else {
+			return CodecFactory.fromString(codecDescription);
+		}
+	}
+	private static String codecToDescription (CodecFactory codec) {
+		return codec.toString();
+	}
+
+
+
+	private Schema _tileSchema = null;
+	private Schema _recordSchema = null;
+
+	private String _compressionCodec;
 	private TypeDescriptor _typeDescription;
+
 	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
-		_compressionCodec = compressionCodec;
+		_compressionCodec = codecToDescription(compressionCodec);
 		_typeDescription = typeDescription;
 	}
 
@@ -68,12 +93,27 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	}
     
 	protected Schema getRecordSchema () throws IOException {
+		if (_recordSchema == null) {
+			_recordSchema = createRecordSchema();
+		}
+		return _recordSchema;
+	}
+	
+	protected Schema createRecordSchema() throws IOException {
 		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
 	}
+	
 	protected Schema getTileSchema () throws IOException {
+		if (_tileSchema == null) {
+			_tileSchema = createTileSchema();
+		}
+		return _tileSchema;
+	}
+	
+	protected Schema createTileSchema() throws IOException {
 		return new AvroSchemaComposer().add(getRecordSchema()).addResource("tile.avsc").resolved();
 	}
-
+	
 	@Override
 	public TypeDescriptor getBinTypeDescription () {
 		return _typeDescription;
@@ -167,7 +207,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(tileSchema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
-			dataFileWriter.setCodec(_compressionCodec);
+			dataFileWriter.setCodec(descriptionToCodec(_compressionCodec));
 			dataFileWriter.create(tileSchema, stream);
 			dataFileWriter.append(tileRecord);
 			dataFileWriter.close();

@@ -50,10 +50,11 @@
 
 .overlay-content {
     position: relative;
-    padding-top:10px;
-    padding-bottom:10px;    
+    padding-top:1px;
+    padding-bottom:1px;    
     padding-left:24px; 
     padding-right:24px;
+    overflow:auto;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;

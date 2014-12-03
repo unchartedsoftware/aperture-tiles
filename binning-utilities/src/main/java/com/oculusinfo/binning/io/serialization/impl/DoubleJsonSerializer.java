@@ -28,6 +28,9 @@ import com.oculusinfo.binning.io.serialization.GenericJSONSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import org.json.JSONException;
 
+/**
+ * A serializer to serialize tiles whose bin values are a double, using JSON.
+ */
 public class DoubleJsonSerializer extends GenericJSONSerializer<Double> {
 	private static final long serialVersionUID = -9050739153280154898L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);
