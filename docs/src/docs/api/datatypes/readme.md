@@ -65,20 +65,20 @@ Example:
 
 ```json
 {
-    “level”: 6,
-    “x”: 73.35,
-    “y”: -125.6,
-    “range”: {
-        “min”: 0,
-        “max”: 6
+    "level": 6,
+    "x": 73.35,
+    "y": -125.6,
+    "range": {
+        "min": 0,
+        "max": 6
     }
-    “group”: "Urgent",   
-    “data”: {
-        “comment”: … ,
-        “author”: … ,
-        “date”: … 
+    "group": "Urgent",   
+    "data": {
+        "comment": … ,
+        "author": … ,
+        "date": … 
     },
-    “certificate”: { … }
+    "certificate": { … }
 }
 ```
 
@@ -114,14 +114,14 @@ Example:
 
 ```json
 {
-	“tile” : {
-		“level”: 3,
-		“xIndex”: 12,
-		“yIndex”: 6
+	"tile" : {
+		"level": 3,
+		"xIndex": 12,
+		"yIndex": 6
 	},
-	“annotations” : {
-		“[0,0]”: [ … ],
-		“[1,0]”: [ … ],
+	"annotations" : {
+		"[0,0]": [ … ],
+		"[1,0]": [ … ],
 		… 
 	}
 }
@@ -159,8 +159,8 @@ Example:
 
 ```json
 {
-    “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
-    “timestamp”: “1401830862“
+    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "timestamp": "1401830862"
 }
 ```
 

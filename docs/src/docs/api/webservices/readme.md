@@ -125,14 +125,7 @@ Example response:
 					“min”: 0,
 					“max”: 9
 			}
-			“group”: "Urgent",   
-			“data”: {
-					“comment”: … ,
-					“author”: … ,
-					“date”: … 
-			},
-			“certificate”: { … }
-		}]
+		]
 	}
 }
 ```
@@ -261,21 +254,21 @@ POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 
 ```json
 {
-    “type”: “write”
-    “layer”: , “annotation-test-layer-id”,
-    “annotation”: {
-        “level”: 6,
-        “x”: 73.35,
-        “y”: -125.6,
-        “range”: {
-            “min”: 0,
-            “max”: 6
+    "type": "write"
+    "layer": , "annotation-test-layer-id",
+    "annotation": {
+        "level": 6,
+        "x": 73.35,
+        "y": -125.6,
+        "range": {
+            "min": 0,
+            "max": 6
         }
-        “group”: "Urgent",   
-        “data”: {
-            “comment”: … ,
-            “author”: … ,
-            “date”: … 
+        "group": "Urgent",   
+        "data": {
+            "comment": … ,
+            "author": … ,
+            "date": … 
         }
     }
 }
@@ -285,8 +278,8 @@ Example response:
 
 ```json
 {
-    “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
-    “timestamp”: “1401830862“
+    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "timestamp": "1401830862"
 }
 ```
 
@@ -414,25 +407,25 @@ POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 
 ```json
 {
-    “type”: “write”
-    “layer”: , “annotation-test-layer-id”,
-    “annotation” : {
-        “level”: 6,
-        “x”: 73.35,
-        “y”: -125.6,
-        “range”: {
-            “min”: 0,
-            “max”: 6
+    "type": "write"
+    "layer": , "annotation-test-layer-id",
+    "annotation" : {
+        "level": 6,
+        "x": 73.35,
+        "y": -125.6,
+        "range": {
+            "min": 0,
+            "max": 6
         }
-        “group”: "Urgent",   
-        “data”: {
-            “comment”: … ,
-            “author”: … ,
-            “date”: … 
+        "group": "Urgent",   
+        "data": {
+            "comment": … ,
+            "author": … ,
+            "date": … 
         },
-        “certificate”: {
-             “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
-            “timestamp”: “1401830862”
+        "certificate": {
+             "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            "timestamp": "1401830862"
         }      
     }
 }
@@ -442,8 +435,8 @@ Example response:
 
 ```json
 {
-    “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
-    “timestamp”: “1401830862“
+    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "timestamp": "1401830862"
 }
 ```
 
@@ -571,11 +564,11 @@ POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 
 ```json
 {
-    “type”: “write”
-    “layer”: , “annotation-test-layer-id”,
-    “certificate”: {
-        “uuid”: “f47ac10b-58cc-4372-a567-0e02b2c3d479”,
-        “timestamp”: “1401830862“
+    "type": "write"
+    "layer": , "annotation-test-layer-id",
+    "certificate": {
+        "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "timestamp": "1401830862"
     }
 }
 ```
