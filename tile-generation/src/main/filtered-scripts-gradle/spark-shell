@@ -51,6 +51,7 @@ function addSparkJar {
 addSparkJar com.oculusinfo math-utilities @project.version@
 addSparkJar com.oculusinfo binning-utilities @project.version@
 addSparkJar com.oculusinfo tile-generation @project.version@
+addSparkJar com.oculusinfo spark-tile-utilities @project.version@
 
 # framework-related jars
 addSparkJar org.apache.hbase hbase @hbase-version@

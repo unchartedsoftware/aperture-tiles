@@ -48,7 +48,8 @@ function addSparkJar {
 # Set up the list of extra jars needed
 # our own jars
 addSparkJar com.oculusinfo math-utilities @project-version@
-addSparkJar com.oculusinfo binning-utilities @project-version@ 
+addSparkJar com.oculusinfo binning-utilities @project-version@
+addSparkJar com.oculusinfo spark-tile-utilities @project-version@
 
 # framework-related jars
 @hbase-jars@
