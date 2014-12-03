@@ -31,7 +31,8 @@ define( function( require ) {
         PubSub = require('../util/PubSub'),
         LegendService = require('../rest/LegendService'),
         requestRampImage,
-        getLevelMinMax;
+        getLevelMinMax,
+        zoomCallback;
 
     /**
      * Private: Request colour ramp image from server.
@@ -64,6 +65,15 @@ define( function( require ) {
         return [ minMax.min, minMax.max ];
     };
 
+    /**
+     * Private: zoom callback function to update level min and maxes.
+     */
+    zoomCallback = function() {
+        if ( this.olLayer ) {
+            this.setLevelMinMax( getLevelMinMax( this ) );
+        }
+    };
+
     function ServerLayer( spec ) {
         // set reasonable defaults
         spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
@@ -85,11 +95,7 @@ define( function( require ) {
         var that = this;
 
         // set callback to update ramp min/max on zoom
-        this.map.on("zoomend", function() {
-            if ( that.olLayer ) {
-                that.setLevelMinMax( getLevelMinMax( that ) );
-            }
-        });
+        this.map.on( "zoomend", $.proxy( this, zoomCallback ) );
 
         function getURL( bounds ) {
             return LayerUtil.getURL.call( this, bounds ) + that.getQueryParamString();
@@ -119,8 +125,11 @@ define( function( require ) {
     };
 
     ServerLayer.prototype.deactivate = function() {
-        this.map.olMap.removeLayer( this.olLayer );
-        this.olLayer.destroy();
+        if ( this.olLayer ) {
+            this.map.olMap.removeLayer( this.olLayer );
+            this.olLayer.destroy();
+        }
+        this.map.off( "zoomend", $.proxy( this, zoomCallback ) );
     };
 
     /**

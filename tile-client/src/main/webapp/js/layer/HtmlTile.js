@@ -121,6 +121,11 @@ define( function() {
     };
 
     OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
+
+        if ( !this.layer || !this.div || !data.tile ) {
+            return;
+        }
+
         var renderer = this.layer.renderer,
             html = this.layer.html,
             render,
@@ -128,45 +133,42 @@ define( function() {
             elements,
             i;
 
-        if ( this.div && data.tile ) {
-
-            if ( renderer ) {
-                // if renderer is attached, use it
-                render = renderer.render( data );
-                html = render.html;
-                entries = render.entries;
-            } else {
-                // else execute html
-                if ( typeof html === "function" ) {
-                    html = html( data );
-                }
+        if ( renderer ) {
+            // if renderer is attached, use it
+            render = renderer.render( data );
+            html = render.html;
+            entries = render.entries;
+        } else {
+            // else execute html
+            if ( typeof html === "function" ) {
+                html = html( data );
             }
+        }
 
-            if ( html instanceof jQuery ) {
-                // if generated a jquery object, append it
-                $( this.div ).append( html );
-            } else if ( html instanceof HTMLElement ) {
-                // if generated an HTMLElement, get html text
-                this.div.appendChild( html );
-            } else {
-                // if generated string, set inner html
-                this.div.innerHTML = html;
-            }
+        if ( html instanceof jQuery ) {
+            // if generated a jquery object, append it
+            $( this.div ).append( html );
+        } else if ( html instanceof HTMLElement ) {
+            // if generated an HTMLElement, get html text
+            this.div.appendChild( html );
+        } else {
+            // if generated string, set inner html
+            this.div.innerHTML = html;
+        }
 
-            this.div.style.visibility = 'inherit';
-            this.div.style.opacity = 'inherit';
-            this.div.style['pointer-events'] = 'none';
+        this.div.style.visibility = 'inherit';
+        this.div.style.opacity = 'inherit';
+        this.div.style['pointer-events'] = 'none';
 
-            // set pointer-events on tile elements to 'all'
-            elements = this.div.children;
-            for ( i=0; i<elements.length; i++ ) {
-                elements[i].style['pointer-events'] = 'all';
-            }
+        // set pointer-events on tile elements to 'all'
+        elements = this.div.children;
+        for ( i=0; i<elements.length; i++ ) {
+            elements[i].style['pointer-events'] = 'all';
+        }
 
-            if ( renderer ) {
-                // if renderer is attached, call hook function
-                renderer.hook( elements, entries, data );
-            }
+        if ( renderer ) {
+            // if renderer is attached, call hook function
+            renderer.hook( elements, entries, data );
         }
     };
 

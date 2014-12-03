@@ -26,14 +26,25 @@
 define( function( require ) {
 	"use strict";
 
-	var Layer = require('../layer/Layer'),
+	var Axis = require('./Axis'),
+        Layer = require('../layer/Layer'),
         BaseLayer = require('../layer/BaseLayer'),
         PubSub = require('../util/PubSub'),
+        Util = require('../util/Util'),
 	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
 	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
 	    TileIterator = require('../binning/TileIterator'),
 	    TILESIZE = 256,
-        setMapCallbacks;
+        setMapCallbacks,
+        activateComponent,
+        deactivateComponent,
+        activateDeferredComponents,
+        addBaseLayer,
+        addLayer,
+        addAxis,
+        removeBaseLayer,
+        removeLayer,
+        removeAxis;
 
     /**
      * Private: Set callbacks to update the maps tile focus, identifying which tile
@@ -70,8 +81,182 @@ define( function( require ) {
         });
         // set resize callback
         $( window ).resize( function() {
-            map.updateSize();
+            map.olMap.updateSize();
         });
+    };
+
+    /**
+     * Private: Activates a component.
+     *
+     * @param map       {Map} The map object.
+     * @param component {*}   The component to activate.
+     */
+    activateComponent = function( map, component ) {
+        if ( component instanceof Layer ) {
+            addLayer( map, component );
+        } else if ( component instanceof Axis ) {
+            addAxis( map, component );
+        }
+    };
+
+    /**
+     * Private: Deactivates a component.
+     *
+     * @param map       {Map} The map object.
+     * @param component {*}   The component to deactivate.
+     */
+    deactivateComponent = function( map, component ) {
+        if ( component instanceof BaseLayer ) {
+            removeBaseLayer( map, component );
+        } else if ( component instanceof Layer ) {
+            removeLayer( map, component );
+        } else if ( component instanceof Axis ) {
+            removeAxis( map, component );
+        }
+    };
+
+    /**
+     * Private: Activates deferred components when the map is ready.
+     *
+     * @param map {Map} The map object.
+     */
+    activateDeferredComponents = function( map ) {
+        var i;
+        for ( i=0; i<map.deferreds.length; i++ ) {
+            activateComponent( map, map.deferreds[i] );
+        }
+        delete map.deferreds;
+    };
+
+    /**
+     * Private: Adds a base layer to the map. If no baselayer is attached, it
+     * will also activate it, along with any deferred components that were attached
+     * first.
+     *
+     * @param map       {Map}       The map object.
+     * @param baselayer {BaseLayer} The baselayer object.
+     */
+    addBaseLayer = function( map, baselayer ) {
+        // add map to baselayer
+        baselayer.map = map;
+        // add to baselayer array
+        map.baselayers = map.baselayers || [];
+        map.baselayers.push( baselayer );
+        // if first baselayer, activate the map
+        if ( map.baseLayerIndex < 0 ) {
+            // openlayers maps require a baselayer to operate, once
+            // this baselayer is set, activate the map
+            map.setBaseLayerIndex( 0 );
+            // set initial viewpoint, required by openlayers
+            map.olMap.zoomToMaxExtent();
+            // set mouse callbacks
+            setMapCallbacks( map );
+            if ( map.deferreds ) {
+                activateDeferredComponents( map );
+            }
+        }
+    };
+
+    /**
+     * Private: Adds a layer object to the map and activates it.
+     *
+     * @param map       {Map}   The map object.
+     * @param layer {Layer} The layer object.
+     */
+    addLayer = function( map, layer ) {
+        // add map to layer
+        layer.map = map;
+        // activate the layer
+        layer.activate();
+        // add it to layer map
+        map.layers = map.layers || {};
+        map.layers[ layer.getUUID() ] = layer;
+    };
+
+    /**
+     * Private: Adds an Axis object to the map and activates it.
+     *
+     * @param map  {Map}   The map object.
+     * @param axis {Axis} The layer object.
+     */
+    addAxis = function( map, axis ) {
+        // set min/max based on pyramid
+        if ( axis.position === 'top' || axis.position === 'bottom' ) {
+            axis.min = map.pyramid.minX;
+            axis.max = map.pyramid.maxX;
+        } else {
+            axis.min = map.pyramid.minY;
+            axis.max = map.pyramid.maxY;
+        }
+
+        // activate and attach to map
+        axis.map = map;
+        axis.activate();
+        map.axes = map.axes || {};
+        map.axes[ axis.position ] = axis;
+
+        // update dimensions
+        _.forIn( map.axes, function( value ) {
+            value.setContentDimension();
+        });
+
+        // redraw
+        _.forIn( map.axes, function( value ) {
+            value.redraw();
+        });
+    };
+
+    /**
+     * Private: Removes a base layer from the map. If no other baselayer is attached, it
+     * will refuse to do so.
+     *
+     * @param map       {Map}       The map object.
+     * @param baselayer {BaseLayer} The baselayer object.
+     */
+    removeBaseLayer = function( map, baselayer ) {
+        var index;
+        // if only 1 baselayer available, ignore
+        if ( map.baselayers.length === 1 ) {
+            console.error( 'Error: attempting to remove only baselayer from map, this destroys the map, use destroy() instead' );
+            return;
+        }
+        // get index of baselayer
+        index = map.baselayers.indexOf( baselayer );
+        // remove baselayer from array
+        map.baselayers.splice( index, 1 );
+        // get replacement index
+        index = ( map.baselayers[ index ] ) ? index : index-1;
+        // replace baselayer
+        map.setBaseLayerIndex( index );
+        baselayer.map = null;
+    };
+
+    /**
+     * Private: Removes a layer object from the map and deactivates it.
+     *
+     * @param map       {Map}   The map object.
+     * @param layer {Layer} The layer object.
+     */
+    removeLayer = function( map, layer ) {
+        // remove it from layer map
+        delete map.layers[ layer.getUUID() ];
+        // deactivate it
+        layer.deactivate();
+        layer.map = null;
+    };
+
+    /**
+     * Private: Removes an Axis object from the map and deactivates it.
+     *
+     * @param map  {Map}   The map object.
+     * @param axis {Axis} The layer object.
+     */
+    removeAxis = function( map, axis ) {
+        // remove it from axes map
+        delete map.axes[ axis.position ];
+        // deactivate it
+        axis.deactivate();
+        axis.map = null;
     };
 
 	function Map( id, spec ) {
@@ -113,94 +298,36 @@ define( function( require ) {
 
     Map.prototype = {
 
-        addAxis: function ( axis ) {
-
-            // set min/max based on pyramid
-            if ( axis.position === 'top' || axis.position === 'bottom' ) {
-                axis.min = this.pyramid.minX;
-                axis.max = this.pyramid.maxX;
-            } else {
-                axis.min = this.pyramid.minY;
-                axis.max = this.pyramid.maxY;
+        /**
+         * Adds a component to the map.
+         *
+         * @param component {*} The component object.
+         */
+        add: function( component ) {
+            if ( component instanceof BaseLayer ) {
+                // if a baselayer, add it
+                addBaseLayer( this, component );
+                return;
             }
-
-            // activate and attach to map
-            axis.map = this;
-            axis.activate();
-            this.axes = this.axes || {};
-            this.axes[ axis.position ] = axis;
-
-            // update dimensions
-            _.forIn( this.axes, function( value ) {
-                value.setContentDimension();
-            });
-
-            // redraw
-            _.forIn( this.axes, function( value ) {
-                value.redraw();
-            });
+            if ( this.baseLayerIndex < 0 ) {
+                // if no baselayer is attached yet, we cannot activate the layers
+                // add them to list of deferred activations
+                this.deferreds = this.deferreds || [];
+                this.deferreds.push( component );
+                return;
+            }
+            // activate the component
+            activateComponent( this, component );
         },
 
         /**
-         * Adds a Layer object to the map.
+         * Removes a component from the map.
          *
-         * @param layer {Layer} The layer object.
+         * @param component {*} The component object.
          */
-        add: function( layer ) {
-            // set the map attribute on the layer to this map
-            layer.map = this;
-            if ( layer instanceof BaseLayer ) {
-                // add to baselayer array
-                this.baselayers = this.baselayers || [];
-                this.baselayers.push( layer );
-                // if first baselayer, activate the map
-                if ( this.baseLayerIndex < 0 ) {
-                    // openlayers maps require a baselayer to operate, once
-                    // this baselayer is set, activate the map
-                    this.setBaseLayerIndex( 0 );
-                    // set initial viewpoint, required by openlayers
-                    this.olMap.zoomToMaxExtent();
-                    // set mouse callbacks
-                    setMapCallbacks( this );
-                }
-            } else if ( layer instanceof Layer ) {
-                // activate the layer
-                layer.activate();
-                // add it to layer map
-                this.layers = this.layers || {};
-                this.layers[ layer.getUUID() ] = layer;
-            }
-        },
-
-        /**
-         * Removes a Layer object from the map.
-         *
-         * @param layer {Layer} The layer object.
-         */
-        remove: function( layer ) {
-            var index;
-            if ( layer instanceof BaseLayer ) {
-                // if only 1 baselayer available, ignore
-                if ( this.baselayers.length === 1 ) {
-                    console.error( 'Error: attempting to remove only baselayer from map, this destroys the map, use destroy() instead' );
-                    return;
-                }
-                // get index of baselayer
-                index = this.baselayers.indexOf( layer );
-                // remove baselayer from array
-                this.baselayers.splice( index, 1 );
-                // get replacement index
-                index = ( this.baselayers[ index ] ) ? index : index-1;
-                // replace baselayer
-                this.setBaseLayerIndex( index );
-            } else {
-                // deactivate the layer
-                layer.deactivate();
-                // remove it from layer map
-                delete this.layers[ layer.getUUID() ];
-            }
-            // set the map attribute on the layer to this map
-            layer.olMap = null;
+        remove: function( component ) {
+            // activate the component
+            deactivateComponent( this, component );
         },
 
         /**
@@ -397,11 +524,11 @@ define( function( require ) {
         },
 
         getMapWidth: function() {
-            return this.getTileSize() * Math.pow( 2, this.getZoom() );
+            return TILESIZE * Math.pow( 2, this.getZoom() );
         },
 
         getMapHeight: function() {
-            return this.getTileSize() * Math.pow( 2, this.getZoom() );
+            return TILESIZE * Math.pow( 2, this.getZoom() );
         },
 
 		getViewportWidth: function() {
@@ -438,10 +565,10 @@ define( function( require ) {
 		 * NOTE:    viewport [0,0] is TOP-LEFT
 		 *          map [0,0] is BOTTOM-LEFT
 		 */
-		getMapPixelFromViewportPixel: function(vx, vy) {
+		getMapPixelFromViewportPixel: function( vx, vy ) {
 			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
 			    totalPixelSpan = this.getMapWidth();
-			return {
+            return {
 				x: totalPixelSpan + vx - viewportMinMax.max.x,
 				y: totalPixelSpan - vy + viewportMinMax.max.y
 			};
@@ -481,8 +608,8 @@ define( function( require ) {
          *
 		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
 		 */
-		getCoordFromMapPixel: function(mx, my) {
-			var tileAndBin = this.getTileAndBinFromMapPixel(mx, my, TILESIZE, TILESIZE),
+		getCoordFromMapPixel: function( mx, my ) {
+			var tileAndBin = this.getTileAndBinFromMapPixel( mx, my, TILESIZE, TILESIZE ),
 			    bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
 			return {
 				x: bounds.minX,
@@ -496,9 +623,9 @@ define( function( require ) {
 		 * NOTE:    viewport [0,0] is TOP-LEFT
 		 *          data [0,0] is BOTTOM-LEFT
 		 */
-		getCoordFromViewportPixel: function(vx, vy) {
-			var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
-			return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
+		getCoordFromViewportPixel: function( vx, vy ) {
+			var mapPixel = this.getMapPixelFromViewportPixel( vx, vy );
+			return this.getCoordFromMapPixel( mapPixel.x, mapPixel.y );
 		},
 
 		/**
@@ -515,13 +642,12 @@ define( function( require ) {
 		/**
          * Returns the tile and bin index corresponding to the given map pixel coordinate
          */
-        getTileAndBinFromMapPixel: function(mx, my, xBinCount, yBinCount) {
+        getTileAndBinFromMapPixel: function( mx, my, xBinCount, yBinCount ) {
 
-            var tileIndexX = Math.floor(mx / TILESIZE),
-                tileIndexY = Math.floor(my / TILESIZE),
-                tilePixelX = mx % TILESIZE,
-                tilePixelY = my % TILESIZE;
-
+            var tileIndexX = Math.floor( mx / TILESIZE ),
+                tileIndexY = Math.floor( my / TILESIZE ),
+                tilePixelX = Util.mod( mx , TILESIZE ),
+                tilePixelY = Util.mod( my, TILESIZE );
             return {
                 tile: {
                     level : this.getZoom(),
@@ -531,7 +657,7 @@ define( function( require ) {
                     yBinCount : yBinCount
                 },
                 bin: {
-                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount) ),
+                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount ) ),
                     y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
                 }
             };
@@ -598,32 +724,8 @@ define( function( require ) {
 			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
 		},
 
-		addControl: function(control) {
-			return this.olMap.addControl(control);
-		},
-
-		setLayerIndex: function(layer, zIndex) {
-			this.olMap.setLayerIndex(layer, zIndex);
-		},
-
-		getExtent: function () {
-			return this.olMap.getExtent();
-		},
-
 		getZoom: function () {
 			return this.olMap.getZoom();
-		},
-
-		zoomToExtent: function (extent, findClosestZoomLvl) {
-			this.olMap.zoomToExtent(extent, findClosestZoomLvl);
-		},
-
-		updateSize: function() {
-			this.olMap.updateSize();
-		},
-
-		getTileSize: function() {
-			return TILESIZE;
 		},
 
 		on: function (eventType, callback) {

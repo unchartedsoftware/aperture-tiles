@@ -77,8 +77,10 @@ define( function( require ) {
     };
 
     AnnotationLayer.prototype.deactivate = function() {
-        this.map.olMap.removeLayer( this.olLayer );
-        this.olLayer.destroy();
+        if ( this.olLayer ) {
+            this.map.olMap.removeLayer( this.olLayer );
+            this.olLayer.destroy();
+        }
     };
 
     /**

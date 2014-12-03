@@ -64,7 +64,8 @@ require(['./util/Util',
                 layers = LayerUtil.parse( layers.layers );
 
                 var map,
-                    axis,
+                    axis0,
+                    axis1,
                     baseLayer,
                     clientLayer0,
                     annotationLayer0,
@@ -258,39 +259,21 @@ require(['./util/Util',
                 });
                 */
 
-
-                axis = new Axis({
+                axis0 = new Axis({
                     position: 'bottom',
                     title: 'Longitude',
                     repeat: true,
                     intervals: {
                         type: 'fixed',
-                        increment: 120
+                        increment: 120,
+                        pivot: 0
                     },
                     units: {
                         type: 'degrees'
                     }
                 });
 
-
-                map = new Map( "map" );
-                map.add( baseLayer );
-                map.add( serverLayer0 );
-                map.add( annotationLayer0 );
-                map.add( clientLayer0 );
-                map.addAxis( new Axis({
-                    position: 'bottom',
-                    title: 'Longitude',
-                    repeat: true,
-                    intervals: {
-                        type: 'fixed',
-                        increment: 120
-                    },
-                    units: {
-                        type: 'degrees'
-                    }
-                }));
-                map.addAxis( new Axis({
+                axis1 =  new Axis({
                     position: 'left',
                     title: 'Latitude',
                     repeat: true,
@@ -301,6 +284,55 @@ require(['./util/Util',
                     units: {
                         type: 'degrees'
                     }
-                }));
+                });
+
+                map = new Map( "map" );
+                map.add( serverLayer0 );
+                map.add( annotationLayer0 );
+                map.add( clientLayer0 );
+                map.add( axis0 );
+                map.add( axis1 );
+                map.add( baseLayer );
+
+                setTimeout( function() {
+                   map.remove( serverLayer0 );
+                }, 1000 );
+
+                setTimeout( function() {
+                   map.remove( clientLayer0 );
+                }, 2000 );
+
+                setTimeout( function() {
+                   map.remove( annotationLayer0 );
+                }, 3000 );
+
+                setTimeout( function() {
+                   map.remove( axis1 );
+                }, 4000 );
+
+                setTimeout( function() {
+                   map.remove( axis0 );
+                }, 5000 );
+
+                setTimeout( function() {
+                   map.add( serverLayer0 );
+                }, 6000 );
+
+                setTimeout( function() {
+                   map.add( clientLayer0 );
+                }, 7000 );
+
+                setTimeout( function() {
+                   map.add( annotationLayer0 );
+                }, 8000 );
+
+                setTimeout( function() {
+                   map.add( axis1 );
+                }, 9000 );
+
+                setTimeout( function() {
+                   map.add( axis0 );
+                }, 10000 );
+
             });
         });

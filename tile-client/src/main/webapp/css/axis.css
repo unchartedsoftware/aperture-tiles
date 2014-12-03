@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 .top-axis {
-    bottom: 0px;   
+    bottom: 0px;
 }
 
 .bottom-axis {
@@ -30,6 +30,14 @@
 
 .dark-theme .axis-header {
     background: #222;
+}
+  
+.light-theme .axis-header-back {
+    box-shadow: 0 0 5px #999;
+}
+
+.dark-theme .axis-header-back {
+    box-shadow: 0 0 5px #000;
 }
 
 .light-theme .axis-header:hover {
@@ -194,16 +202,19 @@
 .large-vertical-axis-marker {
     width: 10px;
     height: 1px;
+    margin-top: -1px;
 }
 
 .medium-vertical-axis-marker {
     width: 6px;
     height: 1px;
+    margin-top: -1px;
 }
 
 .small-vertical-axis-marker {
     width: 4px;
     height: 1px;
+    margin-top: -1px;
 }
 
 .axis-marker-label {
@@ -223,6 +234,7 @@
 }
 
 .vertical-axis-marker-label {
+    margin-top: -1px;
 }
 
 .axis-title-label {

@@ -116,6 +116,29 @@ define( function() {
         },
 
         /**
+         * Returns a proper modulo as the % operator in javascript is the 'remainder' operator.
+         * @param value {number} the value
+         * @param n     {number} the divisor
+         * @returns {number}
+         */
+        mod: function( value, n ) {
+           return ( (value % n) + n) % n;
+        },
+
+        /**
+         * Rounds a given value to a set number of decimals. Defaults to 2.
+         *
+         * @param value    {number} value to round
+         * @param decimals {int}    number of decimals
+         * @returns {string} rounded value
+         */
+        roundToDecimals: function( value, decimals ) {
+            var numDec = decimals || 2,
+                pow10 = Math.pow( 10, numDec );
+            return parseFloat( Math.round( value * pow10 ) / pow10 ).toFixed( decimals );
+        },
+
+        /**
          * Registers a click handler that only fires if the click didn't
          * involve a map drag. Since the map is moving under the mouse cursor
          * the browser will still register a click despite mouse movement. This
