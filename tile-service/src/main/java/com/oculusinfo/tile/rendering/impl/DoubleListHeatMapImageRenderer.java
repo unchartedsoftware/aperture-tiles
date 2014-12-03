@@ -26,6 +26,7 @@ package com.oculusinfo.tile.rendering.impl;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -87,20 +88,108 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
     }
 
 
-	@Override
-	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<>(minimumValue,  maximumValue);
-	}
+    @Override
+    public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
+      String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
+      double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
+      double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
+      return new Pair<>(minimumValue,  maximumValue);
+    }
+
+    public static void renderToBuffer(
+            TileIndex index,
+            int outputWidth,
+            int outputHeight,
+            int rangeMin,
+            int rangeMax,
+            double minimumValue,
+            double maximumValue,
+            TileIndex scaleLevelIndex,
+            ValueTransformer<Double> t,
+            TileData<List<Double>> data,
+            TileTransformer<List<Double>> tileTransformer,
+            ColorRamp colorRamp,
+            BufferedImage in
+    ) throws Exception {
+
+        int[] rgbArray = new int[outputWidth * outputHeight];
+
+        double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
+        double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
+
+        @SuppressWarnings("unchecked")
+        TileData<List<Double>> transformedContents = tileTransformer.transform(data);
+
+        int xBins = data.getDefinition().getXBins();
+        int yBins = data.getDefinition().getYBins();
+
+        //calculate the tile tree multiplier to go between tiles at each level.
+        //this is also the number of x/y tiles in the base level for every tile in the scaled level
+        int tileTreeMultiplier = (int) Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
+
+        int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier;
+
+        //the y tiles are backwards, so we need to shift the order around by reversing the counting direction
+        int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
+
+        //figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
+        int xBinStart = (int) Math.floor(xBins * (((double) (index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
+        int xBinEnd = (int) Math.floor(xBins * (((double) (index.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
+        int yBinStart = ((int) Math.floor(yBins * (((double) (yTileIndex) / tileTreeMultiplier) - scaleLevelIndex.getY())));
+        int yBinEnd = ((int) Math.floor(yBins * (((double) (yTileIndex + 1) / tileTreeMultiplier) - scaleLevelIndex.getY())));
+
+        int numBinsWide = xBinEnd - xBinStart;
+        int numBinsHigh = yBinEnd - yBinStart;
+        double xScale = ((double) in.getWidth()) / numBinsWide;
+        double yScale = ((double) in.getHeight()) / numBinsHigh;
+
+        for (int ty = 0; ty < numBinsHigh; ty++) {
+            for (int tx = 0; tx < numBinsWide; tx++) {
+                //calculate the scaled dimensions of this 'pixel' within the image
+                int minX = (int) Math.round(tx * xScale);
+                int maxX = (int) Math.round((tx + 1) * xScale);
+                int minY = (int) Math.round(ty * yScale);
+                int maxY = (int) Math.round((ty + 1) * yScale);
+
+                List<Double> binContents = transformedContents.getBin(tx, ty);
+                double binCount = 0;
+                for (int i = 0; i < binContents.size(); i++) {
+                    binCount = binCount + binContents.get(i);
+                }
+
+                //log/linear
+                double transformedValue = t.transform(binCount);
+                int rgb;
+                if (binCount > 0
+                        && transformedValue >= scaledLevelMinFreq
+                        && transformedValue <= scaledLevelMaxFreq) {
+
+                    double factor = 1.0 / (scaledLevelMaxFreq - scaledLevelMinFreq);
+                    rgb = colorRamp.getRGB((transformedValue - scaledLevelMinFreq) * factor);
+                } else {
+                    rgb = COLOR_BLANK.getRGB();
+                }
+
+                //'draw' out the scaled 'pixel'
+                for (int ix = minX; ix < maxX; ++ix) {
+                    for (int iy = minY; iy < maxY; ++iy) {
+                        int i = iy * in.getWidth() + ix;
+                        rgbArray[i] = rgb;
+                    }
+                }
+            }
+
+        }
+
+        in.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
+    }
 
 
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
     public BufferedImage render (LayerConfiguration config) {
-        BufferedImage bi;
+
         String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
         String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
         TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
@@ -111,120 +200,54 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
             int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
             double maximumValue = getLevelExtrema(config).getSecond();
-
-            bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
+            double minimumValue = getLevelExtrema(config).getFirst();
 
             @SuppressWarnings("unchecked")
             ValueTransformer<Double> t = config.produce(ValueTransformer.class);
-            int[] rgbArray = new int[outputWidth*outputHeight];
-
-            double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
-            double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
-
-            int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
 
             PyramidIO pyramidIO = config.produce(PyramidIO.class);
             TileSerializer<List<Double>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
                     getRuntimeBinClass(),
                     getRuntimeTypeDescriptor());
 
+            @SuppressWarnings("unchecked")
+            TileTransformer<List<Double>> tileTransformer = config.produce(TileTransformer.class);
+
+            ColorRamp colorRamp = config.produce(ColorRamp.class);
+
+            BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
+
             List<TileData<List<Double>>> tileDatas = null;
 
+            int coarsenessFactor = (int) Math.pow(2, coarseness - 1);
             // Get the coarseness-scaled true tile index
             TileIndex scaleLevelIndex = null;
             // need to get the tile data for the level of the base level minus the coarseness
             for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
-                scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
-                        (int)Math.floor(index.getX() / coarsenessFactor),
-                        (int)Math.floor(index.getY() / coarsenessFactor));
+              scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
+                  (int) Math.floor(index.getX() / coarsenessFactor),
+                  (int) Math.floor(index.getY() / coarsenessFactor));
 
-                tileDatas = pyramidIO.readTiles( dataId , serializer, Collections.singleton(scaleLevelIndex));
-                if (tileDatas.size() >= 1) {
-                    //we got data for this level so use it
-                    break;
-                }
+              tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
+              if (tileDatas.size() >= 1) {
+                //we got data for this level so use it
+                break;
+              }
             }
 
             // Missing tiles are commonplace and we didn't find any data up the
             // tree either. We don't want a big long error for that.
             if (tileDatas.size() < 1) {
-                LOGGER.info("Missing tile " + index + " for layer " + layerId);
-                return null;
+              LOGGER.info("Missing tile " + index + " for layer " + layerId);
+              return null;
             }
 
-            TileData<List<Double>> data = tileDatas.get(0);
-            @SuppressWarnings("unchecked")
-            TileTransformer<List<Double>> tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Double>> transformedContents = tileTransformer.transform( data );
-
-            int xBins = data.getDefinition().getXBins();
-            int yBins = data.getDefinition().getYBins();
-
-            //calculate the tile tree multiplier to go between tiles at each level.
-            //this is also the number of x/y tiles in the base level for every tile in the scaled level
-            int tileTreeMultiplier = (int)Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
-
-            int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier;
-
-            //the y tiles are backwards, so we need to shift the order around by reversing the counting direction
-            int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
-
-            //figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
-            int xBinStart = (int)Math.floor(xBins * (((double)(index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-            int xBinEnd = (int)Math.floor(xBins * (((double)(index.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-            int yBinStart = ((int)Math.floor(yBins * (((double)(yTileIndex) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-            int yBinEnd = ((int)Math.floor(yBins * (((double)(yTileIndex + 1) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-
-            int numBinsWide = xBinEnd - xBinStart;
-            int numBinsHigh = yBinEnd - yBinStart;
-            double xScale = ((double) bi.getWidth())/numBinsWide;
-            double yScale = ((double) bi.getHeight())/numBinsHigh;
-            ColorRamp colorRamp = config.produce(ColorRamp.class);
-
-            for(int ty = 0; ty < numBinsHigh; ty++){
-                for(int tx = 0; tx < numBinsWide; tx++){
-                    //calculate the scaled dimensions of this 'pixel' within the image
-                    int minX = (int) Math.round(tx*xScale);
-                    int maxX = (int) Math.round((tx+1)*xScale);
-                    int minY = (int) Math.round(ty*yScale);
-                    int maxY = (int) Math.round((ty+1)*yScale);
-
-                    List<Double> binContents = transformedContents.getBin(tx, ty);
-                    double binCount = 0;
-                    for(int i = 0; i < binContents.size(); i++){
-                        binCount = binCount + binContents.get(i);
-                    }
-
-                    //log/linear
-                    double transformedValue = t.transform(binCount);
-                    int rgb;
-                    if (binCount > 0
-                            && transformedValue >= scaledLevelMinFreq
-                            && transformedValue <= scaledLevelMaxFreq) {
-
-                        double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
-                        rgb = colorRamp.getRGB( ( transformedValue - scaledLevelMinFreq ) * factor );
-                    } else {
-                        rgb = COLOR_BLANK.getRGB();
-                    }
-
-                    //'draw' out the scaled 'pixel'
-                    for (int ix = minX; ix < maxX; ++ix) {
-                        for (int iy = minY; iy < maxY; ++iy) {
-                            int i = iy*bi.getWidth() + ix;
-                            rgbArray[i] = rgb;
-                        }
-                    }
-                }
-
-            }
-
-            bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
+            renderToBuffer(index, outputWidth, outputHeight, rangeMin, rangeMax, minimumValue, maximumValue, scaleLevelIndex, t, tileDatas.get(0), tileTransformer, colorRamp, bi);
+            return bi;
         } catch (Exception e) {
             LOGGER.error("Tile error: " + layerId + ":" + index, e);
-            bi = null;
+            return null;
         }
-        return bi;
     }
 
 
