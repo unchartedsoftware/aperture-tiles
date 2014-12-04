@@ -375,7 +375,7 @@ The Metadata parameters uniquely identify the layer.
 				<dt>
 					name
 				</dt>
-				<dd>Description of the layer</dd>
+				<dd>Name of the layer</dd>
 			</dl>
 		</ul>
 	</div>
@@ -560,9 +560,9 @@ The custom renderers built to support this functionality are based on the follow
 - ApertureRenderer.js, which uses the Aperture JS framework to render tiles
 - HtmlRenderer.js, which uses an HTML framework to render tiles
 
-A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw the top 5 words occuring in each tile. As multiple renderers are attached to this client-side layer, a carousel interface is activated to allow the user to switch between them. The custom renderers for this application are available in `/src/main/webapp/js/layer/client/renderers/`.
+A sample application using this method is available in the Aperture Tiles source code at `/tile-examples/twitter-topics/twitter-topics-client/`. The Twitter Topics application uses client-side rendering to draw the top 5 words occurring in each tile. As multiple renderers are attached to this client-side layer, a carousel interface is activated to allow the user to switch between them. The custom renderers for this application are available in `/src/main/webapp/js/layer/client/renderers/`.
 
-For example, the TopTopicsHtml.js renderer is based on the HtmlRenderer.js framework. Lines 42-47 of this file use the init function to get the raw source data.
+For example, the TopTopicsHtml.js renderer is based on the HtmlRenderer.js framework. Lines 43-48 of this file use the init function to get the raw source data.
 
 ```javascript
 init: function( map ) {
@@ -604,7 +604,7 @@ The registerLayer method is overriden at line 50. If you are attaching an event 
 },
 ```
 
-At line 78, the HTML node layer is instantiated. This holds the tile data as it comes in from the tile service. The X and Y coordinate mappings are set and used to position the individual nodes on the map. In this example, the data is geospatial and located under the `latitude` and `longitude` keys. The `idKey` attribute is used as a unique identification key for internal managing of the data. In this case, it is the tilekey.
+At line 74, the HTML node layer is instantiated. This holds the tile data as it comes in from the tile service. The X and Y coordinate mappings are set and used to position the individual nodes on the map. In this example, the data is geospatial and located under the `latitude` and `longitude` keys. The `idKey` attribute is used as a unique identification key for internal managing of the data. In this case, it is the tilekey.
 
 ```javascript
 createNodeLayer: function() {
@@ -618,7 +618,7 @@ createNodeLayer: function() {
 },
 ```
 
-Then in lines 96-161, the source data is attached to an HTML layer.
+Then in lines 92-151, the source data is attached to an HTML layer.
 
 ```javascript
 createLayer : function() {
@@ -665,16 +665,11 @@ createLayer : function() {
 				*/
 				$topic.click( function() {
 
-					/*
-						We could simply do the styling in this function here, but to coordinate with the other
-						renderers lets use the layerState object. The layerState will broadcast any change to
-						all listeners.
-					*/
-					that.layerState.set( 'click', {
-						topic: topic,
+					var click = {
 						$elem: $(this),
 						type: "html"
-					});
+					};
+					that.parent.setClick( click );
 					event.stopPropagation(); // stop the click from propagating deeper
 				});
 
