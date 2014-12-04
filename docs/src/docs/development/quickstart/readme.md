@@ -149,28 +149,14 @@ These properties specify the location of your Spark installation.
 
 #### <a name="general-input"></a> General Input Properties ####
 
-These properties specify the location of your Julia set data and where to save the generated tiles.
+These properties specify the location of your Julia set data.
 
 <div class="details props">
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>
-					<b>oculus.tileio.type</b>
-				</dt>
-				<dd>Specify whether the tiles should be saved locally (file) or to HBase
-	(hbase). Local tile IO is supported only for standalone Spark installations.
-
-	<br><br>NOTE: This parameter is not currently in the example .bd file provided for
-	this demo. When this parameter is absent, the tile generator automatically
-	writes to HBase. To write to the local filesystem, manually add this
-	parameter to the .bd file and set its value to "file".</dd>
-				
-				<dt>
-					<b>oculus.binning.source.location</b>
-				</dt>
-				<dd>Path of the source data files in your local file system
-	(ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).</dd>
+			<dl class="detailList params">				
+				<dt>oculus.binning.source.location</dt>
+				<dd>Path of the source data files in your local file system	(ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).</dd>
 			</dl>
 		</ul>
 	</div>
@@ -203,11 +189,30 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 	</div>
 </div>
 
-### <a name="tiling-property-file-configuration"></a>Tiling Property File Configuration
+#### <a name="general-output"></a> General Output Properties ####
 
-Access the **julia-tiling.bd** file in your `tile-generator/examples` folder and edit the `oculus.binning.name` to specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use `julia` for this example.
+These properties specify where to save the generated tiles.
 
-Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>oculus.tileio.type</dt>
+				<dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.
+
+				<br><br>NOTE: This parameter is not currently in the example .bd file provided for this demo. When this parameter is absent, the tile generator automatically writes to HBase. To write to the local filesystem, manually add this parameter to the .bd file and set its value to "file".</dd>
+				
+				<dt>oculus.binning.name</dt>
+				<dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
+								
+			</dl>
+		</ul>
+	</div>
+</div>
+
+### <a name="tiling-property-file-configuration"></a> Tiling Property File Configuration ###
+
+The **julia-tiling.bd** file in your `tile-generator/examples` folder should not need to be edited. Note, however, that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
 ### <a name="execution"></a> Execution ###
 
@@ -220,7 +225,7 @@ tile-generator/bin/spark-run.sh com.oculusinfo.tilegen.examples.apps.CSVBinner
 
 When the tile generation is complete, you should have a folder containing six subfolders (0, being the highest, through 5, being the lowest), each of which corresponds to a zoom level in your project. Across all the folders, you should have a total of 1,365 Avro tile files.
 
-Note that for this example, the tile folder will be named `julia.x.y.v`. The output folder is always named using the the following values in the **julia.bd** file:
+Note that for this example, the tile folder will be named `julia.x.y.v`. The output folder is always named using the the following values your property files:
 
 ```
 [<oculus.binning.prefix>.]<oculus.binning.name>.<oculus.binning.xField>.
