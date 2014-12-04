@@ -8,7 +8,12 @@ layout: default
 <div id="content">
 	<div class="content-context">
 		{% include {{ includeContext }} %}
-		{% include footer.html %}
+		{% if page.section != 'Support' %}
+			{% include footer.html %}
+		{% else %}
+			<br>
+			<a href="http://www.oculusinfo.com" class="copyright">&#169;2013-2014 Oculus Info Inc.</a>
+		{% endif %}
 	</div>
 	<div class="content-body">
 		{{ content }}

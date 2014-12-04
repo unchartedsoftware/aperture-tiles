@@ -14,8 +14,15 @@ The Aperture Tiles Annotation Service REST API is based on the Aperture Tiles Bi
 
 Web service paths are relative to a common base URL.  For example, assuming the hostname *localhost* and port *8080*, the URLs of the various services would be:
 
-- `https://localhost:8080/annotation/{layer}/{uuid}/{level}/{x}/{y}.{ext}`
+- `https://localhost:8080/{version}/annotation/{layer}/{uuid}/{level}/{x}/{y}.{ext}`
+- `https://localhost:8080/annotation/{layer}/{level}/{x}/{y}.{ext}`
+- `https://localhost:8080/{version}/annotation`
 - `https://localhost:8080/annotation`
+- `https://localhost:8080/{version}/layer/{layer}`
+- `https://localhost:8080/layer/{layer}`
+- `https://localhost:8080/{version}/layer`
+- `https://localhost:8080/layer`
+
 
 ## Getting Started
 

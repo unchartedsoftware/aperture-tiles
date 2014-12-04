@@ -58,9 +58,12 @@ public class PairArrayAvroSerializer<S, T> extends GenericAvroArraySerializer<Pa
 
 
 
-	private boolean _keyToString;
-	private boolean _valueToString;
-	private Schema _schema;
+	private Class<? extends S>          _keyType;
+	private Class<? extends T>          _valueType;
+	private transient Schema            _schema          = null;
+	// A bit of a hack to handle string tiles as strings rather than Utf8s
+	private boolean                     _keyToString;
+	private boolean                     _valueToString;
 
 	public PairArrayAvroSerializer (Class<? extends S> keyType, Class<? extends T> valueType,
 	                                CodecFactory compressionCodec) {
@@ -69,9 +72,8 @@ public class PairArrayAvroSerializer<S, T> extends GenericAvroArraySerializer<Pa
 		                         PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(keyType),
 		                         PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(valueType)));
 
-		String keyTypeName = PrimitiveAvroSerializer.getAvroType(keyType);
-		String valueTypeName = PrimitiveAvroSerializer.getAvroType(valueType);
-		_schema = __schemaStore.getSchema(new Pair<>(keyType, valueType), keyTypeName, valueTypeName);
+		_keyType = keyType;
+		_valueType = valueType;
 		_keyToString = (String.class.equals(keyType));
 		_valueToString = (String.class.equals(valueType));
 	}
@@ -84,6 +86,11 @@ public class PairArrayAvroSerializer<S, T> extends GenericAvroArraySerializer<Pa
 
 	@Override
 	protected Schema createEntrySchema () {
+		if (null == _schema) {
+			String keyTypeName = PrimitiveAvroSerializer.getAvroType(_keyType);
+			String valueTypeName = PrimitiveAvroSerializer.getAvroType(_valueType);
+			_schema = __schemaStore.getSchema(new Pair<>(_keyType, _valueType), keyTypeName, valueTypeName);
+		}
 		return _schema;
 	}
 
