@@ -32,7 +32,7 @@ This project has the following prerequisites:
 
 ## <a name="source-code"></a> Source Code ##
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
 
 1. Run the `mvn install` command in the *aperture* folder found in the root Aperture JS directory.
 2. Run the `mvn install` command in the root Aperture Tiles directory.

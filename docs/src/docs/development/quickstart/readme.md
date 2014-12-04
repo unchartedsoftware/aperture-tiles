@@ -76,7 +76,7 @@ Save the following Aperture Tiles distribution available on the [Download](../..
 - [Tile Generator](http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.3-dist.zip): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
 - [Tile Client Template](http://assets.oculusinfo.com/tiles/downloads/tile-server-0.3-dist.zip): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
 
-The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
+The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
 ### <a name="environment-variables"></a> Environment Variables ###
 Set the following environment variables:
