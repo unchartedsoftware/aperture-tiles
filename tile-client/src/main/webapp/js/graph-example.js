@@ -25,6 +25,7 @@
 
 require(['./util/Util',
          './map/Map',
+         './map/Axis',
          './rest/LayerService',
          './layer/LayerUtil',
          './layer/BaseLayer',
@@ -36,6 +37,7 @@ require(['./util/Util',
 
         function( Util,
                   Map,
+                  Axis,
                   LayerService,
                   LayerUtil,
                   BaseLayer,

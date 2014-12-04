@@ -28,6 +28,7 @@ define( function( require ) {
     "use strict";
 
     var Util = require('../util/Util'),
+        MapUtil = require('./MapUtil'),
         MARKER_TYPE_ORDER = ['large', 'small', 'medium', 'small'];
 
     /**
@@ -65,9 +66,9 @@ define( function( require ) {
     function getPixelPosition( axis, value ) {
         // given an axis value, get the pixel position on the page
         if ( axis.isXAxis ) {
-            return axis.map.getViewportPixelFromCoord( value, 0 ).x;
+            return MapUtil.getViewportPixelFromCoord( axis.map, value, 0 ).x;
         }
-        return axis.map.getViewportPixelFromCoord( 0, value ).y;
+        return MapUtil.getViewportPixelFromCoord( axis.map, 0, value ).y;
     }
 
     /**
@@ -80,7 +81,8 @@ define( function( require ) {
      * @returns {{large: Array, medium: Array, small: Array}}
      */
     function fillArrayByIncrement( axis, start, end, intervals ) {
-        var subIncrement = intervals.subIncrement,
+        var EPSILON = 0.000001,
+            subIncrement = intervals.subIncrement,
             startingMarkerTypeIndex = intervals.startingMarkerTypeIndex,
             markers = {
                 large: [],
@@ -89,8 +91,10 @@ define( function( require ) {
             },
             i = Util.mod( startingMarkerTypeIndex, MARKER_TYPE_ORDER.length ),
             value;
+        // reduce sub increment by epsilon to prevent precision errors culling max point
+        subIncrement = ( subIncrement > 0 ) ? subIncrement - EPSILON : subIncrement + EPSILON;
 
-        for  (value = start; value <= end; value += subIncrement ) {
+        for ( value = start; value <= end; value += subIncrement ) {
             markers[ MARKER_TYPE_ORDER[i] ].push({
                 label: getMarkerRollover( axis, value ),
                 pixel: getPixelPosition( axis, value )
@@ -113,9 +117,9 @@ define( function( require ) {
         var minCull, // exact value of cull point, any value less will be culled from view
             incrementCount; // number of sub increments from the pivot
         if ( axis.isXAxis ) {
-            minCull = axis.map.getCoordFromViewportPixel( 0, 0 ).x;
+            minCull = MapUtil.getCoordFromViewportPixel( axis.map, 0, 0 ).x;
         } else {
-            minCull = axis.map.getCoordFromViewportPixel( 0, axis.map.getViewportHeight() ).y;
+            minCull = MapUtil.getCoordFromViewportPixel( axis.map, 0, axis.map.getViewportHeight() ).y;
         }
         if ( !axis.repeat && minCull < axis.min ) {
             // prevent roll-over
@@ -139,9 +143,9 @@ define( function( require ) {
         var maxCull, // exact value of cull point, any value greater will be culled from view
             incrementCount; // number of sub increments from the pivot
         if ( axis.isXAxis ) {
-            maxCull = axis.map.getCoordFromViewportPixel( axis.map.getViewportWidth(), 0 ).x;
+            maxCull = MapUtil.getCoordFromViewportPixel( axis.map, axis.map.getViewportWidth(), 0 ).x;
         } else {
-            maxCull = axis.map.getCoordFromViewportPixel( 0, 0 ).y;
+            maxCull = MapUtil.getCoordFromViewportPixel( axis.map, 0, 0 ).y;
         }
         if ( !axis.repeat && maxCull > axis.max ) {
             // prevent roll-over
@@ -315,7 +319,7 @@ define( function( require ) {
         getMarker: function( axis, vx, vy ) {
             var xOrY = axis.isXAxis ? 'x' : 'y',
                 pixel = ( axis.isXAxis ) ? vx : vy,
-                value = axis.map.getCoordFromViewportPixel(vx, vy)[ xOrY ];
+                value = MapUtil.getCoordFromViewportPixel( axis.map, vx, vy )[ xOrY ];
             return {
                 label: getMarkerRollover(axis, value),
                 pixel: pixel
@@ -328,13 +332,13 @@ define( function( require ) {
          *
          * @param axis {Axis} the axis object.
          */
-        getMarkers: function (axis) {
+        getMarkers: function( axis ) {
             var intervals = {},
                 increment,
                 minIncrement,
                 maxIncrement;
 
-            switch (axis.intervals.type) {
+            switch ( axis.intervals.type ) {
 
                 case "value":
                 case "fixed":
@@ -363,8 +367,10 @@ define( function( require ) {
             // get sub increment for small / medium label-less ticks
             intervals.subIncrement = increment / MARKER_TYPE_ORDER.length;
 
+            // get minimum and maximum visible increments on the axis
             minIncrement = getMinIncrement( axis, intervals );
             maxIncrement = getMaxIncrement( axis, intervals );
+
             // add all points between minimum visible value and maximum visible value
             return fillArrayByIncrement( axis, minIncrement, maxIncrement, intervals );
         }

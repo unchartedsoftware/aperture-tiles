@@ -27,10 +27,10 @@ define( function( require ) {
 	"use strict";
 
 	var Axis = require('./Axis'),
+        MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
         BaseLayer = require('../layer/BaseLayer'),
         PubSub = require('../util/PubSub'),
-        Util = require('../util/Util'),
 	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
 	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
 	    TileIterator = require('../binning/TileIterator'),
@@ -55,7 +55,10 @@ define( function( require ) {
     setMapCallbacks = function( map ) {
         var previousMouse = {};
         function updateTileFocus( x, y ) {
-            var tilekey = map.getTileKeyFromViewportPixel( x, y );
+            var tileAndBin = MapUtil.getTileAndBinFromViewportPixel( map, x, y, 1, 1 ),
+			    tilekey = tileAndBin.tile.level + ","
+                    + tileAndBin.tile.xIndex + ","
+                    + tileAndBin.tile.yIndex;
             if ( tilekey !== map.tileFocus ) {
                 // only update tilefocus if it actually changes
                 map.previousTileFocus = map.tileFocus;
@@ -64,12 +67,12 @@ define( function( require ) {
             }
         }
         // set tile focus callbacks
-        map.on('mousemove', function(event) {
+        map.on('mousemove', function( event ) {
             updateTileFocus( event.xy.x, event.xy.y );
             previousMouse.x = event.xy.x;
             previousMouse.y = event.xy.y;
         });
-        map.on('zoomend', function(event) {
+        map.on('zoomend', function( event ) {
             updateTileFocus( previousMouse.x, previousMouse.y );
         });
         // if mousedown while map is panning, interrupt pan
@@ -273,6 +276,8 @@ define( function( require ) {
         } else {
             this.pyramid = new WebMercatorTilePyramid();
         }
+        // initialize base layer index to -1 for no baselayer
+        this.baseLayerIndex = -1;
 
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
@@ -291,9 +296,6 @@ define( function( require ) {
                 new OpenLayers.Control.Zoom()
             ]
         });
-
-        // initialize base layer index to -1 for no baselayer
-        this.baseLayerIndex = -1;
     }
 
     Map.prototype = {
@@ -310,8 +312,8 @@ define( function( require ) {
                 return;
             }
             if ( this.baseLayerIndex < 0 ) {
-                // if no baselayer is attached yet, we cannot activate the layers
-                // add them to list of deferred activations
+                // if no baselayer is attached yet, we cannot activate the component
+                // add it to list of deferred activations
                 this.deferreds = this.deferreds || [];
                 this.deferreds.push( component );
                 return;
@@ -326,6 +328,13 @@ define( function( require ) {
          * @param component {*} The component object.
          */
         remove: function( component ) {
+            if ( this.baseLayerIndex < 0 ) {
+                // if no baselayer is attached yet, we cannot deactivate the component
+                // remove it from the list of deferred activations
+                this.deferreds = this.deferreds || [];
+                this.deferreds.splice( this.deferreds.indexOf( component ), 1 );
+                return;
+            }
             // activate the component
             deactivateComponent( this, component );
         },
@@ -415,7 +424,6 @@ define( function( require ) {
 		getPyramid: function() {
 			return this.pyramid;
 		},
-
 
         /**
          * Returns a TileIterator object. This TileIterator contains all viewable
@@ -523,223 +531,80 @@ define( function( require ) {
             }
         },
 
-        getMapWidth: function() {
+        /**
+         * Returns the width of the entire map in pixels.
+         *
+         * @returns {number}
+         */
+        getWidth: function() {
             return TILESIZE * Math.pow( 2, this.getZoom() );
         },
 
-        getMapHeight: function() {
+        /**
+         * Returns the height of the entire map in pixels.
+         *
+         * @returns {number}
+         */
+        getHeight: function() {
             return TILESIZE * Math.pow( 2, this.getZoom() );
         },
 
+        /**
+         * Returns the width of the viewport in pixels.
+         *
+         * @returns {number}
+         */
 		getViewportWidth: function() {
 			return this.olMap.viewPortDiv.clientWidth;
 		},
 
+        /**
+         * Returns the height of the viewport in pixels.
+         *
+         * @returns {number}
+         */
 		getViewportHeight: function() {
 			return this.olMap.viewPortDiv.clientHeight;
         },
 
-		/**
-		 * Returns the maps min and max pixels in viewport pixels
-         *
-		 * NOTE:    viewport [0,0] is TOP-LEFT
-		 *          map [0,0] is BOTTOM-LEFT
-		 */
-		getMapMinAndMaxInViewportPixels: function() {
-		    var map = this.olMap;
-		    return {
-                min : {
-                    x: Math.round( map.minPx.x ),
-                    y: Math.round( map.maxPx.y )
-                },
-                max : {
-                    x: Math.round( map.maxPx.x ),
-                    y: Math.round( map.minPx.y )
-                }
-            };
-		},
-
-		/**
-		 * Transforms a point from viewport pixel coordinates to map pixel coordinates
-         *
-		 * NOTE:    viewport [0,0] is TOP-LEFT
-		 *          map [0,0] is BOTTOM-LEFT
-		 */
-		getMapPixelFromViewportPixel: function( vx, vy ) {
-			var viewportMinMax = this.getMapMinAndMaxInViewportPixels(),
-			    totalPixelSpan = this.getMapWidth();
-            return {
-				x: totalPixelSpan + vx - viewportMinMax.max.x,
-				y: totalPixelSpan - vy + viewportMinMax.max.y
-			};
-		},
-
-		/**
-		 * Transforms a point from map pixel coordinates to viewport pixel coordinates
-         *
-		 * NOTE:    viewport [0,0] is TOP-LEFT
-		 *          map [0,0] is BOTTOM-LEFT
-		 */
-		getViewportPixelFromMapPixel: function(mx, my) {
-			var viewportMinMax = this.getMapMinAndMaxInViewportPixels();
-			return {
-				x: mx + viewportMinMax.min.x,
-				y: this.getMapWidth() - my + viewportMinMax.max.y
-			};
-		},
-
-		/**
-		 * Transforms a point from data coordinates to map pixel coordinates
-         *
-		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
-		 */
-		getMapPixelFromCoord: function(x, y) {
-			var zoom = this.getZoom(),
-			    tile = this.pyramid.rootToTile( x, y, zoom, TILESIZE),
-			    bin = this.pyramid.rootToBin( x, y, tile);
-			return {
-				x: tile.xIndex * TILESIZE + bin.x,
-				y: tile.yIndex * TILESIZE + TILESIZE - 1 - bin.y
-			};
-		},
-
-		/**
-		 * Transforms a point from map pixel coordinates to data coordinates
-         *
-		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
-		 */
-		getCoordFromMapPixel: function( mx, my ) {
-			var tileAndBin = this.getTileAndBinFromMapPixel( mx, my, TILESIZE, TILESIZE ),
-			    bounds = this.pyramid.getBinBounds( tileAndBin.tile, tileAndBin.bin );
-			return {
-				x: bounds.minX,
-				y: bounds.minY
-			};
-		},
-
-		/**
-		 * Transforms a point from viewport pixel coordinates to data coordinates
-         *
-		 * NOTE:    viewport [0,0] is TOP-LEFT
-		 *          data [0,0] is BOTTOM-LEFT
-		 */
-		getCoordFromViewportPixel: function( vx, vy ) {
-			var mapPixel = this.getMapPixelFromViewportPixel( vx, vy );
-			return this.getCoordFromMapPixel( mapPixel.x, mapPixel.y );
-		},
-
-		/**
-		 * Transforms a point from data coordinates to viewport pixel coordinates
-         *
-		 * NOTE:    viewport [0,0] is TOP-LEFT
-		 *          data [0,0] is BOTTOM-LEFT
-		 */
-		getViewportPixelFromCoord: function(x, y) {
-			var mapPixel = this.getMapPixelFromCoord(x, y);
-			return this.getViewportPixelFromMapPixel(mapPixel.x, mapPixel.y);
-		},
-
-		/**
-         * Returns the tile and bin index corresponding to the given map pixel coordinate
-         */
-        getTileAndBinFromMapPixel: function( mx, my, xBinCount, yBinCount ) {
-
-            var tileIndexX = Math.floor( mx / TILESIZE ),
-                tileIndexY = Math.floor( my / TILESIZE ),
-                tilePixelX = Util.mod( mx , TILESIZE ),
-                tilePixelY = Util.mod( my, TILESIZE );
-            return {
-                tile: {
-                    level : this.getZoom(),
-                    xIndex : tileIndexX,
-                    yIndex : tileIndexY,
-                    xBinCount : xBinCount,
-                    yBinCount : yBinCount
-                },
-                bin: {
-                    x : Math.floor( tilePixelX / (TILESIZE / xBinCount ) ),
-                    y : (yBinCount - 1) - Math.floor( tilePixelY / (TILESIZE / yBinCount) ) // bin [0,0] is top left
-                }
-            };
-
-        },
-
         /**
-         * Returns the top left pixel location in viewport coord from a tile index
+         * Returns the maps current zoom level. Level 0 is the highest point of aggregation.
+         *
+         * @returns {int} The zoom level.
          */
-        getTopLeftViewportPixelForTile: function( tilekey ) {
-
-            var mapPixel = this.getTopLeftMapPixelForTile( tilekey );
-            // transform map coord to viewport coord
-            return this.getViewportPixelFromMapPixel( mapPixel.x, mapPixel.y );
-        },
-
-         /**
-         * Returns the top left pixel location in viewport coord from a tile index
-         */
-        getTopLeftMapPixelForTile: function( tilekey ) {
-
-            var parsedValues = tilekey.split(','),
-                x = parseInt(parsedValues[1], 10),
-                y = parseInt(parsedValues[2], 10),
-                mx = x * TILESIZE,
-                my = y * TILESIZE + TILESIZE;
-            return {
-                x : mx,
-                y : my
-            };
-        },
-
-        /**
-         * Returns the data coordinate value corresponding to the top left pixel of the tile
-         */
-        getTopLeftCoordForTile: function( tilekey ) {
-            var mapPixel = this.getTopLeftMapPixelForTile( tilekey );
-            return this.getCoordFromMapPixel(mapPixel.x, mapPixel.y);
-        },
-
-		/**
-		 * Returns the tile and bin index corresponding to the given viewport pixel coordinate
-		 */
-		getTileAndBinFromViewportPixel: function(vx, vy, xBinCount, yBinCount) {
-			var mapPixel = this.getMapPixelFromViewportPixel(vx, vy);
-			return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
-		},
-
-		/**
-		 * Returns the tile and bin index corresponding to the given data coordinate
-		 */
-		getTileAndBinFromCoord: function(x, y, xBinCount, yBinCount) {
-			var mapPixel = this.getMapPixelFromCoord(x, y);
-			return this.getTileAndBinFromMapPixel( mapPixel.x, mapPixel.y, xBinCount, yBinCount );
-		},
-
-		getTileKeyFromViewportPixel: function(vx, vy) {
-			var tileAndBin = this.getTileAndBinFromViewportPixel(vx, vy, 1, 1);
-			return tileAndBin.tile.level + "," + tileAndBin.tile.xIndex + "," + tileAndBin.tile.yIndex;
-		},
-
-		getBinKeyFromViewportPixel: function(vx, vy, xBinCount, yBinCount) {
-			var tileAndBin = this.getTileAndBinFromViewportPixel( vx, vy, xBinCount, yBinCount );
-			return tileAndBin.bin.x + "," + tileAndBin.bin.y;
-		},
-
 		getZoom: function () {
 			return this.olMap.getZoom();
 		},
 
-		on: function (eventType, callback) {
-            this.olMap.events.register(eventType, this.olMap, callback);
+        /**
+         * Set a map event callback.
+         *
+         * @param eventType {string}   The event type.
+         * @param callback  {Function} The callback.
+         */
+		on: function( eventType, callback ) {
+            this.olMap.events.register( eventType, this.olMap, callback );
 		},
 
-		off: function(eventType, callback) {
+        /**
+         * Remove a map event callback.
+         *
+         * @param eventType {string}   The event type.
+         * @param callback  {Function} The callback.
+         */
+		off: function( eventType, callback ) {
 			this.olMap.events.unregister( eventType, this.olMap, callback );
 		},
 
-		trigger: function(eventType, event) {
+        /**
+         * Trigger a map event.
+         *
+         * @param eventType {string} The event type.
+         * @param event     {Object} The event object to be passed to the event.
+         */
+		trigger: function( eventType, event ) {
             this.olMap.events.triggerEvent( eventType, event );
 		}
-
 	};
 
 	return Map;

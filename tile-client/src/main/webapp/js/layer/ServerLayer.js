@@ -55,7 +55,7 @@ define( function( require ) {
     getLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
             coarseness = layer.spec.renderer.coarseness,
-            adjustedZoom = zoomLevel - (coarseness-1),
+            adjustedZoom = zoomLevel - ( coarseness-1 ),
             meta =  layer.spec.source.meta,
             levelMinMax = meta.minMax[ adjustedZoom ],
             minMax = levelMinMax ? levelMinMax.minMax : {
@@ -66,12 +66,16 @@ define( function( require ) {
     };
 
     /**
-     * Private: zoom callback function to update level min and maxes.
+     * Private: Returns the zoom callback function to update level min and maxes.
+     *
+     * @param layer {ServerLayer} The layer object.
      */
-    zoomCallback = function() {
-        if ( this.olLayer ) {
-            this.setLevelMinMax( getLevelMinMax( this ) );
-        }
+    zoomCallback = function( layer ) {
+        return function() {
+            if ( layer.olLayer ) {
+                layer.setLevelMinMax( getLevelMinMax( layer ) );
+            }
+        };
     };
 
     function ServerLayer( spec ) {
@@ -92,10 +96,12 @@ define( function( require ) {
     ServerLayer.prototype = Object.create( Layer.prototype );
 
     ServerLayer.prototype.activate = function() {
-        var that = this;
 
+        var that = this;
+        // set callback here so it can be removed later
+        this.zoomCallback = zoomCallback( this );
         // set callback to update ramp min/max on zoom
-        this.map.on( "zoomend", $.proxy( this, zoomCallback ) );
+        this.map.on( "zoomend", this.zoomCallback );
 
         function getURL( bounds ) {
             return LayerUtil.getURL.call( this, bounds ) + that.getQueryParamString();
@@ -129,7 +135,8 @@ define( function( require ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
         }
-        this.map.off( "zoomend", $.proxy( this, zoomCallback ) );
+        this.map.off( "zoomend", this.zoomCallback );
+        this.zoomCallback = null;
     };
 
     /**

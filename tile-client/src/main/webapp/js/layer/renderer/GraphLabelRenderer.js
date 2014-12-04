@@ -57,7 +57,8 @@ define( function( require ) {
             scale = Math.pow( 2, this.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             labelIndex = ( text.labelIndex !== undefined ) ? text.labelIndex : 0,
-            metaCommunities,
+            metaCommunities = meta.minMax.max.communities[0],
+            sizeMultiplier,
             community,
             html = "",
             fontScale,
@@ -76,14 +77,21 @@ define( function( require ) {
                 return a.toUpperCase();
             });
         }
+        // get labelSizeMultiplier value -- value between 0.001 and 1 that controls label font size scaling.
+        // (Lower value caps font size for very large communities, and is better for graphs with many small communities and a few very large ones)
+        sizeMultiplier = ( text.sizeMultiplier )
+            ? Math.min( Math.max( text.sizeMultiplier, 0.001 ), 1.0 )
+            : 0.5;
 
-        metaCommunities = meta.minMax.max.communities[0];
         // get graph hierarchy level for this zoom level
         // assumes same hierarchy level for all tiles at a given zoom level
         hierLevel = metaCommunities.hierLevel;
+
         // if hierLevel = 0, normalize label attributes by community degree
         // else normalize label attributes by num internal nodes
-        countNorm = ( hierLevel === 0 ) ? metaCommunities.degree/2 : metaCommunities.numNodes/2;
+        countNorm = ( hierLevel === 0 )
+            ? metaCommunities.degree * sizeMultiplier
+            : metaCommunities.numNodes * sizeMultiplier;
 
         for ( i=0; i<communities.length; i++ ) {
 

@@ -107,7 +107,8 @@
 
 .axis-content {
     position:absolute;
-    overflow:hidden;   
+    overflow:hidden;
+    cursor: pointer; 
 }
 
 .light-theme .axis-content {

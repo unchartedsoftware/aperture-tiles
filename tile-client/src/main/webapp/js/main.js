@@ -31,12 +31,8 @@ require(['./util/Util',
          './layer/BaseLayer',
          './layer/ServerLayer',
          './layer/ClientLayer',
-         './layer/AnnotationLayer',
-         './layer/renderer/TextScoreRenderer',
-         './layer/renderer/WordCloudRenderer',
-         './layer/renderer/TextByFrequencyRenderer',
-         './layer/renderer/PointRenderer',
-         './layer/renderer/PointAggregateRenderer',
+         './layer/renderer/GraphLabelRenderer',
+         './layer/renderer/GraphNodeRenderer',
          './layer/renderer/RenderTheme'],
 
         function( Util,
@@ -47,12 +43,8 @@ require(['./util/Util',
                   BaseLayer,
                   ServerLayer,
                   ClientLayer,
-                  AnnotationLayer,
-                  TextScoreRenderer,
-                  WordCloudRenderer,
-                  TextByFrequencyRenderer,
-                  PointRenderer,
-                  PointAggregateRenderer,
+                  GraphLabelRenderer,
+                  GraphNodeRenderer,
                   RenderTheme ) {
 
 	        "use strict";
@@ -64,118 +56,62 @@ require(['./util/Util',
                 layers = LayerUtil.parse( layers.layers );
 
                 var map,
-                    axis0,
-                    axis1,
                     baseLayer,
                     clientLayer0,
-                    annotationLayer0,
-                    serverLayer0;
+                    clientLayer1,
+                    serverLayer0,
+                    serverLayer1,
+                    serverLayer2;
 
-                baseLayer = new BaseLayer({
-                    "type": "Google",
-                    "theme" : "dark",
-                    "options" : {
-                        "name" : "Dark",
-                        "type" : "styled",
-                        "style" : [
-                            {
-                                'featureType': 'all',
-                                'stylers': [
-                                    { 'saturation': -100 },
-                                    { 'invert_lightness' : true },
-                                    { 'visibility' : 'simplified' }
-                                ]
-                            },
-                            {
-                                'featureType': 'landscape.natural',
-                                'stylers': [
-                                    { 'lightness': -50 }
-                                ]
-                            },
-                            {
-                                'featureType': 'poi',
-                                'stylers': [
-                                    { 'visibility': 'off' }
-                                ]
-                            },
-                            {
-                                'featureType': 'road',
-                                'stylers': [
-                                    { 'lightness': -50 }
-                                ]
-                            },
-                            {
-                                'featureType': 'road',
-                                'elementType': 'labels',
-                                'stylers': [
-                                    { 'visibility': 'off' }
-                                ]
-                            },
-                            {
-                                'featureType': 'road.highway',
-                                'stylers': [
-                                    { 'lightness': -60 }
-                                ]
-                            },
-                            {
-                                'featureType': 'road.arterial',
-                                'stylers': [
-                                    { 'visibility': 'off' }
-                                ]
-                            },
-                            {
-                                'featureType': 'administrative',
-                                'stylers': [
-                                    { 'lightness': 10 }
-                                ]
-                            },
-                            {
-                                'featureType': 'administrative.province',
-                                'elementType': 'geometry',
-                                'stylers': [
-                                    { 'lightness': 15 }
-                                ]
-                            },
-                            {
-                                'featureType' : 'administrative.country',
-                                'elementType' : 'geometry',
-                                'stylers' : [
-                                    { 'visibility' : 'on' },
-                                    { 'lightness' : -56 }
-                                ]
-                            },
-                            {
-                                'elementType' : 'labels',
-                                'stylers' : [
-                                    { 'lightness' : -46 },
-                                    { 'visibility' : 'on' }
-                                ] }
-                        ]
-                    }
-                });
+                baseLayer = new BaseLayer();
 
                 serverLayer0 = new ServerLayer({
-                    source: layers["tweet-heatmap"],
+                    source: layers["graph-nodes-xy"],
                     valueTransform: {
                         type: "log10"
+                    },
+                    renderer : {
+                        ramp: "flat"
+                    }
+                });
+
+                serverLayer1 = new ServerLayer({
+                    source: layers["graph-intra-edges"],
+                    valueTransform: {
+                        type: "log10"
+                    },
+                    renderer : {
+                        ramp: "hot"
+                    }
+                });
+
+                serverLayer2 = new ServerLayer({
+                    source: layers["graph-inter-edges"],
+                    valueTransform: {
+                        type: "log10"
+                    },
+                    renderer : {
+                        ramp: "hot",
+                        rangeMin: 60,
+                        rangeMax: 100
                     }
                 });
 
                 clientLayer0 = new ClientLayer({
-                    source: layers["top-tweets"],
-                    renderer: new WordCloudRenderer({
+                    source: layers["graph-labels"],
+                    renderer: new GraphLabelRenderer({
                         text: {
-                            textKey: "topic",
-                            countKey: "countMonthly",
+                            idKey: "id",
+                            x : "x",
+                            y : "y",
                             themes: [
                                 new RenderTheme( ".dark-theme", {
                                     'color': "#FFFFFF",
-                                    'color:hover': "#09CFFF",
                                     'text-shadow': "#000"
                                 })
                             ]
                         },
-                        hook: function( elem, entry, entries, data ) {
+                        entry: function( elem, entry, entries, data ) {
                             elem.onclick = function() {
                                 console.log( elem );
                                 console.log( entry );
@@ -184,28 +120,46 @@ require(['./util/Util',
                     })
                 });
 
-                annotationLayer0 = new AnnotationLayer({
-                    source: layers["parlor-annotations"],
-                    renderer: new PointAggregateRenderer({
-                        point: {
-                            x: "x",
-                            y: "y",
+                clientLayer1 = new ClientLayer({
+                    source: layers["graph-nodes"],
+                    renderer: new GraphNodeRenderer({
+                        node : {
+                            x : "x",
+                            y : "y",
+                            radius: "r",
                             themes: [
                                 new RenderTheme( ".dark-theme", {
-                                    'background-color': "rgba( 9, 207, 255, 0.5 )",
-                                    'background-color:hover': "rgba( 9, 207, 255, 0.75 )"
+                                    'background-color' : "rgba(0,0,0,0)",
+                                    'border' : "rgb(78,205,196)",
+                                    'background-color:hover' : "rgba(78,205,196,0.2)"
                                 })
                             ]
                         },
-                        aggregate: {
+                        criticalNode : {
+                            flag : "isPrimaryNode",
+                            y : "y",
                             themes: [
                                 new RenderTheme( ".dark-theme", {
-                                    'background-color': "rgba(0,0,0,0)",
-                                    'border': "#000"
+                                    'background-color' : "rgba(0,0,0,0)",
+                                    'border' : "rgb(255,255,255)",
+                                    'background-color:hover' : "rgba(255,255,255,0.2)"
                                 })
                             ]
                         },
-                        hook: function( elem, entry, entries, data ) {
+                        parentNode : {
+                            id: "parentID",
+                            radius: "parentR",
+                            x: "parentX",
+                            y: "parentY",
+                            themes: [
+                                new RenderTheme( ".dark-theme", {
+                                    'background-color' : "rgba(0,0,0,0)",
+                                    'border' : "#555",
+                                    'background-color:hover' : "rgba(0,0,0,0)"
+                                })
+                            ]
+                        },
+                        entry: function( elem, entry, entries, data ) {
                             elem.onclick = function() {
                                 console.log( elem );
                                 console.log( entry );
@@ -214,125 +168,20 @@ require(['./util/Util',
                     })
                 });
 
-                /*
-                clientLayer0 = new ClientLayer({
-                    source: layers["top-tweets"],
-                    renderer: new TextScoreRenderer({
-                        text: {
-                            textKey: "topic",
-                            countKey : "countMonthly",
-                            themes: [
-                                new RenderTheme( ".dark-theme", {
-                                    'color': "#FFFFFF",
-                                    'color:hover': "#09CFFF",
-                                    'text-shadow': "#000"
-                                })
-                            ]
-                        }
-                    })
-                });
-
-                clientLayer0 = new ClientLayer({
-                    source: layers["top-tweets"],
-                    renderer: new TextByFrequencyRenderer({
-                        text: {
-                            textKey: "topic",
-                            themes: [
-                                new RenderTheme( ".dark-theme", {
-                                    'color': "#FFFFFF",
-                                    'color:hover': "#09CFFF",
-                                    'text-shadow': "#000"
-                                })
-                            ]
-                        },
-                        frequency: {
-                            countKey: "countPerHour",
-                            themes: [
-                                new RenderTheme( ".dark-theme", {
-                                    'background-color': "#FFFFFF",
-                                    'background-color:hover': "#09CFFF",
-                                    'border': "#000"
-                                })
-                            ]
-                        }
-                    })
-                });
-                */
-
-                axis0 = new Axis({
-                    position: 'bottom',
-                    title: 'Longitude',
-                    repeat: true,
-                    intervals: {
-                        type: 'fixed',
-                        increment: 120,
-                        pivot: 0
-                    },
-                    units: {
-                        type: 'degrees'
+                map = new Map( "map", {
+                    pyramid : {
+                        type : "AreaOfInterest",
+                        minX : 0,
+                        maxX : 256,
+                        minY : 0,
+                        maxY : 256
                     }
                 });
-
-                axis1 =  new Axis({
-                    position: 'left',
-                    title: 'Latitude',
-                    repeat: true,
-                    intervals: {
-                        type: 'fixed',
-                        increment: 60
-                    },
-                    units: {
-                        type: 'degrees'
-                    }
-                });
-
-                map = new Map( "map" );
-                map.add( serverLayer0 );
-                map.add( annotationLayer0 );
-                map.add( clientLayer0 );
-                map.add( axis0 );
-                map.add( axis1 );
                 map.add( baseLayer );
-
-                setTimeout( function() {
-                   map.remove( serverLayer0 );
-                }, 1000 );
-
-                setTimeout( function() {
-                   map.remove( clientLayer0 );
-                }, 2000 );
-
-                setTimeout( function() {
-                   map.remove( annotationLayer0 );
-                }, 3000 );
-
-                setTimeout( function() {
-                   map.remove( axis1 );
-                }, 4000 );
-
-                setTimeout( function() {
-                   map.remove( axis0 );
-                }, 5000 );
-
-                setTimeout( function() {
-                   map.add( serverLayer0 );
-                }, 6000 );
-
-                setTimeout( function() {
-                   map.add( clientLayer0 );
-                }, 7000 );
-
-                setTimeout( function() {
-                   map.add( annotationLayer0 );
-                }, 8000 );
-
-                setTimeout( function() {
-                   map.add( axis1 );
-                }, 9000 );
-
-                setTimeout( function() {
-                   map.add( axis0 );
-                }, 10000 );
-
+                map.add( serverLayer2 );
+                map.add( serverLayer1 );
+                map.add( serverLayer0 );
+                map.add( clientLayer1 );
+                map.add( clientLayer0 );
             });
         });

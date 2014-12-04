@@ -246,7 +246,7 @@ define(function (require) {
             marginRight = 0,
             marginTop = 0,
             marginBottom = 0;
-        // add margins in case other axis exist, this prevents border overlap
+        // add margins in case other axis exist, this prevents an ugly border overlap
         if ( axis.isXAxis ) {
             marginLeft = axis.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
             marginRight = axis.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
@@ -254,20 +254,19 @@ define(function (require) {
             marginTop = axis.$map.find('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
             marginBottom = axis.$map.find('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
         }
-        // return jquery element
         return $('<div class="'+ AXIS_HEADER_CLASS + " " + axis.position + AXIS_HEADER_CLASS_SUFFIX + '"'
                + 'style="z-index:'+(Z_INDEX+2)+';'
-               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px; '+marginLeft+'px;"></div>');
+               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px '+marginLeft+'px;"></div>');
     }
 
 
     /**
-     * Private: Creates and returns the axis header jquery object.
+     * Private: Creates and returns the axis header background jquery object. This is used
+     * to apply a box-shadow css without ugly overlap.
      *
      * @param axis {Axis} the axis object.
      */
     function createHeaderBack( axis ) {
-        // return jquery element
         return $('<div class="'+ AXIS_HEADER_CLASS + " " + AXIS_HEADER_CLASS + "-back " + axis.position + AXIS_HEADER_CLASS_SUFFIX + '"'
                + 'style="z-index:'+(Z_INDEX+1)+';"></div>' );
     }
@@ -394,23 +393,30 @@ define(function (require) {
     }
 
     /**
-     * Private: Draw callback function on map 'move' event.
+     * Private: Returns the draw callback function on map 'move' event.
+     *
+     * @param axis {Axis} The axis object.
      */
-    function redrawCallback() {
-        this.redraw();
+    function redrawCallback( axis ) {
+        return function() {
+            axis.redraw();
+        };
     }
 
     /**
-     * Private: Mouse marker callback function on 'mousemove' event.
-     * @param event
+     * Private: Returns the mouse marker callback function on 'mousemove' event.
+     *
+     * @param axis {Axis} The axis object.
      */
-    function mouseMoveCallback( event ) {
-        if ( !this.enabled ) {
-            return;
-        }
-        var marker = AxisUtil.getMarker( this, event.xy.x, event.xy.y );
-        this.$content.find('.mouse-marker').remove();
-        this.$content.append( $( createLargeMarkerHTML( this, marker ) ).addClass( 'mouse-marker' ) );
+    function mouseMoveCallback( axis ) {
+        return function( event ) {
+            if ( !axis.enabled ) {
+                return;
+            }
+            var marker = AxisUtil.getMarker( axis, event.xy.x, event.xy.y );
+            axis.$content.find( '.mouse-marker' ).remove();
+            axis.$content.append( $( createLargeMarkerHTML( axis, marker ) ).addClass( 'mouse-marker' ) );
+        };
     }
 
     function Axis( spec ) {
@@ -446,9 +452,12 @@ define(function (require) {
     }
 
     Axis.prototype.activate = function() {
+        // create unique callbacks so they can be removed later
+        this.redrawCallback = redrawCallback( this );
+        this.mouseMoveCallback = mouseMoveCallback( this );
         // attach callbacks
-        this.map.on( 'move', $.proxy( this, redrawCallback ) );
-        this.map.on( 'mousemove', $.proxy( this, mouseMoveCallback ));
+        this.map.on( 'move', this.redrawCallback );
+        this.map.on( 'mousemove', this.mouseMoveCallback );
         // generate the core html elements
         this.$map = $( this.map.getElement() );
         this.$axis = createAxis( this );
@@ -469,13 +478,15 @@ define(function (require) {
     };
 
     Axis.prototype.deactivate = function() {
-        this.map.off( 'move', $.proxy( this, redrawCallback ) );
-        this.map.off( 'mousemove', $.proxy( this, mouseMoveCallback ));
+        this.map.off( 'move', this.redrawCallback );
+        this.map.off( 'mousemove', this.mouseMoveCallback );
         this.$axis.remove();
         this.$axis = null;
         this.$title = null;
         this.$header = null;
         this.$content = null;
+        this.redrawCallback = null;
+        this.mouseMoveCallback = null;
     };
 
     /**

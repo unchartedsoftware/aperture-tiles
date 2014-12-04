@@ -27,7 +27,8 @@ define( function( require ) {
     "use strict";
 
     var Renderer = require('./Renderer'),
-         injectCss;
+        MapUtil = require('../../map/MapUtil'),
+        injectCss;
 
     injectCss = function( spec ) {
         var i;
@@ -78,8 +79,8 @@ define( function( require ) {
 
                 // get annotations position in viewport space
                 tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
-                tilePos = this.map.getTopLeftViewportPixelForTile( tilekey );
-                position = this.map.getViewportPixelFromCoord( value[j].x, value[j].y );
+                tilePos = MapUtil.getTopLeftViewportPixelForTile( this.map, tilekey );
+                position = MapUtil.getViewportPixelFromCoord( this.map, value[j].x, value[j].y );
                 // get relative position from tile top left
                 offset = {
                     x: position.x - tilePos.x,
