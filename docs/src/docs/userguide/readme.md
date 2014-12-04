@@ -43,7 +43,7 @@ The main layer in the Twitter South American project is a heatmap showing the co
 
 While the tiles in this project aggregate the individual tweets in a region by summation, other Aperture Tiles projects can be incorporate layers that show only the minimum or maximum value on tile.  
 
-###<a name="int-carousel"></a>Tile Carousel
+### <a name="int-carousel"></a> Tile Carousel ###
 
 Each tile can contain a carousel with multiple views that summarize the aggregate data contained in each tile. As they are highly specific to the source data, each Tile Carousel implementation generally requires custom coding.
 
@@ -51,11 +51,11 @@ In the Twitter South America application, each tile contains a carousel that let
 
 - A word cloud that shows the top 10 topics mentioned in Tweets covered by the tile. The larger the word, the more times it was used.
 	<br/><img src="../../img/carousel-cloud.png" class="screenshot" alt="Tile Carousel Word Cloud" />
-- A list of the top 10 topics and a pair of histograms that show their usage over the last month and the last week.
+- A list of the top topics and a histogram showing their usage over the last 24 hours.
 	<br/><img src="../../img/carousel-list.png" class="screenshot" alt="Tile Carousel Topic List" />
 - A blank page that lets you turn off the carousel display for a single tile.
 
-Each carousel page also include a Translate button that translates topics to English.
+Each carousel page also includes a Translate button that translates topics to English.
 
 <img src="../../img/carousel-translate.png" class="screenshot" alt="Translate Tile Carousel" />
 
@@ -64,13 +64,13 @@ Clicking on a particular topic on any of the carousel pages refreshes the map to
 - Highlight instances of the topic in other tiles so you can see other locations in which the topic is popular.
 - Display a detailed overview of the topic usage, which includes:
 	- A total count and expanded histograms of its usage in the past month, week and 24 hours.
-	- The four most recent tweets in which it appeared.
+	- The most recent tweets in which it appeared.
 
 <img src="../../img/carousel-detail.png" class="screenshot" alt="Tile Carousel Topic Detail" />
 
 ### <a name="int-axes"></a> Axes ###
 
-The X and Y axes are labelled to describe the units in your base map. Click either axis to show or hide its units.
+The X and Y axes are labeled to describe the units in your base map. Click either axis to show or hide its units.
 
 <img src="../../img/axis.png" class="screenshot" alt="Axis" />
 
