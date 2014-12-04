@@ -70,15 +70,10 @@ Aperture Tiles uses a distributed framework built on the Apache Spark engine to 
 See the [Installation](../installation/#prerequisites) topic for full details on required third-party tools.
 
 - **Languages**:
-	<p>
 	- *Scala* version 2.10.3
-	<p>
 - **Cluster Computing**:
-	- *Apache Spark* version 0.9.0 or greater (version 1.0.0 recommended).
-      
-        NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.
-	  
-    - *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version
+	- *Apache Spark* version 0.9.0 or greater (version 1.0.0 recommended).<p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
+	- *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version
 
 ### <a name="spark-config"></a> Apache Spark Configuration ###
 
@@ -150,23 +145,14 @@ The Spark connection properties define the location of the Spark installation th
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					spark
-				</dt>
-				<dd>Location of the Spark master.  Use <em>local</em> for standalone Spark.
-   Defaults to <em>local</em>.</dd>
+				<dt>spark</dt>
+				<dd>Location of the Spark master.  Use <em>local</em> for standalone Spark. Defaults to <em>local</em>.</dd>
 				
-				<dt>
-					sparkhome
-				</dt>
-				<dd>Location of Spark in the remote location (or on the local machine if using 
-   standalone). Defaults to the value of the environment variable, <em>SPARK_HOME</em>.</dd>
+				<dt>sparkhome</dt>
+				<dd>Location of Spark in the remote location (or on the local machine if using standalone). Defaults to the value of the environment variable, <em>SPARK_HOME</em>.</dd>
    
-				<dt>
-					user (Optional)
-				</dt>
-				<dd>Username passed to the Spark job title. Defaults to the username of the 
-   current user.</dd>
+				<dt>spark.connection.user (Optional)</dt>
+				<dd>Username passed to the Spark job title. Defaults to the username of the current user.</dd>
 			</dl>
 		</ul>
 	</div>
@@ -180,9 +166,7 @@ The tile storage properties indicate whether the tile set created from your sour
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					oculus.tileio.type
-				</dt>
+				<dt>oculus.tileio.type</dt>
 				<dd>
 					Location to which tiles are written:
 					<dl>

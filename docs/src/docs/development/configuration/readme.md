@@ -117,8 +117,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				<dt>
 					repeat
 				</dt>
-				<dd>Indicates whether the map will repeat when the user scrolls off one end.
-	Most useful for geographic maps.</dd>
+				<dd>Indicates whether the map will repeat when the user scrolls off one end. Most useful for geographic maps.</dd>
 	
 				<dt>
 					intervalSpec
@@ -127,16 +126,13 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				
 					<dl>
 						<dt>type</dt>
-						<dd>How the following increment value is calculated based on the axis range.
-		Accepted values include "percentage", "%", "value" or "#".</dd>
+						<dd>How the following increment value is calculated based on the axis range. Accepted values include "percentage", "%", "value" or "#".</dd>
 		
 						<dt>increment</dt>
-						<dd>Value or percentage of units by which to increment the intervals. How
-		this is applied is dependent on the specified type.</dd>
+						<dd>Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.</dd>
 						
 						<dt>pivot</dt>
-						<dd>Value or percentage from which all other values are incremented.
-		Typically 0.</dd>
+						<dd>Value or percentage from which all other values are incremented. Typically 0.</dd>
 		
 						<dt>allowScaleByZoom</dt>
 						<dd>Indicates whether the axis should be scaled by the zoom factor.</dd>
@@ -163,12 +159,10 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 						</dd>
 						
 						<dt>decimals</dt>
-						<dd>Number of decimals to display for each unit. Applicable to "billions",
-		"millions", "thousands" and "decimal" types.</dd>
+						<dd>Number of decimals to display for each unit. Applicable to "billions", "millions", "thousands" and "decimal" types.</dd>
 		
 						<dt>allowStepDown</dt>
-						<dd>Indicates whether the units can step down if they are below range.
-		Applicable to "billions", "millions", "thousands" types.</dd>
+						<dd>Indicates whether the units can step down if they are below range. Applicable to "billions", "millions", "thousands" types.</dd>
 					</dl>
 			</dl>
 		</ul>
@@ -214,8 +208,7 @@ The MapConfig parameters determine the allowed zoom level and extent of the geog
 				<dt>
 					projection
 				</dt>
-				<dd>"EPSG:900913" indicates that the geographic map is a web mercator or
-	spherical mercator projection.</dd>
+				<dd>"EPSG:900913" indicates that the geographic map is a web mercator or spherical mercator projection.</dd>
 				
 				<dt>
 					displayProjection
@@ -326,8 +319,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 						<dd>Value or percentage of units by which to increment the intervals.</dd>
 						
 						<dt>pivot</dt>
-						<dd>Value or percentage from which all other values are incremented.
-		Typically 0.</dd>
+						<dd>Value or percentage from which all other values are incremented. Typically 0.</dd>
 		
 						<dt>allowScaleByZoom</dt>
 						<dd>Indicates whether the axis should be scaled by the zoom factor.</dd>
@@ -341,8 +333,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				
 					<dl>
 						<dt>type</dt>
-						<dd>Unit label along the specified axis. Options include "decimal", "time"
-		and "degrees".</dd>
+						<dd>Unit label along the specified axis. Options include "decimal", "time" and "degrees".</dd>
 						
 						<dt>decimals</dt>
 						<dd>Number of decimals to display for each unit, if applicable.</dd>
@@ -379,12 +370,7 @@ The Metadata parameters uniquely identify the layer.
 				<dt>
 					id
 				</dt>
-				<dd>Must match the name of the folder to which the tiles were saved during the
-	generation process, which is composed of the following parameters from the
-	Tiing Property File:
-	
-	<br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.
-	&lt;oculus.binning.valueField&gt;</dd>
+				<dd>Must match the name of the folder to which the tiles were saved during the generation process, which is composed of the following parameters from the Tiing Property File: <br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.&lt;oculus.binning.valueField&gt;</dd>
 				
 				<dt>
 					name
