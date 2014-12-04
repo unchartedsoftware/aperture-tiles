@@ -116,7 +116,7 @@ Check your output folder for five part files (`part-00000` to `part-00004`) of r
 
 ## <a name="tile-generation"></a> Tile Generation ##
 
-The first step in building any Aperture Tiles project is creating a set of AVRO tiles that aggregate your source data across the plot/map and its various zoom levels.
+The first step in building any Aperture Tiles project is creating a set of Avro tiles that aggregate your source data across the plot/map and its various zoom levels.
 
 For delimited numeric data sources like the Julia set, the included CSVBinner tool can create these tiles. The CSVBinner tool requires two types of input:
 
@@ -218,7 +218,7 @@ tile-generator/bin/spark-run.sh com.oculusinfo.tilegen.examples.apps.CSVBinner
 -d tile-generator/examples/julia-base.bd tile-generator/examples/julia-tiling.bd
 ```
 
-When the tile generation is complete, you should have a folder containing six subfolders (0, being the highest, through 5, being the lowest), each of which corresponds to a zoom level in your project. Across all the folders, you should have a total of 1,365 AVRO tile files.
+When the tile generation is complete, you should have a folder containing six subfolders (0, being the highest, through 5, being the lowest), each of which corresponds to a zoom level in your project. Across all the folders, you should have a total of 1,365 Avro tile files.
 
 Note that for this example, the tile folder will be named `julia.x.y.v`. The output folder is always named using the the following values in the **julia.bd** file:
 
@@ -237,7 +237,7 @@ For typical Aperture Tiles projects, you will need to edit the **web.xml** and *
 
 ## <a name="tile-client-configuration"></a> Tile Client Configuration ##
 
-To configure the Tile Client application to display the AVRO files containing your source data, you must edit two types of configuration files:
+To configure the Tile Client application to display the Avro files containing your source data, you must edit two types of configuration files:
 
 - Map Properties (within the tile-client-template.zip at `WEB-INF/classes/maps` or within the source at `tile-client-template/src/main/resources/maps`), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
 - Layer Properties (within the tile-client-template.zip at `WEB-INF/classes/layers` or within the source at `tile-client-template/src/main/resources/layers`), which specifies the layers that can be overlaid on your base map or plot.
@@ -266,12 +266,12 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 To edit the layer properties for your project:
 
 1. Access the **crossplot-layers.json.example** file in `tile-client-template/WEB-INF/classes/layers`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
-2. Open the crossplot json file for editing. Edit the children `id` property (*not* the layer `id` property) so it matches the name given to the directory (file system directory or HBase table name) in which your AVRO tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
+2. Open the crossplot json file for editing. Edit the children `id` property (*not* the layer `id` property) so it matches the name given to the directory (file system directory or HBase table name) in which your Avro tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
 3. In the `pyramid` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
-4. If your AVRO tiles are saved to your local machine, add or edit the following values in the `data` section:
+4. If your Avro tiles are saved to your local machine, add or edit the following values in the `data` section:
 	- `type`: Enter **file**
-	- `root.path`: Specify the *root* path to which you generated the AVRO tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the AVRO tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).
-5. If your AVRO tiles are saved to HBase, add or edit the following values in the `data` section:
+	- `root.path`: Specify the *root* path to which you generated the Avro tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the Avro tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).
+5. If your Avro tiles are saved to HBase, add or edit the following values in the `data` section:
 	- `type`: Enter *hbase*
 	- `hbase.zookeeper.quorum`: Zookeeper quorum location needed 
    to connect to HBase (ex: `my-zk-server1.example.com, my-zk-server2.example.com, my-zk-server3.example.com`). 
