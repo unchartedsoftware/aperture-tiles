@@ -45,19 +45,13 @@ Set the following environment variables:
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					<b>SPARK_HOME</b>
-				</dt>
+				<dt>SPARK_HOME/dt>
 				<dd>The location of the Spark installation</dd>
 				
-				<dt>
-					<b>SPARK_MEM</b>
-				</dt>
+				<dt>SPARK_MEM</dt>
 				<dd>The amount of memory to allocate to Spark</dd>
 				
-				<dt>
-					<b>MASTER</b>
-				</dt>
+				<dt>MASTER</dt>
 				<dd>The node on which the cluster is installed (set to <code>local</code> for running Spark on a single machine).</dd>
 			</dl>
 		</ul>
@@ -72,60 +66,36 @@ Aperture Tiles is made up of ten sub-projects:
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					<b>math-utilities</b>
-				</dt>
+				<dt>math-utilities</dt>
 				<dd>Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.</dd>
 				
-				<dt>
-					<b>geometric-utilities</b>
-				</dt>
+				<dt>geometric-utilities</dt>
 				<dd>Advanced math utilities for processing geometry and geographic problems.</dd>
 				
-				<dt>
-					<b>binning-utilities</b>
-				</dt>
+				<dt>binning-utilities</dt>
 				<dd>Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</dd>
 				
-				<dt>
-					<b>tile-generation</b>
-				</dt>
+				<dt>tile-generation</dt>
 				<dd>Spark-based tools to generate tile pyramids from raw data.</dd>
 				
-				<dt>
-					<b>tile-service</b>
-				</dt>
+				<dt>tile-service</dt>
 				<dd>Web service to serve tiles from tile pyramids to web clients.</dd>
 				
-				<dt>
-					<b>annotation-service</b>
-				</dt>
+				<dt>annotation-service</dt>
 				<dd>Services for adding annotations to Aperture Tiles visualizations.</dd>
 				
-				<dt>
-					<b>tile-client</b>
-				</dt>
+				<dt>tile-client</dt>
 				<dd>Simple web client to display tiles from tile pyramids.</dd>
 				
-				<dt>
-					<b>tile-packaging</b>
-				</dt>
+				<dt>tile-packaging</dt>
 				<dd>Packaged assembly of the tile generation service for the <a href="../quickstart/">Quick Start</a> example on this site.</dd>
 				
-				<dt>
-					<b>tile-client-template</b>
-				</dt>
+				<dt>tile-client-template</dt>
 				<dd>Starter template for creating a Tile Client and Server application.</dd>
 				
-				<dt>
-					<b>tile-examples</b>
-				</dt>
+				<dt>tile-examples</dt>
 				<dd>Example applications.</dd>
 				
-				<dt>
-					<b>docs</b>
-				</dt>
-				<dd>Source files for the documentation on this website.</dd>		
 			</dl>
 		</ul>
 	</div>

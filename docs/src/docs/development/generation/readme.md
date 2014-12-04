@@ -101,14 +101,10 @@ The script simplifies the process of running Spark jobs by including all the nec
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					<b>SCALA_HOME</b>
-				</dt>
+				<dt>SCALA_HOME</dt>
 				<dd>Path to the Scala installation directory</dd>
 				
-				<dt>
-					<b>SPARK_HOME</b>
-				</dt>
+				<dt>SPARK_HOME</dt>
 				<dd>Path to the Spark installation directory</dd>
 			</dl>
 		</ul>
@@ -702,27 +698,27 @@ It accepts the following properties:
 				<dd>A distributed collection of (index, record) pairs as described above.</dd>
 				
 				<dt>
-					<b>indexScheme</b>
+					indexScheme
 				</dt>
 				<dd>Used to convert the index to a set X/Y coordinates that can be plotted.	When using a CartesianIndexScheme, the coordinates are taken as given.</dd>
 	
 				<dt>
-					<b>binAnalytic</b>
+					binAnalytic
 				</dt>
 				<dd>A Binning Analytic that, as described above, defines how to aggregate two records, convert them into the form written and determine the extrema of the dataset.</dd>
 	
 				<dt>
-					<b>tileAnalytics</b>
+					tileAnalytics
 				</dt>
 				<dd>Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
 	
 				<dt>
-					<b>dataAnalytics</b>
+					dataAnalytics
 				</dt>
 				<dd>Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
 	
 				<dt>
-					<b>tileScheme</b>
+					tileScheme
 				</dt>
 				<dd>The projection to use to transform from the raw data index into tiles and bins. Two types are predefined:
 					<ul>
@@ -732,22 +728,22 @@ It accepts the following properties:
 				</dd>
 
 				<dt>
-					<b>levels</b>
+					levels
 				</dt>
 				<dd>Specifies which levels to process at the same time. It is generally recommended you process levels 1-9 together, then run additional levels	one	at a time afterward. This arrangement typically makes effective use of system resources.</dd>
 	
 				<dt>
-					<b>xBins</b> (Optional)
+					xBins (Optional)
 				</dt>
 				<dd>Number of bins on the X axis.  Defaults to 256</dd>
 				
 				<dt>
-					<b>yBins</b> (Optional)
+					yBins (Optional)
 				</dt>
 				<dd>Number of bins on the Y axis.  Defaults to 256</dd>
 				
 				<dt>
-					<b>consolidationPartitions</b> (Optional)
+					consolidationPartitions (Optional)
 				</dt>
 				<dd>The number of reducers to use when aggregating data records into bins and tiles. Defaults to the same number of partitions as the original data set. Alter if you encounter problems with the tiling job due to lack of resources.</dd>
 				
@@ -784,42 +780,42 @@ It accepts the following properties:
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>tileScheme</b>
+					tileScheme
 				</dt>
 				<dd>Type of projection built from the set of bins and levels. Must match the     tileScheme specified in binner.processDataByLevel.</dd>
 				
 				<dt>
-					<b>writeLocation</b>
+					writeLocation
 				</dt>
 				<dd>The ID to apply to the tile set when writing it. If writing to the local filesystem, this will be the base directory into which to write the tiles.	If writing to HBase, it will be the name of the table to write.</dd>
 	
 				<dt>
-					<b>tiles</b>
+					tiles
 				</dt>
 				<dd>The binned data set produced by binner.processDataByLevel.</dd>
 				
 				<dt>
-					<b>valueScheme</b>
+					valueScheme
 				</dt>
 				<dd>The bin descriptor describing the dataset.  This must match the bin	descriptor used when creating the tiles.</dd>
 	
 				<dt>
-					<b>tileAnalytics</b> (Optional)
+					tileAnalytics (Optional)
 				</dt>
 				<dd>Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
 	
 				<dt>
-					<b>dataAnalytics</b> (Optional)
+					dataAnalytics (Optional)
 				</dt>
 				<dd>Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
 	
 				<dt>
-					<b>name</b>
+					name
 				</dt>
 				<dd>Name of the finished pyramid. Stored in the tile metadata.</dd>
 				
 				<dt>
-					<b>description</b>
+					description
 				</dt>
 				<dd>Description of the finished pyramid. Stored in the tile metadata.</dd>
 				

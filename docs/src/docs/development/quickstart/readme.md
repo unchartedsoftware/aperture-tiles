@@ -85,19 +85,13 @@ Set the following environment variables:
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					<b>SPARK_HOME</b>
-				</dt>
+				<dt>SPARK_HOME</dt>
 				<dd>The location of the Spark installation</dd>
 				
-				<dt>
-					<b>SPARK_MEM</b>
-				</dt>
+				<dt>SPARK_MEM</dt>
 				<dd>The amount of memory to allocate to Spark</dd>
 				
-				<dt>
-					<b>MASTER</b>
-				</dt>
+				<dt>MASTER</dt>
 				<dd>The node on which the cluster is installed (set to <code>local</code> for running Spark on a single machine).</dd>
 			</dl>
 		</ul>
@@ -143,16 +137,11 @@ These properties specify the location of your Spark installation.
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>
-					<b>spark</b>
-				</dt>
+				<dt>spark</dt>
 				<dd>URI of the Spark master. Set to "local" for standalone Spark installations.</dd>
 				
-				<dt>
-					<b>sparkhome</b>
-				</dt>
-				<dd>File system location of Spark. Defaults to the value of the SPARK_HOME
-	environment variable.</dd>
+				<dt>sparkhome</dt>
+				<dd>File system location of Spark. Defaults to the value of the SPARK_HOME environment variable.</dd>
 			</dl>
 		</ul>
 	</div>

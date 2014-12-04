@@ -105,23 +105,23 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>title</b>
+					title
 				</dt>
 				<dd>Axis name.</dd>
 				
 				<dt>
-					<b>position</b>
+					position
 				</dt>
 				<dd>Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.</dd>
 				
 				<dt>
-					<b>repeat</b>
+					repeat
 				</dt>
 				<dd>Indicates whether the map will repeat when the user scrolls off one end.
 	Most useful for geographic maps.</dd>
 	
 				<dt>
-					<b>intervalSpec</b>
+					intervalSpec
 				</dt>
 				<dd>
 				
@@ -207,28 +207,28 @@ The MapConfig parameters determine the allowed zoom level and extent of the geog
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>numZoomLevels</b>
+					numZoomLevels
 				</dt>
 				<dd>Number of zoom levels available to users.</dd>
 				
 				<dt>
-					<b>projection</b>
+					projection
 				</dt>
 				<dd>"EPSG:900913" indicates that the geographic map is a web mercator or
 	spherical mercator projection.</dd>
 				
 				<dt>
-					<b>displayProjection</b>
+					displayProjection
 				</dt>
 				<dd>"EPSG:4326" indicates the identity projection.</dd>
 				
 				<dt>
-					<b>units</b>
+					units
 				</dt>
 				<dd>Indicates the unit of distance in the map.</dd>
 				
 				<dt>
-					<b>maxExtent</b>
+					maxExtent
 				</dt>
 				<dd>The coordinates that correspond to the geographic boundaries of the map.</dd>
 			</dl>
@@ -299,22 +299,22 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>title</b>
+					title
 				</dt>
 				<dd>Axis name.</dd>
 				
 				<dt>
-					<b>position</b>
+					position
 				</dt>
 				<dd>Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.</dd>
 				
 				<dt>
-					<b>repeat</b>
+					repeat
 				</dt>
 				<dd>Indicates whether the map will repeat when the user scrolls off one end.</dd>
 				
 				<dt>
-					<b>intervalSpec</b>
+					intervalSpec
 				</dt>
 				<dd>
 				
@@ -335,7 +335,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				</dd>
 				
 				<dt>
-					<b>unitSpec</b>
+					unitSpec
 				</dt>
 				<dd>
 				
@@ -377,7 +377,7 @@ The Metadata parameters uniquely identify the layer.
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>id</b>
+					id
 				</dt>
 				<dd>Must match the name of the folder to which the tiles were saved during the
 	generation process, which is composed of the following parameters from the
@@ -387,7 +387,7 @@ The Metadata parameters uniquely identify the layer.
 	&lt;oculus.binning.valueField&gt;</dd>
 				
 				<dt>
-					<b>description</b>
+					name
 				</dt>
 				<dd>Description of the layer</dd>
 			</dl>
@@ -433,7 +433,7 @@ The data parameters specify the location of the tiles that you created. If you a
 				<dd>
 					<dl>
 						<dt>
-							<b>type</b>
+							type
 						</dt>
 						<dd>Indicates the file format of your tiles:
 							<dl>
@@ -450,28 +450,28 @@ The data parameters specify the location of the tiles that you created. If you a
 						</dd>
 						
 						<dt>
-							<b>root.path</b>
+							root.path
 						</dt>
 						<dd>Root path in which the tiles are stored. Not used for HBase.</dd>
 						
 						<dt>
-							<b>extension</b>
+							extension
 						</dt>
 						<dd>Name of the compressed file in which tiles are stored. Only used for ZIP
 						files.</dd>
 						
 						<dt>
-							<b>hbase.zookeeper.quorum</b>
+							hbase.zookeeper.quorum
 						</dt>
 						<dd>Zookeeper quorum location needed to connect to HBase.</dd>
 						
 						<dt>
-							<b>hbase.zookeeper.port</b>
+							hbase.zookeeper.port
 						</dt>
 						<dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
 						
 						<dt>
-							<b>hbase.master</b>
+							hbase.master
 						</dt>
 						<dd>Location of the HBase master on which the tiles are saved.</dd>
 						
@@ -491,12 +491,12 @@ This option defines which renderer the server should use to render tiles. The re
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>domain</b>
+					domain
 				</dt>
 				<dd>Indicates whether the tiles should be rendered by the server or the client.</dd>
 				
 				<dt>
-					<b>renderer</b>
+					renderer
 				</dt>
 				<dd>Used for server-side rendering.
 					
@@ -519,7 +519,7 @@ This option defines which renderer the server should use to render tiles. The re
 						</dd>
 					
 						<dt>
-							<b>ramp</b>
+							ramp
 						</dt>
 						<dd>Determines the color scale applied to the data points based on their concentration. The default color scales are:
 							<ul>
@@ -533,19 +533,19 @@ This option defines which renderer the server should use to render tiles. The re
 						</dd>
 						
 						<dt>
-							<b>opacity</b>
+							opacity
 						</dt>
 						<dd>Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).</dd>
 					</dl>
 				</dd>
 				
 				<dt>
-					<b>renderers</b>
+					renderers
 				</dt>
 				<dd>List of custom renderers required to perform client-side rendering.</dd>
 				
 				<dt>
-					<b>transform</b>
+					transform
 				</dt>
 				<dd>
 					<dl>
