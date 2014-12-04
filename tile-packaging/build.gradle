@@ -1,22 +1,15 @@
-task  {
+apply plugin: 'distribution'
+
+distributions {
 		main {
 				baseName = 'tile-generator'
 				contents {
 					// Copy everything under the dist directory over
 					from "src/dist"
-					// Strip versions out of artifacts on copy
-					rename "(.*)-$version(.*)", "\$1\$2"
+					into ("lib") {
+						from project(":tile-generation").jar
+						rename "(.*)-$version(.*)", "\$1\$2"
+					}
 				}
 		}
-}
-
-// Disable transitive dependencies.  Spark's run script will add almost everything
-// we need to the classpath at runtime, it's really just HBase and our own jars
-// that need to be included.
-configurations.all {
-	transitive = false
-}
-
-dependencies {
-	compile project(":tile-generation")
 }
