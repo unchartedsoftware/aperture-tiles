@@ -81,6 +81,9 @@ Aperture Tiles is made up of ten sub-projects:
 				<dt>tile-service</dt>
 				<dd>Web service to serve tiles from tile pyramids to web clients.</dd>
 				
+				<dt>spark-tile-utilities</dt>
+				<dd>Optional services for allowing the tile server to communicate directly with Spark.</dd>
+				
 				<dt>annotation-service</dt>
 				<dd>Services for adding annotations to Aperture Tiles visualizations.</dd>
 				
@@ -96,6 +99,11 @@ Aperture Tiles is made up of ten sub-projects:
 				<dt>tile-examples</dt>
 				<dd>Example applications.</dd>
 				
+				<dt>gradle</dt>
+				<dd>Gradle build system support.</dd>
+				
+				<dt>docs</dt>
+				<dd>Source files for the documentation on this website.</dd>
 			</dl>
 		</ul>
 	</div>
