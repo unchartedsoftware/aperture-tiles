@@ -160,7 +160,7 @@ The Spark connection properties define the location of the Spark installation th
 
 #### <a name="tile-storage"></a> Tile Storage ####
 
-The tile storage properties indicate whether the tile set created from your source data should be stored in HBase on your local file system:
+The tile storage properties indicate whether the tile set created from your source data should be stored in HBase or your local file system:
 
 <div class="details props">
 	<div class="innerProps">
@@ -177,11 +177,6 @@ The tile storage properties indicate whether the tile set created from your sour
 					</dl>
 				</dd>
 				
-				<dt>
-					sparkhome
-				</dt>
-				<dd>Location of Spark in the remote location (or on the local machine if using standalone). Defaults to the value of the environment variable, <em>SPARK_HOME</em>.</dd>
-   
 				<dt>
 					user (Optional)
 				</dt>
@@ -488,7 +483,7 @@ For example, to record an average, the two types might be used as follows:
 1. The processing type would include the count of records and the sum of their values, both of which would be continuously updated as new records are examined.
 2. The binning type would simply be the average, or the final processing type sum divided by the total count of records.
 
-A code example is shown in line 41 of **TwitterTopicBinningAnalytic.scala**:
+A code example is shown in line 40 of **TwitterTopicBinningAnalytic.scala**:
 
 ```scala
 extends BinningAnalytic[Map[String, TwitterDemoTopicRecord], 
@@ -499,7 +494,7 @@ Here the processing type is a *map* used to add all similar Twitter message topi
 
 ###### Transformation ######
 
-The Binning Analytic should also describe how to convert the processing type into the binning type. In **TwitterTopicBinningAnalytic.scala**, this is accomplished with a **finish** function (lines 65-66):
+The Binning Analytic should also describe how to convert the processing type into the binning type. In **TwitterTopicBinningAnalytic.scala**, this is accomplished with a **finish** function (lines 64-65):
 
 ```scala
 def finish (value: Map[String, TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] =
@@ -516,7 +511,7 @@ While the rest of the topics are discarded, they were necessary during processin
 
 ##### <a name="data-aggregation"></a> Data Aggregation and Record Creation #####
 
-The Binning Analytic defines how data is aggregated. For example, lines 43-48 of **TwitterTopicBinningAnalytic.scala** compare two maps and creates a new map that contains:
+The Binning Analytic defines how data is aggregated. For example, lines 42-47 of **TwitterTopicBinningAnalytic.scala** compare two maps and creates a new map that contains:
 
 - Keys that exist in either map 
 - The sum of the their values
@@ -546,7 +541,7 @@ val maxAnalysis:
 	new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
 ```
 
-Standard Bin Analytics are available in: <em>tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>Analytics.scala</strong></em>
+Standard Bin Analytics are available in: <em>tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr>analytics/<wbr><strong>Analytics.scala</strong></em>
 
 #### <a name="serializer"></a> Serializer ####
 
@@ -565,7 +560,7 @@ The Serializer implements the <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<
 - <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<wbr>serialization.<wbr>GenericAvroSerializer</strong> if your bin type is a single record 
 - <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<wbr>serialization.<wbr>GenericAvroArraySerializer</strong> if your bin type is an array of records record. 
 
-An example of a serializer of tiles whose bins are an array of records is available in:<em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/<wbr>twitter/binning/TwitterTopicAvroSerializer.java</em>
+An example of a serializer of tiles whose bins are an array of records is available in: <em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/<wbr>twitter/binning/TwitterTopicAvroSerializer.java</em>
 
 This class inherits from the **GenericAVROArraySerializer.java** (<em>/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/</em>) and defines:
 
@@ -668,7 +663,7 @@ val tiles = binner.processDataByLevel(data,
 				                      yBins=1)
 ```
 
-**Binner.processDataByLevel** is defined in the following file on line 237: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
+**Binner.processDataByLevel** is defined in the following file on line 238: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
 
 It accepts the following properties:
 
@@ -677,7 +672,7 @@ It accepts the following properties:
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>
-					<b>bareData</b>
+					data
 				</dt>
 				<dd>A distributed collection of (index, record) pairs as described above.</dd>
 				
@@ -706,8 +701,8 @@ It accepts the following properties:
 				</dt>
 				<dd>The projection to use to transform from the raw data index into tiles and bins. Two types are predefined:
 					<ul>
-						<li><em>/binning-utilities/src/main/java/com/oculusinof/binning/impl/AOITilePyramid</em>, which is a linear transformation into an arbitrarily sized space
-						<li><em>/binning-utilities/src/main/java/com/oculusinof/binning/impl/WebMercatorTilePyramid</em>, which is a standard geographical projection
+						<li><em>/binning-utilities/src/main/java/com/oculusinfo/binning/impl/AOITilePyramid</em>, which is a linear transformation into an arbitrarily sized space
+						<li><em>/binning-utilities/src/main/java/com/oculusinfo/binning/impl/WebMercatorTilePyramid</em>, which is a standard geographical projection
 					</ul>
 				</dd>
 
@@ -730,11 +725,6 @@ It accepts the following properties:
 					consolidationPartitions (Optional)
 				</dt>
 				<dd>The number of reducers to use when aggregating data records into bins and tiles. Defaults to the same number of partitions as the original data set. Alter if you encounter problems with the tiling job due to lack of resources.</dd>
-				
-				<dt>
-					<b>isDensityStrip</b>
-				</dt>
-				<dd>Set to true if running a one-dimensional tiling job. Defaults to false.</dd>
 			</dl>
 		</ul>
 	</div>
@@ -755,7 +745,7 @@ tileIO.writeTileSet(tilePyramid,
 				    pyramidDescription)
 ```
 
-**tileIO.writeTileSet** is defined in the following file on line 180: <em>/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/<strong>RDDBinner.scala</strong></em>
+**tileIO.writeTileSet** is defined in the following file on line 181: <em>/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/<strong>RDDBinner.scala</strong></em>
 
 It accepts the following properties:
 
