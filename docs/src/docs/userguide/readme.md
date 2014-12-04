@@ -5,7 +5,7 @@ permalink: docs/userguide/index.html
 layout: submenu
 ---
 
-#User Guide
+# User Guide #
 
 This page is designed for analysts who want to understand how to navigate the Aperture Tiles user interface and use the application to investigate and assess their own data sources.
 
@@ -13,13 +13,13 @@ The look and feel of each Aperture Tiles application is highly dependent on the 
 
 Please note that fully functional example Aperture Tiles applications are available on the the [Demos](../../demos/) page. Copies of these demos are also available for your use in the Aperture Tiles source code.
 
-##<a name="twitter-data"></a>Twitter Latin American Topic Summarization Data
+## <a name="twitter-data"></a> Twitter Latin American Topic Summarization Data ##
 
 The example application described in this User Guide illustrates a heatmap of Twitter messages originating in South American from February to April, 2014. Each tile in the project contains a carousel that summarizes and overlays the top words used in the Tweets covered by that tile. 
 
 <img src="../../img/twitter-sa.png" class="screenshot" alt="Twitter South America" />
 
-##<a name="interface"></a>Interface
+## <a name="interface"></a> Interface ##
 
 The user interface for a typical Aperture Tiles project contains the following components:
 
@@ -29,13 +29,13 @@ The user interface for a typical Aperture Tiles project contains the following c
 - [Description](#int-desc)
 - [Controls](#int-controls)
 
-###<a name="int-map"></a>Map
+### <a name="int-map"></a> Map ###
 
 The map is the canvas upon which your custom data is projected. Aperture tiles supports both geographic and cross plot maps. The map is automatically scaled to show more or less detail depending on the zoom level.
 
 The base map for the Twitter South American data is a Google Maps layer that displays cities and towns, international borders, major roadways, bodies of water and basic elevation data. The project supports nine zoom levels across which varying levels of map detail are displayed. 
 
-###<a name="int-heatmap"></a>Heatmap Layer
+### <a name="int-heatmap"></a> Heatmap Layer ###
 
 The main layer in the Twitter South American project is a heatmap showing the concentration of tweets across South America. The color of the data points on this layer indicate the concentration of tweets in a geographic region, where red is the lowest density of tweets and yellow is the highest.
 
@@ -68,13 +68,13 @@ Clicking on a particular topic on any of the carousel pages refreshes the map to
 
 <img src="../../img/carousel-detail.png" class="screenshot" alt="Tile Carousel Topic Detail" />
 
-###<a name="int-axes"></a>Axes
+### <a name="int-axes"></a> Axes ###
 
 The X and Y axes are labelled to describe the units in your base map. Click either axis to show or hide its units.
 
 <img src="../../img/axis.png" class="screenshot" alt="Axis" />
 
-###<a name="int-desc"></a>Description
+### <a name="int-desc"></a> Description ###
 
 The Description section is an expandable dialog that provides a summary description of your Aperture Tiles application.
 
@@ -82,7 +82,7 @@ It can also be customized to contain basic controls. In the Twitter Topics appli
 
 <img src="../../img/description-expanded.png" class="screenshot" alt="Description" />
 
-###<a name="int-controls"></a>Controls
+### <a name="int-controls"></a> Controls ###
 
 The Controls section is an expandable dialog that contains configurable settings that let you:
 
@@ -96,11 +96,11 @@ You can also use the Controls to change the color scheme (ramp) of your heatmap 
 
 <img src="../../img/controls-settings.png" class="screenshot" alt="Layer Settings" />
 
-##<a name="navigation"></a>Navigation
+## <a name="navigation"></a> Navigation ##
 
 The Aperture Tiles user interface works much like a modern web-based map system. Your source data is projected on a set of tiles in an X/Y cross plot or a geographic map. In either case, your data is aggregated at several zoom levels so you can view the data at a high level or drill down to see more detailed distribution.
 
-###<a name="zoom"></a>Zoom
+### <a name="zoom"></a> Zoom ###
 
 To zoom in on an area you want to investigate, simply double click on it. Alternatively, you can click the **Zoom In** ![Zoom Out](../../img/zoom-in.png) button in the upper right corner of the map.  
 
@@ -108,7 +108,7 @@ To zoom out, click the **Zoom Out** ![Zoom Out](../../img/zoom-out.png) button i
 
 To quickly zoom in or out, use the scroll button on your mouse.
 
-####<a name="zoom-to-city"></a>Zoom to City
+#### <a name="zoom-to-city"></a> Zoom to City ####
 
 To quickly zoom to a major city in South America:
 
@@ -124,7 +124,7 @@ The map is redrawn to show the selected city with a zoom factor of five.
 
 Note that this is customized control that requires specialized code not available in the standard Aperture Tiles template or base libraries.
 
-###<a name="explore"></a>Explore
+### <a name="explore"></a> Explore ###
 
 To view other areas of the map, click and drag in the direction you want to see. Note that you can overscroll from the left side of the map to the right and vice versa.
 

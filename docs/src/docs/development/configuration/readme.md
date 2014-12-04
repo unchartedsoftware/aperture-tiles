@@ -6,7 +6,7 @@ permalink: docs/development/configuration/index.html
 layout: submenu
 ---
 
-# Configuration
+# Configuration #
 
 Once you have generated a tile set from your source data, you should configure and deploy a Tile Server and a Tile Client to make your visual analytic viewable in a web browser. The Tile Server serves tiles from your pyramid, while the Tile Client is a simple web client to view those tiles on a map or plot. 
 
@@ -17,7 +17,7 @@ Note that Aperture Tiles supports two types of tile rendering:
 
 The fastest way to create these the Tile Server and Tile Client is with the Tile Client Template, which contains samples of both. You can also look at the source code for the [tile examples](../../../demos) to understand the structure and configuration of the Tile Server and Tile Client.
 
-## <a name="template-setup"></a>Template Setup
+## <a name="template-setup"></a> Template Setup ##
 
 To begin configuring your Tile Server and Tile Client:
 
@@ -28,7 +28,7 @@ To begin configuring your Tile Server and Tile Client:
 	- `<artifactId>` (line 7): Change from *tile-client-template* to *new-project*
 	- `<name>` (line 10): Enter an appropriate project description. 
 
-## <a name="server-config"></a>Tile Server Configuration
+## <a name="server-config"></a> Tile Server Configuration ##
 
 The Tiler Server in your new template relies on the following configuration files:
 
@@ -37,14 +37,14 @@ The Tiler Server in your new template relies on the following configuration file
 - [Maps](#maps), which defines the base maps on which your data is projected.
 - [Layers](#layers), which defines the individual layers of data that can be overlaid on your base map. The layers file also indicates whether rendering should be performed by the server or the client.
 
-### <a name="webxml"></a>Web XML
+### <a name="webxml"></a> Web XML ###
 
 Edit the **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 
 1. If you performed a custom tile generation, edit the guice-modules parameter to pass in any custom modules you created (e.g., your custom Tile Serialization Factory).
 2. If required, uncomment the relevant Spark lines in the guice-modules to enable live tiling or drill-through to raw data.
 		
-### <a name="tileproperties"></a>Tile Properties
+### <a name="tileproperties"></a> Tile Properties ###
 
 Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as:
 
@@ -54,7 +54,7 @@ Edit the **tile.properties** file in *new-project/src/main/resources/*. This fil
 -  Any JARs you want to add to the Spark context
 -  The location of your map, layer and annotation directories
 
-### <a name="maps"></a>Maps
+### <a name="maps"></a> Maps ###
 
 The maps file describes the base map upon which your source data is projected. Two example map files are provided in the Tile Client Template (`tile-client-template/src/main/resources/maps`):
 
@@ -63,7 +63,7 @@ The maps file describes the base map upon which your source data is projected. T
 
 Choose the appropriate map type and remove the **.example** suffix from the filename. The following sections describe how to edit the **maps.json** for each map type.
 
-#### <a name="cross-plot-maps"></a>Cross Plot Maps
+#### <a name="cross-plot-maps"></a> Cross Plot Maps ####
 
 The following groups of parameters should be configured for your custom cross plot map:
 
@@ -71,7 +71,7 @@ The following groups of parameters should be configured for your custom cross pl
 - [PyramidConfig](#cross-pyramidconfig)
 - [AxisConfig](#cross-axisconfig)
 
-##### <a name="cross-metadata"></a>Metadata
+##### <a name="cross-metadata"></a> Metadata #####
 
 The Metadata parameters uniquely identify the base map.
 
@@ -80,7 +80,7 @@ The Metadata parameters uniquely identify the base map.
 "description": "An example map config for a crossplot-map.",
 ``` 
 
-##### <a name="cross-pyramidconfig"></a>PyramidConfig
+##### <a name="cross-pyramidconfig"></a> PyramidConfig #####
 
 The PyramidConfig parameters describe the minimum and maximum values on the X and Y axes in your cross plot. The values that you provide in this section must match the values in your data source. The `type` should always be set to *AreaOfInterest* for non-geographic cross plot maps. 
 
@@ -96,7 +96,7 @@ The PyramidConfig parameters describe the minimum and maximum values on the X an
 
 Note also that the layer and map pyramid configurations ***must*** match each other.
 
-##### <a name="cross-axisconfig"></a>AxisConfig
+##### <a name="cross-axisconfig"></a> AxisConfig #####
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
@@ -175,7 +175,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 	</div>
 </div>
 
-#### <a name="geographic-maps"></a>Geographic Maps
+#### <a name="geographic-maps"></a> Geographic Maps ####
 
 The following groups of parameters should be configured for your custom geographic map:
 
@@ -185,7 +185,7 @@ The following groups of parameters should be configured for your custom geograph
 - [baseLayer](#geo-baselayer)
 - [AxisConfig](#geo-axisconfig)
 
-##### <a name="geo-metadata"></a>Metadata
+##### <a name="geo-metadata"></a> Metadata #####
 
 The Metadata parameters uniquely identify the base map.
 
@@ -194,11 +194,11 @@ The Metadata parameters uniquely identify the base map.
 "description": "An example map config for a geographic map.",
 ``` 
 
-##### <a name="geo-pyramidconfig"></a>PyramidConfig
+##### <a name="geo-pyramidconfig"></a> PyramidConfig #####
 
 The PyramidConfig `type` parameter should always be set to *WebMercator* for geographic maps.
 
-##### <a name="geo-mapconfig"></a>MapConfig
+##### <a name="geo-mapconfig"></a> MapConfig #####
 
 The MapConfig parameters determine the allowed zoom level and extent of the geographic map.
 
@@ -236,7 +236,7 @@ The MapConfig parameters determine the allowed zoom level and extent of the geog
 	</div>
 </div>
 
-##### <a name="geo-baselayer"></a>BaseLayer
+##### <a name="geo-baselayer"></a> BaseLayer #####
 
 The BaseLayer parameters use map provider APIs to determine what features to include on the base map. In the following example, the Google Maps API is used to define the style of the base map.
 
@@ -290,7 +290,7 @@ The next example shows a TMS layer configuration that uses the Oculus World Grap
 }
 ```
 
-##### <a name="geo-axisconfig"></a>AxisConfig
+##### <a name="geo-axisconfig"></a> AxisConfig #####
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
@@ -355,7 +355,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 	</div>
 </div>
 
-### <a name="layers"></a>Layers
+### <a name="layers"></a> Layers ###
 
 The layers file points to the tiles you created and indicates how they should be displayed on the base map. 
 
@@ -368,7 +368,7 @@ Choose the appropriate layer type and remove the **.example** suffix from the fi
 
 Note that maps with multiple layers can be created by specifying multiple layer descriptions in the *children* section of the **layers.json** file. 
 					
-#### <a name="layer-metadata"></a>Metadata
+#### <a name="layer-metadata"></a> Metadata ####
 
 The Metadata parameters uniquely identify the layer.
 
@@ -395,7 +395,7 @@ The Metadata parameters uniquely identify the layer.
 	</div>
 </div>
 
-#### <a name="layer-pyramid"></a>Pyramid
+#### <a name="layer-pyramid"></a> Pyramid ####
 
 The pyramid parameters describe the extent of the data in the layer.  The values that you provide in this section must match the values in your data source and in your map configuration.
 
@@ -421,7 +421,7 @@ For geographic maps, the `type` should always be set to *WebMercator*. No minimu
 
 Note also that the layer and map pyramid configurations much match each other.
 
-#### <a name="layer-data"></a>Data
+#### <a name="layer-data"></a> Data ####
 
 The data parameters specify the location of the tiles that you created. If you are using HBase, separate parameters are required.
 
@@ -482,7 +482,7 @@ The data parameters specify the location of the tiles that you created. If you a
 	</div>
 </div>
 
-#### <a name="layer-renderers"></a>Renderers
+#### <a name="layer-renderers"></a> Renderers ####
 
 This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data.  The current renderer options are:
 
@@ -563,9 +563,9 @@ This option defines which renderer the server should use to render tiles. The re
 	</div>
 </div>
 
-## <a name="clientconfig"></a>Tile Client Configuration
+## <a name="clientconfig"></a> Tile Client Configuration ##
 
-## <a name="clientside"></a>Client-Side Rendering
+## <a name="clientside"></a> Client-Side Rendering ##
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 

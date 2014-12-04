@@ -21,7 +21,7 @@ Individual tiles are [Avro](http://avro.apache.org/) record objects partitioned 
 
 <img src="../../../img/tile-pyramid-hierarchy.png" class="screenshot" alt="Tile Pyramid" />
 
-## <a name="tile-gen-process"></a>Tile Generation Process ##
+## <a name="tile-gen-process"></a> Tile Generation Process ##
 
 The process of generating a set of Avro tiles from your raw source data is called a tiling job. The tiles created by a job can be served and browsed in any modern Web browser.
 
@@ -61,11 +61,11 @@ You can execute the tile generation process on your source data in any of the fo
 
 Before you run a tiling job, make sure you meet all of the prerequisites listed in the following section.
 
-## <a name="prerequisites"></a>Prerequisites ##
+## <a name="prerequisites"></a> Prerequisites ##
 
 Aperture Tiles uses a distributed framework built on the Apache Spark engine to generate Avro tiles. Before you run a tiling job, you must install and configure Apache Spark and its related prerequisites as described in the following sections.
 
-### <a name="third-party-tools"></a>Third-Party Tools ###
+### <a name="third-party-tools"></a> Third-Party Tools ###
 
 See the [Installation](../installation/#prerequisites) topic for full details on required third-party tools.
 
@@ -80,14 +80,14 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 	  
     - *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version
 
-### <a name="spark-config"></a>Apache Spark Configuration ###
+### <a name="spark-config"></a> Apache Spark Configuration ###
 
 To configure Apache Spark for your installed version of Hadoop, perform one of the following actions:
 
 - [Download](http://spark.apache.org/downloads.html) the correct version directly.
 - If no version is listed for your flavor of Hadoop, [build](http://spark.apache.org/docs/latest/building-with-maven.html) Spark to support it.
 
-#### <a name="spark-script"></a>spark-run Script ####
+#### <a name="spark-script"></a> spark-run Script ####
 
 The Aperture Tiles source code contains a **spark-run** script (in <em>tile-generation/<wbr>scripts/<wbr>spark-run</em>) designed to help you build your tiles. This script only exists in the source code *after* you build Aperture Tiles, as it requires tile generation JAR files to be in your local maven repository. Therefore, to use this script, you must first run the following command:
 
@@ -115,7 +115,7 @@ The script simplifies the process of running Spark jobs by including all the nec
 	</div>
 </div>
 
-## <a name="csvbinner"></a>Standard Tiling Jobs ##
+## <a name="csvbinner"></a> Standard Tiling Jobs ##
 
 A standard Aperture Tiles tiling job uses the CSVBinner tool in the source code to process your numeric, character-separated (e.g., CSV) tabular data and generate a set of tiles. To define the tile set you want to create, you must edit two types of properties files and pass them to the CSVBinner:
 
@@ -137,7 +137,7 @@ dataset-base.bd /data/twitter/dataset.lon.lat.bd
 
 Where the `-d` switch specifies the base properties file path, and each subsequent file path specifies a tiling properties file.
 
-### <a name="base-properties"></a>Base Properties Files ###
+### <a name="base-properties"></a> Base Properties Files ###
 
 The base properties file describes the tiling job, the systems on which it will run and the general characteristics of the source data. The following properties must be defined in the file:
 
@@ -146,7 +146,7 @@ The base properties file describes the tiling job, the systems on which it will 
 - [HBase Connection](#hbase-connection)
 - [Source Data](#source-data)
 
-#### <a name="spark-connection"></a>Spark Connection ####
+#### <a name="spark-connection"></a> Spark Connection ####
 
 The Spark connection properties define the location of the Spark installation that will run the tiling job:
 
@@ -176,7 +176,7 @@ The Spark connection properties define the location of the Spark installation th
 	</div>
 </div>
 
-#### <a name="tile-storage"></a>Tile Storage ####
+#### <a name="tile-storage"></a> Tile Storage ####
 
 The tile storage properties indicate whether the tile set created from your source data should be stored in HBase on your local file system:
 
@@ -211,7 +211,7 @@ The tile storage properties indicate whether the tile set created from your sour
 	</div>
 </div>
 
-#### <a name="hbase-connection"></a>HBase Connection ####
+#### <a name="hbase-connection"></a> HBase Connection ####
 
 If you chose to store your tile set in HBase (i.e., **oculus.tileio.type** is set to *hbase*), these properties define how to connect to HBase:
 
@@ -238,7 +238,7 @@ If you chose to store your tile set in HBase (i.e., **oculus.tileio.type** is se
 	</div>
 </div>
 
-#### <a name="source-data"></a>Source Data ####
+#### <a name="source-data"></a> Source Data ####
 
 The Source Data properties describe the raw data from which you want to create tiles:
 
@@ -339,7 +339,7 @@ The Source Data properties describe the raw data from which you want to create t
 	</div>
 </div>
 
-### <a name="tiling-properties"></a>Tiling Properties Files ###
+### <a name="tiling-properties"></a> Tiling Properties Files ###
 
 The tiling properties files define the tiling job parameters for each layer in your visual analytic, such as which fields to bin on and how values are binned:
 
@@ -451,7 +451,7 @@ The tiling properties files define the tiling job parameters for each layer in y
 	</div>
 </div>
 
-### <a name="examples"></a>Example Properties Files ###
+### <a name="examples"></a> Example Properties Files ###
 
 Several example properties files can be found in the <em>tile-generation/<wbr>data</em> directory.
 
@@ -463,7 +463,7 @@ Several example properties files can be found in the <em>tile-generation/<wbr>da
 	- Tiles are output to HBase
 - **twitter-lon-lat.bd** is a tiling properties file that, in conjunction with either of the base files above, defines a tile set of longitude and latitude data aggregated at 10 levels (0-9).
 
-## <a name="custom-tiling"></a>Custom Tiling Jobs ##
+## <a name="custom-tiling"></a> Custom Tiling Jobs ##
 
 If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and create a tile set. In general, creating custom tile generation code involves the following processes:
 
@@ -480,14 +480,14 @@ Once you have created the required components to perform each process, you shoul
 
 An example of custom code written for tile generation can be found in the Twitter Topics project (<em>tile-examples/<wbr>twitter-topics/</em>), which displays a Twitter message heatmap and aggregates the top words mentioned in tweets for each tile and bin.
 
-### <a name="define-data-structure"></a>Defining Your Data Structure ###
+### <a name="define-data-structure"></a> Defining Your Data Structure ###
 
 The first step in creating custom code for the tile generation process is to decide how your data should be structured, aggregated and written. The following modules are required for this step:
 
 - [Binning Analytic](#binning-analytic), which defines how to process and aggregate your source data 
 - [Serializer](#serializer), which defines how to read and write your source data to the tile set
 
-#### <a name="binning-analytic"></a>Binning Analytic ####
+#### <a name="binning-analytic"></a> Binning Analytic ####
 
 The Binning Analytic is used throughout the tiling process. It should define:
 
@@ -496,7 +496,7 @@ The Binning Analytic is used throughout the tiling process. It should define:
  
 See the following file for an example of a custom Bin Analytic: <em>/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/<wbr><strong>TwitterTopicBinningAnalytic.scala</strong></em>
 
-##### <a name="data-types"></a>Data Types #####
+##### <a name="data-types"></a> Data Types #####
 
 During a tiling job, the Binning Analytic uses two types of data:
 
@@ -534,7 +534,7 @@ The **finish** function:
 
 While the rest of the topics are discarded, they were necessary during processing (e.g., so as to not lose a topic that was eleventh on several different machines -- and hence in the top ten overall).
 
-##### <a name="data-aggregation"></a>Data Aggregation and Record Creation #####
+##### <a name="data-aggregation"></a> Data Aggregation and Record Creation #####
 
 The Binning Analytic defines how data is aggregated. For example, lines 43-48 of **TwitterTopicBinningAnalytic.scala** compare two maps and creates a new map that contains:
 
@@ -550,7 +550,7 @@ def aggregate (a: Map[String, TwitterDemoTopicRecord],
 }
 ```
 
-###### <a name="custom-aggregation"></a>Custom Aggregation Methods ######
+###### <a name="custom-aggregation"></a> Custom Aggregation Methods ######
 
 Lines 96-104  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
@@ -568,7 +568,7 @@ val maxAnalysis:
 
 Standard Bin Analytics are available in: <em>tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>Analytics.scala</strong></em>
 
-#### <a name="serializer"></a>Serializer ####
+#### <a name="serializer"></a> Serializer ####
 
 The Serializer determines how to read and write to the tile set. The Tile Server requires the following supporting classes to use the Serializer:
 
@@ -578,7 +578,7 @@ The Serializer determines how to read and write to the tile set. The Tile Server
 
 See the following sections for examples of each custom Serializer component.
 
-##### <a name="serializer-class"></a>Serializer #####
+##### <a name="serializer-class"></a> Serializer #####
 
 The Serializer implements the <strong>com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<wbr>serialization.<wbr>TileSerializer</strong> interface. To read and write the Avro tiles that are most commonly used, it should inherit from:
 
@@ -607,19 +607,19 @@ The definition of the Avro schema can be based on the template in the following 
 
 <p><em>/binning-utilities/<wbr>src/<wbr>main/<wbr>resources/<wbr><strong>doubleData.avsc</strong></em></p>
 
-##### <a name="serialization-factory"></a>Serialization Factory #####
+##### <a name="serialization-factory"></a> Serialization Factory #####
 
 The Serialization Factory gets configuration information (e.g., the Avro compression codec) and hands back the serializer of choice when needed. It also produces the factory and can be injected by Guice.
 
 <p><em>/tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>init/<strong>TwitterTileSerializationFactory.java</strong></em></p>
 
-##### <a name="serialization-factory-module"></a>Serialization Factory Module #####
+##### <a name="serialization-factory-module"></a> Serialization Factory Module #####
 
 The Factory Module tells Guice which factory providers to use to create serialization factories.
 
 <p><em>/tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>init/<wbr><strong>TwitterSerializationFactoryModule.java</strong></em></p>
 
-### <a name="binning-your-data"></a>Binning Your Data ###
+### <a name="binning-your-data"></a> Binning Your Data ###
 
 There are three steps in binning your data:
 
@@ -629,7 +629,7 @@ There are three steps in binning your data:
 
 See the following file for an example of a custom Binner: <em>/tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>tilegen/<wbr><strong>TwitterTopicBinner.scala</strong></em>
 
-#### <a name="parsing-data"></a>Parsing your Data ####
+#### <a name="parsing-data"></a> Parsing your Data ####
 
 The Binner expects your data as pairs of **(index, record)**, where:
 
@@ -672,7 +672,7 @@ val data = rawDataWithTopics.mapPartitions(i =>
 data.cache
 ```
 
-#### <a name="binning"></a>Binning ####
+#### <a name="binning"></a> Binning ####
 
 Lines 202 - 210 of **TwitterTopicBinner.scala** transform the data into tiles:
 
@@ -760,7 +760,7 @@ It accepts the following properties:
 	</div>
 </div>
 
-#### <a name="writing-tiles"></a>Writing Tiles ####
+#### <a name="writing-tiles"></a> Writing Tiles ####
 
 Lines 211 - 218 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
 
@@ -828,7 +828,7 @@ It accepts the following properties:
 	</div>
 </div>
 
-## <a name="bin-visualizer"></a>Testing the Output of Your Tiling Jobs ##
+## <a name="bin-visualizer"></a> Testing the Output of Your Tiling Jobs ##
 
 A utility for testing the output of tiling jobs is included in the Aperture Tiles source code. The Bin Visualizer, which can be run as a Java application, displays basic visual representations of the individual Avro tiles in your tile set pyramid. This can help you quickly identify problems with your tiling job before you deploy your application. The Bin Visualizer currently only supports heatmap layers.
 
