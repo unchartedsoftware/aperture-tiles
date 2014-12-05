@@ -118,15 +118,32 @@ Example:
 
 ```json
 {
-	tile : {
-		level: 3,
-		xIndex: 12,
-		yIndex: 6
+	index : {
+		level: 7,
+		xIndex: 8,
+		yIndex: 4
 	},
-	annotations : {
-		"[0,0]": [ … ],
-		"[1,0]": [ … ],
-		… 
+	tile : {
+		values: [
+			{
+				value: [
+					level: 7,
+					x: 73.35,
+					y: -125.6,
+					range: {
+						min: 0,
+						max: 9
+					}
+					group: "Urgent",   
+					data: {
+						comment: … ,
+						author: … ,
+						date: … 
+					},
+					certificate: { … }
+				]
+			}
+		]
 	}
 }
 ```
