@@ -44,7 +44,6 @@ import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
@@ -431,7 +430,7 @@ object SortedBinnerTest {
 		}
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
-		val sc = connector.getSparkContext("Pyramid Binning")
+		val sc = connector.createContext(Some("Pyramid Binning"))
 		val tileIO = getTileIO(defaultProperties)
 
 		// Run for each real properties file

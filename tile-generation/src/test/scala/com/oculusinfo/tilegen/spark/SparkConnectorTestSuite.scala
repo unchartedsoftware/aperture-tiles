@@ -26,25 +26,42 @@ package com.oculusinfo.tilegen.spark
 
 
 
-import java.util.Properties
-
-import org.scalatest.FunSuite
-
-
+import org.scalatest._
 
 
 class SparkConnectorTestSuite extends FunSuite {
-	test("Default Connection Libraries") {
-		val references = SparkConnector.getDefaultLibrariesFromMaven
-		references.foreach(reference =>
-			{
-				val last = reference.toString.split("/").reverse.head
-				println("Checking library "+last
-					        +" for obvious version problems")
-				assert(!last.contains("0.0.1-SNAPSHOT"))
-				assert(!last.contains("{"))
-				assert(!last.contains("}"))
-			}
-		)
+
+	test("Create connector with arguments") {
+		val connector = new SparkConnector(Map("spark.app.name" -> "someName", "spark.home" -> "opt/spark"))
+		assertResult(Some("someName")) {
+			connector.getConfProperty("spark.app.name")
+		}
+		assertResult(Some("opt/spark")) {
+			connector.getConfProperty("spark.home")
+		}
 	}
+
+	test("add conf property to connector") {
+		val connector = new SparkConnector(Map("spark.app.name" -> "someName"))
+		connector.setConfProperty("spark.home", "opt/spark")
+		assertResult(Some("opt/spark")) {
+			connector.getConfProperty("spark.home")
+		}
+	}
+
+	test("get non-existant conf property from connector") {
+		val connector = new SparkConnector(Map("spark.app.name" -> "someName", "spark.home" -> "opt/spark"))
+		assertResult(None) {
+			connector.getConfProperty("spark.missing.parm")
+		}
+	}
+
+	test("create context with job name") {
+		val connector = new SparkConnector(Map("spark.app.name" -> "someJob", "spark.master" -> "local"))
+		connector.createContext(Some("someOtherJob"))
+		assertResult(Some("someOtherJob")) {
+			connector.getConfProperty("spark.app.name")
+		}
+	}
+
 }

@@ -110,7 +110,7 @@ dependencies {
 	compile "org.scala-lang:scala-library:$scalaVersion"
 	compile project(":binning-utilities")
 	compile project(":geometric-utilities")
-	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:1.9.1"	
+	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
 	
 	// Call for special handling for hbase dependencies - see top level build file for
 	// definition and explanation.

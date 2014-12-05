@@ -30,7 +30,6 @@ package com.oculusinfo.tilegen.util
 import scala.collection.mutable.{Map => MutableMap}
 
 import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 
 
 class MissingArgumentException (message: String, cause: Throwable)
@@ -524,25 +523,12 @@ abstract class KeyValueArgumentSource {
 	// Complex argument functions
 	// These functions standardize some arguments across applications
 	//
-	def getSparkConnector (jars: Seq[Object] = SparkConnector.getDefaultLibraries): SparkConnector = {
+	def getSparkConnector(): SparkConnector = {
 		val sparkArgs = properties.filter(kv =>
 			{
 				kv._1.startsWith("spark") && "spark" != kv._1 && "sparkhome" != kv._1
 			}
 		)
-		new GeneralSparkConnector(
-			// Only set a master when it has been passed in.  This lets the default
-			// value specified in spark-conf get picked up when no master is specified.
-			getStringOption("spark",
-			                "Spark master location (defaults to externally set value ie. spark-conf)"),
-			getString("sparkhome",
-			          "Spark home location (defaults to ${SPARK_HOME}",
-			          Some(System.getenv("SPARK_HOME"))),
-			Some(getString("user",
-			               "spark user name (defaults to login name)",
-			               Some(System.getProperty("user.name")))),
-			jars,
-			sparkArgs
-		)
+		new SparkConnector(sparkArgs)
 	}
 }

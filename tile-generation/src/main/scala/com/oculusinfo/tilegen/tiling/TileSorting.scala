@@ -46,7 +46,7 @@ object TileSortingTest {
 
 
 		val connector = argParser.getSparkConnector()
-		val sc = connector.getSparkContext("Test Pyramid Sort")
+		val sc = connector.createContext(Some("Test Pyramid Sort"))
 
 		val source = argParser.getString("s", "source location")
 		val destination = argParser.getString("d", "destination location")

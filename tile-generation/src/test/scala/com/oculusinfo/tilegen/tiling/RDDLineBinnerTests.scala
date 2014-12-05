@@ -49,7 +49,7 @@ import com.oculusinfo.tilegen.util.EndPointsToLine
 
 
 
-case class SegmentIndexScheme extends IndexScheme[Segment] with Serializable {
+case class SegmentIndexScheme() extends IndexScheme[Segment] with Serializable {
 	def toCartesian (segment: Segment) = (segment.p0x, segment.p0y)
 			def toCartesianEndpoints (segment: Segment) = (segment.p0x, segment.p0y, segment.p1x, segment.p1y)
 }
