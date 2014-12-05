@@ -69,20 +69,20 @@ Example:
 
 ```json
 {
-    "level": 6,
-    "x": 73.35,
-    "y": -125.6,
-    "range": {
-        "min": 0,
-        "max": 6
+    level: 6,
+    x: 73.35,
+    y: -125.6,
+    range: {
+        min: 0,
+        max: 6
     }
-    "group": "Urgent",   
-    "data": {
-        "comment": … ,
-        "author": … ,
-        "date": … 
+    group: "Urgent",   
+    data: {
+        comment: … ,
+        author: … ,
+        date: … 
     },
-    "certificate": { … }
+    certificate: { … }
 }
 ```
 
@@ -118,12 +118,12 @@ Example:
 
 ```json
 {
-	"tile" : {
-		"level": 3,
-		"xIndex": 12,
-		"yIndex": 6
+	tile : {
+		level: 3,
+		xIndex: 12,
+		yIndex: 6
 	},
-	"annotations" : {
+	annotations : {
 		"[0,0]": [ … ],
 		"[1,0]": [ … ],
 		… 
@@ -163,8 +163,8 @@ Example:
 
 ```json
 {
-    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "timestamp": "1401830862"
+    uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    timestamp: "1401830862"
 }
 ```
 
@@ -284,29 +284,29 @@ Example response:
 
 ```json
 {
-	"index" : {
-		"level": 7,
-		"xIndex": 8,
-		"yIndex": 4
+	index : {
+		level: 7,
+		xIndex: 8,
+		yIndex: 4
 	},
-	"tile" : {
-		"values": [
+	tile : {
+		values: [
 			{
 				value: [
-					"level": 7,
-					"x": 73.35,
-					"y": -125.6,
-					"range": {
-						"min": 0,
-						"max": 9
+					level: 7,
+					x: 73.35,
+					y: -125.6,
+					range: {
+						min: 0,
+						max: 9
 					}
-					"group": "Urgent",   
-					"data": {
-						"comment": … ,
-						"author": … ,
-						"date": … 
+					group: "Urgent",   
+					data: {
+						comment: … ,
+						author: … ,
+						date: … 
 					},
-					"certificate": { … }
+					certificate: { … }
 				]
 			}
 		]
@@ -438,21 +438,21 @@ POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 
 ```json
 {
-    "type": "write"
-    "layer": , "annotation-test-layer-id",
-    "annotation": {
-        "level": 6,
-        "x": 73.35,
-        "y": -125.6,
-        "range": {
-            "min": 0,
-            "max": 6
+    type: "write"
+    layer: , "annotation-test-layer-id",
+    annotation: {
+        level: 6,
+        x: 73.35,
+        y: -125.6,
+        range: {
+            min: 0,
+            max: 6
         }
-        "group": "Urgent",   
-        "data": {
-            "comment": … ,
-            "author": … ,
-            "date": … 
+        group: "Urgent",   
+        data: {
+            comment: … ,
+            author: … ,
+            date: … 
         }
     }
 }
@@ -462,8 +462,8 @@ Example response:
 
 ```json
 {
-    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "timestamp": "1401830862"
+    uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    timestamp: "1401830862"
 }
 ```
 
@@ -591,25 +591,25 @@ POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 
 ```json
 {
-    "type": "write"
-    "layer": , "annotation-test-layer-id",
-    "annotation" : {
-        "level": 6,
-        "x": 73.35,
-        "y": -125.6,
-        "range": {
-            "min": 0,
-            "max": 6
+    type: "write"
+    layer: , "annotation-test-layer-id",
+    annotation : {
+        level: 6,
+        x: 73.35,
+        y: -125.6,
+        range: {
+            min: 0,
+            max: 6
         }
-        "group": "Urgent",   
-        "data": {
-            "comment": … ,
-            "author": … ,
-            "date": … 
+        group: "Urgent",   
+        data: {
+            comment: … ,
+            author: … ,
+            date: … 
         },
-        "certificate": {
-             "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-            "timestamp": "1401830862"
+        certificate: {
+            uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+            timestamp: "1401830862"
         }      
     }
 }
@@ -619,8 +619,8 @@ Example response:
 
 ```json
 {
-    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "timestamp": "1401830862"
+    uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    timestamp: "1401830862"
 }
 ```
 
@@ -748,11 +748,11 @@ POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 
 ```json
 {
-    "type": "write"
-    "layer": , "annotation-test-layer-id",
-    "certificate": {
-        "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "timestamp": "1401830862"
+    type: "write"
+    layer: , "annotation-test-layer-id",
+    certificate: {
+        uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        timestamp: "1401830862"
     }
 }
 ```

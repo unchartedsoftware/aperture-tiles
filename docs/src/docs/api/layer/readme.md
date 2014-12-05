@@ -15,10 +15,10 @@ All server configurations adhere to the following general format:
 ```json
 [ 
 	{
-		"id": "...",
-		"public": {
+		id: "...",
+		public: {
 		}
-		"private" :{
+		private :{
 		}	
 	}
 ]
@@ -31,16 +31,16 @@ The minimal required fields are:
 ```json
 [ 
 	{
-		"id": "...",
-		"public": {
-			"pyramid": {
-				"type": "...."
+		id: "...",
+		public: {
+			pyramid: {
+				type: "...."
 			}
 		}
-		"private" :{
-			"data" : {
-               	"id": "...",
-               	"pyramidio" : {
+		private :{
+			data : {
+               	id: "...",
+               	pyramidio : {
 					...
                 }
             }
@@ -107,27 +107,27 @@ Example response:
 {
 	layers: [
 		{
-			"id": "instagram-heatmap",
-			"version": "v1.0",
-        	"pyramid": {
-            	"type": "WebMercator"
+			id: "instagram-heatmap",
+			version: "v1.0",
+        	pyramid: {
+            	type: "WebMercator"
 			}
-			"meta": { … },
-			renderer" : {
-				"ramp": "spectral",
-				"coarseness": 2
+			meta: { … },
+			renderer : {
+				ramp: "spectral",
+				coarseness: 2
 			},
-			"valueTransform": {
-				"type": "log10"
+			valueTransform: {
+				type: "log10"
 			}
 		},
 		{
-			"id": "instagram-keyword-heatmap",
-			"version": "v1.0",
-        	"pyramid": {
-            	"type": "WebMercator"
+			id: "instagram-keyword-heatmap",
+			version: "v1.0",
+        	pyramid: {
+            	type: "WebMercator"
         	},
-			"meta": { … }
+			meta: { … }
 		}
 	],
 	version: "v1.0"
@@ -187,21 +187,21 @@ Example response:
 ```json
 {
 	layer: {
-		“id”: "instagram-heatmap",
-		“version”: “v1.0”,
-		"pyramid": {
-			"type": "WebMercator"
+		id: "instagram-heatmap",
+		version: "v1.0",
+		pyramid: {
+			type: "WebMercator"
 		 }
-		“meta”: { … },
-		renderer” : {
-			“ramp”: “spectral”,
-			“coarseness”: 2
+		meta: { … },
+		renderer : {
+			ramp: "spectral",
+			coarseness: 2
 		},
-		“valueTransform”: {
-			“type”: “log10”
+		valueTransform: {
+			type: "log10"
 		}
 	},
-	version: “v1.0”
+	version: "v1.0"
 }
 ```
 
@@ -267,8 +267,8 @@ Example response:
 
 ```json
 {
-	version: “v1.0”,
-	state: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	version: "v1.0",
+	state: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 }
 
 ```
@@ -325,92 +325,92 @@ Example response:
 
 ```json
 {  
-   "default":{  
-      "tileTransform":{  
-         "type":"identity"
+   default:{  
+      tileTransform:{  
+         type:"identity"
       },
-      "pyramid":{  
-         "maxY":0,
-         "maxX":0,
-         "type":"WebMercator",
-         "minX":0,
-         "minY":0
+      pyramid:{  
+         maxY:0,
+         maxX:0,
+         type:"WebMercator",
+         minX:0,
+         minY:0
       },
-      "valueTransform":{  
-         "min":5e-324,
-         "max":1.7976931348623157e+308,
-         "layerMax":0,
-         "layerMin":0,
-         "type":"linear"
+      valueTransform:{  
+         min:5e-324,
+         max:1.7976931348623157e+308,
+         layerMax:0,
+         layerMin:0,
+         type:"linear"
       },
-      "renderer":{  
-         "to":"0x000000",
-         "halign":0.5,
-         "from-alpha":-1,
-         "theme":"dark",
-         "to-alpha":-1,
-         "from":"0xffffff",
-         "type":"heatmap",
-         "ramp":"spectral",
-         "coarseness":1,
-         "rangeMin":0,
-         "opacity":1,
-         "rangeMax":100,
-         "components":[  
+      renderer:{  
+         to:"0x000000",
+         halign:0.5,
+         from-alpha:-1,
+         theme:"dark",
+         to-alpha:-1,
+         from:"0xffffff",
+         type:"heatmap",
+         ramp:"spectral",
+         coarseness:1,
+         rangeMin:0,
+         opacity:1,
+         rangeMax:100,
+         components:[  
 
          ],
-         "valign":0.5,
-         "public":{  
-            "renderer":{  
+         valign:0.5,
+         public:{  
+            renderer:{  
 
             }
          },
-         "gradients":[  
+         gradients:[  
 
          ]
       }
    },
-   "e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031":{  
-      "tileTransform":{  
-         "type":"identity"
+   e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031:{  
+      tileTransform:{  
+         type:"identity"
       },
-      "pyramid":{  
-         "maxY":0,
-         "maxX":0,
-         "type":"WebMercator",
-         "minX":0,
-         "minY":0
+      pyramid:{  
+         maxY:0,
+         maxX:0,
+         type:"WebMercator",
+         minX:0,
+         minY:0
       },
-      "valueTransform":{  
-         "min":5e-324,
-         "max":1.7976931348623157e+308,
-         "layerMax":0,
-         "layerMin":0,
-         "type":"linear"
+      valueTransform:{  
+         min:5e-324,
+         max:1.7976931348623157e+308,
+         layerMax:0,
+         layerMin:0,
+         type:"linear"
       },
-      "renderer":{  
-         "to":"0x000000",
-         "halign":0.5,
-         "from-alpha":-1,
-         "theme":"dark",
-         "to-alpha":-1,
-         "from":"0xffffff",
-         "type":"heatmap",
-         "ramp":"hot",
-         "coarseness":1,
-         "rangeMin":0,
-         "opacity":1,
-         "rangeMax":100,
-         "components":[  
+      renderer:{  
+         to:"0x000000",
+         halign:0.5,
+         from-alpha:-1,
+         theme:"dark",
+         to-alpha:-1,
+         from:"0xffffff",
+         type:"heatmap",
+         ramp:"hot",
+         coarseness:1,
+         rangeMin:0,
+         opacity:1,
+         rangeMax:100,
+         components:[  
 
          ],
-         "valign":0.5,
-         "public":{  
-            "renderer":{  
+         valign:0.5,
+         public:{  
+            renderer:{  
 
             }
          },
-         "gradients":[  
+         gradients:[  
 
          ]
       }

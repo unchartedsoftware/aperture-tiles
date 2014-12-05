@@ -41,7 +41,7 @@ Returns a tile for a given layer at the specified level and index.
 					<tr class='item2'>
 						<td class="attributes">Params</td>
 						<td class="nameDescription">
-							<div class="description">Encoded json representing overrides to the “public” node of the server configuration JSON.
+							<div class="description">Encoded json representing overrides to the "public" node of the server configuration JSON.
 <pre>{ 
 	renderer: {
 		type: …,
