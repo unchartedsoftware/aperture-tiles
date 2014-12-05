@@ -1,0 +1,13 @@
+.classpath
+.idea
+.project
+.settings
+.cache
+.gradle
+target
+*.iml
+*.*~
+*~
+build/*
+bower_components/*
+node_modules/*
