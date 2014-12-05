@@ -1,7 +1,7 @@
 ---
 section: Docs
 subtitle: API
-chapter: Tile Service
+chapter: Tile
 permalink: docs/api/tile/index.html
 layout: submenu
 ---

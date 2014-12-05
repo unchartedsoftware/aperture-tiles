@@ -1,7 +1,7 @@
 ---
 section: Docs
 subtitle: API
-chapter: Layer Services
+chapter: Layer
 permalink: docs/api/layer/index.html
 layout: submenu
 ---

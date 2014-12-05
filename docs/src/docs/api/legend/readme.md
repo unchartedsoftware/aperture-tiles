@@ -1,7 +1,7 @@
 ---
 section: Docs
 subtitle: API
-chapter: Legend Services
+chapter: Legend
 permalink: docs/api/legend/index.html
 layout: submenu
 ---
