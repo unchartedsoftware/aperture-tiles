@@ -526,7 +526,7 @@ abstract class KeyValueArgumentSource {
 	def getSparkConnector(): SparkConnector = {
 		val sparkArgs = properties.filter(kv =>
 			{
-				kv._1.startsWith("spark") && "spark" != kv._1 && "sparkhome" != kv._1
+				kv._1.startsWith("spark") || kv._1.startsWith("akka")
 			}
 		)
 		new SparkConnector(sparkArgs)

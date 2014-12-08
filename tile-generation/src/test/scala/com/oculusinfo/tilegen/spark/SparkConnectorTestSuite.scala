@@ -49,14 +49,14 @@ class SparkConnectorTestSuite extends FunSuite {
 		}
 	}
 
-	test("get non-existant conf property from connector") {
+	test("get non-existent conf property from connector") {
 		val connector = new SparkConnector(Map("spark.app.name" -> "someName", "spark.home" -> "opt/spark"))
 		assertResult(None) {
 			connector.getConfProperty("spark.missing.parm")
 		}
 	}
 
-	test("create context with job name") {
+	test("create context with job name override") {
 		val connector = new SparkConnector(Map("spark.app.name" -> "someJob", "spark.master" -> "local"))
 		connector.createContext(Some("someOtherJob"))
 		assertResult(Some("someOtherJob")) {
