@@ -28,7 +28,7 @@
 
     "use strict";
 
-    var OpenLayers = require('../openlayers/OpenLayers.min'),
+    var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         $ = require('jquery');
 
     OpenLayers.Tile.HTML = function() {
@@ -89,6 +89,24 @@
             this.unload();
         }
         return shouldDraw;
+    };
+
+    OpenLayers.Tile.HTML.prototype.createBackBuffer = function() {
+        return null;
+        /*
+        if ( !this.div || this.isLoading ) {
+            return;
+        }
+        var backBuffer;
+        if ( this.frame ) {
+            backBuffer = this.frame.cloneNode(false);
+            backBuffer.appendChild( this.div );
+        } else {
+            backBuffer = this.div;
+        }
+        this.div = null;
+        return backBuffer;
+        */
     };
 
     OpenLayers.Tile.HTML.prototype.positionTile = function() {

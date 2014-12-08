@@ -16,10 +16,12 @@ div.olLayerDiv {
 
 .olLayerGrid .olTileImage {
     pointer-events: none;
+    -webkit-backface-visibility: hidden;
 }
 
 .olLayerGrid .olTileHtml {
     pointer-events: none;
+    -webkit-backface-visibility: hidden;
 }
 
 .olLayerGoogleCopyright {

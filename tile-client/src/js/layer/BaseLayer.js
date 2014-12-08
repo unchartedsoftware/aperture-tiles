@@ -28,7 +28,7 @@
 
 	"use strict";
 
-	var OpenLayers = require('../openlayers/OpenLayers.min'),
+	var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         Layer = require('./Layer');
         
 	function BaseLayer( spec ) {

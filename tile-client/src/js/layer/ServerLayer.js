@@ -27,7 +27,7 @@
 
     "use strict";
 
-    var OpenLayers = require('../openlayers/OpenLayers.min'),
+    var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         $ = require('jquery'),
         _ = require('lodash'),
         Layer = require('./Layer'),

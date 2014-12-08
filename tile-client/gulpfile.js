@@ -132,9 +132,12 @@ gulp.task('build-js', [ 'lint' ], function() {
     return build();
 });
 
-gulp.task('default', [ 'clean' ], function() {
-	 gulp.start( 'build-js' );
-   gulp.start( 'build-min-js' );
-   gulp.start( 'build-css' );
-   gulp.start( 'build-min-css' );
+gulp.task('build', [ 'clean' ], function() {
+    gulp.start( 'build-js' );
+    gulp.start( 'build-min-js' );
+    gulp.start( 'build-css' );
+    gulp.start( 'build-min-css' );
+});
+
+gulp.task('default', [ 'build' ], function() {
 });

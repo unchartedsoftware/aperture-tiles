@@ -27,7 +27,7 @@
 
 	"use strict";
 
-	var OpenLayers = require('../openlayers/OpenLayers.min'),
+	var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         $ = require('jquery'),
         _ = require('lodash'),
         Axis = require('./Axis'),
@@ -283,8 +283,12 @@
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
 
+        // disable animated pan
+        //OpenLayers.Control.DragPan.prototype.enableKinetic = false;
+
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
+            theme: null, // prevent OpenLayers from checking for default css
             projection: new OpenLayers.Projection( spec.options.projection || "EPSG:900913" ),
             displayProjection: new OpenLayers.Projection( spec.options.displayProjection || "EPSG:4326" ),
             maxExtent: OpenLayers.Bounds.fromArray( spec.options.maxExtent || [
@@ -293,6 +297,12 @@
 				20037508.342789244,
 				20037508.342789244
             ]),
+            /*
+            tileManager: null,
+            transitionEffect: null,
+            zoomMethod: null,
+            panMethod: null,
+            */
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [

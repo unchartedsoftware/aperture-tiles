@@ -27,7 +27,7 @@
 
     "use strict";
 
-    var OpenLayers = require('../openlayers/OpenLayers.min'),
+    var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         HtmlTile = require('./HtmlTile');
 
     OpenLayers.Layer.HTML = function( name, url, options ) {
