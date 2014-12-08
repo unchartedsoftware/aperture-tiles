@@ -72,8 +72,8 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 - **Languages**:
 	- *Scala* version 2.10.3
 - **Cluster Computing**:
-	- *Apache Spark* version 0.9.0 or greater (version 1.0.0 recommended).<p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
-	- *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version
+	- *Apache Spark* version 1.0.0 or greater.<p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
+	- *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version. <p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the automatically installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</p>
 
 ### <a name="spark-config"></a> Apache Spark Configuration ###
 
