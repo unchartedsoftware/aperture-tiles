@@ -551,7 +551,7 @@ This option defines which renderer the server should use to render tiles. The re
 
 ## <a name="clientconfig"></a> Tile Client Configuration ##
 
-## <a name="clientside"></a> Client-Side Rendering ##
+### <a name="clientside"></a> Client-Side Rendering ###
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 

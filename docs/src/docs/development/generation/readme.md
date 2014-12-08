@@ -13,7 +13,7 @@ Using a distributed framework built on the Apache Spark engine, Aperture Tiles e
 
 The following sections describe how you can generate a tile pyramid from your raw data using tools built in to the Aperture Tiles source code or by creating your own custom generation code. Also included are instructions for testing the output of your tiling job before you deploy your application.
 
-## Understanding the Tile Pyramid Hierarchy ##
+## <a name="pyramid-hierarchy"></a> Understanding the Tile Pyramid Hierarchy ##
 
 At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to <em>4<sup>z</sup></em> tiles, where *z* is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row-wise across the base map or plot, starting at the lower left. Each tile summarizes the data in the region of the base map/plot to which it corresponds.
 
