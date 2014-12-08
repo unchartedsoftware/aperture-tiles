@@ -2,7 +2,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>tile-client</artifactId>
-	<packaging>war</packaging>
 	<name>Aperture-Tiles Web Client</name>
 	<url>http://github.com/oculusinfo/aperture-tiles</url>
 	<description>
@@ -16,108 +15,50 @@
 		<version>0.4-SNAPSHOT</version>
 	</parent>
 
-	<dependencies>
-
-		<dependency>
-			<groupId>com.oculusinfo</groupId>
-			<artifactId>tile-service</artifactId>
-			<version>${project.version}</version>
-			<type>war</type>
-		</dependency>
-
-		<dependency>
-			<groupId>com.oculusinfo</groupId>
-			<artifactId>annotation-service</artifactId>
-			<version>${project.version}</version>
-			<!--<type>war</type>-->
-		</dependency>
-
-	</dependencies>
-
 	<build>
-		<finalName>${project.artifactId}</finalName>
-
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.1.1</version>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
 				<configuration>
-					<overlays>
-						<overlay>
-							<groupId>com.oculusinfo</groupId>
-							<artifactId>tile-service</artifactId>
-						</overlay>
-					</overlays>
+				    <followSymLinks>false</followSymLinks>
+				    <filesets>
+				        <fileset>
+				            <directory>${basedir}/build</directory>
+				        </fileset>
+				    </filesets>
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>com.googlecode.jslint4java</groupId>
-				<artifactId>jslint4java-maven-plugin</artifactId>
-				<version>2.0.5</version>
+			  	<groupId>org.codehaus.mojo</groupId> 
+				<artifactId>exec-maven-plugin</artifactId> 
+				<version>1.1.1</version> 
 				<executions>
-					<execution>
-						<id>lint</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>lint</goal>
-						</goals>
-						<configuration>
-							<failOnError>true</failOnError>
-							<sourceFolders>
-								<sourceFolder>${project.basedir}/src/main/webapp/js</sourceFolder>
-							</sourceFolders>
-							<excludes>
-								<exclude>libjs/**/*.js</exclude>
-							</excludes>
-							<options>
-								<!-- Predefined constants. Others can be defined in file directives -->
-								<predef>jQuery, $, aperture, require, define, _, OpenLayers</predef>
-								<browser>true</browser>
-								<!-- allows use of the 'continue' statement -->
-								<continue>true</continue>
-								<devel>true</devel>
-								<!-- allow comments with TODO in them. -->
-								<todo>true</todo>
-								<!-- allows names that start with underscore -->
-								<nomen>true</nomen>
-								<!-- allows sloppy whitespace - would take forever to fix... -->
-								<white>true</white>
-								<!-- allows unused method parameters. On the fence here. I feel that 
-								     if you are implementing a callback, then the parameters should appear, even 
-								     if you don't use them. -->
-								<unparam>true</unparam>
-								<!-- Allow increment and decrement operators -->
-								<plusplus>true</plusplus>
-								<!-- Allow bitwise operators -->
-								<bitwise>true</bitwise>
-							</options>
-						</configuration>
-					</execution>
+				    <execution>
+			          	<id>exec-npm-install</id>
+			          	<phase>generate-sources</phase>
+			          	<configuration>
+			            	<executable>npm</executable>
+			            	<arguments>
+			              		<argument>install</argument>
+			            	</arguments>
+			          	</configuration>
+			          	<goals>
+			            	<goal>exec</goal>
+			          	</goals>
+			        </execution>
+			        <execution>
+			          	<id>exec-gulp</id>
+			          	<phase>generate-sources</phase>
+			          	<configuration>
+			            	<executable>gulp</executable>
+			          	</configuration>
+			          	<goals>
+			            	<goal>exec</goal>
+			          	</goals>
+			        </execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<!-- Jetty For Dev Builds Only -->
-				<groupId>org.mortbay.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>${jetty-version}</version>
-				<configuration>
-					<webAppConfig>
-						<contextPath>/${project.artifactId}</contextPath>
-						<baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
-							Use the development (source) code
-							<resourcesAsCSV>src/main/webapp,${project.build.directory}/${project.build.finalName}</resourcesAsCSV>
-						</baseResource>
-					</webAppConfig>        
-				</configuration>
-
-				<dependencies>
-					<dependency>
-						<groupId>org.eclipse.jetty</groupId>
-						<artifactId>jetty-server</artifactId>
-						<version>${jetty-version}</version>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>

@@ -16,11 +16,17 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.oculusinfo</groupId>
-      <artifactId>tile-client</artifactId>
-      <version>${project.version}</version>
-      <type>war</type>
-    </dependency>
+		<groupId>com.oculusinfo</groupId>
+		<artifactId>tile-service</artifactId>
+		<version>${project.version}</version>
+		<type>war</type>
+	</dependency>
+	<dependency>
+		<groupId>com.oculusinfo</groupId>
+		<artifactId>annotation-service</artifactId>
+		<version>${project.version}</version>
+		<type>war</type>
+	</dependency>
     <dependency>
       <groupId>com.oculusinfo</groupId>
       <artifactId>twitter-topics-utilities</artifactId>
@@ -30,23 +36,6 @@
 
   <build>
     <finalName>twitter-topics</finalName>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <targetPath>../jettyFilteredResources</targetPath>
-        <filtering>true</filtering>
-        <includes>
-          <include>aperture-config.json</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>false</filtering>
-        <excludes>
-        	<exclude>aperture-config.json</exclude>
-        </excludes>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
 		<groupId>org.apache.maven.plugins</groupId>
@@ -56,20 +45,9 @@
           <webResources>
             <resources>
               <directory>src/main/resources</directory>
-              <targetPath>data</targetPath>
-              <filtering>true</filtering>
-              <includes>
-		  		<include>aperture-config.json</include>
-			  </includes>
             </resources>
           </webResources>
       	  <warName>twitter-topics</warName>
-	  	  <overlays>
-	    	<overlay>
-	      	  <groupId>com.oculusinfo</groupId>
-	      	  <artifactId>tile-client</artifactId>
-	    	</overlay>
-	  	  </overlays>
 		</configuration>
       </plugin>
       <plugin>
@@ -81,13 +59,6 @@
 	  	  <webAppConfig>
 	    	<contextPath>/twitter-topics</contextPath>
 	    	<baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
-	      			Use the development (source) code
-	      	  <resourcesAsCSV>
-                src/main/webapp,
-                ../../../tile-client/src/main/webapp,
-                ${project.build.directory}/jettyFilteredResources,
-                ${project.build.directory}/${project.build.finalName}
-              </resourcesAsCSV>
 	        </baseResource>
 	  	  </webAppConfig>	
 	    </configuration>
