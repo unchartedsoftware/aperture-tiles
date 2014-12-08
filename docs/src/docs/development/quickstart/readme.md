@@ -20,47 +20,19 @@ At the end of this guide you will have successfully created an example Aperture 
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
-There are two ways you can begin this Quick Start example:
+To begin this Quick Start example, you must perform the following steps:
 
-1. You can download a [virtual machine](#virtual-machine) (VM) preloaded with the third-party tools needed to perform the tile generation and web application deployment.
-2. You can manually install all of the third-party tools on your [local system](#local-system).
+1. Download and install the necessary [third-party tools](#third-party-tools).
+2. Download and install the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities).
+3. Set the [Spark environment variables](#environment-variables).
+4. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
-Once you have a machine configured with all of the third-party prerequisites, you must perform the following steps:
+### <a name="third-party-tools"></a> Third-Party Tools ###
 
-1. Download and install the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities).
-2. Set the [Spark environment variables](#environment-variables).
-3. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
+Aperture Tiles requires the following third-party tools on your local system:
 
-### <a name="virtual-machine"></a> Virtual Machine ##
-
-We have created a virtual machine that has been preconfigured with the third-party tools needed to walk through this Quick Start example. To use this virtual machine:
-
-1. Download and install [Oracle VM VirtualBox](https://www.virtualbox.org/).
-2. Save the virtual machine on the [Download](../../../download/) page to your local system.
-3. Open Oracle VM VirtualBox and select **Import Appliance** from the **File** menu.
-4. Browse to the location of the virtual machine you downloaded and click **Open**.
-5. Click **Next** on the Appliance to import dialog.
-6. Click **Import** on the Appliance settings dialog.
-
-You can access your virtual machine in two ways:
-
-- Directly through the Oracle VM VirtualBox Manager
-- Via ssh with the following command, using the username **vagrant** and password **vagrant**:
-
-```
-ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 
-vagrant@localhost
-```
-
-Access port 8080 (`http://{vm-machine-name}:8080/`) on your virtual machine (which is forwarded to port 8888 (`http://localhost:8888/` on your local machine) in any web browser for a brief description of the virtual machine's configuration and links to preloaded demonstrations.
-
-When you are ready to proceed, skip to the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities) section.
-
-### <a name="local-system"></a> Local System ###
-
-The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
-
-To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). Spark is a distributed cluster computing framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
+- **Operating System**: The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
+- **Cluster Computing**: To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 0.9.0 or greater (version 1.0.0 recommended). Spark is a the distributed framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
 
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
 
@@ -294,9 +266,9 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 
 ## <a name="deployment"></a> Deployment ##
 
-Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory. If you are using the virtual machine provided on the [Download](../../../download/) page, copy the entire directory to the `/opt/jetty/webapps` folder on the VM.
+Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory.
 
-Access the `/tile-client-template` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-client-template`. If you are using the VM, browse to `http://localhost:8888/tile-client-template/` on your local machine or `http://{vm-machine-name}:8080/tile-client-template/` on the virtual machine.
+Access the `/tile-client-template` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-client-template`.
 
 ## Next Steps ##
 
