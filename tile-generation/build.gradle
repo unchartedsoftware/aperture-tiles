@@ -56,13 +56,14 @@ processResources.dependsOn copyFilteredResources
 // dependencies added ot the assemblyJarReq config.
 task assemblyJar(type: Jar) {
 	classifier = "assembly"
+	from files(sourceSets.main.output.classesDir)
 	from {
 		configurations.assemblyJarReq.collect {
 			it.isDirectory() ? it : zipTree(it)
 		}
 	}
 }
-assemble.dependsOn assemblyJar
+assemblyJar.mustRunAfter "jar"
 
 // produce artifacts using the tasks above
 artifacts {
