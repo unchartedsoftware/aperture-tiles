@@ -241,8 +241,8 @@ public final class DefaultTileSerializerFactoryProvider
 		return __reverse.get(name.toLowerCase());
 	}
 
-	public static List<DefaultTileSerializerFactoryProvider> values () {
-		return __values;
+	public static DefaultTileSerializerFactoryProvider[] values () {
+	    return __values.toArray(new DefaultTileSerializerFactoryProvider[__values.size()]);
 	}
 
 

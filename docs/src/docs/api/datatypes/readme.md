@@ -14,9 +14,9 @@ A single annotation received from a GET request or submitted in a write, modify 
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
@@ -65,20 +65,20 @@ Example:
 
 ```json
 {
-    “level”: 6,
-    “x”: 73.35,
-    “y”: -125.6,
-    “range”: {
-        “min”: 0,
-        “max”: 6
+    "level": 6,
+    "x": 73.35,
+    "y": -125.6,
+    "range": {
+        "min": 0,
+        "max": 6
     }
-    “group”: "Urgent",   
-    “data”: {
-        “comment”: … ,
-        “author”: … ,
-        “date”: … 
+    "group": "Urgent",   
+    "data": {
+        "comment": … ,
+        "author": … ,
+        "date": … 
     },
-    “certificate”: { … }
+    "certificate": { … }
 }
 ```
 
@@ -88,9 +88,9 @@ A collection of annotations from a single GET request. Contains all annotations 
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
@@ -114,14 +114,14 @@ Example:
 
 ```json
 {
-	“tile” : {
-		“level”: 3,
-		“xIndex”: 12,
-		“yIndex”: 6
+	"tile" : {
+		"level": 3,
+		"xIndex": 12,
+		"yIndex": 6
 	},
-	“annotations” : {
-		“[0,0]”: [ … ],
-		“[1,0]”: [ … ],
+	"annotations" : {
+		"[0,0]": [ … ],
+		"[1,0]": [ … ],
 		… 
 	}
 }
@@ -133,9 +133,9 @@ An Annotation Certificate is comprised of the UUID and timestamp from a successf
 
 <div class="details props">
 	<div class="innerProps">
-		<h2 class="sectionTitle">
+		<h3 class="sectionTitle">
 			Method Detail
-		</h2>
+		</h3>
 		
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
@@ -159,29 +159,8 @@ Example:
 
 ```json
 {
-    “tile” : {
-        “level”: 7,
-        “xIndex”: 8,
-        “yIndex”: 4
-    },
-    “annotations” : {
-        “[0,0]”: [{
-            “level”: 7,
-            “x”: 73.35,
-            “y”: -125.6,
-            “range”: {
-                “min”: 0,
-                “max”: 9
-            }
-            “group”: "Urgent",   
-            “data”: {
-                “comment”: … ,
-                “author”: … ,
-                “date”: … 
-            },
-            “certificate”: { … }
-        }]
-    }
+    "uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "timestamp": "1401830862"
 }
 ```
 

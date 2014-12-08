@@ -40,7 +40,7 @@ import com.oculusinfo.factory.ConfigurationException;
 public class DefaultTileSerializerTests {
     @Test
     public void testDefaultFactoryProviders () throws ConfigurationException {
-        List<DefaultTileSerializerFactoryProvider> defaults = DefaultTileSerializerFactoryProvider.values();
+        DefaultTileSerializerFactoryProvider[] defaults = DefaultTileSerializerFactoryProvider.values();
         List<TypeDescriptor> typeDescriptors = new ArrayList<>();
         for (DefaultTileSerializerFactoryProvider provider: defaults) {
             ConfigurableFactory<? extends TileSerializer<?>> factory = provider.createFactory(null);
