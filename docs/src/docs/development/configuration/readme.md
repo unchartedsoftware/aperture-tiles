@@ -22,11 +22,10 @@ The fastest way to create these the Tile Server and Tile Client is with the Tile
 To begin configuring your Tile Server and Tile Client:
 
 1. Create a copy of the *aperture-tiles/tile-client-template* directory and give it a unique name (e.g., *new-project*).
-2. Update the Maven POM (*new-project/pom.xml*) to change the following tags:
-	- `<groupId>` (line 5): Enter an appropriate group ID
-	- `<version>` (line 6): Enter an appropriate project version number.
-	- `<artifactId>` (line 7): Change from *tile-client-template* to *new-project*
-	- `<name>` (line 10): Enter an appropriate project description. 
+2. Update the Gradle build file (*new-project/build.gradle*) to change the following fields:
+	- `description`: Enter an appropriate project description. 
+	- `group`: Enter an appropriate group ID.
+	- `version`: Enter an appropriate project version number.
 
 ## <a name="server-config"></a> Tile Server Configuration ##
 
@@ -701,7 +700,7 @@ The layer file should then be updated to specify that client-side rendering shou
 
 Once you have finished configuring the map and layer properties, copy the `/new-project/` folder to your Apache Tomcat or Jetty server.
 
-Access the `/new-project/` directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
+Access the `/new-project/` directory on the server from any web browser to view your custom Aperture Tiles visual analytic.
 
 ## Next Steps
 

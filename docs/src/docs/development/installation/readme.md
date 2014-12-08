@@ -26,7 +26,9 @@ This project has the following prerequisites:
 	-   **Apache Spark** - [Apache Spark](http://spark.incubator.apache.org/) distributed computing framework for distributing tile generation across a cluster of machines.  Aperture Tiles requires version 0.9.0 or greater (version 1.0.0 recommended). Note: when you set up Spark, you need to configure the version of Hadoop with which it will be working (if applicable). NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
 	-   **Hadoop/HDFS/HBase** (Optional) - Distributed computing stack.  HDFS is a file system for storing large data sets. Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work). HBase is a non-relational database that sits atop Hadoop/HDFS. 
 -  **Web Server**: the Tile Server and client are built using the [Restlet](http://restlet.org/) web framework, and require a servlet compatible web server. Choose your preferred implementation ([Apache Tomcat](http://tomcat.apache.org/) or [Jetty](http://www.eclipse.org/jetty/)).
--   **Build Automation**: All Aperture Tiles projects build with [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work). Ensure Maven is configured properly on the system on which you are building Aperture Tiles.
+-   **Build Automation**: Two tools are required to build Aperture Tiles and its dependency, [Aperture JS](aperturejs.com). Ensure that each is configured properly on your system. 
+	- **Aperture JS**: Build with [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x version may work).
+	- **Aperture Tiles**: Build with [Gradle](http://www.gradle.org/)
 
 <img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
@@ -113,15 +115,23 @@ Aperture Tiles is made up of ten sub-projects:
 
 #### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
 
-Prior to building the project, you need to specify the version of Hadoop and/or HBase installed (if applicable). Edit the `<properties>` section of the *aperture-tiles/pom.xml* build file to select the valid settings for your version. See the comments in the file for more details.
- 
-If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
+NOTE: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
+
+Prior to building the project, you need to specify the version of Hadoop and/or HBase installed (if applicable). Review the *Deployment Variants* section of the *aperture-tiles/***build.gradle** file to check for valid settings for your version.
+
+If your version is not included, you must build a new case for it. See the comments in the file for more details.
 
 #### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
 
-Before you compile the Aperture Tiles source code, you must install the Aperture JS project. Run the `mvn install` command in the *aperture* folder in the aperture subdirectory of the Aperture JS root directory.
+Before you compile the Aperture Tiles source code, you must install the Aperture JS project:
 
-Once the Aperture JS installation is complete, run the `mvn install` command again, this time in the root Aperture Tiles directory. This will compile all the project components and install .jar files for each project into your local maven repostitory on your build machine.
+- Run the `mvn build` command in your root Aperture JS directory.
+
+Once the Aperture JS installation is complete:
+
+- Run the `gradlew build <buildType>` command in your root Aperture Tiles directory, where `buildType` is a case in the **build.gradle** file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., *cdh5.1.2*).<p class=list-paragraph">NOTE: If you do not specify a buildType, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+
+This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
 
 ## <a name="next-steps"></a> Next Steps ##
 
