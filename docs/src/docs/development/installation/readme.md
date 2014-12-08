@@ -9,7 +9,9 @@ layout: submenu
 Installation and Compilation
 ============================
 
-The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects. For quick examples of the capabilities of Aperture Tiles:
+The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects.
+
+For quick examples of the capabilities of Aperture Tiles:
 
 - See the [Demos](../../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
 - See the [Download](../../../download) page to access a pre-built distribution designed to help you quickly get started using Aperture Tiles and to understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
@@ -34,15 +36,11 @@ This project has the following prerequisites:
 
 ## <a name="source-code"></a> Source Code ##
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master). To install both projects:
-
-1. Run the `mvn install` command in the *aperture* folder found in the root Aperture JS directory.
-2. Run the `mvn install` command in the root Aperture Tiles directory.
-
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master).
 
 ### <a name="project-structure"></a> Project Structure ###
 
-Aperture Tiles is made up of ten sub-projects:
+Aperture Tiles is made up of the following sub-projects:
 
 <div class="details props">
 	<div class="innerProps">
@@ -67,7 +65,7 @@ Aperture Tiles is made up of ten sub-projects:
 				<dd>Optional services for allowing the tile server to communicate directly with Spark.</dd>
 				
 				<dt>annotation-service</dt>
-				<dd>Services for adding annotations to Aperture Tiles visualizations.</dd>
+				<dd>Optional services for adding annotations to Aperture Tiles visualizations.</dd>
 				
 				<dt>tile-client</dt>
 				<dd>Simple web client to display tiles from tile pyramids.</dd>
