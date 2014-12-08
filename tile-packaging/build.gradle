@@ -7,7 +7,7 @@ distributions {
 		contents {
 			// Copy everything under the dist directory over
 			into ("examples"){
-				from "src/dist"
+				from("src/examples")
 			}
 			// Copy binary, source and doc jars into their subdirectories, stripping off the
 			// version info.
