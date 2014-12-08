@@ -6,12 +6,13 @@ distributions {
 		baseName = 'tile-generator'
 		contents {
 			// Copy everything under the dist directory over
-			from "src/dist"
+			into ("examples"){
+				from "src/dist"
+			}
 			// Copy binary, source and doc jars into their subdirectories, stripping off the
 			// version info.
 			into("lib") {
 				from project(":tile-generation").configurations.archives.artifacts.files.filter {
-					println "****** $it.name"
 					it.name =~ /assembly\w*\.jar/
 				}
 				rename "(.*)-$version(.*)", "\$1\$2"
