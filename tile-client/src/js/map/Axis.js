@@ -316,12 +316,14 @@
             axis.setContentDimension();
             disableSlide();
             axis.$content.animate({width: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
+            axis.redraw();
         };
         verticalSlide = function() {
             axis.setEnabled( !axis.isEnabled() );
             axis.setContentDimension();
             disableSlide();
             axis.$content.animate({height: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
+            axis.redraw();
         };
         // create axis title, header, and container and append them to root
         axis.$title = createTitle( axis );
