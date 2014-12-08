@@ -5,8 +5,7 @@
 	<name>Aperture-Tiles Web Client</name>
 	<url>http://github.com/oculusinfo/aperture-tiles</url>
 	<description>
-		A basic map client that allows for client-side user interaction with 
-		map tiles.
+		A basic javascript library for displaying aperture-tiles generated tiles.
 	</description>
 
 	<parent>

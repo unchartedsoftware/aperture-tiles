@@ -1,9 +1,0 @@
-[
-	{
-		"name": "Julia Set",
-		"layers": [
-			"julia-heatmap-layer"
-		],
-		"map": "julia-map"
-	}
-]

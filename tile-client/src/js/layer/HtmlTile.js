@@ -71,9 +71,9 @@
                         that.tileData = data;
                         that.renderTile( that.div, that.tileData );
                     },
-                    function( xhr, status, error ) {
-                        // TODO handle error
-                        return true;
+                    function( xhr ) {
+                        console.error( xhr.responseText );
+                        console.error( xhr );
                     }
                 ).always( function() {
                     that.isLoading = false;

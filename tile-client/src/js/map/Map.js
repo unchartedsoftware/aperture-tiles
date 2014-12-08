@@ -76,7 +76,7 @@
             previousMouse.x = event.xy.x;
             previousMouse.y = event.xy.y;
         });
-        map.on('zoomend', function( event ) {
+        map.on('zoomend', function() {
             updateTileFocus( previousMouse.x, previousMouse.y );
         });
         // if mousedown while map is panning, interrupt pan

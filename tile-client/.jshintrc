@@ -5,7 +5,7 @@
     "maxerr"        : 25,       // {int} Maximum error before stopping
 
     // Enforcing
-    "bitwise"       : false, //true,     // true: Prohibit bitwise operators (&, |, ^, etc.)
+    "bitwise"       : false,    // true: Prohibit bitwise operators (&, |, ^, etc.)
     "camelcase"     : false,    // true: Identifiers must be in camelCase
     "curly"         : true,     // true: Require {} for every new block or scope
     "eqeqeq"        : true,     // true: Require triple equals (===) for comparison
@@ -47,7 +47,7 @@
     "globalstrict"  : false,     // true: Allow global "use strict" (also enables 'strict')
     "iterator"      : false,     // true: Tolerate using the `__iterator__` property
     "lastsemic"     : false,     // true: Tolerate omitting a semicolon for the last statement of a 1-line block
-    "laxbreak"      : false,     // true: Tolerate possibly unsafe line breakings
+    "laxbreak"      : true,      // true: Tolerate possibly unsafe line breakings
     "laxcomma"      : false,     // true: Tolerate comma-first style coding
     "loopfunc"      : false,     // true: Tolerate functions being defined in loops
     "multistr"      : false,     // true: Tolerate multi-line strings
@@ -56,7 +56,7 @@
     "shadow"        : false,     // true: Allows re-define variables later in code e.g. `var x=1; x=2;`
     "sub"           : false,     // true: Tolerate using `[]` notation when it can still be expressed in dot notation
     "supernew"      : false,     // true: Tolerate `new function () { ... };` and `new Object;`
-    "validthis"     : true, //false,     // true: Tolerate using this in a non-constructor function
+    "validthis"     : true,      // true: Tolerate using this in a non-constructor function
 
     // Environments
     "browser"       : true,     // Web Browser (window, document, etc)
