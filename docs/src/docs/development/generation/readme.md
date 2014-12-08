@@ -82,23 +82,12 @@ To configure Apache Spark for your installed version of Hadoop, perform one of t
 - [Download](http://spark.apache.org/downloads.html) the correct version directly.
 - If no version is listed for your flavor of Hadoop, [build](http://spark.apache.org/docs/latest/building-with-maven.html) Spark to support it.
 
-#### <a name="spark-script"></a> spark-run Script ####
-
-The Aperture Tiles source code contains a **spark-run** script (in <em>tile-generation/<wbr>scripts/<wbr>spark-run</em>) designed to help you build your tiles. This script only exists in the source code *after* you build Aperture Tiles, as it requires tile generation JAR files to be in your local maven repository. Therefore, to use this script, you must first run the following command:
-
-```bash
-mvn install
-```
-
-The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. To use this script, you must first set the following environment variables:
+The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script to help you build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. To use this script, you must first set the following environment variable:
 
 <div class="details props">
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
-				<dt>SCALA_HOME</dt>
-				<dd>Path to the Scala installation directory</dd>
-				
 				<dt>SPARK_HOME</dt>
 				<dd>Path to the Spark installation directory</dd>
 			</dl>
@@ -132,31 +121,9 @@ Where the `-d` switch specifies the base properties file path, and each subseque
 
 The base properties file describes the tiling job, the systems on which it will run and the general characteristics of the source data. The following properties must be defined in the file:
 
-- [Spark Connection](#spark-connection)
 - [Tile Storage](#tile-storage)
 - [HBase Connection](#hbase-connection)
 - [Source Data](#source-data)
-
-#### <a name="spark-connection"></a> Spark Connection ####
-
-The Spark connection properties define the location of the Spark installation that will run the tiling job:
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>spark</dt>
-				<dd>Location of the Spark master.  Use <em>local</em> for standalone Spark. Defaults to <em>local</em>.</dd>
-				
-				<dt>sparkhome</dt>
-				<dd>Location of Spark in the remote location (or on the local machine if using standalone). Defaults to the value of the environment variable, <em>SPARK_HOME</em>.</dd>
-   
-				<dt>spark.connection.user (Optional)</dt>
-				<dd>Username passed to the Spark job title. Defaults to the username of the current user.</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
 
 #### <a name="tile-storage"></a> Tile Storage ####
 

@@ -39,26 +39,6 @@ The Aperture Tiles source code is available on [GitHub](https://github.com/oculu
 1. Run the `mvn install` command in the *aperture* folder found in the root Aperture JS directory.
 2. Run the `mvn install` command in the root Aperture Tiles directory.
 
-### <a name="environment-variables"></a> Environment Variables ###
-
-Set the following environment variables:
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>SPARK_HOME/dt>
-				<dd>The location of the Spark installation</dd>
-				
-				<dt>SPARK_MEM</dt>
-				<dd>The amount of memory to allocate to Spark</dd>
-				
-				<dt>MASTER</dt>
-				<dd>The node on which the cluster is installed (set to <code>local</code> for running Spark on a single machine).</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
 
 ### <a name="project-structure"></a> Project Structure ###
 

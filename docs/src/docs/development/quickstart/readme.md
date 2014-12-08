@@ -51,7 +51,7 @@ Save the following Aperture Tiles distributions available on the [Download](../.
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
 ### <a name="environment-variables"></a> Environment Variables ###
-Set the following environment variables:
+Set the following environment variable:
 
 <div class="details props">
 	<div class="innerProps">
@@ -59,12 +59,6 @@ Set the following environment variables:
 			<dl class="detailList params">
 				<dt>SPARK_HOME</dt>
 				<dd>The location of the Spark installation</dd>
-				
-				<dt>SPARK_MEM</dt>
-				<dd>The amount of memory to allocate to Spark</dd>
-				
-				<dt>MASTER</dt>
-				<dd>The node on which the cluster is installed (set to <code>local</code> for running Spark on a single machine).</dd>
 			</dl>
 		</ul>
 	</div>
@@ -74,17 +68,16 @@ Set the following environment variables:
 
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
-1. Extract the contents of the [tile-generator.zip](../../../download/#tile-generator), then browse to the Spark script (`/tile-generator/bin/spark-run.sh`) that has been provided to assist with running Tile Generation jobs on Spark. In the next step, you will use the script to generate the Julia set data.
-2. Execute the Spark script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. 
-	
-	The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.
+1. Extract the contents of the [tile-generator.zip](../../../download/#tile-generator).
+2. Execute the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. <p class="list-paragraph">The rest of the flags pass in the correct program main class, data set limits, number of output files (10) and total number of data points (10M) to generate in the Julia set.</p>
 
-```
-./spark-run.sh com.oculusinfo.tilegen.examples.datagen.JuliaSetGenerator -real 
--0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
+```bash
+$SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen
+.JuliaSetGenerator --master local[2] lib/tile-generation-assembly.jar -real 
+-0.8 -imag 0.156 -output /data/julia-set -partitions 10 -samples 10000000
 ```
 
-Check your output folder for five part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
+Check your output folder for 10 part files (`part-00000` to `part-00009`) of roughly equal size (1M records and ~44 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
 
 ## <a name="tile-generation"></a> Tile Generation ##
 
@@ -100,24 +93,6 @@ For delimited numeric data sources like the Julia set, the included CSVBinner to
 Access the **julia-base.bd** file in your `tile-generator/examples` folder and edit the properties in the following sections.
 
 Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the types of fields in your source data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website. 
-
-#### <a name="spark-connnection"></a> Spark Connection Details ####
-
-These properties specify the location of your Spark installation.
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>spark</dt>
-				<dd>URI of the Spark master. Set to "local" for standalone Spark installations.</dd>
-				
-				<dt>sparkhome</dt>
-				<dd>File system location of Spark. Defaults to the value of the SPARK_HOME environment variable.</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
 
 #### <a name="general-input"></a> General Input Properties ####
 
@@ -188,11 +163,12 @@ The **julia-tiling.bd** file in your `tile-generator/examples` folder should not
 
 ### <a name="execution"></a> Execution ###
 
-When you have configured all of the required properties, execute the Spark script (`/tile-generator/bin/spark-run.sh`) again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base and tiling property files.
+When you have configured all of the required properties, execute the standard spark-submit script again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base and tiling property files.
 
-```
-tile-generator/bin/spark-run.sh com.oculusinfo.tilegen.examples.apps.CSVBinner 
--d tile-generator/examples/julia-base.bd tile-generator/examples/julia-tiling.bd
+```bash
+tile-generator/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
+.CSVBinner --master local[2] lib/tile-generation-assembly.jar -d examples
+/julia-base.bd examples/julia-tiling.bd
 ```
 
 When the tile generation is complete, you should have a folder containing six subfolders (0, being the highest, through 5, being the lowest), each of which corresponds to a zoom level in your project. Across all the folders, you should have a total of 1,365 Avro tile files.
