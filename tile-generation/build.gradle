@@ -37,20 +37,6 @@ task testJar(type: Jar) {
 	from sourceSets.test.output
 }
 
-// produce artifacts using the tasks above
-artifacts {
-	archives sourcesJar
-	archives scaladocJar
-	archives javadocJar
-	archives testJar
-}
-
-// Add a delete to the clean task that will remove the resource files.
-clean {
-	inputs.file "src/main/resources/build.properties"
-	delete "src/main/resources/build.properties"
-}
-
 // Copy and filter resources files.  This uses a baseline copy task, and applies
 // Ant's token functionality to filter values.
 task copyFilteredResources(type: Copy) {	
@@ -65,21 +51,39 @@ task copyFilteredResources(type: Copy) {
 // Make sure the above tasks run before resource processing.
 processResources.dependsOn copyFilteredResources
 
+
+// Configure a jar task to build a fat jar that includes
+// dependencies added ot the assemblyJarReq config.
+task assemblyJar(type: Jar) {
+	classifier = "assembly"
+	from {
+		configurations.assemblyJarReq.collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+}
+assemble.dependsOn assemblyJar
+
+// produce artifacts using the tasks above
+artifacts {
+	archives sourcesJar
+	archives scaladocJar
+	archives javadocJar
+	archives testJar
+	archives assemblyJar
+}
+
+// Add a delete to the clean task that will remove the resource files.
+clean {
+	inputs.file "src/main/resources/build.properties"
+	delete "src/main/resources/build.properties"
+}
+
 // Create a configuration to hold jars that we need to roll into our fat jar.  Disable transitive dependency
 // resolution, since we only want the jars we specifically list.
 configurations {
-	fatJarReq {
+	assemblyJarReq {
 		transitive = false
-	}
-}
-
-// Configure the jar task to build a fat jar that includes
-// dependencies added ot the fatJarReq config.
-jar {
-	from {
-		configurations.fatJarReq.collect {
-			it.isDirectory() ? it : zipTree(it)
-		}
 	}
 }
 
@@ -116,10 +120,10 @@ dependencies {
 	// definition and explanation.
 	addHBaseDependencies()
 
-	// FatJarReq config - these get rolled into the fatjar as they aren't provided by CDH/Spark
+	// assemblyJarReq config - these get rolled into the fatjar as they aren't provided by CDH/Spark
 	// at runtime.
-	fatJarReq project (":geometric-utilities")
-	fatJarReq project (":binning-utilities")
-	fatJarReq "org.json:json:20090211"
-	addHBaseDependencies("fatJarReq")
+	assemblyJarReq project (":geometric-utilities")
+	assemblyJarReq project (":binning-utilities")
+	assemblyJarReq "org.json:json:20090211"
+	addHBaseDependencies("assemblyJarReq")
 }

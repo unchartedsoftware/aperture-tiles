@@ -214,7 +214,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			task copyApertureConfig(type: Copy) {
 				inputs.file file("src/main/filteredResources/aperture-config.json")
 				outputs.file file("src/main/webapp/data/aperture-config.json")
-				
+
 				from "src/main/filteredResources"
 				into "src/main/webapp/data"
 				include "aperture-config.json"
