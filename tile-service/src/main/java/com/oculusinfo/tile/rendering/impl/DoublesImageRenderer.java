@@ -89,7 +89,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	public BufferedImage render (LayerConfiguration config) {
 		BufferedImage bi;
 		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+		String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
 			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
@@ -101,7 +101,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
-            @SuppressWarnings("unchecked")
+			@SuppressWarnings("unchecked")
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 
@@ -177,7 +177,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 					int rgb;
 
 					if (binCount > 0) {
-                        double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
+						double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
 						rgb = colorRamp.getRGB( ( transformedValue - scaledLevelMinFreq ) * factor );
 					} else {
 						rgb = COLOR_BLANK.getRGB();
@@ -195,8 +195,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 		} catch (Exception e) {
-			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
-			LOGGER.debug("Tile error: ", e);
+			LOGGER.warn("Tile is corrupt: " + layerId + ":" + index);
+			LOGGER.warn("Tile error: ", e);
 			bi = null;
 		}
 		return bi;
