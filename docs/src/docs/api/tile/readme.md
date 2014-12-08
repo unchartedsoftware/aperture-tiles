@@ -41,27 +41,7 @@ Returns a tile for a given layer at the specified level and index.
 					<tr class='item2'>
 						<td class="attributes">Params</td>
 						<td class="nameDescription">
-							<div class="description">Encoded json representing overrides to the "public" node of the server configuration JSON.
-<pre>{ 
-	renderer: {
-		type: …,
-		coarseness: …,
-		ramp: …,
-		rangeMin: …,
-		rangeMax: ...
-	},
-	valueTransform: {
-		type: ...
-	},
-	tileTransform: {
-		type …,
-		data: {
-			…
-		}
-	}
-}</pre>
-							
-							</div>
+							<div class="description">Attributes to override in the "public" node of the server configuration JSON.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -72,7 +52,7 @@ Returns a tile for a given layer at the specified level and index.
 Example request:
 
 ```http
-GET http://localhost:8080/instagram/rest/v1.0/tiles/twitter-heatmap4/2/3.png?%7Brenderer%3A%7Bramp%3Aspectral%2Ccoarseness%3A2%7D%7D%0A
+GET http://localhost:8080/instagram/rest/v1.0/tiles/twitter-heatmap4/2/3.png?renderer.ramp=spectral&renderer.coarseness=2
 ```
 
 Example response:
