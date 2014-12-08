@@ -156,6 +156,7 @@ var appStart = function() {
         axis0 = new tiles.Axis({
             position: 'bottom',
             title: 'Longitude',
+            isOpen: false,
             repeat: true,
             intervals: {
                 type: 'fixed',
@@ -170,6 +171,7 @@ var appStart = function() {
         axis1 =  new tiles.Axis({
             position: 'left',
             title: 'Latitude',
+            isOpen: false,
             repeat: true,
             intervals: {
                 type: 'fixed',
