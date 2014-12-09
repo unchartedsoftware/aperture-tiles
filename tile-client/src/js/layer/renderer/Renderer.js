@@ -32,7 +32,17 @@
     /**
      * Base constructor for Renderer. Renderers are designed to provide generic rendering
      * capabilities that can be reused across applications.
+     *
      * @param spec {Object} The specification object.
+     * {
+     *     hook {Function} - The hook function that is executed on every rendered entry.
+     *
+     *         arguments:
+     *             elem    {HTMLElement} - The html element for the entry.
+     *             entry   {Object}      - The data entry.
+     *             entries {Array}       - All entries for the tile.
+     *             data    {Object}      - The raw data object for the tile.
+     * }
      */
     function Renderer( spec ) {
         this.spec = spec || {};
@@ -43,6 +53,7 @@
      * corresponds to a data entry. This function allows a renderer implementation to
      * provide a selector in situations where this is not the case. This is only relevant
      * if the hook callback is set.
+     *
      * @returns {boolean || string}
      */
     Renderer.prototype.getEntrySelector = function() {
@@ -53,6 +64,7 @@
      * The central rendering function. This function is called for every tile containing data.
      * Returns an object containing the tiles html, along with an array of each data entry. The
      * implementation of this function is unique to each renderer.
+     *
      * @returns {{html: string, entries: Array}}
      */
     Renderer.prototype.render = function() {
@@ -66,6 +78,7 @@
      * The hook callback executor function. If a hook function is provided to the renderer, this
      * will execute it passing the respective element and data entry along with all entries and
      * the raw tile data.
+     *
      * @param elements {HTMLCollection} A collection of html elements.
      * @param entries  {Array} The array of all data entries.
      * @param data     {Object} The raw tile data object.

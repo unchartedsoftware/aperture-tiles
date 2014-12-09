@@ -28,6 +28,7 @@
     "use strict";
 
     var $ = require('jquery'),
+        _ = require('lodash'),
         propagateEvent;
 
     /**
@@ -194,6 +195,48 @@
          */
         getURLParameter: function( key ) {
             return this.getURLParameters()[ key ];
+        },
+
+        /**
+         * Returns a string of an object in query parameter dot notation.
+         *
+         * @param params {Object} The query parameter object.
+         * @returns {string}
+         */
+        encodeQueryParams: function( params ) {
+            var query;
+            function traverseParams( params, query ) {
+                var result = "";
+                _.forIn( params, function( value, key ) {
+                    if ( typeof value !== "object" ) {
+                        result += query + key + '=' + value + "&";
+                    } else {
+                        result += traverseParams( params[ key ], query + key + "." );
+                    }
+                });
+                // if string ends in ".", it resulted in an empty leaf node, return
+                // nothing in that case
+                return ( result[0] !== "." ) ? result : "";
+            }
+            query = "?" + traverseParams( params, '' );
+            // remove last '&' character
+            return query.slice( 0, query.length - 1 );
+        },
+
+        /**
+         * Returns true if an object has no parameters.
+         *
+         * @param obj {Object} The object.
+         * @returns {boolean}
+         */
+        isEmpty: function( obj ) {
+            var prop;
+            for ( prop in obj ) {
+                if ( obj.hasOwnProperty( prop ) ) {
+                    return false;
+                }
+            }
+            return true;
         }
 
     };

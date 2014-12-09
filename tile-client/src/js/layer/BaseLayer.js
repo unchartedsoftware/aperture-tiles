@@ -30,15 +30,24 @@
 
 	var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         Layer = require('./Layer');
-        
+
+    /**
+     * Instantiate a BaseLayer object.
+     *
+     * @param spec {Object} The specification object.
+     * {
+     *     type    {String}  The type of baselayer, ["Blank", "Google", "TMS"]. Default = "Blank"
+     *     opacity {float}   The opacity of the layer. Default = 1.0
+     *     enabled {boolean} Whether the layer is visible or not. Default = true
+     *     url     {String}  if TMS layer, the url for tile requests. Default = undefined
+     *     options {Object}  type specific instantiation attributes. Default = {color:rgb(0,0,0)}
+     * }
+     */
 	function BaseLayer( spec ) {
         // set defaults
         spec = spec || {};
-        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
-        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
         spec.type = spec.type || "Blank";
         spec.options = spec.options || {
-            name : "black",
             color : "rgb(0,0,0)"
         };
         spec.domain = "base";
@@ -63,6 +72,9 @@
 
             case "Google":
 
+                if ( spec.options.styles ) {
+                    spec.options.type = "styled";
+                }
                 this.olLayer = new OpenLayers.Layer.Google( "BaseLayer", spec.options );
                 break;
 
@@ -75,8 +87,8 @@
         this.map.olMap.addLayer( this.olLayer );
         this.map.olMap.setBaseLayer( this.olLayer );
 
-        if ( spec.options.type === 'styled' ) {
-            styledMapType = new google.maps.StyledMapType( spec.options.style, {name: 'Styled Map'} );
+        if ( spec.options.styles ) {
+            styledMapType = new google.maps.StyledMapType( spec.options.styles, {name: 'Styled Map'} );
             this.olLayer.mapObject.mapTypes.set( 'styled', styledMapType );
         }
 

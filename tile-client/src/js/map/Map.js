@@ -283,8 +283,8 @@
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
 
-        // disable animated pan
-        //OpenLayers.Control.DragPan.prototype.enableKinetic = false;
+        // [OpenLayers 2.13.1 specific], disable animated pan
+        // OpenLayers.Control.DragPan.prototype.enableKinetic = false;
 
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
@@ -297,18 +297,17 @@
 				20037508.342789244,
 				20037508.342789244
             ]),
-            /*
-            tileManager: null,
-            transitionEffect: null,
-            zoomMethod: null,
-            panMethod: null,
-            */
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
                 new OpenLayers.Control.Navigation({ documentDrag: true }),
                 new OpenLayers.Control.Zoom()
             ]
+            // [OpenLayers 2.13.1 specific], removes zoom animation and tile load delay
+            //tileManager: null,
+            //transitionEffect: null,
+            //zoomMethod: null,
+            //panMethod: null,
         });
     }
 

@@ -44,6 +44,18 @@
         }
     };
 
+    /**
+     * Instantiate a TextScoreRenderer object.
+     *
+     * @param spec {Object} The specification object.
+     * {
+     *     text: {
+     *         textKey  {String} The attribute for the text in the data entry.
+     *         countKey {String} The attribute for the count in the data entry.
+     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *     }
+     * }
+     */
     function TextScoreRenderer( spec ) {
         Renderer.call( this, spec );
         injectCss( this.spec );

@@ -28,32 +28,7 @@
     "use strict";
 
     var $ = require('jquery'),
-        _ = require('lodash');
-
-    /**
-     * Private: encodes parameter object into a dot notation query
-     * parameter string.
-     *
-     * @param params {Object} parameter object
-     */
-    function encodeQueryParams( params ) {
-        var query;
-        function traverseParams( params, query ) {
-            var result = "";
-            _.forIn( params, function( value, key ) {
-                if ( value instanceof Array ) {
-                    result += query + key + '=' + value.join(',') + "&";
-                } else if ( typeof value !== "object" ) {
-                    result += query + key + '=' + value + "&";
-                } else {
-                    result += traverseParams( params[ key ], query + key + "." );
-                }
-            });
-            return result;
-        }
-        query = "?" + traverseParams( params, '' );
-        return query.slice( 0, query.length - 1 );
-    }
+        Util = require('../util/Util');
 
     /**
      * Private: encodes parameter object into query parameter string.
@@ -85,7 +60,7 @@
                 + layerId + "/"
                 + level + "/"
                 + x + "/"
-                + y + ".json" + encodeQueryParams( _params )
+                + y + ".json" + Util.encodeQueryParams( _params )
             ).then(
                 _success,
                 handleError
@@ -110,7 +85,7 @@
                 + layerId + "/"
                 + level + "/"
                 + x + "/"
-                + y + ".png" + encodeQueryParams( _params )
+                + y + ".png" + Util.encodeQueryParams( _params )
             ).then(
                 _success,
                 handleError

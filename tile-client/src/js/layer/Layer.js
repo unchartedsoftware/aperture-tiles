@@ -96,5 +96,6 @@
             return 'layer.' + this.domain + '.' + this.uuid;
         }
     };
+
     module.exports = Layer;
 }());

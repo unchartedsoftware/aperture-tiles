@@ -60,6 +60,29 @@
         injectCss( this.spec );
     }
 
+    /**
+     * Instantiate a GraphNodeRenderer object.
+     *
+     * @param spec {Object} The specification object.
+     * {
+     *     node: {
+     *         xKey      {String} The attribute for the x coordinate.
+     *         yKey      {String} The attribute for the y coordinate.
+     *         radiusKey {String} The attribute for the node radius.
+     *         themes    {Array}  The array of RenderThemes to be attached to this component.
+     *     },
+     *     criticalNode: {
+     *         flag     {String} The boolean attribute to designate critical nodes.
+     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *     },
+     *     parentNode: {
+     *         xKey      {String} The attribute for the parent node x coordinate.
+     *         yKey      {String} The attribute for the parent node y coordinate.
+     *         radiusKey {String} The attribute for the node radius.
+     *         themes    {Array}  The array of RenderThemes to be attached to this component.
+     *     }
+     * }
+     */
     GraphNodeRenderer.prototype = Object.create( Renderer.prototype );
 
     GraphNodeRenderer.prototype.render = function( data ) {
@@ -86,9 +109,9 @@
             entries.push( community );
 
             // get node position, radius, and diameter
-            x = ( community[ spec.node.x ] % range ) * scale;
-            y = ( community[ spec.node.y ] % range ) * scale;
-            radius = community[ spec.node.radius ] * scale;
+            x = ( community[ spec.node.xKey ] % range ) * scale;
+            y = ( community[ spec.node.yKey ] % range ) * scale;
+            radius = community[ spec.node.radiusKey ] * scale;
             diameter = radius*2;
 
             // don't draw node if radius < 1
@@ -118,9 +141,9 @@
             if ( community[ spec.criticalNode.flag ] ) {
 
                 // get parent node position, radius, and diameter
-                px = ( community[ spec.parentNode.x ] % range ) * scale;
-                py = ( community[ spec.parentNode.y ] % range ) * scale;
-                parentRadius = community[ spec.parentNode.radius ] * scale;
+                px = ( community[ spec.parentNode.xKey ] % range ) * scale;
+                py = ( community[ spec.parentNode.yKey ] % range ) * scale;
+                parentRadius = community[ spec.parentNode.radiusKey ] * scale;
                 parentDiameter = parentRadius * 2;
 
                 // draw parent node

@@ -423,6 +423,28 @@
         };
     }
 
+    /**
+     * Instantiate an Axis object.
+     *
+     * @param spec {Object} The specfication object:
+     * {
+     *     position {String}  Set the position to the bottom of the map. Default = "bottom"
+     *     title    {String}  Set the title of the axis label. Default = "Axis"
+     *     isOpen   {boolean} Have the axis initialize to an open or closed state. Default = true
+     *     repeat   {boolean} Whether or not the axis repeats. Default = false
+     *     intervals: {
+     *         type        {String}  Whether the intervals are by "percentage" or by "value". Default = "percentage"
+     *         increment   {number}  The interval increment in. Default = 10
+     *         pivot       {number}  The value from with increments are generated from. Default = 0
+     *         scaleByZoom {boolean} Whether the increments should be scaled by zoom level. Default = true
+     *     }
+     *     units: {
+     *         type     {String}  The type of unit, ["integer", "decimal", "thousands", "millions", "billions", "degrees"]. Default = "decimal"
+     *         decimals {number}  The number of decimals to display, if applicable. Default = 2
+     *         stepDown {boolean} Whether values should step down by unit type, if applicable. Default = true
+     *     }
+     * }
+     */
     function Axis( spec ) {
 
         this.position = ( spec.position !== undefined ) ? spec.position.toLowerCase() : 'bottom';
@@ -440,7 +462,6 @@
         spec.units = spec.units || {};
         this.units = {};
         this.units.type = ( spec.units.type !== undefined ) ? spec.units.type.toLowerCase() : 'decimal';
-        this.units.divisor = spec.units.divisor || 1000;
         this.units.decimals = spec.units.decimals || 2;
         this.units.stepDown = ( spec.units.stepDown !== undefined ) ? spec.units.stepDown : true;
 

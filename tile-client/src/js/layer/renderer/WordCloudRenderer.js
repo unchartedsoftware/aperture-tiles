@@ -192,6 +192,18 @@
         return cloud;
     };
 
+    /**
+     * Instantiate a WordCloudRenderer object.
+     *
+     * @param spec {Object} The specification object.
+     * {
+     *     text: {
+     *         textKey  {String} The attribute for the text in the data entry.
+     *         countKey {String} The attribute for the count in the data entry.
+     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *     }
+     * }
+     */
     function WordCloudRenderer( spec ) {
         Renderer.call( this, spec );
         injectCss( this.spec );

@@ -29,7 +29,7 @@
 
     var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
         $ = require('jquery'),
-        _ = require('lodash'),
+        Util = require('../util/Util'),
         Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
         PubSub = require('../util/PubSub'),
@@ -82,16 +82,37 @@
         };
     };
 
+    /**
+     * Instantiate a ServerLayer object.
+     *
+     * @param spec {Object} The Specification object.
+     * {
+     *     opacity {float}   The opacity of the layer. Default = 1.0
+     *     enabled {boolean} Whether the layer is visible or not. Default = true
+     *     zIndex  {integer} The z index of the layer. Default = 1
+     *     renderer: {
+     *         coarseness {integer} The pixel by pixel coarseness. Default based on server configuration.
+     *         ramp       {String}  The color ramp type. Default based on server configuration.
+     *         rangeMin   {integer} The minimum percentage to clamp the low end of the color ramp. Default based on
+     *                                server configuration.
+     *         rangeMax   {integer} The maximum percentage to clamp the high end of the color ramp. Default based on
+     *                              server configuration.
+     *     },
+     *     valueTransform: {
+     *         type {String} Value transformer type. Default based on server configuration.
+     *     },
+     *     tileTransform: {
+     *         type {String} Tile transformer type. Default based on server configuration.
+     *         data {Object} The tile transformer data initialization object. Default based on server configuration.
+     *     }
+     * }
+     */
     function ServerLayer( spec ) {
         // set reasonable defaults
         spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
         spec.renderer = spec.renderer || {};
-        spec.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ?  spec.renderer.coarseness : 1;
-        spec.renderer.ramp = spec.renderer.ramp || "spectral";
-        spec.renderer.rangeMin = ( spec.renderer.rangeMin !== undefined ) ? spec.renderer.rangeMin : 0;
-        spec.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? spec.renderer.rangeMax : 100;
-        spec.valueTransform = spec.valueTransform || { type: 'linear' };
-        spec.tileTransform = spec.tileTransform || { type: 'identity' };
+        spec.valueTransform = spec.valueTransform || {};
+        spec.tileTransform = spec.tileTransform || {};
         spec.domain = "server";
         // call base constructor
         Layer.call( this, spec );
@@ -126,12 +147,11 @@
             });
         this.map.olMap.addLayer( this.olLayer );
 
-        requestRampImage( this );
         this.setZIndex( this.spec.zIndex );
         this.setOpacity( this.spec.opacity );
         this.setVisibility( this.spec.enabled );
-        this.setTheme( this.map.getTheme() );
         this.setLevelMinMax( getLevelMinMax( that ) );
+        this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
     };
 
     ServerLayer.prototype.deactivate = function() {
@@ -142,27 +162,6 @@
         this.map.off( "zoomend", this.zoomCallback );
         this.zoomCallback = null;
     };
-
-    /**
-     * Valid ramp type strings.
-     */
-    ServerLayer.prototype.RAMP_TYPES = [
-         {id: "spectral", name: "Spectral"},
-         {id: "hot", name: "Hot"},
-         {id: "polar", name: "Polar"},
-         {id: "neutral", name: "Neutral"},
-         {id: "cool", name: "Cool"},
-         {id: "valence", name: "Valence"},
-         {id: "flat", name: "Flat"}
-    ];
-
-    /**
-     * Valid ramp function strings.
-     */
-    ServerLayer.prototype.RAMP_FUNCTIONS = [
-        {id: "linear", name: "Linear"},
-        {id: "log10", name: "Log 10"}
-    ];
 
     /**
      * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
@@ -323,29 +322,12 @@
      * Generate query parameters based on state of layer
      */
     ServerLayer.prototype.getQueryParamString = function() {
-        function encodeQueryParams( params ) {
-            var query;
-            function traverseParams( params, query ) {
-                var result = "";
-                _.forIn( params, function( value, key ) {
-                    if ( typeof value !== "object" ) {
-                        result += query + key + '=' + value + "&";
-                    } else {
-                        result += traverseParams( params[ key ], query + key + "." );
-                    }
-                });
-                return result;
-            }
-            query = "?" + traverseParams( params, '' );
-            return query.slice( 0, query.length - 1 );
-        }
         var query = {
-                renderer: this.spec.renderer,
-                tileTransform: this.spec.tileTransform,
-                valueTransform: this.spec.valueTransform
-            };
-
-        return encodeQueryParams( query );
+            renderer: this.spec.renderer,
+            tileTransform: this.spec.tileTransform,
+            valueTransform: this.spec.valueTransform
+        };
+        return Util.encodeQueryParams( query );
     };
 
     module.exports = ServerLayer;

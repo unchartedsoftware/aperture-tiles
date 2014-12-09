@@ -37,8 +37,6 @@
 
     function AnnotationLayer( spec ) {
         // set reasonable defaults
-        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
         spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 500;
         spec.domain = "annotation";
         // call base constructor    

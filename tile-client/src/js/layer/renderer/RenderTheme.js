@@ -66,6 +66,20 @@
         return "";
     };
 
+    /**
+     * Instantiate a RenderTheme object.
+     *
+     * @param selector {String} The selector to append the theme under in the DOM.
+     * @param spec     {Object} The specification object.
+     * {
+     *     color                  {String} The css color attribute for the component.
+     *     color:hover            {String} The css color attribute for the component, under hover.
+     *     background-color       {String} The css background-color attribute for the component.
+     *     background-color:hover {String} The css background-color attribute for the component, under hover.
+     *     text-shadow            {String} The css text-shadow attribute for the component.
+     *     border                 {String} The css border attribute for the component.
+     * }
+     */
     function RenderTheme( selector, spec ) {
         spec = spec || {};
         this.selector = selector;

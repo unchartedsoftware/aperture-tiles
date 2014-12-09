@@ -28,32 +28,7 @@
     "use strict";
 
     var $ = require('jquery'),
-        _ = require('lodash');
-
-    /**
-     * Private: encodes parameter object into a dot notation query
-     * parameter string.
-     *
-     * @param params {Object} parameter object
-     */
-    function encodeQueryParams( params ) {
-        var query;
-        function traverseParams( params, query ) {
-            var result = "";
-            _.forIn( params, function( value, key ) {
-                if ( value instanceof Array ) {
-                    result += query + key + '=' + value.join(',') + "&";
-                } else if ( typeof value !== "object" ) {
-                    result += query + key + '=' + value + "&";
-                } else {
-                    result += traverseParams( params[ key ], query + key + "." );
-                }
-            });
-            return result;
-        }
-        query = "?" + traverseParams( params, '' );
-        return query.slice( 0, query.length - 1 );
-    }
+        Util = require('../util/Util');
 
     /**
      * Private: encodes parameter object into query parameter string.
@@ -78,7 +53,7 @@
             var _params = ( typeof params === "object" ) ? params : null,
                 _success = ( typeof success === "function" ) ? success : null;
             $.get(
-                'rest/v1.0/legend/' + layerId + encodeQueryParams( _params )
+                'rest/v1.0/legend/' + layerId + Util.encodeQueryParams( _params )
             ).then(
                 _success,
                 handleError
@@ -98,7 +73,7 @@
             // explicitly set output type to png image
             _params.output = 'png';
             $.get(
-                'rest/v1.0/legend/' + layerId + encodeQueryParams( _params )
+                'rest/v1.0/legend/' + layerId + Util.encodeQueryParams( _params )
             ).then(
                 _success,
                 handleError

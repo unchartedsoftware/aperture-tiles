@@ -51,6 +51,21 @@
         }
     };
 
+    /**
+     * Instantiate a PointAggregateRenderer object.
+     *
+     * @param spec {Object} The specification object.
+     * {
+     *     point: {
+     *         xKey   {String} The attribute for the x coordinate.
+     *         yKey   {String} The attribute for the y coordinate.
+     *         themes {Array}  The array of RenderThemes to be attached to this component.
+     *     }
+     *     aggregate: {
+     *         themes {Array}  The array of RenderThemes to be attached to this component.
+     *     }
+     * }
+     */
     function PointAggregateRenderer( spec ) {
         Renderer.call( this, spec );
         injectCss( this.spec );
@@ -60,9 +75,9 @@
 
     PointAggregateRenderer.prototype.render = function( data ) {
 
-        var //spec = this.spec,
-            //meta = this.meta[ this.map.getZoom() ],
+        var spec = this.spec,
             values = data.tile.values,
+            point = spec.point,
             entries = [],
             positionMap = {},
             positionKey,
@@ -91,7 +106,7 @@
                 // get annotations position in viewport space
                 tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
                 tilePos = MapUtil.getTopLeftViewportPixelForTile( this.map, tilekey );
-                position = MapUtil.getViewportPixelFromCoord( this.map, value[j].x, value[j].y );
+                position = MapUtil.getViewportPixelFromCoord( this.map, value[j][point.xKey], value[j][point.yKey] );
                 // get relative position from tile top left
                 offset = {
                     x: position.x - tilePos.x,

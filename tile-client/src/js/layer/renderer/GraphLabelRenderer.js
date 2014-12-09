@@ -42,6 +42,18 @@
         }
     };
 
+    /**
+     * Instantiate a GraphLabelRenderer object.
+     *
+     * @param spec {Object} The specification object.
+     * {
+     *     text: {
+     *         xKey   {String} The attribute for the x coordinate.
+     *         yKey   {String} The attribute for the y coordinate.
+     *         themes {Array}  The array of RenderThemes to be attached to this component.
+     *     }
+     * }
+     */
     function GraphLabelRenderer( spec ) {
         Renderer.call( this, spec );
         injectCss( this.spec );
@@ -118,8 +130,8 @@
             }
 
             // get label position
-            x = ( community[ text.x ] % range ) * scale;
-            y = ( community[ text.y ] % range ) * scale;
+            x = ( community[ text.xKey ] % range ) * scale;
+            y = ( community[ text.yKey ] % range ) * scale;
 
             // capitalize label
             label = capitalize( split[ labelIndex ].toLowerCase() );

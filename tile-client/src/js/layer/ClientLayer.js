@@ -34,10 +34,24 @@
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
+    /**
+     * Instantiate a client renderer layer, passing the "top-tweets" laye as its source.
+     *
+     * opacity {float}   The opacity of the layer. Default = 1.0
+     * enabled {boolean} Whether the layer is visible or not. Default = true
+     * zIndex {integer}  The z index of the layer. Default = 1000
+     *
+     * Rendering options:
+     *
+     *     renderer {Renderer} The tile renderer object.
+     *
+     *          or
+     *
+     *     html {String|Function|HTMLElement|jQuery} The html for the tile.
+     *
+     */
     function ClientLayer( spec ) {
         // set reasonable defaults
-        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
         spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
         spec.domain = "client";
         // call base constructor    
