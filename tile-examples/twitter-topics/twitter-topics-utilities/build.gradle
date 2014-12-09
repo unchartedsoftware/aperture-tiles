@@ -13,23 +13,6 @@ test << {
 	}
 }
 
-// Add a delete to the clean task that will remove the scripts directory if it exists.
-clean {
-	inputs.file "scripts/spark-run"
-	delete "scripts/spark-run"
-}
-
-// aperture config file.  It will run before the jar assembly task.
-task copyFilteredScripts(type: Copy) {
-	from "src/main/filtered-scripts-gradle"
-	into "scripts"
-	filter ReplaceTokens, tokens:[
-		"project.version": version.toString(),
-		"hbase-jars": getHBaseJarStrings().toString()
-	]
-}
-processResources.dependsOn copyFilteredScripts
- 
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
 // in our setup because the scala code in this project is used by the java code (causing 
 // compile errors).  We force the plugin to use an empty source set for java, and then set the

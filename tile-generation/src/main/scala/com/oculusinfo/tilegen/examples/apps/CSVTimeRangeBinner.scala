@@ -61,7 +61,6 @@ import com.oculusinfo.tilegen.datasets.DatasetFactory
 import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
 import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
 import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
@@ -311,7 +310,7 @@ object CSVTimeRangeBinner {
 		
 		val connectorProperties = new PropertiesWrapper(defProps)
 		val connector = connectorProperties.getSparkConnector()
-		val sc = connector.getSparkContext("Pyramid Binning")
+		val sc = connector.createContext(Some("Pyramid Binning"))
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val tileIO = TileIO.fromArguments(defaultProperties)

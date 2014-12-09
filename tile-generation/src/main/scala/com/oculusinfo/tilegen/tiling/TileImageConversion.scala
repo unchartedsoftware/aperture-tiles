@@ -97,7 +97,7 @@ object TileToTextConverter {
 			val y = argParser.getInt("y", "The y index of the tile to display")
 			val t = argParser.getInt("t", "The number in the series of values to display")
 
-			val sc = connector.getSparkContext("Convert tile pyramid to images")
+			val sc = connector.createContext(Some("Convert tile pyramid to images"))
 			val serializer = new PrimitiveArrayAvroSerializer(classOf[Double], CodecFactory.bzip2Codec())
 			val tiles = tileIO.readTileSet(sc, serializer, source, List(level))
 			val tile = tiles.filter(tile =>
@@ -196,7 +196,7 @@ object TileToImageConverter {
 			                                 ",")
 
 
-			val sc = connector.getSparkContext("Convert tile pyramid to images")
+			val sc = connector.createContext(Some("Convert tile pyramid to images"))
 
 			// And, finally, the serializer determines the converter type
 			argParser.getString("ser",

@@ -1,7 +1,3 @@
-# spark connection details
-spark=local
-sparkhome=/opt/spark
-
 # general input properties
 oculus.binning.source.location=file:///datasets/julia
 oculus.binning.separator=\t

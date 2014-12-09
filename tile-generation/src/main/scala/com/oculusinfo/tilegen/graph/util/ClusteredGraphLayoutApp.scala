@@ -24,14 +24,8 @@
  */
 
 package com.oculusinfo.tilegen.graph.util
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.graphx._
-
 import com.oculusinfo.tilegen.util.ArgumentParser
 //import com.oculusinfo.tilegen.graph.util.ForceDirectedLayout
-import com.oculusinfo.tilegen.spark.MavenReference
 import com.oculusinfo.tilegen.spark.SparkConnector
 
 object ClusteredGraphLayoutApp {
@@ -41,10 +35,7 @@ object ClusteredGraphLayoutApp {
 		val argParser = new ArgumentParser(args)
 		argParser.debug
 
-		val jars =
-			Seq(new MavenReference("com.oculusinfo", "tile-generation", SparkConnector.getDefaultVersions("base"))
-			) union SparkConnector.getDefaultLibrariesFromMaven
-		val sc = argParser.getSparkConnector(jars).getSparkContext("Clustered Graph Layout") 
+		val sc = argParser.getSparkConnector.createContext(Some("Clustered Graph Layout"))
 		val sourceDir = argParser.getString("source", "The source directory where to find clustered graph data")
 		val outputDir = argParser.getString("output", "The output location where to save data")		
 		val partitions = argParser.getInt("parts", "The number of partitions into which to read the raw data", Some(0))

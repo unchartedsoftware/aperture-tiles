@@ -28,26 +28,18 @@ package com.oculusinfo.twitter.tilegen
 
 
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.{List => JavaList}
-
-import scala.reflect.ClassTag
-
-import org.apache.spark.rdd.RDD
-import scala.util.Try
+import java.util.{Date, List => JavaList}
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-
-import com.oculusinfo.tilegen.spark.MavenReference
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescription, CompositeAnalysisDescription}
+import com.oculusinfo.tilegen.tiling.{CartesianIndexScheme, RDDBinner, TileIO}
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
+import org.apache.spark.rdd.RDD
+
+import scala.reflect.ClassTag
+import scala.util.Try
 
 
 
@@ -56,11 +48,7 @@ object TwitterTopicBinner {
 		val argParser = new ArgumentParser(args)
 		argParser.debug
 
-		val versions = SparkConnector.getDefaultVersions
-		val jars =
-			Seq(new MavenReference("com.oculusinfo", "twitter-topics-utilities", versions("base"))
-			) union SparkConnector.getDefaultLibrariesFromMaven
-		val sc = argParser.getSparkConnector(jars).getSparkContext("Twitter demo data tiling")
+		val sc = argParser.getSparkConnector.createContext(Some("Twitter demo data tiling"))
 		val source = argParser.getString("source", "The source location at which to find twitter data")
 		val dateParser = new SimpleDateFormat("yyyy/MM/dd.HH:mm:ss.zzzz")
 		// Note:  don't need a start time for this binning project.  Start time is assumed to be 31 days prior to end time.
@@ -83,7 +71,7 @@ object TwitterTopicBinner {
 		// exception in the case it does not exist. Union all RDDs together.
 		val rawData = files.map { file =>
 		    Try({
-		        var tmp = if (0 == partitions) {
+		        val tmp = if (0 == partitions) {
 		            sc.textFile( file )
 		        } else {
 		            sc.textFile( file , partitions)

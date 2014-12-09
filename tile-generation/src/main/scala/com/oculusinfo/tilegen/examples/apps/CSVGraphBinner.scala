@@ -29,40 +29,16 @@ package com.oculusinfo.tilegen.examples.apps
 
 import java.io.FileInputStream
 import java.util.Properties
-import scala.collection.JavaConverters._
+
+import com.oculusinfo.binning.BinIndex
+import com.oculusinfo.tilegen.datasets.{Dataset, DatasetFactory}
+import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, RDDBinner, RDDLineBinner, SqliteTileIO, TileIO}
+import com.oculusinfo.tilegen.util.{EndPointsToLine, PropertiesWrapper}
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+
 import scala.reflect.ClassTag
 import scala.util.Try
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.api.java.JavaRDD
-import org.apache.spark.storage.StorageLevel
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.tilegen.datasets.CartesianIndexExtractor
-import com.oculusinfo.tilegen.datasets.CSVDataset
-import com.oculusinfo.tilegen.datasets.CSVDatasetBase
-import com.oculusinfo.tilegen.datasets.CSVDataSource
-import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.datasets.GraphRecordParser
-import com.oculusinfo.tilegen.datasets.LineSegmentIndexExtractor
-import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.RDDLineBinner
-import com.oculusinfo.tilegen.tiling.SqliteTileIO
-import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import scala.reflect.ClassTag
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.tilegen.util.EndPointsToLine
 
 
 /**
@@ -401,7 +377,7 @@ object CSVGraphBinner {
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
-		val sc = connector.getSparkContext("Pyramid Binning")
+		val sc = connector.createContext(Some("Pyramid Binning"))
 		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file

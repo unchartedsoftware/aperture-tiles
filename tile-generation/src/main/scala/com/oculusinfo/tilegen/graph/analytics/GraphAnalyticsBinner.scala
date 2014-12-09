@@ -411,7 +411,7 @@ object GraphAnalyticsBinner {
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
-		val sc = connector.getSparkContext("Pyramid Binning")
+		val sc = connector.createContext(Some("Pyramid Binning"))
 		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file

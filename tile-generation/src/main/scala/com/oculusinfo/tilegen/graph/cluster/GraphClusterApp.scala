@@ -25,13 +25,9 @@
 
 package com.oculusinfo.tilegen.graph.cluster
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.graphx._
-import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.tilegen.spark.MavenReference
 import com.oculusinfo.tilegen.spark.SparkConnector
+import com.oculusinfo.tilegen.util.ArgumentParser
+import org.apache.spark.graphx._
 
 
 /**
@@ -78,9 +74,7 @@ object GraphClusterApp {
 	val argParser = new ArgumentParser(args)
 	argParser.debug
 
-	val jars =
-		Seq(new MavenReference("com.oculusinfo", "tile-generation", SparkConnector.getDefaultVersions("base"))) union SparkConnector.getDefaultLibrariesFromMaven
-	val sc = argParser.getSparkConnector(jars).getSparkContext("Graph Clustering")
+	val sc = argParser.getSparkConnector.createContext(Some("Graph Clustering"))
 	
 	val sourceFile = argParser.getString("source", "The source location at which to find the data")
 	val bOnlyEdges = argParser.getBoolean("onlyEdges", "If set to true then source data can simply be a delimited file of edges only", Some(false))

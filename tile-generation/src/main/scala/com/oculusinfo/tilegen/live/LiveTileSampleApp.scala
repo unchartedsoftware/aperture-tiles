@@ -52,7 +52,7 @@ object LiveTileSampleApp {
 		val argParser = new ArgumentParser(args)
 
 		try {
-			val sc = argParser.getSparkConnector().getSparkContext("tile generator")
+			val sc = argParser.getSparkConnector().createContext(Some("tile generator"))
 			val dataFile = argParser.getString("s", "The source data file to read")
 			val data = sc.textFile(dataFile).map(s =>
 				{
