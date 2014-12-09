@@ -1,0 +1,12 @@
+description = "A basic map client that allows for client-side user interaction with"
+
+// Define a configuration for the war overlay process.
+configurations {
+	clientFiles
+}
+
+// Add the tile service war to the overlay config so we can reference it below.  Pull the 
+// tile service war out of that project's exposed config.
+artifacts {
+	clientFiles file("src/main/webapp")
+}
