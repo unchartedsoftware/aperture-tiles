@@ -34,29 +34,30 @@
         LayerUtil = require('./LayerUtil'),
         PubSub = require('../util/PubSub'),
         LegendService = require('../rest/LegendService'),
-        requestRampImage,
-        getLevelMinMax,
+        setRampImageUrl,
+        setLevelMinMax,
         zoomCallback;
 
     /**
-     * Private: Request colour ramp image from server.
+     * Private: Request colour ramp image from server and set layer property when received.
      *
      * @param layer {Object} the layer object
      */
-    requestRampImage = function( layer ) {
+    setRampImageUrl = function( layer ) {
         LegendService.getEncodedImage( layer.spec.source.id, {
                 renderer: layer.spec.renderer
-            }, function ( legendString ) {
-                 layer.setRampImageUrl( legendString );
+            }, function ( url ) {
+                layer.rampImageUrl = url;
+                PubSub.publish( layer.getChannel(), { field: 'rampImageUrl', value: url });
             });
     };
 
     /**
-     * Private: Returns the layers min and max values for the given zoom level.
+     * Private: Sets the layers min and max values for the given zoom level.
      *
      * @param layer {Object} the layer object.
      */
-    getLevelMinMax = function( layer ) {
+    setLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
             coarseness = layer.spec.renderer.coarseness,
             adjustedZoom = zoomLevel - ( coarseness-1 ),
@@ -66,7 +67,8 @@
                 min: null,
                 max: null
             };
-        return [ minMax.min, minMax.max ];
+        layer.levelMinMax =  [ minMax.min, minMax.max ];
+        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: minMax });
     };
 
     /**
@@ -77,7 +79,7 @@
     zoomCallback = function( layer ) {
         return function() {
             if ( layer.olLayer ) {
-                layer.setLevelMinMax( getLevelMinMax( layer ) );
+                setLevelMinMax( layer );
             }
         };
     };
@@ -150,8 +152,8 @@
         this.setZIndex( this.spec.zIndex );
         this.setOpacity( this.spec.opacity );
         this.setVisibility( this.spec.enabled );
-        this.setLevelMinMax( getLevelMinMax( that ) );
         this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
+        setLevelMinMax( this );
     };
 
     ServerLayer.prototype.deactivate = function() {
@@ -164,6 +166,8 @@
     };
 
     /**
+     * Set the z index of the layer.
+     *
      * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
      */
     ServerLayer.prototype.setZIndex = function ( zIndex ) {
@@ -179,19 +183,21 @@
     };
 
     /**
-     * Get the layers zIndex
+     * Get the layers z index.
      */
     ServerLayer.prototype.getZIndex = function () {
         return this.spec.zIndex;
     };
 
     /**
-     * Updates the ramp type associated with the layer
+     * Set the ramp type associated with the layer.
+     *
+     * @param rampType {String} The ramp type used to render the images.
      */
     ServerLayer.prototype.setRampType = function ( rampType ) {
         var that = this;
         this.spec.renderer.ramp = rampType;
-        requestRampImage( that );
+        setRampImageUrl( that );
         this.olLayer.redraw();
     };
 
@@ -203,48 +209,34 @@
     };
 
     /**
-     * Updates the theme associated with the layer
+     * Set the theme associated with the layer.
+     *
+     * @param theme {String} The theme of the layer.
      */
     ServerLayer.prototype.setTheme = function( theme ) {
         var that = this;
         this.spec.renderer.theme = theme;
-        requestRampImage( that );
+        setRampImageUrl( that );
         this.olLayer.redraw();
         this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
     };
 
     /**
-     * Get the current theme for the layer
+     * Get the current theme for the layer.
      */
     ServerLayer.prototype.getTheme = function() {
         return this.spec.renderer.theme;
     };
 
     /**
-     * Sets the ramps current min and max
-     */
-    ServerLayer.prototype.setLevelMinMax = function( minMax ) {
-        this.levelMinMax = minMax;
-        PubSub.publish( this.getChannel(), { field: 'levelMinMax', value: minMax });
-    };
-
-    /**
-     * Get the ramps current min and max for the zoom level
+     * Get the current minimum and maximum values for the current zoom level.
      */
     ServerLayer.prototype.getLevelMinMax = function() {
         return this.levelMinMax;
     };
 
     /**
-     * Update the ramps URL string
-     */
-    ServerLayer.prototype.setRampImageUrl = function ( url ) {
-        this.rampImageUrl = url;
-        PubSub.publish( this.getChannel(), { field: 'rampImageUrl', value: url });
-    };
-
-    /**
-     * Get the current ramps URL string
+     * Get the current ramp image URL string
      */
     ServerLayer.prototype.getRampImageUrl = function() {
         return this.rampImageUrl;
@@ -256,57 +248,63 @@
      *
      * @param {string} rampFunction - The new new ramp function.
      */
-    ServerLayer.prototype.setRampFunction = function ( rampFunction ) {
+    ServerLayer.prototype.setValueTransformType = function ( rampFunction ) {
         this.spec.valueTransform = { type: rampFunction };
         this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'rampFunction', value: rampFunction });
+        PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: rampFunction });
     };
 
     /**
      * Get the current ramps function
      */
-    ServerLayer.prototype.getRampFunction = function() {
+    ServerLayer.prototype.getValueTransformType = function() {
         return this.spec.valueTransform.type;
     };
 
     /**
-     * Set the layers transformer type
+     * Set the layers tile transform type
+     *
+     * @param transformType {String} The tile transformer type.
      */
-    ServerLayer.prototype.setTransformerType = function ( transformerType ) {
-        this.spec.tileTransform.type = transformerType;
+    ServerLayer.prototype.setTileTransformType = function ( transformType ) {
+        this.spec.tileTransform.type = transformType;
         this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'transformerType', value: transformerType });
+        PubSub.publish( this.getChannel(), { field: 'tileTransformType', value: transformType });
     };
 
     /**
      * Get the layers transformer type
      */
-    ServerLayer.prototype.getTransformerType = function () {
+    ServerLayer.prototype.getTileTransformType = function () {
         return this.spec.tileTransform.type;
     };
 
     /**
-     * Set the transformer data arguments
+     * Set the tile transform data attribute
+     *
+     * @param transformData {Object} The tile transform data attribute.
      */
-    ServerLayer.prototype.setTransformerData = function ( transformerData ) {
-        this.spec.tileTransform.data = transformerData;
+    ServerLayer.prototype.setTileTransformData = function ( transformData ) {
+        this.spec.tileTransform.data = transformData;
         this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'transformerData', value: transformerData });
+        PubSub.publish( this.getChannel(), { field: 'tileTransformData', value: transformData });
     };
 
     /**
      * Get the transformer data arguments
      */
-    ServerLayer.prototype.getTransformerData = function () {
+    ServerLayer.prototype.getTileTransformData = function () {
         return this.spec.tileTransform.data;
     };
 
     /**
-     * Set the layer coarseness
+     * Set the layer coarseness.
+     *
+     * @param coarseness {int} The pixel by pixel coarseness of the layer
      */
     ServerLayer.prototype.setCoarseness = function( coarseness ) {
         this.spec.renderer.coarseness = coarseness;
-        this.setLevelMinMax( getLevelMinMax( this ) );
+        setLevelMinMax( this ); // coarseness modifies the min/max
         this.olLayer.redraw();
         PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
     };
