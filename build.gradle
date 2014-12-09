@@ -189,46 +189,16 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 				httpPort = 8080
 				contextPath = project.name
 			}
-			
-			// Define a configuration for the war overlay process.
-			configurations {
-				projectUnderlay
-			}
-			
-			// Add the tile service war to the overlay config
+
+			// Add the tile service project output
 			dependencies {
-				projectUnderlay project(path: ":tile-client", configuration: "tileClientUnderlay")
+				compile project(path: ":tile-service")
 			}
-			
-			// Append an action to the clean task that will clean up the old
-			// aperture-config.json file
-			clean {
-				delete "src/main/webapp/data/aperture-config.json"
+
+			// configure the war task to pick up the tile client files
+			war {
+				from project(":tile-client").configurations.clientFiles.artifacts.files
 			}
-			
-			// Add a task of predefined type Copy to copy and filter the
-			// aperture config file.  It will run before the war build task.
-			task copyApertureConfig(type: Copy) {
-				inputs.file file("src/main/filteredResources/aperture-config.json")
-				outputs.file file("src/main/webapp/data/aperture-config.json")
-				
-				from "src/main/filteredResources"
-				into "src/main/webapp/data"
-				include "aperture-config.json"
-				filter ReplaceTokens, tokens:["project-name": project.name]
-			}
-			war.dependsOn copyApertureConfig
-			
-			// Append the overlay process to the end of the WAR task.
-			war << {
-				// unpack all the war files into the temp directory for this task
-				configurations.projectUnderlay.each {
-						ant.unwar src: it, dest: temporaryDir
-				}
-				// update the war file
-				ant.war basedir: temporaryDir, destfile: archivePath, update: true
-			}
-			war.dependsOn ":tile-client:war"
 		}
 	}
 }
