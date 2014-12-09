@@ -494,7 +494,7 @@ def aggregate (a: Map[String, TwitterDemoTopicRecord],
 
 ###### <a name="custom-aggregation"></a> Custom Aggregation Methods ######
 
-Lines 96-104  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
+Lines 84-92  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
 ```scala
 val minAnalysis:
@@ -593,7 +593,7 @@ val data: RDD[((Double, Double), PROCESSING_TYPE)]
 
 Where **PROCESSING_TYPE** is the processing type from your [Binning Analytic](#binning-analytic).
 
-Lines 160 - 175 in **TwitterTopicBinner.scala** retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
+Lines 148 - 163 in **TwitterTopicBinner.scala** retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i =>
@@ -616,7 +616,7 @@ data.cache
 
 #### <a name="binning"></a> Binning ####
 
-Lines 202 - 210 of **TwitterTopicBinner.scala** transform the data into tiles:
+Lines 190 - 198 of **TwitterTopicBinner.scala** transform the data into tiles:
 
 ```scala
 val tiles = binner.processDataByLevel(data,
@@ -699,7 +699,7 @@ It accepts the following properties:
 
 #### <a name="writing-tiles"></a> Writing Tiles ####
 
-Lines 211 - 218 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
+Lines 199 - 206 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
 
 ```scala
 tileIO.writeTileSet(tilePyramid,
