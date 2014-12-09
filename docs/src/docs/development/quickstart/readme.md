@@ -31,7 +31,7 @@ To begin this Quick Start example, you must perform the following steps:
 
 Aperture Tiles requires the following third-party tools on your local system:
 
-- **Operating System**: The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. 
+- **Operating System**: The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. <p class="list-paragraph">Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.</p>
 - **Cluster Computing**: To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 1.0.0 or greater. Spark is a the distributed framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
 
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
@@ -74,10 +74,10 @@ For a typical Aperture Tiles project, you will work with your own custom data se
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen
 .JuliaSetGenerator --master local[2] lib/tile-generation-assembly.jar -real 
--0.8 -imag 0.156 -output /data/julia-set -partitions 10 -samples 10000000
+-0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
 ```
 
-Check your output folder for 10 part files (`part-00000` to `part-00009`) of roughly equal size (1M records and ~44 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
+Check your output folder for 10 part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
 
 ## <a name="tile-generation"></a> Tile Generation ##
 

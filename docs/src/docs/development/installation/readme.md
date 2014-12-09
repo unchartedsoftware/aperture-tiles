@@ -20,7 +20,7 @@ For quick examples of the capabilities of Aperture Tiles:
 
 This project has the following prerequisites:
 
-- **Operating System**: Linux or OS X.
+- **Operating System**: Linux or OS X. <p class="list-paragraph">Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.</p>
 - **Languages**:
 	-   [**Scala**](http://www.scala-lang.org/) version 2.10.3
 	-   [**Java**](http://www.java.com/) (JDK version 1.7+)
