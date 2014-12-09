@@ -77,7 +77,7 @@ $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen
 -0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
 ```
 
-Check your output folder for 10 part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
+Check your output folder for 5 part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
 
 ## <a name="tile-generation"></a> Tile Generation ##
 
