@@ -132,7 +132,7 @@ To view other areas of the map, click and drag in the direction you want to see.
 	<h2>Interested in Learning More?</h2>
 
 	<ul>
-		<li><a href="../../tour/overview/">Tour</a>: Take our tour to learn more about Aperture Tiles.
+		<li><a href="../../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.
 		<li><a href="../development/quickstart/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
 		<ul>
 			<li><a href="../development/quickstart/">Quick Start</a>: Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.

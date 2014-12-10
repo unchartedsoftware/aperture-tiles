@@ -17,11 +17,11 @@ Please note that Aperture Tiles is dependent on the *master* branch of Aperture 
 
 <a href="https://github.com/oculusinfo/aperturejs/tree/master" class="download-link">Aperture JS Source Code</a>
 
-For information on full installations of Aperture Tiles (along with Aperture JS), see the [Installation](../documentation/installation/) page.
+For information on full installations of Aperture Tiles (along with Aperture JS), see the [Installation](../docs/development/installation/) page.
 
 ## Packaged Distribution ##
 
-The following pre-built distribution can be used to quickly generate and display tiles without having to build the software. See the [Quick Start](../documentation/quickstart) documentation to help you quickly learn how to process a data set, transform it and create an Aperture Tiles project that allows you to visualize it in a web browser.
+The following pre-built distribution can be used to quickly generate and display tiles without having to build the software. See the [Quick Start](../docs/development/quickstart) documentation to help you quickly learn how to process a data set, transform it and create an Aperture Tiles project that allows you to visualize it in a web browser.
 
 - <a name="tile-generator"></a>**Tile Generator**: Enables you to generate a set of tiles that can be viewed using the template Tile Client available below. This version was built for Apache Spark 1.0 and CDH 4.6.
 	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.4-dist.zip" class="download-link">Tile Generator</a><br/><br/>
@@ -32,11 +32,11 @@ The following pre-built distribution can be used to quickly generate and display
 	<h2>Interested in Learning More?</h2>
 
 	<ul>
-		<li><a href="../tour/overview/">Tour</a>: Take our tour to learn more about Aperture Tiles.
+		<li><a href="../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.
 		<li><a href="../docs/development/quickstart/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
 		<ul>
 			<li><a href="../docs/development/quickstart/">Quick Start</a>: Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
 		</ul>
-		<li><a href="demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.
+		<li><a href="../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.
 	</ul>
 </div>
