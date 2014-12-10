@@ -33,20 +33,24 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
-public class FileSystemPyramidIO implements PyramidIO {
+
+/**
+ * Extends the PyramidSource abstract class for file system (directory) based tiles.
+ *  
+ */
+public class FileSystemPyramidSource extends PyramidSource {
+	
 	private String _rootPath;
 	private String _extension;
 
 
-
-	public FileSystemPyramidIO (String rootPath, String extension){
+	public FileSystemPyramidSource (String rootPath, String extension){
 		//if there's no root path, then it should be based on a relative path, so make sure to set root path to '.'
 		if (rootPath == null || rootPath.trim().length() == 0) {
 			rootPath = "./";
@@ -56,34 +60,18 @@ public class FileSystemPyramidIO implements PyramidIO {
 		_rootPath = (rootPath.trim().endsWith("/"))? rootPath : rootPath.trim() + "/";
 		_extension = extension;
 	}
-
-	public Object getRootPath () {
-		return _rootPath;
-	}
 	
-	private File getLevelDir (String basePath, TileIndex tile) {
-		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
-		                              + "/%d/",
-		                              _rootPath + basePath,
-		                              tile.getLevel() ));
-	}
-	
-	private File getXDir (String basePath, TileIndex tile) {
-		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
-		                              + "/%d/%d/",
-		                              _rootPath + basePath,
-		                              tile.getLevel(), tile.getX() ));
+	@Override
+	public InputStream getSourceTileStream (String basePath, TileIndex tile) throws IOException {
+		return getTileStream(basePath, null, tile);
 	}
 
-	private File getTileFile (String basePath, TileIndex tile) {
-		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
-		                              + "/%d/%d/%d." + _extension,
-		                              _rootPath + basePath,
-		                              tile.getLevel(), tile.getX(), tile.getY()));
-	}
+	@Override
+	public InputStream getSourceMetaDataStream (String basePath) throws IOException {
+		File metaDataFile = getMetaDataFile(basePath);
+		if (!metaDataFile.exists()) return null;
 
-	private File getMetaDataFile (String basePath) {
-		return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
+		return new FileInputStream(metaDataFile);
 	}
 
 	@Override
@@ -114,10 +102,6 @@ public class FileSystemPyramidIO implements PyramidIO {
 		stream.close();
 	}
 
-	@Override
-	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
-		// Noop
-	}
 
 	@Override
 	public <T> List<TileData<T>> readTiles (String basePath,
@@ -184,6 +168,31 @@ public class FileSystemPyramidIO implements PyramidIO {
 			}
 
 		}
+	}
+	
+	private File getLevelDir (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/",
+		                              _rootPath + basePath,
+		                              tile.getLevel() ));
+	}
+	
+	private File getXDir (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/%d/",
+		                              _rootPath + basePath,
+		                              tile.getLevel(), tile.getX() ));
+	}
+
+	private File getTileFile (String basePath, TileIndex tile) {
+		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
+		                              + "/%d/%d/%d." + _extension,
+		                              _rootPath + basePath,
+		                              tile.getLevel(), tile.getX(), tile.getY()));
+	}
+
+	private File getMetaDataFile (String basePath) {
+		return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
 	}
     
 }

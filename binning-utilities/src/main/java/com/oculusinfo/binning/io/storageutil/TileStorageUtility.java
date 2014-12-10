@@ -72,7 +72,7 @@ public class TileStorageUtility {
 			PyramidIO fromobject = null;
 			
 			if (fromtype.equals("FileSystem")) {
-				fromobject = new FileSystemPyramidIO(rootpath, "avro");
+				fromobject = new FileBasedPyramidIO(new FileSystemPyramidSource(rootpath, "avro"));
 			} else if (fromtype.equals("HBase")) {
 				//
 				String fromzookeeperQuorum = properties.getProperty(prefix+"zookeeperQuorum");
@@ -84,13 +84,13 @@ public class TileStorageUtility {
 						fromhbaseMaster);
 				
 			} else if (fromtype.equals("Zip")) {
-		        PyramidStreamSource newSource = new ZipResourcePyramidStreamSource(rootpath, "tile");
-		        fromobject = new ResourceStreamReadOnlyPyramidIO(newSource);
+		        PyramidSource newSource = new ZipResourcePyramidSource(rootpath, "tile");
+		        fromobject = new FileBasedPyramidIO(newSource);
 			} else if (fromtype.equals("SQLite")) {
 		//		fromobject = new SQLitePyramidIO(rootpath);
 			} else if (fromtype.equals("ClassResourceStream")) {
-		        PyramidStreamSource newSource = new ResourcePyramidStreamSource(rootpath, "avro");
-		        fromobject = new ResourceStreamReadOnlyPyramidIO(newSource);
+		        PyramidSource newSource = new ResourcePyramidSource(rootpath, "avro");
+		        fromobject = new FileBasedPyramidIO(newSource);
 			}
 			
 			return fromobject;

@@ -25,9 +25,9 @@
 package com.oculusinfo.binning.visualization;
 
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.PyramidStreamSource;
-import com.oculusinfo.binning.io.impl.ResourceStreamReadOnlyPyramidIO;
-import com.oculusinfo.binning.io.impl.ZipResourcePyramidStreamSource;
+import com.oculusinfo.binning.io.impl.PyramidSource;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIO;
+import com.oculusinfo.binning.io.impl.ZipResourcePyramidSource;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -41,7 +41,7 @@ import java.io.File;
 
 
 /**
- * Class to allow a user to specify parameters for a FileSystemPyramidIO, and to
+ * Class to allow a user to specify parameters for a Zip based FileBasedPyramidIO, and to
  * create one.
  * 
  * @author nkronenfeld
@@ -54,7 +54,7 @@ public class ZipFilePyramidIOSelector extends JPanel implements PyramidIOSelecto
 
 	private String                          _zipPath;
 	private String                          _extension;
-	private ResourceStreamReadOnlyPyramidIO _io;
+	private FileBasedPyramidIO 				_io;
 	private JTextField                      _zipPathField;
 	private JFileChooser                    _fileChooser;
 	private JTextField                      _extensionField;
@@ -144,10 +144,10 @@ public class ZipFilePyramidIOSelector extends JPanel implements PyramidIOSelecto
 	}
 
 	private void updatePyramid () {
-		ResourceStreamReadOnlyPyramidIO oldIO = _io;
+		FileBasedPyramidIO oldIO = _io;
 		if (null != _zipPath && null != _extension) {
-			PyramidStreamSource newSource = new ZipResourcePyramidStreamSource(_zipPath, _extension);
-			_io = new ResourceStreamReadOnlyPyramidIO(newSource);
+			PyramidSource newSource = new ZipResourcePyramidSource(_zipPath, _extension);
+			_io = new FileBasedPyramidIO(newSource);
 			firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
 		} else if (null != oldIO) {
 			_io = null;

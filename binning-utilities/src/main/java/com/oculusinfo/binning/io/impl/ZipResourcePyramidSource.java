@@ -26,6 +26,9 @@ package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.PyramidIOFactory;
+import com.oculusinfo.binning.util.Pair;
+
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.slf4j.Logger;
@@ -33,17 +36,49 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
+
+/**
+ * Extends the PyramidSource abstract class for zip based tiles.
+ *  
+ */
+public class ZipResourcePyramidSource extends PyramidSource {
 
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	private ZipFile      _tileSetArchive;
 	private String       _tileExtension;
 
-
+	// We meed a global cache of zip stream sources - zip files are very slow to
+	// read, so the source is slow to initialize, so creating a new one each
+	// time we run isn't feasible.
+	private static Map<Pair<String, String>, ZipResourcePyramidSource> _zipfileCache = new HashMap<>();
 	
-	public ZipResourcePyramidStreamSource (String zipFilePath, String tileExtension) {
+	static ZipResourcePyramidSource getZipSource (String rootpath, String extension) {
+		Pair<String, String> key = new Pair<>(rootpath, extension);
+		if (!_zipfileCache.containsKey(key)) {
+			synchronized (_zipfileCache) {
+				if (!_zipfileCache.containsKey(key)) {
+					if (rootpath.startsWith("file://")) {
+						rootpath = rootpath.substring(7);
+					} else if (rootpath.startsWith("res://")) {
+						rootpath = rootpath.substring(6);
+						URL zipFile = PyramidIOFactory.class.getResource(rootpath);
+						rootpath = zipFile.getFile();
+					}
+
+					ZipResourcePyramidSource source = new ZipResourcePyramidSource(rootpath, extension);
+					_zipfileCache.put(key, source);
+				}
+			}
+		}
+		return _zipfileCache.get(key);
+	}
+	
+	public ZipResourcePyramidSource (String zipFilePath, String tileExtension) {
 		try {
 			_tileSetArchive = new ZipFile(zipFilePath);
 			_tileExtension = tileExtension;
@@ -53,14 +88,14 @@ public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 	}
 	
 	@Override
-	public InputStream getTileStream(String basePath, TileIndex tile) throws IOException {
+	protected InputStream getSourceTileStream (String basePath, TileIndex tile) throws IOException {
 		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _tileExtension, basePath, tile.getLevel(), tile.getX(), tile.getY());
 		ZipArchiveEntry entry = _tileSetArchive.getEntry(tileLocation);
 		return _tileSetArchive.getInputStream(entry);
 	}
 
 	@Override
-	public InputStream getMetaDataStream(String basePath) throws IOException {
+	protected InputStream getSourceMetaDataStream (String basePath) throws IOException {
 		String location = basePath+"/"+PyramidIO.METADATA_FILENAME;
 		ZipArchiveEntry entry = _tileSetArchive.getEntry(location);
 		return _tileSetArchive.getInputStream(entry);

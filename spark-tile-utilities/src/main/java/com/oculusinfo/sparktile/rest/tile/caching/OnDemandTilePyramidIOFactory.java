@@ -54,7 +54,7 @@ public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO>
 			return new OnDemandAccumulatorPyramidIO(_contextProvider.getSparkContext(config));
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
+			LOGGER.error("Error trying to create FileBasedPyramidIO", e);
 		}
 		return null;
 	}

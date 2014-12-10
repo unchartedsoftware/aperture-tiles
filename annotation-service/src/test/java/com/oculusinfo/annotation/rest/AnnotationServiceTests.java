@@ -40,7 +40,8 @@ import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.util.AnnotationGenerator;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIO;
+import com.oculusinfo.binning.io.impl.FileSystemPyramidSource;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
@@ -51,6 +52,7 @@ import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
+
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -407,7 +409,7 @@ public class AnnotationServiceTests {
 					((HBaseAnnotationIO)dataIo).dropTable( _dataId );
 				}
 
-				if ( tileIo instanceof FileSystemPyramidIO &&
+				if ( tileIo instanceof FileBasedPyramidIO &&
 				     dataIo instanceof FileSystemAnnotationIO ) {
 					LOGGER.debug("Deleting temporary file system folders");
 					try {
