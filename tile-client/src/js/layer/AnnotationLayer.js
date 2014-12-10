@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * An annotation layer that is used to manage mutable tile data.
+ */
 ( function() {
 
     "use strict";

@@ -80,6 +80,14 @@ public interface LayerService {
     public JSONObject getLayerStates( String layerId );
 
     /**
+     * Returns a JSONObject containing the specific configuration state under the provided
+     * layer id.
+     * @param layerId The layer identification string
+     * @param stateId The state identification string
+     */
+    public JSONObject getLayerState( String layerId, String stateId );
+
+    /**
      * Returns the meta-data associated with the given layer
      * @param layerId The layer identification string
      */

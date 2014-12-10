@@ -23,26 +23,28 @@
  * SOFTWARE.
  */
 
+/**
+ * A namespace that provides layer service functionality. Functionality
+ * includes:
+ *
+ *      - Retrieving information for all layers via GET request
+ *      - Retrieving information for a specific layer via GET request
+ *      - Saving a layer's configuration state via POST request
+ *      - Getting all configuration states for a layer via GET request
+ *      - Getting a specific configuration state for a layer via GET request
+ */
 ( function() {
 
     "use strict";
 
-    var $ = require('jquery');
-
-    /**
-     * Private: encodes parameter object into query parameter string.
-     *
-     * @param xhr {XmlHttpRequest} XmlHttpRequest object
-     */
-    function handleError( xhr ) {
-        console.error( xhr.responseText );
-        console.error( xhr );
-    }
+    var $ = require('jquery' ),
+        Util = require('../util/Util');
 
     module.exports = {
 
         /**
-         * Request all layers from the server.
+         * Request all layers from the server. Upon success, will execute success
+         * callback function passing the resulting object as first argument.
          *
          * @param [success] {Function} function called after success received (optional)
          */
@@ -52,13 +54,13 @@
                 'rest/v1.0/layers'
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
         /**
-         * Request a specific layer from the server, sending it to the listed callback
-         * function when it is received.
+         * Request a specific layer from the server. Upon success, will execute success
+         * callback function passing the resulting object as first argument.
          *
          * @param layerId   {String}   layer id
          * @param [success] {Function} function called after success received (optional)
@@ -69,12 +71,13 @@
                 'rest/v1.0/layers/' + layerId
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
         /**
-         * Store a configuration state on the server.
+         * Store a configuration state on the server. Upon success, will execute success
+         * callback function passing the resulting object as first argument.
          *
          * @param layerId   {String}   layer id
          * @param params    {Object}   layer configuration parameters
@@ -87,12 +90,13 @@
                 JSON.stringify( params )
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
         /**
-         * Get all configuration states for a layer on the server.
+         * Get all configuration states for a layer on the server. Upon success, will execute
+         * success callback function passing the resulting object as first argument.
          *
          * @param layerId   {String}   layer id
          * @param [success] {Function} function called after success received (optional)
@@ -103,7 +107,25 @@
                 'rest/v1.0/layers/' + layerId + '/states'
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
+            );
+        },
+
+        /**
+         * Get a configuration state for a layer on the server by state id. Upon success,
+         * will execute success callback function passing the resulting object as first argument.
+         *
+         * @param layerId   {String}   layer id
+         * @param stateId   {String}   state id
+         * @param [success] {Function} function called after success received (optional)
+         */
+        getLayerState: function( layerId, stateId, success ) {
+            var _success = ( typeof success === "function" ) ? success : null;
+            $.get(
+                'rest/v1.0/layers/' + layerId + '/states/' + stateId
+            ).then(
+                _success,
+                Util.handleHTTPError
             );
         }
     };

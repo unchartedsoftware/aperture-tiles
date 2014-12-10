@@ -23,6 +23,13 @@
  * SOFTWARE.
  */
 
+/**
+ * A namespace that provides layer service functionality. Functionality
+ * includes:
+ *
+ *      - Retrieving a tiles worth of data via GET request
+ *      - Retrieving a server rendered tile image via GET request
+ */
 ( function() {
     
     "use strict";
@@ -30,20 +37,11 @@
     var $ = require('jquery'),
         Util = require('../util/Util');
 
-    /**
-     * Private: encodes parameter object into query parameter string.
-     *
-     * @param xhr {XmlHttpRequest} XmlHttpRequest object
-     */
-    function handleError( xhr ) {
-        console.error( xhr.responseText );
-        console.error( xhr );
-    }
-
     module.exports = {
 
         /**
-         * Get a tiles data in JSON format.
+         * Get a tiles data in JSON format. Upon success, will execute success
+         * callback function passing the resulting object as first argument.
          *
          * @param layerId   {String}   layer id
          * @param level     {int}      tile level
@@ -63,7 +61,7 @@
                 + y + ".json" + Util.encodeQueryParams( _params )
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
@@ -88,7 +86,7 @@
                 + y + ".png" + Util.encodeQueryParams( _params )
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         }
     };

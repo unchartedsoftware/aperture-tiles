@@ -23,6 +23,10 @@
  * SOFTWARE.
  */
 
+/**
+ * A map object that acts as a central containing for all layers and other map
+ * components.
+ */
 ( function() {
 
 	"use strict";

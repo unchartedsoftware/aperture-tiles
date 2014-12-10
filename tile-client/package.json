@@ -1,9 +1,9 @@
 {
   "name": "aperture-tiles-client",
-  "version": "0.0.4",
+  "version": "0.4.0",
   "private": true,
-  "author": "Kevin Birk <kbirk@oculusinfo.com>",
-  "description": "Automated tile generation application",
+  "author": "Oculus Info Kevin Birk <www.oculusinfo.com>",
+  "description": "Aperture-Tiles Javascript Visualization Library",
   "contributors": [
     {
       "name": "Kevin Birk",
@@ -12,10 +12,10 @@
   ],
   "main": "app.js",
   "dependencies": {
-    "jquery": "^2.1.1",
-    "lodash": "^2.4.1"
   },
   "devDependencies": {
+    "jquery": "^2.1.1",
+    "lodash": "^2.4.1",
     "browserify": "^6.0.2",
     "del": "^1.1.0",
     "gulp": "^3.8.10",

@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A utility namespace containing axis related functionality.
+ */
 ( function() {
 
     "use strict";

@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A utility namespace containing commonly used functionality.
+ */
 ( function() {
 
     "use strict";
@@ -172,6 +175,7 @@
         /**
          * Return an object containing all parameters and values in the current
          * URL.
+         *
          * @returns {Object}
          */
         getURLParameters: function() {
@@ -180,7 +184,7 @@
                 result = {},
                 keyValue,
                 i;
-            for  (i=0; i<urlVars.length; ++i ) {
+            for ( i=0; i<urlVars.length; ++i ) {
                 keyValue = urlVars[i].split('=');
                 result[ keyValue[0] ] = keyValue[1];
             }
@@ -195,6 +199,16 @@
          */
         getURLParameter: function( key ) {
             return this.getURLParameters()[ key ];
+        },
+
+        /**
+         * HTTP REST Error handling function.
+         *
+         * @param xhr {XmlHttpRequest} XmlHttpRequest object
+         */
+        handleHTTPError: function( xhr ) {
+            console.error( xhr.responseText );
+            console.error( xhr );
         },
 
         /**

@@ -23,6 +23,10 @@
  * SOFTWARE.
  */
 
+/**
+ * A map axis object that will attach to a map edge and display coordinates based on
+ * supplied interval and unit specification.
+ */
 ( function() {
 
     "use strict";

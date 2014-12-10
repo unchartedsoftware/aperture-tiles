@@ -23,7 +23,12 @@
  * SOFTWARE.
  */
 
-/*global HTMLElement */
+/**
+ * An overridden OpenLayers.Tile object to create DOM elements based on
+ * tile data. Used by HtmlTileLayers for client rendered layers. Uses
+ * either Renderer objects or html functions to generate the DOM elements
+ * or html strings.
+ */
 ( function() {
 
     "use strict";

@@ -28,6 +28,7 @@
     "use strict";
 
     var Renderer = require('./Renderer'),
+        RendererUtil = require('./RendererUtil'),
         injectCss;
 
     injectCss = function( spec ) {
@@ -56,6 +57,7 @@
     };
 
     function GraphNodeRenderer( spec ) {
+        spec.rootKey = spec.rootKey || "tile.values[0].value[0].communities";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -90,7 +92,7 @@
         var GRAPH_COORD_RANGE = 256,
             BORDER_WIDTH = 2,
             spec = this.spec,
-            communities = data.tile.values[0].value[0].communities,
+            communities = RendererUtil.getAttributeValue( data, spec.rootKey ),
             scale = Math.pow( 2, this.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             className,

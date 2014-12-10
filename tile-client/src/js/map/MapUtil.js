@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A utility namespace containing map coordinate conversion functionality.
+ */
 ( function() {
 
 	"use strict";

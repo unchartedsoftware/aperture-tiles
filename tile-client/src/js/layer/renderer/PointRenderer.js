@@ -28,6 +28,7 @@
     "use strict";
 
     var Renderer = require('./Renderer'),
+        RendererUtil = require('./RendererUtil'),
         MapUtil = require('../../map/MapUtil'),
         injectCss;
 
@@ -64,7 +65,7 @@
     PointRenderer.prototype.render = function( data ) {
 
         var spec = this.spec,
-            values = data.tile.values,
+            values = RendererUtil.getAttributeValue( data, spec.rootKey ),
             point = spec.point,
             entries = [],
             positionMap = {},

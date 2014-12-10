@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A utility namespace containing layer related functionality.
+ */
 ( function() {
 
     "use strict";
@@ -32,7 +35,7 @@
     /**
      * Private: Parses a malformed JSON string into a usable object.
      *
-     * @param jsonString {String} the malformed JSON string
+     * @param jsonString {String} the malformed JSON string.
      */
      function parseMalformedJson( jsonString ) {
         // replace ( and ) with [ and ]
@@ -47,7 +50,7 @@
      * they are currently stored as malformed json, so they require some
      * massaging.
      *
-     * @param meta {Object} the layers meta data object
+     * @param meta {Object} the layers meta data object.
      */
     function parseMetaMinMaxJson( meta ) {
         var min = {}, max = {};

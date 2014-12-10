@@ -58,8 +58,13 @@ public class StateResource extends ApertureServerResource {
                 version = LayerConfiguration.DEFAULT_VERSION;
             }
             String layerId = (String) getRequest().getAttributes().get("layer");
+            String stateId = (String) getRequest().getAttributes().get("state");
             JSONObject result = new JSONObject();
-            result.put( "states", _service.getLayerStates( layerId ) );
+            if ( stateId != null ) {
+                result.put( "state", _service.getLayerState( layerId, stateId ) );
+            } else {
+                result.put( "states", _service.getLayerStates( layerId ) );
+            }
             result.put( "version", version );
             setStatus( Status.SUCCESS_OK );
             getResponse().getCacheDirectives().add( CacheDirective.noCache() );

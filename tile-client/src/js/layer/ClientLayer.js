@@ -23,6 +23,11 @@
  * SOFTWARE.
  */
 
+/**
+ * A client rendered layer object. Uses JSON data retrieved from the server
+ * in conjunction with a Renderer object or html function to create interactible
+ * DOM elements.
+ */
 ( function() {
 
     "use strict";
@@ -35,7 +40,7 @@
         PubSub = require('../util/PubSub');
 
     /**
-     * Instantiate a client renderer layer, passing the "top-tweets" laye as its source.
+     * Instantiate a client renderer layer, passing the "top-tweets" layer as its source.
      *
      * opacity {float}   The opacity of the layer. Default = 1.0
      * enabled {boolean} Whether the layer is visible or not. Default = true

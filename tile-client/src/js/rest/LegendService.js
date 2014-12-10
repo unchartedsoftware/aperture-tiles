@@ -22,7 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+/**
+ * A namespace that provides layer service functionality. Functionality
+ * includes:
+ *
+ *      - Retrieving an encoded legend image via GET request
+ *      - Retrieving a legend image via GET request
+ */
 ( function() {
 
     "use strict";
@@ -30,20 +36,12 @@
     var $ = require('jquery'),
         Util = require('../util/Util');
 
-    /**
-     * Private: encodes parameter object into query parameter string.
-     *
-     * @param xhr {XmlHttpRequest} XmlHttpRequest object
-     */
-    function handleError( xhr ) {
-        console.error( xhr.responseText );
-        console.error( xhr );
-    }
-
     module.exports = {
 
         /**
-         * Get an encoded image string representing the rendering legend.
+         * Get an encoded image string representing the rendering legend. Upon success,
+         * will execute success callback function passing the resulting string as first
+         * argument.
          *
          * @param layerId   {String}   layer id
          * @param [params]  {Object}   query parameter configuration overrides (optional)
@@ -56,7 +54,7 @@
                 'rest/v1.0/legend/' + layerId + Util.encodeQueryParams( _params )
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
@@ -68,7 +66,7 @@
          * @param [success] {Function} function called after success received (optional)
          */
         getImage: function( layerId, params, success ) {
-            var _params = ( typeof params === "object" ) ? params : null,
+            var _params = ( typeof params === "object" ) ? params : {},
                 _success = ( typeof success === "function" ) ? success : null;
             // explicitly set output type to png image
             _params.output = 'png';
@@ -76,7 +74,7 @@
                 'rest/v1.0/legend/' + layerId + Util.encodeQueryParams( _params )
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         }
     };

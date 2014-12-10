@@ -107,7 +107,6 @@ public class LayerResource extends ApertureServerResource {
     @Get
     public Representation getLayer() {
         try {
-            // see if resource is specified
             String version = (String) getRequest().getAttributes().get("version");
             if ( version == null ) {
                 version = LayerConfiguration.DEFAULT_VERSION;

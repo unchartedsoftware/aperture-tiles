@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A layer interface that stores common functionality across all layer types.
+ */
 ( function() {
 
     "use strict";

@@ -23,6 +23,12 @@
  * SOFTWARE.
  */
 
+
+/**
+ * A server rendered image layer that displays images retrieved from the server.
+ * Respective server side rendering parameters may be modified using the interface
+ * of the object.
+ */
 ( function() {
 
     "use strict";

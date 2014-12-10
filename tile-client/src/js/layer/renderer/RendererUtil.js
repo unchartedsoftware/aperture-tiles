@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A utility namespace containing renderer related functionality.
+ */
 ( function() {
 
     "use strict";
@@ -68,11 +71,23 @@
          */
         getAttributeValue: function( obj, attribPath ) {
             var attribs = attribPath.split('.'),
+                arraySplit,
                 attrib,
                 i;
             attrib = obj;
             for (i=0; i<attribs.length; i++) {
-                attrib = attrib[ attribs[i] ];
+                arraySplit = attribs[i].replace(/ /g, '' ).split(/[\[\]]/);
+                if ( arraySplit.length === 1 ) {
+                    // normal attribute
+                    attrib = attrib[ attribs[i] ];
+                } else if ( arraySplit.length === 3 ) {
+                    // array index expressed, use it
+                    attrib = attrib[ arraySplit[0] ][ arraySplit[1] ];
+                } else {
+                    // unrecognized input, default to assumption of
+                    // normal attribute
+                    attrib = attrib[ arraySplit[0] ];
+                }
             }
             return attrib;
         },

@@ -23,6 +23,20 @@
  * SOFTWARE.
  */
 
+/**
+ * A render theme provides a mechanism to style separate components generated
+ * from a renderer object. The theme's CSS is injected into the DOM under the supplied
+ * selectors. This allows switching between themes on client rendered tiles by simply
+ * appending the respective selector to a parent DOM element.
+ *
+ * It is the renderer implementations responsibility to ensure that the render
+ * theme object is utilized correctly, as different implementations may require unique
+ * styling.
+ *
+ * An alternative to using render themes would be either bypassing renderers all together
+ * and using a lower level html provider function. Or using the hook function to insert
+ * application or theme specific classes into the generated html entries.
+ */
 ( function() {
 
     "use strict";

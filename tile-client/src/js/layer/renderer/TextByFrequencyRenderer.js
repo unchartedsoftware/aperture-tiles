@@ -68,6 +68,7 @@
      * }
      */
     function TextByFrequencyRenderer( spec ) {
+        spec.rootKey = spec.rootKey || "tile.values[0].value";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -78,7 +79,7 @@
 
         var textKey = this.spec.text.textKey,
             countKey = this.spec.frequency.countKey,
-            values = data.tile.values[0].value,
+            values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             html = '',
             entries = [],

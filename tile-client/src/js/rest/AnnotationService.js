@@ -23,6 +23,15 @@
  * SOFTWARE.
  */
 
+/**
+ * A namespace that provides annotation service functionality. Functionality
+ * includes:
+ *
+ *      - Retrieving a tiles worth of annotation data via GET request
+ *      - Writing an annotation via POST request
+ *      - Modifying an annotation via PPOST request
+ *      - Removing an annotation via POST request
+ */
 ( function() {
 
     "use strict";
@@ -30,20 +39,11 @@
     var $ = require('jquery'),
         Util = require('../util/Util');
 
-    /**
-     * Private: encodes parameter object into query parameter string.
-     *
-     * @param xhr {XmlHttpRequest} XmlHttpRequest object
-     */
-    function handleError( xhr ) {
-        console.error( xhr.responseText );
-        console.error( xhr );
-    }
-
     module.exports = {
 
         /**
-         * Get a tiles worth of annotations from the server.
+         * Get a tiles worth of annotations from the server. Upon success, will execute success
+         * callback function passing the resulting object as first argument.
          *
          * @param layerId   {String}   annotation layer id
          * @param level     {int}      tile level
@@ -63,12 +63,13 @@
                 + y + ".json" + Util.encodeQueryParams( _params )
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
         /**
-         * Write the annotation to the server.
+         * Write the annotation to the server. Upon success, will execute success
+         * callback function passing the resulting certificate as first argument.
          *
          * @param layerId    {String}   annotation layer id
          * @param annotation {Object}   annotation to be written
@@ -85,12 +86,13 @@
                 })
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
         /**
-         * Modify an the annotation on the server.
+         * Modify an the annotation on the server. Upon success, will execute success
+         * callback function passing the resulting certificate as first argument.
          *
          * @param layerId    {String}   annotation layer id
          * @param annotation {Object}   annotation to be modified
@@ -107,7 +109,7 @@
                 })
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         },
 
@@ -129,7 +131,7 @@
                 })
             ).then(
                 _success,
-                handleError
+                Util.handleHTTPError
             );
         }
 

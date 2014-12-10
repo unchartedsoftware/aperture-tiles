@@ -46,6 +46,9 @@ public class RestConfigModule extends AbstractModule {
         resourceBinder.addBinding("/{version}/layers/{layer}/states").toInstance(new ResourceDefinition(StateResource.class));
         resourceBinder.addBinding("/layers/{layer}/states").toInstance(new ResourceDefinition(StateResource.class));
 
+        resourceBinder.addBinding("/{version}/layers/{layer}/states/{state}").toInstance(new ResourceDefinition(StateResource.class));
+        resourceBinder.addBinding("/layers/{layer}/states/{state}").toInstance(new ResourceDefinition(StateResource.class));
+
         resourceBinder.addBinding("/{version}/layers/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
         resourceBinder.addBinding("/layers/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
 

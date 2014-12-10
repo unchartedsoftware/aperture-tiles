@@ -24,8 +24,7 @@
  */
 
 /**
- * This module defines a TileIterator class, the equivalent of TileIterator in
- * binning-utilities.
+ * A TileIterator class, the equivalent of TileIterator in binning-utilities.
  */
 ( function() {
 

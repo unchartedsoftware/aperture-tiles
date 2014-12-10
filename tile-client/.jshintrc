@@ -77,7 +77,8 @@
     // Custom Globals
     "globals"       : {         // additional predefined global variables
         "require"   : false,
-        "module"    : false,
+        "module"    : false,       
+        "google"    : false,
         "__dirname" : false
     }        
 }

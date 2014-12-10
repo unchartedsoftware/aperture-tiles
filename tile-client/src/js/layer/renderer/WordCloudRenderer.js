@@ -23,6 +23,9 @@
  * SOFTWARE.
  */
 
+/**
+ * A word cloud renderer. Uses a set of words and their counts to generate a word cloud.
+ */
 ( function() {
 
     "use strict";
@@ -205,6 +208,7 @@
      * }
      */
     function WordCloudRenderer( spec ) {
+        spec.rootKey = spec.rootKey || "tile.values[0].value";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -216,8 +220,8 @@
         var text = this.spec.text,
             textKey = text.textKey,
             countKey = text.countKey,
+            values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             meta = this.meta[ this.map.getZoom() ],
-            values = data.tile.values[0].value,
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
             html = '',
             wordCounts = [],

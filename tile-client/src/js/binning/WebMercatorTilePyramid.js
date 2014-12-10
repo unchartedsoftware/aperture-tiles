@@ -24,8 +24,7 @@
  */
 
 /**
- * This module defines a TilePyramid class, the equivalent of 
- * WebMercatorTilePyramid in binning-utilities.
+ * A TilePyramid class, the equivalent of WebMercatorTilePyramid in binning-utilities.
  */
 ( function() {
 

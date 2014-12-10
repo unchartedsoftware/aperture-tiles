@@ -23,7 +23,11 @@
  * SOFTWARE.
  */
 
-/*global google */
+/**
+ * A base layer object that serves as the underlying layer of the map. Supports
+ * blank baselayers that are simply a color, geographic baselayers using the
+ * Google Maps API, or standard TMS layers.
+ */
 ( function() {
 
 	"use strict";

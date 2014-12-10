@@ -24,7 +24,7 @@
  */
 
 /**
-    A hierarchical publish and subscribe object. Channels consist of strings, sub-channels
+    A hierarchical publish and subscribe namespace. Channels consist of strings, sub-channels
     are separated with a period ('.'). Publishing to a target channel will propagate the message
     breadth first as follows:
         1) from the root of the hierarchy to the target channel,
@@ -56,7 +56,6 @@
 
                 [ a.a.c -> null )
 */
-
 ( function() {
 
     "use strict";

@@ -23,6 +23,21 @@
  * SOFTWARE.
  */
 
+/**
+ * A renderer interface that stores common functionality across all renderers, mainly
+ * the execution of the 'hook' function to give developers access to the generated DOM
+ * elements to provided application specific behavior.
+ *
+ * Typically each unique component generated from a renderer will be under a separate
+ * specification attribute. For example the text elements of the TextByFrequencyRenderer
+ * is under 'text' and the frequency distribution elements are under 'frequency'.
+ *
+ * Each of the separate components SHOULD accept *Key attributes to instruct it as to
+ * where the relevant data should be found in the tile data object.
+ *
+ * Each of these separate components SHOULD accept isolated RenderThemes (in the case
+ * that RenderThemes are used).
+ */
 ( function() {
 
     "use strict";

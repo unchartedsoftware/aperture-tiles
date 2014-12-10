@@ -166,7 +166,7 @@ abstract public class ConfigurableFactory<T> {
 	 *         configuration information. Guaranteed not to be null.
 	 */
 	public List<String> getRootPath () {
-		return _rootPath;
+		return new ArrayList<>( _rootPath );
 	}
 	
 	/**
@@ -523,34 +523,39 @@ abstract public class ConfigurableFactory<T> {
         return sb.toString();
     }
 
-    private JSONObject addJSONPath( JSONObject config, List<String> path ) throws JSONException {
-
-        List<String> fullPath = new ArrayList<>( getRootPath() );
-        fullPath.addAll( path );
+    private JSONObject addJSONPathAndReturnLeaf( JSONObject config, List<String> path ) throws JSONException {
+        // if a path does not exist in the json object, create it
         JSONObject node = config;
-        for ( int i=0; i<fullPath.size(); i++ ) {
-            String subpath = fullPath.get( i );
+        for ( String subpath : path ) {
             if ( !node.has( subpath ) ) {
                 node.put( subpath, new JSONObject() );
             }
             node = node.getJSONObject( subpath );
         }
+        // return the leaf node of the path
         return node;
     }
 
     private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
-        List<String> path = _pathsByProperty.get( property.getName() );
-        JSONObject node = addJSONPath( config, path );
+        // get the properties path
+        List<String> fullPath = getRootPath();
+        fullPath.addAll(_pathsByProperty.get( property.getName() ) );
+        // ensure the path exists by adding it if it doesn't
+        // append root path to start of property path since they are relative to the
+        // current factories path
+        JSONObject node = addJSONPathAndReturnLeaf( config, fullPath );
+        // add the property to the leaf node of the path
         node.put( property.getName(), getPropertyValue( property ) );
     }
 
     private JSONObject generateConfigurationObj( JSONObject config ) {
         try {
             for ( ConfigurationProperty<?> prop : _properties ) {
+                // add property to the config object under its path
                 addPropertyUnderPath( config, prop );
             }
             for ( ConfigurableFactory<?> child: _children ) {
-                addJSONPath( config, child.getRootPath() );
+                addJSONPathAndReturnLeaf( config, child.getRootPath() );
                 child.generateConfigurationObj( config );
             }
         } catch ( JSONException e ) {

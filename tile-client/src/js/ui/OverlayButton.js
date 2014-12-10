@@ -23,6 +23,10 @@
  * SOFTWARE.
  */
 
+/**
+ * An overlay button object that will appear over a map in a screen quadrant. Multiple
+ * overlay buttons in the same quadrant will co-exist gracefully.
+ */
 ( function() {
 
     "use strict";
@@ -41,7 +45,7 @@
     };
 
     /**
-     * Construct an overlay button.
+     * Instantiate an overlay button.
      *
      * @param spec {Object} the specification object.
      *     id : the element id,

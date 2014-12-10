@@ -55,6 +55,7 @@
      * }
      */
     function GraphLabelRenderer( spec ) {
+        spec.rootKey = spec.rootKey || "tile.values[0].value[0].communities";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -66,7 +67,7 @@
         var GRAPH_COORD_RANGE = 256,
             text = this.spec.text,
             meta = this.meta[ this.map.getZoom() ],
-            communities = data.tile.values[0].value[0].communities,
+            communities = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             scale = Math.pow( 2, this.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             labelIndex = ( text.labelIndex !== undefined ) ? text.labelIndex : 0,
