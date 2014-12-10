@@ -52,6 +52,7 @@ As shown in the following diagram, the tile generation process has five main sta
 	- *Outputs*: Completed tile pyramid
 
 <a href="diagram.html" class="screenshot"><img src="../../../img/tile-gen-process-thumb.png" alt=""></a>
+<div class="git">Click <a href="../../../img/tile-gen-process-lg.png">here</a> to view an expanded diagram</div>
 
 You can execute the tile generation process on your source data in any of the following manners:
 
