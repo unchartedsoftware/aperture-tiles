@@ -206,6 +206,8 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			war {
 				from project(":tile-client").configurations.clientFiles.artifacts.files
 			}
+
+			war.dependsOn ":tile-client:exportClientFiles"
 		}
 	}
 }
