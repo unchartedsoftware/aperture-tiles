@@ -193,6 +193,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			// Add the tile service project output
 			dependencies {
 				compile project(path: ":tile-service")
+				compile project(path: ":annotation-service")
 			}
 
 			// configure the war task to pick up the tile client files

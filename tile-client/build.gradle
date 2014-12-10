@@ -1,4 +1,19 @@
+plugins {
+	id "com.moowork.gulp" version "0.1"
+}
+
 description = "A basic map client that allows for client-side user interaction with"
+
+task exportClientFiles {
+	ext.clientOutput = file(buildDir)
+}
+
+gulp_build.inputs.dir "$projectDir/src"
+gulp_build.outputs.dir "$buildDir"
+gulp_build.dependsOn npmInstall
+
+exportClientFiles.dependsOn gulp_build
+assemble.dependsOn exportClientFiles
 
 // Define a configuration for the war overlay process.
 configurations {
@@ -8,5 +23,5 @@ configurations {
 // Add the tile service war to the overlay config so we can reference it below.  Pull the 
 // tile service war out of that project's exposed config.
 artifacts {
-	clientFiles file("src/main/webapp")
+	clientFiles exportClientFiles.clientOutput
 }

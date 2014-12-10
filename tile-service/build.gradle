@@ -11,6 +11,7 @@ repositories {
 	}
 }
 
+// Jars / projects this project depends on.
 dependencies {
 	compile "org.restlet.jee:org.restlet:2.1.2"
 	compile "org.restlet.jee:org.restlet.ext.servlet:2.1.2"
