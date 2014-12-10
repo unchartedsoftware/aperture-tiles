@@ -191,17 +191,44 @@ This option defines which renderer the server should use to render tiles. The re
 						<dt>ramp</dt>
 						<dd>Determines the color scale applied to the data points based on their concentration. The default color scales are:
 							<ul>
-								<li>'br': A blue-green ramp.
-								<li>'inv-br': Inverted blue-green ramp.
-								<li>'ware': A red-yellow-green ramp.
-								<li>'inv-ware': Inverted red-yellow-green ramp.
-								<li>'grey': Full greyscale ramp.
-								<li>'inv-grey': Inverse greyscale ramp.
+								<li>'hot': A warm orange ramp.
+								<li>'neutral': A black-grey-white ramp.
+								<li>'cool': A cool blue ramp.
+								<li>'spectral': A red-green-yellow ramp.
+								<li>'flat': A single color (white) ramp.
 							</ul>
 						</dd>
 						
+						<dt>rangeMin</dt>
+						<dd>The minimum percentage to clamp the low end of the color ramp.</dd>
+
+						<dt>rangeMax</dt>
+						<dd>The maximum percentage to clamp the low end of the color ramp.</dd>
+
+						<dt>valueTransform</dt>
+						<dd>
+							<dl>
+								<dt>'type'</dt>
+								<dd>Value transformer type. </dd>
+							</dl>
+						</dd>
+
+						<dt>tileTransform</dt>
+						<dd>
+							<dl>
+								<dt>'type'</dt>
+								<dd>Tile transformer type. </dd>
+								
+								<dt>'data'</dt>
+								<dd>The tile transformer data initialization object.</dd>
+							</dl>
+						</dd>
+
 						<dt>opacity</dt>
 						<dd>Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).</dd>
+
+						<dt>enabled</dt>
+						<dd>Indicates whether the layer is enabled on load.</dd>
 					</dl>
 				</dd>
 				
@@ -230,11 +257,11 @@ The application JavaScript file (*/src/main/webapp/js/***app.js**) should reques
 
 The map describes the base map upon which your source data is projected:
 
-- Geographic maps: the PyramidConfig `type` parameter is *WebMercator*. If no `type` is specified, the map defaults to *WebMercator* and no other configuration options are required.
-- Non-geographic cross-plot maps: the `type` should always be set to *AreaOfInterest*. Additional PyramidConfig parameters are required to describe the minimum and maximum values on the X and Y axes. The values that you provide in this section must match the values in your data source.
+- Geographic maps: the pyramid `type` parameter is *WebMercator*. If no `type` is specified, the map defaults to *WebMercator* and no other configuration options are required.
+- Non-geographic cross-plot maps: the `type` should always be set to *AreaOfInterest*. Additional pyramid parameters are required to describe the minimum and maximum values on the X and Y axes. The values that you provide in this section must match the values in your data source.
 
 ```json
-PyramidConfig: {
+pyramid: {
 	type : "AreaOfInterest",
 	minX : -2.0,
 	maxX : 2.0,
@@ -420,9 +447,9 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
-A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top 5 words occurring in each tile. As multiple renderers are attached to this client-side layer, a carousel interface is activated to allow the user to switch between them. The custom renderers for this application are available in */src/main/webapp/js/***app.js**.
+A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top 10 words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
 
-For example, lines 39-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects.
+For example, lines 39-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
 
 ```javascript
 layers = tiles.LayerUtil.parse( layers.layers );
@@ -468,11 +495,7 @@ Finally the map is instantiated, along with all its components, including the cl
 
 ```javascript
 map = new tiles.Map( "map" );
-map.add( serverLayer );
 map.add( clientLayer );
-map.add( axis0 );
-map.add( axis1 );
-map.add( baseLayer );
 ```
 
 ## <a name="deployment"></a> Deployment ##
