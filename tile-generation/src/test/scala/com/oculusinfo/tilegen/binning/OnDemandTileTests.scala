@@ -51,14 +51,14 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 	var dataFile: File = null
 	var pyramidIo: OnDemandAccumulatorPyramidIO = null
 
-	override def beforeAll (configMap: Map[String, Any]) = {
-		super.beforeAll(configMap)
+	override def beforeAll = {
+		super.beforeAll
 		createDataset(sc)
 	}
 
-	override def afterAll (configMap: Map[String, Any]) = {
+	override def afterAll = {
 		cleanupDataset
-		super.afterAll(configMap)
+		super.afterAll
 	}
 
 	private def createDataset (sc: SparkContext): Unit = {

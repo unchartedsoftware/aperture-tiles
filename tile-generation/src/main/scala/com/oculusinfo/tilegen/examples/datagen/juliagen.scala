@@ -28,13 +28,9 @@ package com.oculusinfo.tilegen.examples.datagen
 
 import scala.util.control.Breaks
 
-import org.apache.spark._
-import org.apache.spark.SparkContext._
-
 // import com.oculusinfo.math.statistics.PoissonDistribution
 
-import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.tilegen.util.MissingArgumentException
+import com.oculusinfo.tilegen.util.{ArgumentParser, MissingArgumentException}
 
 
 
@@ -48,7 +44,7 @@ object JuliaSetGenerator {
 		val argParser = new ArgumentParser(args)
 		try {
 			val jobName = "Julia Set Generation"
-			val sc = argParser.getSparkConnector().getSparkContext(jobName)
+			val sc = argParser.getSparkConnector().createContext(Some(jobName))
 
 			val cReal = argParser.getDouble("real",
 			                                "The real portion of the "

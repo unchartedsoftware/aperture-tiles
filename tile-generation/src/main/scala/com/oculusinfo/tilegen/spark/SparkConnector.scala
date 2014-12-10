@@ -25,142 +25,52 @@
 
 package com.oculusinfo.tilegen.spark
 
-import java.io.File
-
 import org.apache.spark._
-import org.apache.spark.SparkContext._
-
-
-
-class MavenReference (groupId: String,
-                      artifactId: String,
-                      version: String = "0.0.1-SNAPSHOT") {
-	override def toString: String = {
-		var libLocation = (System.getProperty("user.home") + "/.m2/repository/"
-			                   + groupId.split("\\.").mkString("/") + "/" + artifactId + "/"
-			                   + version + "/" + artifactId + "-" + version + ".jar")
-		// we have to do some stupid name-mangling on windows
-		return (new File(libLocation)).toURI().toString()
-	}
-}
-
+import org.slf4j.LoggerFactory
 
 object SparkConnector {
-	def getDefaultSparkConnector: SparkConnector =
-		new SparkConnector(getLibrariesFromClasspath)
-
-	def getLibrariesFromClasspath = {
-		val allSparkLibs = System.getenv("SPARK_CLASSPATH")
-		if (null == allSparkLibs) {
-			Seq[String]()
-		} else {
-			// When running on windows paths are ';' separated.  Cygwin paths are normally
-			// the same as linux, but we have to force them to the windows style in the
-			// spark-run script, otherwise Java/Scala won't recognize them (scala/java exe are windows
-			// programs and expect windows paths).
-			val os = System.getProperty("os.name").toLowerCase()
-			if (os.contains("windows") || os.contains("cygwin")) {
-				allSparkLibs.split(";").filter(!_.isEmpty).toSeq
-			} else {
-				allSparkLibs.split(":").filter(!_.isEmpty).toSeq
-			}
-		}
-	}
-
-	def getLibrariesFromClassLoader = {
-		val loader = classOf[SparkConnector].getClassLoader
-		if (loader.isInstanceOf[java.net.URLClassLoader]) {
-			loader.asInstanceOf[java.net.URLClassLoader].getURLs.toSeq
-		} else {
-			Seq[String]()
-		}
-	}
-
-	def getDefaultLibraries = {
-		println("Checking classpath")
-		val classpath = getLibrariesFromClasspath
-		val libraries = if (classpath.isEmpty) {
-			println("Classpath empty; checking class loader")
-			getLibrariesFromClassLoader
-		} else {
-			println("Classpath ok")
-			classpath
-		}
-		println("Default Libraries:")
-		libraries.foreach(lib => println("\t"+lib))
-		libraries
-	}
-
-	def getDefaultVersions = {
-		val properties = new java.util.Properties()
-		properties.load(classOf[SparkConnector].getResourceAsStream("/build.properties"))
-		Map("base" -> properties.getProperty("aperture.tiles.version"),
-		    "hadoop" -> properties.getProperty("aperture.tiles.hadoop.version"),
-		    "hbase" -> properties.getProperty("aperture.tiles.hbase.version"))
-	}
-
-	def getDefaultLibrariesFromMaven = {
-		val version = getDefaultVersions
-
-		Seq(new MavenReference("com.oculusinfo", "math-utilities", version("base")),
-		    new MavenReference("com.oculusinfo", "binning-utilities", version("base")),
-		    new MavenReference("com.oculusinfo", "geometric-utilities", version("base")),
-		    new MavenReference("com.oculusinfo", "tile-generation", version("base")),
-		    // These two are needed for avro serialization
-		    // new MavenReference("org.apache.avro", "avro", "1.7.4"),
-		    // new MavenReference("org.apache.commons", "commons-compress", "1.4.1"),
-		    new MavenReference("org.apache.hbase", "hbase", version("hbase"))
-		)
-	}
+	val LOGGER = LoggerFactory.getLogger(getClass)
 }
 
-class SparkConnector (jars: Seq[Object]) {
-	protected lazy val jarList : Seq[String] = {
-		jars.map(_.toString).map(jar =>
-			{
-				println("Checking "+jar)
-				println("\t"+new File(jar).exists())
-				jar
-			}
-		)
-	}
+/**
+ * Creates a SparkConnector that will accumulate configuration options and create a
+ * SparkContext from them.
+ * @param args A map of spark config arguments as key/value pairs.
+ */
+class SparkConnector(args: Map[String, String] = Map()) {
 
+	// Pass spark command line arguments through to conf object
+	private val conf = new SparkConf()
+	args.foreach(kv => conf.set(kv._1, kv._2))
 
-	private def getHost: String =
-		java.net.InetAddress.getLocalHost().getHostName()
+	// If we have a kryo registrator, automatically use kryo serialization
+	if (args.contains("spark.kryo.registrator"))
+		conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
-	private def isActive (hostname: String): Boolean =
-		java.net.InetAddress.getByName(hostname).isReachable(5000)
+	private val debug = true
 
+	/**
+	 * Passes property through to the SparkConf instance.  These values will overwrite
+	 * any that have been defined as args to spark-submit or through property files.
+	 */
+	def setConfProperty(name: String, value: String) : Unit = conf.set(name, value)
 
-	def getSparkContext (jobName: String): SparkContext = {
-		getLocalSparkContext(jobName)
-	}
+	/**
+	 * Fetches a property as an option from the SparkConf instance.
+	 */
+	def getConfProperty(name: String) = conf.getOption(name)
 
-
-	def debugConnection (connectionType: String,
-	                     jobName: String): Unit = {
-		println("Connection to " + connectionType + " spark context")
-		println("\tjob: "+jobName)
-		println("\tjars:")
-		if (jarList.isEmpty) println("\t\tNone")
-		else jarList.foreach(j => println("\t\t"+j))
-	}
-
-	def getLocalSparkContext (jobName: String): SparkContext = {
-		debugConnection("local", jobName)
-		new SparkContext("local", jobName, "/opt/spark", jarList, null, null)
-	}
-}
-
-
-object TestSparkConnector {
-	def main (args: Array[String]): Unit = {
-		testDefaultSparkConnector()
-	}
-
-	def testDefaultSparkConnector (): Unit = {
-		val connector = SparkConnector.getDefaultSparkConnector
-		connector.debugConnection("test", "test")
+	/**
+	 * Creates a new SparkContext from the SparkConf instance.
+	 */
+	def createContext(jobName: Option[String] = None) = {
+		jobName.foreach(conf.set("spark.app.name", _))
+		if (debug) {
+			println()
+			println("Configuration:")
+			println(conf.toDebugString)
+			println()
+		}
+		new SparkContext(conf)
 	}
 }

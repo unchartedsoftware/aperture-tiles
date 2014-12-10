@@ -119,13 +119,14 @@ public final class DefaultTileSerializerFactoryProvider
 				{
 					for (final Class<?> type: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
 						String name = PrimitiveAvroSerializer.getAvroType(type)+"_avro";
+						// Note that the double-valued primitive serializer should be the default.
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
 								                                                                List<String> path) {
 									return new PrimitiveAvroSerializerFactory<>(parent, path, type);
 								}
-							}));
+							}, Double.class.equals(type)));
 					}
 				}
 			});
@@ -181,11 +182,18 @@ public final class DefaultTileSerializerFactoryProvider
 
 
 	private DefaultTileSerializerFactoryProvider (String name, Constructor constructor) {
+		this(name, constructor, false);
+	}
+	private DefaultTileSerializerFactoryProvider (String name, Constructor constructor, boolean isDefault) {
 		_name = name;
 		_constructor = constructor;
 		_ordinal = __currentOrdinal;
 		__currentOrdinal = __currentOrdinal+1;
-		__values.add(this);
+		if (isDefault) {
+			__values.add(0, this);
+		} else {
+			__values.add(this);
+		}
 		__reverse.put(name, this);
 	}
 
@@ -242,7 +250,7 @@ public final class DefaultTileSerializerFactoryProvider
 	}
 
 	public static DefaultTileSerializerFactoryProvider[] values () {
-	    return __values.toArray(new DefaultTileSerializerFactoryProvider[__values.size()]);
+		return __values.toArray(new DefaultTileSerializerFactoryProvider[__values.size()]);
 	}
 
 
