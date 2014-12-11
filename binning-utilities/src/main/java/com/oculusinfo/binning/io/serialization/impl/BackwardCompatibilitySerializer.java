@@ -43,7 +43,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 /**
  * This serializer serializes an early, non-avro form of double-valued tiles.
  * It is no longer supported.  Please use
- * {@link com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer} instead.
+ * {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer} instead.
  */
 @Deprecated
 public class BackwardCompatibilitySerializer implements TileSerializer<Double>{

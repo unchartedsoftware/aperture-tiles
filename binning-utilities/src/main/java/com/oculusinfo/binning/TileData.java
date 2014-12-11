@@ -114,7 +114,7 @@ public class TileData<T> implements Serializable {
 	/**
 	 * Get the tile index defining which tile is associated with this data
 	 * 
-	 * @return
+	 * @return The TileIndex of the tile
 	 */
 	public TileIndex getDefinition () {
 		return _definition;
@@ -147,7 +147,7 @@ public class TileData<T> implements Serializable {
 	 * this method is intended for users using the data as a block (such as for
 	 * I/O) without any need to know what the data itself is - the only thing
 	 * most users should know is that the format output here is the same one
-	 * expected by {@link #TileData(TileIndex, double[]).
+	 * expected by {@link #TileData(TileIndex, List)}.
 	 */
 	public List<T> getData () {
 		return Collections.unmodifiableList(_data);
@@ -167,7 +167,7 @@ public class TileData<T> implements Serializable {
 	/**
 	 * Get the value of the given metadata property.
 	 *
-	 * @param The property of interest
+	 * @param property The property of interest
 	 * @return The value of the given property, or null if the property
 	 *         isn't listed in the tile's metadata.
 	 */

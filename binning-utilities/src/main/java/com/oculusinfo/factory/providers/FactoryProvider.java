@@ -52,7 +52,6 @@ public interface FactoryProvider<T> {
 	 * Create a new factory of the required type.
 	 * 
 	 * Passing in a null parent is the equivalent of calling
-	 * {@link #createFactory(String[])}
 	 * 
 	 * @param parent The parent factory to which this factory will provide its
 	 *            goods
@@ -68,9 +67,8 @@ public interface FactoryProvider<T> {
 	 * Create a new factory of the required type.
 	 * 
 	 * Passing in a null parent is the equivalent of calling
-	 * {@link #createFactory(String[])}
 	 * 
-	 * @param name The name of this particular factory, so as to differentiate
+	 * @param factoryName The name of this particular factory, so as to differentiate
 	 *            it from other factories of the same type.
 	 * @param parent The parent factory to which this factory will provide its
 	 *            goods

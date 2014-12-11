@@ -416,8 +416,8 @@ public class JsonUtilities {
      * Transform a JSON object into a properties object, concatenating levels
      * into keys using a period.
      * 
-     * @param jsonObj
-     *            The JSON object to translate
+     * @param properties The properties object to translate
+     *
      * @return The same data, in properties form
      */
     public static JSONObject propertiesObjToJSON (Properties properties) {
