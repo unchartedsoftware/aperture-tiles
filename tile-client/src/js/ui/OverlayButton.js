@@ -31,8 +31,7 @@
 
     "use strict";
 
-    var $ = require('jquery'),
-        DURATION = 300,
+    var DURATION = 300,
         getMaxContentHeight;
 
     /**

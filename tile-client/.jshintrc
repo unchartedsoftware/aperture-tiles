@@ -79,6 +79,8 @@
         "require"   : false,
         "module"    : false,       
         "google"    : false,
-        "__dirname" : false
+        "$"         : false,
+        "_"         : false,
+        "OpenLayers": false
     }        
 }

@@ -37,8 +37,7 @@
 
     "use strict";
 
-    var $ = require('jquery' ),
-        Util = require('../util/Util');
+    var Util = require('../util/Util');
 
     module.exports = {
 

@@ -32,8 +32,7 @@
 
     "use strict";
 
-    var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
-        HtmlTile = require('./HtmlTile');
+    var HtmlTile = require('./HtmlTile');
 
     OpenLayers.Layer.HTML = function( name, url, options ) {
         OpenLayers.Layer.Grid.call( this, name, url, options );

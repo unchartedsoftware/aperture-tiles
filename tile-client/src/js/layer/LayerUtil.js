@@ -30,8 +30,6 @@
 
     "use strict";
 
-    var $ = require('jquery');
-
     /**
      * Private: Parses a malformed JSON string into a usable object.
      *

@@ -32,8 +32,7 @@
 
 	"use strict";
 
-	var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
-        Layer = require('./Layer');
+	var Layer = require('./Layer');
 
     /**
      * Instantiate a BaseLayer object.
