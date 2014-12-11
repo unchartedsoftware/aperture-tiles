@@ -72,7 +72,6 @@ import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 
@@ -350,8 +349,9 @@ public class BinVisualizer extends JFrame {
 			}
 			break;
 		case Legacy:
-			if (null == _serializer || !(_serializer instanceof BackwardCompatibilitySerializer)) {
-				_serializer = new BackwardCompatibilitySerializer();
+			if (null == _serializer ||
+               !(_serializer instanceof com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer)) {
+				_serializer = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
 				changed = true;
 			}
 		}
