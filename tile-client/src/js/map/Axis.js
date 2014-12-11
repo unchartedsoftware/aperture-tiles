@@ -31,9 +31,7 @@
 
     "use strict";
 
-    var $ = require('jquery'),
-        _ = require('lodash'),
-        Util = require('../util/Util'),
+    var Util = require('../util/Util'),
         AxisUtil = require('./AxisUtil'),
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",

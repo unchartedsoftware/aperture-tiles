@@ -33,9 +33,6 @@
 
     "use strict";
 
-    var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
-        $ = require('jquery');
-
     OpenLayers.Tile.HTML = function() {
         OpenLayers.Tile.apply( this, arguments );
     };

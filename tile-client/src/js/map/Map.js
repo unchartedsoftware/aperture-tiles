@@ -31,10 +31,7 @@
 
 	"use strict";
 
-	var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
-        $ = require('jquery'),
-        _ = require('lodash'),
-        Axis = require('./Axis'),
+	var Axis = require('./Axis'),
         MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
         BaseLayer = require('../layer/BaseLayer'),
@@ -287,9 +284,6 @@
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
 
-        // [OpenLayers 2.13.1 specific], disable animated pan
-        // OpenLayers.Control.DragPan.prototype.enableKinetic = false;
-
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
             theme: null, // prevent OpenLayers from checking for default css
@@ -307,11 +301,6 @@
                 new OpenLayers.Control.Navigation({ documentDrag: true }),
                 new OpenLayers.Control.Zoom()
             ]
-            // [OpenLayers 2.13.1 specific], removes zoom animation and tile load delay
-            //tileManager: null,
-            //transitionEffect: null,
-            //zoomMethod: null,
-            //panMethod: null,
         });
     }
 
