@@ -69,14 +69,21 @@ public class LegendResource extends ApertureServerResource {
 
 		try {
 
+            String outputType = "uri";
+			int width = 128;
+            int height = 1;
+            String orientationString = "horizontal";
+            boolean renderHorizontally = true;
+
             // decode the query parameters
             JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
-
-            String outputType = decodedQueryParams.optString("output", "uri");
-			int width = decodedQueryParams.optInt("width", 128);
-            int height = decodedQueryParams.optInt("height", 1);
-            String orientationString = decodedQueryParams.optString("orientation", "horizontal");
-            boolean renderHorizontally = orientationString.equalsIgnoreCase("horizontal");
+            if ( decodedQueryParams != null ) {
+                outputType = decodedQueryParams.optString( "output", outputType );
+                width = decodedQueryParams.optInt( "width", width );
+                height = decodedQueryParams.optInt( "height", height );
+                orientationString = decodedQueryParams.optString( "orientation", orientationString );
+                renderHorizontally = orientationString.equalsIgnoreCase( "horizontal" );
+            }
 
             setStatus(Status.SUCCESS_OK);
 

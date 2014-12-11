@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8">    
+    <title>Interactive Map Demo</title>
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon"/>
+    <!-- Include the tile client stylesheets -->
+    <link rel="stylesheet" href="tiles.min.css" />
+    <!-- Include google maps API for Google baselayer -->
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <!-- Include tiles client javascript library -->
+    <script src="tiles.min.js"></script>
+    <!-- Include the application specific javascript -->
+    <script src="js/app.js"></script>
+    <!-- On window load, start the app -->
+    <script type="text/javascript">
+      window.onload = appStart;
+    </script>
+  </head>
+  <!-- Set the theme class to match that set in app.js RenderTheme -->
+  <body class="dark-theme">
+    <div id="map" class="olMap"></div>
+  </body>
+</html>

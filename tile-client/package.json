@@ -1,0 +1,30 @@
+{
+  "name": "aperture-tiles-client",
+  "version": "0.4.0",
+  "private": true,
+  "author": "Oculus Info Kevin Birk <www.oculusinfo.com>",
+  "description": "Aperture-Tiles Javascript Visualization Library",
+  "contributors": [
+    {
+      "name": "Kevin Birk",
+      "email": "kbirk@oculusinfo.com"
+    }
+  ],
+  "main": "app.js",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "jquery": "^2.1.1",
+    "lodash": "^2.4.1",
+    "browserify": "^6.0.2",
+    "del": "^1.1.0",
+    "gulp": "^3.8.10",
+    "gulp-concat": "^2.4.2",
+    "gulp-csso": "^0.2.9",
+    "gulp-jshint": "^1.8.5",
+    "gulp-uglify": "^1.0.1",
+    "jshint-stylish": "^1.0.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.0.0"
+  }
+}

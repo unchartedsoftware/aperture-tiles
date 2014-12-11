@@ -1,6 +1,4 @@
-description = "Tile client template project"
-group = "template.group"
-version = "0.1"
+description = "A website template to display aperture-tiles data"
 
 // Plugin setup
 apply plugin: "war"

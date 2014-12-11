@@ -13,6 +13,9 @@
                     "type" : "zip",
                     "root.path" : "/twitter.2014.02-04.SA.twitter.longitude.latitude.zip",
                     "extension" : "avro"
+                },
+                "serializer": {
+                    "type": "double-a"
                 }
             }
         }

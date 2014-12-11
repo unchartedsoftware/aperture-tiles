@@ -235,6 +235,22 @@ public class LayerServiceImpl implements LayerService {
         return states;
     }
 
+    @Override
+    public JSONObject getLayerState( String layerId, String stateId ) {
+        try {
+            JSONObject layer = _layersBySha.get( stateId );
+            if ( layer == null ) {
+                return null;
+            }
+            return getLayerConfiguration( layerId, layer.getJSONObject("public") )
+                    .getExplicitConfiguration()
+                    .getJSONObject("public"); // only return public node
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 	private File[] getConfigurationFiles (String location) {
 		try {
 			// Find our configuration file.
