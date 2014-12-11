@@ -109,6 +109,27 @@ These properties specify the location of your Julia set data.
 	</div>
 </div>
 
+#### <a name="general-output"></a> General Output Properties ####
+
+These properties specify where to save the generated tiles.
+
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>oculus.tileio.type</dt>
+				<dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.
+
+				<br><br>NOTE: This parameter is not currently in the example .bd file provided for this demo. When this parameter is absent, the tile generator automatically writes to HBase. To write to the local filesystem, manually add this parameter to the .bd file and set its value to "file".</dd>
+				
+				<dt>oculus.binning.name</dt>
+				<dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
+								
+			</dl>
+		</ul>
+	</div>
+</div>
+
 #### <a name="hbase-connection"></a> HBase Connection Details (Optional) ####
 
 These properties should only be included if you are using Hadoop/HDFS and HBase. Note that these optional components must be used if you want to run the tile generation job on a multi-computer cluster. 
@@ -131,27 +152,6 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 					<b>hbase.master</b>
 				</dt>
 				<dd>Location of the HBase master to which to save the tiles.</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
-
-#### <a name="general-output"></a> General Output Properties ####
-
-These properties specify where to save the generated tiles.
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>oculus.tileio.type</dt>
-				<dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.
-
-				<br><br>NOTE: This parameter is not currently in the example .bd file provided for this demo. When this parameter is absent, the tile generator automatically writes to HBase. To write to the local filesystem, manually add this parameter to the .bd file and set its value to "file".</dd>
-				
-				<dt>oculus.binning.name</dt>
-				<dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
-								
 			</dl>
 		</ul>
 	</div>
