@@ -1,6 +1,6 @@
 # Twitter Topics Aperture Tiles Sample
 
-This demo displays a Twitter geo-located tweet heatmap and aggregates the top words mentioned in tweets for each tile. A more advanced demo of this dataset can be found at https://tiles.oculusinfo.com/demos/.
+This demo displays a Twitter geo-located tweet heatmap and aggregates the top words mentioned in tweets for each tile. A more advanced demo of this dataset can be found at https://aperturetiles.com/demos/.
 
 ## Setup and Building
 

@@ -8,29 +8,62 @@
 			<li><a href="{{ site.baseurl }}/docs/api/">Overview</a></li>
 		{% endif %}
 		
-		{% if page.chapter == 'Data Types' %}
-			<li>Data Types
+		{% if page.chapter == 'Annotation' %}
+			<li>Annotation
 		{% else %}
-			<li><a href="{{ site.baseurl }}/docs/api/datatypes">Data Types</a>
+			<li><a href="{{ site.baseurl }}/docs/api/annotation">Annotation</a>
 			{% endif %}
 				<ul>
-					<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation">Annotation</a></li>
-					<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation-tile">Annotation Tile</a></li>
-					<li><a href="{{ site.baseurl }}/docs/api/datatypes/#annotation-certificate">Annotation Certificate</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/annotation/#data-types">Data Types</a></li>
+					<ul>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#annotation">Annotation</a></li>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#annotation-tile">Annotation Tile</a></li>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#annotation-certificate">Annotation Certificate</a></li>
+					</ul>
+					<li><a href="{{ site.baseurl }}/docs/api/annotation/#web-services">Web Services</a></li>
+					<ul>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#read-annotation-tile">Read Annotation Tile</a></li>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#write-annotation">Write Annotation</a></li>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#modify-annotation">Modify Annotation</a></li>
+						<li><a href="{{ site.baseurl }}/docs/api/annotation/#remove-annotation">Remove Annotation</a></li>
+					</ul>
 				</ul>
 			</li>
 			
-		{% if page.chapter == 'Web Services' %}
-			<li>Web Services
+		{% if page.chapter == 'Layer' %}
+			<li>Layer
 		{% else %}
-			<li><a href="{{ site.baseurl }}/docs/api/webservices">Web Services</a>
+			<li><a href="{{ site.baseurl }}/docs/api/layer">Layer</a>
 		{% endif %}
 				<ul>
-					<li><a href="{{ site.baseurl }}/docs/api/webservices/#read-annotation-tile">Read Annotation Tile</a></li>
-					<li><a href="{{ site.baseurl }}/docs/api/webservices/#write-annotation">Write Annotation</a></li>
-					<li><a href="{{ site.baseurl }}/docs/api/webservices/#modify-annotation">Modify Annotation</a></li>
-					<li><a href="{{ site.baseurl }}/docs/api/webservices/#remove-annotation">Remove Annotation </a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/layer/#configuration">Configuration</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/layer/#request-all-layers">Request All Layers</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/layer/#request-specific-layer">Request Specific Layer</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/layer/#store-configuration-state">Store a Configuration State</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/layer/#get-configuration-state">Get a Configuration State</a></li>
+					<li><a href="{{ site.baseurl }}/docs/api/layer/#get-configuration-states">Get Configuration States</a></li>
 				</ul>
 			</li>
+			
+		{% if page.chapter == 'Legend' %}
+			<li>Legend
+		{% else %}
+			<li><a href="{{ site.baseurl }}/docs/api/legend">Legend</a>
+		{% endif %}
+				<ul>
+					<li><a href="{{ site.baseurl }}/docs/api/legend/#get-encoded-image-key">Get Encoded Image Key</a></li>
+				</ul>
+			</li>
+		
+		{% if page.chapter == 'Tile' %}
+			<li>Tile
+		{% else %}
+			<li><a href="{{ site.baseurl }}/docs/api/tile">Tile</a>
+		{% endif %}
+				<ul>
+					<li><a href="{{ site.baseurl }}/docs/api/tile/#get-tile">Get Tile</a></li>
+				</ul>
+			</li>
+		
 	</ul>
 </div>
