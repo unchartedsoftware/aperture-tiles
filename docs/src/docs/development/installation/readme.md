@@ -107,7 +107,7 @@ Before you compile the Aperture Tiles source code, you must install the Aperture
 
 Once the Aperture JS installation is complete:
 
-- Run the `gradlew build <buildType>` command in your root Aperture Tiles directory, where `buildType` is a case in the **build.gradle** file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., *cdh5.1.2*).<p class=list-paragraph">NOTE: If you do not specify a buildType, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+- Run the `gradlew install -PbuildType=<buildType>` command in your root Aperture Tiles directory, where `buildType` is a case in the **build.gradle** file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., *cdh5.1.2*).<p class=list-paragraph">NOTE: If you do not specify a buildType, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
 
 This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
 

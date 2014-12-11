@@ -101,7 +101,7 @@ The following sections describe how to execute the CSVBinner and edit the config
 To execute the CSVBinner and run a tiling job, use the **spark-run** script and pass in the names of the properties files you want to use. For example:
 
 ```bash
-spark-run com.oculusinfo.tilegen.examples.apps.CSVBinner -d /data/twitter/
+spark-submit --class com.oculusinfo.tilegen.examples.apps.CSVBinner lib/tile-generation-assembly.jar -d /data/twitter/
 dataset-base.bd /data/twitter/dataset.lon.lat.bd
 ```
 

@@ -59,7 +59,7 @@ For a typical Aperture Tiles project, you will work with your own custom data se
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen
 .JuliaSetGenerator --master local[2] lib/tile-generation-assembly.jar -real 
--0.8 -imag 0.156 -output /data/julia-set -partitions 5 -samples 10000000
+-0.8 -imag 0.156 -output datasets/julia -partitions 5 -samples 10000000
 ```
 
 Check your output folder for 5 part files (`part-00000` to `part-00004`) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set you will use Aperture Tiles to visualize.
@@ -103,10 +103,8 @@ These properties specify where to save the generated tiles.
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>oculus.tileio.type</dt>
-				<dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.
+				<dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.</dd>
 
-				<br><br>NOTE: This parameter is not currently in the example .bd file provided for this demo. When this parameter is absent, the tile generator automatically writes to HBase. To write to the local filesystem, manually add this parameter to the .bd file and set its value to "file".</dd>
-				
 				<dt>oculus.binning.name</dt>
 				<dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
 								
@@ -152,7 +150,7 @@ When you have configured all of the required properties, execute the standard sp
 
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
-.CSVBinner --master local[2] lib/tile-generation-assembly.jar -d examples
+.CSVBinner --master local[2] --driver-memory 1G lib/tile-generation-assembly.jar -d examples
 /julia-base.bd examples/julia-tiling.bd
 ```
 
