@@ -60,8 +60,8 @@ The layers file points to the tiles you created and indicates how they should be
 
 Two example layer files are provided in the Tile Client Template (`tile-client-template/src/main/resources/layers`):
 
-- **crossplot-layers.json.example**: describes the parameters of an X/Y cross plot layer
-- **geographic-layers.json.example**: describes the parameters of a world map layer
+- **crossplot-layers.json**: describes the parameters of an X/Y cross plot layer
+- **geographic-layers.json**: describes the parameters of a world map layer
 
 Choose the appropriate layer type and remove the **.example** suffix from the filename. The following sections describe how to edit the **layers.json** for each layer type.
 
