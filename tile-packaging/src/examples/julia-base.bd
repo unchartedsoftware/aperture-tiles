@@ -1,5 +1,5 @@
 # general input properties
-oculus.binning.source.location=file:///datasets/julia
+oculus.binning.source.location=datasets/julia
 oculus.binning.separator=\t
 
 oculus.binning.parsing.x.index=0
