@@ -46,13 +46,13 @@ Edit the **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 		
 ### <a name="tileproperties"></a> Tile Properties ###
 
-Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as:
+Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as the location of your layer and annotation directories. Additional Spark parameters are available for on-demand tile generation and data drill down:
 
 - The location of your Spark master
 - The name under which the Aperture Tiles web service should appear in the Spark web interface.
 - The home directory of Spark
 - Any JARs you want to add to the Spark context
-- The location of your map, layer and annotation directories
+
 
 ### <a name="layers"></a> Layers ##
 
