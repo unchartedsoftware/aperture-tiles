@@ -63,29 +63,30 @@ Two example layer files are provided in the Tile Client Template (`tile-client-t
 - **crossplot-layers.json**: describes the parameters of an X/Y cross plot layer
 - **geographic-layers.json**: describes the parameters of a world map layer
 
-Choose the appropriate layer type and remove the **.example** suffix from the filename. The following sections describe how to edit the **layers.json** for each layer type.
+Choose the appropriate layer type, then review the following sections to understand how to edit the file for the selected type. Parameters in the layers file are split into two sections: those in the **public** node are accessible from the client, while those under the **private** note are not.
 
-Note that maps with multiple layers can be created by specifying multiple layer descriptions in the *children* section of the **layers.json** file. 
+Note that maps with multiple layers can be created by specifying multiple layer descriptions in the **layers.json** file. 
 					
-#### <a name="layer-metadata"></a> Metadata ####
+#### <a name="layer-id"></a> ID ####
 
-The Metadata parameter uniquely identifies the layer.
+The ID parameter uniquely identifies the layer.
 
 <div class="details props">
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>id</dt>
-				<dd>Must match the name of the folder to which the tiles were saved during the generation process, which is composed of the following parameters from the Tiling Property File:
-	
-	<br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.
-	&lt;oculus.binning.valueField&gt;</dd>
+				<dd>The identification string for the layer. This is used in all layer-related REST calls. Must conform to JSON property name format.</dd>
 			</dl>
 		</ul>
 	</div>
 </div>
 
-#### <a name="layer-pyramid"></a> Pyramid ####
+#### Public Parameters ####
+
+Parameters in the **public** node section of the **layers.json** file are accessible from the client.
+
+##### <a name="layer-pyramid"></a> Pyramid #####
 
 The pyramid parameters describe the extent of the data in the layer. The values that you provide in this section must match the values in your data source and in your map configuration.
 
@@ -111,7 +112,112 @@ pyramid: {
 
 Note also that the layer and map pyramid configurations much match each other.
 
-#### <a name="layer-data"></a> Data ####
+##### <a name="layer-renderers"></a> Renderers #####
+
+This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data. The current renderer options are:
+
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">				
+				<dt>renderer</dt>
+				<dd>Used for server-side rendering.
+					
+					<dl>
+						<dt>type</dt>
+						<dd>
+							<dl>
+								<dt>'heatmap'</dt>
+								<dd>Renders to a heat-map, based on a standard Avro double-valued tile</dd>
+								
+								<dt>'doubleseries'</dt>
+								<dd>Renders to a series of heat-maps, based on a standard Avro double-series-valued tile</dd>
+								
+								<dt>'doublestatistics'</dt>
+								<dd>Renders tile's total hit and % coverage as text to the tile</dd>
+								
+								<dt>'textscore'</dt>
+								<dd>Renders to an image showing scored words, with bars based on their score</dd>
+							</dl>
+						</dd>
+					
+						<dt>ramp</dt>
+						<dd>Determines the color scale applied to the data points based on their concentration. The default color scales are:
+							<ul>
+								<li>'hot': A warm orange ramp.
+								<li>'neutral': A black-grey-white ramp.
+								<li>'cool': A cool blue ramp.
+								<li>'spectral': A red-green-yellow ramp.
+								<li>'flat': A single color (white) ramp.
+							</ul>
+						</dd>
+						
+						<dt>rangeMin</dt>
+						<dd>The minimum percentage to clamp the low end of the color ramp.</dd>
+
+						<dt>rangeMax</dt>
+						<dd>The maximum percentage to clamp the low end of the color ramp.</dd>
+
+						<dt>opacity</dt>
+						<dd>Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).</dd>
+
+						<dt>enabled</dt>
+						<dd>Indicates whether the layer is enabled on load.</dd>
+					</dl>
+				</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
+
+##### Value Transformer #####
+
+Type of transformations that can be applied to the data values when determining color:
+
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>valueTransform</dt>
+				<dd>
+					<dl>
+						<dt>'type'</dt>
+						<dd>Value transformer type:
+							<dl>
+								<dt>minmax</dt>
+								<dd>Do not change the value, but allow capping within min and max values.</dd>
+								
+								<dt>sigmoid</dt>
+								<dd>Apply a sigmoid function to each value to make them fall between fixed values. With data that can be infinitely large in either direction, this can be used to bring it into finite, displayable bounds. Uses the following properties to indicate the minimum and maximum expected values while allowing values infinitely above or below them.
+								<ul>
+									<li>layerMin
+									<li>layerMax
+								</ul>
+								These two values should be symmetric around the desired central value.</dd>
+
+								<dt>half-sigmoid</dt>
+								<dd>Apply a sigmoid function to each value to make them fall between fixed values. With data that can be infinitely large in one direction only, this can be used to bring it into finite, displayable bounds. Uses the following properties:
+								<ul>
+									<li><em>layerMin</em> corresponds to the minimum allowed data value
+									<li><em>layerMax</em> indicates the maximum expected data value while allowing values infinitely above it
+								</ul></dd>
+								
+								<dt>log10</dt>
+								<dd>Take the log (base 10) of each value. Useful when displaying data that can be large (but not infinite) in one direction only. Uses the <em>layerMax</em> property to indicate the maximum.</dd>
+							</dl>
+						</dd>
+					</dl>
+				</dd>
+			</dl>
+		</ul>
+	</div>
+</div>
+
+#### Private Parameters ####
+
+Parameters in the **private** node section of the **layers.json** file are not accessible from the client.
+
+##### <a name="layer-data"></a> Data #####
 
 The data parameters specify the location of the tiles that you created. If you are using HBase, separate parameters are required.
 
@@ -119,6 +225,14 @@ The data parameters specify the location of the tiles that you created. If you a
 	<div class="innerProps">
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
+				<dt>id</dt>
+				<dd>Must match the name of the folder to which the tiles were saved during the generation process, which is composed of the following parameters from the Tiling Property File:
+	
+				<br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.
+				&lt;oculus.binning.valueField&gt;</dd>
+
+				<br><br>Where oculus.binning.yField is set to 0 if no yField name is specified.
+
 				<dt>pyramidio</dt>
 				<dd>
 					<dl>
@@ -159,96 +273,6 @@ The data parameters specify the location of the tiles that you created. If you a
 	</div>
 </div>
 
-#### <a name="layer-renderers"></a> Renderers ####
-
-This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data. The current renderer options are:
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">				
-				<dt>renderer</dt>
-				<dd>Used for server-side rendering.
-					
-					<dl>
-						<dt>type</dt>
-						<dd>
-							<dl>
-								<dt>'heatmap'</dt>
-								<dd>Renders to a heat-map, based on a standard Aro double-valued tile</dd>
-								
-								<dt>'doubleseries'</dt>
-								<dd>Renders to a series of heat-maps, based on a standard Avro double-series-valued tile</dd>
-								
-								<dt>'doublestatistics'</dt>
-								<dd>Renders tile's total hit and % coverage as text to the tile</dd>
-								
-								<dt>'textscore'</dt>
-								<dd>Renders to an image showing scored words, with bars based on their score</dd>
-							</dl>
-						</dd>
-					
-						<dt>ramp</dt>
-						<dd>Determines the color scale applied to the data points based on their concentration. The default color scales are:
-							<ul>
-								<li>'hot': A warm orange ramp.
-								<li>'neutral': A black-grey-white ramp.
-								<li>'cool': A cool blue ramp.
-								<li>'spectral': A red-green-yellow ramp.
-								<li>'flat': A single color (white) ramp.
-							</ul>
-						</dd>
-						
-						<dt>rangeMin</dt>
-						<dd>The minimum percentage to clamp the low end of the color ramp.</dd>
-
-						<dt>rangeMax</dt>
-						<dd>The maximum percentage to clamp the low end of the color ramp.</dd>
-
-						<dt>valueTransform</dt>
-						<dd>
-							<dl>
-								<dt>'type'</dt>
-								<dd>Value transformer type. </dd>
-							</dl>
-						</dd>
-
-						<dt>tileTransform</dt>
-						<dd>
-							<dl>
-								<dt>'type'</dt>
-								<dd>Tile transformer type. </dd>
-								
-								<dt>'data'</dt>
-								<dd>The tile transformer data initialization object.</dd>
-							</dl>
-						</dd>
-
-						<dt>opacity</dt>
-						<dd>Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).</dd>
-
-						<dt>enabled</dt>
-						<dd>Indicates whether the layer is enabled on load.</dd>
-					</dl>
-				</dd>
-				
-				<dt>transform</dt>
-				<dd>
-					<dl>
-						<dt>name</dt>
-						<dd>Type of transformations that can be applied to the data values when	determining color:
-							<ul>
-								<li>"linear" does not perform a transformation.
-								<li>"log10" takes logarithms of raw values before applying a color ramp.
-							</ul>
-						</dd>
-					</dl>
-				</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
-
 ## Application JavaScript ##
 
 The application JavaScript file (*/src/main/webapp/js/***app.js**) should request layers from server and return an array of layer configuration objects. Among the objects it should instantiate are the map, its baselayer and axis configurations.
@@ -274,7 +298,7 @@ Note also that the layer and map pyramid configurations ***must*** match each ot
 
 ### <a name="geo-baselayer"></a> BaseLayer ###
 
-The BaseLayer parameters use map provider APIs to determine what features to include on the base map. In the following example, the Google Maps API is used to define the style of the base map.
+The BaseLayer parameters use map provider APIs to determine what features to include on the base map. In the following example, the Google Maps API (OpenLayers.Layer.Google) is used to define the style of the base map.
 
 ```json
 baseLayer = new tiles.BaseLayer({
@@ -358,7 +382,7 @@ baseLayer = new tiles.BaseLayer({
 });
 ```
 
-The next example shows a TMS layer configuration that uses the Oculus World Graphite map set. You can use these maps in offline mode by first downloading the [map tiles WAR](http://aperturejs.com/downloads/) on [aperturejs.com](http://aperturejs.com/).
+The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS) that uses the Oculus World Graphite map set. You can use these maps in offline mode by first downloading the [map tiles WAR](http://aperturejs.com/downloads/) on [aperturejs.com](http://aperturejs.com/).
 
 ```javascript
 {
@@ -447,7 +471,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
-A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top 10 words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
+A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
 
 For example, lines 39-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
 
