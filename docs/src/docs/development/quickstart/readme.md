@@ -163,7 +163,7 @@ The **julia-tiling.bd** file in your `tile-generator/examples` folder should not
 
 ### <a name="execution"></a> Execution ###
 
-When you have configured all of the required properties, execute the standard spark-submit script again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base and tiling property files.
+When you have configured all of the required properties, execute the standard spark-submit script again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base property files (tiling property files can be pass in without a switch).
 
 ```bash
 tile-generator/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
