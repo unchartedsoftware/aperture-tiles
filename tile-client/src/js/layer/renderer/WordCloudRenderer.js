@@ -30,8 +30,7 @@
 
     "use strict";
 
-    var $ = require('jquery'),
-        Renderer = require('./Renderer'),
+    var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 10,
         HORIZONTAL_OFFSET = 10,

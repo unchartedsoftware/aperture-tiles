@@ -41,8 +41,7 @@
 
     "use strict";
 
-    var $ = require('jquery'),
-        getOutlineCss;
+    var getOutlineCss;
 
     getOutlineCss = function( type, value ) {
         function isColor( val ) {

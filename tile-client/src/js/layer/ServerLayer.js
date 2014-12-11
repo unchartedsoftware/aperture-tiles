@@ -33,9 +33,7 @@
 
     "use strict";
 
-    var OpenLayers = require('../openlayers/OpenLayers.2.12.min'),
-        $ = require('jquery'),
-        Util = require('../util/Util'),
+    var Util = require('../util/Util'),
         Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
         PubSub = require('../util/PubSub'),

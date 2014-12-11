@@ -30,9 +30,7 @@
 
     "use strict";
 
-    var $ = require('jquery'),
-        _ = require('lodash'),
-        propagateEvent;
+    var propagateEvent;
 
     /**
      * Private: A propagation handler that will temporarily de-activate the

@@ -42,8 +42,6 @@
 
     "use strict";
 
-    var $ = require('jquery');
-
     /**
      * Base constructor for Renderer. Renderers are designed to provide generic rendering
      * capabilities that can be reused across applications.

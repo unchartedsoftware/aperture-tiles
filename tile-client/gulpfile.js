@@ -25,7 +25,13 @@ function bundleMin( b, output ) {
         })
         .pipe( source( output ) )
         .pipe( buffer() )
-        .pipe( uglify() )
+        .pipe( uglify({
+            compress: {
+                global_defs: {
+                    INTERNAL_LIBS: false
+                }
+            }
+        }) )
         .pipe( gulp.dest( 'build' ) );
 }
 
@@ -33,14 +39,14 @@ function build( root, output ) {
     var b = browserify( root, { 
             debug: true,
             standalone: 'tiles'
-        });
+        })
     return bundle( b, output );
 }
 
 function buildMin( root, output ) {
     var b = browserify( root, { 
             standalone: 'tiles'
-        });
+        })
     return bundleMin( b, output );
 }
 
