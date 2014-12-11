@@ -100,7 +100,6 @@ public interface PyramidIO {
 	 *            is dependent on the I/O type
 	 * @param serializer A serializaer class that defines how the specific data
 	 *            format will be read
-	 * @param data The tiles to be read
 	 * @return A list of tiles
 	 */
 	public <T> List<TileData<T>> readTiles (String pyramidId, TileSerializer<T> serializer,

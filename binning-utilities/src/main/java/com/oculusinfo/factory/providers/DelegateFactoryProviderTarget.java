@@ -58,7 +58,6 @@ public interface DelegateFactoryProviderTarget<T> {
 	 * Create a new factory of the required type.
 	 * 
 	 * Passing in a null parent is the equivalent of calling
-	 * {@link #createFactory(String[])}
 	 * 
 	 * @param parent The parent factory to which this factory will provide its
 	 *            goods

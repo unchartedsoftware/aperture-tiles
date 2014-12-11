@@ -40,7 +40,6 @@ import org.junit.Test;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializer;
@@ -51,7 +50,8 @@ public class SerializationTests {
 	//@Test
 	public void testBackwardCompatbilitySerialize() throws IOException{
 		TestPyramidIO io = new TestPyramidIO();
-		TileSerializer<Double> serializer = new BackwardCompatibilitySerializer();
+		TileSerializer<Double> serializer
+                = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
 		
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<Double> tile = new TileData<Double>(index);

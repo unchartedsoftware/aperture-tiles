@@ -140,7 +140,7 @@ public class SphereUtilities {
      *            The polar angle fo point B
      * @param thetaC
      *            The azimuth of point C
-     * @param phiB
+     * @param phiC
      *            The polar angle fo point C
      * @return The angle ABC, in radians
      */
@@ -169,7 +169,7 @@ public class SphereUtilities {
      *            The polar angle fo point B
      * @param thetaC
      *            The azimuth of point C
-     * @param phiB
+     * @param phiC
      *            The polar angle fo point C
      * @return The area subtended by the triangle (A, B, C), in steradians
      */

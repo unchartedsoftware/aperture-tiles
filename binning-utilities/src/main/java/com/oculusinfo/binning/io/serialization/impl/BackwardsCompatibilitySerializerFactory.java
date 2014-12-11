@@ -33,7 +33,7 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * This serializer factory constructs a
  * {@link com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer},
  * for use with old-style double-valued tiles.  It is no longer supported.  Please use
- * {@link com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializerFactory}
+ * {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory}
  * instead.
  */
 @Deprecated

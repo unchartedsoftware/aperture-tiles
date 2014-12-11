@@ -400,129 +400,129 @@ public class PyramidMetaData {
     }
 
 
-/*
-	private JSONObject getLevelExtremaObject (boolean max) {
-		JSONObject metaInfo;
-		try {
-			metaInfo = _metaData.getJSONObject("meta");
-		} catch (JSONException e) {
-			LOGGER.log(Level.WARNING,
-			           "Missing meta object in pyramid metadata.");
-			return null;
-		}
+//
+//	private JSONObject getLevelExtremaObject (boolean max) {
+//		JSONObject metaInfo;
+//		try {
+//			metaInfo = _metaData.getJSONObject("meta");
+//		} catch (JSONException e) {
+//			LOGGER.log(Level.WARNING,
+//			           "Missing meta object in pyramid metadata.");
+//			return null;
+//		}
+//
+//		JSONObject extrema;
+//		try {
+//			if (max) extrema = metaInfo.getJSONObject("levelMaximums");
+//			else extrema = metaInfo.getJSONObject("levelMinimums");
+//		} catch (JSONException e1) {
+//			try {
+//				// Some older tiles use this instead - included for backwards
+//				// compatibility. No real users should ever reach this.
+//				if (max) extrema = metaInfo.getJSONObject("levelMaxFreq");
+//				else extrema = metaInfo.getJSONObject("levelMinFreq");
+//			} catch (JSONException e2) {
+//				LOGGER.log(Level.WARNING,
+//				           "Missing level bounds in pyramid metadata.");
+//				return null;
+//			}
+//		}
+//		return extrema;
+//	}
+//
+//	private Map<Integer, String> getLevelExtrema (boolean max) {
+//		JSONObject extrema = getLevelExtremaObject(max);
+//
+//		Map<Integer, String> byLevel = new HashMap<Integer, String>();
+//		if (null != extrema) {
+//			for (Iterator<?> i = extrema.keys(); i.hasNext();) {
+//				Object rawKey = i.next();
+//				try {
+//					int key = Integer.parseInt(rawKey.toString());
+//					String value = extrema.getString(rawKey.toString());
+//					byLevel.put(key, value);
+//				} catch (NumberFormatException e) {
+//					LOGGER.log(Level.WARNING, "Unparsable level "+rawKey+".");
+//				} catch (JSONException e) {
+//					LOGGER.log(Level.WARNING, "Error reading level maximum value for level "+rawKey+".");
+//				}
+//			}
+//		}
+//		return byLevel;
+//	}
+//
+//	public String getLevelExtremum (boolean max, int level) {
+//		JSONObject extrema = getLevelExtremaObject(max);
+//
+//		if (null != extrema) {
+//			for (Iterator<?> i = extrema.keys(); i.hasNext();) {
+//				Object rawKey = i.next();
+//				try {
+//					int key = Integer.parseInt(rawKey.toString());
+//					if (key == level) {
+//						return extrema.getString(rawKey.toString());
+//					}
+//				} catch (NumberFormatException e) {
+//					LOGGER.log(Level.WARNING, "Unparsable level " + rawKey
+//					           + ".");
+//				} catch (JSONException e) {
+//					LOGGER.log(Level.WARNING,
+//					           "Error reading level maximum value for level "
+//					           + rawKey + ".");
+//				}
+//			}
+//		}
+//		return null;
+//	}
+//
+//	/**
+//	 * Get a map, indexed by level, of the maximum value for each level
+//	 *
+//	 * @return A map from level to maximum value of that level. May be empty,
+//	 *         but should never be null.
+//	 */
+//
+//	public Map<Integer, String> getLevelMaximums () {
+//		return getLevelExtrema(true);
+//	}
+//
+//	/**
+//	 * Get a map, indexed by level, of the minimum value for each level
+//	 *
+//	 * @return A map from level to minimum value of that level. May be empty,
+//	 *         but should never be null.
+//	 */
+//
+//	public Map<Integer, String> getLevelMinimums () {
+//		return getLevelExtrema(false);
+//	}
+//
+//	/**
+//	 * Get the maximum value of a given level
+//	 *
+//	 * @param level The level of interest
+//     *
+//	 * @return The maximum value of that level, or null if no maximum is
+//	 *         properly specified for that level.
+//	 */
+//
+//	public String getLevelMaximum (int level) {
+//		return getLevelExtremum(true, level);
+//	}
+//
+//	/**
+//	 * Get the minimum value of a given level
+//	 *
+//	 * @param level The level of interest
+//     *
+//	 * @return The minimum value of that level, or null if no maximum is
+//	 *         properly specified for that level.
+//	 */
+//
+//	public String getLevelMinimum (int level) {
+//		return getLevelExtremum(false, level);
+//	}
 
-		JSONObject extrema;
-		try {
-			if (max) extrema = metaInfo.getJSONObject("levelMaximums");
-			else extrema = metaInfo.getJSONObject("levelMinimums");
-		} catch (JSONException e1) {
-			try {
-				// Some older tiles use this instead - included for backwards
-				// compatibility. No real users should ever reach this.
-				if (max) extrema = metaInfo.getJSONObject("levelMaxFreq");
-				else extrema = metaInfo.getJSONObject("levelMinFreq");
-			} catch (JSONException e2) {
-				LOGGER.log(Level.WARNING,
-				           "Missing level bounds in pyramid metadata.");
-				return null;
-			}
-		}
-		return extrema;
-	}
-
-	private Map<Integer, String> getLevelExtrema (boolean max) {
-		JSONObject extrema = getLevelExtremaObject(max);
-
-		Map<Integer, String> byLevel = new HashMap<Integer, String>();
-		if (null != extrema) {
-			for (Iterator<?> i = extrema.keys(); i.hasNext();) {
-				Object rawKey = i.next();
-				try {
-					int key = Integer.parseInt(rawKey.toString());
-					String value = extrema.getString(rawKey.toString());
-					byLevel.put(key, value);
-				} catch (NumberFormatException e) {
-					LOGGER.log(Level.WARNING, "Unparsable level "+rawKey+".");
-				} catch (JSONException e) {
-					LOGGER.log(Level.WARNING, "Error reading level maximum value for level "+rawKey+".");
-				}
-			}
-		}
-		return byLevel;
-	}
-
-	public String getLevelExtremum (boolean max, int level) {
-		JSONObject extrema = getLevelExtremaObject(max);
-
-		if (null != extrema) {
-			for (Iterator<?> i = extrema.keys(); i.hasNext();) {
-				Object rawKey = i.next();
-				try {
-					int key = Integer.parseInt(rawKey.toString());
-					if (key == level) {
-						return extrema.getString(rawKey.toString());
-					}
-				} catch (NumberFormatException e) {
-					LOGGER.log(Level.WARNING, "Unparsable level " + rawKey
-					           + ".");
-				} catch (JSONException e) {
-					LOGGER.log(Level.WARNING,
-					           "Error reading level maximum value for level "
-					           + rawKey + ".");
-				}
-			}
-		}
-		return null;
-	}
-*/
-	/**
-	 * Get a map, indexed by level, of the maximum value for each level
-	 * 
-	 * @return A map from level to maximum value of that level. May be empty,
-	 *         but should never be null.
-	 */
-/*
-	public Map<Integer, String> getLevelMaximums () {
-		return getLevelExtrema(true);
-	}
-*/
-	/**
-	 * Get a map, indexed by level, of the minimum value for each level
-	 * 
-	 * @return A map from level to minimum value of that level. May be empty,
-	 *         but should never be null.
-	 */
-/*
-	public Map<Integer, String> getLevelMinimums () {
-		return getLevelExtrema(false);
-	}
-*/
-	/**
-	 * Get the maximum value of a given level
-	 * 
-	 * @param level
-	 *            The level of interest
-	 * @return The maximum value of that level, or null if no maximum is
-	 *         properly specified for that level.
-	 */
-/*
-	public String getLevelMaximum (int level) {
-		return getLevelExtremum(true, level);
-	}
-*/
-	/**
-	 * Get the minimum value of a given level
-	 * 
-	 * @param level
-	 *            The level of interest
-	 * @return The minimum value of that level, or null if no maximum is
-	 *         properly specified for that level.
-	 */
-/*
-	public String getLevelMinimum (int level) {
-		return getLevelExtremum(false, level);
-	}
-*/
 
 	@Override
 	public String toString () {

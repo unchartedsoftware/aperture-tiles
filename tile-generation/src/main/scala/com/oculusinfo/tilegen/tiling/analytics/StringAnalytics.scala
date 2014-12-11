@@ -42,12 +42,11 @@ import com.oculusinfo.binning.util.Pair
 /**
  * Standard string score ordering
  * 
- * @baseAnalytic An analytic used to aggregate scores
+ * @param baseAnalytic An analytic used to aggregate scores
  * @param aggregationLimit An optional number of elements to keep when 
  *                         aggregating.  If None, all elements are kept.
  * @param order An optional function to specify the order of values.  If not 
  *              given, the order will be random.
- * @tparam The type of the score value
  */
 class StringScoreAnalytic[T]
 	(baseAnalytic: Analytic[T],

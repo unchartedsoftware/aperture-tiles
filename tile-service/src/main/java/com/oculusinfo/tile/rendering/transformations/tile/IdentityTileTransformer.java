@@ -52,8 +52,8 @@ public class IdentityTileTransformer<T> implements TileTransformer<T> {
 
     /**
      * Same transformation on the raw tile form
-     * @param data
-     * @return
+     * @param data the tile data
+     * @return returns the data
      * @throws Exception
      */
     //takes tile data x returns tile data x generified on function level

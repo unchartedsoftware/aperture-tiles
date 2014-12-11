@@ -38,7 +38,6 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
 import com.oculusinfo.binning.io.serialization.impl.GenericJavaSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
@@ -242,7 +241,8 @@ public class SerializationSpeedTests {
 	
 	
 	private <T> void serializeLegacy(String type, TileData<Double> tileData) throws IOException {
-		BackwardCompatibilitySerializer serializer = new BackwardCompatibilitySerializer();
+		com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer serializer
+                = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
 		
 		// Get something to deserialize
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -268,7 +268,8 @@ public class SerializationSpeedTests {
 	
 	
 	private void deserializeLegacy(String type, TileData<Double> tileData) throws IOException {
-		BackwardCompatibilitySerializer serializer = new BackwardCompatibilitySerializer();
+		com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer serializer
+                = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
 
 		long startTime = System.currentTimeMillis();
 		for (int n=0; n<ITERATIONS; ++n) {

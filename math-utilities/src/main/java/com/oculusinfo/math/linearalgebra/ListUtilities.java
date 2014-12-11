@@ -40,9 +40,7 @@ public class ListUtilities {
     /**
      * Join together 2 ordered lists of doubles into a single, ordered list
      * without duplicates.
-     * 
-     * @param lists The lists to be joined
-     * 
+     *
      * @param A The first list
      * @param B The second list
      * @param epsilon The difference within which two doubles are considered

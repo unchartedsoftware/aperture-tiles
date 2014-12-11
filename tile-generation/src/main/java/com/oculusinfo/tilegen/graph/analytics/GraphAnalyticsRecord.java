@@ -505,8 +505,8 @@ public class GraphAnalyticsRecord implements Serializable {
 	/**
 	 * Get minimums of all counts across some number of records.
 	 * 
-	 * @param that
-	 * @return
+	 * @param records A variable number of records
+	 * @return The minimums of all counts
 	 */
 	public static GraphAnalyticsRecord minOfRecords(
 			GraphAnalyticsRecord... records) {
@@ -548,8 +548,8 @@ public class GraphAnalyticsRecord implements Serializable {
 	/**
 	 * Get maximums of all counts across some number of records.
 	 * 
-	 * @param that
-	 * @return
+	 * @param records A variable number of records
+	 * @return The maximums of all counts
 	 */
 	public static GraphAnalyticsRecord maxOfRecords(
 			GraphAnalyticsRecord... records) {
