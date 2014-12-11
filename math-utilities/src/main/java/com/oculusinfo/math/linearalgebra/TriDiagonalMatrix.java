@@ -84,8 +84,7 @@ public class TriDiagonalMatrix {
     /**
      * Find the X for which this*X=d
      * 
-     * Taken from {@linkplain http
-     * ://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm}, but modified to
+     * Taken from @see <a href="http://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm></a>, but modified to
      * use recursion instead of iteration, and thereby to handle degenerate
      * cases cleanly.
      * 

@@ -72,7 +72,7 @@ public class AngleUtilities {
      *            The number in question
      * @param modulus
      *            The modulus - i.e., the width of the range
-     * @returnthe equivalent of number, mod modulus, centered on the given
+     * @return the equivalent of number, mod modulus, centered on the given
      *            center (i.e., in the range [center-modulus/2,
      *            center+modulus/2))
      */

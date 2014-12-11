@@ -237,9 +237,9 @@ public class Vector implements Serializable {
     }
 
     /**
-     * 
-     * @param v
-     * @return
+     * Calculate the cross product of two vectors. Both vectors must be of 3 components.
+     * @param v cross product operand
+     * @return The cross product
      */
     public Vector cross (Vector v) {
         if (3 != size() || 3 != v.size()) 
