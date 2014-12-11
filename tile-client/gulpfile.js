@@ -25,13 +25,7 @@ function bundleMin( b, output ) {
         })
         .pipe( source( output ) )
         .pipe( buffer() )
-        .pipe( uglify({
-            compress: {
-                global_defs: {
-                    INTERNAL_LIBS: false
-                }
-            }
-        }) )
+        .pipe( uglify() )
         .pipe( gulp.dest( 'build' ) );
 }
 
