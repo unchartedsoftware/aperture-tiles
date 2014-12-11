@@ -276,9 +276,9 @@ Example response:
 
 ```
 
-## <a name="get-configuration-states"></a> Get Configuration States ##
+## <a name="get-configuration-state"></a> Get Configuration State ##
 
-Returns all configured states stored on the server for a particular layer, including the default state.
+Returns a specified configured state stored on the server for a particular layer.
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
@@ -322,59 +322,14 @@ Returns all configured states stored on the server for a particular layer, inclu
 Example request:
 
 ```html
-GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
+GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states/e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031
 ```
 
 Example response:
 
 ```json
 {  
-   default:{  
-      tileTransform:{  
-         type:"identity"
-      },
-      pyramid:{  
-         maxY:0,
-         maxX:0,
-         type:"WebMercator",
-         minX:0,
-         minY:0
-      },
-      valueTransform:{  
-         min:5e-324,
-         max:1.7976931348623157e+308,
-         layerMax:0,
-         layerMin:0,
-         type:"linear"
-      },
-      renderer:{  
-         to:"0x000000",
-         halign:0.5,
-         from-alpha:-1,
-         theme:"dark",
-         to-alpha:-1,
-         from:"0xffffff",
-         type:"heatmap",
-         ramp:"spectral",
-         coarseness:1,
-         rangeMin:0,
-         opacity:1,
-         rangeMax:100,
-         components:[  
-
-         ],
-         valign:0.5,
-         public:{  
-            renderer:{  
-
-            }
-         },
-         gradients:[  
-
-         ]
-      }
-   },
-   e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031:{  
+   state:{  
       tileTransform:{  
          type:"identity"
       },
@@ -409,15 +364,150 @@ Example response:
 
          ],
          valign:0.5,
-         public:{  
-            renderer:{  
-
-            }
-         },
          gradients:[  
 
          ]
       }
-   }
+   },
+   version:"v1.0"
+}
+```
+
+## <a name="get-configuration-states"></a> Get Configuration States ##
+
+Returns all configured states stored on the server for a particular layer, including the default state.
+
+<div class="props">
+	<h3 class="sectionTitle">Method Summary</h3>
+		<nav>
+			<table class="summaryTable">
+				<thead>
+					<tr>
+						<th scope="col">Attributes</th>
+						<th scope="col">Description</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<tr class='item0'>
+						<td class="attributes">URL</td>
+						<td class="nameDescription">
+							<div class="description">/{version}/layers/{layerId}/states
+								<br>layers/{layerId}/states</div>
+						</td>
+					</tr>
+					
+					<tr class='item1'>
+						<td class="attributes">HTTP Method</td>
+						<td class="nameDescription">
+							<div class="description">`GET`</div>
+						</td>
+					</tr>
+					
+					<tr class='item2'>
+						<td class="attributes">Params</td>
+						<td class="nameDescription">
+							<div class="description">None</div>
+						</td>
+					</tr>
+					
+				</tbody>
+			</table>
+		</nav>
+</div>
+
+Example request:
+
+```html
+GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
+```
+
+Example response:
+
+```json
+{  
+	states:{
+	   default:{  
+	      tileTransform:{  
+	         type:"identity"
+	      },
+	      pyramid:{  
+	         maxY:0,
+	         maxX:0,
+	         type:"WebMercator",
+	         minX:0,
+	         minY:0
+	      },
+	      valueTransform:{  
+	         min:5e-324,
+	         max:1.7976931348623157e+308,
+	         layerMax:0,
+	         layerMin:0,
+	         type:"linear"
+	      },
+	      renderer:{  
+	         to:"0x000000",
+	         halign:0.5,
+	         from-alpha:-1,
+	         theme:"dark",
+	         to-alpha:-1,
+	         from:"0xffffff",
+	         type:"heatmap",
+	         ramp:"spectral",
+	         coarseness:1,
+	         rangeMin:0,
+	         opacity:1,
+	         rangeMax:100,
+	         components:[  
+
+	         ],
+	         valign:0.5,
+	         gradients:[  
+
+	         ]
+	      }
+	   },
+	   e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031:{  
+	      tileTransform:{  
+	         type:"identity"
+	      },
+	      pyramid:{  
+	         maxY:0,
+	         maxX:0,
+	         type:"WebMercator",
+	         minX:0,
+	         minY:0
+	      },
+	      valueTransform:{  
+	         min:5e-324,
+	         max:1.7976931348623157e+308,
+	         layerMax:0,
+	         layerMin:0,
+	         type:"linear"
+	      },
+	      renderer:{  
+	         to:"0x000000",
+	         halign:0.5,
+	         from-alpha:-1,
+	         theme:"dark",
+	         to-alpha:-1,
+	         from:"0xffffff",
+	         type:"heatmap",
+	         ramp:"hot",
+	         coarseness:1,
+	         rangeMin:0,
+	         opacity:1,
+	         rangeMax:100,
+	         components:[  
+
+	         ],
+	         valign:0.5,
+	         gradients:[  
+
+	         ]
+	      }
+	   }
+   },
+   version:"v1.0"
 }
 ```
