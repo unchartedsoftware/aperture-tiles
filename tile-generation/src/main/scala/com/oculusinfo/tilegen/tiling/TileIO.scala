@@ -47,7 +47,6 @@ import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
 import com.oculusinfo.binning.io.impl.SQLitePyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.datasets.ValueDescription
@@ -290,7 +289,7 @@ object TileSerializerChooser {
 
 	def getSerializer (serializerType: String): TileSerializer[_] =
 		serializerType match {
-			case "legacy" => new BackwardCompatibilitySerializer()
+			case "legacy" => new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer()
 			case "avro-double" => new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 			case "avro-int" => new PrimitiveAvroSerializer(classOf[JavaInt], CodecFactory.bzip2Codec())
 			case "avro-long" => new PrimitiveAvroSerializer(classOf[JavaLong], CodecFactory.bzip2Codec())

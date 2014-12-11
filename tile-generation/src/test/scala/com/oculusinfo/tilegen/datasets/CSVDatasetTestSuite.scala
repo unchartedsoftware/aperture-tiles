@@ -79,21 +79,21 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		val CSVPropsA = new CSVRecordPropertiesWrapper(props)
 		assert(CSVValueExtractor.fromProperties(CSVPropsA,
 		                                        CSVValueExtractor.standardFactories)
-			       .isInstanceOf[MeanValueExtractor[Double]])
+			       .isInstanceOf[MeanValueExtractor[_]])
 
 		props.setProperty("oculus.binning.valueField", "b")
 		val CSVPropsB = new CSVRecordPropertiesWrapper(props)
 		assert(CSVValueExtractor.fromProperties(CSVPropsB,
 		                                        CSVValueExtractor.standardFactories)
-			       .isInstanceOf[MeanValueExtractor[Float]])
+			       .isInstanceOf[MeanValueExtractor[_]])
 
 		// Make sure something else (say, for the sake of argument, 'median')
 		// does not.
 		props.setProperty("oculus.binning.valueField", "c")
 		val CSVPropsC = new CSVRecordPropertiesWrapper(props)
-		assert(!(CSVValueExtractor.fromProperties(CSVPropsC,
+		assert(!CSVValueExtractor.fromProperties(CSVPropsC,
 		                                          CSVValueExtractor.standardFactories)
-			         .isInstanceOf[MeanValueExtractor[_]]))
+			         .isInstanceOf[MeanValueExtractor[_]])
 	}
 }
 
