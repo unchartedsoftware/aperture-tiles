@@ -83,18 +83,7 @@ To configure Apache Spark for your installed version of Hadoop, perform one of t
 - [Download](http://spark.apache.org/downloads.html) the correct version directly.
 - If no version is listed for your flavor of Hadoop, [build](http://spark.apache.org/docs/latest/building-with-maven.html) Spark to support it.
 
-The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script to help you build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters. To use this script, you must first set the following environment variable:
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>SPARK_HOME</dt>
-				<dd>Path to the Spark installation directory</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
+The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script to help you build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters.
 
 ## <a name="csvbinner"></a> Standard Tiling Jobs ##
 

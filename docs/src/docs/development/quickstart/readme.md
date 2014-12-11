@@ -24,8 +24,7 @@ To begin this Quick Start example, you must perform the following steps:
 
 1. Download and install the necessary [third-party tools](#third-party-tools).
 2. Download and install the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities).
-3. Set the [Spark environment variables](#environment-variables).
-4. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
+3. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
 ### <a name="third-party-tools"></a> Third-Party Tools ###
 
@@ -49,20 +48,6 @@ Save the following Aperture Tiles distributions available on the [Download](../.
 - [Tile Client Template](../../../download/#tile-client-template): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
-
-### <a name="environment-variables"></a> Environment Variables ###
-Set the following environment variable:
-
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>SPARK_HOME</dt>
-				<dd>The location of the Spark installation</dd>
-			</dl>
-		</ul>
-	</div>
-</div>
 
 ### <a name="julia-set-data-generation"></a> Julia Set Data Generation ###
 
