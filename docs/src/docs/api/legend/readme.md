@@ -27,7 +27,8 @@ Returns an image describing the values that a tile can take, with a specified or
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/legend/{layer}</div>
+							<div class="description">/{version}/legend/{layer}
+								<br>/legend/{layer}</div>
 						</td>
 					</tr>
 					

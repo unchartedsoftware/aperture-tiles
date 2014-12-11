@@ -73,7 +73,8 @@ Layer information returned is the **public** node of the server-side configurati
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/layers</div>
+							<div class="description">/{version}/layers
+								<br>/layers</div>
 						</td>
 					</tr>
 					
@@ -153,7 +154,8 @@ Returns the requested layer information. Layer information returned is the **pub
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}</div>
+							<div class="description">/{version}/layers/{layerId}
+								<br>/layers/{layerId}</div>
 						</td>
 					</tr>
 					
@@ -224,7 +226,8 @@ Store a configuration state on the server that can be accessed at a later time. 
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}/states</div>
+							<div class="description">/{version}/layers/{layerId}/states
+								<br>layers/{layerId}/states</div>
 						</td>
 					</tr>
 					
@@ -292,7 +295,8 @@ Returns all configured states stored on the server for a particular layer, inclu
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}/states</div>
+							<div class="description">/{version}/layers/{layerId}/states/{stateId}
+								<br>layers/{layerId}/states/{stateId}</div>
 						</td>
 					</tr>
 					

@@ -27,7 +27,8 @@ Returns a tile for a given layer at the specified level and index.
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/tile/{layer}/{level}/{x}/{y}.{ext}</div>
+							<div class="description">/{version}/tile/{layer}/{level}/{x}/{y}.{ext}
+								<br>/tile/{layer}/{level}/{x}/{y}.{ext}</div>
 						</td>
 					</tr>
 					
