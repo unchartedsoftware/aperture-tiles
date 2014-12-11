@@ -9,39 +9,39 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify');
 
 
-function bundle( b, minify ) {
+function bundle( b, output ) {
     return b.bundle()
         .on( 'error', function( e ) {
             console.log( e );
         })
-        .pipe( source( 'tiles.js' ) )
+        .pipe( source( output ) )
         .pipe( gulp.dest( 'build' ) );
 }
 
-function bundleMin( b, minify ) {
+function bundleMin( b, output ) {
     return b.bundle()
         .on( 'error', function( e ) {
             console.log( e );
         })
-        .pipe( source( 'tiles.min.js' ) )
+        .pipe( source( output ) )
         .pipe( buffer() )
         .pipe( uglify() )
         .pipe( gulp.dest( 'build' ) );
 }
 
-function build( root ) {
+function build( root, output ) {
     var b = browserify( root, { 
             debug: true,
             standalone: 'tiles'
         });
-    return bundle( b );
+    return bundle( b, output );
 }
 
-function buildMin( root ) {
+function buildMin( root, output ) {
     var b = browserify( root, { 
             standalone: 'tiles'
         });
-    return bundleMin( b );
+    return bundleMin( b, output );
 }
 
 function handleError( err ) {
@@ -74,19 +74,19 @@ gulp.task('build-css', function () {
 });
 
 gulp.task('build-min-js', [ 'lint' ], function() {
-    return buildMin( './src/js/api.js' );
+    return buildMin( './src/js/api.js', 'tiles.min.js' );
 });
 
 gulp.task('build-js', [ 'lint' ], function() {
-    return build( './src/js/api.js' );
+    return build( './src/js/api.js', 'tiles.js' );
 });
 
 gulp.task('build-rest-min-js', [ 'lint' ], function() {
-    return buildMin( './src/js/rest-api.js' );
+    return buildMin( './src/js/rest-api.js', 'tiles-rest.min.js' );
 });
 
 gulp.task('build-rest-js', [ 'lint' ], function() {
-    return build( './src/js/rest-api.js' );
+    return build( './src/js/rest-api.js', 'tiles-rest.js' );
 });
 
 gulp.task('build', [ 'clean' ], function() {
