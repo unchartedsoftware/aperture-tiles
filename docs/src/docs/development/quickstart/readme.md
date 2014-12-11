@@ -166,7 +166,7 @@ The **julia-tiling.bd** file in your `tile-generator/examples` folder should not
 When you have configured all of the required properties, execute the standard spark-submit script again. This time you will invoke the CSVBinner and use the `-d` switch to pass your edited base property files (tiling property files can be pass in without a switch).
 
 ```bash
-tile-generator/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
+$SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
 .CSVBinner --master local[2] lib/tile-generation-assembly.jar -d examples
 /julia-base.bd examples/julia-tiling.bd
 ```
