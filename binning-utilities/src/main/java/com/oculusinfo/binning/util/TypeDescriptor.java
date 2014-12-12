@@ -25,6 +25,7 @@ package com.oculusinfo.binning.util;
 
 
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,7 +36,7 @@ import java.util.List;
  * 
  * @author nkronenfeld
  */
-public class TypeDescriptor {
+public class TypeDescriptor implements Serializable {
 	private Class<?>                     _mainType;
 	private List<TypeDescriptor> _genericTypes;
 

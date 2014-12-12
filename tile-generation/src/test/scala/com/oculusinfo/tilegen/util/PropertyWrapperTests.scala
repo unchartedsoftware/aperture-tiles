@@ -57,4 +57,30 @@ class PropertyWrapperTestSuite extends FunSuite {
 		assert(List[String]("x", "y", "z") === wrappedProps.getStringPropSeq("d", "").toList)
 		assert(List[String]("i", "j", "k", "l") === wrappedProps.getStringPropSeq("e", "").toList)
 	}
+
+	test("create connector with spark and akka properties") {
+		val props = new Properties()
+		props.setProperty("spark.some.property", "someValue")
+		props.setProperty("akka.some.property", "someOtherValue")
+
+		val wrappedProps = new PropertiesWrapper(props)
+		val connector = wrappedProps.getSparkConnector()
+		assertResult(Some("someValue")) {
+			connector.getConfProperty("spark.some.property")
+		}
+		assertResult(Some("someOtherValue")) {
+			connector.getConfProperty("akka.some.property")
+		}
+	}
+
+	test("create connector with ignored properties") {
+		val props = new Properties()
+		props.setProperty("bad.some.property", "someValue")
+
+		val wrappedProps = new PropertiesWrapper(props)
+		val connector = wrappedProps.getSparkConnector()
+		assertResult(None) {
+			connector.getConfProperty("bad.some.property")
+		}
+	}
 }

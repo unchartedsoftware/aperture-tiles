@@ -39,7 +39,7 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJSONSerializer;
+import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
 
 /**
@@ -96,7 +96,7 @@ public class SQLitePyramidIOTest {
 			// classes--ideally, these objects should be mocked.
 
 			TileIndex tileDef = new TileIndex(0, 0, 0, 1, 1);
-			StringIntPairArrayJSONSerializer serializer = new StringIntPairArrayJSONSerializer();
+			StringIntPairArrayJsonSerializer serializer = new StringIntPairArrayJsonSerializer();
 
 			TileData<List<Pair<String, Integer>>> tileToWrite = new TileData<List<Pair<String, Integer>>>(tileDef);
 			List<Pair<String, Integer>> binVals = new ArrayList<Pair<String,Integer>>();

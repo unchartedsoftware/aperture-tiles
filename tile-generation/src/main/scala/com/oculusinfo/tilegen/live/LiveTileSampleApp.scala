@@ -42,7 +42,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
 
 import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.tilegen.tiling.StandardDoubleBinDescriptor
+import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 
 
 
@@ -52,7 +52,7 @@ object LiveTileSampleApp {
 		val argParser = new ArgumentParser(args)
 
 		try {
-			val sc = argParser.getSparkConnector().getSparkContext("tile generator")
+			val sc = argParser.getSparkConnector().createContext(Some("tile generator"))
 			val dataFile = argParser.getString("s", "The source data file to read")
 			val data = sc.textFile(dataFile).map(s =>
 				{
@@ -62,9 +62,8 @@ object LiveTileSampleApp {
 			).cache
 			val imageDir = argParser.getString("d", "The destination directory into which to put images")
 			val pyramid = new AOITilePyramid(-1.0, -1.0, 1.0, 1.0)
-			val binDesc = new StandardDoubleBinDescriptor
-
-			val generator = new LiveTileGenerator[Double, JavaDouble](data, pyramid, binDesc)
+			val analytic = new NumericSumBinningAnalytic[Double, JavaDouble]()
+			val generator = new LiveTileGenerator[Double, JavaDouble](data, pyramid, analytic)
 
 			var done = false
 			do {

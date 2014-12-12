@@ -34,11 +34,16 @@ import scala.util.{Try, Success, Failure}
 
 import org.scalatest.FunSuite
 
+import org.apache.avro.file.CodecFactory
+
 import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
+
+import com.oculusinfo.tilegen.datasets.CountValueExtractor
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 
 
 
@@ -55,18 +60,23 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 
 		val coordFcn: (((Double, Double), Double)) => Try[(Double, Double)] = record => Try(record._1)
 		val valueFcn: (((Double, Double), Double)) => Try[Double] = record => Try(record._2)
-		
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Double]] = None
+		val dataAnalytics: Option[AnalysisDescription[((Double, Double), Double), Double]] = None
+
 		binner.binAndWriteData(data,
 		                       coordFcn,
 		                       valueFcn,
 		                       new CartesianIndexScheme,
-		                       new StandardDoubleBinDescriptor,
+		                       new NumericSumBinningAnalytic[Double, JavaDouble](),
+		                       tileAnalytics,
+		                       dataAnalytics,
+		                       new CountValueExtractor(),
 		                       pyramid,
 		                       None,
 		                       pyramidId,
 		                       tileIO,
 		                       List(List(1)),
-		                       bins=4)
+		                       xBins=4, yBins=4)
 
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 4))
 		assert(tile00.isEmpty)
@@ -88,5 +98,44 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 			                    0.0, 1.0, 0.0, 0.0,
 			                    0.0, 0.0, 1.0, 0.0,
 			                    0.0, 0.0, 0.0, 1.0))
+	}
+
+	test("One-dimensional binning") {
+		val data = sc.parallelize(Range(0, 3)).map(n =>
+			((n.toDouble, (7-n).toDouble), 1.0)
+		)
+
+		val binner = new RDDBinner
+		val tileIO = new TestTileIO
+		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
+		val pyramidId = "1-d test"
+
+		val coordFcn: (((Double, Double), Double)) => Try[(Double, Double)] = record => Try(record._1)
+		val valueFcn: (((Double, Double), Double)) => Try[Double] = record => Try(record._2)
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Double]] = None
+		val dataAnalytics: Option[AnalysisDescription[((Double, Double), Double), Double]] = None
+
+		binner.binAndWriteData(data,
+		                       coordFcn,
+		                       valueFcn,
+		                       new DensityStripIndexScheme,
+		                       new NumericSumBinningAnalytic[Double, JavaDouble](),
+		                       tileAnalytics,
+		                       dataAnalytics,
+		                       new CountValueExtractor(),
+		                       pyramid,
+		                       None,
+		                       pyramidId,
+		                       tileIO,
+		                       List(List(1)),
+		                       xBins=4, yBins=1)
+
+		// Noting that visually, the tiles should look exactly as we enter them here.
+		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 1))
+		assert(tile10.isDefined)
+		assert(tile10.get.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 1.0, 1.0, 0.0))
+		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 1))
+		assert(!tile11.isDefined)
 	}
 }

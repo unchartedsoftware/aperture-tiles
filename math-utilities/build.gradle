@@ -1,0 +1,27 @@
+description = "Useful mathematical utilities for general use"
+
+// Pulls in the Java plugin
+apply plugin: "java"
+
+// Task to create a JAR from the all source set
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+
+// Defines the artifacts produced when this project is built 
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+
+// Dependencies on other projects / jars
+dependencies {
+	testCompile "junit:junit:4.8.1"
+}

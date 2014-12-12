@@ -1,0 +1,21 @@
+---
+layout: default
+---
+
+{% comment %} Get filename containing sidebar content {% endcomment %}
+	{% capture includeContext %}{{ page.section | slugify }}.html{% endcapture %}
+
+<div id="content">
+	<div class="content-context">
+		{% include {{ includeContext }} %}
+		{% if page.section != 'Support' %}
+			{% include footer.html %}
+		{% else %}
+			<br>
+			<a href="http://www.oculusinfo.com" class="copyright">&#169;2013-2014 Oculus Info Inc.</a>
+		{% endif %}
+	</div>
+	<div class="content-body">
+		{{ content }}
+	</div>
+</div>

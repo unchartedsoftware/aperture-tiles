@@ -45,23 +45,33 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 		super(compressionCodec, new TypeDescriptor(List.class, elementTypeDescription));
 	}
 
+	private Schema _entrySchema;
+	
 	abstract protected String getEntrySchemaFile ();
 	abstract protected T getEntryValue (GenericRecord entry);
 	abstract protected void setEntryValue (GenericRecord avroEntry, T rawEntry) throws IOException;
-
+	
 	@Override
 	protected String getRecordSchemaFile () {
 		return "arrayData.avsc";
 	}
 
 	protected Schema getEntrySchema () throws IOException {
+		if (_entrySchema == null) {
+				_entrySchema = createEntrySchema();
+		}
+		return _entrySchema;
+	}
+	
+	protected Schema createEntrySchema() throws IOException {
 		return new AvroSchemaComposer().addResource(getEntrySchemaFile()).resolved();
 	}
+	
 	@Override
-	protected Schema getRecordSchema() throws IOException {
+	protected Schema createRecordSchema() throws IOException {
 		return new AvroSchemaComposer().add(getEntrySchema()).addResource(getRecordSchemaFile()).resolved();
 	}
-
+		
 	@SuppressWarnings("unchecked")
 	@Override
 	protected List<T> getValue (GenericRecord bin) {
@@ -75,12 +85,10 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 
 	@Override
 	protected void setValue (GenericRecord bin, List<T> values) throws IOException {
-		Schema entrySchema = getEntrySchema();
-
 		List<GenericRecord> avroValues = new ArrayList<GenericRecord>();
 
 		for (T value: values) {
-			GenericRecord avroValue = new GenericData.Record(entrySchema);
+			GenericRecord avroValue = new GenericData.Record(getEntrySchema());
 			setEntryValue(avroValue, value);
 			avroValues.add(avroValue);
 		}

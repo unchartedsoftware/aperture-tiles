@@ -1,0 +1,49 @@
+[
+	{
+		"id": "julia-set",
+		"public" :{
+			"pyramid": {
+				"type": "AreaOfInterest",
+				"minX": -2,
+				"maxX": 2,
+				"minY": -2,
+				"maxY": 2
+			},
+		},
+		"private": {
+			"data" : {
+				"id": "julia.x.y.v",
+				"pyramidio" : {
+					"type" : "live",
+					"data" : {
+						"oculus.binning.name": "julia+-0.8_0.156",
+						"oculus.binning.source.location": "hdfs://hadoop-s1/xdata/data/julia/500by200",
+						"oculus.binning.separator": "\t",
+						"oculus.binning.projection": "EPSG:4326",
+						"oculus.binning.projection.autobounds": "false",
+						"oculus.binning.projection.minx": "-2.0",
+						"oculus.binning.projection.maxx": "2.0",
+						"oculus.binning.projection.miny": "-2.0",
+						"oculus.binning.projection.maxy": "2.0",
+						"oculus.binning.parsing.x.index": 0,
+						"oculus.binning.parsing.y.index": 1,
+						"oculus.binning.parsing.v.index": 2,
+						"oculus.binning.parsing.v.fieldType": "double",
+						"oculus.binning.parsing.v.fieldAggregation": "min",
+						"oculus.binning.xField": "x",
+						"oculus.binning.yField": "y",
+						"oculus.binning.valueField": "v",
+						"oculus.binning.levels.0": "0, 1, 2, 3, 4, 5, 6, 7, 8, 9",
+						"spark.shuffle.consolidateFiles": "true",
+						"spark.cores.max": 100,
+						"spark.executor.memory": "20g",
+						"spark.ui.port": 4042,
+						"spark.shuffle.file.buffer.kb": 500,
+						"spark.speculation": "true",
+						"spark.storage.blockManagerHeartBeatMs": 300000
+					}
+				}
+			}
+		}
+	}
+]

@@ -24,21 +24,21 @@
  */
 package com.oculusinfo.tile.rest.legend;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.IValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.LinearCappedValueTransformer;
-import com.oculusinfo.tile.rendering.transformations.ValueTransformerFactory;
+import com.oculusinfo.tile.rendering.transformations.value.LinearCappedValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
+import com.oculusinfo.tile.rest.layer.LayerService;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 
 /**
  * A service that generates an image coloured using the specified
@@ -52,100 +52,64 @@ public class LegendServiceImpl implements LegendService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(LegendServiceImpl.class);
 
-	LegendServiceImpl () {
+    private LayerService _layerService;
+
+    @Inject
+	LegendServiceImpl( LayerService layerService ) {
+        _layerService = layerService;
 	}
 	
 	/* (non-Javadoc)
 	 * @see LegendService#getLegend(Object, ColorRampParameter, String, int, int, int, boolean, boolean)
 	 */
-	public BufferedImage getLegend (LayerConfiguration config, String layer, 
-	                                int zoomLevel, int width, int height, boolean doAxis, boolean renderHorizontally) {
+	public BufferedImage getLegend( String layer, int width, int height, boolean renderHorizontally, JSONObject query ) {
+
+        LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = bi.createGraphics();	
+		Graphics2D g = bi.createGraphics();
 
 		try {
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 			
 			// legend always uses a linear capped value transform - don't use layer config specified transform
-			double levelMax = config.getPropertyValue(ValueTransformerFactory.LAYER_MAXIMUM);
-			
-			double max;
+			double levelMax = config.getPropertyValue( ValueTransformerFactory.LAYER_MAXIMUM);
+			double levelMin = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
+
+            double max = levelMax;
 			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MAXIMUM)) {
 				max = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
 			}
-			else {
-				max = levelMax;
-			}
 
-			double min;
+			double min = levelMin;
 			if (config.hasPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM)) {
 				min = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
 			}
-			else {
-				min = config.getPropertyValue(ValueTransformerFactory.LAYER_MINIMUM);
-			}
 			
-			IValueTransformer t = new LinearCappedValueTransformer(min, max, levelMax);
-			
-			int fontHeight = 12;
-			int barHeight = height - fontHeight;
-			int barYOffset = fontHeight/2;
-			int labelBarSpacer = 8;
-			int barWidth = width - g.getFontMetrics().stringWidth(Integer.toString((int)levelMax)) - labelBarSpacer;
-			int barXOffset = width - barWidth + labelBarSpacer;
-    		
-			if (renderHorizontally){
+			ValueTransformer<Double> t = new LinearCappedValueTransformer(min, max, levelMax);
+
+			if ( renderHorizontally ) {
 				for (int i = 0; i < width; i++){
 					double v = ((double)(i+1)/(double)width) * levelMax;
 					int colorInt = colorRamp.getRGB(t.transform(v));		
-					g.setColor(new Color(colorInt));
+					g.setColor(new Color(colorInt, true));
 					g.drawLine(i, 0, i, height);
 				}
 			} else {
-				//Override the above.
-				barHeight = height;
-				barYOffset = 0;
-				barXOffset = 0;
-    			
-				for(int i = 0; i <= barHeight; i++){
-					double v = ((double)(i+1)/(double)barHeight) * levelMax;
+				for(int i = 0; i <= height; i++){
+					double v = ((double)(i+1)/(double)height) * levelMax;
 					int colorInt = colorRamp.getRGB(t.transform(v));		
-					g.setColor(new Color(colorInt));
-					int y = barHeight-i+barYOffset;
-					g.drawLine(barXOffset, y, width, y);
+					g.setColor(new Color(colorInt, true));
+					int y = height-i;
+					g.drawLine(0, y, width, y);
 				}
 			}
-    		
-			if(doAxis){
-				// We currently don't support rendering labels for horizontal legends
-				if (!renderHorizontally){ 
-					// Draw text labels.
-					int textRightEdge = barXOffset - labelBarSpacer;
-					int numInnerLabels = height/fontHeight/4;
-					int labelStep = height/numInnerLabels;
-					MathContext mathContext = new MathContext(2, RoundingMode.DOWN);
-					g.setColor(Color.black);
-    				
-					g.drawLine(barXOffset-3, barYOffset, barXOffset-3, barYOffset+barHeight);
-					//g.drawString(Integer.toString(levelMaxFreq), 0, fontHeight);
-    				
-					for(int i = 0; i < height+fontHeight; i+=labelStep){
-						BigDecimal value = new BigDecimal(levelMax - levelMax * ( (double)i/(double)height ), mathContext );
-						String label = value.toPlainString();
-						int labelWidth = g.getFontMetrics().stringWidth(label);
-    					
-						g.drawString(label, textRightEdge - labelWidth, i+(fontHeight) );
-						g.drawLine(barXOffset-6, i+barYOffset, barXOffset-3, i+barYOffset);
-					}
-				}
-    			
-				//g.drawString(Integer.toString(levelMinFreq), 0, height);
-			}
-    		
 			g.dispose();
+
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error attempting to get legend - mis-configured layer");
-		}
+		} catch (IllegalArgumentException e) {
+            LOGGER.info( "Renderer configuration not recognized." );
+        }
 		return bi;
 	}
 }

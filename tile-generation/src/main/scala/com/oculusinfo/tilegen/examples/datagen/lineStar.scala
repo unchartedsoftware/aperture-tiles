@@ -36,11 +36,9 @@ import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.BinDescriptor
 import com.oculusinfo.tilegen.util.ArgumentParser
 
 /**
@@ -109,7 +107,7 @@ object LineStarSampleGenerator {
 			"The lowest level at which a line will display as continuous, with no breaks.",
 			Option(10))
 
-		val sc = argParser.getSparkConnector().getSparkContext("Create sample data for live tile demonstration")
+		val sc = argParser.getSparkConnector().createContext(Some("Create sample data for live tile demonstration"))
 
 		val linesPerSide = 256 << topLevel
 		val linePartitions = if (bottomLevel < 6) 1 else (1 << (bottomLevel-6))

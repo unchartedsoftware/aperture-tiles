@@ -1,0 +1,130 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+description = "A Spark-based library to aid in easy tile and tile pyramid generation"
+
+// Configure for scala compilation via the scala plugin
+apply plugin: "scala"
+
+// appends scala test functionality to the baseline test task
+test << {
+	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
+	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+			reporter(type: 'stdout')
+	}
+}
+
+// Task to create a JAR from all source (scala and java)
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a scaladoc JAR
+task scaladocJar(type: Jar, dependsOn: scaladoc) {
+	classifier = "scaladoc"
+	from scaladoc.destinationDir
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+
+// Task to create a jar of test classes
+task testJar(type: Jar) {
+	classifier = "tests"
+	from sourceSets.test.output
+}
+
+// Copy and filter resources files.  This uses a baseline copy task, and applies
+// Ant's token functionality to filter values.
+task copyFilteredResources(type: Copy) {	
+	from "src/main/filtered-resources-gradle"
+	into "src/main/resources"
+	filter ReplaceTokens, tokens:[
+		"project-version": version.toString(),
+		"hadoop-core-version": hadoopCoreVersion.toString(),
+		"hbase-version": hbaseVersion.toString()		
+	]
+}
+// Make sure the above tasks run before resource processing.
+processResources.dependsOn copyFilteredResources
+
+
+// Configure a jar task to build a fat jar that includes
+// dependencies added ot the assemblyJarReq config.
+task assemblyJar(type: Jar) {
+	classifier = "assembly"
+	from files(sourceSets.main.output.classesDir)
+	from {
+		configurations.assemblyJarReq.collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+}
+assemblyJar.mustRunAfter "jar"
+
+// produce artifacts using the tasks above
+artifacts {
+	archives sourcesJar
+	archives scaladocJar
+	archives javadocJar
+	archives testJar
+	archives assemblyJar
+}
+
+// Add a delete to the clean task that will remove the resource files.
+clean {
+	inputs.file "src/main/resources/build.properties"
+	delete "src/main/resources/build.properties"
+}
+
+// Create a configuration to hold jars that we need to roll into our fat jar.  Disable transitive dependency
+// resolution, since we only want the jars we specifically list.
+configurations {
+	assemblyJarReq {
+		transitive = false
+	}
+}
+
+// By default the Gradle scala plugin builds java code before scala code.  This leads to problems
+// in our setup because the scala code in this project is used by the java code (causing 
+// compile errors).  We force the plugin to use an empty source set for java, and then set the
+// scala source to both scala and java.  The scala compiler generates class files for both without
+// issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
+// scala and java in the same project.  
+sourceSets {
+    main {
+        scala {
+            srcDirs = ["src/main/scala", "src/main/java"]
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
+// Jars / projects this project depends on.
+dependencies {
+	// Compile config - needed to build
+	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
+	compile "org.scala-lang:scala-library:$scalaVersion"
+	compile project(":binning-utilities")
+	compile project(":geometric-utilities")
+	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
+	
+	// Call for special handling for hbase dependencies - see top level build file for
+	// definition and explanation.
+	addHBaseDependencies()
+
+	// assemblyJarReq config - these get rolled into the fatjar as they aren't provided by CDH/Spark
+	// at runtime.
+	assemblyJarReq project (":geometric-utilities")
+	assemblyJarReq project (":binning-utilities")
+	assemblyJarReq "org.json:json:20090211"
+	addHBaseDependencies("assemblyJarReq")
+}

@@ -24,7 +24,7 @@
  */
 package com.oculusinfo.annotation.io.impl;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.util.Pair;
@@ -65,23 +65,24 @@ public class HBaseAnnotationIO implements AnnotationIO {
     }
     
     private Configuration  _config;
-    private HBaseAdmin     _admin;
-    private HConnection    _connection;
+    private HBaseAdmin _admin;
+    private HConnection _connection;
 
     public HBaseAnnotationIO (String zookeeperQuorum, 
     						  String zookeeperPort, 
     						  String hbaseMaster) throws IOException {
-    	
+
         Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop.hbase.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop.hbase.client").setLevel(Level.WARN);
-    	
+        Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
+
         _config = HBaseConfiguration.create();
         _config.set("hbase.zookeeper.quorum", zookeeperQuorum);
         _config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
         _config.set("hbase.master", hbaseMaster);
         _admin = new HBaseAdmin(_config);
-        _connection = HConnectionManager.createConnection(_config);
+        _connection = HConnectionManager.createConnection( _config );
+
+
     }
     
     /**
@@ -147,7 +148,9 @@ public class HBaseAnnotationIO implements AnnotationIO {
 
     	List<byte[]> rowIds = new ArrayList<>();
         for (Pair<String,Long> certificate: certificates) {
-            rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );
+        	if (certificate != null) {
+        		rowIds.add( rowIdFromData( UUID.fromString( certificate.getFirst() ) ) );	
+        	}            
         }
 
         List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, ANNOTATION_COLUMN);

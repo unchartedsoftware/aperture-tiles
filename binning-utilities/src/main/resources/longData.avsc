@@ -1,0 +1,8 @@
+{
+  "name":"recordType",
+  "namespace":"ar.avro",
+  "type":"record",
+  "fields":[
+    {"name":"value", "type":"long"}
+  ]
+}

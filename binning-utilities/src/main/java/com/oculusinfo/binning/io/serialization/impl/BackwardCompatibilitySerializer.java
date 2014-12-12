@@ -40,6 +40,12 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
+/**
+ * This serializer serializes an early, non-avro form of double-valued tiles.
+ * It is no longer supported.  Please use
+ * {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer} instead.
+ */
+@Deprecated
 public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 	private static final long serialVersionUID = 1L;
 	private static final TypeDescriptor TYPE_DESCRIPTOR = new TypeDescriptor(Double.class);

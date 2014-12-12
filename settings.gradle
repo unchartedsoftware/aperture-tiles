@@ -1,0 +1,15 @@
+// List of include sub-projects
+include 'math-utilities',
+		'geometric-utilities',
+		'binning-utilities',
+		'tile-generation',
+		'spark-tile-utilities',
+		'tile-service',
+		'tile-packaging',
+		'annotation-service',
+		'tile-client',
+		'tile-client-template',
+		'tile-examples:julia-demo',
+		'tile-examples:julia-demo-live',
+		'tile-examples:twitter-topics:twitter-topics-utilities',
+		'tile-examples:twitter-topics:twitter-topics-client'

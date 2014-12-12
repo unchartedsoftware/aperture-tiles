@@ -45,9 +45,9 @@ public class TileData<T> implements Serializable {
 
 
 
-	private TileIndex           _definition;
-	private ArrayList<T>        _data;
-	private Map<String, String> _metaData;
+    private TileIndex           _definition;
+    private List<T>             _data;
+    private Map<String, String> _metaData;
 
 
 
@@ -88,13 +88,16 @@ public class TileData<T> implements Serializable {
 		_metaData = null;
 	}
 
-	/**
-	 * Construct a set of tile data for a particular tile, with preset data.
-	 * 
-	 * @param definition The index of the tile whose data is to be
-	 *            represented by this object.
-	 * @param tileData The data for this tile
-	 */
+    /**
+     * Construct a set of tile data for a particular tile, with preset data.
+     * Note the passed-in preset data is used as is, not copied.
+     * 
+     * @param definition
+     *            The index of the tile whose data is to be represented by this
+     *            object.
+     * @param tileData
+     *            The data for this tile
+     */
 	public TileData (TileIndex definition, List<T> tileData) {
 		_definition = definition;
 		int requiredLength = _definition.getXBins() * _definition.getYBins();
@@ -105,13 +108,13 @@ public class TileData<T> implements Serializable {
 			                                   + ", was "
 			                                   + tileData.size());
 		}
-		_data = new ArrayList<T>(tileData);
+		_data = tileData;
 	}
 
 	/**
 	 * Get the tile index defining which tile is associated with this data
 	 * 
-	 * @return
+	 * @return The TileIndex of the tile
 	 */
 	public TileIndex getDefinition () {
 		return _definition;
@@ -144,7 +147,7 @@ public class TileData<T> implements Serializable {
 	 * this method is intended for users using the data as a block (such as for
 	 * I/O) without any need to know what the data itself is - the only thing
 	 * most users should know is that the format output here is the same one
-	 * expected by {@link #TileData(TileIndex, double[]).
+	 * expected by {@link #TileData(TileIndex, List)}.
 	 */
 	public List<T> getData () {
 		return Collections.unmodifiableList(_data);
@@ -164,7 +167,7 @@ public class TileData<T> implements Serializable {
 	/**
 	 * Get the value of the given metadata property.
 	 *
-	 * @param The property of interest
+	 * @param property The property of interest
 	 * @return The value of the given property, or null if the property
 	 *         isn't listed in the tile's metadata.
 	 */
@@ -179,10 +182,14 @@ public class TileData<T> implements Serializable {
 	 * @param property The property of interest
 	 * @param value The value of said property
 	 */
-	public void setMetaData (String property, String value) {
+	public void setMetaData (String property, Object value) {
 		if (null == _metaData) {
 			_metaData = new HashMap<>();
 		}
-		_metaData.put(property, value);
+		if (null == value) {
+		    _metaData.put(property, null);
+		} else {
+		    _metaData.put(property, value.toString());
+		}
 	}
 }

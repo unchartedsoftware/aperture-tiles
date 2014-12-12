@@ -35,7 +35,8 @@ import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper;
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam;
 import com.oculusinfo.tilegen.spark.MinMaxAccumulableParam;
-import com.oculusinfo.tilegen.tiling.*;
+import com.oculusinfo.tilegen.tiling.HBaseTileIO;
+import com.oculusinfo.tilegen.tiling.TileIO;
 import com.oculusinfo.tilegen.util.PropertiesWrapper;
 import com.oculusinfo.tilegen.util.Rectangle;
 import org.apache.spark.serializer.KryoRegistrator;
@@ -43,16 +44,53 @@ import org.apache.spark.serializer.KryoRegistrator;
 
 public class TileRegistrator implements KryoRegistrator {
 
-	//static boolean needToRegister = true;
-
 	public void registerClasses(Kryo kryo) {
-
-		//if (needToRegister) {
 
 		// throw exception if class is being serialized, but has not been registered
 		kryo.setRegistrationRequired(true);
 
 		kryo.register(scala.runtime.BoxedUnit.class);
+		kryo.register(scala.None.class);
+		kryo.register(scala.None$.class);
+		kryo.register(scala.Some.class);
+		kryo.register(scala.Some$.class);
+
+		kryo.register(char[].class);
+		kryo.register(char[][].class);
+		kryo.register(char[][][].class);
+		kryo.register(char[][][][].class);
+		kryo.register(byte[].class);
+		kryo.register(byte[][].class);
+		kryo.register(byte[][][].class);
+		kryo.register(byte[][][][].class);
+		kryo.register(short[].class);
+		kryo.register(short[][].class);
+		kryo.register(short[][][].class);
+		kryo.register(short[][][][].class);
+		kryo.register(int[].class);
+		kryo.register(int[][].class);
+		kryo.register(int[][][].class);
+		kryo.register(int[][][][].class);
+		kryo.register(long[].class);
+		kryo.register(long[][].class);
+		kryo.register(long[][][].class);
+		kryo.register(long[][][][].class);
+		kryo.register(float[].class);
+		kryo.register(float[][].class);
+		kryo.register(float[][][].class);
+		kryo.register(float[][][][].class);
+		kryo.register(double[].class);
+		kryo.register(double[][].class);
+		kryo.register(double[][][].class);
+		kryo.register(double[][][][].class);
+		kryo.register(boolean[].class);
+		kryo.register(boolean[][].class);
+		kryo.register(boolean[][][].class);
+		kryo.register(boolean[][][][].class);
+
+		kryo.register(java.util.HashMap.class);
+
+		kryo.register(scala.collection.immutable.Range.class);
 
 		// com.oculusinfo.tilegen.spark
 		kryo.register(MinMaxAccumulableParam.class);
@@ -60,23 +98,8 @@ public class TileRegistrator implements KryoRegistrator {
 		kryo.register(DoubleMaxAccumulatorParam.class);
 
 		// com.oculusinfo.tilegen.tiling
-		kryo.register(BinDescriptor.class);
-		kryo.register(StandardDoubleBinDescriptor.class);
-		kryo.register(CompatibilityDoubleBinDescriptor.class);
-		kryo.register(MinimumDoubleBinDescriptor.class);
-		kryo.register(MaximumDoubleBinDescriptor.class);
-		kryo.register(LogDoubleBinDescriptor.class);
-		kryo.register(StandardDoubleArrayBinDescriptor.class);
-		kryo.register(StringScoreBinDescriptor.class);
-		kryo.register(RecordParser.class);
-		kryo.register(FieldExtractor.class);
 		kryo.register(TileIO.class);
 		kryo.register(HBaseTileIO.class);
-		kryo.register(LevelMinMaxAccumulableParam.class);
-		kryo.register(GenericSeriesBinner.class);
-		kryo.register(TileToImageConverter.class);
-		kryo.register(SingleTileToImageConverter.class);
-		kryo.register(TileSeriesToImagesConverter.class);
 
 		// com.oculusinfo.tilegen.util
 		kryo.register(PropertiesWrapper.class);
@@ -92,16 +115,12 @@ public class TileRegistrator implements KryoRegistrator {
 		kryo.register(TileData[].class);
 		kryo.register(java.util.ArrayList.class);
 		kryo.register(TileIndex.class);
-		kryo.register(DensityStripData.class);
-        
+
 		// com.oculusinfo.binning.impl
 		kryo.register(AOITilePyramid.class);
 		kryo.register(WebMercatorTilePyramid.class);
 
 		// com.oculusinfo.binning.util
 		kryo.register(Pair.class);
-
-		//needToRegister = false;
-		//}
 	}
 }

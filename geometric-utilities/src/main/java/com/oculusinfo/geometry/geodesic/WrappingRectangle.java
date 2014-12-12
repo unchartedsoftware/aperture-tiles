@@ -105,8 +105,8 @@ public class WrappingRectangle {
      * Gets a rectangle with the same center as this one, but scaled by the
      * given amount.
      * 
-     * @param scale
-     * @return
+     * @param scale The scale factor
+     * @return The WrappingRectangle scaled by scale
      */
     public WrappingRectangle scale (double scale) {
         double halfWidth = (_maxLon-_minLon)/2.0;

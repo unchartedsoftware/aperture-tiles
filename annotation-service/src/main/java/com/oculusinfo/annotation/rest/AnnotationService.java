@@ -23,8 +23,7 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import com.oculusinfo.annotation.config.AnnotationConfiguration;
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.util.Pair;
@@ -32,49 +31,49 @@ import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 
 
 public interface AnnotationService {
-	
-	/*
-	 * Write an annotation to the storage service
-	 * 
-	 */
+
+    /**
+     * Write an annotation to the storage service
+     *
+     * @param layer The layer identification string.
+     * @param annotation The annotation data object to be written.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract Pair<String,Long> write( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
-	
-	
-	/*
-	 * Modify an annotation in the storage service
-	 * 
-	 */
+
+    /**
+     * Modify an annotation in the storage service
+     *
+     * @param layer The layer identification string.
+     * @param annotation The modified annotation data object to be written.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract Pair<String,Long> modify( String layer, AnnotationData<?> annotation ) throws IllegalArgumentException;
-	
-	
-	/*
-	 * Read annotations from the storage service
-	 * 
-	 */
-	public abstract Map<BinIndex, List<AnnotationData<?>>> read( UUID id, String layer, TileIndex tile ) throws IllegalArgumentException;
-	
-	
-	/*
-	 * Remove an annotation from the storage service
-	 * 
-	 */
+
+    /**
+     * Read annotations from the storage service, if no annotations are in the tile, returns null
+     *
+     * @param layer The layer identification string.
+     * @param tile The tile index to read.
+     * @param query Query parameter object.
+     *
+     * @throws IllegalArgumentException
+     */
+	public abstract List<List<AnnotationData<?>>> read( String layer, TileIndex tile, JSONObject query ) throws IllegalArgumentException;
+
+    /**
+     * Remove an annotation from the storage service
+     * @param layer The layer identification string.
+     * @param certificate The uuid and timestamp pair that represents the annotation to be removed.
+     *
+     * @throws IllegalArgumentException
+     */
 	public abstract void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException;
 
-	
-	/*
-	 * Configuration interface 
-	 */
-	public abstract AnnotationConfiguration getConfiguration( String layer );
-	public abstract UUID configureFilter (String layerId, JSONObject filters );
-    public abstract void unconfigureFilter (String layerId, UUID uuid );
-
-    /*
-     * List Layers interface
-     */
-	public abstract List<AnnotationInfo> list();
 }

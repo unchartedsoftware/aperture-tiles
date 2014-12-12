@@ -3,7 +3,7 @@
 
 <!-- Note that this file is refreshed by the server every 60seconds, as specified in web.xml -->
 
-<log4j:configuration debug="true">
+<log4j:configuration debug="false">
 
 	<appender name='stdout' class='org.apache.log4j.ConsoleAppender'>
 		<layout class='org.apache.log4j.PatternLayout'>
@@ -25,7 +25,7 @@
 	</appender>
 
 	<root>
-		<priority value="FINE"/>
+		<priority value="WARN"/>
 		<appender-ref ref="stdout"/>
 		<!-- appender-ref ref="General"/ -->
 	</root>

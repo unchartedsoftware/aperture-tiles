@@ -25,75 +25,39 @@ package com.oculusinfo.twitter.init;
 
 import java.util.List;
 
-import org.apache.avro.file.CodecFactory;
-
-import com.oculusinfo.binning.io.serialization.StandardTileSerializerFactory;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord;
 import com.oculusinfo.twitter.binning.TwitterTopicAvroSerializer;
 
-public class TwitterTileSerializationFactory extends StandardTileSerializerFactory {
-    public static StringProperty TWITTER_SERIALIZER_TYPE = new StringProperty("type",
-                                                                              ("The type of serializer desired.  Except for the legacy serializer, this will "
-                                                                               + "just be a short-hand describing the class type of the individual bins of the tile "
-                                                                               + "type that the serializer can handle.  In this short-hand, square brackets surround "
-                                                                               + "an array, parentheses, an n-tuple.  Finally, after the type is a suffix indicating "
-                                                                               + "the format in which the data will be written - \"-a\" for Apache Avro, \"-j\" for "
-                                                                               + "JSON.  So, \"double-a\" indicates a serializer for tiles whose bins are just doubles, "
-                                                                               + "written using Avro."),
-                                                                               "double-a",
-                                                                              new String[] {
-                                                                                            "legacy",
-                                                                                            "[(string, integer)]-j",
-                                                                                            "integer-a", "double-a", "[double]-a", "[string]-a",
-                                                                                            "[(string, integer)]-a", "[(string, double)]-a",
-                                                                                            "[twitterdemorecord]-a"
-    });
-    public TwitterTileSerializationFactory (ConfigurableFactory<?> parent,
-                                            List<String> path) {
-        super(parent, path);
-    }
+public class TwitterTileSerializationFactory extends ConfigurableFactory<TileSerializer<List<TwitterDemoTopicRecord>>> {
+	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static Class<TileSerializer<List<TwitterDemoTopicRecord>>> getGenericSerializerClass () {
+		return (Class) TileSerializer.class;
+	}
 
-    public TwitterTileSerializationFactory (String name,
-                                            ConfigurableFactory<?> parent,
-                                            List<String> path) {
-        super(name, parent, path);
-    }
+	public TwitterTileSerializationFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super("[twitterdemorecord]-a", getGenericSerializerClass(), parent, path);
+	}
 
-    @Override
-    protected void initializeProperties () {
-        addProperty(TWITTER_SERIALIZER_TYPE);
-        addProperty(CODEC_TYPE);
-        addProperty(DEFLATE_LEVEL);
-    }
+	@Override
+	protected TileSerializer<List<TwitterDemoTopicRecord>> create () {
+		return new TwitterTopicAvroSerializer(TileSerializerFactory.getCodecFactory(this));
+	}
 
-    @Override
-    protected TileSerializer<?> create () {
-        String serializerType = getPropertyValue(SERIALIZER_TYPE);
+	public static class TwitterTileSerializationFactoryDelegate implements DelegateFactoryProviderTarget<TileSerializer<?>> {
+		@Override
+		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (List<String> path) {
+			return this.createFactory(null, path);
+		}
 
-        if ("[twitterdemorecord]-a".equals(serializerType)) {
-            CodecType codecType = getPropertyValue(CODEC_TYPE);
-            CodecFactory codec = null;
-            switch (codecType) {
-                case Snappy:
-                    codec = CodecFactory.snappyCodec();
-                    break;
-                case Deflate:
-                    int deflateLevel = getPropertyValue(DEFLATE_LEVEL);
-                    codec = CodecFactory.deflateCodec(deflateLevel);
-                    break;
-                case None:
-                    codec = CodecFactory.nullCodec();
-                    break;
-                case BZip2:
-                default:
-                    codec = CodecFactory.bzip2Codec();
-                    break;
-            }
-            return new TwitterTopicAvroSerializer(codec);
-        } else {
-            return super.create();
-        }
-    }
+		@Override
+		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
+			 List<String> path) {
+			return new TwitterTileSerializationFactory(parent, path);
+		}
+	}
 }

@@ -1,0 +1,60 @@
+description = "Useful geometric utilities for general use"
+
+// Pulls in the scala plugin
+apply plugin: "scala"
+
+// Task to create a JAR from all source (java and scala)
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a scaladoc JAR
+task scaladocJar(type: Jar, dependsOn: scaladoc) {
+	classifier = "scaladoc"
+	from scaladoc.destinationDir
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+
+// Task to create a jar of test classes
+task testJar(type: Jar) {
+	classifier = "tests"
+	from sourceSets.test.output
+}
+ 
+// produce artifacts using the tasks above
+artifacts {
+	archives sourcesJar
+	archives scaladocJar
+	archives javadocJar
+	archives testJar
+}
+
+// By default the Gradle scala plugin builds java code before scala code.  This leads to problems
+// in our setup because the scala code in this project is used by the java code (causing 
+// compile errors).  We force the plugin to use an empty source set for java, and then set the
+// scala source to both scala and java.  The scala compiler generates class files for both without
+// issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
+// scala and java in the same project.  
+sourceSets {
+    main {
+        scala {
+            srcDirs = ["src/main/scala", "src/main/java"]
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+
+// Jars / projects this project depends on.
+dependencies {	
+	compile project(":math-utilities")
+	compile "org.scala-lang:scala-library:$scalaVersion"
+	testCompile "junit:junit:4.8.1"
+}

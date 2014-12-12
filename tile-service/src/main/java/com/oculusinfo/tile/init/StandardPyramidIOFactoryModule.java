@@ -27,6 +27,8 @@ package com.oculusinfo.tile.init;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 
@@ -34,15 +36,12 @@ public class StandardPyramidIOFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.HBASE.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.FILE.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.FILE_SYSTEM.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.JDBC.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.RESOURCE.create());
-		factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.ZIP.create());
-        factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.SQLITE.create());
-        factoryProviderBinder.addBinding().toInstance(DefaultPyramidIOFactoryProvider.DUMMY.create());
+		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
+
+		for (DefaultPyramidIOFactoryProvider provider: DefaultPyramidIOFactoryProvider.values()) {
+			factoryProviderBinder.addBinding().toInstance(provider);
+		}
 
 		bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
 	}

@@ -28,12 +28,11 @@ package com.oculusinfo.tilegen.tiling
 
 
 import java.lang.{Double => JavaDouble}
-
 import scala.collection.mutable.MutableList
-
+import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.TileData
-
 import com.oculusinfo.tilegen.util.ArgumentParser
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 
 
 
@@ -45,7 +44,7 @@ object TilePrinter {
 	def main (args: Array[String]) = {
 		val argParser = new ArgumentParser(args)
 
-		val sc = argParser.getSparkConnector().getSparkContext("Tile Edges Test")
+		val sc = argParser.getSparkConnector().createContext(Some("Tile Edges Test"))
 
 		val baseLocation =
 			argParser.getString("loc",
@@ -54,8 +53,7 @@ object TilePrinter {
 		                             "The level of data to print")
 		val tileIO = TileIO.fromArguments(argParser)
 
-		val binDesc = new StandardDoubleBinDescriptor
-		val tiles = tileIO.readTileSet(sc, binDesc.getSerializer, baseLocation,
+		val tiles = tileIO.readTileSet(sc, new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()), baseLocation,
 		                               List(level)).collect()
 
 		val printer = new TilePrinter()

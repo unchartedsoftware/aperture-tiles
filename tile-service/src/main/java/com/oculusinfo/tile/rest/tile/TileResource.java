@@ -26,10 +26,12 @@ package com.oculusinfo.tile.rest.tile;
 
 import com.google.inject.Inject;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
+import com.oculusinfo.tile.rest.QueryParamDecoder;
 import oculus.aperture.common.rest.ApertureServerResource;
+import org.json.JSONArray;
 import org.json.JSONObject;
-import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -38,10 +40,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import java.awt.image.BufferedImage;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class TileResource extends ApertureServerResource {
 
@@ -76,99 +75,82 @@ public class TileResource extends ApertureServerResource {
 	public TileResource(TileService service) {
 		this._service = service;
 	}
-	
-	private Integer getIntQueryValue (Form query, String key) {
-		String stringValue = query.getFirstValue(key, true, null);
-		if (null == stringValue) return null;
-		try {
-			return Integer.parseInt(stringValue);
-		} catch (NumberFormatException e) {
-			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-			                            "Parameter "+key+" had non-integer value \""+stringValue+"\"");
-		}
-	}
 
-	private TileIndex getTileIndexQueryValue (Form query, String key) {
-		String stringValue = query.getFirstValue(key, true, null);
-		if (null == stringValue) return null;
-		return TileIndex.fromString(stringValue);
-	}
+    /**
+     * Tilesets defined by tile indices, or tile bounds may be specified as request parameters.
+     * @param query request parameter JSONObject.
+     * @return Set<TileIndex> set of tile indices specified by the set or bound parameters. If
+     * none are specified, return empty set.
+     */
+	private Collection<TileIndex>  parseTileSetDescription( JSONObject query ) {
 
-	private Collection<TileIndex>  parseTileSetDescription (Form query) {
-		Set<TileIndex> indices = null;
+        Set<TileIndex> indices = new HashSet<>();
+        try {
+            if ( null != query ) {
+                // Check for specifically requested tiles
+                if ( query.has("tileset") ) {
+                    JSONArray tileSets = query.getJSONArray( "tileset" );
+                    for ( int i = 0; i < tileSets.length(); i++ ) {
+                        String[] tileDescriptions = tileSets.getString( i ).split( "\\|" );
+                        for ( String tileDescription : tileDescriptions ) {
+                            TileIndex index = TileIndex.fromString( tileDescription );
+                            if ( null != index ) {
+                                indices.add( index );
+                            }
+                        }
+                    }
+                }
 
-		if (null != query) {
-			// Check for specifically requested tiles
-			String[] tileSets = query.getValuesArray("tileset", true);
-			for (String tileSetDescription: tileSets) {
-				String[] tileDescriptions = tileSetDescription.split("\\|");
-				for (String tileDescription: tileDescriptions) {
-					TileIndex index = TileIndex.fromString(tileDescription);
-					if (null != index) {
-						if (null == indices) {
-							indices = new HashSet<>();
-						}
-						indices.add(index);
-					}
-				}
-			}
+                // Check for simple bounds
+                Integer minX = query.optInt( "minX" );
+                Integer maxX = query.optInt( "maxX" );
+                Integer minY = query.optInt( "minY" );
+                Integer maxY = query.optInt( "maxY" );
+                Integer minZ = query.optInt( "minZ" );
+                Integer maxZ = query.optInt( "maxZ" );
 
-			// Check for simple bounds
-			Integer minX = getIntQueryValue(query, "minx");
-			Integer maxX = getIntQueryValue(query, "maxx");
-			Integer minY = getIntQueryValue(query, "miny");
-			Integer maxY = getIntQueryValue(query, "maxy");
-			Integer minZ = getIntQueryValue(query, "minz");
-			Integer maxZ = getIntQueryValue(query, "maxz");
+                TileIndex minTile = TileIndex.fromString( query.optString( "mintile" ) );
+                TileIndex maxTile = TileIndex.fromString( query.optString( "maxtile" ) );
 
-			TileIndex minTile = getTileIndexQueryValue(query, "mintile");
-			TileIndex maxTile = getTileIndexQueryValue(query, "maxtile");
+                if (null == minTile && null != minX && null != minY && null != minZ) {
+                     minTile = new TileIndex(minZ, minX, minY);
+                }
+                if (null == maxTile && null != maxX && null != maxY && null != maxZ) {
+                     maxTile = new TileIndex(maxZ, maxX, maxY);
+                }
+                if (null != minTile && null != maxTile) {
+                    for ( int z = minTile.getLevel(); z <= maxTile.getLevel(); ++z ) {
+                        for ( int x = minTile.getX(); x <= maxTile.getX(); ++x ) {
+                            for ( int y = minTile.getY(); y <= maxTile.getY(); ++y ) {
+                                if ( null == indices )
+                                    indices = new HashSet<>();
+                                indices.add( new TileIndex( z, x, y ) );
+                            }
+                        }
+                    }
+                }
+            }
 
-			if (null == minTile && null != minX && null != minY && null != minZ) {
-				minTile = new TileIndex(minZ, minX, minY);
-			}
-			if (null == maxTile && null != maxX && null != maxY && null != maxZ) {
-				maxTile = new TileIndex(maxZ, maxX, maxY);
-			}
-			if (null != minTile && null != maxTile) {
-				for (int z=minTile.getLevel(); z <= maxTile.getLevel(); ++z) {
-					for (int x=minTile.getX(); x <= maxTile.getX(); ++x) {
-						for (int y=minTile.getY(); y <= maxTile.getY(); ++y) {
-							if (null == indices)
-								indices = new HashSet<>();
-							indices.add(new TileIndex(z, x, y));
-						}
-					}
-				}
-			}
-		}
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
 		return indices;
 	}
-	
-	/**
-	 * If there's any query params, then they are turned into a {@link JSONObject}.
-	 * @param query
-	 * 	The query for the resource request.
-	 * <code>getRequest().getResourceRef().getQueryAsForm()</code>
-	 * @return
-	 * 	Returns a {@link JSONObject} that represents all the query parameters,
-	 * 	or null if the query doesn't exist
-	 */
-	private JSONObject createQueryParamsObject(Form query) {
-		JSONObject obj = null;
-		if (query != null) {
-			obj = new JSONObject(query.getValuesMap());
-		}
-		return obj;
-	}
 
+
+    /**
+     * GET request. Returns a tile from a layer at specified level, xIndex, yIndex. Currently
+     * supports png/jpg image formats and JSON data tiles.
+     */
 	@Get
 	public Representation getTile() throws ResourceException {
 
 		try {
 			// No alternate versions supported. But if we did:
-			//String version = (String) getRequest().getAttributes().get("version");
-			String id = (String) getRequest().getAttributes().get("id");
+			String version = (String) getRequest().getAttributes().get("version");
+            if ( version == null ) {
+                version = LayerConfiguration.DEFAULT_VERSION;
+            }
 			String layer = (String) getRequest().getAttributes().get("layer");
 			String levelDir = (String) getRequest().getAttributes().get("level");
 			int zoomLevel = Integer.parseInt(levelDir);
@@ -177,30 +159,25 @@ public class TileResource extends ApertureServerResource {
 			String yAttr = (String) getRequest().getAttributes().get("y");
 			int y = Integer.parseInt(yAttr);
 			TileIndex index = new TileIndex(zoomLevel, x, y);
-			JSONObject queryParams = createQueryParamsObject(getRequest().getResourceRef().getQueryAsForm());
+            String ext = (String) getRequest().getAttributes().get("ext");
+			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 
+            // decode and build JSONObject from request parameters
+            JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
 
-			Collection<TileIndex> tileSet = parseTileSetDescription(getRequest().getResourceRef().getQueryAsForm());
-			if (null == tileSet) {
-				tileSet = new HashSet<>();
-			}
+            // parse parameters for tile sets or tile bounds
+			Collection<TileIndex> tileSet = parseTileSetDescription( decodedQueryParams );
 			tileSet.add(index);
 
-			UUID uuid = null;
-			if( !"default".equals(id) ){ // Special indicator - no ID.
-				uuid = UUID.fromString(id);
-			}
-
-			String ext = (String) getRequest().getAttributes().get("ext");
-			ExtensionType extType = ExtensionType.valueOf(ext.trim().toLowerCase());
 			if (null == extType) {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			} else if (ResponseType.Image.equals(extType.getResponseType())) {
-				BufferedImage tile = _service.getTileImage(uuid, layer, index, tileSet, queryParams);
-				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
 
-				setStatus(Status.SUCCESS_CREATED);
+				BufferedImage tile = _service.getTileImage( layer, index, tileSet, decodedQueryParams );
+				ImageOutputRepresentation imageRep = new ImageOutputRepresentation(extType.getMediaType(), tile);
+				setStatus(Status.SUCCESS_OK);
 				return imageRep;
+
 			} else if (ResponseType.Tile.equals(extType.getResponseType())) {
 				// We return an object including the tile index ("index") and 
 				// the tile data ("data").
@@ -213,10 +190,11 @@ public class TileResource extends ApertureServerResource {
 				tileIndex.put("xIndex", x);
 				tileIndex.put("yIndex", y);
 				result.put("index", tileIndex);
-				result.put("tile", _service.getTileObject(uuid, layer, index, tileSet, queryParams));
-
-				setStatus(Status.SUCCESS_CREATED);
+                result.put("version", version);
+				result.put("tile", _service.getTileObject( layer, index, tileSet, decodedQueryParams ));
+				setStatus(Status.SUCCESS_OK);
 				return new JsonRepresentation(result);
+
 			} else {
 				setStatus(Status.SERVER_ERROR_INTERNAL);
 			}

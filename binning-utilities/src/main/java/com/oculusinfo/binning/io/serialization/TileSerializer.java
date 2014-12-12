@@ -50,6 +50,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
  *            knows how to handle.
  */
 public interface TileSerializer<T> extends Serializable {
+
 	/**
 	 * Get a description of the type of data read from and written to bins in
 	 * tiles by this serializer, in a format comparable, even accounting for
@@ -74,9 +75,7 @@ public interface TileSerializer<T> extends Serializable {
 	 * Write a tile
 	 * 
 	 * @param data The tile to write
-	 * @param tilePyramid The tile pyramid describing the pyramid scheme in
-	 *            which this tile falls
-	 * @param ouput A raw output stream to which to write the tile
+	 * @param output A raw output stream to which to write the tile
 	 * @throws IOException
 	 */
 	public void serialize (TileData<T> data, OutputStream output) throws IOException;

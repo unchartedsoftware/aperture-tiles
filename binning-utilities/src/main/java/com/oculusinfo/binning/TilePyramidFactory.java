@@ -41,16 +41,16 @@ public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
 	                                                         new String[] {"areaofinterest", "epsg:4326", "webmercator", "epsg:900913", "epsg:3857"});
 	private DoubleProperty MINIMUM_X = new DoubleProperty("minX",
 	                                                      "The lower bound for the X axis in an area-of-interest tile pyramid",
-	                                                      0.0);
+	                                                      -180.0);
 	private DoubleProperty MAXIMUM_X = new DoubleProperty("maxX",
 	                                                      "The upper bound for the X axis in an area-of-interest tile pyramid",
-	                                                      0.0);
+	                                                      180.0);
 	private DoubleProperty MINIMUM_Y = new DoubleProperty("minY",
 	                                                      "The lower bound for the Y axis in an area-of-interest tile pyramid",
-	                                                      0.0);
+	                                                      -80.05);
 	private DoubleProperty MAXIMUM_Y = new DoubleProperty("maxY",
 	                                                      "The upper bound for the Y axis in an area-of-interest tile pyramid",
-	                                                      0.0);
+	                                                      80.05);
 
 
 

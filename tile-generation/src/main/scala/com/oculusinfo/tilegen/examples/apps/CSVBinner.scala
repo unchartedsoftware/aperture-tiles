@@ -30,24 +30,13 @@ package com.oculusinfo.tilegen.examples.apps
 import java.io.FileInputStream
 import java.util.Properties
 
-import scala.collection.JavaConverters._
-import scala.reflect.ClassTag
-
-import org.apache.spark.SparkContext._
+import com.oculusinfo.tilegen.datasets.{Dataset, DatasetFactory}
+import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
+import com.oculusinfo.tilegen.util.PropertiesWrapper
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.spark.GeneralSparkConnector
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.tiling.SqliteTileIO
+import scala.reflect.ClassTag
 
 
 
@@ -98,61 +87,58 @@ import com.oculusinfo.tilegen.tiling.SqliteTileIO
 
 
 object CSVBinner {
-	def getTileIO(properties: PropertiesWrapper): TileIO = {
-		properties.getString("oculus.tileio.type",
-		                     "Where to put tiles",
-		                     Some("hbase")) match {
-			case "hbase" => {
-				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
-				                                        "The HBase zookeeper quorum").get
-				val port = properties.getString("hbase.zookeeper.port",
-				                                "The HBase zookeeper port",
-				                                Some("2181"))
-				val master = properties.getStringOption("hbase.master",
-				                                        "The HBase master").get
-				new HBaseTileIO(quorum, port, master)
-			}
-			case "sqlite" => {
-				val path =
-					properties.getString("oculus.tileio.sqlite.path",
-					                     "The path to the database",
-					                     Some(""))
-				new SqliteTileIO(path)
-				
-			}
-			case _ => {
-				val extension =
-					properties.getString("oculus.tileio.file.extension",
-					                     "The extension with which to write tiles",
-					                     Some("avro"))
-				new LocalTileIO(extension)
-			}
-		}
-	}
-	
+
 	def processDataset[IT: ClassTag,
-	                   PT: ClassTag, 
-	                   BT] (dataset: Dataset[IT, PT, BT],
+	                   PT: ClassTag,
+	                   DT: ClassTag,
+	                   AT: ClassTag,
+	                   BT] (sc: SparkContext,
+	                        dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
+
+		val tileAnalytics = dataset.getTileAnalytics
+		val dataAnalytics = dataset.getDataAnalytics
+
+		println("Tiling dataset "+dataset.getName)
+		println("\tTile analytics: "+tileAnalytics)
+		println("\tData analytics: "+dataAnalytics)
+
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
 		dataset.getLevels.map(levels =>
 			{
-				val procFcn: RDD[(IT, PT)] => Unit =
+				println("\tProcessing levels "+levels)
+
+				// Add level accumulators for all analytics for these levels (for now at least)
+				tileAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levels.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+
+				val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
 					rdd =>
 				{
 					val tiles = binner.processDataByLevel(rdd,
 					                                      dataset.getIndexScheme,
-					                                      dataset.getBinDescriptor,
+					                                      dataset.getBinningAnalytic,
+					                                      tileAnalytics,
+					                                      dataAnalytics,
 					                                      dataset.getTilePyramid,
 					                                      levels,
-					                                      (dataset.getNumXBins max dataset.getNumYBins),
-					                                      dataset.getConsolidationPartitions,
-					                                      dataset.isDensityStrip)
+					                                      dataset.getNumXBins,
+					                                      dataset.getNumYBins,
+					                                      dataset.getConsolidationPartitions)
+
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
 					                    tiles,
-					                    dataset.getBinDescriptor,
+					                    dataset.getValueScheme,
+					                    tileAnalytics, dataAnalytics,
 					                    dataset.getName,
 					                    dataset.getDescription)
 				}
@@ -165,9 +151,13 @@ object CSVBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, BT] (dataset: Dataset[IT, PT, BT],
-	                                       tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.indexTypeManifest, dataset.binTypeManifest)
+	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
+	                                               dataset: Dataset[IT, PT, DT, AT, BT],
+	                                               tileIO: TileIO): Unit =
+		processDataset(sc, dataset, tileIO)(dataset.indexTypeTag,
+		                                    dataset.binTypeTag,
+		                                    dataset.dataAnalysisTypeTag,
+		                                    dataset.tileAnalysisTypeTag)
 
 	
 	def main (args: Array[String]): Unit = {
@@ -190,8 +180,8 @@ object CSVBinner {
 		}
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
-		val sc = connector.getSparkContext("Pyramid Binning")
-		val tileIO = getTileIO(defaultProperties)
+		val sc = connector.createContext(Some("Pyramid Binning"))
+		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
@@ -202,7 +192,11 @@ object CSVBinner {
 			props.load(propStream)
 			propStream.close()
 
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props, false, false, true), tileIO)
+			// If the user hasn't explicitly set us not to cache, cache processed data to make
+			// multiple runs more efficient
+			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
+				props.setProperty("oculus.binning.caching.processed", "true")
+			processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

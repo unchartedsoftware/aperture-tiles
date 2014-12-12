@@ -1,0 +1,34 @@
+apply plugin: 'distribution'
+
+distributions {
+
+	main {
+		baseName = 'tile-generator'
+		contents {
+			// Copy everything under the dist directory over
+			into ("examples"){
+				from("src/examples")
+			}
+			// Copy binary, source and doc jars into their subdirectories, stripping off the
+			// version info.
+			into("lib") {
+				from project(":tile-generation").configurations.archives.artifacts.files.filter {
+					it.name =~ /assembly\w*\.jar/
+				}
+				rename "(.*)-$version(.*)", "\$1\$2"
+			}
+			into("doc") {
+				from project(":tile-generation").configurations.archives.artifacts.files.filter {
+					it.name =~ /doc\w*\.jar/
+				}
+				rename "(.*)-$version(.*)", "\$1\$2"
+			}
+			into("src") {
+				from project(":tile-generation").configurations.archives.artifacts.files.filter {
+					it.name =~ /source\w*\.jar/
+				}
+				rename "(.*)-$version(.*)", "\$1\$2"
+			}
+		}
+	}
+}

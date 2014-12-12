@@ -28,18 +28,18 @@ package com.oculusinfo.twitter.tilegen
 
 
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.{Date, List => JavaList}
 
+import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-
-import com.oculusinfo.tilegen.spark.MavenReference
-import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.TileIO
+import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescription, CompositeAnalysisDescription}
+import com.oculusinfo.tilegen.tiling.{CartesianIndexScheme, RDDBinner, TileIO}
 import com.oculusinfo.tilegen.util.ArgumentParser
-
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
+import org.apache.spark.rdd.RDD
+
+import scala.reflect.ClassTag
+import scala.util.Try
 
 
 
@@ -48,46 +48,102 @@ object TwitterTopicBinner {
 		val argParser = new ArgumentParser(args)
 		argParser.debug
 
-		val versions = SparkConnector.getDefaultVersions
-		val jars =
-			Seq(new MavenReference("com.oculusinfo", "twitter-topics-utilities", versions("base"))
-			) union SparkConnector.getDefaultLibrariesFromMaven
-		val sc = argParser.getSparkConnector(jars).getSparkContext("Twitter demo data tiling")
+		val sc = argParser.getSparkConnector.createContext(Some("Twitter demo data tiling"))
 		val source = argParser.getString("source", "The source location at which to find twitter data")
 		val dateParser = new SimpleDateFormat("yyyy/MM/dd.HH:mm:ss.zzzz")
-		//Note:  don't need a start time for this binning project.  Start time is assumed to be 31 days prior to end time.
-		//val startTime = dateParser.parse(argParser.getString("start", "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz"))
+		// Note:  don't need a start time for this binning project.  Start time is assumed to be 31 days prior to end time.
 		val endTime = dateParser.parse(argParser.getString("end", "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz"))
-		//val bins = argParser.getInt("bins", "The number of time bins into which to divide the time range?", Some(1))
-		//val stopWordList = new TwitterTopicRecordParser(0L, 1L, 1).getStopWordList	//don't need to use stop-words for this demo
 
-		val levelSets = argParser.getString("levels", "The level sets (;-separated) of ,-separated levels to bin.").split(";").map(_.split(",").map(_.toInt))
+		val levelSets = argParser.getString("levels",
+		                                    "The level sets (;-separated) of ,-separated levels to bin.")
+			.split(";").map(_.split(",").map(_.toInt))
 
 		val pyramidId = argParser.getString("id", "An ID by which to identify the finished pyramid.")
 		val pyramidName = argParser.getString("name", "A name with which to label the finished pyramid").replace("_", " ")
 		val pyramidDescription = argParser.getString("description", "A description with which to present the finished pyramid").replace("_", " ")
 		val partitions = argParser.getInt("partitions", "The number of partitions into which to read the raw data", Some(0))
-		//val useWords = argParser.getBoolean("words", "If true, pull out all non-trival words from tweet text; if false, just pull out tags.", Some(false))
 		val topicList = argParser.getString("topicList", "Path and filename of list of extracted topics and English translations")
-		
-		val binner = new RDDBinner
-		binner.debug = true
-		val binDesc = new TwitterTopicBinDescriptor
-		val tilePyramid = new WebMercatorTilePyramid
+
 		val tileIO = TileIO.fromArguments(argParser)
 
-		val rawData = if (0 == partitions) {
-			sc.textFile(source)
-		} else {
-			sc.textFile(source, partitions)
-		}
-		
+		val files = source.split(",")
+		// For each file, attempt create an RDD, then immediately force an
+		// exception in the case it does not exist. Union all RDDs together.
+		val rawData = files.map { file =>
+		    Try({
+		        val tmp = if (0 == partitions) {
+		            sc.textFile( file )
+		        } else {
+		            sc.textFile( file , partitions)
+		        }
+		        tmp.partitions // force exception if file does not exist
+		        tmp
+		    }).getOrElse( sc.emptyRDD )
+		}.reduce(_ union _)
+
+		val minAnalysis:
+				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+				                    List[TwitterDemoTopicRecord]] =
+			new TwitterTopicListAnalysis(new TwitterMinRecordAnalytic)
+
+		val maxAnalysis:
+				AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+				                    List[TwitterDemoTopicRecord]] =
+			new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
+
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+		                                              (List[TwitterDemoTopicRecord],
+		                                               List[TwitterDemoTopicRecord])]] =
+			Some(new CompositeAnalysisDescription(minAnalysis, maxAnalysis))
+		val dataAnalytics: Option[AnalysisDescription[((Double, Double),
+		                                               Map[String, TwitterDemoTopicRecord]),
+		                                              Int]] =
+			None
+
+		genericProcessData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics,
+		                   endTime, pyramidId, pyramidName, pyramidDescription, topicList)
+	}
+
+
+	private def genericProcessData[AT, DT]
+		(rawData: RDD[String],
+		 levelSets: Array[Array[Int]],
+		 tileIO: TileIO,
+		 tileAnalytics: Option[AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]], AT]],
+		 dataAnalytics: Option[AnalysisDescription[((Double, Double),
+		                                            Map[String, TwitterDemoTopicRecord]), DT]],
+		 endTime: Date,
+		 pyramidId: String,
+		 pyramidName: String,
+		 pyramidDescription: String,
+		 topicList: String) =
+	{
+		val tileAnalyticsTag: ClassTag[AT] = tileAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
+		val dataAnalyticsTag: ClassTag[DT] = dataAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
+
+		processData(rawData, levelSets, tileIO, tileAnalytics, dataAnalytics,
+		            endTime, pyramidId, pyramidName, pyramidDescription, topicList)(tileAnalyticsTag, dataAnalyticsTag)
+	}
+
+	private def processData[AT: ClassTag, DT: ClassTag]
+		(rawData: RDD[String],
+		 levelSets: Array[Array[Int]],
+		 tileIO: TileIO,
+		 tileAnalytics: Option[AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]], AT]],
+		 dataAnalytics: Option[AnalysisDescription[((Double, Double),
+		                                            Map[String, TwitterDemoTopicRecord]), DT]],
+		 endTime: Date,
+		 pyramidId: String,
+		 pyramidName: String,
+		 pyramidDescription: String,
+		 topicList: String) =
+	{
 		val endTimeSecs = endTime.getTime()/1000;	// convert time from msec to sec
 		val topicMatcher = new TopicMatcher
 		val topicsMap = topicMatcher.getKeywordList(topicList)	// get pre-extracted topics
 		
 		// append topics to end of data entries
-		val rawDataWithTopics = topicMatcher.appendTopicsToData(sc, rawData, topicsMap, endTimeSecs)
+		val rawDataWithTopics = topicMatcher.appendTopicsToData(rawData.sparkContext, rawData, topicsMap, endTimeSecs)
 		
 		val data = rawDataWithTopics.mapPartitions(i =>
 			{
@@ -103,23 +159,55 @@ object TwitterTopicBinner {
 					}
 				)
 			}
-		)
+		).map(record => (record._1, record._2, dataAnalytics.map(_.convert(record))))
 		data.cache
 
+		val binner = new RDDBinner
+		binner.debug = true
+		val tilePyramid = new WebMercatorTilePyramid
+
+		// Add global analytic accumulators
+		val sc = rawData.context
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
 		levelSets.foreach(levelSet =>
 			{
 				println()
 				println()
 				println()
 				println("Starting binning levels "+levelSet.mkString("[", ",", "]")+" at "+new Date())
-				val startTime = System.currentTimeMillis
-				val tiles = binner.processDataByLevel(data, new CartesianIndexScheme,
-				                                      binDesc, tilePyramid, levelSet, bins=1)
-				tileIO.writeTileSet(tilePyramid, pyramidId, tiles, binDesc,
-				                    pyramidName, pyramidDescription)
-				val endTime = System.currentTimeMillis()
+
+				// Add whole-level analytic accumulators for these levels
+				tileAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+				dataAnalytics.map(analytic =>
+					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
+				)
+
+				// Do actual binning
+				val taskStart = System.currentTimeMillis
+				val tiles = binner.processDataByLevel(data,
+				                                      new CartesianIndexScheme,
+				                                      new TwitterTopicBinningAnalytic,
+				                                      tileAnalytics,
+				                                      dataAnalytics,
+				                                      tilePyramid,
+				                                      levelSet,
+				                                      xBins=1,
+				                                      yBins=1)
+				tileIO.writeTileSet(tilePyramid,
+				                    pyramidId,
+				                    tiles,
+				                    new TwitterTopicValueDescription,
+				                    tileAnalytics,
+				                    dataAnalytics,
+				                    pyramidName,
+				                    pyramidDescription)
+				val taskEnd = System.currentTimeMillis()
+				val elapsedMinutes = (taskEnd - taskStart)/60000.0
 				println("Finished binning levels "+levelSet.mkString("[", ",", "]")+" at "+new Date())
-				println("\telapsed time: "+((endTime-startTime)/60000.0)+" minutes")
+				println("\telapsed time: "+elapsedMinutes+" minutes")
 				println()
 			}
 		)

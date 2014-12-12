@@ -26,10 +26,9 @@ package com.oculusinfo.tile.rest;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.oculusinfo.tile.rest.data.DataResource;
 import com.oculusinfo.tile.rest.layer.LayerResource;
+import com.oculusinfo.tile.rest.layer.StateResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
-import com.oculusinfo.tile.rest.map.MapResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
 import oculus.aperture.common.rest.ResourceDefinition;
 
@@ -41,10 +40,22 @@ public class RestConfigModule extends AbstractModule {
 		MapBinder<String, ResourceDefinition> resourceBinder =
 			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
 
-		resourceBinder.addBinding("/maps").toInstance(new ResourceDefinition(MapResource.class));
-		resourceBinder.addBinding("/layer").toInstance(new ResourceDefinition(LayerResource.class));
-		resourceBinder.addBinding("/tile/{id}/{version}/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
-		resourceBinder.addBinding("/legend").toInstance(new ResourceDefinition(LegendResource.class));
-		resourceBinder.addBinding("/data").toInstance(new ResourceDefinition(DataResource.class));
+        resourceBinder.addBinding("/{version}/layers").toInstance(new ResourceDefinition(LayerResource.class));
+        resourceBinder.addBinding("/layers").toInstance(new ResourceDefinition(LayerResource.class));
+
+        resourceBinder.addBinding("/{version}/layers/{layer}/states").toInstance(new ResourceDefinition(StateResource.class));
+        resourceBinder.addBinding("/layers/{layer}/states").toInstance(new ResourceDefinition(StateResource.class));
+
+        resourceBinder.addBinding("/{version}/layers/{layer}/states/{state}").toInstance(new ResourceDefinition(StateResource.class));
+        resourceBinder.addBinding("/layers/{layer}/states/{state}").toInstance(new ResourceDefinition(StateResource.class));
+
+        resourceBinder.addBinding("/{version}/layers/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
+        resourceBinder.addBinding("/layers/{layer}").toInstance(new ResourceDefinition(LayerResource.class));
+
+        resourceBinder.addBinding("/{version}/tile/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
+        resourceBinder.addBinding("/tile/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition(TileResource.class));
+
+        resourceBinder.addBinding("/{version}/legend/{layer}").toInstance(new ResourceDefinition(LegendResource.class));
+        resourceBinder.addBinding("/legend/{layer}").toInstance(new ResourceDefinition(LegendResource.class));
 	}
 }

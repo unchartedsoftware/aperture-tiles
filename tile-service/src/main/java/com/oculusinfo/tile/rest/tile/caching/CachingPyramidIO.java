@@ -152,10 +152,9 @@ public class CachingPyramidIO implements PyramidIO {
 	 * Request a set of tiles, retrieving some of them immediately, and setting
 	 * the rest up for eventual retrieval
 	 * 
-	 * @param pyramidId
-	 * @param serializer
+	 * @param pyramidId the pyramid io
+	 * @param serializer the serializer
 	 * @param indices Indices of tiles to be requested.  May not be null.
-	 * @return
 	 * @throws IOException
 	 */
 	public <T> void requestTiles (String pyramidId,

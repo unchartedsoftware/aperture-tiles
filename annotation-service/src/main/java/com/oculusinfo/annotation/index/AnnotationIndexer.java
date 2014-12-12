@@ -23,7 +23,8 @@
  */
 package com.oculusinfo.annotation.index;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileAndBinIndices;
 import com.oculusinfo.binning.TilePyramid;
 
@@ -31,14 +32,13 @@ import java.util.List;
 
 public abstract class AnnotationIndexer {
 
-	public static final int NUM_BINS = 8;
-	
-    public AnnotationIndexer() {
-    }
+	public static final int NUM_BINS = 16;
+	public static final BinIndex RANGE_BIN = new BinIndex(0, 0);
+
+    public AnnotationIndexer() {}
     
     public abstract List<TileAndBinIndices> getIndices( AnnotationData<?> data, TilePyramid pyramid );
-  
-    public abstract TileAndBinIndices getIndex( AnnotationData<?> data, int level, TilePyramid pyramid );
+    public abstract List<TileAndBinIndices> getIndicesByLevel( AnnotationData<?> data, int level, TilePyramid pyramid );
 
     
 }

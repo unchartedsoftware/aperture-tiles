@@ -57,5 +57,43 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		assert(2 === CSVProps.fieldIndices("c"))
 		assert(3 === CSVProps.fieldIndices("d"))
 	}
+
+	test("Test mean type extraction") {
+		val props = new Properties()
+		props.setProperty("oculus.binning.source.location", "hdfs://localhost/data-location")
+		props.setProperty("oculus.binning.source.partitions", "13")
+		props.setProperty("oculus.binning.name", "sample name")
+		props.setProperty("oculus.binning.parsing.a.index", "0")
+		props.setProperty("oculus.binning.parsing.a.fieldType", "double")
+		props.setProperty("oculus.binning.parsing.a.fieldAggregation", "meAn")
+		props.setProperty("oculus.binning.parsing.separator", "\t")
+		props.setProperty("oculus.binning.parsing.b.index", "1")
+		props.setProperty("oculus.binning.parsing.b.fieldType", "float")
+		props.setProperty("oculus.binning.parsing.b.fieldAggregation", "aVerage")
+		props.setProperty("oculus.binning.parsing.c.index", "2")
+		props.setProperty("oculus.binning.parsing.c.fieldType", "Median")
+
+		// Make sure that both 'mean' and 'average' field types use our 
+		// MeanValueExtractor
+		props.setProperty("oculus.binning.valueField", "a")
+		val CSVPropsA = new CSVRecordPropertiesWrapper(props)
+		assert(CSVValueExtractor.fromProperties(CSVPropsA,
+		                                        CSVValueExtractor.standardFactories)
+			       .isInstanceOf[MeanValueExtractor[_]])
+
+		props.setProperty("oculus.binning.valueField", "b")
+		val CSVPropsB = new CSVRecordPropertiesWrapper(props)
+		assert(CSVValueExtractor.fromProperties(CSVPropsB,
+		                                        CSVValueExtractor.standardFactories)
+			       .isInstanceOf[MeanValueExtractor[_]])
+
+		// Make sure something else (say, for the sake of argument, 'median')
+		// does not.
+		props.setProperty("oculus.binning.valueField", "c")
+		val CSVPropsC = new CSVRecordPropertiesWrapper(props)
+		assert(!CSVValueExtractor.fromProperties(CSVPropsC,
+		                                          CSVValueExtractor.standardFactories)
+			         .isInstanceOf[MeanValueExtractor[_]])
+	}
 }
 

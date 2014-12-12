@@ -24,38 +24,58 @@
 package com.oculusinfo.tile.init.providers;
 
 import com.google.inject.Inject;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.tile.init.FactoryProvider;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
 import java.util.List;
 
 public class StandardLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
-    @Inject
+
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
-    @Inject
+    private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-    @Inject
     private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
+    private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
 
+    @Inject
+    public StandardLayerConfigurationProvider( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
+                                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
+                                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
+                                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
+                                               FactoryProvider<TileTransformer> tileTransformerFactoryProvider ) {
 
+        _pyramidIOFactoryProvider = pyramidIOFactoryProvider;
+        _tilePyramidFactoryProvider = tilePyramidFactoryProvider;
+        _serializationFactoryProvider = serializationFactoryProvider;
+        _rendererFactoryProvider = rendererFactoryProvider;
+        _tileTransformerFactoryProvider = tileTransformerFactoryProvider;
+    }
 
     @Override
     public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                      _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, null, path);
+                                      _rendererFactoryProvider, 
+                                      _tileTransformerFactoryProvider,
+                                      null, path);
     }
 
     @Override
     public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
                                                                   List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                      _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, parent, path);
+                                      _rendererFactoryProvider,
+                                      _tileTransformerFactoryProvider,
+                                      parent, path);
     }
 
     @Override
@@ -63,7 +83,10 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
                                                                   ConfigurableFactory<?> parent,
                                                                   List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
+                                      _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
-                                      _rendererFactoryProvider, factoryName, parent, path);
+                                      _rendererFactoryProvider,
+                                      _tileTransformerFactoryProvider,
+                                      factoryName, parent, path);
     }
 }

@@ -50,7 +50,7 @@ public class LRUCache<K, V>  {
 		 * if the cache is already too big) - but it can determine behavior - if
 		 * it returns false, the entry will not be removed. If the removal
 		 * policy handles removing the element itself, it must return true (see
-		 * {@link LinkedHashMap#removeEldestElement}
+		 * {@link LinkedHashMap#removeEldestEntry}
 		 * 
 		 * @param entry
 		 *            The least recently used entry in the cache

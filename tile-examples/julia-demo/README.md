@@ -1,6 +1,6 @@
 # Julia Set Aperture Tiles Sample
 
-This demo displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels. It is a complete version of the [quick start](https://tiles.oculusinfo.com/documentation/quickstart/) walk-through on http://tiles.oculusinfo.com/.
+This demo displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels. It is a complete version of the [quick start](https://aperturetiles.com/docs/development/quickstart/) walk-through on http://aperturetiles.com/.
 
 ## Setup and Building
 

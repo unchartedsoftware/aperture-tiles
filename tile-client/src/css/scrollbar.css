@@ -1,0 +1,41 @@
+@charset "UTF-8";
+
+::-webkit-scrollbar {
+    width: 14px;
+}
+ 
+.light-theme ::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #eee; 
+    border-radius: 10px;
+}
+ 
+.dark-theme ::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #111; 
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    cursor:pointer;
+}
+
+.light-theme ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.dark-theme ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #222;
+    border: 1px solid #000;
+}
+
+.light-theme ::-webkit-scrollbar-corner {
+    background-color: #eee;
+}
+
+.dark-theme ::-webkit-scrollbar-corner {
+    background-color: #111;
+}

@@ -71,20 +71,25 @@ public interface TilePyramid {
 
 	/**
 	 * Convert from root to tile coordinates
-	 *
+	 * 
 	 * @param point
 	 *            The coordinate of the point to be transformed, in the root
 	 *            coordinate system
 	 * @param level
 	 *            The tile level required
-	 * @param bins
-	 *            The number of bins (both in x and y) of the requested tile.  
-	 *            This doesn't make any difference in choice of tile, but is 
-	 *            included in the return value, so we allow passing it in so 
-	 *            as to avoid the need to change the return value.
+	 * @param xBins
+	 *            The number of bins along the horizontal dimension of the
+	 *            requested tile. This doesn't make any difference in choice of
+	 *            tile, but is included in the return value, so we allow passing
+	 *            it in so as to avoid the need to change the return value.
+	 * @param yBins
+	 *            The number of bins along the vertical dimension of the
+	 *            requested tile. This doesn't make any difference in choice of
+	 *            tile, but is included in the return value, so we allow passing
+	 *            it in so as to avoid the need to change the return value.
 	 * @return The tile into which (x, y) falls at the given level
 	 */
-	public TileIndex rootToTile (Point2D point, int level, int bins);
+	public TileIndex rootToTile (Point2D point, int level, int xBins, int yBins);
 
 	/**
 	 * Convert from root to tile coordinates
@@ -103,23 +108,28 @@ public interface TilePyramid {
 
 	/**
 	 * Convert from root to tile coordinates
-	 *
+	 * 
 	 * @param x
-	 *            The x coordinate of the point to be transformed, in the
-	 *            root coordinate system
+	 *            The x coordinate of the point to be transformed, in the root
+	 *            coordinate system
 	 * @param y
-	 *            The y coordinate of the point to be transformed, in the
-	 *            root coordinate system
+	 *            The y coordinate of the point to be transformed, in the root
+	 *            coordinate system
 	 * @param level
 	 *            The tile level required
-	 * @param bins
-	 *            The number of bins (both in x and y) of the requested tile.  
-	 *            This doesn't make any difference in choice of tile, but is 
-	 *            included in the return value, so we allow passing it in so 
-	 *            as to avoid the need to change the return value.
+	 * @param xBins
+	 *            The number of bins along the horizontal dimension of the
+	 *            requested tile. This doesn't make any difference in choice of
+	 *            tile, but is included in the return value, so we allow passing
+	 *            it in so as to avoid the need to change the return value.
+	 * @param yBins
+	 *            The number of bins along the vertical dimension of the
+	 *            requested tile. This doesn't make any difference in choice of
+	 *            tile, but is included in the return value, so we allow passing
+	 *            it in so as to avoid the need to change the return value.
 	 * @return The tile into which (x, y) falls at the given level
 	 */
-	public TileIndex rootToTile (double x, double y, int level, int bins);
+	public TileIndex rootToTile (double x, double y, int level, int xBins, int yBins);
 
 	/**
 	 * Convert from root to a particular bin coordinate
@@ -200,13 +210,13 @@ public interface TilePyramid {
 
 	/**
 	 * Returns a human-readable name for the projection used by this pyramid
-	 * @return
+	 * @return Human-readable name for the projection.
 	 */
 	public String getProjection ();
 
 	/**
 	 * Returns a human-readable name for the way tiles are laid out in this pyramid
-	 * @return
+	 * @return Human-readable name for the tile scheme.
 	 */
 	public String getTileScheme ();
 }

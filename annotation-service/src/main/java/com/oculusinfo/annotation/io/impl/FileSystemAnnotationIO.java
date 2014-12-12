@@ -24,7 +24,7 @@
  */
 package com.oculusinfo.annotation.io.impl;
 
-import com.oculusinfo.annotation.data.AnnotationData;
+import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.binning.util.Pair;
@@ -96,6 +96,9 @@ public class FileSystemAnnotationIO implements AnnotationIO {
 	                                        Iterable<Pair<String, Long>> certificates) throws IOException {
 		List<AnnotationData<?>> results = new LinkedList<>();
 		for (Pair<String, Long> certificate: certificates) {
+			if (certificate == null) {
+				continue;
+			}
 			File annotationFile = getAnnotationFile(basePath, certificate);
 
 			if (annotationFile.exists() && annotationFile.isFile()) {

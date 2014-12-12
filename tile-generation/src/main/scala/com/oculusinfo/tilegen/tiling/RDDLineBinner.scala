@@ -39,7 +39,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.BinIterator
-import com.oculusinfo.binning.DensityStripData
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
@@ -47,9 +46,13 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileAndBinIndices
+import com.oculusinfo.tilegen.datasets.ValueDescription
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.util.EndPointsToLine
+import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
 
-class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable { 
+class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable {
 	def toCartesianEndpoints (coords: (Double, Double, Double, Double)): (Double, Double, Double, Double) = coords
 	def toCartesian (coords: (Double, Double, Double, Double)): (Double, Double) = (coords._1, coords._2)
 }
@@ -63,12 +66,88 @@ class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double
  *
  * @param tileScheme the type of tile pyramid this binner can bin.
  */
-class RDDLineBinner(minBins: Int = 2,
-                    maxBins: Int = 1024) extends Serializable {	//1<<10 = 1024  256*4 = 4 tile widths
-	var debug: Boolean = true
+object RDDLineBinner {
 	
-	protected def getMinBins = minBins
-	protected def getMaxBins = maxBins	
+	def getNumSplits[T: ClassTag] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
+		val curSize = dataSet.partitions.size
+		val result = curSize max requestedPartitions.getOrElse(0)
+		result
+	}
+
+
+	/**
+	 * Determine all tiles required to draw a line between two endpoint bins.
+	 *
+	 * @param baseTile
+	 *        A sample tile specifying level and number of bins of all required
+	 *        results.
+	 * @return All tiles falling on the direct line (in universal bin
+	 *         coordinates) between the two endpoint bins
+	 */
+	protected def universalBinsToTiles[PT](baseTile: TileIndex, bins: IndexedSeq[(BinIndex, PT)],
+	                                       uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices):
+			Traversable[TileIndex] =
+	{
+		bins.map(b =>
+			{
+				val ubin = b._1
+				val tb = uniBinToTB(baseTile, ubin)
+				tb.getTile()
+			}
+		).toSet	// transform to set to remove duplicates
+	}
+	/**
+	 * Determine all bins within a given tile that are required to draw a line
+	 * between two endpoint bins.
+	 *
+	 * @param tile
+	 *        The tile of interest
+	 * @return All bins, in tile bin coordinates, in the given tile, falling on
+	 *         the direct line (in universal bin coordinates) between the two
+	 *         endoint bins.
+	 */
+	protected def universalBinsToBins[PT](tile: TileIndex, bins: IndexedSeq[(BinIndex, PT)],
+	                                      uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices):
+			IndexedSeq[(BinIndex, PT)] =
+	{
+		//get tile/bin and line-scale pairs
+		val tb_scale = bins.map(b => {
+			                        val (ubin, value) = b
+			                        val tb = uniBinToTB(tile, ubin)
+			                        (tb, value)
+		                        })
+		
+		// filter results so only ones for current tile remain
+		tb_scale.filter(_._1.getTile().equals(tile))
+			.map(b => {
+				     val bin = b._1.getBin	//bin result
+				     val value = b._2		// and corresponding line scale value for this bin
+				     (bin, value)
+			     })
+	}
+}
+
+
+
+class RDDLineBinner(minBins: Int = 2,
+                    maxBins: Int = 1024,		// 1<<10 = 1024  256*4 = 4 tile widths
+                    bDrawLineEnds: Boolean = false) {
+	var debug: Boolean = true
+
+	def transformData[RT: ClassTag, IT: ClassTag, PT: ClassTag, DT: ClassTag]
+		(data: RDD[RT],
+		 indexFcn: RT => Try[IT],
+		 valueFcn: RT => Try[PT],
+		 dataAnalytics: Option[AnalysisDescription[RT, DT]] = None):
+			RDD[(IT, PT, Option[DT])] =
+	{
+		// Process the data to remove all but the minimal portion we need for
+		// tiling - x coordinate, y coordinate, and bin value
+		data.mapPartitions(iter =>
+			iter.map(i => (indexFcn(i), valueFcn(i), dataAnalytics.map(_.convert(i))))
+		).filter(record => record._1.isSuccess && record._2.isSuccess)
+			.map(record =>(record._1.get, record._2.get, record._3))
+	}
 
 	/**
 	 * Fully process a dataset of input records into output tiles written out
@@ -79,18 +158,24 @@ class RDDLineBinner(minBins: Int = 2,
 	 * @param PT The processing bin type
 	 * @param BT The output bin type
 	 */
-	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag, BT] (
+	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT] (
 		data: RDD[RT],
 		indexFcn: RT => Try[IT],
 		valueFcn: RT => Try[PT],
 		indexScheme: IndexScheme[IT],
-		binDesc: BinDescriptor[PT, BT],
+		binAnalytic: BinningAnalytic[PT, BT],
+		tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		dataAnalytics: Option[AnalysisDescription[RT, DT]],
+		valueScheme: ValueDescription[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
 		writeLocation: String,
 		tileIO: TileIO,
 		levelSets: Seq[Seq[Int]],
-		bins: Int = 256,
+		calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
+			new EndPointsToLine().endpointsToLineBins,
+		xBins: Int = 256,
+		yBins: Int = 256,
 		name: String = "unknown",
 		description: String = "unknown") =
 	{
@@ -101,22 +186,15 @@ class RDDLineBinner(minBins: Int = 2,
 			println("\tTile io type: "+tileIO.getClass.getName)
 			println("\tlevel sets: "+levelSets.map(_.mkString("[", ", ", "]"))
 				        .mkString("[", ", ", "]"))
-			println("\tBins: "+bins)
+			println("\tX Bins: "+xBins)
+			println("\tY Bins: "+yBins)
 			println("\tName: "+name)
 			println("\tDescription: "+description)
 		}
 
 		val startTime = System.currentTimeMillis()
 
-		// Process the data to remove all but the minimal portion we need for
-		// tiling - x coordinate, y coordinate, and bin value
-		val bareData = data.mapPartitions(iter =>
-			{
-				println("Initial partition processing")
-				iter.map(i => (indexFcn(i), valueFcn(i)))
-			}
-		).filter(record => record._1.isSuccess && record._2.isSuccess)
-			.map(record =>(record._1.get, record._2.get))
+		val bareData = transformData(data, indexFcn, valueFcn, dataAnalytics)
 
 		// Cache this, we'll use it at least once for each level set
 		bareData.persist(StorageLevel.MEMORY_AND_DISK)
@@ -127,14 +205,19 @@ class RDDLineBinner(minBins: Int = 2,
 				// For each level set, process the bare data into tiles...
 				var tiles = processDataByLevel(bareData,
 				                               indexScheme,
-				                               binDesc,
+				                               binAnalytic,
+				                               tileAnalytics,
+				                               dataAnalytics,
 				                               tileScheme,
 				                               levels,
-				                               bins,
-				                               consolidationPartitions)
+				                               xBins,
+				                               yBins,
+				                               consolidationPartitions,
+				                               calcLinePixels)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
-				                    binDesc, name, description)
+				                    valueScheme, tileAnalytics, dataAnalytics,
+				                    name, description)
 				if (debug) {
 					val levelEndTime = System.currentTimeMillis()
 					println("Finished binning levels ["+levels.mkString(", ")+"] of data set "
@@ -163,75 +246,101 @@ class RDDLineBinner(minBins: Int = 2,
 	 * @param data The data to be processed
 	 * @param indexScheme A conversion scheme for converting from the index type 
 	 *        to one we can use.
-	 * @param binDesc A description of how raw values are to be aggregated into
-	 *                bin values
+	 * @param binAnalytic A description of how raw values are aggregated into 
+	 *                    bin values
+	 * @param tileAnalytics A description of analytics that can be run on each 
+	 *                      tile, and how to aggregate them
+	 * @param dataAnalytics A description of analytics that can be run on the
+	 *                      raw data, and recorded (in the aggregate) on each
+	 *                      tile
 	 * @param tileScheme A description of how raw values are transformed to bin
 	 *                   coordinates
 	 * @param levels A list of levels on which to create tiles
-	 * @param bins The number of bins per coordinate on each tile
+	 * @param xBins The number of bins along the horizontal axis of each tile
+	 * @param yBins The number of bins along the vertical axis of each tile
 	 * @param consolidationPartitions The number of partitions to use when
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
-	 * 
-	 * @param IT the index type, convertable to a cartesian pair with the 
-     *           coordinateFromIndex function
+	 * @param calcLinePixels A function used to rasterize the line/arc between
+	 *                       two end points.  Defaults to a line based implementation.
+	 * @param usePointBinner Indicates whether the lines will be consolidate by point
+	 *                       or by tile.  Defaults to using point based consolidation.
+	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
+	 *                    or arcs.  Defaults to lines.
+	 * @param IT the index type, convertible to a cartesian pair with the 
+	 *           coordinateFromIndex function
 	 * @param PT The bin type, when processing and aggregating
-     * @param BT The final bin type, ready for writing to tiles
+	 * @param AT The type of tile-level analytic to calculate for each tile.
+	 * @param DT The type of raw data-level analytic that already has been 
+	 *           calculated for each tile.
+	 * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processDataByLevel[IT: ClassTag,
-	                       PT: ClassTag, BT] (data: RDD[(IT, PT)],
-	                                          indexScheme: IndexScheme[IT],
-	                                          binDesc: BinDescriptor[PT, BT],
-	                                          tileScheme: TilePyramid,
-	                                          levels: Seq[Int],
-	                                          bins: Int = 256,
-	                                          consolidationPartitions: Option[Int] = None,
-	                                          isDensityStrip: Boolean = false,
-	                                          usePointBinner: Boolean = true,
-	                                          linesAsArcs: Boolean = false):
-	        RDD[TileData[BT]] = {
-				
-		val tileBinToUniBin = {
-			if (bins == 256) 
-				(TileIndex.tileBinIndexToUniversalBinIndex256)_ 	// use this version if bins == 256
-			else 
-				(TileIndex.tileBinIndexToUniversalBinIndex)_
-		}
-		
-		val minPts = getMinBins
-		val maxPts = getMaxBins
-				
-		val mapOverLevels: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)] =	//BinIndex == universal bin indices in this case
+	def processDataByLevel[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+		(data: RDD[(IT, PT, Option[DT])],
+		 indexScheme: IndexScheme[IT],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 tileScheme: TilePyramid,
+		 levels: Seq[Int],
+		 xBins: Int = 256,
+		 yBins: Int = 256,
+		 consolidationPartitions: Option[Int] = None,
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	=
+			 new EndPointsToLine().endpointsToLineBins,
+		 usePointBinner: Boolean = true,
+		 linesAsArcs: Boolean = false):
+			RDD[TileData[BT]] =
+	{
+		val tileBinToUniBin = (TileIndex.tileBinIndexToUniversalBinIndex)_
+
+		val localMinBins = minBins
+		val localMaxBins = maxBins
+		val localDrawLineEnds = bDrawLineEnds
+
+		val mapOverLevels: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)] =
+			//BinIndex == universal bin indices in this case
 			index => {
-				val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)	
+				val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
 				levels.map(level =>
 					{
-						// find 'universal' bins for both endpoints 
-						val tile1 = tileScheme.rootToTile(x1, y1, level, bins)
+						// find 'universal' bins for both endpoints
+						val tile1 = tileScheme.rootToTile(x1, y1, level, xBins, yBins)
 						val tileBin1 = tileScheme.rootToBin(x1, y1, tile1)
 						val unvBin1 = tileBinToUniBin(tile1, tileBin1)
-						
-						val tile2 = tileScheme.rootToTile(x2, y2, level, bins)
+
+						val tile2 = tileScheme.rootToTile(x2, y2, level, xBins, yBins)
 						val tileBin2 = tileScheme.rootToBin(x2, y2, tile2)
 						val unvBin2 = tileBinToUniBin(tile2, tileBin2)
-						
-						// check if line length is within valid range 
-						val points = math.abs(unvBin1.getX()-unvBin2.getX()) max math.abs(unvBin1.getY()-unvBin2.getY())
-						if (points < minPts || points > maxPts) {
-							(null, null, null)	// line segment either too short or too long (so disregard)
+
+						// check if line length is within valid range
+						val points =
+							(math.abs(unvBin1.getX()-unvBin2.getX()) max
+								 math.abs(unvBin1.getY()-unvBin2.getY()))
+						if (points < localMinBins || (!localDrawLineEnds && points > localMaxBins)) {
+							// line segment either too short or too long (so
+							// disregard)
+							(null, null, null)
 						} else {
-							// return endpoints as pair of universal bins per level
+							// return endpoints as pair of universal bins per
+							// level
 							if (unvBin1.getX() < unvBin2.getX())
-								(unvBin1, unvBin2, tile1)	// use convention of endpoint with min X value is listed first
+								// use convention of endpoint with min X value
+								// is listed first
+								(unvBin1, unvBin2, tile1)
 							else
-								(unvBin2, unvBin1, tile2)	//note, we need one of the tile indices here to keep level info for this line segment	
+								// note, we need one of the tile indices here
+								// to keep level info for this line segment
+								(unvBin2, unvBin1, tile2)
 						}
 					}
 				)
 			}
 
-		processData(data, binDesc, mapOverLevels, bins, consolidationPartitions, isDensityStrip, usePointBinner, linesAsArcs)
+		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
+		            mapOverLevels, xBins, yBins, consolidationPartitions, calcLinePixels,
+		            usePointBinner, linesAsArcs)
 	}
 
 
@@ -241,31 +350,51 @@ class RDDLineBinner(minBins: Int = 2,
 	 * but minimal, data into an RDD of tiles.
 	 * 
 	 * @param data The data to be processed
-	 * @param binDesc A description of how raw values are to be aggregated into
-	 *                bin values
+	 * @param binAnalytic A description of how raw values are aggregated into 
+	 *                    bin values
+	 * @param tileAnalytics A description of analytics that can be run on each 
+	 *                      tile, and how to aggregate them
+	 * @param dataAnalytics A description of analytics that can be run on the
+	 *                      raw data, and recorded (in the aggregate) on each
+	 *                      tile
 	 * @param datumToTiles A function that spreads a data point out over the
 	 *                     tiles and bins of interest
 	 * @param levels A list of levels on which to create tiles
-	 * @param bins The number of bins per coordinate on each tile
+	 * @param xBins The number of bins along the horizontal axis of each tile
+	 * @param yBins The number of bins along the vertical axis of each tile
 	 * @param consolidationPartitions The number of partitions to use when
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
-	 * 
+	 * @param calcLinePixels A function used to rasterize the line/arc between
+	 *                       two end points.  Defaults to a line based implementation.
+	 * @param usePointBinner Indicates whether the lines will be consolidate by point
+	 *                       or by tile.  Defaults to using point based consolidation.
+	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
+	 *                    or arcs.  Defaults to lines.
 	 * @param IT The index type, convertable to tile and bin
 	 * @param PT The bin type, when processing and aggregating
-     * @param BT The final bin type, ready for writing to tiles
+	 * @param AT The type of tile-level analytic to calculate for each tile.
+	 * @param DT The type of raw data-level analytic that already has been 
+	 *           calculated for each tile.
+	 * @param BT The final bin type, ready for writing to tiles
 	 */
-	def processData[IT: ClassTag,
-	                PT: ClassTag, BT] (data: RDD[(IT, PT)],
-	                                   binDesc: BinDescriptor[PT, BT],
-	                                   indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
-	                                   bins: Int = 256,
-	                                   consolidationPartitions: Option[Int] = None,
-	                                   isDensityStrip: Boolean = false,
-	                                   usePointBinner: Boolean = true,
-	                                   linesAsArcs: Boolean = false):
-			RDD[TileData[BT]] = {
+	def processData[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+		(data: RDD[(IT, PT, Option[DT])],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
+		 xBins: Int = 256,
+		 yBins: Int = 256,
+		 consolidationPartitions: Option[Int] = None,
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
+			 new EndPointsToLine().endpointsToLineBins,
+		 usePointBinner: Boolean = true,
+		 linesAsArcs: Boolean = false): RDD[TileData[BT]] =
+	{
+		val metaData = processMetaData(data, indexToUniversalBins, dataAnalytics)
+
 		// We first bin data in each partition into its associated bins
 		val partitionBins = data.mapPartitions(iter =>
 			{
@@ -273,15 +402,17 @@ class RDDLineBinner(minBins: Int = 2,
 					MutableMap[(BinIndex, BinIndex, TileIndex), PT]()
 
 				// Map each data point in this partition into its bins
-				iter.flatMap(record => indexToUniversalBins(record._1).filter(_._1 != null)
-					.map(tbi => (tbi, record._2)))
+				iter.flatMap(record =>
+					indexToUniversalBins(record._1)
+						.filter(_._1 != null)
+						.map(tbi => (tbi, record._2))
+				).foreach(tbv =>
 					// And combine bins within this partition
-					.foreach(tbv =>
 					{
 						val key = tbv._1
 						val value = tbv._2
 						if (partitionResults.contains(key)) {
-							partitionResults(key) = binDesc.aggregateBins(partitionResults(key), value)
+							partitionResults(key) = binAnalytic.aggregate(partitionResults(key), value)
 						} else {
 							partitionResults(key) = value
 						}
@@ -292,387 +423,355 @@ class RDDLineBinner(minBins: Int = 2,
 			}
 		)
 
+		val uniBinToTileBin = {
+			if (linesAsArcs)
+				(TileIndex.universalBinIndexToTileBinIndexClipped)_	// need to clip arc pts that go outside valid tile/bin bounds
+			else
+				(TileIndex.universalBinIndexToTileBinIndex)_
+		}
+
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		if (usePointBinner) {
-			consolidateByPoints(partitionBins, binDesc, consolidationPartitions, isDensityStrip, bins, linesAsArcs)
-		}
-		else {
-			consolidateByTiles(partitionBins, binDesc, consolidationPartitions, isDensityStrip, bins, linesAsArcs)
+			consolidateByPoints(partitionBins, binAnalytic, tileAnalytics,
+			                    metaData, consolidationPartitions,
+			                    xBins, yBins, uniBinToTileBin, calcLinePixels)
+		} else {
+			consolidateByTiles(partitionBins, binAnalytic, tileAnalytics,
+			                   metaData, consolidationPartitions,
+			                   xBins, yBins, uniBinToTileBin, calcLinePixels)
 		}
 	}
 
 
 
-	private def consolidateByPoints[PT: ClassTag, BT] (data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
-	                                           binDesc: BinDescriptor[PT, BT],
-	                                           consolidationPartitions: Option[Int],
-	                                           isDensityStrip: Boolean,
-	                                           bins: Int = 256,
-	                                           linesAsArcs: Boolean = false):
-			RDD[TileData[BT]] = {
-		
-	    val uniBinToTileBin = {
-			if (bins == 256) 
-				(TileIndex.universalBinIndexToTileBinIndex256)_ 	// use this version if bins == 256
-			else 
-				(TileIndex.universalBinIndexToTileBinIndex)_
-		}
-	    val calcLinePixels = {
-	    	if (linesAsArcs)
-	    		endpointsToArcBins
-	    	else
-	    		endpointsToLineBins
-	    }	    
-		
-		val densityStripLocal = isDensityStrip
-		
-		// Do reduceByKey to account for duplicate lines at a given level (not really necessary, but might speed things up?)
-		//val reduced1 = data.reduceByKey(binDesc.aggregateBins(_, _),
-		//                               getNumSplits(consolidationPartitions, data))                              
-		// Draw lines (based on endpoint bins), and convert all results from universal bins to tile,bin coords
-		//val reducedData = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
-		val reducedData = data.flatMap(p => {
-			calcLinePixels(p._1._1, p._1._2).map(bin => {
-				val tb = uniBinToTileBin(p._1._3, bin)
-				((tb.getTile(), tb.getBin()), p._2)
-			})		
-		})
-		// Rest of process is same as regular RDDBinner (reduceByKey, convert to (tile,(bin,value)), groupByKey, and create tiled results)
-		val reducedFinal = reducedData.reduceByKey(binDesc.aggregateBins(_, _),
-		                               getNumSplits(consolidationPartitions, reducedData))				                               
-		                           .map(p => (p._1._1, (p._1._2, p._2)))
-			
-		val result = reducedFinal
-			.groupByKey(getNumSplits(consolidationPartitions, reducedFinal))
+	/**
+	 * Process a simplified input dataset to run any raw data-based analysis
+	 * 
+	 * @param IT The index type of the data set
+	 * @param DT The type of data analytic used
+	 * @param data The data to process
+	 * @param indexToUniversalBins A function that spreads a data point out over
+	 *                             area of interest
+	 * @param dataAnalytic An optional transformation from a raw data record
+	 *                     into an aggregable analytic value.  If None, this
+	 *                     should cause no extra processing. If multiple
+	 *                     analytics are desired, use ComposedTileAnalytic
+	 */
+	def processMetaData[IT: ClassTag, PT: ClassTag, DT: ClassTag]
+		(data: RDD[(IT, PT, Option[DT])],
+		 indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
+			Option[RDD[(TileIndex, Map[String, Any])]] =
+	{
+		dataAnalytics.map(da =>
+			data.mapPartitions(iter =>
+				{
+					val partitionResults = MutableMap[TileIndex, DT]()
+					iter.foreach(record =>
+						{
+							indexToUniversalBins(record._1).foreach(indices =>
+								{
+									val tile = indices._3
+									val value = record._3
+									value.foreach(v =>
+										{
+											partitionResults(tile) =
+												if (partitionResults.contains(tile)) {
+													da.analytic.aggregate(partitionResults(tile), v)
+												} else {
+													v
+												}
+											da.accumulate(tile, v)
+										}
+									)
+								}
+							)
+						}
+					)
+
+					partitionResults.map{case (tile, value) =>
+						(tile, da.analytic.toMap(value))
+					}.iterator
+				}
+			)
+		)
+	}
+
+
+
+	private def consolidateByPoints[PT: ClassTag, AT: ClassTag, BT]
+		(data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
+		 consolidationPartitions: Option[Int],
+		 xBins: Int = 256,
+		 yBins: Int = 256,
+		 uniBinToTileBin: (TileIndex, BinIndex) => TileAndBinIndices,
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]):
+			RDD[TileData[BT]] =
+	{
+		// Do reduceByKey to account for duplicate lines at a given level
+		// (not really necessary, but might speed things up?)
+		// val reduced1 = data.reduceByKey(binAnalytic.aggregate(_, _),
+		//                                 getNumSplits(consolidationPartitions, data))
+
+		// We need to consolidate both metadata and binning data, so our result
+		// has two slots, and each half populates one of them.
+		//
+		// We need to do this right away because the tiles should be immutable
+		// once created
+		//
+		// For the same reason, we'll have to run the tile analytic when we
+		// create the tile, too.
+		//
+		// First, the binning data half.
+
+		//     Draw lines (based on endpoint bins), and convert all results from
+		//     universal bins to tile,bin coords
+		val expanded = data.flatMap(p =>
+			{
+				val ((lineStart, lineEnd, tile), procValue) = p
+				calcLinePixels(lineStart, lineEnd, procValue).map(b =>
+					{
+						val (bin, scaledValue) = b
+						val tb = uniBinToTileBin(tile, bin)
+						((tb.getTile(), tb.getBin()), scaledValue)
+					}
+				)
+			}
+		)
+
+		//     Rest of process is same as regular RDDBinner (reduceByKey, convert
+		//     to (tile,(bin,value)), groupByKey, and create tiled results)
+		val reduced: RDD[(TileIndex, (Option[(BinIndex, PT)],
+		                              Option[Map[String, Any]]))] =
+			expanded.reduceByKey(binAnalytic.aggregate(_, _),
+			                     RDDLineBinner.getNumSplits(consolidationPartitions, expanded)
+			).map(p => (p._1._1, (Some((p._1._2, p._2)), None)))
+
+		// Now the metadata half (in a way that should take no work if there is no metadata)
+		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, PT)],
+		                                      Option[Map[String, Any]]))]] =
+			tileMetaData.map(
+				_.map{case (index, metaData) => (index, (None, Some(metaData))) }
+			)
+
+		// Get the combination of the two sets, again in a way that does
+		// no extra work if there is no metadata
+		val toTile =
+			if (metaData.isDefined) reduced union metaData.get
+			else reduced
+
+
+
+		toTile
+			.groupByKey(RDDLineBinner.getNumSplits(consolidationPartitions, toTile))
 			.map(t =>
 			{
 				val index = t._1
-				val bins = t._2
+				val tileData = t._2
 				val xLimit = index.getXBins()
 				val yLimit = index.getYBins()
-				val tile = if (densityStripLocal) new DensityStripData[BT](index)
-				else new TileData[BT](index)
-				val defaultBinValue = binDesc.convert(binDesc.defaultProcessedBinValue)
 
+				// Create our tile
+				val tile = new TileData[BT](index)
+
+				// Put the proper default in all bins
+				val defaultBinValue =
+					binAnalytic.finish(binAnalytic.defaultProcessedValue)
 				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {
 						tile.setBin(x, y, defaultBinValue)
 					}
 				}
 
-				bins.foreach(p =>
+				// Put the proper value in each bin
+				tileData.filter(_._1.isDefined).foreach(p =>
 					{
-						val bin = p._1
-						val value = p._2
-						tile.setBin(bin.getX(), bin.getY(), binDesc.convert(value))
+						val bin = p._1.get._1
+						val value = p._1.get._2
+						tile.setBin(bin.getX(), bin.getY(), binAnalytic.finish(value))
+					}
+				)
+
+				// Add in any pre-calculated metadata
+				tileData.filter(_._2.isDefined).foreach(p =>
+					{
+						val metaData = p._2.get
+						metaData.map{
+							case (key, value) => tile.setMetaData(key, value)
+						}
+					}
+				)
+
+				// Calculate and add in any tile-level metadata we've been told to calcualte
+				tileAnalytics.map(ta =>
+					{
+						// Figure out the value for this tile
+						val analyticValue = ta.convert(tile)
+						// Add it into any appropriate accumulators
+						ta.accumulate(index, analyticValue)
+						// And store it in the tile's metadata
+						ta.analytic.toMap(analyticValue).map{case (key, value) =>
+							tile.setMetaData(key, value)
+						}
 					}
 				)
 
 				tile
 			}
 		)
-
-		result
 	}
 
 	
 
-	private def consolidateByTiles[PT: ClassTag, BT] (data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
-	                                           binDesc: BinDescriptor[PT, BT],
-	                                           consolidationPartitions: Option[Int],
-	                                           isDensityStrip: Boolean,
-	                                           bins: Int = 256,
-	                                           linesAsArcs: Boolean = false):
+	private def consolidateByTiles[PT: ClassTag, AT: ClassTag, BT]
+		(data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
+		 consolidationPartitions: Option[Int],
+		 xBins: Int = 256,
+		 yBins: Int = 256,
+		 uniBinToTileBin: (TileIndex, BinIndex) => TileAndBinIndices,
+		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]):
 			RDD[TileData[BT]] = {
 		
-	    val uniBinToTileBin = {
-			if (bins == 256) 
-				(TileIndex.universalBinIndexToTileBinIndex256)_ 	// use this version if bins == 256
-			else 
-				(TileIndex.universalBinIndexToTileBinIndex)_
-		}	    
-	    val calcLinePixels = {
-	    	if (linesAsArcs)
-	    		endpointsToArcBins
-	    	else
-	    		endpointsToLineBins
-	    }
+
+		// Do reduceByKey to account for duplicate lines at a given level (not
+		// really necessary, but might speed things up?)
+		// val reduced1 = data.reduceByKey(binDesc.aggregateBins(_, _),
+		//                               getNumSplits(consolidationPartitions, data))
+
+		// We need to consolidate (join) both metadata and segment data, so our
+		// result has two slots, and each half populates one of them.
+		//
+		// We need to do this before we actually create tiles, because the
+		// tiles should be immutable, once created.
+		//
+		// For the same reason, we'll have to run the tile analytic when we
+		// create the tile, too.
+		//
+		// First, the segment data half
+
+		// Draw lines (based on endpoint bins), and convert all results from
+		// universal bins to tile,bin coords
+		// Need flatMap here, else result is an RDD IndexedSeq
+		// val reduced2 = reduced1.flatMap(p => {
 		
-		val densityStripLocal = isDensityStrip
-		
-		// Do reduceByKey to account for duplicate lines at a given level (not really necessary, but might speed things up?)
-		//val reduced1 = data.reduceByKey(binDesc.aggregateBins(_, _),
-		//                               getNumSplits(consolidationPartitions, data))                              
-		// Draw lines (based on endpoint bins), and convert all results from universal bins to tile,bin coords
-		//val reduced2 = reduced1.flatMap(p => {		//need flatMap here, else result is an RDD IndexedSeq
-		
-		val reducedData = data.flatMap(p => {		
-			universalBinsToTiles(p._1._3, calcLinePixels(p._1._1, p._1._2), uniBinToTileBin).map(tile =>
-								(tile, (p._1._1, p._1._2, p._2))
-							)
-		})
-		
-		
-		// Consolidate segments for each tile index, and draw a tile data based on
-		// the consolidated results
-		reducedData.groupByKey(getNumSplits(consolidationPartitions, reducedData)).map(t =>
-			{				
+		val segmentsByTile: RDD[(TileIndex, (Option[(BinIndex, BinIndex, PT)],
+		                                     Option[Map[String, Any]]))] =
+			data.flatMap(p =>
+				{
+					val ((lineStart, lineEnd, tile), procType) = p
+					
+					RDDLineBinner.universalBinsToTiles(tile,
+					                                   calcLinePixels(lineStart, lineEnd, procType),
+					                                   uniBinToTileBin).map(tile =>
+						(tile, (Some((lineStart, lineEnd, procType)), None))
+					)
+				}
+			)
+
+
+		// Now, the metadata half (in a way that should take no work if there
+		// is no metadata)
+		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, BinIndex, PT)],
+		                                      Option[Map[String, Any]]))]] =
+			tileMetaData.map(_.map{case (index, metaData) => (index, (None, Some(metaData)))})
+
+		// Get the combination of the two sets, again in a way that does no
+		// extra work if there is no metadata
+		//
+		// Note that we don't do a simple join because we want all entries from
+		// the segmentsByTile dataset, whether or not they have a corresponding
+		// entry in the metadata dataset
+		val toTile =
+			if (metaData.isDefined) segmentsByTile union metaData.get
+			else segmentsByTile
+
+		// Consolidate segments for each tile index, and any associated metadata,
+		// and draw a tile data based on the consolidated results
+		val partitions = RDDLineBinner.getNumSplits(consolidationPartitions, segmentsByTile)
+		toTile
+			.groupByKey(partitions)
+			.map(t =>
+			{
 				val index = t._1
-				val segments = t._2
+				val tileData = t._2
 				val xLimit = index.getXBins()
 				val yLimit = index.getYBins()
-				val tile = if (densityStripLocal) new DensityStripData[BT](index)
-				else new TileData[BT](index)
-				
-				val binValues = Array.ofDim[PT](xLimit, yLimit)	//init 2D array of of type PT
-				for (x <- 0 until xLimit) {		// fill 2D array with default bin values
+
+				// Create and default our tile as an array, first, for efficiency.
+				//init 2D array of of type PT
+				val binValues = Array.ofDim[PT](xLimit, yLimit)
+				val defaultRawValue = binAnalytic.defaultUnprocessedValue
+				val defaultCookedValue = binAnalytic.defaultProcessedValue
+				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {
-						binValues(x)(y) = binDesc.defaultProcessedBinValue
+						binValues(x)(y) = defaultRawValue
 					}
 				}
-									
-				segments.foreach(segment =>
+
+				// Determine proper bin values
+				tileData.filter(_._1.isDefined).foreach(p =>
 					{
-						// get all universal bins in line, discard ones not in current tile, 
+						val segment = p._1.get
+						val (lineStart, lineEnd, procValue) = segment
+						// get all universal bins in line, discard ones not in current tile,
 						// and convert bins to 'regular' tile/bin units
-						universalBinsToBins(index, calcLinePixels(segment._1, segment._2), uniBinToTileBin).foreach(bin =>
+						RDDLineBinner.universalBinsToBins(index,
+						                                  calcLinePixels(lineStart, lineEnd, procValue),
+						                                  uniBinToTileBin).foreach(b =>
 							{
+								val (bin, scaledValue) = b
 								val x = bin.getX()
 								val y = bin.getY()
-								binValues(x)(y) =  binDesc.aggregateBins(binValues(x)(y), segment._3)
+								binValues(x)(y) =  binAnalytic.aggregate(binValues(x)(y), scaledValue)
 							}
 						)
 					}
 				)
 				
 				// convert aggregated bin values from type PT to BT, and save tile results
+				// Create our tile
+				val tile = new TileData[BT](index)
+
 				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {
-						tile.setBin(x, y, binDesc.convert(binValues(x)(y)))
+						val value =
+							if (binValues(x)(y) == defaultRawValue) defaultCookedValue
+							else binValues(x)(y)
+						tile.setBin(x, y, binAnalytic.finish(value))
 					}
 				}
+
+				// Add in any pre-calculated metadata
+				tileData.filter(_._2.isDefined).foreach(p =>
+					{
+						val metaData = p._2.get
+						metaData.map{
+							case (key, value) => tile.setMetaData(key, value)
+						}
+					}
+				)
+				// Calculate and add in any tile-level metadata we've been told
+				// to calculate
+				tileAnalytics.map(ta =>
+					{
+						// Figure out the value for this tile
+						val analyticValue = ta.convert(tile)
+						// Add it into any appropriate accumulators
+						ta.accumulate(index, analyticValue)
+						// And store it in the tile's metadata
+						ta.analytic.toMap(analyticValue).map{case (key, value) =>
+							tile.setMetaData(key, value)
+						}
+					}
+				)
 				tile
 			}
 		)
-	}	
-	
-	def getNumSplits[T: ClassTag] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
-		val curSize = dataSet.partitions.size
-		val result = curSize max requestedPartitions.getOrElse(0)
-		result
 	}
-	
-	
-	/**
-	 * Determine all bins that are required to draw a line two endpoint bins.
-	 *
-	 * Bresenham's algorithm for filling in the intermediate pixels in a line.
-	 *
-	 * From wikipedia
-	 * 
-	 * @param start
-	 *        The start bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
-	 * @param end
-	 *        The end bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
-	 * @return All bins, in universal bin coordinates, falling on the direct
-	 *         line between the two endoint bins.
-	 */
-	protected val endpointsToLineBins: (BinIndex, BinIndex) => IndexedSeq[BinIndex] =
-		(start, end) => {
-
-			// Bresenham's algorithm
-			var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
-			var steep = math.abs(y1 - y0) > math.abs(x1 - x0)
-			
-			var tmpInt = 0
-			if (steep) {
-				tmpInt = y0		//swap x0, y0
-				y0 = x0
-				x0 = tmpInt
-				tmpInt = y1		//swap x1, y1
-				y1 = x1
-				x1 = tmpInt
-			}
-			if (x0 > x1) {
-				tmpInt = x1		//swap x0, x1
-				x1 = x0
-				x0 = tmpInt
-				tmpInt = y0		//swap y0, y1
-				y0 = y1
-				y1 = tmpInt
-			}
-
-			val deltax = x1-x0
-			val deltay = math.abs(y1-y0)
-			var error = deltax>>1
-			var y = y0
-			val ystep = if (y0 < y1) 1 else -1
-
-			Range(x0, x1+1).map(x =>		//x1+1 needed here so that "end" bin is included in Sequence
-				{
-					val ourY = y
-					error = error - deltay
-					if (error < 0) {
-						y = y + ystep
-						error = error + deltax
-					}
-
-					if (steep) new BinIndex(ourY, x)
-					else new BinIndex(x, ourY)
-				}
-			)	
-		}
-
-	/**
-	 * Determine all bins that are required to draw an arc between two endpoint bins.
-	 *
-	 * Bresenham's Midpoint circle algorithm is used for filling in the intermediate pixels in an arc.
-	 *
-	 * From wikipedia
-	 * 
-	 * @param start
-	 *        The start bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
-	 * @param end
-	 *        The end bin, in universal bin index coordinates (not tile bin
-	 *        coordinates)
-	 * @return All bins, in universal bin coordinates, falling on the direct
-	 *         line between the two endoint bins.
-	 */
-	protected val endpointsToArcBins: (BinIndex, BinIndex) => IndexedSeq[BinIndex] =
-		(start, end) => {
-
-			var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
-
-			//---- Find centre of circle to be used to draw the arc
-			val dx = x1-x0
-			val dy = y1-y0		
-			val len = Math.sqrt(dx*dx + dy*dy)	//length between endpoints
-			val r = len.toInt	// set radius of circle = len for now  (TODO -- could make this a tunable parameter?)
-			
-			val halfPI = 0.5*Math.PI
-			val theta1 = halfPI - Math.asin(len/(2.0*r)); // angle from each endpoint to circle's centre (centre and endpoints form an isosceles triangle)
-			val angleTemp = Math.atan2(dy, dx)-theta1;
-			val xC = (x0 + r*Math.cos(angleTemp)).toInt		   // co-ords for circle's centre
-			val yC = (y0 + r*Math.sin(angleTemp)).toInt
-			//val xC_2 = x0 + (r*Math.cos(Math.atan2(dy, dx)+theta1)).toInt	//Note: 2nd possiblility for circle's centre 
-			//val yC_2 = y0 + (r*Math.cos(Math.atan2(dy, dx)+theta1)).toInt	//(corresponds to CCW arc, so not needed in this case)
-					
-			//---- Use Midpoint Circle algorithm to draw the arc	
-			var f = 1-r
-			var ddF_x = 1
-			var ddF_y = -2*r
-			var x = 0
-			var y = r
-			
-			// angles for start and end points of arc
-			var startRad = Math.atan2(y0-yC, x0-xC)
-			var stopRad = Math.atan2(y1-yC, x1-xC)
-			
-			val bWrapNeg = (stopRad-startRad > Math.PI)
-			if (bWrapNeg) startRad += 2.0*Math.PI	//note: this assumes using CW arcs only!
-													//(otherwise would need to check if stopRad is negative here as well)
-		
-			val arcBins = scala.collection.mutable.ArrayBuffer[BinIndex]()
-			
-			// calc points for the four vertices of circle
-			saveArcPoint((xC, yC+r), halfPI)			
-			saveArcPoint((xC, yC-r), -halfPI)			
-			saveArcPoint((xC+r, yC), 0)
-			saveArcPoint((xC-r, yC), Math.PI)
-			
-			while (x < y-1) {
-				if (f >= 0) {
-					y = y - 1
-					ddF_y = ddF_y + 2
-					f = f + ddF_y
-				}
-				x = x + 1
-				ddF_x = ddF_x + 2
-				f = f + ddF_x
-				
-				val newAngle = Math.atan2(y, x)
-				saveArcPoint((xC+x, yC+y), newAngle)			
-				saveArcPoint((xC-x, yC+y), Math.PI - newAngle)			
-				saveArcPoint((xC+x, yC-y), -newAngle)
-				saveArcPoint((xC-x, yC-y), -Math.PI + newAngle)
-				
-				if (x!=y) {
-					saveArcPoint((xC+y, yC+x), halfPI - newAngle)
-					saveArcPoint((xC-y, yC+x), halfPI + newAngle)
-					saveArcPoint((xC+y, yC-x), -halfPI + newAngle)
-					saveArcPoint((xC-y, yC-x), -halfPI - newAngle)
-				}
-			}
-			
-			//------
-			def saveArcPoint(point: (Int, Int), angle: Double) = {				
-				var newAngle = angle
-				if (bWrapNeg && newAngle < 0.0)
-					newAngle += 2.0*Math.PI
-					
-				if (newAngle <= startRad && newAngle >= stopRad)
-					arcBins += new BinIndex(point._1, point._2)
-			}
-			
-			arcBins.toIndexedSeq	// seq of arc bins
-		}
-					
-	/**
-	 * Determine all tiles required to draw a line between two endpoint bins.
-	 *
-	 * @param baseTile
-	 *        A sample tile specifying level and number of bins of all required
-	 *        results.
-	 * @return All tiles falling on the direct line (in universal bin
-	 *         coordinates) between the two endpoint bins
-	 */
-//	protected val universalBinsToTiles:
-//			(TileIndex, IndexedSeq[BinIndex]) => Traversable[TileIndex] =
-//		(baseTile, bins) => {
-//			bins.map(ubin =>
-//				{
-//					val tb = TileIndex.universalBinIndexToTileBinIndex(baseTile, ubin)
-//					tb.getTile()
-//				}
-//			).toSet
-//			// transform to set to remove duplicates
-//		}
-		
-	protected def universalBinsToTiles(baseTile: TileIndex, bins: IndexedSeq[BinIndex], 
-									   uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices): Traversable[TileIndex] = {
-		bins.map(ubin =>
-			{
-				val tb = uniBinToTB(baseTile, ubin)
-				tb.getTile()
-			}
-		).toSet	// transform to set to remove duplicates			
-	}	
-	/**
-	 * Determine all bins within a given tile that are required to draw a line
-	 * between two endpoint bins.
-	 *
-	 * @param tile
-	 *        The tile of interest
-	 * @return All bins, in tile bin coordinates, in the given tile, falling on
-	 *         the direct line (in universal bin coordinates) between the two
-	 *         endoint bins.
-	 */
-//	protected val universalBinsToBins:
-//			(TileIndex, IndexedSeq[BinIndex]) => IndexedSeq[BinIndex] =
-//		(tile, bins) => {
-//			bins.map(ubin =>
-//				TileIndex.universalBinIndexToTileBinIndex(tile, ubin)
-//			).filter(_.getTile().equals(tile)).map(_.getBin())
-//		}
-		
-	protected def universalBinsToBins(tile: TileIndex, bins: IndexedSeq[BinIndex],
-									   uniBinToTB: (TileIndex, BinIndex) => TileAndBinIndices): IndexedSeq[BinIndex] = {
-		bins.map(ubin =>
-			uniBinToTB(tile, ubin)
-		).filter(_.getTile().equals(tile)).map(_.getBin())
-	}			
-		
 }
