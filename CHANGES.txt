@@ -1,0 +1,23 @@
+2014-12-12, Version 0.4.0
+
+General
+=======
+* Project build migrated from Maven to Gradle
+
+Server
+======
+* HTTP interface reworked to be more RESTful and facilitate caching
+* Layer definition simplified to support interface changes
+* Added new colour ramp types
+
+Client
+======
+* Created minimal client JS library to wrap HTTP calls
+* Reduced Map/layer framework dependencies and removed required JS libs from distribution
+* Moved JS build to Gulp
+
+Tile Generation
+===============
+* Added on-demand tiling
+* Moved serializers and analytics to use generics
+* Removed spark-run scripts in favor of spark-submit
