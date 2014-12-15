@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 // This is the top level build file for the aperture tiles core projects.  Definitions / tasks that
 // are shared between sub-projects need to go in here, but care should be taken not to needlessly
 // pollute the global namespace.  The 'settings.gradle' file that is also in this directory defines
@@ -97,7 +95,7 @@ subprojects {
 	// Shared group and version info.  We keep build variant types in the version names so that we get 
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
-	version = "0.4-$buildType"
+	version = "0.5-SNAPSHOT-$buildType"
 
 	// Aperture JS version - shared between a few places
 	project.ext.apertureJsVersion = "1.0.9"
