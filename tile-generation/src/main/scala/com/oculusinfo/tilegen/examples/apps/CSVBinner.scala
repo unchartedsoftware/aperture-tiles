@@ -137,7 +137,7 @@ object CSVBinner {
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
 					                    tiles,
-					                    dataset.getValueScheme,
+					                    dataset.getTileSerializer,
 					                    tileAnalytics, dataAnalytics,
 					                    dataset.getName,
 					                    dataset.getDescription)

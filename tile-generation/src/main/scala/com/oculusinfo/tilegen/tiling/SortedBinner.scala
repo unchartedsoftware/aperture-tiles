@@ -387,7 +387,7 @@ object SortedBinnerTest {
 					tileIO.writeTileSet(dataset.getTilePyramid,
 					                    dataset.getName,
 					                    tiles,
-					                    dataset.getValueScheme,
+					                    dataset.getTileSerializer,
 					                    dataset.getTileAnalytics,
 					                    dataset.getDataAnalytics,
 					                    dataset.getName,

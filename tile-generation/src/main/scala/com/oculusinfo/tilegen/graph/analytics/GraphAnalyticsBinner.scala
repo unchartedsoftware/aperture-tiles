@@ -35,6 +35,7 @@ import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.SqliteTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
+import org.apache.avro.file.CodecFactory
 import scala.reflect.ClassTag
 import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.tiling.RDDBinner
@@ -42,7 +43,7 @@ import org.apache.spark.rdd.RDD
 import java.util.Properties
 import java.io.FileInputStream
 import scala.util.Try
-import com.oculusinfo.tilegen.datasets.DatasetFactory
+	import com.oculusinfo.tilegen.datasets.DatasetFactory
 import org.apache.spark.SparkContext
 import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import java.util.{List => JavaList}
@@ -181,26 +182,26 @@ import scala.collection.JavaConverters._
 
 object GraphAnalyticsBinner {
 	private var _hierlevel = 0
-		
+	
 	//------------------
 	def importAndProcessData (sc: SparkContext,
-	                   dataDescription: Properties,
-	                   tileIO: TileIO,
-	                   hierarchyLevel: Int = 0) = {
+	                          dataDescription: Properties,
+	                          tileIO: TileIO,
+	                          hierarchyLevel: Int = 0) = {
 		
 		// Wrap parameters more usefully
 		val properties = new CSVRecordPropertiesWrapper(dataDescription)
 		
 		val source = properties.getString("oculus.binning.source.location", "The hdfs file name from which to get the CSV data")
 		val partitions = properties.getInt("oculus.binning.source.partitions",
-										   "The number of partitions to use when reducing data, if needed", Some(0))
-		//val consolidationPartitions = properties.getIntOption("oculus.binning.consolidationPartitions", 
+		                                   "The number of partitions to use when reducing data, if needed", Some(0))
+		//val consolidationPartitions = properties.getIntOption("oculus.binning.consolidationPartitions",
 		//								   "The number of partitions into which to consolidate data when done")
 		val pyramidName = properties.getString("oculus.binning.name","The name of the tileset",Some("unknown"))
 		val pyramidDescription = properties.getString("oculus.binning.description", "The description to put in the tile metadata",Some(""))
-	
+		
 		val levelSets = properties.getStringPropSeq("oculus.binning.levels",		// parse zoom level sets
-		                                         "The levels to bin").map(lvlString =>
+		                                            "The levels to bin").map(lvlString =>
 			{
 				lvlString.split(',').map(levelRange =>
 					{
@@ -220,7 +221,7 @@ object GraphAnalyticsBinner {
 		)
 		val levelBounds = levelSets.map(_.map(a => (a, a))
 			                                .reduce((a, b) => (a._1 min b._1, a._2 max b._2)))
-			.reduce((a, b) => (a._1 min b._1, a._2 max b._2))		
+			.reduce((a, b) => (a._1 min b._1, a._2 max b._2))
 
 		val rawData = if (0 == partitions) {	// read in raw data
 			sc.textFile(source)
@@ -242,12 +243,12 @@ object GraphAnalyticsBinner {
 		                                              (List[GraphAnalyticsRecord],
 		                                               List[GraphAnalyticsRecord])]] =
 			Some(new CompositeAnalysisDescription(minAnalysis, maxAnalysis))
-			
-//		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]], JavaList[GraphAnalyticsRecord]]] = None
+		
+		//		val tileAnalytics: Option[AnalysisDescription[TileData[JavaList[GraphAnalyticsRecord]], JavaList[GraphAnalyticsRecord]]] = None
 		val dataAnalytics: Option[AnalysisDescription[((Double, Double), GraphAnalyticsRecord),
-		                                              Int]] = None  	                                              
-		// process data                                              
-		genericProcessData(sc, rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)		
+		                                              Int]] = None
+		// process data
+		genericProcessData(sc, rawData, levelSets, tileIO, tileAnalytics, dataAnalytics, pyramidName, pyramidDescription, properties, hierarchyLevel)
 		
 	}
 	
@@ -297,25 +298,25 @@ object GraphAnalyticsBinner {
 		val nodesWithEdges = edgeMatcher.matchEdgesWithCommunities(nodeData, edgeData)
 		
 		//convert parsed graph communities into GraphAnalyticsRecord objects for processing with RDDBinner
-		val data = nodesWithEdges.map(record => {		
-			val (xy, community) = record
-			val graphRecord = new GraphAnalyticsRecord(1, List(community).asJava)
-			(xy, graphRecord, dataAnalytics.map(_.convert((xy, graphRecord))))
-		})
+		val data = nodesWithEdges.map(record => {
+			                              val (xy, community) = record
+			                              val graphRecord = new GraphAnalyticsRecord(1, List(community).asJava)
+			                              (xy, graphRecord, dataAnalytics.map(_.convert((xy, graphRecord))))
+		                              })
 		data.cache
 
 		val binner = new RDDBinner
 		binner.debug = true
-		val tilePyramid = getTilePyramid(properties)	
+		val tilePyramid = getTilePyramid(properties)
 		
 		println("\tTile analytics: "+tileAnalytics)
 		println("\tData analytics: "+dataAnalytics)
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
-		dataAnalytics.map(_.addGlobalAccumulator(sc))		
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
 
 		levelSets.foreach(levelSet =>
-			{			
+			{
 				// Add level accumulators for all analytics for these levels (for now at least)
 				tileAnalytics.map(analytic =>
 					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
@@ -323,7 +324,7 @@ object GraphAnalyticsBinner {
 				dataAnalytics.map(analytic =>
 					levelSet.map(level => analytic.addLevelAccumulator(sc, level))
 				)
-						
+				
 				println()
 				println()
 				println()
@@ -341,7 +342,7 @@ object GraphAnalyticsBinner {
 				tileIO.writeTileSet(tilePyramid,
 				                    pyramidName,
 				                    tiles,
-				                    new GraphAnalyticsValueDescription,
+				                    new GraphAnalyticsAvroSerializer(CodecFactory.bzip2Codec()),
 				                    tileAnalytics,
 				                    dataAnalytics,
 				                    pyramidName,
@@ -356,13 +357,13 @@ object GraphAnalyticsBinner {
 	
 	//----------------
 	def getTilePyramid(properties: CSVRecordPropertiesWrapper): TilePyramid = {
-		val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds", 
-									"If true, calculate tile pyramid bounds automatically",
-				                      Some(false))
-	    if (autoBounds) {
-	    	throw new Exception("oculus.binning.projection.autobounds = true currently not supported")
-	    }
-		//TODO -- add in autobounds checking to this application (ie when/if we modify the app to use 'proper' tile-gen Data Analytics features) 
+		val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds",
+		                                       "If true, calculate tile pyramid bounds automatically",
+		                                       Some(false))
+		if (autoBounds) {
+			throw new Exception("oculus.binning.projection.autobounds = true currently not supported")
+		}
+		//TODO -- add in autobounds checking to this application (ie when/if we modify the app to use 'proper' tile-gen Data Analytics features)
 		
 		val projection = properties.getString("oculus.binning.projection",
 		                                      "The type of tile pyramid to use",
@@ -370,27 +371,27 @@ object GraphAnalyticsBinner {
 		if ("EPSG:900913" == projection) {
 			new WebMercatorTilePyramid()
 		} else {
-	//		if (autoBounds) {
-	//			new AOITilePyramid(minX, minY, maxX, maxY)
-	//		} else {
-				val minXp = properties.getDoubleOption("oculus.binning.projection.minx",
-				                                       "The minimum x value to use for "+
-					                                       "the tile pyramid").get
-				val maxXp = properties.getDoubleOption("oculus.binning.projection.maxx",
-				                                       "The maximum x value to use for "+
-					                                       "the tile pyramid").get
-				val minYp = properties.getDoubleOption("oculus.binning.projection.miny",
-				                                       "The minimum y value to use for "+
-					                                       "the tile pyramid").get
-				val maxYp = properties.getDoubleOption("oculus.binning.projection.maxy",
-				                                       "The maximum y value to use for "+
-					                                       "the tile pyramid").get
-				new AOITilePyramid(minXp, minYp, maxXp, maxYp)
-	//		}
-		}				
+			//		if (autoBounds) {
+			//			new AOITilePyramid(minX, minY, maxX, maxY)
+			//		} else {
+			val minXp = properties.getDoubleOption("oculus.binning.projection.minx",
+			                                       "The minimum x value to use for "+
+				                                       "the tile pyramid").get
+			val maxXp = properties.getDoubleOption("oculus.binning.projection.maxx",
+			                                       "The maximum x value to use for "+
+				                                       "the tile pyramid").get
+			val minYp = properties.getDoubleOption("oculus.binning.projection.miny",
+			                                       "The minimum y value to use for "+
+				                                       "the tile pyramid").get
+			val maxYp = properties.getDoubleOption("oculus.binning.projection.maxy",
+			                                       "The maximum y value to use for "+
+				                                       "the tile pyramid").get
+			new AOITilePyramid(minXp, minYp, maxXp, maxYp)
+			//		}
+		}
 	}
 	
-	//----------------	
+	//----------------
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {
 			println("Usage:")
@@ -424,7 +425,7 @@ object GraphAnalyticsBinner {
 			val propStream = new FileInputStream(args(argIdx))
 			props.load(propStream)
 			propStream.close()
-			                                      
+			
 			// check if hierarchical mode is enabled
 			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");
 			var hierarchicalClusters = if (valTemp=="true") true else false
@@ -434,7 +435,7 @@ object GraphAnalyticsBinner {
 				// multiple runs more efficient
 				if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
 					props.setProperty("oculus.binning.caching.processed", "true")
-					
+				
 				// regular tile generation
 				importAndProcessData(sc, props, tileIO, _hierlevel)
 			}
@@ -443,7 +444,7 @@ object GraphAnalyticsBinner {
 				
 				// The highest hierarchy level used for tile generation
 				var currentHierLevel = Try(props.getProperty("oculus.binning.hierarchical.maxlevel",
-						"The highest hierarchy level used for tile generation").toInt).getOrElse(0)
+				                                             "The highest hierarchy level used for tile generation").toInt).getOrElse(0)
 
 				var nn = 0;
 				var levelsList:scala.collection.mutable.MutableList[String] =
@@ -487,7 +488,7 @@ object GraphAnalyticsBinner {
 					if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
 						props.setProperty("oculus.binning.caching.processed", "true")
 					// perform tile generation
-					importAndProcessData(sc, props, tileIO, currentHierLevel)	
+					importAndProcessData(sc, props, tileIO, currentHierLevel)
 
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
@@ -500,8 +501,8 @@ object GraphAnalyticsBinner {
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
 
 			argIdx = argIdx + 1
-		}	
+		}
 		val endTime = System.currentTimeMillis()
-		println("Finished binning all sets in "+((endTime-startTime)/60000.0)+" minutes")	
-	}				
+		println("Finished binning all sets in "+((endTime-startTime)/60000.0)+" minutes")
+	}
 }

@@ -46,6 +46,7 @@ import org.apache.spark.streaming.Time
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -90,7 +91,7 @@ abstract class Dataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, B
 	def getConsolidationPartitions: Option[Int] = None
 	
 	def getIndexScheme: IndexScheme[IT]
-	def getValueScheme: ValueDescription[BT]
+	def getTileSerializer: TileSerializer[BT]
 
 	/**
 	 * Get an analytic that defines how to aggregate this data

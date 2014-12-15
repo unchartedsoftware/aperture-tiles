@@ -166,7 +166,7 @@ class RDDLineBinner(minBins: Int = 2,
 		binAnalytic: BinningAnalytic[PT, BT],
 		tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		dataAnalytics: Option[AnalysisDescription[RT, DT]],
-		valueScheme: ValueDescription[BT],
+		serializer: TileSerializer[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
 		writeLocation: String,
@@ -216,7 +216,7 @@ class RDDLineBinner(minBins: Int = 2,
 				                               calcLinePixels)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
-				                    valueScheme, tileAnalytics, dataAnalytics,
+				                    serializer, tileAnalytics, dataAnalytics,
 				                    name, description)
 				if (debug) {
 					val levelEndTime = System.currentTimeMillis()
