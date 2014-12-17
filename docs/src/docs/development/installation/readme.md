@@ -20,18 +20,21 @@ For quick examples of the capabilities of Aperture Tiles:
 
 This project has the following prerequisites:
 
-- **Operating System**: Linux or OS X. <p class="list-paragraph">Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.</p>
-- **Languages**:
-	-   [**Scala**](http://www.scala-lang.org/) version 2.10.3
-	-   [**Java**](http://www.java.com/) (JDK version 1.7+)
-- **Runtime Environment**: [Node.js](http://nodejs.org/) 
-- **Cluster Computing**: To facilitate large tiling jobs, Aperture Tiles supports a cluster computing framework. Note that if you only intend to run small jobs (data sets that fit in the memory of a single machine) or are willing to take a long time to complete them, you can skip the Hadoop/HDFS/HBase installation and run Spark on a single node and read/write to your local file system.
-	-   **Apache Spark** - [Apache Spark](http://spark.incubator.apache.org/) distributed computing framework for distributing tile generation across a cluster of machines.  Aperture Tiles requires version 1.0.0 or greater. When you set up Spark, you also need to configure the version of Hadoop with which it will be working (if applicable). <p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
-	-   **Hadoop/HDFS/HBase** (Optional) - Distributed computing stack.  HDFS is a file system for storing large data sets. Choose your preferred flavor  ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work). HBase is a non-relational database that sits atop Hadoop/HDFS.<p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the automatically installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</p>
--  **Web Server**: the Tile Server and client are built using the [Restlet](http://restlet.org/) web framework, and require a servlet compatible web server. Choose your preferred implementation ([Apache Tomcat](http://tomcat.apache.org/) or [Jetty](http://www.eclipse.org/jetty/)).
+- **Operating System**: Linux or OS X. Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.
+- **Languages**: [Scala](http://www.scala-lang.org/) version 2.10.3 and [Java](http://www.java.com/) (JDK version 1.7+).
+- **Cluster Computing**: Facilitates large tiling jobs. If you only run small jobs (datasets that fit in a single machine's memory) or if wait times are not an issue, you can omit Hadoop/HDFS/HBase and run Spark on a single node on your local file system.
+	-   [Apache Spark](http://spark.incubator.apache.org/) version 1.0.0 or greater. You will need to configure the version of Hadoop with which Spark will be working (if applicable). <p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
+	-   [Hadoop/HDFS/HBase](http://hadoop.apache.org/) (*Optional*) - Choose your preferred flavor:
+		- [Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) (*Recommended*) version 4.6 
+		- [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
+		- [MapR](http://www.mapr.com/products/apache-hadoop)
+		- [HortonWorks](http://hortonworks.com/)<p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</p>
+-  **Web Server**: The Tile Server and Tile Client, built using the [Restlet](http://restlet.org/) web framework, require a servlet-compatible web server. Choose your preferred implementation:
+	- [Apache Tomcat](http://tomcat.apache.org/)
+	- [Jetty](http://www.eclipse.org/jetty/)
 -   **Build Automation**: Two tools are required to build Aperture Tiles and its dependency, [Aperture JS](http://aperturejs.com). Ensure that each is configured properly on your system. 
-	- **Aperture JS**: Build with [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x version may work).
-	- **Aperture Tiles**: Build with [Gradle](http://www.gradle.org/)
+	- *Aperture JS*: [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work)
+	- *Aperture Tiles*: [Gradle](http://www.gradle.org/), which also requires [Node.js](http://nodejs.org/)<p class="list-paragraph">NOTE: The Windows installer for Node.js v0.10.33 has a known issue in that fails to install the following directory, which in turn will cause your Aperture Tiles build to fail. To work around this issue, simply create the directory, then re-run the Aperture Tiles build</p><p><code>C:\Users\<UserName>\AppData\Roaming\npm</code></p>
 
 <img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
