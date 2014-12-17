@@ -34,7 +34,8 @@ This project has the following prerequisites:
 	- [Jetty](http://www.eclipse.org/jetty/)
 -   **Build Automation**: Two tools are required to build Aperture Tiles and its dependency, [Aperture JS](http://aperturejs.com). Ensure that each is configured properly on your system. 
 	- *Aperture JS*: [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work)
-	- *Aperture Tiles*: [Gradle](http://www.gradle.org/), which also requires [Node.js](http://nodejs.org/)<p class="list-paragraph">NOTE: The Windows installer for Node.js v0.10.33 has a known issue in that fails to install the following directory, which in turn will cause your Aperture Tiles build to fail. To work around this issue, simply create the directory, then re-run the Aperture Tiles build</p><p><code>C:\Users\<UserName>\AppData\Roaming\npm</code></p>
+	- *Aperture Tiles*: [Gradle](http://www.gradle.org/), which also requires [Node.js](http://nodejs.org/)<p class="list-paragraph">NOTE: The Windows installer for Node.js v0.10.33 has a known issue in that fails to install the following directory, which in turn will cause your Aperture Tiles build to fail. To work around this issue, simply create the directory, then re-run the Aperture Tiles build</p>
+	<pre>C:\Users\\\<UserName>\AppData\Roaming\npm</pre>
 
 <img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
