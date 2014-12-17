@@ -23,6 +23,7 @@ artifacts {
 
 // Jars / projects this project depends on.
 dependencies {
+    compile "com.google.guava:guava:14.0.1"
 	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"	
 	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"	
 	compile "org.apache.avro:avro:1.7.4"

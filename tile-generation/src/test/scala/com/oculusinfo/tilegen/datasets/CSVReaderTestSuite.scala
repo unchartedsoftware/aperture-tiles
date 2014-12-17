@@ -31,6 +31,8 @@ import java.io.{FileWriter, File}
 import java.util.{TimeZone, Calendar, Properties}
 import java.sql.Timestamp
 
+import org.apache.log4j.{LogManager, Level}
+
 import scala.collection.mutable.ArrayBuffer
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
@@ -88,7 +90,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		configuration.setProperty("oculus.binning.parsing.ip.fieldType",     "ipv4")
 		configuration.setProperty("oculus.binning.parsing.date.index",       "9")
 		configuration.setProperty("oculus.binning.parsing.date.fieldType",   "date")
-		configuration.setProperty("oculus.binning.parsing.date.dateFormat",  "dd:HH:mm")
+		configuration.setProperty("oculus.binning.parsing.date.dateFormat",  "HH:mm:ss")
 		configuration.setProperty("oculus.binning.parsing.prop.index",       "10")
 		configuration.setProperty("oculus.binning.parsing.prop.fieldType",   "propertyMap")
 		configuration.setProperty("oculus.binning.parsing.prop.property",               "n")
@@ -118,6 +120,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test CSV => Data conversion") {
+		LogManager.getRootLogger.setLevel(Level.WARN)
 		val reader = createReader
 		import reader.sqlc._
 
@@ -145,7 +148,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val strings = reader.asSchemaRDD.select('str).map(_(0).asInstanceOf[String]).collect.toList
 		strings.zipWithIndex.foreach(values => assert("abc%d".format(1+values._2) == values._1))
 
-		val ips = reader.asSchemaRDD.select('ip).map(_(0).asInstanceOf[ArrayBuffer[Byte]]).collect.toList
+		val ips = reader.asSchemaRDD.select('ip).map(_(0).asInstanceOf[Seq[Byte]]).collect.toList
 		ips.zipWithIndex.foreach(values => {
 			                         assert(4 === values._1.size)
 			                         assert(192.toByte === values._1(0))

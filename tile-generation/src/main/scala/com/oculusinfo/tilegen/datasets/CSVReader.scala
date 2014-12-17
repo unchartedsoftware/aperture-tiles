@@ -126,10 +126,13 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 	                                                 Some("\t"))
 
 	private lazy val _parsed: SchemaRDD = {
+		val separator = _separator
+		val parsers = _parsers
+		val N = _fields
 		val rowRDD: RDD[Row] = data.map(record =>
 			{
-				val fields = record.split(_separator)
-				val values = (0 until _fields).map(n => _parsers(n)(fields(n)))
+				val fields = record.split(separator)
+				val values = (0 until N).map(n => parsers(n)(fields(n)))
 				row(values:_*)
 			}
 		)
@@ -162,7 +165,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 				case "double" => (DoubleType, s => s.trim.toDouble)
 				case "string" => (StringType, s => s)
 				case "ipv4" => (ArrayType(ByteType), s => {
-					                s.trim.split("\\.").map(_.trim.toShort.toByte).toArray
+					                s.trim.split("\\.").map(_.trim.toShort.toByte).toSeq
 				                })
 				case "date" => {
 					val format = new SimpleDateFormat(
