@@ -185,27 +185,122 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 	// the build hasn't started) add behavior specific to web client projects.
 	// Client projects are flagged by a property called 'clientProject' - if that's present,
 	// the client behavior gets injected into the project in question.
-	afterEvaluate { Project proj ->
-		if (proj.ext.has("clientProject") && project.clientProject) {
+	afterEvaluate {
+		if (project.ext.has("clientProject") && project.clientProject) {
 			
-			// Configure the jetty run task
-			jettyRun {
-				httpPort = 8080
-				contextPath = project.name
+			// Directory constants
+			def TILE_CLIENT_SRC = "${rootDir}/tile-client/src"
+			def TILE_CLIENT_BUILD = "${rootDir}/tile-client/build"
+			def TILE_SERVICE_SRC = "${rootDir}/tile-service/src"
+			def TILE_SERVICE_BUILD = "${rootDir}/tile-service/build/libs"
+			def ANNOTATION_SERVICE_SRC = "${rootDir}/annotation-service/src"
+			def ANNOTATION_SERVICE_BUILD = "${rootDir}/annotation-service/build/libs"
+			def BINNING_UTIL_SRC = "${rootDir}/binning-utilities/src"
+			def BINNING_UTIL_BUILD = "${rootDir}/binning-utilities/build/libs"
+			def MATH_UTIL_SRC = "${rootDir}/math-utilities/src"
+			def MATH_UTIL_BUILD = "${rootDir}/math-utilities/build/libs"
+			def EXPLODED_DIR = "$buildDir/exploded"
+			def EXPLODED_LIBS = EXPLODED_DIR + "/WEB-INF/lib"
+
+
+			// Create a watch daemon thread
+			task watchThread() << {
+			    Thread.start {
+			        project.tasks.watch.execute()
+			    }
 			}
 
-			// Add the tile service project output
+			// Copy client build files into the exploded war
+			task copyTileClientToExploded(type: Copy) {
+			    from fileTree(TILE_CLIENT_BUILD).include("*.min.js", "*.min.css")
+			    into EXPLODED_DIR
+			}
+			copyTileClientToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyTileClientToExploded.outputs.dir EXPLODED_DIR
+
+			// Copy tile-service jar files into the exploded war
+			task copyTileServiceToExploded(type: Copy) {
+				from fileTree(TILE_SERVICE_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
+			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy binning-utilities jar into the exploded war
+			task copyBinningUtilToExploded(type: Copy) {
+				from fileTree(BINNING_UTIL_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyBinningUtilToExploded.inputs.dir BINNING_UTIL_BUILD
+			copyBinningUtilToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy math-utilities jar into the exploded war
+			task copyMathUtilToExploded(type: Copy) {
+				from fileTree(MATH_UTIL_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyMathUtilToExploded.inputs.dir MATH_UTIL_BUILD
+			copyMathUtilToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy annotation-service jar into the exploded war
+			task copyAnnotationServiceToExploded(type: Copy) {
+				from fileTree(ANNOTATION_SERVICE_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyAnnotationServiceToExploded.inputs.dir ANNOTATION_SERVICE_BUILD
+			copyAnnotationServiceToExploded.outputs.dir EXPLODED_LIBS
+
+			// Configure the watch task
+			watch {
+				serviceWatch {
+			        files fileTree(TILE_SERVICE_SRC).include('**/*.java')
+			        tasks ':tile-service:jar', 'copyTileServiceToExploded'
+			    }
+			    annotationWatch {
+			        files fileTree(ANNOTATION_SERVICE_SRC).include('**/*.java')
+			        tasks ':annotation-service:jar', 'copyAnnotationServiceToExploded'
+			    }
+			    binningWatch {
+			        files fileTree(BINNING_UTIL_SRC).include('**/*.java')
+			        tasks ':binning-utilities:jar', 'copyBinningUtilToExploded'
+			    }
+			    mathWatch {
+			        files fileTree(MATH_UTIL_SRC).include('**/*.java')
+			        tasks ':math-utilities:jar', 'copyMathUtilToExploded'
+			    }
+			    clientwatch {
+			        files fileTree(TILE_CLIENT_SRC).include('**/*.js', '**/*.css')
+			        tasks ':tile-client:assemble', 'copyTileClientToExploded'
+			    }
+			}
+
+			// Add the tile-service and annotation-service dependencies
 			dependencies {
 				compile project(path: ":tile-service")
 				compile project(path: ":annotation-service")
 			}
-
-			// configure the war task to pick up the tile client files
+		
+		
+			// configure the war task to pick up the tile client build files
 			war {
-				from project(":tile-client").configurations.clientFiles.artifacts.files
+				doLast {
+					ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
+					copyTileClientToExploded.execute()
+				}
 			}
+			war.dependsOn ":tile-client:zipMinifiedFiles"
 
-			war.dependsOn ":tile-client:exportClientFiles"
+			// Jetty Exploded War
+			// Configure the jetty run task
+			jettyRun {
+				httpPort = 8080
+				contextPath = project.name
+    			scanIntervalSeconds = 1
+    			reload = "automatic"
+    			webAppSourceDirectory = file(EXPLODED_DIR)
+			}
+			jettyRun.dependsOn watchThread
+			jettyRun.dependsOn war
 		}
 	}
 }
