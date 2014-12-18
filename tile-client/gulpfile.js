@@ -54,7 +54,7 @@ gulp.task('clean', function () {
 });
 
 gulp.task('lint', function() {
-     return gulp.src( ['src/js/**/*.js', '!src/js/openlayers/*.js'] )
+     return gulp.src( ['src/js/**/*.js'] )
              .pipe( jshint() )
              .pipe( jshint('.jshintrc') )
              .pipe( jshint.reporter('jshint-stylish') );
@@ -77,7 +77,7 @@ gulp.task('build-min-js', [ 'lint' ], function() {
     return buildMin( './src/js/api.js', 'tiles.min.js' );
 });
 
-gulp.task('build-js', [ 'lint' ], function() {
+gulp.task('build-js', function() {
     return build( './src/js/api.js', 'tiles.js' );
 });
 
@@ -94,8 +94,16 @@ gulp.task('build', [ 'clean' ], function() {
     gulp.start( 'build-rest-js' );
     gulp.start( 'build-css' );   
     gulp.start( 'build-min-js' );;
-    gulp.start( 'build-rest-min-js' );
-    gulp.start( 'build-min-css' );
+    //gulp.start( 'build-rest-min-js' );
+    //gulp.start( 'build-min-css' );
+});
+
+gulp.task('debugjs', function() {
+    gulp.start( 'build-js' );
+});
+
+gulp.task('debugcss', function() {
+    gulp.start( 'build-css' );
 });
 
 gulp.task('default', [ 'build' ], function() {
