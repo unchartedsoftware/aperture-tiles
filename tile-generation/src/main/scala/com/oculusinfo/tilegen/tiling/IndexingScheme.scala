@@ -39,6 +39,24 @@ trait IndexScheme[T] {
 	def toCartesianEndpoints (t: T): (Double, Double, Double, Double)
 }
 
+class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with Serializable {
+	def asDouble (x: Any): Double =
+	x match {
+		case c: Byte => c.toDouble
+		case c: Short => c.toDouble
+		case c: Int => c.toDouble
+		case c: Long => c.toDouble
+		case c: Float => c.toDouble
+		case c: Double => c.toDouble
+	}
+
+	def toCartesian (coords: Seq[Any]): (Double, Double) =
+		(asDouble(coords(0)), asDouble(coords(1)))
+
+	def toCartesianEndpoints (coords: Seq[Any]): (Double, Double, Double, Double) =
+		(asDouble(coords(0)), asDouble(coords(1)), asDouble(coords(2)), asDouble(coords(3)))
+}
+
 class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
 	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
 	def toCartesianEndpoints (coords: (Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._1, coords._2, coords._2) 	//TODO -- redundant, see note above

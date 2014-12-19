@@ -26,12 +26,26 @@
 package com.oculusinfo.tilegen.datasets
 
 
-import com.oculusinfo.binning.TilePyramid
+import java.lang.{Integer => JavaInt}
+import java.lang.{Double => JavaDouble}
+
+import java.util.ArrayList
+
+import com.oculusinfo.binning.impl.{AOITilePyramid, WebMercatorTilePyramid}
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
+import com.oculusinfo.binning.metadata.PyramidMetaData
+import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.binning.{TileIndex, TileData, TilePyramid}
+import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.tilegen.spark.{DoubleMaxAccumulatorParam, DoubleMinAccumulatorParam}
-import com.oculusinfo.tilegen.tiling.IndexScheme
+import com.oculusinfo.tilegen.tiling.{CartesianSchemaIndexScheme, IndexScheme}
+import com.oculusinfo.tilegen.tiling.analytics.{NumericSumBinningAnalytic, AnalysisDescription, BinningAnalytic}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import org.apache.avro.file.CodecFactory
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.sql.{SQLContext, SchemaRDD}
+import org.apache.spark.streaming.dstream.DStream
 
 import scala.reflect.ClassTag
 
@@ -53,35 +67,34 @@ import scala.reflect.ClassTag
  * <li> Standard typed transformations based on spark.sql DataTypes.</li>
  * </ul>
  *
- * @param data The data on which this task is run.
+ * @param sqlc The SQL context in which to run
+ * @param table The table in that SQL context containing our raw data.
  * @param config An object specifying the configuration details of this task.
  * @param indexer An object to extract the index value(s) from the raw data
  * @param valuer An object to extract the binnable value(s) from the raw data
+ * @param analyzer An object to extract data analytic value(s) from the raw data
  * @param pyramidLevels The levels of the tile pyramid this tiling task is expecting to calculate.
  * @param tileWidth The width, in bins, of any tile this task calculates.
  * @param tileHeight The height, in bins, of any tile this task calculates.
  *
- * @tparam IT The index type used by this binning task when calculating bins coordinates.
  * @tparam PT The processing value type used by this binning task when calculating bin values.
  * @tparam BT The final bin type used by this binning task when writing tiles.
  * @tparam AT The type of tile analytic used by this binning task.
  * @tparam DT The type of data analytic used by this binning task.
  */
-abstract class BinningTask[IT: ClassTag, PT: ClassTag, BT, AT: ClassTag, DT: ClassTag]
-(data: SchemaRDD,
- config: KeyValueArgumentSource,
- indexer: IndexExtractor[IT],
- valuer: ValueExtractor,
- pyramidLevels: Seq[Seq[Int]],
- val tileWidth: Int = 256,
- val tileHeight: Int = 256) {
-	val indexTypeTag = implicitly[ClassTag[IT]]
-	val binTypeTag = implicitly[ClassTag[PT]]
-	val dataAnalysisTypeTag = implicitly[ClassTag[DT]]
-	val tileAnalysisTypeTag = implicitly[ClassTag[AT]]
-
+abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+	(sqlc: SQLContext,
+	 table: String,
+	 config: KeyValueArgumentSource,
+	 indexer: IndexExtractor,
+	 valuer: ValueExtractor[PT, BT],
+	 analyzer: AnalyticExtractor[BT, AT, DT],
+	 pyramidLevels: Seq[Seq[Int]],
+	 val tileWidth: Int = 256,
+	 val tileHeight: Int = 256)
+		extends Dataset[Seq[Any], PT, DT, AT, BT] {
 	/** Get the name by which the tile pyramid produced by this task should be known. */
-	val name = {
+	val getName = {
 		val name = config.getString("oculus.binning.name",
 		                            "The name of the tileset",
 		                            Some("unknown"))
@@ -95,23 +108,22 @@ abstract class BinningTask[IT: ClassTag, PT: ClassTag, BT, AT: ClassTag, DT: Cla
 
 
 	/** Get a description of the tile pyramid produced by this task. */
-	def description =
+	def getDescription =
 		config.getStringOption("oculus.binning.description", "The description to put in the tile metadata")
-				.getOrElse("Binned " + name + " data showing " + indexer.description)
+			.getOrElse("Binned " + getName + " data showing " + indexer.description)
 
 	/** The levels this task is intended to tile, in groups that should be tiled together */
-	def levels = pyramidLevels
+	def getLevels = pyramidLevels
 
 	/** The tile pyramid */
-	def tilePyramid = {
-		val extractor = new FieldExtractor(config)
+	def getTilePyramid = {
 		val autoBounds = (
-				allowAutoBounds &&
-						config.getBoolean("oculus.binning.projection.autobounds",
-						                  "If true, calculate tile pyramid bounds automatically; " +
-								                  "if false, use values given by properties",
-						                  Some(true))
-				)
+			allowAutoBounds &&
+				config.getBoolean("oculus.binning.projection.autobounds",
+				                  "If true, calculate tile pyramid bounds automatically; " +
+					                  "if false, use values given by properties",
+				                  Some(true))
+		)
 		val (minX, maxX, minY, maxY) =
 			if (autoBounds) {
 				axisBounds
@@ -119,76 +131,218 @@ abstract class BinningTask[IT: ClassTag, PT: ClassTag, BT, AT: ClassTag, DT: Cla
 				(0.0, 0.0, 0.0, 0.0)
 			}
 
-		extractor.getTilePyramid(autoBounds, "", minX, maxX, "", minY, maxY)
+		indexer.getTilePyramid(autoBounds, "", minX, maxX, "", minY, maxY)
 	}
-
-	private lazy val axisBounds = getAxisBounds()
-
 
 	/** Inheritors may override this to disallow auto-bounds calculations when they make no sense. */
 	protected def allowAutoBounds = true
 
+	/** The number of bins per tile, along the X axis, in tiles produced by this task */
+	override def getNumXBins = tileWidth
 
-	private def transformRDD[T](transformation: RDD[(IT, PT, Option[DT])] => RDD[T]): RDD[T] = {
+	/** The number of bins per tile, along the Y axis, in tiles produced by this task */
+	override def getNumYBins = tileHeight
+
+	/** Get the number of partitions to use when reducing data to tiles */
+	override def getConsolidationPartitions =
+		config.getIntOption("oculus.binning.consolidationPartitions",
+		                    "The number of partitions into which to consolidate data when done")
+
+	/** Get the scheme used to determine axis values for our tiles */
+	def getIndexScheme = indexer.indexScheme
+
+	/** Get the serializer used to serialize our tiles */
+	def getTileSerializer = valuer.serializer
+
+	/** Get the analytic used to aggregate the bin data for our tiles */
+	def getBinningAnalytic = valuer.binningAnalytic
+
+	/** Get the data analytics to be used and inserted into our tiles */
+	def getDataAnalytics: Option[AnalysisDescription[_, DT]] = analyzer.dataAnalytics
+
+	/** Get the tile analytics to apply to and record in our tiles */
+	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]] = analyzer.tileAnalytics
+
+	/**
+	 * Creates a blank metadata describing this dataset
+	 */
+	override def createMetaData(pyramidId: String): PyramidMetaData = {
+		val tilePyramid = getTilePyramid
+		val fullBounds = tilePyramid.getTileBounds(
+			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
+		)
+		new PyramidMetaData(pyramidId,
+		                    getDescription,
+		                    getNumXBins, getNumYBins,
+		                    tilePyramid.getTileScheme(),
+		                    tilePyramid.getProjection(),
+		                    null,
+		                    fullBounds,
+		                    new ArrayList[Pair[JavaInt, String]](),
+		                    new ArrayList[Pair[JavaInt, String]]())
+	}
+
+
+	private def transformRDD[T](transformation: RDD[(Seq[Any], PT, Option[DT])] => RDD[T]): RDD[T] = {
 		null
 	}
+
+	private lazy val axisBounds = getAxisBounds()
+
 	private def getAxisBounds(): (Double, Double, Double, Double) = {
-		val localIndexer = indexer
-		val cartesianConversion = localIndexer.indexScheme.toCartesian(_)
-		val toCartesian: RDD[(IT, PT, Option[DT])] => RDD[(Double, Double)] =
-			rdd => rdd.map(_._1).map(cartesianConversion)
-		val coordinates = transformRDD(toCartesian)
+		val selectStmt =
+			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
+				.mkString("SELECT ", ", ", " FROM " + table)
+		val bounds = sqlc.sql(selectStmt).take(1)(0)
+		val minBounds = bounds.grouped(2).map(_(0)).toSeq
+		val maxBounds = bounds.grouped(2).map(_(1)).toSeq
+		val (minX, minY) = indexer.indexScheme.toCartesian(minBounds)
+		val (maxX, maxY) = indexer.indexScheme.toCartesian(maxBounds)
+		(minX, maxX, minY, maxY)
+	}
+}
+class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+	(sqlc: SQLContext,
+	 table: String,
+	 config: KeyValueArgumentSource,
+	 indexer: IndexExtractor,
+	 valuer: ValueExtractor[PT, BT],
+	 analyzer: AnalyticExtractor[BT, AT, DT],
+	 pyramidLevels: Seq[Seq[Int]],
+	 tileWidth: Int = 256,
+	 tileHeight: Int = 256)
+		extends BinningTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, analyzer, pyramidLevels, tileWidth, tileHeight)
+{
+	type STRATEGY_TYPE = StaticBinningTaskProcessingStrategy
+	override protected var strategy: STRATEGY_TYPE = null
+	def initialize (): Unit = {
+		initialize(new StaticBinningTaskProcessingStrategy())
+	}
+	class StaticBinningTaskProcessingStrategy
+			extends StaticProcessingStrategy[Seq[Any], PT, DT](sqlc.sparkContext)
+	{
+		def getDataAnalytics: Option[AnalysisDescription[_, DT]] = analyzer.dataAnalytics
 
-		// Figure out our axis bounds
-		val minXAccum = coordinates.context.accumulator(Double.MaxValue)(new DoubleMinAccumulatorParam)
-		val maxXAccum = coordinates.context.accumulator(Double.MinValue)(new DoubleMaxAccumulatorParam)
-		val minYAccum = coordinates.context.accumulator(Double.MaxValue)(new DoubleMinAccumulatorParam)
-		val maxYAccum = coordinates.context.accumulator(Double.MinValue)(new DoubleMaxAccumulatorParam)
+		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
+			val allFields = indexer.fields ++ valuer.fields ++ analyzer.fields
 
-		config.setDistributedComputation(true)
-		coordinates.foreach(p => {
-			val (x, y) = p
-			minXAccum += x
-			maxXAccum += x
-			minYAccum += y
-			maxYAccum += y
+			val selectStmt =
+				allFields.mkString("SELECT ", ", ", " FROM "+table)
+
+			val data = sqlc.sql(selectStmt)
+
+			val indexFields = indexer.fields.length
+			val valueFields = valuer.fields.length
+			val localValuer = valuer
+			val analytics = analyzer.dataAnalytics
+			data.map(row =>
+				{
+					val index = row.take(indexFields)
+
+					val values = row.drop(indexFields).take(valueFields)
+					val value = localValuer.convert(values)
+
+					val analyticInputs = row.drop(indexFields+valueFields)
+					val analysis = analytics.map(analytic => analytic.convert(analyticInputs))
+
+					(index, value, analysis)
+				}
+			)
 		}
-		)
-		config.setDistributedComputation(false)
-
-		val minX = minXAccum.value
-		val maxX = maxXAccum.value
-		val minY = minYAccum.value
-		val maxY = maxYAccum.value
-
-		// Include a fraction of a bin extra in the bounds, so the max goes on the
-		// right side of the last tile, rather than forming an extra tile.
-		val maxLevel = {
-			if (levels.isEmpty) 18
-			else levels.map(_.reduce(_ max _)).reduce(_ max _)
-		}
-		val epsilon = (1.0 / (1 << maxLevel))
-		val adjustedMaxX = maxX + (maxX - minX) * epsilon / (tileWidth * tileWidth)
-		val adjustedMaxY = maxY + (maxY - minY) * epsilon / (tileHeight * tileHeight)
-
-		(minX, adjustedMaxX, minY, adjustedMaxY)
 	}
 }
 
-abstract class IndexExtractor[IT] {
-	def name: String
 
-	def description: String
 
-	def indexScheme: IndexScheme[IT]
-}
 
-abstract class ValueExtractor {
-	def name: String
-}
 
-class FieldExtractor (config: KeyValueArgumentSource) {
+abstract class IndexExtractor (config: KeyValueArgumentSource) {
+	def name: String = fields.mkString(".")
+
+	def description: String = "Cartesian index scheme"
+
+	def fields: Seq[String]
+
+	def indexScheme: IndexScheme[Seq[Any]]
+
 	def getTilePyramid(autoBounds: Boolean,
 	                   xField: String, minX: Double, maxX: Double,
-	                   yField: String, minY: Double, maxY: Double): TilePyramid = null
+	                   yField: String, minY: Double, maxY: Double): TilePyramid = {
+		val projection = config.getString("oculus.binning.projection",
+		                                  "The type of tile pyramid to use",
+		                                  Some("EPSG:4326"))
+		if ("EPSG:900913" == projection) {
+			new WebMercatorTilePyramid()
+		} else {
+			if (autoBounds) {
+				new AOITilePyramid(minX, minY, maxX, maxY)
+			} else {
+				val minXp = config.getDoubleOption("oculus.binning.projection.minx",
+				                                   "The minimum x value to use for "+
+					                                   "the tile pyramid").get
+				val maxXp = config.getDoubleOption("oculus.binning.projection.maxx",
+				                                   "The maximum x value to use for "+
+					                                   "the tile pyramid").get
+				val minYp = config.getDoubleOption("oculus.binning.projection.miny",
+				                                   "The minimum y value to use for "+
+					                                   "the tile pyramid").get
+				val maxYp = config.getDoubleOption("oculus.binning.projection.maxy",
+				                                   "The maximum y value to use for "+
+					                                   "the tile pyramid").get
+				new AOITilePyramid(minXp, minYp, maxXp, maxYp)
+			}
+		}
+	}
+}
+
+class CartesianIndexExtractor (config: KeyValueArgumentSource) extends IndexExtractor(config){
+	private val _fields = config.getStringPropSeq("oculus.binning.index.field",
+	                                              "The field or fields used to determine the coordinates of each "+
+		                                              "record in tile space",
+	                                              None).map(_.trim)
+	def fields = _fields
+
+	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
+
+}
+
+abstract class ValueExtractor[PT: ClassTag, BT: ClassTag] extends Serializable {
+	def name: String
+
+	/** The fields needed to calculate the value to be used for binning. */
+	def fields: Seq[String]
+
+	/**
+	 * Convert a sequence of values, one for each of the fields listed by the fields method, into a processable 
+	 * value for binning
+	 * */
+	def convert: Seq[Any] => PT
+
+	def binningAnalytic: BinningAnalytic[PT, BT]
+
+	def serializer: TileSerializer[BT]
+}
+
+class CountValueExtractor2 (config: KeyValueArgumentSource)
+		extends ValueExtractor[Double, JavaDouble] with Serializable
+{
+	def name = "count"
+	def fields = Seq[String]()
+	def convert = (s: Seq[Any]) => 1.0
+	def binningAnalytic = new NumericSumBinningAnalytic[Double, JavaDouble]()
+	def serializer = new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
+}
+
+
+/**
+ * A class to encapsulate the data analytics needed by a tiling task, and the information needed to obtain the
+ * data to run them.
+ */
+
+abstract class AnalyticExtractor[BT, AT: ClassTag, DT: ClassTag] {
+	def fields: Seq[String]
+
+	def tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]]
+
+	def dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]]
 }
