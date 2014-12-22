@@ -40,7 +40,7 @@ public class ResourcePyramidSource extends PyramidSource {
 	private String _extension;
 
 	public ResourcePyramidSource (String rootPath, String extension) {
-		_rootPath=rootPath;
+		_rootPath = rootPath;
 		_extension = extension;
 	}
 	
