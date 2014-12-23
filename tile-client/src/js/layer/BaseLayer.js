@@ -49,7 +49,7 @@
 	function BaseLayer( spec ) {
         // set defaults
         spec = spec || {};
-        spec.type = spec.type || "Blank";
+        spec.type = spec.type || "blank";
         spec.options = spec.options || {
             color : "rgb(0,0,0)"
         };
@@ -65,15 +65,15 @@
         var spec = this.spec,
             styledMapType;
 
-        switch ( this.spec.type ) {
+        switch ( this.spec.type.toLowerCase() ) {
 
-            case "Blank":
+            case "blank":
 
                 this.olLayer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
                 this.map.getElement().style['background-color'] = spec.options.color;
                 break;
 
-            case "Google":
+            case "google":
 
                 if ( spec.options.styles ) {
                     spec.options.type = "styled";
@@ -81,7 +81,7 @@
                 this.olLayer = new OpenLayers.Layer.Google( "BaseLayer", spec.options );
                 break;
 
-            case "TMS":
+            case "tms":
 
                 this.olLayer = new OpenLayers.Layer.TMS( "BaseLayer", spec.url, spec.options );
                 break;
