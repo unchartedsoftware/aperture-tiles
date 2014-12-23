@@ -48,7 +48,11 @@
          */
         getEncodedImage: function( layerId, params, success ) {
             var _params = ( typeof params === "object" ) ? params : null,
-                _success = ( typeof success === "function" ) ? success : null;
+                _success = ( typeof success === "function" )
+                    ? success
+                    : ( typeof params === "function" )
+                        ? params
+                        : null;
             $.get(
                 'rest/v1.0/legend/' + layerId + Util.encodeQueryParams( _params )
             ).then(
@@ -66,7 +70,11 @@
          */
         getImage: function( layerId, params, success ) {
             var _params = ( typeof params === "object" ) ? params : {},
-                _success = ( typeof success === "function" ) ? success : null;
+                _success = ( typeof success === "function" )
+                    ? success
+                    : ( typeof params === "function" )
+                        ? params
+                        : null;
             // explicitly set output type to png image
             _params.output = 'png';
             $.get(
