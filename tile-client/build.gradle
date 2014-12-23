@@ -58,9 +58,3 @@ publishing {
         }
     }
 }
-
-// Add the tile service war to the overlay config so we can reference it below.  Pull the 
-// tile service war out of that project's exposed config.
-artifacts {
-	clientFiles exportClientFiles.clientOutput
-}

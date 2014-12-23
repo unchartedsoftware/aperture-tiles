@@ -1,3 +1,7 @@
+plugins {
+	id "com.bluepapa32.watch" version "0.1.4"
+}
+
 description = "A website template to display aperture-tiles data"
 
 // Plugin setup
