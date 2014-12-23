@@ -3,7 +3,6 @@
 global._ = require('lodash');
 
 var path = require('path'),
-    assert = require("assert"),
     srcPath = path.join( __dirname, '../../src/js/' ),  
     TileService = require( srcPath + 'rest/TileService' ),
     Util = require( srcPath + 'util/Util' ),
