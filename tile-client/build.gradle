@@ -2,10 +2,42 @@ plugins {
 	id "com.moowork.gulp" version "0.1"
 }
 
+// pull in maven publish plugin to let us upload the .zip file
+apply plugin: 'maven-publish'
 description = "A basic map client that allows for client-side user interaction with"
 
-task exportClientFiles {
-	ext.clientOutput = file(buildDir)
+task test {}
+test.dependsOn gulp_test
+
+/**
+ *	DEBUG BUILD (builds non-minified files with source maps, assumes dependencies are installed)
+ */
+// empty tasks for debug build
+task build_debug_js {}
+task build_debug_css {}
+// build js
+gulp_debugjs.inputs.dir "$projectDir/src"
+gulp_debugjs.outputs.dir "$buildDir"
+build_debug_js.dependsOn gulp_debugjs
+// build css
+gulp_debugcss.inputs.dir "$projectDir/src"
+gulp_debugcss.outputs.dir "$buildDir"
+build_debug_css.dependsOn gulp_debugcss
+
+/**
+ *	FULL BUILD (builds everything, will check for dependencies)
+ */
+
+// empty build task
+task build {}
+// empty install task
+task install {}
+
+// take the files from the build directory and zip them
+task zipMinifiedFiles(type: Zip) {
+ 	from buildDir
+ 	include "*.js", "*.css"
+ 	destinationDir file( buildDir.getPath() + "/distribution" ) 
 }
 
 gulp_build.inputs.dir "$projectDir/src"
@@ -13,13 +45,18 @@ gulp_build.outputs.dir "$buildDir"
 gulp_build.dependsOn 'installGulp'
 gulp_build.dependsOn 'npmInstall'
 
-exportClientFiles.dependsOn gulp_build
+zipMinifiedFiles.dependsOn gulp_build
+assemble.dependsOn zipMinifiedFiles
+build.dependsOn assemble
+install.dependsOn build
+install.dependsOn publishToMavenLocal
 
-assemble.dependsOn exportClientFiles
-
-// Define a configuration for the war overlay process.
-configurations {
-	clientFiles
+publishing {
+    publications {
+        uploadMaven(MavenPublication) {
+            artifact zipMinifiedFiles
+        }
+    }
 }
 
 // Add the tile service war to the overlay config so we can reference it below.  Pull the 

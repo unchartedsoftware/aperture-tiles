@@ -81,6 +81,8 @@
         "google"    : false,
         "$"         : false,
         "_"         : false,
-        "OpenLayers": false
+        "OpenLayers": false,
+        "describe"  : false,
+        "it"        : false
     }        
 }
