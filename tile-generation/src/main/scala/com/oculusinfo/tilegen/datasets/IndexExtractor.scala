@@ -71,7 +71,7 @@ object CSVIndexExtractor {
 				val yVar = properties.getString("oculus.binning.yField",
 				                                "The field to use for the Y axis of tiles produced",
 				                                Some(CSVDatasetBase.ZERO_STR))
-				new CartesianIndexExtractor(xVar, yVar)
+				new CartesianCSVIndexExtractor(xVar, yVar)
 			}
 			case "graph" => {
 				// edges require two cartesian endpoints
@@ -166,7 +166,7 @@ abstract class TimeRangeCSVIndexExtractor[IT: ClassTag] extends CSVIndexExtracto
 	def msPerTimeRange: Double
 }
 
-class CartesianIndexExtractor(xVar: String, yVar: String)
+class CartesianCSVIndexExtractor(xVar: String, yVar: String)
 		extends CSVIndexExtractor[(Double, Double)]
 {
 	private val scheme =
