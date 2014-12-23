@@ -37,13 +37,25 @@ var appStart = function() {
             baseLayer,
             serverLayer;
 
-        baseLayer = new tiles.BaseLayer();
+        baseLayer = new tiles.BaseLayer({
+            options: {
+                color: "#000"
+            }
+        });
 
         serverLayer = new tiles.ServerLayer({
             source: layers["julia-set"]
         });
 
-        map = new tiles.Map( "map" );
+        map = new tiles.Map( "map", {
+            pyramid : {
+                type : "AreaOfInterest",
+                minX : -2,
+                maxX : 2,
+                minY : -2,
+                maxY : 2
+            }
+        });
         map.add( serverLayer );
         map.add( baseLayer );
 
