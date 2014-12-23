@@ -7,6 +7,7 @@ apply plugin: 'maven-publish'
 description = "A basic map client that allows for client-side user interaction with"
 
 task test {}
+test.dependsOn assemble
 test.dependsOn gulp_test
 
 /**
@@ -48,6 +49,7 @@ gulp_build.dependsOn 'npmInstall'
 zipMinifiedFiles.dependsOn gulp_build
 assemble.dependsOn zipMinifiedFiles
 build.dependsOn assemble
+build.dependsOn test
 install.dependsOn build
 install.dependsOn publishToMavenLocal
 
