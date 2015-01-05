@@ -14,4 +14,4 @@ build
 test-output
 .gradle
 bin
-/**/data/aperture-config.json
+*/**/coverage

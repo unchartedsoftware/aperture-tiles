@@ -29,7 +29,7 @@
  *
  *      - Retrieving a tiles worth of annotation data via GET request
  *      - Writing an annotation via POST request
- *      - Modifying an annotation via PPOST request
+ *      - Modifying an annotation via POST request
  *      - Removing an annotation via POST request
  */
 ( function() {
@@ -53,7 +53,11 @@
          */
         getTileJSON: function( layerId, level, x, y, params, success ) {
             var _params = ( typeof params === "object" ) ? params : null,
-                _success = ( typeof success === "function" ) ? success : null;
+                _success = ( typeof success === "function" )
+                    ? success
+                    : ( typeof params === "function" )
+                        ? params
+                        : null;
             $.get(
                 'rest/v1.0/annotation/'
                 + layerId + "/"
@@ -77,7 +81,7 @@
         writeAnnotation: function( layerId, annotation, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/annotation/',
+                'rest/v1.0/annotation',
                 JSON.stringify({
                     type: "write",
                     annotation: annotation,
@@ -100,7 +104,7 @@
         modifyAnnotation: function( layerId, annotation, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/annotation/',
+                'rest/v1.0/annotation',
                 JSON.stringify({
                     type: "modify",
                     annotation: annotation,
@@ -122,7 +126,7 @@
         removeAnnotation: function( layerId, certificate, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/annotation/',
+                'rest/v1.0/annotation',
                 JSON.stringify({
                     type: "remove",
                     certificate: certificate,

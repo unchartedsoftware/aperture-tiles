@@ -11,17 +11,19 @@
     }
   ],
   "main": "app.js",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "browserify": "^6.0.2",
     "del": "^1.1.0",
     "gulp": "^3.8.10",
     "gulp-concat": "^2.4.2",
     "gulp-csso": "^0.2.9",
+    "gulp-istanbul": "^0.3.1",
     "gulp-jshint": "^1.8.5",
+    "gulp-mocha": "^1.1.0",
     "gulp-uglify": "^1.0.1",
     "jshint-stylish": "^1.0.0",
+    "lodash": "^2.4.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.0.0"
   }

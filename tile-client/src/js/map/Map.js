@@ -276,7 +276,7 @@
         // element id
         this.id = id;
         // set map tile pyramid
-        if ( spec.pyramid.type === "AreaOfInterest" ) {
+        if ( spec.pyramid.type && spec.pyramid.type.toLowerCase() === "areaofinterest" ) {
             this.pyramid = new AreaOfInterestTilePyramid( spec.pyramid );
         } else {
             this.pyramid = new WebMercatorTilePyramid();

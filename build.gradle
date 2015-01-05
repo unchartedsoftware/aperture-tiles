@@ -210,13 +210,21 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    }
 			}
 
-			// Copy client build files into the exploded war
-			task copyTileClientToExploded(type: Copy) {
-			    from fileTree(TILE_CLIENT_BUILD).include("*.min.js", "*.min.css")
+			// Copy client js build files into the exploded war
+			task copyClientJsToExploded(type: Copy) {
+				from fileTree(TILE_CLIENT_BUILD).include("*.js")
 			    into EXPLODED_DIR
 			}
-			copyTileClientToExploded.inputs.dir TILE_CLIENT_BUILD
-			copyTileClientToExploded.outputs.dir EXPLODED_DIR
+			copyClientJsToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyClientJsToExploded.outputs.dir EXPLODED_DIR
+
+			// Copy client css build files into the exploded war
+			task copyClientCssToExploded(type: Copy) {
+				from fileTree(TILE_CLIENT_BUILD).include("*.css")
+			    into EXPLODED_DIR
+			}
+			copyClientCssToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyClientCssToExploded.outputs.dir EXPLODED_DIR
 
 			// Copy tile-service jar files into the exploded war
 			task copyTileServiceToExploded(type: Copy) {
@@ -268,9 +276,13 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			        files fileTree(MATH_UTIL_SRC).include('**/*.java')
 			        tasks ':math-utilities:jar', 'copyMathUtilToExploded'
 			    }
-			    clientwatch {
-			        files fileTree(TILE_CLIENT_SRC).include('**/*.js', '**/*.css')
-			        tasks ':tile-client:assemble', 'copyTileClientToExploded'
+			    clientJsWatch {
+			        files fileTree(TILE_CLIENT_SRC).include('**/*.js')
+			        tasks ':tile-client:build_debug_js', 'copyClientJsToExploded'
+			    }
+			    clientCssWatch {
+			        files fileTree(TILE_CLIENT_SRC).include('**/*.css')
+			        tasks ':tile-client:build_debug_css', 'copyClientCssToExploded'
 			    }
 			}
 
@@ -285,10 +297,12 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			war {
 				doLast {
 					ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
-					copyTileClientToExploded.execute()
+					copyClientJsToExploded.execute()
+					copyClientCssToExploded.execute()
 				}
 			}
-			war.dependsOn ":tile-client:zipMinifiedFiles"
+			// install to ensure everything is ready for debug hotswap builds
+			war.dependsOn ":tile-client:install"
 
 			// Jetty Exploded War
 			// Configure the jetty run task
