@@ -32,6 +32,7 @@ import java.util.Properties
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -86,17 +87,21 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		props.setProperty("oculus.binning.source.type", "schema")
 		props.setProperty("oculus.binning.table", "test")
 		props.setProperty("oculus.binning.projection.autobounds", "false")
-		props.setProperty("oculus.binning.projection.minx", "0.0")
-		props.setProperty("oculus.binning.projection.maxx", "7.9999")
-		props.setProperty("oculus.binning.projection.miny", "0.0")
-		props.setProperty("oculus.binning.projection.maxy", "7.9999")
 		props.setProperty("oculus.binning.index.type", "cartesian")
+		props.setProperty("oculus.binning.index.pyramid.minX", "0.0")
+		props.setProperty("oculus.binning.index.pyramid.maxX", "7.9999")
+		props.setProperty("oculus.binning.index.pyramid.minY", "0.0")
+		props.setProperty("oculus.binning.index.pyramid.maxY", "7.9999")
 		props.setProperty("oculus.binning.index.field.0", "x")
 		props.setProperty("oculus.binning.index.field.1", "y")
 		props.setProperty("oculus.binning.levels.0", "1")
 		val config = new PropertiesWrapper(props)
+		val jsonConfig = JsonUtilities.propertiesObjToJSON(props)
 
-		val indexer = new CartesianIndexExtractor(config)
+		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
+		indexerFactory.readConfiguration(jsonConfig)
+		val indexer = indexerFactory.produce(classOf[IndexExtractor])
+
 		val valuer = new CountValueExtractor2(config)
 		val analyzer = new AnalyticExtractor[JavaDouble, Int, Int] {
 			override def fields: Seq[String] = Seq[String]()

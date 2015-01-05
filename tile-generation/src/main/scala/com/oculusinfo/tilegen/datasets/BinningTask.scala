@@ -256,55 +256,7 @@ class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 
 
 
-abstract class IndexExtractor (config: KeyValueArgumentSource) {
-	def name: String = fields.mkString(".")
 
-	def description: String = "Cartesian index scheme"
-
-	def fields: Seq[String]
-
-	def indexScheme: IndexScheme[Seq[Any]]
-
-	def getTilePyramid(autoBounds: Boolean,
-	                   xField: String, minX: Double, maxX: Double,
-	                   yField: String, minY: Double, maxY: Double): TilePyramid = {
-		val projection = config.getString("oculus.binning.projection",
-		                                  "The type of tile pyramid to use",
-		                                  Some("EPSG:4326"))
-		if ("EPSG:900913" == projection) {
-			new WebMercatorTilePyramid()
-		} else {
-			if (autoBounds) {
-				new AOITilePyramid(minX, minY, maxX, maxY)
-			} else {
-				val minXp = config.getDoubleOption("oculus.binning.projection.minx",
-				                                   "The minimum x value to use for "+
-					                                   "the tile pyramid").get
-				val maxXp = config.getDoubleOption("oculus.binning.projection.maxx",
-				                                   "The maximum x value to use for "+
-					                                   "the tile pyramid").get
-				val minYp = config.getDoubleOption("oculus.binning.projection.miny",
-				                                   "The minimum y value to use for "+
-					                                   "the tile pyramid").get
-				val maxYp = config.getDoubleOption("oculus.binning.projection.maxy",
-				                                   "The maximum y value to use for "+
-					                                   "the tile pyramid").get
-				new AOITilePyramid(minXp, minYp, maxXp, maxYp)
-			}
-		}
-	}
-}
-
-class CartesianIndexExtractor (config: KeyValueArgumentSource) extends IndexExtractor(config){
-	private val _fields = config.getStringPropSeq("oculus.binning.index.field",
-	                                              "The field or fields used to determine the coordinates of each "+
-		                                              "record in tile space",
-	                                              None).map(_.trim)
-	def fields = _fields
-
-	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
-
-}
 
 abstract class ValueExtractor[PT: ClassTag, BT: ClassTag] extends Serializable {
 	def name: String

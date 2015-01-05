@@ -26,9 +26,11 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import java.util.Date
 
 import com.oculusinfo.binning.impl.AOITilePyramid
 
+import scala.collection.mutable.ArrayBuffer
 
 
 trait IndexScheme[T] {
@@ -39,16 +41,24 @@ trait IndexScheme[T] {
 	def toCartesianEndpoints (t: T): (Double, Double, Double, Double)
 }
 
-class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with Serializable {
+trait TimeIndexScheme[T] extends IndexScheme[T] {
+	def extractTime (t: T): Double
+}
+
+trait NumberConverter {
 	def asDouble (x: Any): Double =
-	x match {
-		case c: Byte => c.toDouble
-		case c: Short => c.toDouble
-		case c: Int => c.toDouble
-		case c: Long => c.toDouble
-		case c: Float => c.toDouble
-		case c: Double => c.toDouble
-	}
+		x match {
+			case c: Byte => c.toDouble
+			case c: Short => c.toDouble
+			case c: Int => c.toDouble
+			case c: Long => c.toDouble
+			case c: Float => c.toDouble
+			case c: Double => c.toDouble
+			case c: Date => c.getTime
+		}
+}
+
+class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with NumberConverter with Serializable {
 
 	def toCartesian (coords: Seq[Any]): (Double, Double) =
 		(asDouble(coords(0)), asDouble(coords(1)))
@@ -56,6 +66,49 @@ class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with Serializable
 	def toCartesianEndpoints (coords: Seq[Any]): (Double, Double, Double, Double) =
 		(asDouble(coords(0)), asDouble(coords(1)), asDouble(coords(2)), asDouble(coords(3)))
 }
+
+class TimeRangeCartesianSchemaIndexScheme (startDate: Double, secsPerPeriod: Double)
+		extends TimeIndexScheme[Seq[Any]] with NumberConverter with Serializable
+{
+	private val msPerTimeRange = secsPerPeriod * 1000
+	def toCartesian (coords: Seq[Any]): (Double, Double) = (asDouble(coords(1)), asDouble(coords(2)))
+	def extractTime (coords: Seq[Any]): Double = {
+		def floorDate(d: Double) = Math.floor((d - startDate) / msPerTimeRange) * msPerTimeRange + startDate
+		floorDate(asDouble(coords(0)))
+	}
+	def toCartesianEndpoints (coords: Seq[Any]): (Double, Double, Double, Double) =
+	//TODO -- redundant, see note above
+		(asDouble(coords(1)), asDouble(coords(2)), asDouble(coords(4)), asDouble(coords(5)))
+}
+
+class IPv4ZCurveSchemaIndexScheme extends IndexScheme[Seq[Any]] with Serializable {
+	def toCartesian (values: Seq[Any]): (Double, Double) = {
+		val value = values(0)
+		val ipAddress: Array[Byte] = value match {
+			case s: String => s.split("\\.").map(_.trim.toByte)
+			case a: ArrayBuffer[Byte] => a.toArray
+		}
+		def getXDigit (byte: Byte): Long =
+			(((byte & 0x40) >> 3) |
+					((byte & 0x10) >> 2) |
+					((byte & 0x04) >> 1) |
+					((byte & 0x01))).toLong
+
+		def getYDigit (byte: Byte): Long =
+			(((byte & 0x80) >> 4) |
+					((byte & 0x20) >> 3) |
+					((byte & 0x08) >> 2) |
+					((byte & 0x02) >> 1)).toLong
+
+		ipAddress.map(byte => (getXDigit(byte), getYDigit(byte)))
+				.foldLeft((0.0, 0.0))((a, b) =>
+			(16.0*a._1+b._1, 16.0*a._2+b._2)
+				)
+	}
+	def toCartesianEndpoints (values: Seq[Any]): (Double, Double, Double, Double) = (0, 0, 0, 0) 	//TODO -- redundant, see note above
+}
+
+
 
 class CartesianIndexScheme extends IndexScheme[(Double, Double)] with Serializable {
 	def toCartesian (coords: (Double, Double)): (Double, Double) = coords
@@ -117,10 +170,6 @@ class IPv4ZCurveIndexScheme extends IndexScheme[Array[Byte]] with Serializable {
 	def toCartesianEndpoints (ipAddress: Array[Byte]): (Double, Double, Double, Double) = (0, 0, 0, 0) 	//TODO -- redundant, see note above
 }
 
-trait TimeIndexScheme[T] extends IndexScheme[T] {
-	def extractTime (t: T): Double
-}
-
 /**
  * Assumes the coords coming in are (Date, X, Y), so this just throws away the date field.
  */
@@ -129,5 +178,3 @@ class TimeRangeCartesianIndexScheme extends TimeIndexScheme[(Double, Double, Dou
 	def extractTime (coords: (Double, Double, Double)): Double = coords._1
 	def toCartesianEndpoints (coords: (Double, Double, Double)): (Double, Double, Double, Double) = (coords._1, coords._2, coords._3, coords._3) 	//TODO -- redundant, see note above
 }
-
-
