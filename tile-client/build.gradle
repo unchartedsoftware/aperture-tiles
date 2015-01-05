@@ -57,7 +57,7 @@ build.dependsOn test
 // The 'install' task is typically provided by the 'maven' plugin, an empty task is added here to 
 // provide a similar interface, with the implementation provided by the 'maven-publish' plugin.
 task install {}
-install.dependsOn build
+install.dependsOn assemble
 install.dependsOn publishToMavenLocal
 
 publishing {
