@@ -147,8 +147,8 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		assert(tile101.getDefinition.getXBins() === 2)
 		assert(tile101.getDefinition.getYBins() === 2)
 		assert(tile101.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](2.0, 2.0,
-			                    2.0, 2.0))
+			       List[Double](2.0, 0.0,
+			                    0.0, 2.0))
 
 		val tile111: Seq[TileData[_]] =
 			pyramidIo.readTiles(pyramidId, null,
