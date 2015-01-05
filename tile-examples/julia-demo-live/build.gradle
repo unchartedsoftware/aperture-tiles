@@ -2,7 +2,7 @@ plugins {
 	id "com.bluepapa32.watch" version "0.1.4"
 }
 
-description = "A website template to display aperture-tiles data"
+description = "A demo project to display live tiling of the Julia set data."
 
 // Plugin setup
 apply plugin: "war"

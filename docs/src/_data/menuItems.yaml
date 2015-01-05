@@ -11,8 +11,8 @@ main:
   - label: Download
     path: download/
 
-  - label: Support
-    path: support/
+  - label: Contact
+    path: contact/
 
 docs:
   - label: Development

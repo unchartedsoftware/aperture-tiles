@@ -38,6 +38,10 @@ gulp_build.inputs.dir "$projectDir/src"
 gulp_build.outputs.dir "$buildDir"
 gulp_build.dependsOn 'installGulp'
 gulp_build.dependsOn 'npmInstall'
+zipMinifiedFiles.dependsOn gulp_build
+assemble.dependsOn zipMinifiedFiles
+install.dependsOn assemble
+install.dependsOn publishToMavenLocal
 
 // take the files from the build directory and zip them
 task zipMinifiedFiles(type: Zip) {
