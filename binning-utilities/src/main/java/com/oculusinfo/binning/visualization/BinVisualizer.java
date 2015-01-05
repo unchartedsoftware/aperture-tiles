@@ -24,23 +24,11 @@
  */
 package com.oculusinfo.binning.visualization;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer;
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializer;
-import com.oculusinfo.binning.metadata.PyramidMetaData;
-import org.apache.avro.file.CodecFactory;
-
-import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
@@ -56,6 +44,37 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.BorderFactory;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import org.apache.avro.file.CodecFactory;
+
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
+
 
 
 
@@ -64,6 +83,7 @@ import java.util.logging.Logger;
  * 
  * @author Nathan Kronenfeld
  */
+@SuppressWarnings("deprecation")
 public class BinVisualizer extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(BinVisualizer.class.getName());
@@ -323,14 +343,15 @@ public class BinVisualizer extends JFrame {
 		boolean changed = false;
 		switch (type) {
 		case Avro:
-			if (null == _serializer || !(_serializer instanceof DoubleAvroSerializer)) {
-				_serializer = new DoubleAvroSerializer(CodecFactory.bzip2Codec());
+			if (null == _serializer || !(_serializer instanceof PrimitiveAvroSerializer)) {
+				_serializer = new PrimitiveAvroSerializer<Double>(Double.class, CodecFactory.bzip2Codec());
 				changed = true;
 			}
 			break;
 		case Legacy:
-			if (null == _serializer || !(_serializer instanceof BackwardCompatibilitySerializer)) {
-				_serializer = new BackwardCompatibilitySerializer();
+			if (null == _serializer ||
+               !(_serializer instanceof com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer)) {
+				_serializer = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
 				changed = true;
 			}
 		}

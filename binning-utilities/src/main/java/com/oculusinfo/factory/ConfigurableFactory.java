@@ -23,17 +23,15 @@
  */
 package com.oculusinfo.factory;
 
-
 import java.io.PrintStream;
 import java.security.MessageDigest;
 import java.util.*;
 
+import org.apache.commons.codec.binary.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 
 /**
  * This class provides a basis for factories that are configurable via JSON or
@@ -52,22 +50,15 @@ abstract public class ConfigurableFactory<T> {
 
 	private String                        _name;
 	private Class<T>                      _factoryType;
-
 	private List<String>                  _rootPath;
-
     private ConfigurableFactory<?>        _parent;
 	private List<ConfigurableFactory<?>>  _children;
-
     private Set<ConfigurationProperty<?>> _properties;
     private HashMap<String, List<String>> _pathsByProperty;
-
 	private boolean                       _configured;
 	private JSONObject                    _configurationNode;
-
     private boolean                       _isSingleton;
     private T                             _singletonProduct;
-
-
 
     /**
      * Create a factory
@@ -159,6 +150,7 @@ abstract public class ConfigurableFactory<T> {
         //be created before the children if you're doing a bottom up approach for some reason.
         _parent = null; 
 	}
+
 	/**
 	 * Get the root node in the tree of configurables.
 	 * @return Returns the root of the configurable factories, or this factory if no parent is set.
@@ -174,7 +166,7 @@ abstract public class ConfigurableFactory<T> {
 	 *         configuration information. Guaranteed not to be null.
 	 */
 	public List<String> getRootPath () {
-		return _rootPath;
+		return new ArrayList<>( _rootPath );
 	}
 	
 	/**
@@ -212,32 +204,23 @@ abstract public class ConfigurableFactory<T> {
 		addProperty( property, new ArrayList<String>() );
 	}
 
-
-    private JSONObject getPropertyNode (ConfigurationProperty<?> property) {
-
-        if ( _pathsByProperty.get( property.getName() ) == null ) {
-            return new JSONObject();
-        }
-        JSONObject node;
-        List<String> path = new ArrayList<>(  _pathsByProperty.get( property.getName() ) );
-        if ( path.isEmpty() ) {
-            return _configurationNode;
-        } else {
-            String subPath;
-            JSONObject currentNode = _configurationNode;
-            while ( path.size() > 1 ) {
-                subPath = path.remove( 0 );
-                currentNode = currentNode.optJSONObject( subPath );
-                if ( currentNode == null ) {
-                    return new JSONObject();
-                }
-            }
-            node = currentNode.optJSONObject( path.get(0) );
-            if ( node == null ) {
-                return new JSONObject();
-            }
-            return node;
-        }
+    /**
+     * Return a SHA-256 hexcode representing the state of the configuration
+     * @return String representing the hexcode SHA-256 hash of the configuration state
+     */
+    public String generateSHA256() {
+        try {
+            String propertyString = getFactoryString();
+            // generate SHA-256 from the string
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+            md.update( propertyString.getBytes( "UTF-8" ) );
+            byte[] digest = md.digest();
+            // convert SHA-256 bytes to hex string
+            return Hex.encodeHexString( digest );
+        } catch ( Exception e ) {
+			LOGGER.warn( "Error registering configuration to SHA", e );
+            return "";
+		}
     }
 
 	/**
@@ -274,7 +257,6 @@ abstract public class ConfigurableFactory<T> {
 		return property.getDefaultValue();
 	}
 
-
 	/**
 	 * Add a child factory, to be used by this factory.
 	 * 
@@ -289,7 +271,7 @@ abstract public class ConfigurableFactory<T> {
 	 * Create the object provided by this factory.
 	 * @return The object 
 	 */
-	protected abstract T create ();
+	protected abstract T create();
 
 	/**
 	 * Get one of the goods managed by this factory.
@@ -315,7 +297,6 @@ abstract public class ConfigurableFactory<T> {
 		if (!_configured) {
 			throw new ConfigurationException("Attempt to get value from uninitialized factory");
 		}
-
 		if ((null == name || name.equals(_name)) && goodsType.equals(_factoryType)) {
 		    if (_isSingleton) {
 		        if (null == _singletonProduct) {
@@ -361,28 +342,14 @@ abstract public class ConfigurableFactory<T> {
 		return null;
 	}
 
-
-
-	// /////////////////////////////////////////////////////////////////////////
-	// Section: Reading from and writing to a JSON file
-	//
-
 	/**
 	 * Initialize needed construction values from a properties list.
 	 * 
 	 * @param rootNode The root node of all configuration information for this
 	 *            factory.
-	 * @throws ConfigurationException If something goes wrong in configuration,
-	 *             or if configuration is called twice.
+	 * @throws ConfigurationException If something goes wrong in configuration.
 	 */
 	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
-
-        /*
-        if (_configured) {
-			throw new ConfigurationException("Attempt to configure factory "+this+" twice");
-		}
-		*/
-
 		try {
 			_configurationNode = getConfigurationNode(rootNode);
 			for (ConfigurableFactory<?> child: _children) {
@@ -393,6 +360,74 @@ abstract public class ConfigurableFactory<T> {
 			throw new ConfigurationException("Error configuring factory "+this.getClass().getName(), e);
 		}
 	}
+
+	public void writeConfigurationInformation (PrintStream stream, String prefix) {
+		stream.println(prefix+"Configuration for "+this.getClass().getSimpleName()+" (node name "+_name+", path: "+mkString(_rootPath, ", ")+"):");
+		prefix = prefix + "  ";
+		for (ConfigurationProperty<?> property: _properties) {
+			writePropertyValue(stream, prefix, property);
+		}
+		stream.println();
+		for (ConfigurableFactory<?> child: _children) {
+			child.writeConfigurationInformation(stream, prefix);
+		}
+	}
+
+	public void writeConfigurationInformation (PrintStream stream) {
+		writeConfigurationInformation(stream, "");
+	}
+
+    /**
+     * Get the explicit configuration JSON, containing ALL properties.
+     * @return JSONObject containing all properties used by the configuration
+     */
+    public JSONObject getExplicitConfiguration() {
+        JSONObject config = new JSONObject();
+        return generateConfigurationObj( config );
+    }
+
+	/**
+	 * Get the JSON object used to configure this factory.
+	 *
+	 * @return The configuring JSON object, or null if this factory has not yet
+	 *         been configured.
+	 */
+	protected JSONObject getConfigurationNode () {
+		return _configurationNode;
+	}
+
+	/**
+	 * Gets the class of object produced by this factory.
+	 */
+	protected Class<? extends T> getFactoryType () {
+		return _factoryType;
+	}
+
+    private JSONObject getPropertyNode (ConfigurationProperty<?> property) {
+        if ( _pathsByProperty.get( property.getName() ) == null ) {
+            return new JSONObject();
+        }
+        JSONObject node;
+        List<String> path = new ArrayList<>(  _pathsByProperty.get( property.getName() ) );
+        if ( path.isEmpty() ) {
+            return _configurationNode;
+        } else {
+            String subPath;
+            JSONObject currentNode = _configurationNode;
+            while ( path.size() > 1 ) {
+                subPath = path.remove( 0 );
+                currentNode = currentNode.optJSONObject( subPath );
+                if ( currentNode == null ) {
+                    return new JSONObject();
+                }
+            }
+            node = currentNode.optJSONObject( path.get(0) );
+            if ( node == null ) {
+                return new JSONObject();
+            }
+            return node;
+        }
+    }
 
 	/*
 	 * Gets the JSON node with all this factory's configuration information
@@ -431,12 +466,6 @@ abstract public class ConfigurableFactory<T> {
 		return target;
 	}
 
-
-
-	public void writeConfigurationInformation (PrintStream stream) {
-		writeConfigurationInformation(stream, "");
-	}
-
 	private <PT> void writePropertyValue (PrintStream stream, String prefix, ConfigurationProperty<PT> property) {
 		if (hasPropertyValue(property)) {
 			stream.println(prefix+property.getName()+": "+property.encode(property.getDefaultValue())+" (DEFAULT)");
@@ -464,20 +493,7 @@ abstract public class ConfigurableFactory<T> {
 		return result;
 	}
 
-	public void writeConfigurationInformation (PrintStream stream, String prefix) {
-		stream.println(prefix+"Configuration for "+this.getClass().getSimpleName()+" (node name "+_name+", path: "+mkString(_rootPath, ", ")+"):");
-		prefix = prefix + "  ";
-		for (ConfigurationProperty<?> property: _properties) {
-			writePropertyValue(stream, prefix, property);
-		}
-		stream.println();
-		for (ConfigurableFactory<?> child: _children) {
-			child.writeConfigurationInformation(stream, prefix);
-		}
-	}
-
     private String getFullPropertyString( String name) {
-
         StringBuilder sb = new StringBuilder();
         for ( String subPath : _rootPath ) {
             sb.append( subPath );
@@ -507,46 +523,45 @@ abstract public class ConfigurableFactory<T> {
         return sb.toString();
     }
 
-
-    /**
-     * Return a SHA-256 hexcode representing the state of the configuration
-     * @return String representing the hexcode SHA-256 hash of the configuration state
-     */
-    public String generateSHA256() {
-        try {
-            String propertyString = getFactoryString();
-            // generate SHA-256 from the string
-            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
-            md.update( propertyString.getBytes( "UTF-8" ) );
-            byte[] digest = md.digest();
-
-            // convert SHA-256 bytes to hex string
-            StringBuilder sb2 = new StringBuilder();
-            for ( byte b : digest ) {
-                sb2.append( Integer.toString( ( b & 0xff ) + 0x100, 16 ).substring( 1 ) );
+    private JSONObject addJSONPathAndReturnLeaf( JSONObject config, List<String> path ) throws JSONException {
+        // if a path does not exist in the json object, create it
+        JSONObject node = config;
+        for ( String subpath : path ) {
+            if ( !node.has( subpath ) ) {
+                node.put( subpath, new JSONObject() );
             }
-            return sb2.toString();
-        } catch ( Exception e ) {
-			LOGGER.warn("Error registering configuration to SHA");
-            return "";
-		}
+            node = node.getJSONObject( subpath );
+        }
+        // return the leaf node of the path
+        return node;
     }
 
+    private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
+        // get the properties path
+        List<String> fullPath = getRootPath();
+        fullPath.addAll(_pathsByProperty.get( property.getName() ) );
+        // ensure the path exists by adding it if it doesn't
+        // append root path to start of property path since they are relative to the
+        // current factories path
+        JSONObject node = addJSONPathAndReturnLeaf( config, fullPath );
+        // add the property to the leaf node of the path
+        node.put( property.getName(), getPropertyValue( property ) );
+    }
 
-	/**
-	 * Get the JSON object used to configure this factory.
-	 * 
-	 * @return The configuring JSON object, or null if this factory has not yet
-	 *         been configured.
-	 */
-	protected JSONObject getConfigurationNode () {
-		return _configurationNode;
-	}
+    private JSONObject generateConfigurationObj( JSONObject config ) {
+        try {
+            for ( ConfigurationProperty<?> prop : _properties ) {
+                // add property to the config object under its path
+                addPropertyUnderPath( config, prop );
+            }
+            for ( ConfigurableFactory<?> child: _children ) {
+                addJSONPathAndReturnLeaf( config, child.getRootPath() );
+                child.generateConfigurationObj( config );
+            }
+        } catch ( JSONException e ) {
+            LOGGER.warn( "Error occurred while generating configuration JSON", e );
+        }
+        return config;
+    }
 
-	/**
-	 * Gets the class of object produced by this factory.
-	 */
-	protected Class<? extends T> getFactoryType () {
-		return _factoryType;
-	}
 }

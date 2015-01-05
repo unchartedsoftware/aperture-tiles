@@ -211,7 +211,7 @@ class AnalyticAccumulatorParam[T] (analytic: Analytic[T]) extends AccumulatorPar
  * </ol>
  * 
  * @tparam RT The raw type of data on which this analysis takes place
- * @tparma AT The type of data collected by this analysis, to be aggregated and
+ * @tparam AT The type of data collected by this analysis, to be aggregated and
  *            stored.  In an AnalyticDescription, the result of analyzing a 
  *            single record of type RT is a single record of type AT, and this 
  *            analysis is captured by the convert method.

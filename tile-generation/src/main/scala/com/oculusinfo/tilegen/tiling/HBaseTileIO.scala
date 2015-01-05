@@ -251,7 +251,7 @@ object CountHBaseRowsByLevel {
 		val tileIO = TileIO.fromArguments(argParser)
 		val serializer = TileSerializerChooser.fromArguments(argParser)
 		val table = argParser.getString("table", "The name of the table to read")
-		val sc = argParser.getSparkConnector().getSparkContext("Testing table equality")
+		val sc = argParser.getSparkConnector().createContext(Some("Testing table equality"))
 
 		tileIO.readTileSet(sc, serializer, table, null).map(tile =>
 			{

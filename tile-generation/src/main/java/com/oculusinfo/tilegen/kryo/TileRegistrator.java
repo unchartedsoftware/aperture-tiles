@@ -36,10 +36,7 @@ import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam;
 import com.oculusinfo.tilegen.spark.MinMaxAccumulableParam;
 import com.oculusinfo.tilegen.tiling.HBaseTileIO;
-import com.oculusinfo.tilegen.tiling.SingleTileToImageConverter;
 import com.oculusinfo.tilegen.tiling.TileIO;
-import com.oculusinfo.tilegen.tiling.TileSeriesToImagesConverter;
-import com.oculusinfo.tilegen.tiling.TileToImageConverter;
 import com.oculusinfo.tilegen.util.PropertiesWrapper;
 import com.oculusinfo.tilegen.util.Rectangle;
 import org.apache.spark.serializer.KryoRegistrator;
@@ -47,11 +44,7 @@ import org.apache.spark.serializer.KryoRegistrator;
 
 public class TileRegistrator implements KryoRegistrator {
 
-	//static boolean needToRegister = true;
-
 	public void registerClasses(Kryo kryo) {
-
-		//if (needToRegister) {
 
 		// throw exception if class is being serialized, but has not been registered
 		kryo.setRegistrationRequired(true);
@@ -107,9 +100,6 @@ public class TileRegistrator implements KryoRegistrator {
 		// com.oculusinfo.tilegen.tiling
 		kryo.register(TileIO.class);
 		kryo.register(HBaseTileIO.class);
-		kryo.register(TileToImageConverter.class);
-		kryo.register(SingleTileToImageConverter.class);
-		kryo.register(TileSeriesToImagesConverter.class);
 
 		// com.oculusinfo.tilegen.util
 		kryo.register(PropertiesWrapper.class);
@@ -132,9 +122,5 @@ public class TileRegistrator implements KryoRegistrator {
 
 		// com.oculusinfo.binning.util
 		kryo.register(Pair.class);
-
-
-		//needToRegister = false;
-		//}
 	}
 }

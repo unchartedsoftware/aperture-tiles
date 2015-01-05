@@ -97,7 +97,7 @@ object MultivarTimeSeries {
 			val timeRange = (startTime to endTime by (endTime - startTime) / numPoints)
 			
 			val jobName = "Multi-variable Timeseries Generator"
-			val sc = argParser.getSparkConnector().getSparkContext(jobName)
+			val sc = argParser.getSparkConnector().createContext(Some(jobName))
 			
 			// Create the RDD for spark to operate on.
 			val parallelCollection = sc.parallelize(computePartitionRanges(partitions, timeRange), partitions)

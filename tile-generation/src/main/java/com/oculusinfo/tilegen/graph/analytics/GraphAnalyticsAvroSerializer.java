@@ -53,9 +53,9 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
     protected String getEntrySchemaFile () {
         return "graphAnalyticsEntry.avsc";
     }
-    
+
+    @SuppressWarnings("unchecked")
     private List<GraphCommunity> communityListTOJava (GenericRecord entry) {
-		@SuppressWarnings("unchecked")
 		GenericData.Array<GenericRecord> values = (GenericData.Array<GenericRecord>) entry.get("communities");
 		List<GraphCommunity> results = new ArrayList<>();
 		for (GenericRecord value: values) {

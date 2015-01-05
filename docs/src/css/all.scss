@@ -11,7 +11,6 @@ $color-submenu-nav-num: #5E544A;
 
 $color-api-sidebar-link: #C40;
 $color-api-sidebar-link-hover: #F60;
-
 $color-body: #4E443C;
 $color-body-link: #07A;
 $color-body-link-hover: #3AF;
@@ -56,6 +55,9 @@ ul {
     padding-left:30px;
 }​
 
+ol {
+    padding-left:30px;
+}​
 li {
 	margin: 0 0 5px 0;
 }
@@ -90,6 +92,10 @@ h1 {
 h2 {
 	@include heading(24px,10px,$color-sub-h1);
 	margin-top: 30px;
+	border-bottom-color: $txt-block-border;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	line-height: 33px;
 	&.sectionTitle {
 		font-size: 22px;
 		color: $color-api-section-title;
@@ -99,23 +105,35 @@ h2 {
 }
 
 h3 {
-	@include heading(22px,9px,$color-sub-h1);
+	@include heading(21.33px,9px,$color-sub-h1);
 	&.context-info-title {
 		color: $color-api-sidebar-link;
 		&:hover {
 			color: $color-api-sidebar-link-hover;
 		}
 	}
+	&.sectionTitle {
+		font-size: 20px;
+		color: $color-api-section-title;
+		margin-top: 10px;
+		padding: 0 10px 10px 0;
+	}
 }
 h4 {
-	@include heading(20px,0px,$color-sub-h1);
-	font-style: italic;
+	@include heading(18.66px,0px,$color-sub-h1);
 }
 h5 {
-	@include heading(18px,0px,$color-sub-h1);
+	@include heading(16px,0px,$color-sub-h1);
 }
 h6 {
-	@include heading(16px,0px,$color-sub-h1);
+	@include heading(14.66px,0px,$color-sub-h1);
+	&.fine {
+		margin-top: 0;
+	}
+	&.procedure {
+		font-style: italic;
+		margin-top: 16px;
+	}
 }
 
 a {
@@ -154,11 +172,18 @@ img {
 		border: 1px solid $img-border;
 	}
 	
+	&.context-logo {
+		margin: 20px 0 4px;
+	}
 	&.screenshot {
 		margin: 20px auto 4px;
 		display: block;
 	}
 
+	&.table {
+		margin: 0px auto 4px;
+		display: block;
+	}
 	&.vid-thumbnail {
 		@extend .screenshot;
 		border: 1px solid $img-border;
@@ -317,7 +342,6 @@ pre {
 	width: 280px;
 	font-size: 14px;
 	margin-top: -20px;
-	line-height: 1.4em;
 }
 .oculus-footer
 {
@@ -361,6 +385,16 @@ pre {
 	border:	1px solid $txt-block-border;
 	line-height: 1.4em;
 }
+.content-image {
+	text-align:	center;
+	padding: 0 30px;
+	margin: 41px;
+	font-size: 16px;
+	background: $content-body-bg-color;
+	border:	1px solid $txt-block-border;
+	line-height: 1.4em;
+	display: inline-block;
+}
 
 .git {
 	display: none;
@@ -400,7 +434,7 @@ sub {
 
 .props {
 	@extend code-block;
-	font-family: $family-standard
+	font-family: $family-standard;
 }
 
 .innerProps {
@@ -457,7 +491,7 @@ th {
 	font-size: 14px;
 	font-weight: normal;
 	line-height: 19.6px;
-	padding: 0 10px 10px 10px;
+	padding: 10px;
 	margin: 0;
 }
 table.summaryTable {
@@ -466,14 +500,42 @@ table.summaryTable {
 	border-spacing: 0;
 }
 
-td.attributes {
-	padding:0 10px 10px 10px;
-	font-size:14px;
-	line-height:19.6px
+td {
+	&.attributes {
+		padding:0 10px 10px 10px;
+		font-size:14px;
+		line-height:19.6px;
+		vertical-align: top;
+	}
+	&.caption {
+		font-size: 14px;
+		font-weight: bold;
+		text-align: center;
+	}
+	&.nameDescription {
+		vertical-align: text-top;
+	}
 }
 
 div.description {
 	padding:0 10px 10px 10px;
 	font-size:14px;
-	line-height:19.6px
+	line-height:19.6px;
+}
+.version {
+	display: block;
+	text-align: center;
+	font-size: 14px;
+}
+.fine-print {
+	font-size: 14px;
+	margin-top: 0;
+}
+
+.procedure-text {
+	padding-left:13px;
+}
+
+.list-paragraph {
+	margin-bottom: 0;
 }

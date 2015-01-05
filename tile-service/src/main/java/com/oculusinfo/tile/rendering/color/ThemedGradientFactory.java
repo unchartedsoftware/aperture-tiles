@@ -94,7 +94,7 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 	
 	/**
 	 * Returns the theme name.
-	 * @return
+	 * @return the theme name
 	 */
 	public String getTheme() {
 		return getPropertyValue(THEME);
@@ -160,8 +160,8 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 
 	/**
 	 * Creates a default grayscale gradient.
-	 * @param theme
-	 * @return
+	 * @param theme the theme name
+	 * @return the default array of colors corresponding to a theme
 	 */
 	public static List<Color> createDefault(String theme) {
 		return "light".equalsIgnoreCase(theme)? DEFAULT_LIGHT : DEFAULT_DARK;

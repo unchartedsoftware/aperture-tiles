@@ -78,8 +78,8 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 	 * Each factory is passed a relative base path where its configuration can
 	 * be found, and then it will add its own path, if needed.
 	 * 
-	 * @param path
-	 * @return
+	 * @param path The relative base path where the configuration can be found
+	 * @return The created children.
 	 */
 	protected List<ConfigurableFactory<? extends T>> createChildren (List<String> path) {
 		List<ConfigurableFactory<? extends T>> children = Lists.newArrayList();

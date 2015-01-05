@@ -56,14 +56,14 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 	var dataFile: File = null
 	var pyramidIo: OnDemandBinningPyramidIO = null
 
-	override def beforeAll (configMap: Map[String, Any]) = {
-		super.beforeAll(configMap)
+	override def beforeAll = {
+		super.beforeAll
 		createDataset(sc)
 	}
 
-	override def afterAll (configMap: Map[String, Any]) = {
+	override def afterAll  = {
 		cleanupDataset
-		super.afterAll(configMap)
+		super.afterAll
 	}
 
 	def createDataset (sc: SparkContext): Unit = {

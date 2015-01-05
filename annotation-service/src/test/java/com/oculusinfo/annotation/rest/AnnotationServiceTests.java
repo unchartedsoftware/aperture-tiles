@@ -33,8 +33,6 @@ import com.oculusinfo.annotation.init.DefaultAnnotationIOFactoryProvider;
 import com.oculusinfo.annotation.init.providers.StandardAnnotationFilterFactoryProvider;
 import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
 import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIO;
-import com.oculusinfo.annotation.io.impl.HBaseAnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.util.AnnotationGenerator;
@@ -52,18 +50,13 @@ import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
-
 
 public class AnnotationServiceTests {
 
@@ -400,28 +393,16 @@ public class AnnotationServiceTests {
 				LayerConfiguration config = _layerService.getLayerConfiguration( _layerId, null );
 				PyramidIO tileIo = config.produce( PyramidIO.class );
 				AnnotationIO dataIo = config.produce( AnnotationIO.class );
-				if ( tileIo instanceof HBasePyramidIO ) {
-					LOGGER.debug("Dropping tile HBase table");
-					((HBasePyramidIO)tileIo).dropTable( _dataId );
-				}
-				if ( dataIo instanceof HBaseAnnotationIO ) {
-					LOGGER.debug("Dropping data HBase table");
-					((HBaseAnnotationIO)dataIo).dropTable( _dataId );
-				}
-
-				if ( tileIo instanceof FileBasedPyramidIO &&
-				     dataIo instanceof FileSystemAnnotationIO ) {
-					LOGGER.debug("Deleting temporary file system folders");
-					try {
-						File testDir = new File( ".\\" + _dataId );
-						for ( File f : testDir.listFiles() ) {
-							f.delete();
-						}
-						testDir.delete();
-					} catch ( Exception e ) {
-						// swallow exception
-					}
-				}
+                LOGGER.debug("Deleting temporary file system folders");
+                try {
+                    File testDir = new File( ".\\" + _dataId );
+                    for ( File f : testDir.listFiles() ) {
+                        f.delete();
+                    }
+                    testDir.delete();
+                } catch ( Exception e ) {
+                    // swallow exception
+                }
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

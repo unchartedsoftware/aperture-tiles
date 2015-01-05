@@ -11,4 +11,4 @@ Tailored analytic overlays (e.g., alerts, pattern detection, feature extraction)
 
 Aperture Tiles is open source, and free to use under the MIT License.
 
-For an overview, developer documentation and live examples see the [Aperture Tiles project website](https://tiles.oculusinfo.com) or [docs folder](docs/) in the source code.
+For an overview, developer documentation and live examples see the [Aperture Tiles project website](https://aperturetiles.com) or [docs folder](docs/src/) in the source code.

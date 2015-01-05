@@ -1,0 +1,36 @@
+[
+	{
+		"id": "julia-set",
+		"public" :{
+			"pyramid": {
+				"type": "AreaOfInterest",
+				"minX": -2,
+				"maxX": 2,
+				"minY": -2,
+				"maxY": 2
+			},
+			"renderer": {
+                "ramp": "spectral",
+                "coarseness": 1,
+                "rangeMin": 0,
+                "rangeMax": 100
+            },
+            "valueTransform": {
+                "type": "linear"
+            },
+            "tiletransform": {
+                "type": "identity"
+            }
+		},
+		"private": {
+			"data" : {
+				"id": "julia.x.y.v",
+	            "pyramidio" : {
+	                "type" : "zip",
+	                "root.path" : "/julia.x.y.v.zip",
+	                "extension" : "avro"
+	            }
+	        }
+	    }
+	}
+]

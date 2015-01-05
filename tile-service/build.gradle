@@ -1,41 +1,7 @@
 description = "Useful utilites to help pyramid-based binning schemes (and others, as necessary)"
 
 // Pulls in the Java plugin
-apply plugin: "war"
-
-// Add a configuration to provide access to the phantom js exe dependency 
-configurations {
-	phantomJs
-}
-
-dependencies {
-	phantomJs "oculus.aperture.service:aperture-capture-phantom:1.0.7@exe"
-}
-
-clean {
-	inputs.dir "bin"
-	delete "bin"
-}
-
-// Task to copy the phantom js exe to the bin dir.  Bind it into the jetty run
-// prior to the war task.
-task phantomCopy(type: Copy) {
-	outputs.dir "bin/windows"
-	from configurations.phantomJs
-	into "bin/windows"
-  	rename "aperture-capture-phantom-1.0.7.exe", "phantomjs.exe"
-}
-war.dependsOn(phantomCopy)
-
-// Create a configuration to expose created artifacts
-configurations {
-	tileServiceUnderlay
-}
-
-// Create an externally accessible artifact that is created by our war task
-artifacts {
-	tileServiceUnderlay war
-}
+apply plugin: "java"
 
 // Restlet isn't in maven central for some reason, so we need to add their
 // location to the set from the parent build file.
@@ -45,6 +11,7 @@ repositories {
 	}
 }
 
+// Jars / projects this project depends on.
 dependencies {
 	compile "org.restlet.jee:org.restlet:2.1.2"
 	compile "org.restlet.jee:org.restlet.ext.servlet:2.1.2"
@@ -54,15 +21,12 @@ dependencies {
 	compile "com.google.inject.extensions:guice-multibindings:3.0"
 	compile "net.sf.ehcache:ehcache:2.8.4"
 	compile "net.sf.ehcache:ehcache-web:2.0.4"
-	compile "oculus.aperture:aperture-server-core:1.0.7"
-	compile "oculus.aperture.service:aperture-cms:1.0.7"
-	compile "oculus.aperture.service:aperture-capture-phantom:1.0.7"
+	compile "oculus.aperture:aperture-server-core:$project.apertureJsVersion"
+	compile "oculus.aperture.service:aperture-cms:$project.apertureJsVersion"
+	compile "oculus.aperture.service:aperture-capture-phantom:$project.apertureJsVersion"
 	compile "org.slf4j:slf4j-api:1.7.7"
-	compile "org.slf4j:slf4j-log4j12:1.7.7"
-	compile "org.slf4j:jul-to-slf4j:1.7.7"
 	compile "log4j:log4j:1.2.17"
 	
-	compile project(":tile-generation")
 	compile project(":math-utilities")
 	compile project(":binning-utilities")
 	

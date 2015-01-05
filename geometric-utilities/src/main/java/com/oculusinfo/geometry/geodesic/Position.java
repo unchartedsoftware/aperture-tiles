@@ -429,10 +429,10 @@ public class Position implements Serializable {
      * Get the point offset from this point by the given distance at the given
      * azimuth.
      * 
-     * @param azimuth
+     * @param azimuthDegrees
      *            The angle, in degree, with N=0, E=90, in which the desired
      *            offset point lies
-     * @param distance
+     * @param distanceDegrees
      *            The angular distance, in degrees, by which to offset this
      *            point.
      * @return The point offset from this one as described.
@@ -471,9 +471,9 @@ public class Position implements Serializable {
     /**
      * Get the point on the great circle from a to b at the given latitude
      * 
-     * @param a
+     * @param p1
      *            The segment start point
-     * @param b
+     * @param p2
      *            The segment end point
      * @param latitude
      *            The latitude of the desired result (in degrees)

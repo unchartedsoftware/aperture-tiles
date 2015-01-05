@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.apache.avro.file.CodecFactory;
 
-import com.oculusinfo.binning.io.serialization.impl.DoubleAvroSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.EnumProperty;
@@ -74,7 +73,7 @@ public class TileSerializerFactory
 	                              ConfigurableFactory<?> parent,
 	                              List<String> path,
 	                              List<ConfigurableFactory<? extends TileSerializer<?>>> children) {
-		super(name, getGenericSerializerClass(), parent, path, children, DoubleAvroSerializerFactory.NAME);
+		super(name, getGenericSerializerClass(), parent, path, children, null);
 
 		addProperty(CODEC_TYPE);
 		addProperty(DEFLATE_LEVEL);

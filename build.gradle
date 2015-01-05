@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 // This is the top level build file for the aperture tiles core projects.  Definitions / tasks that
 // are shared between sub-projects need to go in here, but care should be taken not to needlessly
 // pollute the global namespace.  The 'settings.gradle' file that is also in this directory defines
@@ -44,7 +42,7 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.3.0-cdh5.0.0"
 				hadoopCoreVersion = "2.3.0-mr1-cdh5.0.0"
 				hbaseVersion = "0.96.1.1-cdh5.0.0"
-				sparkVersion = "0.9.0-cdh5.0.0"
+				sparkVersion = "1.1.1" // Instead of 0.9.0-cdh5.0.0.  We require >= 1.0
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
@@ -55,9 +53,9 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.0.0-cdh4.6.0"
 				hadoopCoreVersion = "2.0.0-mr1-cdh4.6.0"
 				hbaseVersion = "0.94.15-cdh4.6.0"
+				sparkVersion = "1.1.1" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
-				sparkVersion = "1.0.0"
 			}
 			break
 		default:
@@ -88,7 +86,7 @@ allprojects {
 // General definitions pushed down to all sub-projects - this code is executed within the context
 // of each subproject.
 subprojects {				
-	
+
 	// Allows for eclipse project files to be generated
 	apply plugin: "eclipse"
 	// Support for reading from / writing to maven repositories
@@ -97,7 +95,10 @@ subprojects {
 	// Shared group and version info.  We keep build variant types in the version names so that we get 
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
-	version = "0.4-$buildType-SNAPSHOT"
+	version = "0.5-SNAPSHOT-$buildType"
+
+	// Aperture JS version - shared between a few places
+	project.ext.apertureJsVersion = "1.0.9"
 	
 	// Maven repos to check for artifacts
 	repositories {
@@ -123,21 +124,24 @@ subprojects {
 	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
 	// to multiple jars in later.  CDH5.x picks up the new split HBase jar, while CDH4.x needs the
 	// unified jar.
-	ext.addHBaseDependencies = {
+	ext.addHBaseDependencies = { config ->
+		if (config == null || config == "") {
+			config = "compile"
+		}
 		// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
 		if (checkHBaseSplit) {
 			logger.info("Matched CDH5x cloudera version - using new-style jars")
-			getDependencies().add("compile", "org.apache.hbase:hbase-common:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase-common:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 			})
-			getDependencies().add("compile", "org.apache.hbase:hbase-client:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 			})
-			getDependencies().add("compile", "org.apache.hbase:hbase-server:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
@@ -145,7 +149,7 @@ subprojects {
 			})
 		} else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
-			getDependencies().add("compile", "org.apache.hbase:hbase:$hbaseVersion", {
+			getDependencies().add(config, "org.apache.hbase:hbase:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
@@ -181,54 +185,136 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 	// the build hasn't started) add behavior specific to web client projects.
 	// Client projects are flagged by a property called 'clientProject' - if that's present,
 	// the client behavior gets injected into the project in question.
-	afterEvaluate { Project proj ->
-		if (proj.ext.has("clientProject") && project.clientProject) {
+	afterEvaluate {
+		if (project.ext.has("clientProject") && project.clientProject) {
 			
+			// Directory constants
+			def TILE_CLIENT_SRC = "${rootDir}/tile-client/src"
+			def TILE_CLIENT_BUILD = "${rootDir}/tile-client/build"
+			def TILE_SERVICE_SRC = "${rootDir}/tile-service/src"
+			def TILE_SERVICE_BUILD = "${rootDir}/tile-service/build/libs"
+			def ANNOTATION_SERVICE_SRC = "${rootDir}/annotation-service/src"
+			def ANNOTATION_SERVICE_BUILD = "${rootDir}/annotation-service/build/libs"
+			def BINNING_UTIL_SRC = "${rootDir}/binning-utilities/src"
+			def BINNING_UTIL_BUILD = "${rootDir}/binning-utilities/build/libs"
+			def MATH_UTIL_SRC = "${rootDir}/math-utilities/src"
+			def MATH_UTIL_BUILD = "${rootDir}/math-utilities/build/libs"
+			def EXPLODED_DIR = "$buildDir/exploded"
+			def EXPLODED_LIBS = EXPLODED_DIR + "/WEB-INF/lib"
+
+
+			// Create a watch daemon thread
+			task watchThread() << {
+			    Thread.start {
+			        project.tasks.watch.execute()
+			    }
+			}
+
+			// Copy client js build files into the exploded war
+			task copyClientJsToExploded(type: Copy) {
+				from fileTree(TILE_CLIENT_BUILD).include("*.js")
+			    into EXPLODED_DIR
+			}
+			copyClientJsToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyClientJsToExploded.outputs.dir EXPLODED_DIR
+
+			// Copy client css build files into the exploded war
+			task copyClientCssToExploded(type: Copy) {
+				from fileTree(TILE_CLIENT_BUILD).include("*.css")
+			    into EXPLODED_DIR
+			}
+			copyClientCssToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyClientCssToExploded.outputs.dir EXPLODED_DIR
+
+			// Copy tile-service jar files into the exploded war
+			task copyTileServiceToExploded(type: Copy) {
+				from fileTree(TILE_SERVICE_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
+			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy binning-utilities jar into the exploded war
+			task copyBinningUtilToExploded(type: Copy) {
+				from fileTree(BINNING_UTIL_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyBinningUtilToExploded.inputs.dir BINNING_UTIL_BUILD
+			copyBinningUtilToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy math-utilities jar into the exploded war
+			task copyMathUtilToExploded(type: Copy) {
+				from fileTree(MATH_UTIL_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyMathUtilToExploded.inputs.dir MATH_UTIL_BUILD
+			copyMathUtilToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy annotation-service jar into the exploded war
+			task copyAnnotationServiceToExploded(type: Copy) {
+				from fileTree(ANNOTATION_SERVICE_BUILD).include("*.jar")
+			    into EXPLODED_LIBS
+			}
+			copyAnnotationServiceToExploded.inputs.dir ANNOTATION_SERVICE_BUILD
+			copyAnnotationServiceToExploded.outputs.dir EXPLODED_LIBS
+
+			// Configure the watch task
+			watch {
+				serviceWatch {
+			        files fileTree(TILE_SERVICE_SRC).include('**/*.java')
+			        tasks ':tile-service:jar', 'copyTileServiceToExploded'
+			    }
+			    annotationWatch {
+			        files fileTree(ANNOTATION_SERVICE_SRC).include('**/*.java')
+			        tasks ':annotation-service:jar', 'copyAnnotationServiceToExploded'
+			    }
+			    binningWatch {
+			        files fileTree(BINNING_UTIL_SRC).include('**/*.java')
+			        tasks ':binning-utilities:jar', 'copyBinningUtilToExploded'
+			    }
+			    mathWatch {
+			        files fileTree(MATH_UTIL_SRC).include('**/*.java')
+			        tasks ':math-utilities:jar', 'copyMathUtilToExploded'
+			    }
+			    clientJsWatch {
+			        files fileTree(TILE_CLIENT_SRC).include('**/*.js')
+			        tasks ':tile-client:build_debug_js', 'copyClientJsToExploded'
+			    }
+			    clientCssWatch {
+			        files fileTree(TILE_CLIENT_SRC).include('**/*.css')
+			        tasks ':tile-client:build_debug_css', 'copyClientCssToExploded'
+			    }
+			}
+
+			// Add the tile-service and annotation-service dependencies
+			dependencies {
+				compile project(path: ":tile-service")
+				compile project(path: ":annotation-service")
+			}
+		
+		
+			// configure the war task to pick up the tile client build files
+			war {
+				doLast {
+					ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
+					copyClientJsToExploded.execute()
+					copyClientCssToExploded.execute()
+				}
+			}
+			// install to ensure everything is ready for debug hotswap builds
+			war.dependsOn ":tile-client:install"
+
+			// Jetty Exploded War
 			// Configure the jetty run task
 			jettyRun {
 				httpPort = 8080
 				contextPath = project.name
+    			scanIntervalSeconds = 1
+    			reload = "automatic"
+    			webAppSourceDirectory = file(EXPLODED_DIR)
 			}
-			
-			// Define a configuration for the war overlay process.
-			configurations {
-				projectUnderlay
-			}
-			
-			// Add the tile service war to the overlay config
-			dependencies {
-				projectUnderlay project(path: ":tile-client", configuration: "tileClientUnderlay")
-			}
-			
-			// Append an action to the clean task that will clean up the old
-			// aperture-config.json file
-			clean {
-				delete "src/main/webapp/data/aperture-config.json"
-			}
-			
-			// Add a task of predefined type Copy to copy and filter the
-			// aperture config file.  It will run before the war build task.
-			task copyApertureConfig(type: Copy) {
-				inputs.file file("src/main/filteredResources/aperture-config.json")
-				outputs.file file("src/main/webapp/data/aperture-config.json")
-				
-				from "src/main/filteredResources"
-				into "src/main/webapp/data"
-				include "aperture-config.json"
-				filter ReplaceTokens, tokens:["project-name": project.name]
-			}
-			war.dependsOn copyApertureConfig
-			
-			// Append the overlay process to the end of the WAR task.
-			war << {
-				// unpack all the war files into the temp directory for this task
-				configurations.projectUnderlay.each {
-						ant.unwar src: it, dest: temporaryDir
-				}
-				// update the war file
-				ant.war basedir: temporaryDir, destfile: archivePath, update: true
-			}
-			war.dependsOn ":tile-client:war"
+			jettyRun.dependsOn watchThread
+			jettyRun.dependsOn war
 		}
 	}
 }

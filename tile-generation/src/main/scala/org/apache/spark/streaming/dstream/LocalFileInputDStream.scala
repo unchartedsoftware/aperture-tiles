@@ -28,8 +28,6 @@ import java.io.ObjectInputStream
 import org.apache.spark.rdd.UnionRDD
 import java.io.FilenameFilter
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.dstream.InputDStream
-import java.io.IOException
 import org.apache.spark.streaming.StreamingContext
 import java.io.File
 import scala.collection.mutable.HashSet

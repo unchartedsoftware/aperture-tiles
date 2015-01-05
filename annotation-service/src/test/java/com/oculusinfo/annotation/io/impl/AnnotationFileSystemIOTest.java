@@ -62,7 +62,6 @@ public class AnnotationFileSystemIOTest {
 	private static final String DATA_EXT = "json";
     private static double [] BOUNDS = { 180, 85.05, -180, -85.05};
     private static String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
-	private static final boolean VERBOSE = false;
     private int NUM_ENTRIES = 50;
 	private AnnotationIO _dataIO;
 	private PyramidIO _tileIO;

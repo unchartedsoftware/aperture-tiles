@@ -52,9 +52,6 @@ import com.oculusinfo.tile.rendering.color.ColorRamp;
  *
  * This renderer by default renders the sum of all key values.
  *
- * To render select keys override
- * {@link \#getTextsToDraw(List)}.
- *
  *
  * @author mkielo
  */

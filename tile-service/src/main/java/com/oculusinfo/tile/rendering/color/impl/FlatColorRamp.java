@@ -43,10 +43,10 @@ public class FlatColorRamp implements ColorRamp {
 	
 	
 	/**
-	 * Creates the ramp for the given colour and opacity. 
-	 * @param opacity
-	 * 	The opacity level from 0-255.
-	 * @param rgbCol
+	 * Creates the ramp for the given colour and opacity.
+     *
+	 * @param color The color object
+	 * @param opacity The opacity level from 0-255.
 	 * 	The rgb colour.
 	 */
 	public FlatColorRamp (Color color, double opacity) {

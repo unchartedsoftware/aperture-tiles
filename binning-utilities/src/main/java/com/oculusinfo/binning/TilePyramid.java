@@ -210,13 +210,13 @@ public interface TilePyramid {
 
 	/**
 	 * Returns a human-readable name for the projection used by this pyramid
-	 * @return
+	 * @return Human-readable name for the projection.
 	 */
 	public String getProjection ();
 
 	/**
 	 * Returns a human-readable name for the way tiles are laid out in this pyramid
-	 * @return
+	 * @return Human-readable name for the tile scheme.
 	 */
 	public String getTileScheme ();
 }

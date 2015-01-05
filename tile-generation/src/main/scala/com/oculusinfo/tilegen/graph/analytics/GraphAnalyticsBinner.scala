@@ -52,7 +52,6 @@ import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
 import org.apache.spark.graphx._
 import scala.collection.JavaConverters._
 
-
 /**
  * This application handles reading in a graph dataset from a CSV file, and generating
  * pre-tile analytics for the graph's nodes and communities.
@@ -79,9 +78,10 @@ import scala.collection.JavaConverters._
  *   	A given hierarchy "level" of clustered data to a given set of tile levels.  E.g., clustered data assigned
  *     	to oculus.binning.source.levels.0 will be used to generate tiles for all tiles given in the 
  *     	oculus.binning.levels.0 set of zoom levels, and so on for other level 'orders'.
- *      
- *      
- *  ----- Parameters for parsing graph community information [required]    
+ *
+ *  -----
+ *
+ *  Parameters for parsing graph community information [required]
  *      
  *  oculus.binning.graph.x.index
  *      The column number of X axis coord of each graph community/node (Double)
@@ -118,9 +118,10 @@ import scala.collection.JavaConverters._
  *         
  *  oculus.binning.graph.maxcommunities
  *  	The max number of communities to store per tile (ranked by community size). Default is 25.
- *   
- *   
- *  ----- Parameters for parsing graph edge information [optional].
+ *
+ *  -----
+ *
+ *  Parameters for parsing graph edge information [optional].
  *  	  NOTE: If edge parameters are not specified then analytics will ONLY be calculated
  *        for the graph's communities/nodes (NOT edges).
  *        
@@ -139,7 +140,8 @@ import scala.collection.JavaConverters._
  *      
  *  oculus.binning.graph.maxedges
  *  	The max number of both inter-community and intra-community edges to 
- *   	store per community (ranked by weight). Default is 10.              
+ *   	store per community (ranked by weight). Default is 10.
+ *
  *  -----    
  *      
  *  hbase.zookeeper.quorum
@@ -411,7 +413,7 @@ object GraphAnalyticsBinner {
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
-		val sc = connector.getSparkContext("Pyramid Binning")
+		val sc = connector.createContext(Some("Pyramid Binning"))
 		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file

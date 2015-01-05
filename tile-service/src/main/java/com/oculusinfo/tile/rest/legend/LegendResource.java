@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest.legend;
 import com.google.inject.Inject;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
+import com.oculusinfo.tile.rest.QueryParamDecoder;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
@@ -68,17 +69,21 @@ public class LegendResource extends ApertureServerResource {
 
 		try {
 
-            // decode the query parameters
-            JSONObject decodedQueryParams = new JSONObject();
-            if ( getRequest().getResourceRef().hasQuery() ) {
-                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery( true ) );
-            }
+            String outputType = "uri";
+			int width = 128;
+            int height = 1;
+            String orientationString = "horizontal";
+            boolean renderHorizontally = true;
 
-            String outputType = decodedQueryParams.optString("output", "uri");
-			int width = decodedQueryParams.optInt("width", 128);
-            int height = decodedQueryParams.optInt("height", 1);
-            String orientationString = decodedQueryParams.optString("orientation", "horizontal");
-            boolean renderHorizontally = orientationString.equalsIgnoreCase("horizontal");
+            // decode the query parameters
+            JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
+            if ( decodedQueryParams != null ) {
+                outputType = decodedQueryParams.optString( "output", outputType );
+                width = decodedQueryParams.optInt( "width", width );
+                height = decodedQueryParams.optInt( "height", height );
+                orientationString = decodedQueryParams.optString( "orientation", orientationString );
+                renderHorizontally = orientationString.equalsIgnoreCase( "horizontal" );
+            }
 
             setStatus(Status.SUCCESS_OK);
 

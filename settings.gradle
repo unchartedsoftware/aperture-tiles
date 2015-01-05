@@ -1,13 +1,52 @@
+// tile generation modules
+ext.tileGenProjects = [
+		'math-utilities',
+		'geometric-utilities',
+		'binning-utilities',
+		'tile-generation',
+		'tile-packaging'
+] as Set
+
+// tile client/server Projects
+ext.clientServerProjects = [
+		'math-utilities',
+		'geometric-utilities',
+		'binning-utilities',
+		'tile-generation',
+		'spark-tile-utilities',
+		'tile-service',
+		'annotation-service',
+		'tile-client',
+		'tile-client-template',
+		'tile-examples:julia-demo',
+		'tile-examples:julia-demo-live',
+		'tile-examples:twitter-topics:twitter-topics-utilities',
+		'tile-examples:twitter-topics:twitter-topics-client'
+] as Set
+
+// Projects used for live tiling
+ext.liveTileGenProjects = ['tile-service', 'spark-tile-utilities'] as Set
+liveTileGenProjects.addAll(tileGenProjects)
+liveTileGenProjects.remove('tile-packaging')
+
+ext.projects = ""
+switch (buildProjects) {
+	case "tileGeneration":
+		ext.projects = tileGenProjects
+		break
+	case "clientServer":
+		ext.projects = clientServerProjects
+		break
+	case "liveTiling":
+		ext.projects = liveTileGenProjects
+		break
+	case "all":
+		ext.projects = tileGenProjects + clientServerProjects
+		break
+	default:
+		throw new StopExecutionException("Unsupported build type '$buildProjects' specified")
+}
+
 // List of include sub-projects
-include 'math-utilities', 
-	'geometric-utilities', 
-	'binning-utilities', 
-	'tile-generation', 
-	'tile-service',
-	'tile-packaging',
-	'annotation-service',
-	'tile-client',
-	'tile-examples:julia-demo',
-	'tile-examples:julia-demo-live',
-	'tile-examples:twitter-topics:twitter-topics-utilities',
-	'tile-examples:twitter-topics:twitter-topics-client'
+projects.each { projectName -> include projectName }
+
