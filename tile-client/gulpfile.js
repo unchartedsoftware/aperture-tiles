@@ -55,7 +55,7 @@ gulp.task('clean', function () {
 });
 
 gulp.task('lint', function() {
-     return gulp.src( ['src/js/**/*.js', '!src/js/openlayers/*.js'] )
+     return gulp.src( ['src/js/**/*.js'] )
              .pipe( jshint() )
              .pipe( jshint('.jshintrc') )
              .pipe( jshint.reporter('jshint-stylish') );
@@ -89,7 +89,7 @@ gulp.task('build-min-js', [ 'lint' ], function() {
     return buildMin( './src/js/api.js', 'tiles.min.js' );
 });
 
-gulp.task('build-js', [ 'lint' ], function() {
+gulp.task('build-js', function() {
     return build( './src/js/api.js', 'tiles.js' );
 });
 
