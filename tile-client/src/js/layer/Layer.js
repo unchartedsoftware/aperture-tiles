@@ -23,9 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A layer interface that stores common functionality across all layer types.
- */
 ( function() {
 
     "use strict";
@@ -33,6 +30,13 @@
     var Util = require('../util/Util'),
         PubSub = require('../util/PubSub');
 
+    /**
+     * Instantiate a Layer object.
+     * @class Layer
+     * @classdesc A Layer class, the base class for all layer implementations.
+     *
+     * @param {Object} spec - The specification object.
+     */
     function Layer( spec ) {
         this.uuid = Util.generateUuid();
         this.name = spec.name || "Unnamed Layer";
@@ -46,9 +50,10 @@
     Layer.prototype = {
 
         /**
-         * Set the opacity of the layer
+         * Set the opacity of the layer.
+         * @memberof Layer.prototype
          *
-         * @param opacity {float} opacity value from 0 to 1
+         * @param {float} opacity - opacity value from 0 to 1.
          */
         setOpacity: function( opacity ) {
             this.spec.opacity = opacity;
@@ -60,6 +65,9 @@
 
         /**
          * Returns the opacity of the layer.
+         * @memberof Layer.prototype
+         *
+         * @returns {float} The opacity of the layer.
          */
         getOpacity: function() {
             return this.spec.opacity;
@@ -67,6 +75,7 @@
 
         /**
          * Set the visibility of the layer.
+         * @memberof Layer.prototype
          *
          * @param visibility {boolean} whether the layer is visible or not
          */
@@ -80,6 +89,9 @@
 
         /**
          * Returns the visibility of the layer.
+         * @memberof Layer.prototype
+         *
+         * @returns {boolean} If the layer is visible or not.
          */
         getVisibility: function() {
             return this.spec.enabled;
@@ -87,6 +99,9 @@
 
         /**
          * Returns the UUID that uniquely identifies this layer.
+         * @memberof Layer.prototype
+         *
+         * @returns {String} The UUID of the layer.
          */
         getUUID: function() {
             return this.uuid;
@@ -94,6 +109,9 @@
 
         /**
          * Returns the publish/subscribe channel id of this specific layer.
+         * @memberof Layer.prototype
+         *
+         * @returns {String} The publish/subscribe channel for the layer.
          */
         getChannel: function () {
             return 'layer.' + this.domain + '.' + this.uuid;

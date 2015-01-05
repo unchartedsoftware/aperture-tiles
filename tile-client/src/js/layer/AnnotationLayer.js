@@ -23,9 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * An annotation layer that is used to manage mutable tile data.
- */
 ( function() {
 
     "use strict";
@@ -36,6 +33,61 @@
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
+    /**
+     * Ensures an annotation object meets the minimum attribute requirements.
+     *
+     * @param {Object} annotation - The annotation object.
+     *
+     * @returns {boolean} Whether or not the input is valid.
+     */
+    function isAnnotationInputValid( annotation ) {
+        if ( annotation.x === undefined ) {
+            console.error( "Annotation argument is missing the 'x' attribute");
+            return false;
+        }
+        if ( annotation.y === undefined ) {
+            console.error( "Annotation argument is missing the 'y' attribute");
+            return false;
+        }
+        if ( annotation.level === undefined ) {
+            console.error( "Annotation argument is missing the 'level' attribute");
+            return false;
+        }
+        if ( annotation.range === undefined ) {
+            console.error( "Annotation argument is missing the 'range' attribute");
+            return false;
+        }
+        if ( annotation.group === undefined ) {
+            console.error( "Annotation argument is missing the 'group' attribute");
+            return false;
+        }
+        if ( annotation.data === undefined ) {
+            console.error( "Annotation argument is missing the 'data' attribute");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Instantiate an AnnotationLayer object.
+     * @class AnnotationLayer
+     * @augments Layer
+     * @classdesc A client rendered layer object. Uses JSON data retrieved from the
+     *            server in conjunction with a Renderer object or html function to
+     *            create interactable DOM elements. AnnotationLayers differ from
+     *            ClientLayers in that the data they represent is mutable.
+     *
+     * @param {Object} spec - The specification object.
+     * <pre>
+     * {
+     *     opacity  {float}    - The opacity of the layer. Default = 1.0
+     *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
+     *     zIndex   {integer}  - The z index of the layer. Default = 1000
+     *     renderer {Renderer} - The tile renderer object. (optional)
+     *     html     {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     * }
+     * </pre>
+     */
     function AnnotationLayer( spec ) {
         // set reasonable defaults
         spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 500;
@@ -46,6 +98,11 @@
 
     AnnotationLayer.prototype = Object.create( Layer.prototype );
 
+    /**
+     * Activates the layer object. This should never be called manually.
+     * @memberof AnnotationLayer
+     * @private
+     */
     AnnotationLayer.prototype.activate = function() {
 
         // add the new layer
@@ -78,6 +135,11 @@
         }
     };
 
+    /**
+     * Dectivates the layer object. This should never be called manually.
+     * @memberof AnnotationLayer
+     * @private
+     */
     AnnotationLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
@@ -86,21 +148,30 @@
     };
 
     /**
-     * Updates the theme associated with the layer
+     * Updates the theme associated with the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {String} theme - The theme identifier string.
      */
     AnnotationLayer.prototype.setTheme = function( theme ) {
         this.spec.theme = theme;
     };
 
     /**
-     * Get the current theme for the layer
+     * Get the current theme for the layer.
+     * @memberof AnnotationLayer
+     *
+     * @returns {String} The theme identifier string.
      */
     AnnotationLayer.prototype.getTheme = function() {
         return this.spec.theme;
     };
 
     /**
-     * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
+     * Set the z index of the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
      */
     AnnotationLayer.prototype.setZIndex = function ( zIndex ) {
         // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
@@ -113,72 +184,69 @@
     };
 
     /**
-     * Get the layers zIndex
+     * Get the layers zIndex.
+     * @memberof AnnotationLayer
+     *
+     * @returns {integer} The zIndex for the layer.
      */
     AnnotationLayer.prototype.getZIndex = function () {
         return this.spec.zIndex;
     };
 
     /**
-     * Create the a new annotation
+     * Write the a new annotation to the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {Object} annotation - The target annotation.
+     * @param {Function} callback - The callback function executing on success.
      */
-    AnnotationLayer.prototype.write = function( position ) {
-
-        var that = this,
-            coord;
-
-        // temp for debug writing
-        function DEBUG_ANNOTATION( coord ) {
-            var randomGroupIndex = Math.floor( that.spec.groups.length*Math.random() );
-            return {
-                x: coord.x,
-                y: coord.y,
-                group: that.spec.groups[ randomGroupIndex ],
-                range: {
-                    min: 0,
-                    max: that.map.getZoom()
-                },
-                level: that.map.getZoom(),
-                data: {}
-            };
+    AnnotationLayer.prototype.write = function( annotation, callback ) {
+        if ( !isAnnotationInputValid( annotation ) ) {
+            return;
         }
-
-        // get position and tilekey for annotation
-        coord = this.map.getCoordFromViewportPixel( position.x, position.y );
-
-        // write annotation
         AnnotationService.writeAnnotation(
             this.spec.source.id,
-            DEBUG_ANNOTATION( coord ),
+            annotation,
             function() {
-               // TODO: refresh tile
-                return true;
+                // TODO: refresh tile
+                callback();
             });
     };
 
     /**
-     * Modify an existing annotation
+     * Modify an existing annotation in the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {Object} annotation - The target annotation.
+     * @param {Function} callback - The callback function executing on success.
      */
-    AnnotationLayer.prototype.modify = function( annotation ) {
+    AnnotationLayer.prototype.modify = function( annotation, callback ) {
+        if ( !isAnnotationInputValid( annotation ) ) {
+            return;
+        }
         AnnotationService.modifyAnnotation(
             this.spec.source.id,
             annotation,
             function() {
-               // TODO: refresh tile
-                return true;
+                // TODO: refresh tile
+                callback();
             });
     };
 
     /**
-     * Remove an existing annotation.
+     * Remove an existing annotation from the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {Object} certificate - The target annotation certificate.
+     * @param {Function} callback - The callback function executing on success.
      */
-    AnnotationLayer.prototype.remove = function( annotation ) {
+    AnnotationLayer.prototype.remove = function( certificate, callback ) {
         AnnotationService.removeAnnotation(
             this.spec.source.id,
-            annotation.certificate,
+            certificate,
             function() {
                // TODO: refresh tile
-                return true;
+                callback();
             });
     };
 

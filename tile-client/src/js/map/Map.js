@@ -23,10 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A map object that acts as a central containing for all layers and other map
- * components.
- */
 ( function() {
 
 	"use strict";
@@ -52,8 +48,9 @@
         removeAxis;
 
     /**
-     * Private: Set callbacks to update the maps tile focus, identifying which tile
+     * Set callbacks to update the maps tile focus, identifying which tile
      * the user is currently hovering over.
+     * @private
      *
      * @param map {Map} The map object.
      */
@@ -94,7 +91,8 @@
     };
 
     /**
-     * Private: Activates a component.
+     * Activates a component.
+     * @private
      *
      * @param map       {Map} The map object.
      * @param component {*}   The component to activate.
@@ -108,7 +106,8 @@
     };
 
     /**
-     * Private: Deactivates a component.
+     * Deactivates a component.
+     * @private
      *
      * @param map       {Map} The map object.
      * @param component {*}   The component to deactivate.
@@ -124,7 +123,8 @@
     };
 
     /**
-     * Private: Activates deferred components when the map is ready.
+     * Activates deferred components when the map is ready.
+     * @private
      *
      * @param map {Map} The map object.
      */
@@ -137,9 +137,10 @@
     };
 
     /**
-     * Private: Adds a base layer to the map. If no baselayer is attached, it
+     * Adds a base layer to the map. If no baselayer is attached, it
      * will also activate it, along with any deferred components that were attached
      * first.
+     * @private
      *
      * @param map       {Map}       The map object.
      * @param baselayer {BaseLayer} The baselayer object.
@@ -166,7 +167,8 @@
     };
 
     /**
-     * Private: Adds a layer object to the map and activates it.
+     * Adds a layer object to the map and activates it.
+     * @private
      *
      * @param map       {Map}   The map object.
      * @param layer {Layer} The layer object.
@@ -182,7 +184,8 @@
     };
 
     /**
-     * Private: Adds an Axis object to the map and activates it.
+     * Adds an Axis object to the map and activates it.
+     * @private
      *
      * @param map  {Map}   The map object.
      * @param axis {Axis} The layer object.
@@ -215,8 +218,9 @@
     };
 
     /**
-     * Private: Removes a base layer from the map. If no other baselayer is attached, it
+     * Removes a base layer from the map. If no other baselayer is attached, it
      * will refuse to do so.
+     * @private
      *
      * @param map       {Map}       The map object.
      * @param baselayer {BaseLayer} The baselayer object.
@@ -240,7 +244,8 @@
     };
 
     /**
-     * Private: Removes a layer object from the map and deactivates it.
+     * Removes a layer object from the map and deactivates it.
+     * @private
      *
      * @param map       {Map}   The map object.
      * @param layer {Layer} The layer object.
@@ -254,7 +259,8 @@
     };
 
     /**
-     * Private: Removes an Axis object from the map and deactivates it.
+     * Removes an Axis object from the map and deactivates it.
+     * @private
      *
      * @param map  {Map}   The map object.
      * @param axis {Axis} The layer object.
@@ -267,6 +273,15 @@
         axis.map = null;
     };
 
+    /**
+     * Instantiate a Map object.
+     * @class Map
+     * @classdesc A map object that acts as a central container for all layers and other map
+     *            components.
+     *
+     * @param {String} id - The DOM element id string.
+     * @param {Object} spec - The specification object.
+     */
 	function Map( id, spec ) {
 
         spec = spec || {};
@@ -308,8 +323,9 @@
 
         /**
          * Adds a component to the map.
+         * @memberof Map.prototype
          *
-         * @param component {*} The component object.
+         * @param {Layer|Axis} component - The component object.
          */
         add: function( component ) {
             if ( component instanceof BaseLayer ) {
@@ -330,8 +346,9 @@
 
         /**
          * Removes a component from the map.
+         * @memberof Map.prototype
          *
-         * @param component {*} The component object.
+         * @param {Layer|Axis} component - The component object.
          */
         remove: function( component ) {
             if ( this.baseLayerIndex < 0 ) {
@@ -347,6 +364,9 @@
 
         /**
          * Returns the tilekey for the tile currently under the mouse.
+         * @memberof Map.prototype
+         *
+         * @returns {String} The tilekey currently under the mouse.
          */
         getTileFocus: function() {
             return this.tileFocus;
