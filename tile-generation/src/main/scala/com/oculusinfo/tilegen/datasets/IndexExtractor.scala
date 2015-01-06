@@ -85,7 +85,7 @@ abstract class IndexExtractor (pyramid: TilePyramid) {
 object IndexExtractorFactory {
 	private[datasets] val FIELDS_PROPERTY =
 		new ListProperty(new StringProperty("field", "The fields used by this index extractor", ""),
-			"fields",
+			"field",
 			"The fields that the index extractor will pull from a data record to construct that record's index")
 	val defaultFactory: String = "cartesian"
 	val defaultFactories: Seq[ConfigurableFactory[_ <: IndexExtractor]] = Seq(

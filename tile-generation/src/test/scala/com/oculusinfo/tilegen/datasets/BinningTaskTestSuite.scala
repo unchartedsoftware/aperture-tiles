@@ -88,6 +88,7 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		props.setProperty("oculus.binning.table", "test")
 		props.setProperty("oculus.binning.projection.autobounds", "false")
 		props.setProperty("oculus.binning.index.type", "cartesian")
+		props.setProperty("oculus.binning.index.pyramid.type", "EPSG:4326")
 		props.setProperty("oculus.binning.index.pyramid.minX", "0.0")
 		props.setProperty("oculus.binning.index.pyramid.maxX", "7.9999")
 		props.setProperty("oculus.binning.index.pyramid.minY", "0.0")
