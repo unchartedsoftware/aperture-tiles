@@ -15,14 +15,15 @@ Note that Aperture Tiles supports two types of tile rendering:
 - **Server-side rendering**, in which the Server renders the tiles as image files and passes them on to the Client.
 - **Client-side rendering**, in which the Server passes the tiles as JSON data to the Client, which then renders them directly.
 
-The fastest way to create these the Tile Server and Tile Client is with the Tile Client Template, which contains samples of both. You can also look at the source code for the [tile examples](../../../demos) to understand the structure and configuration of the Tile Server and Tile Client.
+The fastest way to create a Tile Server and Tile Client is to modify an existing example application, which are available in the source code (*tile-examples/*). These examples will help you understand the structure and configuration of the Tile Server and Tile Client.
 
 ## <a name="template-setup"></a> Template Setup ##
 
 To begin configuring your Tile Server and Tile Client:
 
-1. Create a copy of the *aperture-tiles/tile-client-template* directory and give it a unique name (e.g., *new-project*).
-2. Update the Gradle build file (*new-project/build.gradle*) to change the following fields:
+1. Choose the Julia demo (*tile-examples/julia-demo/*) or Twitter Topics demo (*tile-examples/twitter-topics/*) to use as a template. The Julia demo displays a heatmap on a crossplot map and utilizes client-side rendering, while the Twitter Topics demo displays a heatmap on a geographic map with client-side rendering tile carousel images.
+2. Copy the appropriate demo and give it a unique name (e.g., *new-project*).
+3. Update the Gradle build file (*new-project/build.gradle*) to change the following fields:
 	- `description`: Enter an appropriate project description. 
 	- `group`: Enter an appropriate group ID.
 	- `version`: Enter an appropriate project version number.
@@ -35,7 +36,7 @@ The Tiler Server in your new template relies on the following configuration file
 - [Tile Properties](#tileproperties), which specifies constants used by Guice during initialization, including the location of your Spark installation, and the location of some server configuration files.
 - [Layers](#layers), which defines the individual layers of data that can be overlaid on your base map. The layers file also indicates whether rendering should be performed by the server or the client.
 
-The remainder of the tile server configuration, which includes instantiation of the map, its base feature and axis configuration, should be handled in the [Application JavaScript](#app-js) (*/src/main/webapp/js/***app.js**).
+The remainder of the tile server configuration, which includes instantiation of the map, its base features and axis configuration, should be handled in the [Application JavaScript](#app-js) (*/src/main/webapp/js/***app.js**).
 
 ### <a name="webxml"></a> Web XML ###
 
@@ -53,20 +54,17 @@ Edit the **tile.properties** file in *new-project/src/main/resources/*. This fil
 - The home directory of Spark
 - Any JARs you want to add to the Spark context
 
-
 ### <a name="layers"></a> Layers ##
 
-The layers file points to the tiles you created and indicates how they should be displayed on the base map. 
+The layers file points to the tiles you created and indicates how they should be displayed on the base map. There are two types of layer files:
 
-Two example layer files are provided in the Tile Client Template (`tile-client-template/src/main/resources/layers`):
-
-- **crossplot-layers.json**: describes the parameters of an X/Y cross plot layer
-- **geographic-layers.json**: describes the parameters of a world map layer
+- **Crossplot layer**: Describes the parameters of an X/Y cross plot layer. An example can be found in the Julia example at *tile-examples\julia-demo\src\main\resources\layers*.
+- **Geographic layer**: Describes the parameters of a world map layer. An example can be found in the Twitter Topics example at *tile-examples\twitter-topics\twitter-topics-client\src\main\resources\layers*.
 
 Choose the appropriate layer type, then review the following sections to understand how to edit the file for the selected type. Parameters in the layers file are split into two sections: those in the **public** node are accessible from the client, while those under the **private** note are not.
 
-Note that maps with multiple layers can be created by specifying multiple layer descriptions in the **layers.json** file. 
-					
+Note that maps with multiple layers can be created by specifying multiple layer descriptions in the **layers.json** file.
+
 #### <a name="layer-id"></a> ID ####
 
 The ID parameter uniquely identifies the layer.

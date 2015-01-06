@@ -25,8 +25,8 @@ The following pre-built distribution can be used to quickly generate and display
 
 - <a name="tile-generator"></a>**Tile Generator**: Enables you to generate a set of tiles that can be viewed using the template Tile Client available below. This version was built for Apache Spark 1.0 and CDH 4.6.
 	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.4-dist.zip" class="download-link">Tile Generator</a><br/><br/>
-- <a name="tile-client-template"></a>**Tile Client Template**: An example Tile Client that you can quickly copy and deploy to your web server after minimal modification to display tiles in a browser.
-	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-server-0.4-dist.zip" class="download-link">Tile Client Template</a>
+- <a name="tile-quick-start-template"></a>**Tile Quick Start Template**: An example Tile Client that you can quickly copy and deploy to your web server after minimal modification to display tiles in a browser.
+	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-quickstart-0.4.0.zip" class="download-link">Tile Quick Start Template</a>
 
 <div class="git">
 	<h2>Interested in Learning More?</h2>

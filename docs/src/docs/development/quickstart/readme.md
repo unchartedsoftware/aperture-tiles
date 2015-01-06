@@ -44,8 +44,8 @@ Otherwise, if your data set is sufficiently small (i.e., it can fit in the memor
 
 Save the following Aperture Tiles distributions available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Client template
-- [Tile Client Template](../../../download/#tile-client-template): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start template
+- [Tile Quick Start Template](../../../download/#tile-quick-start-template): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
@@ -75,7 +75,7 @@ For delimited numeric data sources like the Julia set, the included CSVBinner to
 
 ### <a name="base-property-file-configuration"></a> Base Property File Configuration ###
 
-Access the **julia-base.bd** file in your `tile-generator/examples` folder and edit the properties in the following sections.
+Access the **julia-base.bd** file in your *tile-generator/examples* folder and edit the properties in the following sections.
 
 Note that for a typical Aperture Tiles project, you will need to edit additional properties to define the types of fields in your source data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website. 
 
@@ -142,7 +142,7 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 
 ### <a name="tiling-property-file-configuration"></a> Tiling Property File Configuration ###
 
-The **julia-tiling.bd** file in your `tile-generator/examples` folder should not need to be edited. Note, however, that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
+The **julia-tiling.bd** file in your *tile-generator/examples* folder should not need to be edited. Note, however, that for a typical Aperture Tiles project, you will need to edit additional properties to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
 ### <a name="execution"></a> Execution ###
 
@@ -167,45 +167,115 @@ Note that the `oculus.binning.prefix` value is only included if you set it in th
 
 ## <a name="tile-server-configuration"></a> Tile Server Configuration ##
 
-For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-client-template.zip](../../../download/#tile-client-template) distribution.
+For the purposes of this demonstration, a preconfigured example server application has been provided as part of the [tile-quickstart.zip](../../../download/#tile-quick-start-template) distribution.
 
-For typical Aperture Tiles projects, you will need to edit the **web.xml** and **tile.properties** files in this directory. For more information on editing these files, see the [Tile Generation](../generation/) topic on this website.
+For typical Aperture Tiles projects, you will also need to edit the **web.xml** and **tile.properties** files in this directory. For more information on editing these files, see the [Configuration](../configuration/) topic on this website.
 
 ## <a name="tile-client-configuration"></a> Tile Client Configuration ##
 
-To configure the Tile Client application to display the Avro files containing your source data, you must edit two types of configuration files:
+To configure the Tile Client application to display the Avro files containing your source data, you must edit two types of properties, both of which are available in the [tile-quickstart.zip](../../../download/#tile-quick-start-template) distribution. Extract the contents of the file to access them.
 
-- Map Properties (within the tile-client-template.zip at `WEB-INF/classes/maps` or within the source at `tile-client-template/src/main/resources/maps`), which specifies the attributes of the base map or plot on which your data is displayed. To include more than one map in your project, create a separate Map Properties file for each.
-- Layer Properties (within the tile-client-template.zip at `WEB-INF/classes/layers` or within the source at `tile-client-template/src/main/resources/layers`), which specifies the layers that can be overlaid on your base map or plot.
-
-Both files are available in the [tile-client-template.zip](../../../download/#tile-client-template) distribution. Extract the contents of the file to access them.
+- Map properties (within the tile-quickstart.zip at *src/main/webapp/***app.js**) specify the attributes of the base map or plot on which your data is displayed.
+- Layer Properties (within the tile-quickstart.zip at *src/main/resources/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot.
 
 ### <a name="map-properties"></a> Map Properties ###
 
 To edit the map properties for your project:
 
-1. Access the **crossplot-maps.json.example** file in `tile-client-template/WEB-INF/classes/maps`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
-2. Open the crossplot json file for editing. In the `PyramidConfig` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Points in the Julia set will range from **-2** to **2** along both axes.
-3. In the `AxisConfig` section for both axes, it is useful to set the `intervalSpec` `type` to **percentage** and the *increment* value to **20**. 
-4. In the `MapConfig` > `options` section, set the `numZoomLevels` to **6**, as this is the number of zoom levels you created when generating the Julia set tiles.
-5. Save the file.
+1. Open the **app.js** file in the root directory of the extracted Tile Quick Start template.
+2. Note how the map instantiation specifies the boundaries of the Julia set values:
 
-Note that for typical Aperture Tiles projects, you can also use this file to configure other base map/plot properties, such as:
+	```js
+	map = new Map( "map", {
+		pyramid : {
+			type : "AreaOfInterest",
+			minX : -2,
+			maxX : 2,
+			minY : -2,
+			maxY : 2
+	    },
+	    options: numZoomLevels: 6
+	});
+	```
 
-- Map type (geographic or X/Y plot)
-- Axis names
-- Unit specifications
-- Marker styles
+	Where:
+	- `pyramid` contains definitions for:
+		- The map `type` ('AreaOfInterest' denotes a crossplot)
+		- The minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Points in the Julia set will range from **-2** to **2** along both axes.
+	- `numZoomLevels` specifies number of zoom levels (6) you created when generating the Julia set tiles.
+
+3. If desired, you can also instantiate the axes, which are not displayed by default. Replace the layer parser the with the following lines:
+
+	```js
+	var map,
+	    axis0,
+        axis1,
+        baseLayer,
+        serverLayer;
+    ```
+
+ 	Add the following `axis0` and `axis1` configurations to adjust the axes for the Julia set data:
+
+	```js
+	axis0 = new tiles.Axis({
+            position: 'bottom',
+            title: 'X',
+            isOpen: true,
+            repeat: false,
+            intervals: {
+                type: 'percentage',
+                increment: 20
+            },
+            units: {
+                type: 'decimal'
+            }
+        });
+
+        axis1 =  new tiles.Axis({
+            position: 'left',
+            title: 'Y',
+            isOpen: true,
+            repeat: false,
+            intervals: {
+                type: 'percentage',
+                increment: 20
+            },
+            units: {
+                type: 'decimal'
+            }
+        });
+	```
+
+	Where:
+	- `title` specifies the axis label
+	- `isOpen` indicates whether to show the axes by default for new sessions
+	- `repeat` indicates whether the axes repeat (most useful for geographic maps)
+	- `intervals` specifies how the axis intervals are incremented
+	- `units` specifies the units on the axes
+
+	Finally, update the map instantiation with the following lines:
+
+	```js
+	map = new tiles.Map( "map" );
+    map.add( serverLayer );
+    map.add( axis0 );
+    map.add( axis1 );
+    map.add( baseLayer );
+	```
+
+4. Edit the `serverLayer` to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
+5. Edit the baseLayer to change the background color of the crossplot, if desired. The default background color is black.
+6. Save the file.
 
 ### <a name="layer-properties"></a> Layer Properties ###
 
 To edit the layer properties for your project:
 
-1. Access the **crossplot-layers.json.example** file in `tile-client-template/WEB-INF/classes/layers`, remove the **.example** extension and delete the example geographic json file in the same directory. It is not needed for this example.
-2. Open the crossplot json file for editing. Edit the children `id` property (*not* the layer `id` property) so it matches the name given to the directory (file system directory or HBase table name) in which your Avro tiles were generated. For the Julia set example, this will be **julia.x.y.v**.
-3. In the `pyramid` section, specify the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
-4. If your Avro tiles are saved to your local machine, add or edit the following values in the `data` section:
-	- `type`: Enter **file**
+1. Access the *src/main/resources/layers/***julia-layer.json** file.
+2. Make sure the `id` property under the `private' node matches the name given to the file system directory or HBase table name to which your Avro tiles were generated. For the Julia set example, this should be **julia.x.y.v**.
+3. Note how the the `pyramid` section under the public `node` specifies the minimum and maximum values for the X (`minX` and `maxX`) and Y (`min` and `maxY`) axes. Make sure the values you specify here match the range you specified in the map properties.
+4. If your Avro tiles are saved to your local machine, add or edit the following values in the `data` section under the `private` node:
+	- `type`: Enter *file*
 	- `root.path`: Specify the *root* path to which you generated the Avro tiles. Note that the `id` you specified in step 2 is the leaf folder that contains the Avro tiles. Set the `root.path` to the folder above that (e.g., */data/tiles/*).
 5. If your Avro tiles are saved to HBase, add or edit the following values in the `data` section:
 	- `type`: Enter *hbase*
@@ -225,9 +295,9 @@ Note that for typical Aperture Tiles projects, you can also use this file to con
 
 ## <a name="deployment"></a> Deployment ##
 
-Once you have finished configuring the map and layer properties, copy the `tile-client-template/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory.
+Once you have finished configuring the map and layer properties, copy the `tile-quickstart/` folder to your web server's (e.g., Apache Tomcat or Jetty) webapps directory.
 
-Access the `/tile-client-template` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-client-template`.
+Access the `/tile-quickstart` web directory on the server from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available. For example if your server were `www.example.com`, the URL would be `http://www.example.com/tile-quickstart`.
 
 ## Next Steps ##
 
