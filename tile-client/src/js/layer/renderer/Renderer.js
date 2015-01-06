@@ -67,7 +67,7 @@
      * provide a selector in situations where this is not the case. This is only relevant
      * if the hook callback is set.
      *
-     * @returns {boolean || string}
+     * @returns {boolean|string}
      */
     Renderer.prototype.getEntrySelector = function() {
         return false;
@@ -92,9 +92,9 @@
      * will execute it passing the respective element and data entry along with all entries and
      * the raw tile data.
      *
-     * @param elements {HTMLCollection} A collection of html elements.
-     * @param entries  {Array} The array of all data entries.
-     * @param data     {Object} The raw tile data object.
+     * @param {HTMLCollection}  elements  A collection of html elements.
+     * @param {Array} entries - The array of all data entries.
+     * @param {Object} data - The raw tile data object.
      */
     Renderer.prototype.hook = function( elements, entries, data ) {
         var hook = this.spec.hook,
