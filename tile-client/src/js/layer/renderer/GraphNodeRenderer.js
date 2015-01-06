@@ -56,37 +56,51 @@
         }
     };
 
+    /**
+     * Instantiate a GraphNodeRenderer object.
+     * @class GraphNodeRenderer
+     * @augments Renderer
+     * @classDesc A Renderer implementation that renders a set of graph nodes.
+     *
+     * @param spec {Object} The specification object.
+     * <pre>
+     * {
+     *     node: {
+     *         xKey      {String} - The attribute for the x coordinate.
+     *         yKey      {String} - The attribute for the y coordinate.
+     *         radiusKey {String} - The attribute for the node radius.
+     *         themes    {Array}   The array of RenderThemes to be attached to this component.
+     *     },
+     *     criticalNode: {
+     *         flag     {String} - The boolean attribute to designate critical nodes.
+     *         themes   {Array}  - The array of RenderThemes to be attached to this component.
+     *     },
+     *     parentNode: {
+     *         xKey      {String} - The attribute for the parent node x coordinate.
+     *         yKey      {String} - The attribute for the parent node y coordinate.
+     *         radiusKey {String} - The attribute for the node radius.
+     *         themes    {Array}  - The array of RenderThemes to be attached to this component.
+     *     }
+     * }
+     * </pre>
+     */
     function GraphNodeRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value[0].communities";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
 
-    /**
-     * Instantiate a GraphNodeRenderer object.
-     *
-     * @param spec {Object} The specification object.
-     * {
-     *     node: {
-     *         xKey      {String} The attribute for the x coordinate.
-     *         yKey      {String} The attribute for the y coordinate.
-     *         radiusKey {String} The attribute for the node radius.
-     *         themes    {Array}  The array of RenderThemes to be attached to this component.
-     *     },
-     *     criticalNode: {
-     *         flag     {String} The boolean attribute to designate critical nodes.
-     *         themes   {Array}  The array of RenderThemes to be attached to this component.
-     *     },
-     *     parentNode: {
-     *         xKey      {String} The attribute for the parent node x coordinate.
-     *         yKey      {String} The attribute for the parent node y coordinate.
-     *         radiusKey {String} The attribute for the node radius.
-     *         themes    {Array}  The array of RenderThemes to be attached to this component.
-     *     }
-     * }
-     */
     GraphNodeRenderer.prototype = Object.create( Renderer.prototype );
 
+    /**
+     * Implementation specific rendering function.
+     * @memberof GraphNodeRenderer
+     * @private
+     *
+     * @param {Object} data - The raw data for a tile to be rendered.
+     *
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
+     */
     GraphNodeRenderer.prototype.render = function( data ) {
 
         var GRAPH_COORD_RANGE = 256,

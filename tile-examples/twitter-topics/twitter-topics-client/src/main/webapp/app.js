@@ -177,7 +177,7 @@ var appStart = function() {
          * text-shadow            {String} - The css text-shadow attribute for the component.
          * border                 {String} - The css border attribute for the component.
          */
-        darkRenderTheme = new tiles.RenderTheme( ".dark-theme", {
+        darkRenderTheme = new tiles.RenderTheme( "dark", {
             'color': "#FFFFFF",
             'color:hover': "#09CFFF",
             'text-shadow': "#000"

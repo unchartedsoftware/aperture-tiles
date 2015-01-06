@@ -54,18 +54,24 @@
 
     /**
      * Instantiate a TextByFrequencyRenderer object.
+     * @class TextByFrequencyRenderer
+     * @augments Renderer
+     * @classDesc A Renderer implementation that renders a histogram of the frequency of
+     * a particular topic over time, with the topic text next to it.
      *
      * @param spec {Object} The specification object.
+     * <pre>
      * {
      *     text: {
-     *         textKey  {String} The attribute for the text in the data entry.
-     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *         textKey  {String} - The attribute for the text in the data entry.
+     *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     },
      *     frequency: {
-     *         countKey {String} The attribute for the count in the data entry.
-     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *         countKey {String} - The attribute for the count in the data entry.
+     *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
+     * </pre>
      */
     function TextByFrequencyRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value";
@@ -75,6 +81,15 @@
 
     TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
 
+    /**
+     * Implementation specific rendering function.
+     * @memberof TextByFrequencyRenderer
+     * @private
+     *
+     * @param {Object} data - The raw data for a tile to be rendered.
+     *
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
+     */
     TextByFrequencyRenderer.prototype.render = function( data ) {
 
         var textKey = this.spec.text.textKey,

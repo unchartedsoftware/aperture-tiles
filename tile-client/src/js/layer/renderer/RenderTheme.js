@@ -23,20 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A render theme provides a mechanism to style separate components generated
- * from a renderer object. The theme's CSS is injected into the DOM under the supplied
- * selectors. This allows switching between themes on client rendered tiles by simply
- * appending the respective selector to a parent DOM element.
- *
- * It is the renderer implementations responsibility to ensure that the render
- * theme object is utilized correctly, as different implementations may require unique
- * styling.
- *
- * An alternative to using render themes would be either bypassing renderers all together
- * and using a lower level html provider function. Or using the hook function to insert
- * application or theme specific classes into the generated html entries.
- */
 ( function() {
 
     "use strict";
@@ -81,24 +67,48 @@
 
     /**
      * Instantiate a RenderTheme object.
+     * @class RenderTheme
+     * @classdesc The RenderTheme class provides a mechanism to style separate components
+     * generated from a Renderer object. The theme's CSS is injected into the DOM under the
+     * supplied selectors. This allows switching between themes on client rendered tiles by
+     * simply appending the respective selector to a parent DOM element.
      *
-     * @param selector {String} The selector to append the theme under in the DOM.
-     * @param spec     {Object} The specification object.
+     * It is the Renderer implementations responsibility to ensure that the render
+     * theme object is utilized correctly, as different implementations may require unique
+     * styling.
+     *
+     * An alternative to using RenderThemes would be either bypassing Renderers all together
+     * and using the lower level html provider function accepted by client rendered layers, or
+     * using the hook function to insert application or theme specific classes into the
+     * generated html entries.
+     *
+     * @param theme {String} The theme identification string. Currently restricted to "dark" and "light".
+     * @param spec  {Object} The specification object.
+     * <pre>
      * {
-     *     color                  {String} The css color attribute for the component.
-     *     color:hover            {String} The css color attribute for the component, under hover.
-     *     background-color       {String} The css background-color attribute for the component.
-     *     background-color:hover {String} The css background-color attribute for the component, under hover.
-     *     text-shadow            {String} The css text-shadow attribute for the component.
-     *     border                 {String} The css border attribute for the component.
+     *     color                  {String} - The css color attribute for the component.
+     *     color:hover            {String} - The css color attribute for the component, under hover.
+     *     background-color       {String} - The css background-color attribute for the component.
+     *     background-color:hover {String} - The css background-color attribute for the component, under hover.
+     *     text-shadow            {String} - The css text-shadow attribute for the component.
+     *     border                 {String} - The css border attribute for the component.
      * }
+     * </pre>
      */
-    function RenderTheme( selector, spec ) {
+    function RenderTheme( theme, spec ) {
         spec = spec || {};
-        this.selector = selector;
+        this.selector = ( theme === 'light' ) ? ".light-theme" : ".dark-theme";
         this.spec = spec;
     }
 
+    /**
+     * Injects the themes CSS under the provided selector and parent selector. This should
+     * only be called from within a Renderer class implementation, and it is the responsibility
+     * of the Renderer implementation to ensure it is used correctly.
+     * @private
+     *
+     * @param {Object} options - The options object containing the selector and parentSelector.
+     */
     RenderTheme.prototype.injectTheme = function( options ) {
         var theme = this.selector,
             spec = this.spec,

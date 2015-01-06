@@ -41,6 +41,8 @@
          * @param {integer} numEntries - The number of entries to render.
          * @param {integer} spacing - The he spacing between entries in pixels.
          * @param {integer} offset - The offset from the top of the tile to centre on in pixels.
+         *
+         * @returns {integer} The y pixel offset.
          */
         getYOffset: function( numEntries, spacing, offset ) {
             return offset - ( ( ( numEntries - 1) / 2 ) ) * spacing;
@@ -53,6 +55,8 @@
          * @param {integer} count - The local count.
          * @param {integer}totalCount - The global count.
          * @param {Object} options - The options object to set min and max font size and bias (optional).
+         *
+         * @returns {integer} The interpolated font size.
          */
         getFontSize: function( count, totalCount, options ) {
             options = options || {};
@@ -72,6 +76,8 @@
          *
          * @param {Object} obj - The object to traverse.
          * @param {String} attribPath - Period delimited attribute path.
+         *
+         * @returns {*} The nested value within the object.
          */
         getAttributeValue: function( obj, attribPath ) {
             var attribs = attribPath.split('.'),
@@ -97,9 +103,12 @@
         },
 
         /**
-         * Converts a hexcode color to its RGB counter part.
+         * Converts a hex code color to its RGB counter part.
+         * @memberof RenderUtil
          *
-         * @param hex {String} hex code color
+         * @param {String} hex - The hex code color.
+         *
+         * @returns {Object} The RGB color values.
          */
         hexToRgb: function(hex) {
             var bigint;
@@ -118,9 +127,12 @@
         },
 
         /**
-         * Converts an RGB color to its hexcode counter part.
+         * Converts an RGB color to its hex code counter part.
+         * @memberof RenderUtil
          *
-         * @param rgb {Object} RGB color
+         * @param {Object} rgb - The RGB color.
+         *
+         * @returns {String} The hex code color value.
          */
         rgbToHex: function( rgb ) {
             var r = rgb.r,
@@ -136,10 +148,13 @@
         },
 
         /**
-         * Increases the brightness of a hexcode color by a percentage factor
+         * Increases the brightness of a hex code color by a percentage factor
+         * @memberof RenderUtil
          *
-         * @param hex    {String} hex code color
-         * @param factor {float}  percentage factor of increase
+         * @param {String} hex - The hex code color.
+         * @param {float} factor - The percentage factor of increase.
+         *
+         * @returns {String} The adjusted hex code color value.
          */
         hexBrightness: function( hex, factor ) {
             var rgb = this.hexToRgb( hex );
@@ -149,9 +164,12 @@
         },
 
         /**
-         * Converts a hexcode color to greyscale using aluminosity based model
+         * Converts a hex code color to greyscale using a luminosity based model
+         * @memberof RenderUtil
          *
-         * @param hex {String} hex code color
+         * @param {String} hex - The  hex code color.
+         *
+         * @returns {String} The greyscale hex code color value.
          */
         hexGreyscale: function( hex ) {
             var rgb = this.hexToRgb( hex ),
@@ -164,18 +182,20 @@
         },
 
         /**
-         * Blends two hexcode colors together, defaults to 50/50 blend
+         * Blends two hex code colors together, defaults to 50/50 blend
+         * @memberof RenderUtil
          *
-         * @param hexA {String} hex code color A
-         * @param hexB {String} hex code color B
-         * @param [aIntoBPercentage] {float} percentage to blend hexA into hexB (optional)
+         * @param {String} hexA - The hex code color A.
+         * @param {String} hexB - The hex code color B.
+         * @param {float} aIntoBPercentage - The percentage to blend hexA into hexB (optional).
+         *
+         * @returns {String} The blended hex code color value.
          */
         hexBlend: function( hexA, hexB, aIntoBPercentage ) {
             var aPerc = Math.min( 1, aIntoBPercentage ) || 0.5,
                 bPerc = 1 - aPerc,
                 rgb1 = this.hexToRgb( hexA ),
                 rgb2 = this.hexToRgb( hexB );
-
             return this.rgbToHex({
                 r : ( rgb1.r*aPerc + rgb2.r*bPerc ),
                 g : ( rgb1.g*aPerc + rgb2.g*bPerc ),

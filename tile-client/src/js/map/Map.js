@@ -421,7 +421,7 @@
         setTheme: function( theme ) {
             if ( theme === 'dark' ) {
                 $( this.olMap.div ).removeClass( "light-theme" ).addClass( "dark-theme" );
-            } else if ( them === 'light' ) {
+            } else if ( theme === 'light' ) {
                 $( this.olMap.div ).removeClass( "dark-theme" ).addClass( "light-theme" );
             }
         },

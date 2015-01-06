@@ -66,6 +66,7 @@
      * provide a selector in situations where this is not the case. This is only relevant
      * if the hook callback is set.
      * @memberof Renderer
+     * @private
      *
      * @returns {boolean|string} The DOM element selector for each rendered entry.
      */
@@ -78,8 +79,9 @@
      * Returns an object containing the tiles html, along with an array of each data entry. The
      * implementation of this function is unique to each renderer.
      * @memberof Renderer
+     * @private
      *
-     * @returns {{html: string, entries: Array}} The html to render and an array of all DOM element entries.
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
      */
     Renderer.prototype.render = function() {
         return {
@@ -91,8 +93,9 @@
     /**
      * The hook callback executor function. If a hook function is provided to the renderer, this
      * will execute it passing the respective element and data entry along with all entries and
-     * the raw tile data.
+     * the raw tile data. This is called by the HtmlTile object, should not be called manually.
      * @memberof Renderer
+     * @private
      *
      * @param {HTMLCollection} elements - A collection of html elements.
      * @param {Array} entries - The array of all data entries.

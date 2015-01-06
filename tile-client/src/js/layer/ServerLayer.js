@@ -96,9 +96,9 @@
      * @param spec {Object} The Specification object.
      * <pre>
      * {
-     *     opacity {float}   - The opacity of the layer. Default = 1.0
-     *     enabled {boolean} - Whether the layer is visible or not. Default = true
-     *     zIndex  {integer} - The z index of the layer. Default = 1
+     *     opacity {float}   - The opacity of the layer. Default = 1.0.
+     *     enabled {boolean} - Whether the layer is visible or not. Default = true.
+     *     zIndex  {integer} - The z index of the layer. Default = 1.
      *     renderer: {
      *         coarseness {integer} - The pixel by pixel coarseness. Default based on server configuration.
      *         ramp       {String}  - The color ramp type. Default based on server configuration.
