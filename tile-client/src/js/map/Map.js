@@ -413,17 +413,16 @@
         },
 
         /**
-         * Returns the current theme of the map. Currently restricted to "dark"
-         * and "light".
+         * Set the theme of the map. Currently restricted to "dark" and "light".
          * @memberof Map.prototype
          *
          * @param {String} theme - The theme identification string of the map.
          */
         setTheme: function( theme ) {
             if ( theme === 'dark' ) {
-                $( this.olMap.div ).removeClass( "light-theme" ).addClass("dark-theme");
+                $( this.olMap.div ).removeClass( "light-theme" ).addClass( "dark-theme" );
             } else if ( them === 'light' ) {
-                $( this.olMap.div ).removeClass( "dark-theme" ).addClass("light-theme");
+                $( this.olMap.div ).removeClass( "dark-theme" ).addClass( "light-theme" );
             }
         },
 

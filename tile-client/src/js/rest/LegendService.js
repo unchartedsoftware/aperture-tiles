@@ -23,11 +23,8 @@
  * SOFTWARE.
  */
 /**
- * A namespace that provides layer service functionality. Functionality
- * includes:
- *
- *      - Retrieving an encoded legend image via GET request
- *      - Retrieving a legend image via GET request
+ * @namespace LegendService
+ * @classdesc A utility namespace that provides legend service REST functionality.
  */
 ( function() {
 
@@ -41,10 +38,11 @@
          * Get an encoded image string representing the rendering legend. Upon success,
          * will execute success callback function passing the resulting string as first
          * argument.
+         * @memberof LegendService
          *
-         * @param layerId   {String}   layer id
-         * @param [params]  {Object}   query parameter configuration overrides (optional)
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {Object} params - The query parameter configuration overrides (optional).
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getEncodedImage: function( layerId, params, success ) {
             var _params = ( typeof params === "object" ) ? params : null,
@@ -63,10 +61,11 @@
 
         /**
          * Get a png image representing the rendering legend.
+         * @memberof LegendService
          *
-         * @param layerId   {String}   layer id
-         * @param [params]  {Object}   query parameter configuration overrides (optional)
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {Object} params - The query parameter configuration overrides (optional).
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getImage: function( layerId, params, success ) {
             var _params = ( typeof params === "object" ) ? params : {},

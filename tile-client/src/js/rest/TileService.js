@@ -24,11 +24,8 @@
  */
 
 /**
- * A namespace that provides layer service functionality. Functionality
- * includes:
- *
- *      - Retrieving a tiles worth of data via GET request
- *      - Retrieving a server rendered tile image via GET request
+ * @namespace TileService
+ * @classdesc A utility namespace that provides tile service REST functionality.
  */
 ( function() {
     
@@ -39,15 +36,16 @@
     module.exports = {
 
         /**
-         * Get a tiles data in JSON format. Upon success, will execute success
+         * Get a tile worth of data in JSON format. Upon success, will execute success
          * callback function passing the resulting object as first argument.
+         * @memberof TileService
          *
-         * @param layerId   {String}   layer id
-         * @param level     {int}      tile level
-         * @param x         {int}      tile x index
-         * @param y         {int}      tile y index
-         * @param [params]  {Object}   query parameter configuration overrides (optional)
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {integer} level - The zoom level.
+         * @param {integer} x - The tile x index.
+         * @param {integer} y - The tile y index.
+         * @param {Object} params - The query parameter configuration overrides (optional).
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getTileJSON: function( layerId, level, x, y, params, success ) {
             var _params = ( typeof params === "object" ) ? params : null,
@@ -69,14 +67,16 @@
         },
 
         /**
-         * Get a tile rendered as an image.
+         * Get a tile rendered as an image. Upon success, will execute success
+         * callback function passing the resulting object as first argument.
+         * @memberof TileService
          *
-         * @param layerId   {String}   layer id
-         * @param level     {int}      tile level
-         * @param x         {int}      tile x index
-         * @param y         {int}      tile y index
-         * @param [params ] {Object}   query parameter configuration overrides (optional)
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {integer} level - The zoom level.
+         * @param {integer} x - The tile x index.
+         * @param {integer} y - The tile y index.
+         * @param {Object} params - The query parameter configuration overrides (optional).
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getTileImage: function( layerId, level, x, y, params, success ) {
             var _params = ( typeof params === "object" ) ? params : null,

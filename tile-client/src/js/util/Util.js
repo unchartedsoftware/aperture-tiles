@@ -152,7 +152,7 @@
          * @param callback    {Function}    The callback function.
          * @param [threshold] {int}         The movement threshold (optional).
          */
-        dragSensitiveClick : function( element, callback, threshold ) {
+        dragSensitiveClick: function( element, callback, threshold ) {
             var dragStart = {x: null, y: null};
 
             threshold = threshold || 10;

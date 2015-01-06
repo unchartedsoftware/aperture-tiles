@@ -24,38 +24,47 @@
  */
 
 /**
-    A hierarchical publish and subscribe namespace. Channels consist of strings, sub-channels
-    are separated with a period ('.'). Publishing to a target channel will propagate the message
-    breadth first as follows:
-        1) from the root of the hierarchy to the target channel,
-        2) from the target channel to all existing sub-channels
-
-    Ex.
-
-        Hierarchy:
-
-            a -> [ a.a, a.ab ] -> [ a.a.a, a.a.b, a.a.c ]
-
-        Publishing to a.a will publish:
-
-            1) from root to target
-
-                [ a -> a.a )
-
-            2) from target to all sub-channels
-
-                [ a.a -> a.a.a -> a.a.b -> a.a.c )
-
-        Publishing to a.a.c will publish:
-
-            1) from root to target
-
-                [ a -> a.a -> a.a.c )
-
-            2) from target to all sub-channels
-
-                [ a.a.c -> null )
-*/
+ * @namespace PubSub
+ * @classdesc A hierarchical publish and subscribe namespace. Channels consist of strings, sub-channels
+ * are separated with a period ('.'). Publishing to a target channel will propagate the message
+ * breadth first from the root of the hierarchy to the target channel, then from the target channel to
+ * all its existing sub-channels.
+ * <pre>
+ * Ex.
+ *
+ *     Hierarchy:
+ *
+ *         layer -> server -> abc28d05-9b9d-4e03-9f53-9f88cf7078c7
+ *                            fb943cca-cac3-4bbf-ba03-91a1559fee28
+ *                            67fd55b5-dc3a-40cf-8adc-9e634b82d474
+ *                  client -> 3392103f-7f50-4422-ae59-2c2c0971951f
+ *                            7bc33c81-c347-4bea-9cfb-c22328bcb648
+ *
+ *     Publishing to 'layer.server' will publish:
+ *
+ *         From root to target:
+ *
+ *             1) layer
+ *
+ *     From target to all sub-channels:
+ *
+ *             2) layer.server
+ *             3) layer.server.abc28d05-9b9d-4e03-9f53-9f88cf7078c7
+ *             4) layer.server.fb943cca-cac3-4bbf-ba03-91a1559fee28
+ *             5) layer.server.67fd55b5-dc3a-40cf-8adc-9e634b82d474
+ *
+ *     Publishing to 'layer.client.3392103f-7f50-4422-ae59-2c2c0971951f' will publish:
+ *
+ *         From root to target:
+ *
+ *             1) layer
+ *             2) layer.client
+ *
+ *         From target to all sub-channels:
+ *
+ *             3) layer.client.3392103f-7f50-4422-ae59-2c2c0971951f
+ * </pre>
+ */
 ( function() {
 
     "use strict";
@@ -64,6 +73,7 @@
 
         /**
          * Subscribe a listener function to the specific channel path.
+         * @memberof PubSub
          *
          * @param channelPath {string}   A '.' delimited channel path.
          * @param subscriber  {Function} The subscriber function associated with the provided path.
@@ -97,9 +107,9 @@
 
         /**
          * Publish a message to a channel path. Publishing to a target channel will propagate the message
-         *   breadth first as follows:
-         *      1) from the root of the hierarchy to the target channel
-         *      2) from the target channel to all existing sub-channels
+         * breadth first from the root of the hierarchy to the target channel, then from the target channel
+         * to all existing sub-channels
+         * @memberof PubSub
          *
          * @param channelPath {string}   A '.' delimited channel path.
          * @param message  {*}       The messsage to be published.

@@ -24,7 +24,8 @@
  */
 
 /**
- * A utility namespace containing renderer related functionality.
+ * @namespace RenderUtil
+ * @classdesc A utility namespace containing renderer related functionality.
  */
 ( function() {
 
@@ -35,10 +36,11 @@
         /**
          * Returns a y offset required to vertical centre a number of entries based
          * on spacing and offset
+         * @memberof RenderUtil
          *
-         * @param numEntries {int} number of entries to render
-         * @param spacing    {int} the spacing between entries in pixels
-         * @param offset     {int} the offset from the top of the tile to centre on in pixels
+         * @param {integer} numEntries - The number of entries to render.
+         * @param {integer} spacing - The he spacing between entries in pixels.
+         * @param {integer} offset - The offset from the top of the tile to centre on in pixels.
          */
         getYOffset: function( numEntries, spacing, offset ) {
             return offset - ( ( ( numEntries - 1) / 2 ) ) * spacing;
@@ -46,10 +48,11 @@
 
         /**
          * Returns a font size based on the percentage of tweets relative to the total count
+         * @memberof RenderUtil
          *
-         * @param count      {int} local count
-         * @param totalCount {int} global count
-         * @param [options]    {Object} options object to set min and max font size and bias (optional)
+         * @param {integer} count - The local count.
+         * @param {integer}totalCount - The global count.
+         * @param {Object} options - The options object to set min and max font size and bias (optional).
          */
         getFontSize: function( count, totalCount, options ) {
             options = options || {};
@@ -65,9 +68,10 @@
 
         /**
          * Traverses an object to return a nested attribute
+         * @memberof RenderUtil
          *
-         * @param obj        {Object} the object to traverse
-         * @param attribPath {String} period delimited attribute path
+         * @param {Object} obj - The object to traverse.
+         * @param {String} attribPath - Period delimited attribute path.
          */
         getAttributeValue: function( obj, attribPath ) {
             var attribs = attribPath.split('.'),
