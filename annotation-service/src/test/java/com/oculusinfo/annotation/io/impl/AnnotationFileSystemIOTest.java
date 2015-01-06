@@ -36,10 +36,12 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIO;
+import com.oculusinfo.binning.io.impl.FileSystemPyramidSource;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializer;
 import com.oculusinfo.binning.util.Pair;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +78,7 @@ public class AnnotationFileSystemIOTest {
 		try {
     		
 			_dataIO = new FileSystemAnnotationIO(ROOT_PATH, DATA_EXT);   		
-			_tileIO = new FileSystemPyramidIO(ROOT_PATH, TILE_EXT);
+			_tileIO = new FileBasedPyramidIO(new FileSystemPyramidSource(ROOT_PATH, TILE_EXT));
     		
 		} catch (Exception e) {
 

@@ -27,7 +27,7 @@ package com.oculusinfo.binning.io;
 
 import java.util.List;
 
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIOFactory;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.JSONProperty;
@@ -54,7 +54,7 @@ public class PyramidIOFactory extends UberFactory<PyramidIO> {
 	public PyramidIOFactory (String name, ConfigurableFactory<?> parent,
 	                         List<String> path,
 	                         List<ConfigurableFactory<? extends PyramidIO>> children) {
-		super(name, PyramidIO.class, parent, path, true, children, FileSystemPyramidIOFactory.NAME);
+		super(name, PyramidIO.class, parent, path, true, children, FileBasedPyramidIOFactory.NAME);
 
 		addProperty(INITIALIZATION_DATA);
 	}

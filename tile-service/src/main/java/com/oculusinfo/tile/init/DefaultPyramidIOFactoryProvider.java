@@ -29,12 +29,10 @@ import java.util.List;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.DummyPyramidIOFactory;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIOFactory;
 import com.oculusinfo.binning.io.impl.HBasePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.JDBCPyramidIOFactory;
-import com.oculusinfo.binning.io.impl.ResourcePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIOFactory;
-import com.oculusinfo.binning.io.impl.ZipPyramidIOFactory;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 
@@ -64,25 +62,13 @@ public enum DefaultPyramidIOFactoryProvider implements DelegateFactoryProviderTa
     FILE(new Constructor() {
             @Override
             public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-                return new FileSystemPyramidIOFactory(parent, path);
+                return new FileBasedPyramidIOFactory(parent, path);
             }
         }),
     JDBC(new Constructor() {
             @Override
             public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
                 return new JDBCPyramidIOFactory(parent, path);
-            }
-        }),
-    RESOURCE(new Constructor() {
-            @Override
-            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-                return new ResourcePyramidIOFactory(parent, path);
-            }
-        }),
-    ZIP(new Constructor() {
-            @Override
-            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-                return new ZipPyramidIOFactory(parent, path);
             }
         }),
     SQLITE(new Constructor() {
