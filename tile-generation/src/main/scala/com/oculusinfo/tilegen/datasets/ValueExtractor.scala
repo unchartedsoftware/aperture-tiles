@@ -33,11 +33,14 @@ import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
+import com.oculusinfo.factory.{UberFactory, ConfigurableFactory}
+import com.oculusinfo.factory.properties.{StringProperty, ListProperty}
+
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 import org.apache.avro.file.CodecFactory
-import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.{TilePyramid, TileData}
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer
 import com.oculusinfo.binning.util.Pair
@@ -60,15 +63,263 @@ import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumTileAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.NumericMeanBinningAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.StringScoreBinningAnalytic
-import com.oculusinfo.tilegen.util.ExtendedNumeric
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.tilegen.util.TypeConversion
+import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, ExtendedNumeric, PropertiesWrapper, TypeConversion}
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 
 
 
 
+/**
+ * A class that encapsulates and describes extraction of values from schema RDDs, as well as the helper classes that
+ * are needed to understand them
+ *
+ * @tparam PT The type of value to be extracted from records
+ * @tparam BT The type of value into which the extracted values will be transformed when placed in tiles.
+ */
+abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
+	/** The name of the value type, used in default naming of tile pyramids. */
+	def name: String
+
+	/** The fields needed to calculate the value to be used for binning. */
+	def fields: Seq[String]
+
+	/**
+	 * Convert a sequence of values, one for each of the fields listed by the fields method, into a processable
+	 * value for binning
+	 */
+	def convert: Seq[Any] => PT
+
+	/** The binning analytic needed to aggregate values, and transform them into their binnable form */
+	def binningAnalytic: BinningAnalytic[PT, BT]
+
+	/** The serializer needed to write tiles of the type described by this value extractor */
+	def serializer: TileSerializer[BT]
+}
+
+/**
+ * General constructors and properties for default value extractor factories
+ */
+case class ExtendedNumericWithConversion[T: ClassTag, JT]
+(implicit n: ExtendedNumeric[T], c: TypeConversion[T, JT])
+{
+	def tag = implicitly[ClassTag[T]]
+	def numeric = n
+	def conversion = c
+}
+object ValueExtractorFactory2 {
+	private[datasets] val FIELD_PROPERTY =
+		new StringProperty("field", "The field used by this value extractor", "")
+	private[datasets] val NUMERIC_TYPE_PROPERTY =
+		new StringProperty("valueType", "The type of numeric value used by this value extractor", "double",
+		                   Array("int", "long", "float", "double"))
+
+
+	val defaultFactory = "count"
+
+	private[datasets] def withNumericType[RT] (typeName: String,
+	                                           fcn: ExtendedNumericWithConversion[_, _] => RT): RT = {
+		val numericWithConversion: ExtendedNumericWithConversion[_, _] = typeName match {
+			case "int" => new ExtendedNumericWithConversion[Int, JavaInt]()
+			case "long" => new ExtendedNumericWithConversion[Long, JavaLong]()
+			case "float" => new ExtendedNumericWithConversion[Float, JavaFloat]()
+			case "double" => new ExtendedNumericWithConversion[Double, JavaDouble]()
+		}
+		fcn(numericWithConversion)
+	}
+
+	/** Default function to use when creating child factories */
+	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
+	JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] =
+		Seq[ConfigurableFactory[_ <: ValueExtractor[_, _]]](
+			new CountValueExtractorFactory2(parent, path),
+			new FieldValueExtractorFactory2(parent, path)
+		).asJava
+
+
+	/** Create an un-named uber-factory for value extractors */
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultType: String = defaultFactory,
+	           childProviders: (ConfigurableFactory[_],
+			           JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
+	ConfigurableFactory[ValueExtractor[_, _]] =
+		new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, true,
+		                                      createChildren(parent, path), defaultType)
+
+	/** Create a named uber-factory for value extractors */
+	def named (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultType: String = defaultFactory,
+	           childProviders: (ConfigurableFactory[_],
+			           JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
+	ConfigurableFactory[ValueExtractor[_, _]] =
+		new UberFactory[ValueExtractor[_, _]](name, classOf[ValueExtractor[_, _]], parent, path, true,
+		                                      createChildren(parent, path), defaultType)
+}
+
+class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ConfigurableFactory[ValueExtractor[_,_]]("count", classOf[ValueExtractor[_,_]], parent, path)
+{
+	private def untypedCreate (nt: ExtendedNumericWithConversion[_, _]): ValueExtractor[_, _] = {
+		def typedCreate[T, JT](nt: ExtendedNumericWithConversion[T, JT]): ValueExtractor[_, _] = {
+			new CountValueExtractor2[T, JT]()(nt.tag, nt.numeric, nt.conversion)
+		}
+		typedCreate(nt)
+	}
+
+	override protected def create(): ValueExtractor[_, _] = {
+		ValueExtractorFactory2.withNumericType(getPropertyValue(ValueExtractorFactory2.NUMERIC_TYPE_PROPERTY),
+		                                       untypedCreate(_))
+	}
+}
+
+class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[T, JT] with Serializable
+{
+	def name = "count"
+	def fields = Seq[String]()
+	def convert = (s: Seq[Any]) => numeric.fromDouble(1.0)
+	def binningAnalytic = new NumericSumBinningAnalytic[T, JT]()
+	def serializer = new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ConfigurableFactory[ValueExtractor[_,_]]("field", classOf[ValueExtractor[_,_]], parent, path)
+{
+	private def untypedCreate (nt: ExtendedNumericWithConversion[_, _]): ValueExtractor[_, _] = {
+		def typedCreate[T, JT] (nt: ExtendedNumericWithConversion[T, JT]): ValueExtractor[_, _] =
+		{
+			val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
+			new FieldValueExtractor2[T, JT](field)(nt.tag, nt.numeric, nt.conversion)
+		}
+		typedCreate(nt)
+	}
+
+	override protected def create(): ValueExtractor[_, _] = {
+		ValueExtractorFactory2.withNumericType(getPropertyValue(ValueExtractorFactory2.NUMERIC_TYPE_PROPERTY),
+		                                       untypedCreate(_))
+	}
+}
+
+class FieldValueExtractor2[T: ClassTag, JT] (field: String)
+                                            (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[T, JT] with Serializable {
+	def name = field
+	def fields = Seq(field)
+	override def convert: (Seq[Any]) => T = s => s(0).asInstanceOf[T]
+	override def binningAnalytic: BinningAnalytic[T, JT] = new NumericSumBinningAnalytic[T, JT]()
+	override def serializer: TileSerializer[JT] =
+		new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
+                                       (implicit numeric: ExtendedNumeric[T])
+		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
+	def name = field
+	def fields = Seq(field)
+	override def convert: (Seq[Any]) => (T, Int) = s => (s(0).asInstanceOf[T], 1)
+	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = new NumericMeanBinningAnalytic[T]()
+	override def serializer: TileSerializer[JavaDouble] =
+		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
+}
+
+class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
+                                             (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
+	def name = "series"
+	def fields = _fields
+	override def convert: (Seq[Any]) => Seq[T] =
+		s => s.map(v => Try(v.asInstanceOf[T]).getOrElse(numeric.fromInt(0)))
+	override def binningAnalytic: BinningAnalytic[Seq[T], JavaList[JT]] =
+		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
+	override def serializer: TileSerializer[JavaList[JT]] =
+		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
+                                                     (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[Seq[T], JavaList[JT]]
+{
+	def name = "indirectSeries"
+	def fields = Seq(keyField, valueField)
+	override def convert: (Seq[Any]) => Seq[T] =
+		s => {
+			val key = s(0).toString
+			val value = s(1).asInstanceOf[T]
+			validKeys.map(k => if (k == key) value else numeric.fromInt(0))
+		}
+	def binningAnalytic: BinningAnalytic[Seq[T], JavaList[JT]] =
+		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
+	def serializer: TileSerializer[JavaList[JT]] =
+		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
+                                                 (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
+	def name = "fieldMap"
+	def fields = _fields
+	override def convert: (Seq[Any]) => Seq[T] =
+		s => s.map(v => Try(v.asInstanceOf[T]).getOrElse(numeric.fromInt(0)))
+	def binningAnalytic: BinningAnalytic[Seq[T], JavaList[Pair[String, JT]]] =
+		new CategoryValueBinningAnalytic[T, JT](_fields, new NumericSumBinningAnalytic())
+	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
+		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+class StringValueExtractor2[T: ClassTag, JT] (field: String,
+                                              _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
+                                             (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
+{
+	def name = field
+	def fields = Seq(field)
+	override def convert: (Seq[Any]) => Map[String, T] =
+		s => Map(s(0).toString -> numeric.fromInt(1))
+	def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
+	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
+		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+class SubstringValueExtractor2[T: ClassTag, JT] (field: String,
+                                                 parsingDelimiter: String,
+                                                 aggregationDelimiter: String,
+                                                 indices: Seq[(Int, Int)],
+                                                 _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
+                                                (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
+{
+	def name = field
+	def fields = Seq(field)
+	override def convert: (Seq[Any]) => Map[String, T] =
+		s => {
+			val value = s(0).toString
+			val subValues = value.split(parsingDelimiter)
+			val len = subValues.length
+			val entryIndices = indices.flatMap(extrema =>
+				{
+			        val (start, end) = extrema
+					val modStart = if (start < 0) len+start else start
+					val modEnd = if (end < 0) len+end else end
+					modStart to modEnd
+				}
+			).toSet
+			val entry = Range(0, len)
+					.filter(entryIndices.contains(_))
+					.map(subValues(_))
+					.mkString(aggregationDelimiter)
+			Map(entry -> numeric.fromInt(1))
+
+	}
+	override def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
+	override def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
+		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
+}
+
+
+
+// /////////////////////////////////////////////////////////////////////////////
+// Everything below this line refers to the old, defunct CSV-based dataset
+//
 trait ValueDescription[BT] {
 	// Get a serializer that can write tiles of our type.
 	def getSerializer: TileSerializer[BT]
@@ -126,8 +377,6 @@ abstract class CSVValueExtractor[PT: ClassTag, BT]
 
 	def getDataAnalytics: Seq[AnalysisDescription[(_, PT), _]]
 }
-
-
 
 /**
  * A factory to construct a value extractor, with some general mixin functions 

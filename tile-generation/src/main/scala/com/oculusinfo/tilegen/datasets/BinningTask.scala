@@ -258,33 +258,6 @@ class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 
 
 
-abstract class ValueExtractor[PT: ClassTag, BT: ClassTag] extends Serializable {
-	def name: String
-
-	/** The fields needed to calculate the value to be used for binning. */
-	def fields: Seq[String]
-
-	/**
-	 * Convert a sequence of values, one for each of the fields listed by the fields method, into a processable 
-	 * value for binning
-	 * */
-	def convert: Seq[Any] => PT
-
-	def binningAnalytic: BinningAnalytic[PT, BT]
-
-	def serializer: TileSerializer[BT]
-}
-
-class CountValueExtractor2 (config: KeyValueArgumentSource)
-		extends ValueExtractor[Double, JavaDouble] with Serializable
-{
-	def name = "count"
-	def fields = Seq[String]()
-	def convert = (s: Seq[Any]) => 1.0
-	def binningAnalytic = new NumericSumBinningAnalytic[Double, JavaDouble]()
-	def serializer = new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
-}
-
 
 /**
  * A class to encapsulate the data analytics needed by a tiling task, and the information needed to obtain the

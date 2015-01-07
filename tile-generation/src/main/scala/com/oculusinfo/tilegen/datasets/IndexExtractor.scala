@@ -49,7 +49,9 @@ import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
 
 
 /**
- * A class that encapsulates and describes extraction of indices from schema RDDs
+ * A class that encapsulates and describes extraction of indices from schema RDDs, as well as the helper classes that
+ * are needed to understand them
+ *
  * @param pyramid The default pyramid to use with produced indices
  */
 abstract class IndexExtractor (pyramid: TilePyramid) {

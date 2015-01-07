@@ -43,6 +43,7 @@ trait ExtendedNumeric[T] extends Numeric[T] {
 	def name: String
 
 	// Extended conversion methods
+	// Numeric has fromInt, and toX for all appropriate X.
 	def fromLong (x: Long): T
 	def fromFloat (x: Float): T
 	def fromDouble (x: Double): T
@@ -53,6 +54,7 @@ trait ExtendedNumeric[T] extends Numeric[T] {
 	def isNaN (x: T): Boolean
 	def minValue: T
 	def maxValue: T
+	def getNumericClass: Class[_ <: T]
 
 	class ExtendedOps (lhs: T) extends Ops(lhs) {
 		def / (rhs: T)  = div(lhs, rhs)
@@ -80,6 +82,7 @@ object ExtendedNumeric {
 		def isNaN (n: Int): Boolean = false
 		def minValue: Int = Int.MinValue
 		def maxValue: Int = Int.MaxValue
+		def getNumericClass = classOf[Int]
 	}
 	implicit object ExtendedInt extends ExtendedInt with Ordering.IntOrdering
 
@@ -96,6 +99,7 @@ object ExtendedNumeric {
 		def isNaN (n: Long): Boolean = false
 		def minValue: Long = Long.MinValue
 		def maxValue: Long = Long.MaxValue
+		def getNumericClass = classOf[Long]
 	}
 	implicit object ExtendedLong extends ExtendedLong with Ordering.LongOrdering
 
@@ -110,6 +114,7 @@ object ExtendedNumeric {
 		def isNaN (x: Float): Boolean = x.isNaN
 		def minValue: Float = Float.MinValue
 		def maxValue: Float = Float.MaxValue
+		def getNumericClass = classOf[Float]
 	}
 	implicit object ExtendedFloat extends ExtendedFloat with Ordering.FloatOrdering
 
@@ -124,6 +129,7 @@ object ExtendedNumeric {
 		def isNaN (x: Double): Boolean = x.isNaN
 		def minValue: Double = Double.MinValue
 		def maxValue: Double = Double.MaxValue
+		def getNumericClass = classOf[Double]
 	}
 	implicit object ExtendedDouble extends ExtendedDouble with Ordering.DoubleOrdering
 }

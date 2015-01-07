@@ -47,6 +47,7 @@ import org.apache.spark.{SparkContext, SharedSparkContext}
 import com.oculusinfo.binning.{TileData, TileIndex}
 import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 
+import scala.reflect.ClassTag
 
 
 /**
@@ -103,17 +104,25 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		indexerFactory.readConfiguration(jsonConfig)
 		val indexer = indexerFactory.produce(classOf[IndexExtractor])
 
-		val valuer = new CountValueExtractor2(config)
-		val analyzer = new AnalyticExtractor[JavaDouble, Int, Int] {
-			override def fields: Seq[String] = Seq[String]()
-			override def tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Int]] = None
-			override def dataAnalytics: Option[AnalysisDescription[Seq[Any], Int]] = None
+		val valuerFactory = ValueExtractorFactory2(null, java.util.Arrays.asList("oculus", "binning", "value"))
+		valuerFactory.readConfiguration(jsonConfig)
+
+		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): Unit = {
+			val analyzer = new AnalyticExtractor[JT, Int, Int] {
+				override def fields: Seq[String] = Seq[String]()
+
+				override def tileAnalytics: Option[AnalysisDescription[TileData[JT], Int]] = None
+
+				override def dataAnalytics: Option[AnalysisDescription[Seq[Any], Int]] = None
+			}
+
+			val dataset =
+				new StaticBinningTask[T, Int, Int, JT](sqlc, "test", config, indexer,
+				                                       valuer, analyzer, Seq(Seq(0, 1)), 2, 2)
+			dataset.initialize()
+			pyramidIo.initializeDirectly(pyramidId, dataset);
 		}
-		val dataset =
-			new StaticBinningTask[Double, Int, Int, JavaDouble](sqlc, "test", config, indexer,
-			                                                    valuer, analyzer, Seq(Seq(0, 1)), 2, 2)
-		dataset.initialize()
-		pyramidIo.initializeDirectly(pyramidId, dataset);
+		withValuer(valuerFactory.produce(classOf[ValueExtractor[_, _]]))
 	}
 
 	private def cleanupDataset: Unit = {

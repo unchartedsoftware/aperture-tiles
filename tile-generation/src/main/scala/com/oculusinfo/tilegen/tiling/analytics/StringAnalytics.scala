@@ -160,7 +160,7 @@ class CategoryValueAnalytic[T] (categoryNames: Seq[String], baseAnalytic: Analyt
  * @tparam T {@see CategoryValueAnalytic}
  * @tparam JT The type as which the score is to be written to bins.
  */
-class CategoryValueBinningAnalytic[T, JT <: JavaSerializable] (categoryNames: Seq[String], baseAnalytic: BinningAnalytic[T, JT])
+class CategoryValueBinningAnalytic[T, JT] (categoryNames: Seq[String], baseAnalytic: BinningAnalytic[T, JT])
 		extends CategoryValueAnalytic[T](categoryNames, baseAnalytic)
 		with BinningAnalytic[Seq[T], JavaList[Pair[String, JT]]]
 {
