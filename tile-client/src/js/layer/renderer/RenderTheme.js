@@ -73,8 +73,8 @@
      * supplied selectors. This allows switching between themes on client rendered tiles by
      * simply appending the respective selector to a parent DOM element.
      *
-     * It is the Renderer implementations responsibility to ensure that the render
-     * theme object is utilized correctly, as different implementations may require unique
+     * It is the Renderer implementations responsibility to ensure that the RenderTheme
+     * object is utilized correctly, as different implementations may require unique
      * styling.
      *
      * An alternative to using RenderThemes would be either bypassing Renderers all together
