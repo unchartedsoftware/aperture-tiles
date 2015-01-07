@@ -25,11 +25,35 @@
 package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
 
-import java.io.IOException;
 import java.io.InputStream;
 
-public interface PyramidStreamSource {
-	public InputStream getTileStream(String basePath, TileIndex tile) throws IOException;
-	public InputStream getMetaDataStream (String basePath) throws IOException;
+
+/**
+ * Extends the PyramidSource abstract class for resource based tiles.
+ *  
+ */
+public class ResourcePyramidSource extends PyramidSourceStream {
+	
+	private String _rootPath;
+	private String _extension;
+
+	public ResourcePyramidSource (String rootPath, String extension) {
+		_rootPath = rootPath;
+		_extension = extension;
+	}
+	
+	@Override
+	protected InputStream getSourceTileStream(String basePath, TileIndex tile) {
+		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _extension, _rootPath + basePath, tile.getLevel(), tile.getX(), tile.getY());
+		return ResourcePyramidSource.class.getResourceAsStream(tileLocation);
+	}
+
+	@Override
+	protected InputStream getSourceMetaDataStream (String basePath) {
+		String location = _rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME;
+		return ResourcePyramidSource.class.getResourceAsStream(location);
+	}
+
 }

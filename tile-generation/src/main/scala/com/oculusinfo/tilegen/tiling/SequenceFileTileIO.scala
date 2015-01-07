@@ -56,7 +56,8 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIO
+import com.oculusinfo.binning.io.impl.FileSystemPyramidSource
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 
@@ -297,7 +298,7 @@ object SequenceFileTileIO {
 		if (!fs.exists(hdfsBase)) throw new IllegalArgumentException("Nonexistent source location "+hdfsLoc)
 
 		// Set up our local io
-		val fsio = new FileSystemPyramidIO(null, "avro")
+		val fsio = new FileBasedPyramidIO(new FileSystemPyramidSource(null, "avro"))
 		fsio.initializeForWrite(fsLoc)
 
 		// Copy over metadata

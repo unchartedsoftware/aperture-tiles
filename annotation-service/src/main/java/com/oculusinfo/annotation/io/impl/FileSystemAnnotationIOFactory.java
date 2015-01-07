@@ -60,7 +60,7 @@ public class FileSystemAnnotationIOFactory extends ConfigurableFactory<Annotatio
 			return new FileSystemAnnotationIO(rootPath, extension);
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create FileSystemPyramidIO", e);
+			LOGGER.error("Error trying to create FileSystemPyramidSource", e);
 		}
 		return null;
 	}

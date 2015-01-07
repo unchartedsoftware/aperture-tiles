@@ -22,33 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
-
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Properties;
 
-public class ResourcePyramidStreamSource implements PyramidStreamSource {
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+
+public interface PyramidSource {
+
+	public void initializeForWrite (String basePath) throws IOException;
+
+	public <T> void writeTiles (String basePath, TileSerializer<T> serializer,
+	                            Iterable<TileData<T>> data) throws IOException;
 	
-	private String _rootPath;
-	private String _extension;
+	public void writeMetaData (String basePath, String metaData) throws IOException;
 
-	public ResourcePyramidStreamSource (String rootPath, String extension) {
-		_rootPath=rootPath;
-		_extension = extension;
-	}
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription);
+
+	public <T> List<TileData<T>> readTiles (String basePath,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException;
 	
-	@Override
-	public InputStream getTileStream(String basePath, TileIndex tile) {
-		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _extension, _rootPath + basePath, tile.getLevel(), tile.getX(), tile.getY());
-		return ResourcePyramidStreamSource.class.getResourceAsStream(tileLocation);
-	}
+	public <T> InputStream getTileStream (String basePath,
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException;
 
-	@Override
-	public InputStream getMetaDataStream (String basePath) {
-		String location = _rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME;
-		return ResourcePyramidStreamSource.class.getResourceAsStream(location);
-	}
-
+	public String readMetaData (String basePath) throws IOException;
+	
+	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException;
 }

@@ -36,7 +36,7 @@ import java.io.InputStream;
 
 import static org.junit.Assert.fail;
 
-public class ZipResourcePyramidStreamSourceTest {
+public class ZipResourcePyramidSourceTest {
 
 	@Test
 	public void test() {
@@ -70,17 +70,17 @@ public class ZipResourcePyramidStreamSourceTest {
 		}
 		
 		try {
-			ZipResourcePyramidStreamSource src = new ZipResourcePyramidStreamSource(filename, "dummy");
+			ZipResourcePyramidSource src = new ZipResourcePyramidSource(filename, "dummy");
 			
 			TileIndex tileDef = new TileIndex(0, 0, 0, 1, 1);
-			InputStream is = src.getTileStream("test", tileDef);
+			InputStream is = src.getSourceTileStream("test", tileDef);
 			Assert.assertTrue(is!=null);
 
 			tileDef = new TileIndex(2, 3, 3, 1, 1);
-			is = src.getTileStream("test", tileDef);
+			is = src.getSourceTileStream("test", tileDef);
 			Assert.assertTrue(is!=null);
 			
-			is = src.getMetaDataStream("test");
+			is = src.getSourceMetaDataStream("test");
 			Assert.assertTrue(is!=null);
 
 			
