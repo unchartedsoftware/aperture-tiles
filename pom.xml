@@ -47,10 +47,10 @@
 		<!-- For cloudera versions, these release numbers can be found at http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH-Version-and-Packaging-Information/cdhvd_topic_8.html -->
 
 		<!-- cloudera version 5.2.1 defs -->
-		 <cdh-version>cdh5.2.0</cdh-version> <hadoop-common-version>2.5.0-cdh5.2.0</hadoop-common-version> 
-		     <hadoop-core-version>2.5.0-mr1-cdh5.2.0</hadoop-core-version> 
-		     <hbase-version>0.98.6-cdh5.2.0</hbase-version>
-			<spark-version>1.1.0-cdh5.2.0</spark-version>
+		 <cdh-version>cdh5.2.1</cdh-version> <hadoop-common-version>2.5.0-cdh5.2.1</hadoop-common-version> 
+		     <hadoop-core-version>2.5.0-mr1-cdh5.2.1</hadoop-core-version> 
+		     <hbase-version>0.98.6-cdh5.2.1</hbase-version>
+			<spark-version>1.1.0-cdh5.2.1</spark-version>
 
 		<!-- cloudera version 5.1.2 defs -->
 		<!-- <cdh-version>cdh5.1.2</cdh-version> <hadoop-common-version>2.3.0-cdh5.1.2</hadoop-common-version> 
