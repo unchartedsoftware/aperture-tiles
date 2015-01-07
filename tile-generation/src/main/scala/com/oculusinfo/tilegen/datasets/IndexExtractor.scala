@@ -81,18 +81,19 @@ abstract class IndexExtractor (pyramid: TilePyramid) {
 }
 
 
-
+/**
+ * General constructors and properties for default index extractor factories
+ */
 object IndexExtractorFactory {
 	private[datasets] val FIELDS_PROPERTY =
 		new ListProperty(new StringProperty("field", "The fields used by this index extractor", ""),
 			"field",
 			"The fields that the index extractor will pull from a data record to construct that record's index")
-	val defaultFactory: String = "cartesian"
-	val defaultFactories: Seq[ConfigurableFactory[_ <: IndexExtractor]] = Seq(
 
-	)
+	val defaultFactory = "cartesian"
 
-	private def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
+	/** Default function to use when creating child factories */
+	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
 		JavaList[ConfigurableFactory[_ <: IndexExtractor]] =
 	Seq[ConfigurableFactory[_ <: IndexExtractor]](
 		new CartesianIndexExtractorFactory(parent, path),
@@ -101,17 +102,30 @@ object IndexExtractorFactory {
 	    new TimeRangeIndexExtractorFactory(parent, path)).asJava
 
 
+	/** Create an un-named uber-factory for index extractors */
 	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
-	           children: Seq[ConfigurableFactory[_ <: IndexExtractor]] = defaultFactories,
-	           defaultType: String = defaultFactory): ConfigurableFactory[IndexExtractor] =
+	           defaultType: String = defaultFactory,
+	           childProviders: (ConfigurableFactory[_],
+			                    JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
+	ConfigurableFactory[IndexExtractor] =
 		new UberFactory[IndexExtractor](classOf[IndexExtractor], parent, path, true,
 			                            createChildren(parent, path), defaultType)
+
+	/** Create a named uber-factory for index extractors */
 	def named (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
-	           children: Seq[ConfigurableFactory[_ <: IndexExtractor]] = defaultFactories,
-	           defaultType: String = defaultFactory): ConfigurableFactory[IndexExtractor] =
+	           defaultType: String = defaultFactory,
+	           childProviders: (ConfigurableFactory[_],
+			           JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
+	ConfigurableFactory[IndexExtractor] =
 		new UberFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path, true,
 			                            createChildren(parent, path), defaultType)
 }
+
+/**
+ * A superclass for all index extractor factories; all it really does is add in the pyramid factory.
+ *
+ * All parameters are pass-throughs to {@link ConfigurableFactory}.
+ */
 abstract class IndexExtractorFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
 extends ConfigurableFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path)
 {
@@ -119,6 +133,7 @@ extends ConfigurableFactory[IndexExtractor](name, classOf[IndexExtractor], paren
 	addChildFactory(new TilePyramidFactory(this, Seq("pyramid").asJava))
 }
 
+/** A constructor for a standard cartesian index extractor */
 class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("cartesian", parent, path)
 {
@@ -145,6 +160,7 @@ class CartesianSchemaIndexExtractor (pyramid: TilePyramid, xField: String, yFiel
 	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
 }
 
+/** A constructor for a standard line segment index extractor */
 class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("segment", parent, path)
 {
@@ -160,6 +176,15 @@ class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: Ja
 		new LineSegmentSchemaIndexExtractor(produce(classOf[TilePyramid]), x1Field, y1Field, x2Field, y2Field)
 	}
 }
+
+/**
+ * An index extractor that extracts from a record the description of a line segment
+ * @param pyramid The default pyramid to use with produced indices
+ * @param x1Var The field from which to get the X coordinate of the first point of the described line segment from a given record.
+ * @param y1Var The field from which to get the Y coordinate of the first point of the described line segment from a given record.
+ * @param x2Var The field from which to get the X coordinate of the second point of the described line segment from a given record.
+ * @param y2Var The field from which to get the Y coordinate of the second point of the described line segment from a given record.
+ */
 class LineSegmentSchemaIndexExtractor (pyramid: TilePyramid,
                                        x1Var: String, y1Var: String, x2Var: String, y2Var: String)
 		extends IndexExtractor(pyramid)
@@ -169,6 +194,7 @@ class LineSegmentSchemaIndexExtractor (pyramid: TilePyramid,
 	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
 }
 
+/** A constructor for a standard ip address index extractor */
 class IP4VIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("ipv4", parent, path)
 {
@@ -181,6 +207,12 @@ class IP4VIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[
 		new IPv4SchemaIndexExtractor(produce(classOf[TilePyramid]), ipField)
 	}
 }
+
+/**
+ * An index extractor that extracts an IP address (v4) from a record
+ * @param pyramid The default pyramid to use with produced indices
+ * @param ipField The field from which to get the IPv4 address of a given record
+ */
 class IPv4SchemaIndexExtractor (pyramid: TilePyramid, ipField: String) extends IndexExtractor(pyramid) {
 	@transient lazy private val _fields = Seq(ipField)
 	def fields = _fields
@@ -193,6 +225,8 @@ object TimeRangeIndexExtractorFactory {
 	private[datasets] val SECONDS_PER_PERIOD_PROPERTY =
 	    new DoubleProperty("period-length", "The length of each time period, in seconds", 60.0*60.0*24.0)
 }
+
+/** A constructor for a standard time range/cartesian point index extractor */
 class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("timerange", parent, path)
 {
@@ -213,6 +247,17 @@ class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
 
 	}
 }
+
+/**
+ * An augmentation of the standard cartesian index extractor that also records a binned time range.
+ * With the ability to do data analytics on fields not used in the index or value, this will probably become defunct.
+ * @param pyramid The default pyramid to use with produced indices
+ * @param timeVar The field from which to get the time of a given record.
+ * @param xVar The field from which to get the X coordinate of a given record
+ * @param yVar The field from which to get the Y coordinate of a given record
+ * @param startDate The start time of the first time bin, as per standard Java date math
+ * @param secsPerPeriod The size of each time bin, in seconds
+ */
 class TimeRangeCartesianSchemaIndexExtractor (pyramid: TilePyramid,
                                               timeVar: String, xVar: String, yVar: String,
                                               startDate: Double, secsPerPeriod: Double)
