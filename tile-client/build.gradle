@@ -8,20 +8,6 @@ apply plugin: 'maven-publish'
 // module description
 description = "A basic map client that allows for client-side user interaction with"
 
-// JS documentation task
-task generateDocs( type: Exec ) {
-	// check if windows, if so use the .cmd script
-	def osName = System.getProperty("os.name").toLowerCase();
-	def executable;
-	if ( osName.contains("windows") ) {
-		executable = 'jsdoc.cmd'
-	} else {	
-		executable = 'jsdoc'
-	}
-	commandLine executable, '../../src/js/', '--destination', '../../docs', '--recurse', '--template', '../../node_modules/jaguarjs-jsdoc'	
-	workingDir 'node_modules/.bin/'
-}
-
 // The 'test' task is typically provided by the 'java' plugin, an empty task is added here to 
 // provide a similar interface.
 task test {}
@@ -72,7 +58,6 @@ build.dependsOn test
 // provide a similar interface, with the implementation provided by the 'maven-publish' plugin.
 task install {}
 install.dependsOn build
-install.dependsOn generateDocs
 install.dependsOn publishToMavenLocal
 
 publishing {

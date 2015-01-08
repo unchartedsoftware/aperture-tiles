@@ -67,7 +67,7 @@
      * @memberof AreaOfInterestTilePyramid
      *
      * @param {number} x - The x root coordinate value.
-     * @param {number} y - The x root coordinate value.
+     * @param {number} y - The y root coordinate value.
      * @param {integer} level - The zoom level.
      *
      * @returns {Object} The fractional tile coordinate.
@@ -108,7 +108,7 @@
      * @memberof AreaOfInterestTilePyramid
      *
      * @param {number} x - The x root coordinate value.
-     * @param {number} y - The x root coordinate value.
+     * @param {number} y - The y root coordinate value.
      * @param {integer} level - The zoom level.
      * @param {integer} bins - The number of bins per dimension in a tile.
      *
@@ -136,7 +136,7 @@
      * @memberof AreaOfInterestTilePyramid
      *
      * @param {number} x - The x root coordinate value.
-     * @param {number} y - The x root coordinate value.
+     * @param {number} y - The y root coordinate value.
      * @param {Object} tile - The tile coordinate that holds the target bin.
      *
      * @returns {Object} The bin coordinate.

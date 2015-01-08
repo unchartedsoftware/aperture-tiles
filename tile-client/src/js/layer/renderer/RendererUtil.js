@@ -39,7 +39,7 @@
          * @memberof RenderUtil
          *
          * @param {integer} numEntries - The number of entries to render.
-         * @param {integer} spacing - The he spacing between entries in pixels.
+         * @param {integer} spacing - The spacing between entries in pixels.
          * @param {integer} offset - The offset from the top of the tile to centre on in pixels.
          *
          * @returns {integer} The y pixel offset.
