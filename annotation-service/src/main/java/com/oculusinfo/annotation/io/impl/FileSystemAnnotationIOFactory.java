@@ -36,12 +36,10 @@ public class FileSystemAnnotationIOFactory extends ConfigurableFactory<Annotatio
 	private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemAnnotationIOFactory.class);
 	public static final String NAME = "file";
 
-
-
-	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
+	public static StringProperty ROOT_PATH = new StringProperty("root.path",
 		   "Indicates the root path of the tile annotation - a directory.  There is no default for this property.",
 		   null);
-	public static StringProperty EXTENSION              = new StringProperty("extension",
+	public static StringProperty EXTENSION = new StringProperty("extension",
 		   "The file extension which the serializer should expect to find on individual tiles.",
 		   "avro");
 
@@ -54,13 +52,24 @@ public class FileSystemAnnotationIOFactory extends ConfigurableFactory<Annotatio
 
 	@Override
 	protected AnnotationIO create() {
+
 		try {
-			String rootPath = getPropertyValue(ROOT_PATH);
+			String rootpath = getPropertyValue(ROOT_PATH).trim();
 			String extension = getPropertyValue(EXTENSION);
-			return new FileSystemAnnotationIO(rootPath, extension);
+			AnnotationSource source;
+
+			if (rootpath.startsWith( "file://" )) {
+				// a file/directory on the file system
+				rootpath = rootpath.substring(7);
+				source = new FileSystemAnnotationSource(rootpath, extension);
+			} else {
+				// no prefix / postfix supplied, default to file for legacy support
+				source = new FileSystemAnnotationSource(rootpath, extension);
+			}
+			return new FileSystemAnnotationIO( source );
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create FileSystemPyramidSource", e);
+			LOGGER.error("Error trying to create FileBasedPyramidIO", e);
 		}
 		return null;
 	}

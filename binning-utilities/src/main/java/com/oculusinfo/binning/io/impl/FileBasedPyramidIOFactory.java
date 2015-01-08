@@ -80,6 +80,9 @@ public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 				// a file/directory within the webapp resources
 				rootpath = rootpath.substring(6);
 				source = new ResourcePyramidSource(rootpath, extension);
+			} else {
+				// no prefix / postfix supplied, default to file for legacy support
+				source = new FileSystemPyramidSource(rootpath, extension);
 			}
 			return new FileBasedPyramidIO(source);
 		}
