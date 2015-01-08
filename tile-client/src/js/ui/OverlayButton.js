@@ -45,13 +45,20 @@
 
     /**
      * Instantiate an overlay button.
+     * @class OverlayButton
+     * @classdesc An interface button that is attached to a quadrant of the map and interacts
+     * gracefully with other OverlayButton objects.
      *
-     * @param spec {Object} the specification object.
-     *     id : the element id,
-     *     header: the header html,
-     *     content: the content html,
-     *     verticalPosition: the vertical position, "bottom" or "top"
-     *     horizontalPosition: the horizontal position, "left" or "right"
+     * @param {Object} spec - The specification object.
+     * <pre>
+     * {
+     *     id {String} - The element id.
+     *     header {String} - The header html.
+     *     content {String} - The content html.
+     *     verticalPosition {integer} - The vertical position, "bottom" or "top".
+     *     horizontalPosition {integer} - The horizontal position, "left" or "right".
+     * }
+     * </pre>
      */
     function OverlayButton( spec ) {
         var that = this,
@@ -193,8 +200,9 @@
 
     /**
      * Returns the header DOM element.
+     * @memberof OverlayButton
      *
-     * @returns {jQuery|HTMLElement}
+     * @returns {jQuery|HTMLElement} The header DOM element.
      */
     OverlayButton.prototype.getHeaderElement = function() {
         return this.$header;
@@ -202,8 +210,9 @@
 
     /**
      * Returns the content DOM element.
+     * @memberof OverlayButton
      *
-     * @returns {jQuery|HTMLElement}
+     * @returns {jQuery|HTMLElement}  The content DOM element.
      */
     OverlayButton.prototype.getContentElement = function() {
         return this.$content;
@@ -211,8 +220,9 @@
 
     /**
      * Returns the container DOM element.
+     * @memberof OverlayButton
      *
-     * @returns {jQuery|HTMLElement}
+     * @returns {jQuery|HTMLElement}  The container DOM element.
      */
     OverlayButton.prototypegetContainerElement = function() {
         return this.$container;

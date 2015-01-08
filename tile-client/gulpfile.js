@@ -8,6 +8,7 @@ var gulp = require('gulp'),
     browserify = require('browserify'),
     source = require('vinyl-source-stream'),
     buffer = require('vinyl-buffer'),
+    run = require('gulp-run'),
     uglify = require('gulp-uglify');
 
 function bundle( b, output ) {
@@ -52,6 +53,7 @@ function handleError( err ) {
 
 gulp.task('clean', function () {
    	del([ 'build/*']);
+    del([ 'docs/*']);
 });
 
 gulp.task('lint', function() {
@@ -101,11 +103,16 @@ gulp.task('build-js', function() {
 //     return build( './src/js/rest-api.js', 'tiles-rest.js' );
 // });
 
+gulp.task('generate-docs', function () { 
+  run('jsdoc src/js/ --destination docs --recurse --template node_modules/jaguarjs-jsdoc').exec()  // prints "Hello World\n".
+})
+
 gulp.task('build', [ 'clean' ], function() {
     gulp.start( 'build-js' );   
     gulp.start( 'build-css' );   
     gulp.start( 'build-min-js' );
     gulp.start( 'build-min-css' );
+    gulp.start( 'generate-docs' );
     //gulp.start( 'build-rest-min-js' );
     //gulp.start( 'build-rest-js' );
 });

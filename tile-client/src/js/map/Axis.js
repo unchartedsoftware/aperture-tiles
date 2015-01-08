@@ -23,10 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A map axis object that will attach to a map edge and display coordinates based on
- * supplied interval and unit specification.
- */
 ( function() {
 
     "use strict";
@@ -48,9 +44,10 @@
         Z_INDEX = 2001;
 
     /**
-     * Private: Creates and returns a dummy marker label element to measure. This function
+     * Creates and returns a dummy marker label element to measure. This function
      * is used for measuring, as the real label func sizes the labels to the current
      * max measurements
+     * @private
      *
      * @param axis   {Axis}     the axis object.
      * @param marker {Object} the marker object.
@@ -64,7 +61,8 @@
     }
 
     /**
-     * Private: Creates and returns a marker label element with proper CSS
+     * Creates and returns a marker label element with proper CSS
+     * @private
      *
      * @param axis   {Axis}     the axis object.
      * @param marker {Object} the marker object.
@@ -96,7 +94,8 @@
     }
 
     /**
-     * Private: Creates and returns a large marker element with proper CSS
+     * Creates and returns a large marker element with proper CSS
+     * @private
      *
      * @param axis   {Axis}     the axis object.
      * @param marker {Object} the marker object.
@@ -111,7 +110,8 @@
     }
 
     /**
-     * Private: Creates and returns a major marker element with proper CSS
+     * Creates and returns a major marker element with proper CSS
+     * @private
      *
      * @param axis   {Axis}     the axis object.
      * @param marker {Object} the marker object.
@@ -126,7 +126,8 @@
     }
 
     /**
-     * Private: Creates and returns a major marker element with proper CSS
+     * Creates and returns a major marker element with proper CSS
+     * @private
      *
      * @param axis   {Axis}     the axis object.
      * @param marker {Object} the marker object.
@@ -141,8 +142,9 @@
     }
 
     /**
-     * Private: This function is used to create temporary elements to determine the required run-time
+     * This function is used to create temporary elements to determine the required run-time
      * dimensions. This is only be called once per axis as these dimensions will never change.
+     * @private
      *
      * @param axis{Axis} the axis object.
      */
@@ -209,7 +211,8 @@
     }
 
     /**
-     * Private: Creates and returns the axis label element with proper CSS.
+     * Creates and returns the axis label element with proper CSS.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -241,7 +244,8 @@
     }
 
     /**
-     * Private: Creates and returns the axis header jquery object.
+     * Creates and returns the axis header jquery object.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -263,10 +267,10 @@
                + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px '+marginLeft+'px;"></div>');
     }
 
-
     /**
-     * Private: Creates and returns the axis header background jquery object. This is used
+     * Creates and returns the axis header background jquery object. This is used
      * to apply a box-shadow css without ugly overlap.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -275,9 +279,9 @@
                + 'style="z-index:'+(Z_INDEX+1)+';"></div>' );
     }
 
-
     /**
-     * Private: Creates and returns the empty axis content jquery object.
+     * Creates and returns the empty axis content jquery object.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -287,9 +291,9 @@
                + '"  style="z-index:'+Z_INDEX+';"></div>');
     }
 
-
     /**
-     * Private: Creates and returns the axis parent div jquery object.
+     * Creates and returns the axis parent div jquery object.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -342,7 +346,8 @@
     }
 
     /**
-     * Private: Updates the positon of the axis title of its size changes.
+     * Updates the positon of the axis title of its size changes.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -367,7 +372,8 @@
     }
 
     /**
-     * Private: Creates the axis marker elements and appends them to the content div.
+     * Creates the axis marker elements and appends them to the content div.
+     * @private
      *
      * @param axis {Axis} the axis object.
      */
@@ -399,7 +405,8 @@
     }
 
     /**
-     * Private: Returns the draw callback function on map 'move' event.
+     * Returns the draw callback function on map 'move' event.
+     * @private
      *
      * @param axis {Axis} The axis object.
      */
@@ -410,7 +417,8 @@
     }
 
     /**
-     * Private: Returns the mouse marker callback function on 'mousemove' event.
+     * Returns the mouse marker callback function on 'mousemove' event.
+     * @private
      *
      * @param axis {Axis} The axis object.
      */
@@ -427,6 +435,9 @@
 
     /**
      * Instantiate an Axis object.
+     * @class Axis
+     * @classdesc A map axis object that will attach to a map edge and display coordinates based on
+     *            supplied interval and unit specification.
      *
      * @param spec {Object} The specfication object:
      * {
@@ -478,6 +489,11 @@
                                         (this.position === 'top') ? 'bottom' : 'top';
     }
 
+    /**
+     * Activates the Axis object. This should never be called manually.
+     * @memberof Axis
+     * @private
+     */
     Axis.prototype.activate = function() {
         // create unique callbacks so they can be removed later
         this.redrawCallback = redrawCallback( this );
@@ -504,6 +520,11 @@
         Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
     };
 
+    /**
+     * Dectivates the layer object. This should never be called manually.
+     * @memberof Axis
+     * @private
+     */
     Axis.prototype.deactivate = function() {
         this.map.off( 'move', this.redrawCallback );
         this.map.off( 'mousemove', this.mouseMoveCallback );
@@ -517,21 +538,30 @@
     };
 
     /**
-     *  Returns true if the axis is currently enabled, false if not
+     * Returns true if the axis is currently enabled, false if not.
+     * @memberof Axis
+     *
+     * @returns {boolean} Whether or not the axis is enabled or not.
      */
     Axis.prototype.isEnabled = function() {
         return this.enabled;
     };
 
     /**
-     *  Enable or disable the axis
+     * Enable or disable the axis.
+     * @memberof Axis
+     *
+     * @param {boolean} - Whether to enable or disable the axis.
      */
     Axis.prototype.setEnabled = function( enabled ) {
         this.enabled = enabled;
     };
 
     /**
-     *  Returns the dimension of the content div of the axis
+     * Returns the dimension of the content div of the axis.
+     * @memberof Axis
+     *
+     * @returns {integer} The dimension of the content div.
      */
     Axis.prototype.getContentDimension = function() {
         var dim = this.isXAxis ? this.MAX_LABEL_HEIGHT : this.MAX_LABEL_WIDTH;
@@ -539,8 +569,9 @@
     };
 
     /**
-     * Iterates over all axes on the map, determines the max content size, and sets the content dimension
-     * to that size.
+     * Iterates over all axes on the map, determines the max content size, and 
+     * sets the content dimension to that size.
+     * @memberof Axis
      */
     Axis.prototype.setContentDimension = function() {
         var dim = this.isXAxis ? 'height' : 'width',
@@ -552,8 +583,8 @@
     };
 
     /**
-     * Checks if the mutable spec attributes have changed, if so, redraws
-     * that.
+     * Checks if the mutable spec attributes have changed, if so, redraws the axis.
+     * @memberof Axis
      */
     Axis.prototype.redraw = function() {
         // always update title position (in case of window resize)

@@ -24,14 +24,8 @@
  */
 
 /**
- * A namespace that provides layer service functionality. Functionality
- * includes:
- *
- *      - Retrieving information for all layers via GET request
- *      - Retrieving information for a specific layer via GET request
- *      - Saving a layer's configuration state via POST request
- *      - Getting all configuration states for a layer via GET request
- *      - Getting a specific configuration state for a layer via GET request
+ * @namespace LayerService
+ * @classdesc A utility namespace that provides layer service REST functionality.
  */
 ( function() {
 
@@ -44,8 +38,9 @@
         /**
          * Request all layers from the server. Upon success, will execute success
          * callback function passing the resulting object as first argument.
+         * @memberof LayerService
          *
-         * @param [success] {Function} function called after success received (optional)
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getLayers: function( success ) {
             var _success = ( typeof success === "function" ) ? success : null;
@@ -60,9 +55,10 @@
         /**
          * Request a specific layer from the server. Upon success, will execute success
          * callback function passing the resulting object as first argument.
+         * @memberof LayerService
          *
-         * @param layerId   {String}   layer id
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getLayer: function( layerId, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
@@ -77,10 +73,11 @@
         /**
          * Store a configuration state on the server. Upon success, will execute success
          * callback function passing the resulting object as first argument.
+         * @memberof LayerService
          *
-         * @param layerId   {String}   layer id
-         * @param params    {Object}   layer configuration parameters
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {Object} params - The parameter configuration overrides (optional).
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         saveLayerState: function( layerId, params, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
@@ -96,9 +93,10 @@
         /**
          * Get all configuration states for a layer on the server. Upon success, will execute
          * success callback function passing the resulting object as first argument.
+         * @memberof LayerService
          *
-         * @param layerId   {String}   layer id
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getLayerStates: function( layerId, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
@@ -113,10 +111,11 @@
         /**
          * Get a configuration state for a layer on the server by state id. Upon success,
          * will execute success callback function passing the resulting object as first argument.
+         * @memberof LayerService
          *
-         * @param layerId   {String}   layer id
-         * @param stateId   {String}   state id
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The layer identification string.
+         * @param {String} stateId - The state identification string.
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getLayerState: function( layerId, stateId, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
