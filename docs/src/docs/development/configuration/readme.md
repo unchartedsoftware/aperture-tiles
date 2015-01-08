@@ -21,7 +21,7 @@ The fastest way to create a Tile Server and Tile Client is to modify an existing
 
 To begin configuring your Tile Server and Tile Client:
 
-1. Choose the Julia demo (*tile-examples/julia-demo/*) or Twitter Topics demo (*tile-examples/twitter-topics/*) to use as a template. The Julia demo displays a heatmap on a crossplot map and utilizes client-side rendering, while the Twitter Topics demo displays a heatmap on a geographic map with client-side rendering tile carousel images.
+1. Choose the Julia demo (*tile-examples/julia-demo/*) or Twitter Topics demo (*tile-examples/twitter-topics/*) to use as a template. The Julia demo displays a server-rendered heatmap on a blank crossplot baselayer, while the Twitter Topics demo displays a server-rendered heatmap and client-rendered word clouds on a geographic Google Maps baselayer.
 2. Copy the appropriate demo and give it a unique name (e.g., *new-project*).
 3. Update the Gradle build file (*new-project/build.gradle*) to change the following fields:
 	- `description`: Enter an appropriate project description. 
@@ -56,14 +56,9 @@ Edit the **tile.properties** file in *new-project/src/main/resources/*. This fil
 
 ### <a name="layers"></a> Layers ##
 
-The layers file points to the tiles you created and indicates how they should be displayed on the base map. There are two types of layer files:
+The layers file describes the tile layers to be made available to the server and client application. Parameters in the layers file are split into two sections: those in the public node are accessible from the client, while those under the private note are not.
 
-- **Crossplot layer**: Describes the parameters of an X/Y cross plot layer. An example can be found in the Julia example at *tile-examples\julia-demo\src\main\resources\layers*.
-- **Geographic layer**: Describes the parameters of a world map layer. An example can be found in the Twitter Topics example at *tile-examples\twitter-topics\twitter-topics-client\src\main\resources\layers*.
-
-Choose the appropriate layer type, then review the following sections to understand how to edit the file for the selected type. Parameters in the layers file are split into two sections: those in the **public** node are accessible from the client, while those under the **private** note are not.
-
-Note that maps with multiple layers can be created by specifying multiple layer descriptions in the **layers.json** file.
+Layer file examples can be found in in the Julia example at *tile-examples\julia-demo\src\main\resources\layers* and the Twitter Topics example at *tile-examples\twitter-topics\twitter-topics-client\src\main\resources\layers*.
 
 #### <a name="layer-id"></a> ID ####
 
