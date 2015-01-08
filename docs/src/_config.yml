@@ -21,3 +21,4 @@ exclude: ["img/resources/SiteComponents.png"]
 
 # Variables
 product: Aperture Tiles
+version: 0.4.0
