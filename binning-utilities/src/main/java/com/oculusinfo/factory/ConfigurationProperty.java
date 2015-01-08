@@ -49,6 +49,8 @@ public interface ConfigurationProperty<T> {
 
 	public T getDefaultValue ();
 
+	public String getUUID ();
+
 	/**
 	 * Give a string version of a value for this property.
 	 */

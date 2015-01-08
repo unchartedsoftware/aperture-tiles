@@ -30,10 +30,13 @@ import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.UUID;
+
 public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 	private String    _name;
 	private String    _description;
 	private TileIndex _defaultValue;
+	private String _uuid;
 
 
 
@@ -41,6 +44,7 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 		_name = name;
 		_description = description;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -66,6 +70,11 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 	@Override
 	public TileIndex getDefaultValue () {
 		return _defaultValue;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override

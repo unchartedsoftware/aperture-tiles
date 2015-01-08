@@ -30,12 +30,17 @@ import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.UUID;
+
 public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
 	private String _name;
 	private String _description;
+	private String _uuid;
+
 	public FixedPointProperty (String name, String description) {
 		_name = name;
 		_description = description;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -63,6 +68,11 @@ public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
 	public FixedPoint getDefaultValue () {
 		// Similarly, no default value possible.
 		return null;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override

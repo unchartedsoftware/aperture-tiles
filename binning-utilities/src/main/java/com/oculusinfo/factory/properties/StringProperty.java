@@ -28,11 +28,14 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 
+import java.util.UUID;
+
 public class StringProperty implements ConfigurationProperty<String> {
 	private String   _name;
 	private String   _description;
 	private String   _defaultValue;
 	private String[] _possibleValues;
+	private String _uuid;
 
 
 
@@ -41,6 +44,7 @@ public class StringProperty implements ConfigurationProperty<String> {
 		_description = description;
 		_defaultValue = defaultValue;
 		_possibleValues = null;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	public StringProperty (String name, String description, String defaultValue, String[] possibleValues) {
@@ -48,6 +52,7 @@ public class StringProperty implements ConfigurationProperty<String> {
 		_description = description;
 		_defaultValue = defaultValue;
 		_possibleValues = possibleValues;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -73,6 +78,11 @@ public class StringProperty implements ConfigurationProperty<String> {
 	@Override
 	public String getDefaultValue () {
 		return _defaultValue;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(EnumProperty.class);
@@ -20,6 +21,7 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 	private Class<T> _type;
 	private T _defaultValue;
 	private Method _valueOf;
+	private String _uuid;
 
 
 
@@ -28,6 +30,7 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 		_description = description;
 		_type = type;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 		try {
 			_valueOf = type.getDeclaredMethod("valueOf", String.class);
 		} catch (NoSuchMethodException e) {
@@ -60,6 +63,11 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 	@Override
 	public T getDefaultValue () {
 		return _defaultValue;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override

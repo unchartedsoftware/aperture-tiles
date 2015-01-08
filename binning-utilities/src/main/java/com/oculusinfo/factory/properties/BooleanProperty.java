@@ -28,17 +28,20 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 
+import java.util.UUID;
+
 public class BooleanProperty implements ConfigurationProperty<Boolean> {
 	private String  _name;
 	private String  _description;
 	private boolean _defaultValue;
-
+	private String _uuid;
 
 
 	public BooleanProperty (String name, String description, boolean defaultValue) {
 		_name = name;
 		_description = description;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -64,6 +67,11 @@ public class BooleanProperty implements ConfigurationProperty<Boolean> {
 	@Override
 	public Boolean getDefaultValue () {
 		return _defaultValue;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override

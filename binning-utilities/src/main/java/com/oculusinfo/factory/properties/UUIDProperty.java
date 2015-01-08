@@ -33,12 +33,14 @@ import java.util.UUID;
 public class UUIDProperty implements ConfigurationProperty<UUID> {
 	private String   _name;
 	private String   _description;
+	private String _uuid;
 
 
 
 	public UUIDProperty (String name, String description) {
 		_name = name;
 		_description = description;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -66,6 +68,11 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
 	public UUID getDefaultValue () {
 		// Being unique, UUIDs should never have a default value
 		return null;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override

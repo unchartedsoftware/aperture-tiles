@@ -31,11 +31,13 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 	private ConfigurationProperty<T> _baseProperty;
 	private String                   _name;
 	private String                   _description;
+	private String _uuid;
 
 	/**
 	 * Construct a list property
@@ -48,6 +50,7 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 		_baseProperty = baseProperty;
 		_name = name;
 		_description = description;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -76,6 +79,11 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 	public List<T> getDefaultValue () {
 		// Default to an empty list if not overridden.
 		return new ArrayList<>();
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	@Override
