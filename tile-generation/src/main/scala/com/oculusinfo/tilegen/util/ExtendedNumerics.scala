@@ -154,7 +154,7 @@ private[util] case class ExtendedNumericWithConversion[T: ClassTag, JT]
 	def conversion = c
 }
 object NumericallyConfigurableFactory {
-	private[datasets] val NUMERIC_TYPE_PROPERTY =
+	private[util] val NUMERIC_TYPE_PROPERTY =
 		new StringProperty("valueType", "The type of numeric value used by this value extractor", "double",
 		                   Array("int", "long", "float", "double"))
 

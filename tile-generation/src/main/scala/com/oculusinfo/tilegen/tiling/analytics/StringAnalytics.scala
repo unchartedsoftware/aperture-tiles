@@ -85,14 +85,13 @@ class StringScoreAnalytic[T]
  * @tparam T See StringScoreAnalytic
  * @tparam JT The type as which the score is to be written to bins.
  */
-class StringScoreBinningAnalytic[T, JT <: JavaSerializable]
+class StringScoreBinningAnalytic[T, JT]
 	(baseAnalytic: BinningAnalytic[T, JT],
 	 aggregationLimit: Option[Int] = None,
 	 order: Option[((String, T), (String, T)) => Boolean] = None,
 	 storageLimit: Option[Int] = None)
 		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
-		with BinningAnalytic[Map[String, T],
-		                     JavaList[Pair[String, JT]]]
+		with BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]]
 {
 	def finish (value: Map[String, T]): JavaList[Pair[String, JT]] = {
 		val valueSeq =

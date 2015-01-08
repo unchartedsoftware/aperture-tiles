@@ -88,6 +88,7 @@ abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 config: KeyValueArgumentSource,
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
+	 deferredPyramid: DeferredTilePyramid,
 	 analyzer: AnalyticExtractor[BT, AT, DT],
 	 pyramidLevels: Seq[Seq[Int]],
 	 val tileWidth: Int = 256,
@@ -117,21 +118,7 @@ abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 
 	/** The tile pyramid */
 	def getTilePyramid = {
-		val autoBounds = (
-			allowAutoBounds &&
-				config.getBoolean("oculus.binning.projection.autobounds",
-				                  "If true, calculate tile pyramid bounds automatically; " +
-					                  "if false, use values given by properties",
-				                  Some(true))
-		)
-		val (minX, maxX, minY, maxY) =
-			if (autoBounds) {
-				axisBounds
-			} else {
-				(0.0, 0.0, 0.0, 0.0)
-			}
-
-		indexer.getTilePyramid(autoBounds, "", minX, maxX, "", minY, maxY)
+		deferredPyramid.getTilePyramid(getAxisBounds)
 	}
 
 	/** Inheritors may override this to disallow auto-bounds calculations when they make no sense. */
@@ -207,11 +194,12 @@ class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 config: KeyValueArgumentSource,
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
+	 deferredPyramid: DeferredTilePyramid,
 	 analyzer: AnalyticExtractor[BT, AT, DT],
 	 pyramidLevels: Seq[Seq[Int]],
 	 tileWidth: Int = 256,
 	 tileHeight: Int = 256)
-		extends BinningTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, analyzer, pyramidLevels, tileWidth, tileHeight)
+		extends BinningTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid, analyzer, pyramidLevels, tileWidth, tileHeight)
 {
 	type STRATEGY_TYPE = StaticBinningTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null

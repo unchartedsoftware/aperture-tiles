@@ -144,15 +144,8 @@ object ValueExtractorFactory2 {
 }
 abstract class ValueExtractorFactory2 (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
 		extends NumericallyConfigurableFactory[ValueExtractor[_,_]](name, classOf[ValueExtractor[_,_]], parent, path)
+		with OptionsFactoryMixin[ValueExtractor[_, _]]
 {
-	/** Get a property value, but only if it is present */
-	def optionalGet[T] (property: ConfigurationProperty[T]): Option[T] = {
-		if (hasPropertyValue(property)) {
-			Some(getPropertyValue(property))
-		} else {
-			None
-		}
-	}
 }
 
 class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
@@ -218,9 +211,9 @@ class MeanValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
 		val emptyValue = optionalGet(MeanValueExtractorFactory2.EMPTY_VALUE_PROPERTY)
-		val minCount = optionalGet(MeanValueExtractorFactory2.MIN_COUNT_PROPERTY)
+		val minCount = optionalGet(MeanValueExtractorFactory2.MIN_COUNT_PROPERTY).map(_.intValue())
 
-		new MeanValueExtractor2[T](field, emptyValue, minCount.map(_.intValue()))(numeric)
+		new MeanValueExtractor2[T](field, emptyValue, minCount)(tag, numeric)
 	}
 }
 class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
@@ -243,7 +236,7 @@ class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		def fields = getPropertyValue(ValueExtractorFactory2.FIELDS_PROPERTY).asScala.toArray
-		new SeriesValueExtractor2[T, JT](fields)(numeric, conversion)
+		new SeriesValueExtractor2[T, JT](fields)(tag, numeric, conversion)
 	}
 }
 class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
@@ -284,7 +277,7 @@ class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path
 		def keyField = getPropertyValue(KEY_PROPERTY)
 		def valueField = getPropertyValue(VALUE_PROPERTY)
 		def validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
-		new IndirectSeriesValueExtractor2[T, JT](keyField, valueField, validKeys)(numeric, conversion)
+		new IndirectSeriesValueExtractor2[T, JT](keyField, valueField, validKeys)(tag, numeric, conversion)
 	}
 }
 class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
@@ -314,7 +307,7 @@ class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Ja
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val fields = getPropertyValue(ValueExtractorFactory2.FIELDS_PROPERTY).asScala.toArray
-		new MultiFieldValueExtractor2[T, JT](fields)(numeric, conversion)
+		new MultiFieldValueExtractor2[T, JT](fields)(tag, numeric, conversion)
 	}
 }
 class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
@@ -343,9 +336,9 @@ object StringScoreBinningAnalyticFactory2 {
 			                                        "similarly, \"high\" for ordering by score from high to "+
 			                                        "low, \"low\" for ordering by score from low to high, "+
 			                                        "and \"random\" or \"none\" for no ordering.",
-	                                        "high", Array("low", "high", "alpha", "reverse-alpha", "none"))
+	                                        "none", Array("low", "high", "alpha", "reverse-alpha", "none"))
 
-	protected def getOrder[T] (orderDescription: String)(implicit numeric: ExtendedNumeric[T]):
+	protected def getOrder[T] (orderDescription: Option[String])(implicit numeric: ExtendedNumeric[T]):
 	Option[((String, T), (String, T)) => Boolean] =
 		orderDescription match {
 			case Some("alpha") =>
@@ -376,7 +369,7 @@ object StringScoreBinningAnalyticFactory2 {
 	                               conversion: TypeConversion[T, JT]): BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = {
 		val aggregationLimit = factory.optionalGet(AGGREGATION_LIMIT_PROPERTY).map(_.intValue())
 		val binLimit = factory.optionalGet(BIN_LIMIT_PROPERTY).map(_.intValue())
-		val ordering = getOrder(factory.getPropertyValue(ORDER_PROPERTY))
+		val ordering = getOrder(factory.optionalGet(ORDER_PROPERTY))
 		new StringScoreBinningAnalytic[T, JT](new NumericSumBinningAnalytic(), aggregationLimit, ordering, binLimit)
 	}
 }
@@ -390,8 +383,8 @@ class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
-		val binningAnalytic = StringScoreBinningAnalyticFactory2.getBinningAnalytic[T, JT](this)
-		new StringValueExtractor2[T, JT](field, binningAnalytic)(numeric, conversion)
+		val binningAnalytic = StringScoreBinningAnalyticFactory2.getBinningAnalytic[T, JT](this)(numeric, conversion)
+		new StringValueExtractor2[T, JT](field, binningAnalytic)(tag, numeric, conversion)
 	}
 }
 class StringValueExtractor2[T: ClassTag, JT] (field: String,
@@ -441,8 +434,8 @@ class SubstringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Jav
 		val indices = getPropertyValue(INDICES_PROPERTY).asScala.toSeq.map(p =>
 			(p.getFirst.intValue, p.getSecond.intValue)
 		)
-		val binningAnalytic = StringScoreBinningAnalyticFactory2.getBinningAnalytic[T, JT](this)
-		new SubstringValueExtractor2[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic)(numeric, conversion)
+		val binningAnalytic = StringScoreBinningAnalyticFactory2.getBinningAnalytic[T, JT](this)(numeric, conversion)
+		new SubstringValueExtractor2[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic)(tag, numeric, conversion)
 	}
 }
 class SubstringValueExtractor2[T: ClassTag, JT] (field: String,

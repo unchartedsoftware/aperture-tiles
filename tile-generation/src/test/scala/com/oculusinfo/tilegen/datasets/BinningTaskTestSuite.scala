@@ -88,12 +88,12 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		props.setProperty("oculus.binning.source.type", "schema")
 		props.setProperty("oculus.binning.table", "test")
 		props.setProperty("oculus.binning.projection.autobounds", "false")
+		props.setProperty("oculus.binning.projection.type", "EPSG:4326")
+		props.setProperty("oculus.binning.projection.minX", "0.0")
+		props.setProperty("oculus.binning.projection.maxX", "7.9999")
+		props.setProperty("oculus.binning.projection.minY", "0.0")
+		props.setProperty("oculus.binning.projection.maxY", "7.9999")
 		props.setProperty("oculus.binning.index.type", "cartesian")
-		props.setProperty("oculus.binning.index.pyramid.type", "EPSG:4326")
-		props.setProperty("oculus.binning.index.pyramid.minX", "0.0")
-		props.setProperty("oculus.binning.index.pyramid.maxX", "7.9999")
-		props.setProperty("oculus.binning.index.pyramid.minY", "0.0")
-		props.setProperty("oculus.binning.index.pyramid.maxY", "7.9999")
 		props.setProperty("oculus.binning.index.field.0", "x")
 		props.setProperty("oculus.binning.index.field.1", "y")
 		props.setProperty("oculus.binning.levels.0", "1")
@@ -107,6 +107,10 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		val valuerFactory = ValueExtractorFactory2(null, java.util.Arrays.asList("oculus", "binning", "value"))
 		valuerFactory.readConfiguration(jsonConfig)
 
+		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
+		deferredPyramidFactory.readConfiguration(jsonConfig)
+		val deferredPyramid = deferredPyramidFactory.produce(classOf[DeferredTilePyramid])
+
 		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): Unit = {
 			val analyzer = new AnalyticExtractor[JT, Int, Int] {
 				override def fields: Seq[String] = Seq[String]()
@@ -117,8 +121,8 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 			}
 
 			val dataset =
-				new StaticBinningTask[T, Int, Int, JT](sqlc, "test", config, indexer,
-				                                       valuer, analyzer, Seq(Seq(0, 1)), 2, 2)
+				new StaticBinningTask[T, Int, Int, JT](sqlc, "test", config, indexer, valuer, deferredPyramid,
+				                                       analyzer, Seq(Seq(0, 1)), 2, 2)
 			dataset.initialize()
 			pyramidIo.initializeDirectly(pyramidId, dataset);
 		}
