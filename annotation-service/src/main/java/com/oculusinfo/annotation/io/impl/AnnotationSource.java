@@ -1,19 +1,19 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,61 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.oculusinfo.annotation.io.impl;
 
-import com.oculusinfo.annotation.AnnotationData;
-import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.binning.io.impl.PyramidSource;
-import com.oculusinfo.binning.util.Pair;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.LinkedList;
+import java.io.*;
 import java.util.List;
 
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.util.Pair;
 
-public class FileSystemAnnotationIO implements AnnotationIO {
+public interface AnnotationSource {
 
-	private AnnotationSource _source;
+	public void initializeForWrite (String basePath) throws IOException;
 
-	public FileSystemAnnotationIO(AnnotationSource source){
-		_source = source;
-	}
-
-	public AnnotationSource getSource () {
-		return _source;
-	}
-
-	@Override
-	public void initializeForWrite (String basePath) throws IOException {
-		_source.initializeForWrite( basePath );
-	}
-
-	@Override
 	public void writeData (String basePath, AnnotationSerializer serializer,
-	                            Iterable<AnnotationData<?>> data) throws IOException {
-		_source.writeData( basePath, serializer, data );
-	}
+	                            Iterable<AnnotationData<?>> data) throws IOException;
 
-	@Override
-	public void initializeForRead(String basePath) {
-		// Noop
-		_source.initializeForRead( basePath );
-	}
+	public void initializeForRead(String basePath);
 
-	@Override
 	public List<AnnotationData<?>> readData (String basePath,
 	                                        AnnotationSerializer serializer,
-	                                        Iterable<Pair<String, Long>> certificates) throws IOException {
-		return _source.readData( basePath, serializer, certificates );
-	}
+	                                        Iterable<Pair<String, Long>> certificates) throws IOException;
 
-	@Override
-	public void removeData (String basePath, Iterable<Pair<String, Long>> certificates ) throws IOException {
-		_source.removeData( basePath, certificates );
-	}
-    
+	public void removeData (String basePath, Iterable<Pair<String, Long>> certificates ) throws IOException;
 }
