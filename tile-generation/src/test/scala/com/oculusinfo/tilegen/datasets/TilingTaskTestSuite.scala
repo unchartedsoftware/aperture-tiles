@@ -51,9 +51,9 @@ import scala.reflect.ClassTag
 
 
 /**
- * Created by nkronenfeld on 12/18/2014.
+ * Basic tests for the TilingTask object
  */
-class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
 	val pyramidId = "unknown.x.y.count"
 	var sqlc: SQLContext = null
 	var data: SchemaRDD = null
@@ -110,9 +110,9 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		deferredPyramidFactory.readConfiguration(jsonConfig)
 		val deferredPyramid = deferredPyramidFactory.produce(classOf[DeferredTilePyramid])
 
-		val configFactory = new BinningTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
+		val configFactory = new TilingTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
 		configFactory.readConfiguration(jsonConfig)
-		val config = configFactory.produce(classOf[BinningTaskParameters])
+		val config = configFactory.produce(classOf[TilingTaskParameters])
 
 		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): Unit = {
 			val analyzer = new AnalyticExtractor[JT, Int, Int] {
@@ -124,7 +124,7 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 			}
 
 			val dataset =
-				new StaticBinningTask[T, Int, Int, JT](sqlc, "test", config, indexer, valuer, deferredPyramid,
+				new StaticTilingTask[T, Int, Int, JT](sqlc, "test", config, indexer, valuer, deferredPyramid,
 				                                       analyzer, Seq(Seq(0, 1)), 2, 2)
 			dataset.initialize()
 			pyramidIo.initializeDirectly(pyramidId, dataset);
@@ -138,7 +138,7 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		pyramidIo = null
 	}
 
-	test("Simple binning using BinningTasks") {
+	test("Simple tiling using TilingTask") {
 		// Noting that visually, the tiles should look exactly as we enter them here.
 		val tile000: TileData[_] =
 			pyramidIo.readTiles(pyramidId, null,

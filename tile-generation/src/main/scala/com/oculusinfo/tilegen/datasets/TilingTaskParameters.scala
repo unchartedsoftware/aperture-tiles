@@ -34,7 +34,7 @@ import com.oculusinfo.tilegen.util.OptionsFactoryMixin
 
 
 /**
- * A consolidated location for the random parameters associated with binning tasks, so as to make them ammenable to
+ * A consolidated location for the random parameters associated with tiling tasks, so as to make them amenable to
  * factory construction
  *
  * @param name The basic name of the tile pyramid to be tiled
@@ -42,7 +42,7 @@ import com.oculusinfo.tilegen.util.OptionsFactoryMixin
  * @param prefix A prefix to be prepended to the basic name, to differentiate different runs of a tiling task
  * @param consolidationPartitions The number of partitions into which to consolidate data when performign reduce operations
  */
-case class BinningTaskParameters (name: String,
+case class TilingTaskParameters (name: String,
                                   description: String,
                                   prefix: Option[String],
                                   consolidationPartitions: Option[Int])
@@ -50,20 +50,20 @@ case class BinningTaskParameters (name: String,
 }
 
 
-object BinningTaskParametersFactory {
+object TilingTaskParametersFactory {
 	var NAME_PROPERTY = new StringProperty("name", "The basic root name of the tile pyramid to be tiled", "")
 	var DESC_PROPERTY = new StringProperty("description", "A description of the tile pyramid to be tiled.  This will be put in the pyramid metaData.", "")
 	var PREFIX_PROPERTY = new StringProperty("prefix", "A prefix to be prepended to the basic name, so as to differentiate different attempts to tile the same data.", "")
 	var PARTITIONS_PROPERTY = new IntegerProperty("consolidationPartitions", "The number of partitions into which to consolidate data when performign reduce operations", 0)
 }
-class BinningTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ConfigurableFactory[BinningTaskParameters](classOf[BinningTaskParameters], parent, path, true)
-		with OptionsFactoryMixin[BinningTaskParameters]
+class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
+		with OptionsFactoryMixin[TilingTaskParameters]
 {
-	import BinningTaskParametersFactory._
+	import TilingTaskParametersFactory._
 
-	override protected def create(): BinningTaskParameters = {
-		new BinningTaskParameters(getPropertyValue(NAME_PROPERTY),
+	override protected def create(): TilingTaskParameters = {
+		new TilingTaskParameters(getPropertyValue(NAME_PROPERTY),
 		                          getPropertyValue(DESC_PROPERTY),
 		                          optionalGet(PREFIX_PROPERTY),
 		                          optionalGet(PARTITIONS_PROPERTY).map(_.intValue()))

@@ -51,7 +51,7 @@ import scala.reflect.ClassTag
 
 
 /**
- * A BinningTask encapsulates all the information needed to construct a tile pyramid
+ * A TilingTask encapsulates all the information needed to construct a tile pyramid
  *
  * For this first iteration, this will be basically a transfer of the old Dataset into the new types.
  *
@@ -77,15 +77,15 @@ import scala.reflect.ClassTag
  * @param tileWidth The width, in bins, of any tile this task calculates.
  * @param tileHeight The height, in bins, of any tile this task calculates.
  *
- * @tparam PT The processing value type used by this binning task when calculating bin values.
- * @tparam BT The final bin type used by this binning task when writing tiles.
- * @tparam AT The type of tile analytic used by this binning task.
- * @tparam DT The type of data analytic used by this binning task.
+ * @tparam PT The processing value type used by this tiling task when calculating bin values.
+ * @tparam BT The final bin type used by this tiling task when writing tiles.
+ * @tparam AT The type of tile analytic used by this tiling task.
+ * @tparam DT The type of data analytic used by this tiling task.
  */
-abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	(sqlc: SQLContext,
 	 table: String,
-	 config: BinningTaskParameters,
+	 config: TilingTaskParameters,
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
 	 deferredPyramid: DeferredTilePyramid,
@@ -179,10 +179,10 @@ abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(minX, maxX, minY, maxY)
 	}
 }
-class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	(sqlc: SQLContext,
 	 table: String,
-	 config: BinningTaskParameters,
+	 config: TilingTaskParameters,
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
 	 deferredPyramid: DeferredTilePyramid,
@@ -190,14 +190,14 @@ class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 pyramidLevels: Seq[Seq[Int]],
 	 tileWidth: Int = 256,
 	 tileHeight: Int = 256)
-		extends BinningTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid, analyzer, pyramidLevels, tileWidth, tileHeight)
+		extends TilingTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid, analyzer, pyramidLevels, tileWidth, tileHeight)
 {
-	type STRATEGY_TYPE = StaticBinningTaskProcessingStrategy
+	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null
 	def initialize (): Unit = {
-		initialize(new StaticBinningTaskProcessingStrategy())
+		initialize(new StaticTilingTaskProcessingStrategy())
 	}
-	class StaticBinningTaskProcessingStrategy
+	class StaticTilingTaskProcessingStrategy
 			extends StaticProcessingStrategy[Seq[Any], PT, DT](sqlc.sparkContext)
 	{
 		def getDataAnalytics: Option[AnalysisDescription[_, DT]] = analyzer.dataAnalytics
