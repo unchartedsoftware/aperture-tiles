@@ -97,39 +97,9 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 		props.setProperty("oculus.binning.index.field.0", "x")
 		props.setProperty("oculus.binning.index.field.1", "y")
 		props.setProperty("oculus.binning.levels.0", "1")
-		val jsonConfig = JsonUtilities.propertiesObjToJSON(props)
 
-		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
-		indexerFactory.readConfiguration(jsonConfig)
-		val indexer = indexerFactory.produce(classOf[IndexExtractor])
-
-		val valuerFactory = ValueExtractorFactory2(null, java.util.Arrays.asList("oculus", "binning", "value"))
-		valuerFactory.readConfiguration(jsonConfig)
-
-		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
-		deferredPyramidFactory.readConfiguration(jsonConfig)
-		val deferredPyramid = deferredPyramidFactory.produce(classOf[DeferredTilePyramid])
-
-		val configFactory = new TilingTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
-		configFactory.readConfiguration(jsonConfig)
-		val config = configFactory.produce(classOf[TilingTaskParameters])
-
-		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): Unit = {
-			val analyzer = new AnalyticExtractor[JT, Int, Int] {
-				override def fields: Seq[String] = Seq[String]()
-
-				override def tileAnalytics: Option[AnalysisDescription[TileData[JT], Int]] = None
-
-				override def dataAnalytics: Option[AnalysisDescription[Seq[Any], Int]] = None
-			}
-
-			val dataset =
-				new StaticTilingTask[T, Int, Int, JT](sqlc, "test", config, indexer, valuer, deferredPyramid,
-				                                       analyzer, Seq(Seq(0, 1)), 2, 2)
-			dataset.initialize()
-			pyramidIo.initializeDirectly(pyramidId, dataset);
-		}
-		withValuer(valuerFactory.produce(classOf[ValueExtractor[_, _]]))
+		val task = TilingTask(sqlc, props)
+		pyramidIo.initializeDirectly(pyramidId, task)
 	}
 
 	private def cleanupDataset: Unit = {

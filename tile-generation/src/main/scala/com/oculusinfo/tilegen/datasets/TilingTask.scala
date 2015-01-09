@@ -29,12 +29,12 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Integer => JavaInt}
 import java.lang.{Double => JavaDouble}
 
-import java.util.ArrayList
+import java.util.{Properties, ArrayList}
 
 import com.oculusinfo.binning.impl.{AOITilePyramid, WebMercatorTilePyramid}
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.binning.util.{JsonUtilities, Pair}
 import com.oculusinfo.binning.{TileIndex, TileData, TilePyramid}
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.tilegen.spark.{DoubleMaxAccumulatorParam, DoubleMinAccumulatorParam}
@@ -50,6 +50,44 @@ import org.apache.spark.streaming.dstream.DStream
 import scala.reflect.ClassTag
 
 
+
+object TilingTask {
+	def apply (sqlc: SQLContext, config: Properties): TilingTask[_, _, _, _] = {
+		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
+
+		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
+		indexerFactory.readConfiguration(jsonConfig)
+
+		val valuerFactory = ValueExtractorFactory2(null, java.util.Arrays.asList("oculus", "binning", "value"))
+		valuerFactory.readConfiguration(jsonConfig)
+
+		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
+		deferredPyramidFactory.readConfiguration(jsonConfig)
+
+		val configFactory = new TilingTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
+		configFactory.readConfiguration(jsonConfig)
+
+		val indexer = indexerFactory.produce(classOf[IndexExtractor])
+		val valuer = valuerFactory.produce(classOf[ValueExtractor[_, _]])
+		val deferredPyramid = deferredPyramidFactory.produce(classOf[DeferredTilePyramid])
+		val taskConfig = configFactory.produce(classOf[TilingTaskParameters])
+
+		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): TilingTask[_, _, _, _] = {
+			val analyzer = new AnalyticExtractor[JT, Int, Int] {
+				override def fields: Seq[String] = Seq[String]()
+
+				override def tileAnalytics: Option[AnalysisDescription[TileData[JT], Int]] = None
+
+				override def dataAnalytics: Option[AnalysisDescription[Seq[Any], Int]] = None
+			}
+
+			new StaticTilingTask[T, Int, Int, JT](sqlc, "test", taskConfig, indexer, valuer, deferredPyramid,
+			                                      analyzer, Seq(Seq(0, 1)), 2, 2).initialize()
+		}
+
+		withValuer(valuerFactory.produce(classOf[ValueExtractor[_, _]]))
+	}
+}
 /**
  * A TilingTask encapsulates all the information needed to construct a tile pyramid
  *
@@ -194,8 +232,9 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 {
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null
-	def initialize (): Unit = {
+	def initialize (): TilingTask[PT, AT, DT, BT] = {
 		initialize(new StaticTilingTaskProcessingStrategy())
+		this
 	}
 	class StaticTilingTaskProcessingStrategy
 			extends StaticProcessingStrategy[Seq[Any], PT, DT](sqlc.sparkContext)
