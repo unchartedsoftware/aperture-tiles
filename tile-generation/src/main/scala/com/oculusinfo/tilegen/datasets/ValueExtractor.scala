@@ -95,6 +95,8 @@ abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
 
 	/** The serializer needed to write tiles of the type described by this value extractor */
 	def serializer: TileSerializer[BT]
+
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[BT], _]]
 }
 
 /**
@@ -165,6 +167,10 @@ class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric
 	def fields = Seq[String]()
 	def convert = (s: Seq[Any]) => numeric.fromDouble(1.0)
 	def binningAnalytic = new NumericSumBinningAnalytic[T, JT]()
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JT], _]] = {
+		Seq(new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMinTileAnalytic[T]()),
+		    new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMaxTileAnalytic[T]()))
+	}
 	def serializer = new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
@@ -188,6 +194,10 @@ class FieldValueExtractor2[T: ClassTag, JT] (field: String)
 	def fields = Seq(field)
 	override def convert: (Seq[Any]) => T = s => s(0).asInstanceOf[T]
 	override def binningAnalytic: BinningAnalytic[T, JT] = new NumericSumBinningAnalytic[T, JT]()
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JT], _]] = {
+		Seq(new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMinTileAnalytic[T]()),
+		    new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMaxTileAnalytic[T]()))
+	}
 	override def serializer: TileSerializer[JT] =
 		new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
@@ -223,6 +233,11 @@ class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDo
 	def fields = Seq(field)
 	override def convert: (Seq[Any]) => (T, Int) = s => (s(0).asInstanceOf[T], 1)
 	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = new NumericMeanBinningAnalytic[T]()
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
+		val convertFcn: JavaDouble => T = bt => numeric.fromDouble(bt.doubleValue())
+		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMinTileAnalytic[T]()),
+		    new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMaxTileAnalytic[T]()))
+	}
 	override def serializer: TileSerializer[JavaDouble] =
 		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 }
@@ -248,6 +263,12 @@ class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
 		s => s.map(v => Try(v.asInstanceOf[T]).getOrElse(numeric.fromInt(0)))
 	override def binningAnalytic: BinningAnalytic[Seq[T], JavaList[JT]] =
 		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
+		val convertFcn: JavaList[JT] => Seq[T] = bt => bt.asScala.map(conversion.backwards(_))
+		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
+		    new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMaxTileAnalytic())),
+		    new CustomGlobalMetadata(Map[String, Object]("variables" -> fields.toSeq.asJava)))
+	}
 	override def serializer: TileSerializer[JavaList[JT]] =
 		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
@@ -294,6 +315,12 @@ class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueFie
 		}
 	def binningAnalytic: BinningAnalytic[Seq[T], JavaList[JT]] =
 		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
+	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
+		val convertFcn: JavaList[JT] => Seq[T] = bt =>
+			for (b <- bt.asScala) yield conversion.backwards(b)
+		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
+		    new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMaxTileAnalytic())))
+	}
 	def serializer: TileSerializer[JavaList[JT]] =
 		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
@@ -319,6 +346,8 @@ class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
 		s => s.map(v => Try(v.asInstanceOf[T]).getOrElse(numeric.fromInt(0)))
 	def binningAnalytic: BinningAnalytic[Seq[T], JavaList[Pair[String, JT]]] =
 		new CategoryValueBinningAnalytic[T, JT](_fields, new NumericSumBinningAnalytic())
+	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
+		Seq()
 	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
 		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
 }
@@ -397,6 +426,8 @@ class StringValueExtractor2[T: ClassTag, JT] (field: String,
 	override def convert: (Seq[Any]) => Map[String, T] =
 		s => Map(s(0).toString -> numeric.fromInt(1))
 	def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
+	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
+		Seq()
 	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
 		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
 }
@@ -469,6 +500,8 @@ class SubstringValueExtractor2[T: ClassTag, JT] (field: String,
 
 	}
 	override def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
+	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
+		Seq()
 	override def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
 		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
 }

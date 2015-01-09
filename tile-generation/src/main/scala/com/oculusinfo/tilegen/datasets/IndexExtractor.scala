@@ -64,6 +64,9 @@ abstract class IndexExtractor () {
 
 	/** The index scheme to be used when binning to understand the indices this extractor extracts from records. */
 	def indexScheme: IndexScheme[Seq[Any]]
+
+	// List any tile analytics automatically associated with this index extractor
+	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] = Seq()
 }
 
 
@@ -197,6 +200,10 @@ class IPv4SchemaIndexExtractor (ipField: String) extends IndexExtractor() {
 	@transient lazy private val _fields = Seq(ipField)
 	def fields = _fields
 	def indexScheme = new IPv4ZCurveSchemaIndexScheme
+	override def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] =
+		Seq(IPv4Analytics.getCIDRBlockAnalysis[BT](),
+		    IPv4Analytics.getMinIPAddressAnalysis[BT](),
+		    IPv4Analytics.getMaxIPAddressAnalysis[BT]())
 }
 
 object TimeRangeIndexExtractorFactory {
