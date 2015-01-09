@@ -67,25 +67,35 @@ object TilingTask {
 		val configFactory = new TilingTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
 		configFactory.readConfiguration(jsonConfig)
 
+		val analyzerFactory = new AnalyticExtractorFactory(null, java.util.Arrays.asList("oculus", "analytics"))
+		analyzerFactory.readConfiguration(jsonConfig)
+
 		val indexer = indexerFactory.produce(classOf[IndexExtractor])
 		val valuer = valuerFactory.produce(classOf[ValueExtractor[_, _]])
+		val analyzer = analyzerFactory.produce(classOf[AnalyticExtractor])
 		val deferredPyramid = deferredPyramidFactory.produce(classOf[DeferredTilePyramid])
 		val taskConfig = configFactory.produce(classOf[TilingTaskParameters])
 
-		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): TilingTask[_, _, _, _] = {
-			val analyzer = new AnalyticExtractor[JT, Int, Int] {
-				override def fields: Seq[String] = Seq[String]()
 
-				override def tileAnalytics: Option[AnalysisDescription[TileData[JT], Int]] = None
+		// Tell the tilng task constructor about the processing type tag
+		def withValueTags[T: ClassTag, JT] (
+			valuer: ValueExtractor[T, JT]): TilingTask[T, _, _, JT] = {
+			val dataAnalyticFields = analyzer.fields
+			val dataAnalytics = analyzer.dataAnalytics
+			val tileAnalytics = analyzer.tileAnalytics(valuer.getTileAnalytics ++ indexer.getTileAnalytics)
 
-				override def dataAnalytics: Option[AnalysisDescription[Seq[Any], Int]] = None
+			// Tell the tiling task constructor about the analytic type tags
+			def withTilingTags[AT: ClassTag, DT: ClassTag] (dataAnalytics: AnalysisWithTag[Seq[Any], DT],
+			                                                tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
+			TilingTask[T, AT, DT, JT] = {
+				new StaticTilingTask[T, AT, DT, JT](sqlc, "test", taskConfig, indexer, valuer, deferredPyramid,
+					dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis, Seq(Seq(0, 1)), 2, 2).initialize()
 			}
-
-			new StaticTilingTask[T, Int, Int, JT](sqlc, "test", taskConfig, indexer, valuer, deferredPyramid,
-			                                      analyzer, Seq(Seq(0, 1)), 2, 2).initialize()
+			withTilingTags(dataAnalytics, tileAnalytics)
 		}
 
-		withValuer(valuerFactory.produce(classOf[ValueExtractor[_, _]]))
+		// Construct the tiling task, with all needed tags
+		withValueTags(valuer)
 	}
 }
 /**
@@ -110,7 +120,9 @@ object TilingTask {
  * @param config An object specifying the configuration details of this task.
  * @param indexer An object to extract the index value(s) from the raw data
  * @param valuer An object to extract the binnable value(s) from the raw data
- * @param analyzer An object to extract data analytic value(s) from the raw data
+ * @param deferredPyramid
+ * @param tileAnalytics
+ * @param dataAnalytics
  * @param pyramidLevels The levels of the tile pyramid this tiling task is expecting to calculate.
  * @param tileWidth The width, in bins, of any tile this task calculates.
  * @param tileHeight The height, in bins, of any tile this task calculates.
@@ -127,7 +139,9 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
 	 deferredPyramid: DeferredTilePyramid,
-	 analyzer: AnalyticExtractor[BT, AT, DT],
+	 dataAnalyticFields: Seq[String],
+	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	 pyramidLevels: Seq[Seq[Int]],
 	 val tileWidth: Int = 256,
 	 val tileHeight: Int = 256)
@@ -174,10 +188,10 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	def getBinningAnalytic = valuer.binningAnalytic
 
 	/** Get the data analytics to be used and inserted into our tiles */
-	def getDataAnalytics: Option[AnalysisDescription[_, DT]] = analyzer.dataAnalytics
+	def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
 
 	/** Get the tile analytics to apply to and record in our tiles */
-	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]] = analyzer.tileAnalytics
+	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]] = tileAnalytics
 
 	/**
 	 * Creates a blank metadata describing this dataset
@@ -224,11 +238,14 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
 	 deferredPyramid: DeferredTilePyramid,
-	 analyzer: AnalyticExtractor[BT, AT, DT],
+	 dataAnalyticFields: Seq[String],
+	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	 pyramidLevels: Seq[Seq[Int]],
 	 tileWidth: Int = 256,
 	 tileHeight: Int = 256)
-		extends TilingTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid, analyzer, pyramidLevels, tileWidth, tileHeight)
+		extends TilingTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid,
+			dataAnalyticFields, dataAnalytics, tileAnalytics, pyramidLevels, tileWidth, tileHeight)
 {
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null
@@ -239,10 +256,8 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	class StaticTilingTaskProcessingStrategy
 			extends StaticProcessingStrategy[Seq[Any], PT, DT](sqlc.sparkContext)
 	{
-		def getDataAnalytics: Option[AnalysisDescription[_, DT]] = analyzer.dataAnalytics
-
 		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
-			val allFields = indexer.fields ++ valuer.fields ++ analyzer.fields
+			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
 
 			val selectStmt =
 				allFields.mkString("SELECT ", ", ", " FROM "+table)
@@ -252,7 +267,6 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 			val indexFields = indexer.fields.length
 			val valueFields = valuer.fields.length
 			val localValuer = valuer
-			val analytics = analyzer.dataAnalytics
 			data.map(row =>
 				{
 					val index = row.take(indexFields)
@@ -261,31 +275,13 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 					val value = localValuer.convert(values)
 
 					val analyticInputs = row.drop(indexFields+valueFields)
-					val analysis = analytics.map(analytic => analytic.convert(analyticInputs))
+					val analysis = dataAnalytics.map(analytic => analytic.convert(analyticInputs))
 
 					(index, value, analysis)
 				}
 			)
 		}
+
+		override def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
 	}
-}
-
-
-
-
-
-
-
-
-/**
- * A class to encapsulate the data analytics needed by a tiling task, and the information needed to obtain the
- * data to run them.
- */
-
-abstract class AnalyticExtractor[BT, AT: ClassTag, DT: ClassTag] {
-	def fields: Seq[String]
-
-	def tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]]
-
-	def dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]]
 }

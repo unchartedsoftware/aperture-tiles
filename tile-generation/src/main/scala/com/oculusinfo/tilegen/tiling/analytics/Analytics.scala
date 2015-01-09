@@ -368,6 +368,42 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis2.addAccumulator(sc, name, test)
 	}
 
+	// Helper functions for testing purposes only
+	/** Count all composed sub-components.  For testing purposes only. */
+	def countComponents: Int = {
+		val count1: Int = if (analysis1.isInstanceOf[CompositeAnalysisDescription[_, _, _]])
+			analysis1.asInstanceOf[CompositeAnalysisDescription[_, _, _]].countComponents
+		else 1
+		val count2: Int = if (analysis2.isInstanceOf[CompositeAnalysisDescription[_, _, _]])
+			analysis2.asInstanceOf[CompositeAnalysisDescription[_, _, _]].countComponents
+		else 1
+		count1 + count2
+	}
+
+	/** Get the nth composed sub-component.  For testing purposes only. */
+	def getComponent (n: Int): AnalysisDescription[RT, _] = {
+		getComponentInternal(n)._1.get
+	}
+
+	protected def getComponentInternal (n: Int): (Option[AnalysisDescription[RT, _]], Int) = {
+		val postFirst =
+			if (analysis1.isInstanceOf[CompositeAnalysisDescription[RT, _, _]])
+				analysis1.asInstanceOf[CompositeAnalysisDescription[RT, _, _]].getComponentInternal(n)
+			else if (0 == n) (Some(analysis1), -1)
+			else (None, n - 1)
+
+		if (postFirst._1.isDefined) postFirst
+		else {
+			val n2 = postFirst._2
+			val postSecond =
+				if (analysis2.isInstanceOf[CompositeAnalysisDescription[RT, _, _]])
+					analysis2.asInstanceOf[CompositeAnalysisDescription[RT, _, _]].getComponentInternal(n2)
+				else if (0 == n2) (Some(analysis2), -1)
+				else (None, n2 - 1)
+			postSecond
+		}
+	}
+
 	override def toString = "["+analysis1+","+analysis2+"]"
 }
 
