@@ -97,7 +97,6 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		props.setProperty("oculus.binning.index.field.0", "x")
 		props.setProperty("oculus.binning.index.field.1", "y")
 		props.setProperty("oculus.binning.levels.0", "1")
-		val config = new PropertiesWrapper(props)
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(props)
 
 		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
@@ -110,6 +109,10 @@ class BinningTaskTestSuite extends FunSuite with SharedSparkContext with BeforeA
 		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
 		deferredPyramidFactory.readConfiguration(jsonConfig)
 		val deferredPyramid = deferredPyramidFactory.produce(classOf[DeferredTilePyramid])
+
+		val configFactory = new BinningTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
+		configFactory.readConfiguration(jsonConfig)
+		val config = configFactory.produce(classOf[BinningTaskParameters])
 
 		def withValuer[T: ClassTag, JT] (valuer: ValueExtractor[T, JT]): Unit = {
 			val analyzer = new AnalyticExtractor[JT, Int, Int] {

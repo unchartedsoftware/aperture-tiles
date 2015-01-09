@@ -85,7 +85,7 @@ import scala.reflect.ClassTag
 abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	(sqlc: SQLContext,
 	 table: String,
-	 config: KeyValueArgumentSource,
+	 config: BinningTaskParameters,
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
 	 deferredPyramid: DeferredTilePyramid,
@@ -96,22 +96,15 @@ abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		extends Dataset[Seq[Any], PT, DT, AT, BT] {
 	/** Get the name by which the tile pyramid produced by this task should be known. */
 	val getName = {
-		val name = config.getString("oculus.binning.name",
-		                            "The name of the tileset",
-		                            Some("unknown"))
-		val prefix = config.getStringOption("oculus.binning.prefix",
-		                                    "A prefix to add to the tile pyramid ID")
-		val pyramidName = if (prefix.isDefined) prefix.get + "." + name
-		else name
+		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + config.name
+		                  else config.name
 
 		pyramidName + "." + indexer.name + "." + valuer.name
 	}
 
 
 	/** Get a description of the tile pyramid produced by this task. */
-	def getDescription =
-		config.getStringOption("oculus.binning.description", "The description to put in the tile metadata")
-			.getOrElse("Binned " + getName + " data showing " + indexer.description)
+	def getDescription = config.description
 
 	/** The levels this task is intended to tile, in groups that should be tiled together */
 	def getLevels = pyramidLevels
@@ -131,9 +124,7 @@ abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	override def getNumYBins = tileHeight
 
 	/** Get the number of partitions to use when reducing data to tiles */
-	override def getConsolidationPartitions =
-		config.getIntOption("oculus.binning.consolidationPartitions",
-		                    "The number of partitions into which to consolidate data when done")
+	override def getConsolidationPartitions = config.consolidationPartitions
 
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
@@ -191,7 +182,7 @@ abstract class BinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 class StaticBinningTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	(sqlc: SQLContext,
 	 table: String,
-	 config: KeyValueArgumentSource,
+	 config: BinningTaskParameters,
 	 indexer: IndexExtractor,
 	 valuer: ValueExtractor[PT, BT],
 	 deferredPyramid: DeferredTilePyramid,
