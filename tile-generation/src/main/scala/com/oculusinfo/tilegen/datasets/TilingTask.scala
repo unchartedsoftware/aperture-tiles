@@ -52,7 +52,7 @@ import scala.reflect.ClassTag
 
 
 object TilingTask {
-	def apply (sqlc: SQLContext, config: Properties): TilingTask[_, _, _, _] = {
+	def apply (sqlc: SQLContext, table: String, config: Properties): TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
 		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
@@ -88,7 +88,7 @@ object TilingTask {
 			def withTilingTags[AT: ClassTag, DT: ClassTag] (dataAnalytics: AnalysisWithTag[Seq[Any], DT],
 			                                                tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
 					TilingTask[T, AT, DT, JT] = {
-				new StaticTilingTask[T, AT, DT, JT](sqlc, "test", taskConfig, indexer, valuer, deferredPyramid,
+				new StaticTilingTask[T, AT, DT, JT](sqlc, table, taskConfig, indexer, valuer, deferredPyramid,
 				                                    dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis, Seq(Seq(0, 1)), 2, 2).initialize()
 			}
 			withTilingTags(dataAnalytics, tileAnalytics)

@@ -98,7 +98,7 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 		props.setProperty("oculus.binning.index.field.1", "y")
 		props.setProperty("oculus.binning.levels.0", "1")
 
-		val task = TilingTask(sqlc, props)
+		val task = TilingTask(sqlc, "test", props)
 		pyramidIo.initializeDirectly(pyramidId, task)
 	}
 
