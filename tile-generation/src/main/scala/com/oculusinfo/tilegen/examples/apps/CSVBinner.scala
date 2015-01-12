@@ -30,11 +30,12 @@ package com.oculusinfo.tilegen.examples.apps
 import java.io.FileInputStream
 import java.util.Properties
 
-import com.oculusinfo.tilegen.datasets.{Dataset, DatasetFactory}
+import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
 
 import scala.reflect.ClassTag
 
@@ -159,7 +160,17 @@ object CSVBinner {
 		                                    dataset.dataAnalysisTypeTag,
 		                                    dataset.tileAnalysisTypeTag)
 
-	
+
+
+	private def readFile (file: String, props: Properties): Properties = {
+		val stream = new FileInputStream(file)
+		props.load(stream)
+		stream.close()
+		props
+	}
+
+
+
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {
 			println("Usage:")
@@ -173,30 +184,38 @@ object CSVBinner {
 
 		while ("-d" == args(argIdx)) {
 			argIdx = argIdx + 1
-			val stream = new FileInputStream(args(argIdx))
-			defProps.load(stream)
-			stream.close()
+			readFile(args(argIdx), defProps)
 			argIdx = argIdx + 1
 		}
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
 		val sc = connector.createContext(Some("Pyramid Binning"))
+		val sqlc = new SQLContext(sc)
 		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
 		while (argIdx < args.size) {
 			val fileStartTime = System.currentTimeMillis()
-			val props = new Properties(defProps)
-			val propStream = new FileInputStream(args(argIdx))
-			props.load(propStream)
-			propStream.close()
+			val rawProps = readFile(args(argIdx), new Properties(defProps))
+			val props = new PropertiesWrapper(rawProps)
 
-			// If the user hasn't explicitly set us not to cache, cache processed data to make
-			// multiple runs more efficient
-			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
-				props.setProperty("oculus.binning.caching.processed", "true")
-			processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props), tileIO)
+			// Read our CSV data
+			val source = new CSVDataSource(props)
+			// Read the CSV into a schema file
+			val reader = new CSVReader(sqlc, source.getData(sc), props)
+			// Unless the user has specifically said not to, cache processed data so as to make multiple runs
+			// more efficient.
+			val cache = props.getBoolean(
+				"oculus.binning.caching.processed",
+				"Cache the data, in a parsed and processed form, if true",
+				Some(true))
+			if (cache) reader.asSchemaRDD.cache()
+			// Register it as a table
+			val table = "table"+argIdx
+			reader.asSchemaRDD.registerTempTable(table)
+			// Process the data
+			processDatasetGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

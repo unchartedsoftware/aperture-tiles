@@ -51,8 +51,7 @@ import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
-import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, ArgumentParser, PropertiesWrapper}
 
 
 /**
@@ -235,7 +234,7 @@ class CSVRecordPropertiesWrapper (properties: Properties) extends PropertiesWrap
  * A simple data source for binning of generic CSV data based on a
  * property-style configuration file
  */
-class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
+class CSVDataSource (properties: KeyValueArgumentSource) {
 	def getDataFiles: Seq[String] = properties.getStringPropSeq(
 		"oculus.binning.source.location",
 		"The hdfs file name from which to get the CSV data.  Either a directory, all "+
@@ -264,7 +263,7 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 					tmp.partitions // force exception if file does not exist
 					tmp
 				}
-			).getOrElse( sc.emptyRDD )
+			).getOrElse( sc.emptyRDD[String] )
 		}.reduce(_ union _)
 }
 
