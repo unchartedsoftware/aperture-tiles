@@ -266,6 +266,7 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 
 			val indexFields = indexer.fields.length
 			val valueFields = valuer.fields.length
+			val localDataAnalytics = dataAnalytics
 			val localValuer = valuer
 			data.map(row =>
 				{
@@ -275,7 +276,7 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 					val value = localValuer.convert(values)
 
 					val analyticInputs = row.drop(indexFields+valueFields)
-					val analysis = dataAnalytics.map(analytic => analytic.convert(analyticInputs))
+					val analysis = localDataAnalytics.map(analytic => analytic.convert(analyticInputs))
 
 					(index, value, analysis)
 				}
