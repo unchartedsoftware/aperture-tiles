@@ -86,14 +86,18 @@ configurations {
 	assemblyJarReq {
 		transitive = false
 	}
+	// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
+	// the impl of the servlet api, which ends up generating a security exception.  We force exclude
+	// the signed api jar here, and force include the unsigned api jar below.
+	compile.exclude group: "org.eclipse.jetty.orbit", module: "servlet-api"
 }
 
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
-// in our setup because the scala code in this project is used by the java code (causing 
+// in our setup because the scala code in this project is used by the java code (causing
 // compile errors).  We force the plugin to use an empty source set for java, and then set the
 // scala source to both scala and java.  The scala compiler generates class files for both without
 // issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
-// scala and java in the same project.  
+// scala and java in the same project.
 sourceSets {
     main {
         scala {
@@ -109,14 +113,21 @@ sourceSets {
 dependencies {
 	// Compile config - needed to build
 	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-sql_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
 	compile "org.scala-lang:scala-library:$scalaVersion"
+	compile "org.clapper:grizzled-slf4j_$dependencyScalaVersion:1.02"
 	compile project(":binning-utilities")
 	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
-	
+
+	// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
+	// the impl of the servlet api, which ends up generating a security exception.  We force include
+	// the unsigned api jar here, and force include the unsigned api jar above.
+	compile "javax.servlet:javax.servlet-api:3.0.1"
+
 	// Call for special handling for hbase dependencies - see top level build file for
 	// definition and explanation.
 	addHBaseDependencies()
