@@ -113,7 +113,7 @@ object ValueExtractorFactory2 {
 
 	/** Default function to use when creating child factories */
 	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
-	JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] =
+			JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] =
 		Seq[ConfigurableFactory[_ <: ValueExtractor[_, _]]](
 			new CountValueExtractorFactory2(parent, path),
 			new FieldValueExtractorFactory2(parent, path),
@@ -130,8 +130,8 @@ object ValueExtractorFactory2 {
 	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
 	           defaultType: String = defaultFactory,
 	           childProviders: (ConfigurableFactory[_],
-			           JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
-	ConfigurableFactory[ValueExtractor[_, _]] =
+	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
+			ConfigurableFactory[ValueExtractor[_, _]] =
 		new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, true,
 		                                      createChildren(parent, path), defaultType)
 
@@ -139,8 +139,8 @@ object ValueExtractorFactory2 {
 	def named (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
 	           defaultType: String = defaultFactory,
 	           childProviders: (ConfigurableFactory[_],
-			           JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
-	ConfigurableFactory[ValueExtractor[_, _]] =
+	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
+			ConfigurableFactory[ValueExtractor[_, _]] =
 		new UberFactory[ValueExtractor[_, _]](name, classOf[ValueExtractor[_, _]], parent, path, true,
 		                                      createChildren(parent, path), defaultType)
 }
@@ -217,7 +217,7 @@ class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class FieldValueExtractor2[T: ClassTag, JT] (field: String)
-                                            (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                          (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable {
 	def name = field
 	def fields = Seq(field)
@@ -267,7 +267,7 @@ class MeanValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList
  * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
  */
 class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
-                                       (implicit numeric: ExtendedNumeric[T])
+                         (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
 	def name = field
 	def fields = Seq(field)
@@ -307,7 +307,7 @@ class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
-                                             (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
 	def name = "series"
 	def fields = _fields
@@ -327,11 +327,11 @@ class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
 
 object IndirectSeriesValueExtractor2 {
 	val KEY_PROPERTY = new StringProperty("key",
-	                                   "The field in which to find the key of a given record for the indirect series",
-	                                   "")
+	                                      "The field in which to find the key of a given record for the indirect series",
+	                                      "")
 	val VALUE_PROPERTY = new StringProperty("value",
-	                                     "The field in which to find the value of a given record for the indirect series",
-	                                     "")
+	                                        "The field in which to find the value of a given record for the indirect series",
+	                                        "")
 	val VALID_KEYS_PROPERTY = new ListProperty(KEY_PROPERTY,
 	                                           "validKeys",
 	                                           "A list of the valid values that may be found in a records key property; all other values will be ignored.")
@@ -370,7 +370,7 @@ class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
-                                                     (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                                   (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]]
 {
 	def name = "indirectSeries"
@@ -385,7 +385,7 @@ class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueFie
 		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
 		val convertFcn: JavaList[JT] => Seq[T] = bt =>
-			for (b <- bt.asScala) yield conversion.backwards(b)
+		for (b <- bt.asScala) yield conversion.backwards(b)
 		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
 		    new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMaxTileAnalytic())))
 	}
@@ -418,7 +418,7 @@ class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Ja
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
-                                                 (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                               (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
 	def name = "fieldMap"
 	def fields = _fields
@@ -441,30 +441,30 @@ object StringScoreBinningAnalyticFactory2 {
 	                                             10)
 	val ORDER_PROPERTY = new StringProperty("ordering",
 	                                        "How to order elements.  Possible values are: \"alpha\" for "+
-			                                        "alphanumeric ordering of strings, \"reverse-alpha\" "+
-			                                        "similarly, \"high\" for ordering by score from high to "+
-			                                        "low, \"low\" for ordering by score from low to high, "+
-			                                        "and \"random\" or \"none\" for no ordering.",
+		                                        "alphanumeric ordering of strings, \"reverse-alpha\" "+
+		                                        "similarly, \"high\" for ordering by score from high to "+
+		                                        "low, \"low\" for ordering by score from low to high, "+
+		                                        "and \"random\" or \"none\" for no ordering.",
 	                                        "none", Array("low", "high", "alpha", "reverse-alpha", "none"))
 
 	protected def getOrder[T] (orderDescription: Option[String])(implicit numeric: ExtendedNumeric[T]):
-	Option[((String, T), (String, T)) => Boolean] =
+			Option[((String, T), (String, T)) => Boolean] =
 		orderDescription match {
 			case Some("alpha") =>
 				Some((a: (String, T), b: (String, T)) =>
-					     a._1.compareTo(b._1)>0
+					a._1.compareTo(b._1)>0
 				)
 			case Some("reverse-alpha") =>
 				Some((a: (String, T), b: (String, T)) =>
-					     a._1.compareTo(b._1)>0
+					a._1.compareTo(b._1)>0
 				)
 			case Some("high") =>
 				Some((a: (String, T), b: (String, T)) =>
-					     numeric.gt(a._2, b._2)
+					numeric.gt(a._2, b._2)
 				)
 			case Some("low") =>
 				Some((a: (String, T), b: (String, T)) =>
-					     numeric.lt(a._2, b._2)
+					numeric.lt(a._2, b._2)
 				)
 			case _ => None
 		}
@@ -474,8 +474,8 @@ object StringScoreBinningAnalyticFactory2 {
 		factory.addProperty(ORDER_PROPERTY)
 	}
 	def getBinningAnalytic[T, JT] (factory: ValueExtractorFactory2)
-	                              (implicit numeric: ExtendedNumeric[T],
-	                               conversion: TypeConversion[T, JT]): BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = {
+	                      (implicit numeric: ExtendedNumeric[T],
+	                       conversion: TypeConversion[T, JT]): BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = {
 		val aggregationLimit = factory.optionalGet(AGGREGATION_LIMIT_PROPERTY).map(_.intValue())
 		val binLimit = factory.optionalGet(BIN_LIMIT_PROPERTY).map(_.intValue())
 		val ordering = getOrder(factory.optionalGet(ORDER_PROPERTY))
@@ -510,7 +510,7 @@ class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
  */
 class StringValueExtractor2[T: ClassTag, JT] (field: String,
                                               _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
-                                             (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
 {
 	def name = field
@@ -532,9 +532,9 @@ object SubstringValueExtractorFactory2 {
 	                                                        "A delimiter to use when recombining the relevant split values of the field of interest",
 	                                                        ",")
 	val INDICES_PROPERTY = new ListProperty(new PairProperty[JavaInt, JavaInt](
-		new IntegerProperty("key", "Start index of relevant substrings", 0),
-		new IntegerProperty("value", "End index of relevant substrings", 1),
-		"bounds", "relevant substring bounds", new Pair(0, 1)),
+		                                        new IntegerProperty("key", "Start index of relevant substrings", 0),
+		                                        new IntegerProperty("value", "End index of relevant substrings", 1),
+		                                        "bounds", "relevant substring bounds", new Pair(0, 1)),
 	                                        "indices",
 	                                        "The bounds of relevant substring groups, where groups are delimited by the parsing delimiter");
 }
@@ -581,7 +581,7 @@ class SubstringValueExtractor2[T: ClassTag, JT] (field: String,
                                                  aggregationDelimiter: String,
                                                  indices: Seq[(Int, Int)],
                                                  _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
-                                                (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                              (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
 {
 	def name = field
@@ -593,19 +593,19 @@ class SubstringValueExtractor2[T: ClassTag, JT] (field: String,
 			val len = subValues.length
 			val entryIndices = indices.flatMap(extrema =>
 				{
-			        val (start, end) = extrema
+					val (start, end) = extrema
 					val modStart = if (start < 0) len+start else start
 					val modEnd = if (end < 0) len+end else end
 					modStart to modEnd
 				}
 			).toSet
 			val entry = Range(0, len)
-					.filter(entryIndices.contains(_))
-					.map(subValues(_))
-					.mkString(aggregationDelimiter)
+				.filter(entryIndices.contains(_))
+				.map(subValues(_))
+				.mkString(aggregationDelimiter)
 			Map(entry -> numeric.fromInt(1))
 
-	}
+		}
 	override def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
 		Seq()

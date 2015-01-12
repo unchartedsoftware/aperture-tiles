@@ -64,10 +64,10 @@ private[datasets] class AnalysisWithTag[BT, AT: ClassTag] (val analysis: Option[
 object AnalyticFactory {
 	val ANALYTIC_TYPE_PROPERTY = new StringProperty("analytic",
 	                                                "The full class name of the analysis description to create.  The "+
-			                                                "class named must have a no-argument constructor, and be "+
-			                                                "of type AnalysisDescription[Seq[Any], _] for data "+
-			                                                "analytics, or AnalysisDescription[TileData[BT], _] for "+
-			                                                "tile analytics (where BT is the bin type of the tile).",
+		                                                "class named must have a no-argument constructor, and be "+
+		                                                "of type AnalysisDescription[Seq[Any], _] for data "+
+		                                                "analytics, or AnalysisDescription[TileData[BT], _] for "+
+		                                                "tile analytics (where BT is the bin type of the tile).",
 	                                                "")
 	val FIELDS_PROPERTY = new ListProperty(new StringProperty("", "", ""),
 	                                       "fields",
@@ -76,7 +76,7 @@ object AnalyticFactory {
 }
 class AnalyticFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ConfigurableFactory[(AnalysisDescription[_, _], Seq[String])] (
-			classOf[(AnalysisDescription[_, _], Seq[String])], parent, path)
+	classOf[(AnalysisDescription[_, _], Seq[String])], parent, path)
 {
 	import AnalyticFactory._
 
@@ -110,12 +110,12 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 		val tileAnalyticConfig = getPropertyValue(TILE_ANALYTIC_PROPERTY)
 		val tileAnalytics =
 			(0 until tileAnalyticConfig.length()).map(n =>
-			{
-				val factory = new AnalyticFactory(null, new util.ArrayList[String]())
-				factory.readConfiguration(tileAnalyticConfig.getJSONObject(n))
-				val (analytic, fields) = factory.produce(classOf[(AnalysisDescription[_, _], Seq[String])])
-				analytic.asInstanceOf[AnalysisDescription[TileData[_], _]]
-			}
+				{
+					val factory = new AnalyticFactory(null, new util.ArrayList[String]())
+					factory.readConfiguration(tileAnalyticConfig.getJSONObject(n))
+					val (analytic, fields) = factory.produce(classOf[(AnalysisDescription[_, _], Seq[String])])
+					analytic.asInstanceOf[AnalysisDescription[TileData[_], _]]
+				}
 			)
 		val dataAnalyticConfig = getPropertyValue(DATA_ANALYTICS_PROPERTY)
 		val dataAnalytics =

@@ -83,7 +83,7 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 	}
 	@Override
 	public String encode (List<T> value) {
-        String res = "";
+		String res = "";
 		for (int i=0; i<value.size(); ++i) {
 			if (0 == i) res = escape(_baseProperty.encode(value.get(i)));
 			else res = res + "," + escape(_baseProperty.encode(value.get(i)));

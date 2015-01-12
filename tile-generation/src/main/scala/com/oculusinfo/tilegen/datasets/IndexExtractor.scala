@@ -76,38 +76,38 @@ abstract class IndexExtractor () {
 object IndexExtractorFactory {
 	private[datasets] val FIELDS_PROPERTY =
 		new ListProperty(new StringProperty("field", "The fields used by this index extractor", ""),
-			"field",
-			"The fields that the index extractor will pull from a data record to construct that record's index")
+		                 "field",
+		                 "The fields that the index extractor will pull from a data record to construct that record's index")
 
 	val defaultFactory = "cartesian"
 
 	/** Default function to use when creating child factories */
 	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
-		JavaList[ConfigurableFactory[_ <: IndexExtractor]] =
-	Seq[ConfigurableFactory[_ <: IndexExtractor]](
-		new CartesianIndexExtractorFactory(parent, path),
-		new LineSegmentIndexExtractorFactory(parent, path),
-		new IP4VIndexExtractorFactory(parent, path),
-	    new TimeRangeIndexExtractorFactory(parent, path)).asJava
+			JavaList[ConfigurableFactory[_ <: IndexExtractor]] =
+		Seq[ConfigurableFactory[_ <: IndexExtractor]](
+			new CartesianIndexExtractorFactory(parent, path),
+			new LineSegmentIndexExtractorFactory(parent, path),
+			new IP4VIndexExtractorFactory(parent, path),
+			new TimeRangeIndexExtractorFactory(parent, path)).asJava
 
 
 	/** Create an un-named uber-factory for index extractors */
 	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
 	           defaultType: String = defaultFactory,
 	           childProviders: (ConfigurableFactory[_],
-			                    JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
-	ConfigurableFactory[IndexExtractor] =
+	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
+			ConfigurableFactory[IndexExtractor] =
 		new UberFactory[IndexExtractor](classOf[IndexExtractor], parent, path, true,
-			                            createChildren(parent, path), defaultType)
+		                                createChildren(parent, path), defaultType)
 
 	/** Create a named uber-factory for index extractors */
 	def named (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
 	           defaultType: String = defaultFactory,
 	           childProviders: (ConfigurableFactory[_],
-			           JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
-	ConfigurableFactory[IndexExtractor] =
+	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
+			ConfigurableFactory[IndexExtractor] =
 		new UberFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path, true,
-			                            createChildren(parent, path), defaultType)
+		                                createChildren(parent, path), defaultType)
 }
 
 /**
@@ -116,7 +116,7 @@ object IndexExtractorFactory {
  * All parameters are pass-throughs to {@link ConfigurableFactory}.
  */
 abstract class IndexExtractorFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
-extends ConfigurableFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path)
+		extends ConfigurableFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path)
 {
 }
 
@@ -210,7 +210,7 @@ object TimeRangeIndexExtractorFactory {
 	private[datasets] val START_DATE_PROPERTY =
 		new DoubleProperty("start-date", "The start of the first time period, for binned times", 0.0)
 	private[datasets] val SECONDS_PER_PERIOD_PROPERTY =
-	    new DoubleProperty("period-length", "The length of each time period, in seconds", 60.0*60.0*24.0)
+		new DoubleProperty("period-length", "The length of each time period, in seconds", 60.0*60.0*24.0)
 }
 
 /** A constructor for a standard time range/cartesian point index extractor */

@@ -149,25 +149,29 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		strings.zipWithIndex.foreach(values => assert("abc%d".format(1+values._2) == values._1))
 
 		val ips = reader.asSchemaRDD.select('ip).map(_(0).asInstanceOf[Seq[Byte]]).collect.toList
-		ips.zipWithIndex.foreach(values => {
-			                         assert(4 === values._1.size)
-			                         assert(192.toByte === values._1(0))
-			                         assert(168.toByte === values._1(1))
-			                         assert(0.toByte   === values._1(2))
-			                         assert((values._2+1).toByte === values._1(3))
-		                         })
+		ips.zipWithIndex.foreach(values =>
+			{
+				assert(4 === values._1.size)
+				assert(192.toByte === values._1(0))
+				assert(168.toByte === values._1(1))
+				assert(0.toByte   === values._1(2))
+				assert((values._2+1).toByte === values._1(3))
+			}
+		)
 
 		val dates = reader.asSchemaRDD.select('date).map(_(0).asInstanceOf[Timestamp]).collect.toList
-		dates.zipWithIndex.foreach(values => {
-			                           // val date: Timestamp = values._1
-			                           val date = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-			                           date.setTime(values._1)
+		dates.zipWithIndex.foreach(values =>
+			{
+				// val date: Timestamp = values._1
+				val date = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
+				date.setTime(values._1)
 
-			                           val n = values._2+1
-			                           assert((n%12) === date.get(Calendar.HOUR_OF_DAY))
-			                           assert((n%60) === date.get(Calendar.MINUTE))
-			                           assert((n%60) === date.get(Calendar.SECOND))
-		                           })
+				val n = values._2+1
+				assert((n%12) === date.get(Calendar.HOUR_OF_DAY))
+				assert((n%60) === date.get(Calendar.MINUTE))
+				assert((n%60) === date.get(Calendar.SECOND))
+			}
+		)
 
 		val props = reader.asSchemaRDD.select('prop).map(_(0).asInstanceOf[Int]).collect.toList
 		props.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))

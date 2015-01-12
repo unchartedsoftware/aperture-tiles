@@ -87,9 +87,9 @@ object TilingTask {
 			// Tell the tiling task constructor about the analytic type tags
 			def withTilingTags[AT: ClassTag, DT: ClassTag] (dataAnalytics: AnalysisWithTag[Seq[Any], DT],
 			                                                tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
-			TilingTask[T, AT, DT, JT] = {
+					TilingTask[T, AT, DT, JT] = {
 				new StaticTilingTask[T, AT, DT, JT](sqlc, "test", taskConfig, indexer, valuer, deferredPyramid,
-					dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis, Seq(Seq(0, 1)), 2, 2).initialize()
+				                                    dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis, Seq(Seq(0, 1)), 2, 2).initialize()
 			}
 			withTilingTags(dataAnalytics, tileAnalytics)
 		}
@@ -149,7 +149,7 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	/** Get the name by which the tile pyramid produced by this task should be known. */
 	val getName = {
 		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + config.name
-		                  else config.name
+		else config.name
 
 		pyramidName + "." + indexer.name + "." + valuer.name
 	}
@@ -245,7 +245,7 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 tileWidth: Int = 256,
 	 tileHeight: Int = 256)
 		extends TilingTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid,
-			dataAnalyticFields, dataAnalytics, tileAnalytics, pyramidLevels, tileWidth, tileHeight)
+		                                   dataAnalyticFields, dataAnalytics, tileAnalytics, pyramidLevels, tileWidth, tileHeight)
 {
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null

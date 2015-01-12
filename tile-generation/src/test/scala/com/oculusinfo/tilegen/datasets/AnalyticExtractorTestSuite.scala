@@ -47,35 +47,36 @@ import scala.reflect.ClassTag
 class AnalyticExtractorTestSuite extends FunSuite {
 	test("Data analytic construction") {
 		val config = new JSONObject(
-			"{\n"+
-			"   \"analytics\": {\n"+
-			"       \"data\": [\n"+
-			"           {\n"+
-			"		        \"analytic\": \""+classOf[MaxDataAnalytic].getName+"\",\n"+
-			"               \"fields\": [\"a\"]\n"+
-			"           },\n"+
-			"           {\n"+
-			"               \"analytic\": \""+classOf[MinDataAnalytic].getName+"\",\n"+
-			"               \"fields\": [\"b\"]\n"+
-			"           },\n"+
-			"           {\n"+
-			"               \"analytic\": \""+classOf[ExtremaDataAnalytic].getName+"\",\n"+
-			"               \"fields\": [\"c\", \"d\"]\n"+
-			"           }\n"+
-			"       ],\n"+
-			"       \"tile\": [\n"+
-			"           {\n"+
-			"		        \"analytic\": \""+classOf[MaxTileAnalytic].getName+"\"\n"+
-			"           },\n"+
-			"           {\n"+
-			"               \"analytic\": \""+classOf[MinTileAnalytic].getName+"\"\n"+
-			"           },\n"+
-			"           {\n"+
-			"               \"analytic\": \""+classOf[ExtremaTileAnalytic].getName+"\"\n"+
-			"           }\n"+
-			"       ]\n"+
-			"   }\n"+
-			"}"
+			""+
+				"{\n"+
+				"   \"analytics\": {\n"+
+				"       \"data\": [\n"+
+				"           {\n"+
+				"		        \"analytic\": \""+classOf[MaxDataAnalytic].getName+"\",\n"+
+				"               \"fields\": [\"a\"]\n"+
+				"           },\n"+
+				"           {\n"+
+				"               \"analytic\": \""+classOf[MinDataAnalytic].getName+"\",\n"+
+				"               \"fields\": [\"b\"]\n"+
+				"           },\n"+
+				"           {\n"+
+				"               \"analytic\": \""+classOf[ExtremaDataAnalytic].getName+"\",\n"+
+				"               \"fields\": [\"c\", \"d\"]\n"+
+				"           }\n"+
+				"       ],\n"+
+				"       \"tile\": [\n"+
+				"           {\n"+
+				"		        \"analytic\": \""+classOf[MaxTileAnalytic].getName+"\"\n"+
+				"           },\n"+
+				"           {\n"+
+				"               \"analytic\": \""+classOf[MinTileAnalytic].getName+"\"\n"+
+				"           },\n"+
+				"           {\n"+
+				"               \"analytic\": \""+classOf[ExtremaTileAnalytic].getName+"\"\n"+
+				"           }\n"+
+				"       ]\n"+
+				"   }\n"+
+				"}"
 		)
 
 		val factory = new AnalyticExtractorFactory(null, util.Arrays.asList("analytics"))
@@ -116,11 +117,11 @@ class MinDataAnalytic
 
 class ExtremaDataAnalytic
 		extends CompositeAnalysisDescription[Seq[Any], Double, Double](
-			new MonolithicAnalysisDescription[Seq[Any], Double](s => s(0).asInstanceOf[Double],
-                                                                new NumericMinTileAnalytic[Double]()),
-			new MonolithicAnalysisDescription[Seq[Any], Double](s => s(1).asInstanceOf[Double],
-			                                                    new NumericMaxTileAnalytic[Double]())
-		)
+	new MonolithicAnalysisDescription[Seq[Any], Double](s => s(0).asInstanceOf[Double],
+	                                                    new NumericMinTileAnalytic[Double]()),
+	new MonolithicAnalysisDescription[Seq[Any], Double](s => s(1).asInstanceOf[Double],
+	                                                    new NumericMaxTileAnalytic[Double]())
+)
 {
 	// This will be wrapped, so we don't need ot override component introspection
 }
@@ -132,10 +133,10 @@ class MinTileAnalytic
 		extends AnalysisDescriptionTileWrapper[JavaDouble, Double](_.doubleValue, new NumericMaxTileAnalytic[Double]()) {}
 
 class ExtremaTileAnalytic
-	extends AnalysisDescriptionTileWrapper[JavaDouble, (Double, Double)](
-		d => (d.doubleValue(), d.doubleValue()),
-		new ComposedTileAnalytic[Double, Double](new NumericMinTileAnalytic[Double](),
-		                                         new NumericMaxTileAnalytic[Double]())
-	)
+		extends AnalysisDescriptionTileWrapper[JavaDouble, (Double, Double)](
+	d => (d.doubleValue(), d.doubleValue()),
+	new ComposedTileAnalytic[Double, Double](new NumericMinTileAnalytic[Double](),
+	                                         new NumericMaxTileAnalytic[Double]())
+)
 {
 }

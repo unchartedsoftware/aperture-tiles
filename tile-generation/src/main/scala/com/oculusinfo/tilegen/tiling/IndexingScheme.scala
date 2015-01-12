@@ -77,7 +77,7 @@ class TimeRangeCartesianSchemaIndexScheme (startDate: Double, secsPerPeriod: Dou
 		floorDate(asDouble(coords(0)))
 	}
 	def toCartesianEndpoints (coords: Seq[Any]): (Double, Double, Double, Double) =
-	//TODO -- redundant, see note above
+		//TODO -- redundant, see note above
 		(asDouble(coords(1)), asDouble(coords(2)), asDouble(coords(4)), asDouble(coords(5)))
 }
 
@@ -90,20 +90,20 @@ class IPv4ZCurveSchemaIndexScheme extends IndexScheme[Seq[Any]] with Serializabl
 		}
 		def getXDigit (byte: Byte): Long =
 			(((byte & 0x40) >> 3) |
-					((byte & 0x10) >> 2) |
-					((byte & 0x04) >> 1) |
-					((byte & 0x01))).toLong
+				 ((byte & 0x10) >> 2) |
+				 ((byte & 0x04) >> 1) |
+				 ((byte & 0x01))).toLong
 
 		def getYDigit (byte: Byte): Long =
 			(((byte & 0x80) >> 4) |
-					((byte & 0x20) >> 3) |
-					((byte & 0x08) >> 2) |
-					((byte & 0x02) >> 1)).toLong
+				 ((byte & 0x20) >> 3) |
+				 ((byte & 0x08) >> 2) |
+				 ((byte & 0x02) >> 1)).toLong
 
 		ipAddress.map(byte => (getXDigit(byte), getYDigit(byte)))
-				.foldLeft((0.0, 0.0))((a, b) =>
+			.foldLeft((0.0, 0.0))((a, b) =>
 			(16.0*a._1+b._1, 16.0*a._2+b._2)
-				)
+		)
 	}
 	def toCartesianEndpoints (values: Seq[Any]): (Double, Double, Double, Double) = (0, 0, 0, 0) 	//TODO -- redundant, see note above
 }

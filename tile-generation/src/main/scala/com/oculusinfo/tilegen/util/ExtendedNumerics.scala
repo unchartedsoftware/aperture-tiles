@@ -147,7 +147,7 @@ object ExtendedNumeric {
 
 /** A quick case class to encapsulate an extended numeric and type conversion of related types together. */
 private[util] case class ExtendedNumericWithConversion[T: ClassTag, JT]
-(implicit n: ExtendedNumeric[T], c: TypeConversion[T, JT])
+	(implicit n: ExtendedNumeric[T], c: TypeConversion[T, JT])
 {
 	def tag = implicitly[ClassTag[T]]
 	def numeric = n
@@ -166,7 +166,7 @@ object NumericallyConfigurableFactory {
  * All arguments are pass-throughs to {@see ConfigurableFactory}.
  */
 abstract class NumericallyConfigurableFactory[T]
-(name: String, factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String], isSingleton: Boolean = false)
+	(name: String, factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String], isSingleton: Boolean = false)
 		extends ConfigurableFactory[T](name, factoryType, parent, path, isSingleton) {
 	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String]) =
 		this("", factoryType, parent, path)

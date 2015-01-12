@@ -43,9 +43,9 @@ import com.oculusinfo.tilegen.util.OptionsFactoryMixin
  * @param consolidationPartitions The number of partitions into which to consolidate data when performign reduce operations
  */
 case class TilingTaskParameters (name: String,
-                                  description: String,
-                                  prefix: Option[String],
-                                  consolidationPartitions: Option[Int])
+                                 description: String,
+                                 prefix: Option[String],
+                                 consolidationPartitions: Option[Int])
 {
 }
 
@@ -64,8 +64,8 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 
 	override protected def create(): TilingTaskParameters = {
 		new TilingTaskParameters(getPropertyValue(NAME_PROPERTY),
-		                          getPropertyValue(DESC_PROPERTY),
-		                          optionalGet(PREFIX_PROPERTY),
-		                          optionalGet(PARTITIONS_PROPERTY).map(_.intValue()))
+		                         getPropertyValue(DESC_PROPERTY),
+		                         optionalGet(PREFIX_PROPERTY),
+		                         optionalGet(PARTITIONS_PROPERTY).map(_.intValue()))
 	}
 }
