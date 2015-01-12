@@ -45,15 +45,21 @@
 
     /**
      * Instantiate a PointRenderer object.
+     * @class PointRenderer
+     * @augments Renderer
+     * @classDesc A Renderer implementation that renders a circular point for each data
+     * value.
      *
      * @param spec {Object} The specification object.
+     * <pre>
      * {
      *     point: {
-     *         xKey   {String} The attribute for the x coordinate.
-     *         yKey   {String} The attribute for the y coordinate.
-     *         themes {Array}  The array of RenderThemes to be attached to this component.
+     *         xKey   {String} - The attribute for the x coordinate.
+     *         yKey   {String} - The attribute for the y coordinate.
+     *         themes {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
+     * </pre>
      */
     function PointRenderer( spec ) {
         Renderer.call( this, spec );
@@ -62,6 +68,15 @@
 
     PointRenderer.prototype = Object.create( Renderer.prototype );
 
+    /**
+     * Implementation specific rendering function.
+     * @memberof PointRenderer
+     * @private
+     *
+     * @param {Object} data - The raw data for a tile to be rendered.
+     *
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
+     */
     PointRenderer.prototype.render = function( data ) {
 
         var spec = this.spec,

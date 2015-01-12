@@ -78,9 +78,6 @@ Aperture Tiles is made up of the following sub-projects:
 				<dt>tile-packaging</dt>
 				<dd>Packaged assembly of the tile generation service for the <a href="../quickstart/">Quick Start</a> example on this site.</dd>
 				
-				<dt>tile-client-template</dt>
-				<dd>Starter template for creating a Tile Client and Server application.</dd>
-				
 				<dt>tile-examples</dt>
 				<dd>Example applications.</dd>
 				

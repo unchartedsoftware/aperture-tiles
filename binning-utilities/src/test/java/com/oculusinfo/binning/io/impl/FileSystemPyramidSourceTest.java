@@ -44,6 +44,8 @@ public class FileSystemPyramidSourceTest {
 	private static String SOURCE_DIR = "./src/test/file_pyramid/";
 	private static String SOURCE_EXT = "avro";
 
+
+
 	@Test 
 	public void writeReadAvroRoundTripTest () {
 		FileBasedPyramidIO io = new FileBasedPyramidIO(new FileSystemPyramidSource(SOURCE_DIR, SOURCE_EXT));

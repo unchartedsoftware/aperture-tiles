@@ -56,7 +56,7 @@ public class AnnotationFileSystemIOTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationFileSystemIOTest.class );
 
-	private static final String ROOT_PATH = ".\\";
+	private static final String ROOT_PATH = "file://./";
 	private static final String BASE_PATH = "annotation-unit-test";
 	private static final String TILE_EXT = "json";
 	private static final String DATA_EXT = "json";
@@ -77,7 +77,7 @@ public class AnnotationFileSystemIOTest {
 
 		try {
     		
-			_dataIO = new FileSystemAnnotationIO(ROOT_PATH, DATA_EXT);   		
+			_dataIO = new FileSystemAnnotationIO( new FileSystemAnnotationSource( ROOT_PATH, DATA_EXT ) );
 			_tileIO = new FileBasedPyramidIO(new FileSystemPyramidSource(ROOT_PATH, TILE_EXT));
     		
 		} catch (Exception e) {

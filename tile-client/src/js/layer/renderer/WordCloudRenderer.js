@@ -196,15 +196,19 @@
 
     /**
      * Instantiate a WordCloudRenderer object.
+     * @class WordCloudRenderer
+     * @augments Renderer
+     * @classDesc A Renderer implementation that renders a word cloud.
      *
      * @param spec {Object} The specification object.
-     * {
+     * <pre>
      *     text: {
-     *         textKey  {String} The attribute for the text in the data entry.
-     *         countKey {String} The attribute for the count in the data entry.
-     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *         textKey  {String} - The attribute for the text in the data entry.
+     *         countKey {String} - The attribute for the count in the data entry.
+     *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
+     * </pre>
      */
     function WordCloudRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value";
@@ -214,6 +218,14 @@
 
     WordCloudRenderer.prototype = Object.create( Renderer.prototype );
 
+    /**
+     * Implementation specific rendering function.
+     * @memberof WordCloudRenderer
+     *
+     * @param {Object} data - The raw data for a tile to be rendered.
+     *
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
+     */
     WordCloudRenderer.prototype.render = function( data ) {
 
         var text = this.spec.text,

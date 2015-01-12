@@ -24,14 +24,16 @@
  */
 
 /**
- * A utility namespace containing layer related functionality.
+ * @namespace LayerUtil
+ * @classdesc A utility namespace containing layer related functionality.
  */
 ( function() {
 
     "use strict";
 
     /**
-     * Private: Parses a malformed JSON string into a usable object.
+     * Parses a malformed JSON string into a usable object.
+     * @private
      *
      * @param jsonString {String} the malformed JSON string.
      */
@@ -44,9 +46,10 @@
      }
 
     /**
-     * Private: Parse a given layers meta data min and max json strings,
+     * Parse a given layers meta data min and max json strings,
      * they are currently stored as malformed json, so they require some
      * massaging.
+     * @private
      *
      * @param meta {Object} the layers meta data object.
      */
@@ -65,10 +68,11 @@
     }
 
     /**
-     * Private: Meta data minimum and maximums are stored as malformed json
+     * Meta data minimum and maximums are stored as malformed json
      * strings, but are usually accessed at a high frequency ( multiple
      * times per tile render ). This parses them all and stores them
      * as actual objects.
+     * @private
      *
      * @param layerMeta {Object} the .meta node of the data returned for a layer
      *                           service call
@@ -90,8 +94,9 @@
          * Parses a layer or an array of layer data objects, formats meta data
          * min and max and returns either the single layer, or a map of layers
          * keyed by layerId.
+         * @memberof LayerUtil
          *
-         * @param layerData {Object|Array} layer data object or array of layer data objects
+         * @param {Object|Array} layerData - layer data object or array of layer data objects.
          */
         parse: function( layerData ) {
             var layerMap,
@@ -113,8 +118,9 @@
          * The getURL function passed to a OpenLayers TMS / Grid Layer to generate the
          * tile urls. Can be passed as is, or appended by using 'call'. The 'this'
          * context is set to the context of the OpenLayers layer.
+         * @memberof LayerUtil
          *
-         * @param bounds {Object} the bounds object for the current tile
+         * @param {Object} bounds - The bounds object for the current tile.
          */
         getURL: function( bounds ) {
             var res = this.map.getResolution(),

@@ -24,12 +24,21 @@
  */
 
 /**
- * A TileIterator class, the equivalent of TileIterator in binning-utilities.
+ * @package binning
  */
 ( function() {
 
     "use strict";
 
+    /**
+     * Instantiate a TileIterator object.
+
+     * @class TileIterator
+     * @classdesc A TileIterator class, the equivalent of TileIterator
+     *            in tile-service/binning-utilities.
+     *
+     * @param {Object} spec - The specification object.
+     */
     function TileIterator( spec ) {
         this.pyramid = spec.pyramid;
         this.level = spec.level;
@@ -39,27 +48,45 @@
         this.curY = this.minTile.yIndex;
     }
 
-    TileIterator.prototype.hasNext = function () {
+    /**
+     * Returns true if there is another tile, false if there isn't.
+     * @memberof TileIterator
+     *
+     * @returns {boolean} Whether or not a next tile exists.
+     */
+    TileIterator.prototype.hasNext = function() {
         return (this.curX <= this.maxTile.xIndex &&
                 this.curY <= this.maxTile.yIndex);
     };
 
-    TileIterator.prototype.next = function () {
+    /**
+     * Returns the next tile in the iterator.
+     * @memberof TileIterator
+     *
+     * @returns {Object} The next tile object.
+     */
+    TileIterator.prototype.next = function() {
         var tile = {
-            xIndex:    this.curX,
-            yIndex:    this.curY,
-            level:     this.level,
+            xIndex: this.curX,
+            yIndex: this.curY,
+            level: this.level,
             xBinCount: 256,
             yBinCount: 256
         };
         this.curX = this.curX + 1;
-        if (this.curX > this.maxTile.xIndex) {
+        if ( this.curX > this.maxTile.xIndex ) {
             this.curX = this.minTile.xIndex;
             this.curY = this.curY + 1;
         }
         return tile;
     };
 
+    /**
+     * Returns an array of all remaining tiles the iterator.
+     * @memberof TileIterator
+     *
+     * @returns {Array} All tiles left in the iterator.
+     */
     TileIterator.prototype.getRest = function () {
         var all = [];
         while (this.hasNext()) {
@@ -68,10 +95,16 @@
         return all;
     };
 
+    /**
+     * Returns a string containing all remaining tile indices in the iterator.
+     * @memberof TileIterator
+     *
+     * @returns {String} The next tile object.
+     */
     TileIterator.prototype.toString = function () {
         var srep = "", index;
-        while (this.hasNext()) {
-            if (srep.length > 0) {
+        while ( this.hasNext() ) {
+            if ( srep.length > 0 ) {
                 srep = srep + "|";
             }
             index = this.next();
@@ -80,6 +113,12 @@
         return srep;
     };
 
+    /**
+     * Returns the tile bounds of all tiles within the iterator.
+     * @memberof TileIterator
+     *
+     * @returns {Object} The tile bounds of the iterator.
+     */
     TileIterator.prototype.toTileBounds = function () {
         return {
             'minX': this.minTile.xIndex,

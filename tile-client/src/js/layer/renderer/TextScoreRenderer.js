@@ -46,15 +46,21 @@
 
     /**
      * Instantiate a TextScoreRenderer object.
+     * @class TextScoreRenderer
+     * @augments Renderer
+     * @classDesc A Renderer implementation that renders a text label scaled by its
+     * frequency.
      *
      * @param spec {Object} The specification object.
+     * <pre>
      * {
      *     text: {
-     *         textKey  {String} The attribute for the text in the data entry.
-     *         countKey {String} The attribute for the count in the data entry.
-     *         themes   {Array}  The array of RenderThemes to be attached to this component.
+     *         textKey  {String} - The attribute for the text in the data entry.
+     *         countKey {String} - The attribute for the count in the data entry.
+     *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
+     * </pre>
      */
     function TextScoreRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value";
@@ -64,10 +70,26 @@
 
     TextScoreRenderer.prototype = Object.create( Renderer.prototype );
 
+    /**
+     * Returns the entry selector unique to this Renderer Implementation.
+     * @memberof TextScoreRenderer
+     * @private
+     *
+     * @returns {String} The entry DOM selector.
+     */
     TextScoreRenderer.prototype.getEntrySelector = function() {
         return ".text-score-entry";
     };
 
+    /**
+     * Implementation specific rendering function.
+     * @memberof TextScoreRenderer
+     * @private
+     *
+     * @param {Object} data - The raw data for a tile to be rendered.
+     *
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
+     */
     TextScoreRenderer.prototype.render = function( data ) {
 
         var text = this.spec.text,
