@@ -144,12 +144,26 @@ object ValueExtractorFactory2 {
 		new UberFactory[ValueExtractor[_, _]](name, classOf[ValueExtractor[_, _]], parent, path, true,
 		                                      createChildren(parent, path), defaultType)
 }
+
+/**
+ * Root class for most specific value extractor factories, this mostly just mixes in the necessary helper traits.
+ * Non-numeric value extractors may want to inherit from ConfigurableFactory directly.
+ *
+ * Constructor arguments are pass-throughs to {@link ConfigurableFactory}.
+ *
+ * @param name The name of this specific value extractor factory; this will be what must be specified as the value
+ *             type in configuration files.
+ */
 abstract class ValueExtractorFactory2 (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
 		extends NumericallyConfigurableFactory[ValueExtractor[_,_]](name, classOf[ValueExtractor[_,_]], parent, path)
 		with OptionsFactoryMixin[ValueExtractor[_, _]]
 {
 }
 
+/**
+ * A constructor for {@link CountValueExtractor2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("count", parent, path)
 {
@@ -160,6 +174,11 @@ class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLis
 	}
 }
 
+/**
+ * A value extractor that just uses a record count as the record value (so each record has a value of '1').
+ * @tparam T The numeric type to use for the count when processing
+ * @tparam JT The numeric type to use for the count when writing tiles (generally a Java version of T)
+ */
 class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable
 {
@@ -174,6 +193,10 @@ class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric
 	def serializer = new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
+/**
+ * A constructor for {@link FieldValueExtractor2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("field", parent, path)
 {
@@ -187,6 +210,12 @@ class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLis
 	}
 }
 
+/**
+ * A value extractor that uses the sum of the (numeric) value of a single field as the value of each record.
+ * @param field The field whose value is used as the record's value
+ * @tparam T The numeric type expected for the field in question
+ * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
+ */
 class FieldValueExtractor2[T: ClassTag, JT] (field: String)
                                             (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable {
@@ -209,6 +238,10 @@ object MeanValueExtractorFactory2 {
 		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 0)
 }
 
+/**
+ * A constructor for {@link MeanValueExtractor2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class MeanValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("mean", parent, path)
 {
@@ -226,6 +259,13 @@ class MeanValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList
 		new MeanValueExtractor2[T](field, emptyValue, minCount)(tag, numeric)
 	}
 }
+/**
+ * A value extractor that uses the mean of the (numeric) value of a single field as the value of each record.
+ * @param field The field whose value is used as the record's value
+ * @param emptyValue The value to use for bins without enough valid data
+ * @param minCount The minimum number of records allowed in a bin before it is considered valid.
+ * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
+ */
 class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
                                        (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
@@ -242,6 +282,10 @@ class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDo
 		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 }
 
+/**
+ * A constructor for {@link SeriesValueExtractor2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("series", parent, path)
 {
@@ -254,6 +298,14 @@ class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
 		new SeriesValueExtractor2[T, JT](fields)(tag, numeric, conversion)
 	}
 }
+
+/**
+ * A value extractor that sets as the value for each record a (dense) array of the values of various fields in the
+ * record.
+ * @param _fields The record fields whose values should be used as the record's value
+ * @tparam T The numeric type expected for the fields in question
+ * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
+ */
 class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
                                              (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
@@ -284,6 +336,11 @@ object IndirectSeriesValueExtractor2 {
 	                                           "validKeys",
 	                                           "A list of the valid values that may be found in a records key property; all other values will be ignored.")
 }
+
+/**
+ * A constructor for {@link IndirectSeriesValueExtractor2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("indirectSeries", parent, path)
 {
@@ -301,6 +358,17 @@ class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path
 		new IndirectSeriesValueExtractor2[T, JT](keyField, valueField, validKeys)(tag, numeric, conversion)
 	}
 }
+
+/**
+ * A value extractor that stores a (dense) array of values, summed across records, where for each record, a single,
+ * named value in that array is non-zero.
+ *
+ * @param keyField The field from which the name of the non-zero entry for each record is taken
+ * @param valueField The field from which the value of the non-zero entry for each record is taken
+ * @param validKeys The list of valid entry names
+ * @tparam T The numeric type expected for the fields in question
+ * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
+ */
 class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
                                                      (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]]
@@ -325,6 +393,10 @@ class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueFie
 		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
+/**
+ * A constructor for {@link MultiFieldValueExtractor2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("fieldMap", parent, path)
 {
@@ -337,6 +409,14 @@ class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Ja
 		new MultiFieldValueExtractor2[T, JT](fields)(tag, numeric, conversion)
 	}
 }
+
+/**
+ * A value extractor that sets as the value for each record a set of values of various fields in the
+ * record.  This set is kept as a dense array during processing, but is written out as a sparse array.
+ * @param _fields The record fields whose values should be used as the record's value
+ * @tparam T The numeric type expected for the fields in question
+ * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
+ */
 class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
                                                  (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
@@ -402,6 +482,10 @@ object StringScoreBinningAnalyticFactory2 {
 		new StringScoreBinningAnalytic[T, JT](new NumericSumBinningAnalytic(), aggregationLimit, ordering, binLimit)
 	}
 }
+/**
+ * A constructor for {@link SutringValueExtrator2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("string", parent, path)
 {
@@ -416,6 +500,14 @@ class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
 		new StringValueExtractor2[T, JT](field, binningAnalytic)(tag, numeric, conversion)
 	}
 }
+/**
+ * A value extractor that sets as the value for each record the count of instances of a given string value in the
+ * specified field.
+ *
+ * @param field The record fields whose values should be used as the record's value
+ * @tparam T The numeric type expected for the fields in question
+ * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
+ */
 class StringValueExtractor2[T: ClassTag, JT] (field: String,
                                               _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
                                              (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
@@ -446,6 +538,11 @@ object SubstringValueExtractorFactory2 {
 	                                        "indices",
 	                                        "The bounds of relevant substring groups, where groups are delimited by the parsing delimiter");
 }
+
+/**
+ * A constructor for {@link SubstringValueExtrator2} value extractors.  All arguments are pass-throughs to
+ * @{link ValueExtractorFactory2}
+ */
 class SubstringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("string", parent, path)
 {
@@ -469,6 +566,16 @@ class SubstringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Jav
 		new SubstringValueExtractor2[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic)(tag, numeric, conversion)
 	}
 }
+
+/**
+ * A value extractor that counts the values of various substrings of a single field
+ * @param field The field from which to get keys to count
+ * @param parsingDelimiter A delimiter to use when spliting the value of the counted field into keys
+ * @param aggregationDelimiter A delimiter to use when recombining selected pieces of the counted field
+ * @param indices The indices of the sub-pieces of the counted field to use.
+ * @tparam T The numeric type to use for the counts when processing
+ * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
+ */
 class SubstringValueExtractor2[T: ClassTag, JT] (field: String,
                                                  parsingDelimiter: String,
                                                  aggregationDelimiter: String,
