@@ -89,7 +89,7 @@ class AnalyticExtractorTestSuite extends FunSuite {
 		assert(3 === dataAnalytics.countComponents)
 		def checkDataAnalytic[T] (analytic: Any, expected: Class[T]): Unit = {
 			assert(analytic.isInstanceOf[DataAnalyticWrapper[_]])
-			assert(analytic.asInstanceOf[DataAnalyticWrapper[_]].base.isInstanceOf[T])
+			assert(expected.isInstance(analytic.asInstanceOf[DataAnalyticWrapper[_]].base))
 		}
 		checkDataAnalytic(dataAnalytics.getComponent(0), classOf[MaxDataAnalytic])
 		checkDataAnalytic(dataAnalytics.getComponent(1), classOf[MinDataAnalytic])
