@@ -89,7 +89,7 @@ object TilingTask {
 			                                                tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
 					TilingTask[T, AT, DT, JT] = {
 				new StaticTilingTask[T, AT, DT, JT](sqlc, table, taskConfig, indexer, valuer, deferredPyramid,
-				                                    dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis, Seq(Seq(0, 1)), 2, 2).initialize()
+				                                    dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis).initialize()
 			}
 			withTilingTags(dataAnalytics, tileAnalytics)
 		}
@@ -123,9 +123,6 @@ object TilingTask {
  * @param deferredPyramid
  * @param tileAnalytics
  * @param dataAnalytics
- * @param pyramidLevels The levels of the tile pyramid this tiling task is expecting to calculate.
- * @param tileWidth The width, in bins, of any tile this task calculates.
- * @param tileHeight The height, in bins, of any tile this task calculates.
  *
  * @tparam PT The processing value type used by this tiling task when calculating bin values.
  * @tparam BT The final bin type used by this tiling task when writing tiles.
@@ -141,10 +138,7 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 deferredPyramid: DeferredTilePyramid,
 	 dataAnalyticFields: Seq[String],
 	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
-	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-	 pyramidLevels: Seq[Seq[Int]],
-	 val tileWidth: Int = 256,
-	 val tileHeight: Int = 256)
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
 		extends Dataset[Seq[Any], PT, DT, AT, BT] {
 	/** Get the name by which the tile pyramid produced by this task should be known. */
 	val getName = {
@@ -159,7 +153,7 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	def getDescription = config.description
 
 	/** The levels this task is intended to tile, in groups that should be tiled together */
-	def getLevels = pyramidLevels
+	def getLevels = config.levels
 
 	/** The tile pyramid */
 	def getTilePyramid = {
@@ -170,10 +164,10 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	protected def allowAutoBounds = true
 
 	/** The number of bins per tile, along the X axis, in tiles produced by this task */
-	override def getNumXBins = tileWidth
+	override def getNumXBins = config.tileWidth
 
 	/** The number of bins per tile, along the Y axis, in tiles produced by this task */
-	override def getNumYBins = tileHeight
+	override def getNumYBins = config.tileHeight
 
 	/** Get the number of partitions to use when reducing data to tiles */
 	override def getConsolidationPartitions = config.consolidationPartitions
@@ -240,12 +234,9 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 deferredPyramid: DeferredTilePyramid,
 	 dataAnalyticFields: Seq[String],
 	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
-	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-	 pyramidLevels: Seq[Seq[Int]],
-	 tileWidth: Int = 256,
-	 tileHeight: Int = 256)
+	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
 		extends TilingTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid,
-		                                   dataAnalyticFields, dataAnalytics, tileAnalytics, pyramidLevels, tileWidth, tileHeight)
+		                                   dataAnalyticFields, dataAnalytics, tileAnalytics)
 {
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null

@@ -148,7 +148,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 		// A quick internal function to get a field or field property type.
 		def getFieldType(field: String, suffix: String = "fieldType"): String =
 			configuration.getString("oculus.binning.parsing." + field + "." + suffix, "You should never see this.",
-			                        Some(if ("constant" == field || "zero" == field) "constant" else ""))
+			                        Some(if ("constant" == field || "zero" == field) "constant" else "double"))
 
 		// A quick internal function to parse a string type into a data type and a parser function
 		def getParseFunction (fieldName: String, stringType: String): (DataType, String => Any) =

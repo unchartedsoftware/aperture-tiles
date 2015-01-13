@@ -149,7 +149,7 @@ object ValueExtractorFactory2 {
  * Root class for most specific value extractor factories, this mostly just mixes in the necessary helper traits.
  * Non-numeric value extractors may want to inherit from ConfigurableFactory directly.
  *
- * Constructor arguments are pass-throughs to {@link ConfigurableFactory}.
+ * Constructor arguments are pass-throughs to the super-class
  *
  * @param name The name of this specific value extractor factory; this will be what must be specified as the value
  *             type in configuration files.
@@ -161,8 +161,8 @@ abstract class ValueExtractorFactory2 (name: String, parent: ConfigurableFactory
 }
 
 /**
- * A constructor for {@link CountValueExtractor2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for CountValueExtractor2 value extractors.  All arguments are pass-throughs to
+ * @see CountValueExtractor2
  */
 class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("count", parent, path)
@@ -193,30 +193,47 @@ class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric
 	def serializer = new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
+object FieldValueExtractorFactory2 {
+	private[datasets] val FIELD_AGGREGATION_PROPERTY = new StringProperty("aggregation",
+	                                                                      "The way to aggregate the value field when binning",
+	                                                                      "add")
+}
 /**
- * A constructor for {@link FieldValueExtractor2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for FieldValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
+ * constructor.
+ *
+ * @see FieldValueExtractor2
  */
 class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("field", parent, path)
 {
 	addProperty(ValueExtractorFactory2.FIELD_PROPERTY)
+	addProperty(FieldValueExtractorFactory2.FIELD_AGGREGATION_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
-		new FieldValueExtractor2[T, JT](field)(tag, numeric, conversion)
+		val analyticType = getPropertyValue(FieldValueExtractorFactory2.FIELD_AGGREGATION_PROPERTY).toLowerCase()
+		val analytic = analyticType match {
+			case "min" => new NumericMinBinningAnalytic[T, JT]()(numeric, conversion)
+			case "minimum" => new NumericMinBinningAnalytic[T, JT]()(numeric, conversion)
+			case "max" => new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion)
+			case "maximum" => new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion)
+			case _ => new NumericSumBinningAnalytic[T, JT]()(numeric, conversion)
+		}
+		new FieldValueExtractor2[T, JT](field, analytic)(tag, numeric, conversion)
 	}
 }
 
 /**
  * A value extractor that uses the sum of the (numeric) value of a single field as the value of each record.
  * @param field The field whose value is used as the record's value
+ * @param _binningAnalytic The analytic used to aggregate the field value
  * @tparam T The numeric type expected for the field in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class FieldValueExtractor2[T: ClassTag, JT] (field: String)
+class FieldValueExtractor2[T: ClassTag, JT] (field: String, _binningAnalytic: BinningAnalytic[T, JT])
                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable {
 	def name = field
@@ -239,8 +256,10 @@ object MeanValueExtractorFactory2 {
 }
 
 /**
- * A constructor for {@link MeanValueExtractor2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for MeanValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
+ * constructor
+ *
+ * @see MeanValueExtractor2
  */
 class MeanValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("mean", parent, path)
@@ -283,8 +302,10 @@ class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDo
 }
 
 /**
- * A constructor for {@link SeriesValueExtractor2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for SeriesValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
+ * constructor.
+ *
+ * @see SeriesValueExtractor2
  */
 class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("series", parent, path)
@@ -338,8 +359,10 @@ object IndirectSeriesValueExtractor2 {
 }
 
 /**
- * A constructor for {@link IndirectSeriesValueExtractor2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for IndirectSeriesValueExtractor2 value extractors.  All arguments are pass-throughs to the
+ * super-class's constructor.
+ *
+ * @see IndirectSeriesValueExtractor2
  */
 class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("indirectSeries", parent, path)
@@ -394,8 +417,10 @@ class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueFie
 }
 
 /**
- * A constructor for {@link MultiFieldValueExtractor2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for MultiFieldValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
+ * constructor.
+ *
+ * @see MultiFieldValueExtractor2
  */
 class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("fieldMap", parent, path)
@@ -483,8 +508,10 @@ object StringScoreBinningAnalyticFactory2 {
 	}
 }
 /**
- * A constructor for {@link SutringValueExtrator2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for SubstringValueExtrator2 value extractors.  All arguments are pass-throughs to the super-class's
+ * constructor.
+ *
+ * @see SubstringValueExtractor2
  */
 class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("string", parent, path)
@@ -540,8 +567,10 @@ object SubstringValueExtractorFactory2 {
 }
 
 /**
- * A constructor for {@link SubstringValueExtrator2} value extractors.  All arguments are pass-throughs to
- * @{link ValueExtractorFactory2}
+ * A constructor for SubstringValueExtrator2 value extractors.  All arguments are pass-throughs to the super-class's
+ * constructor.
+ *
+ * @see SubstringValueExtractor2
  */
 class SubstringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("string", parent, path)
