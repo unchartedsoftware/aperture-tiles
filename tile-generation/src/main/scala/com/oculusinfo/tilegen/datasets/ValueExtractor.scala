@@ -239,7 +239,7 @@ class FieldValueExtractor2[T: ClassTag, JT] (field: String, _binningAnalytic: Bi
 	def name = field
 	def fields = Seq(field)
 	override def convert: (Seq[Any]) => T = s => s(0).asInstanceOf[T]
-	override def binningAnalytic: BinningAnalytic[T, JT] = new NumericSumBinningAnalytic[T, JT]()
+	override def binningAnalytic: BinningAnalytic[T, JT] = _binningAnalytic
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JT], _]] = {
 		Seq(new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMinTileAnalytic[T]()),
 		    new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMaxTileAnalytic[T]()))

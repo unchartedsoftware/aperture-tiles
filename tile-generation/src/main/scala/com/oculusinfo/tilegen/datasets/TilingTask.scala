@@ -39,7 +39,7 @@ import com.oculusinfo.binning.{TileIndex, TileData, TilePyramid}
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.tilegen.spark.{DoubleMaxAccumulatorParam, DoubleMinAccumulatorParam}
 import com.oculusinfo.tilegen.tiling.{CartesianSchemaIndexScheme, IndexScheme}
-import com.oculusinfo.tilegen.tiling.analytics.{NumericSumBinningAnalytic, AnalysisDescription, BinningAnalytic}
+import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescription, BinningAnalytic}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.avro.file.CodecFactory
 import org.apache.spark.SparkContext
