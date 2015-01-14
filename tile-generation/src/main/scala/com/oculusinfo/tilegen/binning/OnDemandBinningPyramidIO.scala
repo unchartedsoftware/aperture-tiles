@@ -38,13 +38,14 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
+import org.apache.spark.sql.SQLContext
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
 
-import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
@@ -57,10 +58,9 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.util.Rectangle
+import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
 
 
 
@@ -68,7 +68,8 @@ import com.oculusinfo.tilegen.util.Rectangle
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-class OnDemandBinningPyramidIO (sc: SparkContext) extends PyramidIO {
+class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
+	private val sc = sqlc.sparkContext
 	private val datasets = MutableMap[String, Dataset[_, _, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
 	private var consolidationPartitions: Option[Int] = Some(1)
@@ -98,15 +99,31 @@ class OnDemandBinningPyramidIO (sc: SparkContext) extends PyramidIO {
 		if (!datasets.contains(pyramidId)) {
 			datasets.synchronized {
 				if (!datasets.contains(pyramidId)) {
-					if (!dataDescription.stringPropertyNames.contains("oculus.binning.caching.processed"))
-						dataDescription.setProperty("oculus.binning.caching.processed", "true")
+					// Note our tile width and height appropriately
+					dataDescription.setProperty("oculus.binning.tileWidth", width.toString)
+					dataDescription.setProperty("oculus.binning.tileHeight", height.toString)
 
-					val newDataset =
-						DatasetFactory.createDataset(sc, dataDescription,
-						                             Some(width), Some(height))
-					newDataset.getTileAnalytics.map(_.addGlobalAccumulator(sc))
-					newDataset.getDataAnalytics.map(_.addGlobalAccumulator(sc))
-					datasets(pyramidId) = newDataset
+					// Read our data
+					val wrappedDesc = new PropertiesWrapper(dataDescription)
+					// Read our CSV data
+					val source = new CSVDataSource(wrappedDesc)
+					// Read the CSV into a schema file
+					val reader = new CSVReader(sqlc, source.getData(sc), wrappedDesc)
+					// Unless the user has specifically said not to, cache processed data so as to make multiple runs
+					// more efficient.
+					val cache = wrappedDesc.getBoolean(
+						"oculus.binning.caching.processed",
+						"Cache the data, in a parsed and processed form, if true",
+						Some(true))
+					if (cache) reader.asSchemaRDD.cache()
+					// Register it as a table
+					val table = "table"+pyramidId
+					reader.asSchemaRDD.registerTempTable(table)
+					// Create our tiling task
+					val newTask = TilingTask(sqlc, table, dataDescription)
+					newTask.getTileAnalytics.map(_.addGlobalAccumulator(sc))
+					newTask.getDataAnalytics.map(_.addGlobalAccumulator(sc))
+					datasets(pyramidId) = newTask
 				}
 			}
 		}

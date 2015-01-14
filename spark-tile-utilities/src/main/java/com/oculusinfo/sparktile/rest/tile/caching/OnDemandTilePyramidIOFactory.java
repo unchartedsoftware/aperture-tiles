@@ -52,7 +52,7 @@ public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO>
 	protected PyramidIO create () {
 		try {
 			JSONObject config = getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA);
-			return new OnDemandAccumulatorPyramidIO(_contextProvider.getSparkContext(config));
+			return new OnDemandAccumulatorPyramidIO(_contextProvider.getSQLContext(config));
 		}
 		catch (Exception e) {
 			LOGGER.error("Error trying to create FileSystemPyramidIO", e);

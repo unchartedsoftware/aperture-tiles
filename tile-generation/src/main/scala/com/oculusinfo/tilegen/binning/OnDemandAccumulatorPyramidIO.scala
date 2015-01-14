@@ -38,6 +38,9 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
+import com.oculusinfo.tilegen.util.PropertiesWrapper
+import org.apache.spark.sql.SQLContext
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable.MutableList
@@ -58,8 +61,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import org.apache.log4j.Level
 
@@ -69,7 +71,8 @@ import org.apache.log4j.Level
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-class OnDemandAccumulatorPyramidIO (sc: SparkContext) extends PyramidIO {
+class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
+	private val sc = sqlc.sparkContext
 	private val datasets = MutableMap[String, Dataset[_, _, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
 	private val accStore = new AccumulatorStore
@@ -97,13 +100,31 @@ class OnDemandAccumulatorPyramidIO (sc: SparkContext) extends PyramidIO {
 		if (!datasets.contains(pyramidId)) {
 			datasets.synchronized {
 				if (!datasets.contains(pyramidId)) {
-					if (!dataDescription.stringPropertyNames.contains("oculus.binning.caching.processed"))
-						dataDescription.setProperty("oculus.binning.caching.processed", "true")
-					val newDataset =
-						DatasetFactory.createDataset(sc, dataDescription, Some(width), Some(height))
-					newDataset.getTileAnalytics.map(_.addGlobalAccumulator(sc))
-					newDataset.getDataAnalytics.map(_.addGlobalAccumulator(sc))
-					datasets(pyramidId) = newDataset
+					// Note our tile width and height appropriately
+					dataDescription.setProperty("oculus.binning.tileWidth", width.toString)
+					dataDescription.setProperty("oculus.binning.tileHeight", height.toString)
+
+					// Read our data
+					val wrappedDesc = new PropertiesWrapper(dataDescription)
+					// Read our CSV data
+					val source = new CSVDataSource(wrappedDesc)
+					// Read the CSV into a schema file
+					val reader = new CSVReader(sqlc, source.getData(sc), wrappedDesc)
+					// Unless the user has specifically said not to, cache processed data so as to make multiple runs
+					// more efficient.
+					val cache = wrappedDesc.getBoolean(
+						"oculus.binning.caching.processed",
+						"Cache the data, in a parsed and processed form, if true",
+						Some(true))
+					if (cache) reader.asSchemaRDD.cache()
+					// Register it as a table
+					val table = "table"+pyramidId
+					reader.asSchemaRDD.registerTempTable(table)
+					// Create our tiling task
+					val newTask = TilingTask(sqlc, table, dataDescription)
+					newTask.getTileAnalytics.map(_.addGlobalAccumulator(sc))
+					newTask.getDataAnalytics.map(_.addGlobalAccumulator(sc))
+					datasets(pyramidId) = newTask
 				}
 			}
 		}

@@ -71,7 +71,7 @@ class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with Befo
 		writer.close()
 
 		// Create our pyramid IO
-		pyramidIo = new OnDemandAccumulatorPyramidIO(sc)
+		pyramidIo = new OnDemandAccumulatorPyramidIO(sqlc)
 
 		// Read the one into the other
 		val props = new Properties()

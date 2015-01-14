@@ -55,7 +55,6 @@ import scala.reflect.ClassTag
  */
 class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
 	val pyramidId = "unknown.x.y.count"
-	var sqlc: SQLContext = null
 	var data: SchemaRDD = null
 	var dataset: Dataset[_, _, _, _, _] = null
 	var pyramidIo: OnDemandAccumulatorPyramidIO = null
@@ -71,8 +70,6 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 	}
 
 	private def createDataset(sc: SparkContext): Unit = {
-		sqlc = new SQLContext(sc)
-
 		// Create our data
 		// We create a simple data set with pairs (n, 7-n) as n goes from 0 to 6
 		data = sqlc.jsonRDD(sc.parallelize(Range(0, 7)).map(n =>
@@ -81,7 +78,7 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 		data.registerTempTable("test")
 
 		// Create our pyramid IO
-		pyramidIo = new OnDemandAccumulatorPyramidIO(sc)
+		pyramidIo = new OnDemandAccumulatorPyramidIO(sqlc)
 
 		// Read the one into the other
 		val props = new Properties()
@@ -103,7 +100,6 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 	}
 
 	private def cleanupDataset: Unit = {
-		sqlc = null
 		data = null
 		pyramidIo = null
 	}

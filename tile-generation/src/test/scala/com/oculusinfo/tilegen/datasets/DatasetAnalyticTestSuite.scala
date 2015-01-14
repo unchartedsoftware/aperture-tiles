@@ -102,7 +102,7 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		props.setProperty("oculus.binning.analytics.data.0",
 		                  "com.oculusinfo.tilegen.datasets.TestDataAnalytic")
 
-		pyramidIo = new OnDemandBinningPyramidIO(sc)
+		pyramidIo = new OnDemandBinningPyramidIO(sqlc)
 		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
 	}
 
