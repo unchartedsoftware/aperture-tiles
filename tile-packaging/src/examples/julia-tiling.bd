@@ -5,9 +5,11 @@ oculus.binning.projection.minx=-2.0
 oculus.binning.projection.maxx=2.0
 oculus.binning.projection.miny=-2.0
 oculus.binning.projection.maxy=2.0
-oculus.binning.xField=x
-oculus.binning.yField=y
-oculus.binning.valueField=v
+oculus.binning.index.field.0=x
+oculus.binning.index.field.1=y
+oculus.binning.value.type=field
+oculus.binning.value.field=v
+oculus.binning.value.aggregation=min
 
 # Define the tile pyramid levels we want to generate.
 oculus.binning.levels.0=0,1
