@@ -141,7 +141,8 @@ class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
  * @param yField The field from which to get the Y coordinate of a given record
  */
 class CartesianSchemaIndexExtractor (xField: String, yField: String) extends IndexExtractor() {
-	@transient lazy private val _fields = Seq(xField, yField)
+	private def checkForZero (field: String): String = if ("zero" == field) "0" else field
+	@transient lazy private val _fields = Seq(checkForZero(xField), checkForZero(yField))
 	def fields = _fields
 	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
 }
