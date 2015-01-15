@@ -229,7 +229,7 @@ object AnalysisDescription {
 			Map[String, TileIndex => Boolean] =
 		Map("global."+name -> ((t: TileIndex) => true))
 }
-trait AnalysisDescription[RT, AT] {
+trait AnalysisDescription[RT, AT] extends Serializable {
 	val analysisTypeTag: ClassTag[AT]
 	def convert: RT => AT
 	def analytic: TileAnalytic[AT]
@@ -270,7 +270,6 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 	(convertParam: RT => AT,
 	 analyticParam: TileAnalytic[AT])
 		extends AnalysisDescription[RT, AT]
-		with Serializable
 {
 	val analysisTypeTag = implicitly[ClassTag[AT]]
 
@@ -344,7 +343,6 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 	(analysis1: AnalysisDescription[RT, AT1],
 	 analysis2: AnalysisDescription[RT, AT2])
 		extends AnalysisDescription[RT, (AT1, AT2)]
-		with Serializable
 {
 	val analysisTypeTag = implicitly[ClassTag[(AT1, AT2)]]
 
@@ -462,7 +460,7 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
  *           this type, it just must match the dataset.
  */
 class CustomGlobalMetadata[T] (customData: Map[String, Object])
-		extends AnalysisDescription[T, String] with Serializable
+		extends AnalysisDescription[T, String]
 {
 	val analysisTypeTag = implicitly[ClassTag[String]]
 	def convert: T => String = (raw: T) => ""
