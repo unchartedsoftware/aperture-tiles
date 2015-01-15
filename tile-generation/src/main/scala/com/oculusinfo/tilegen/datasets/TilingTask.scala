@@ -52,6 +52,25 @@ import scala.reflect.ClassTag
 
 
 object TilingTask {
+	/**
+	 * From a list of name pieces, construct a string that can be used as a table name when registering a SchemaRDD
+	 * with a SQLContext.
+	 *
+	 * Basically, this strips out non-alphanumerics, and concatenates the remainder using camel-case.
+	 *
+	 * @param rawName The desired name
+	 * @return The reduced and standardized name
+	 */
+	def rectifyTableName (rawName: String): String =
+		rawName.split("[^a-zA-Z0-9]+").map(_.toLowerCase.capitalize).mkString("")
+
+	/**
+	 * Create a standard tiling task from necessary ingredients
+	 * @param sqlc A SQL context in which the data, in the form of a SchemaRDD, has been registered
+	 * @param table The table name as which the data has been registered
+	 * @param config A configuration object describing how the data is to be tiled
+	 * @return A tiling task that can be used to take the data and produce a tile pyramid
+	 */
 	def apply (sqlc: SQLContext, table: String, config: Properties): TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
@@ -67,7 +86,7 @@ object TilingTask {
 		val configFactory = new TilingTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
 		configFactory.readConfiguration(jsonConfig)
 
-		val analyzerFactory = new AnalyticExtractorFactory(null, java.util.Arrays.asList("oculus", "analytics"))
+		val analyzerFactory = new AnalyticExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "analytics"))
 		analyzerFactory.readConfiguration(jsonConfig)
 
 		val indexer = indexerFactory.produce(classOf[IndexExtractor])
