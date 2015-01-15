@@ -117,7 +117,6 @@ object ValueExtractorFactory2 {
 		Seq[ConfigurableFactory[_ <: ValueExtractor[_, _]]](
 			new CountValueExtractorFactory2(parent, path),
 			new FieldValueExtractorFactory2(parent, path),
-			new MeanValueExtractorFactory2(parent, path),
 			new MultiFieldValueExtractorFactory2(parent, path),
 			new SeriesValueExtractorFactory2(parent, path),
 			new IndirectSeriesValueExtractorFactory2(parent, path),
@@ -197,6 +196,10 @@ object FieldValueExtractorFactory2 {
 	private[datasets] val FIELD_AGGREGATION_PROPERTY = new StringProperty("aggregation",
 	                                                                      "The way to aggregate the value field when binning",
 	                                                                      "add")
+	private[datasets] val EMPTY_VALUE_PROPERTY =
+		new DoubleProperty("empty", "The value to be used in bins without enough data for validity", 0.0)
+	private[datasets] val MIN_COUNT_PROPERTY =
+		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 0)
 }
 /**
  * A constructor for FieldValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
@@ -207,22 +210,38 @@ object FieldValueExtractorFactory2 {
 class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory2("field", parent, path)
 {
+	import FieldValueExtractorFactory2._
+
 	addProperty(ValueExtractorFactory2.FIELD_PROPERTY)
-	addProperty(FieldValueExtractorFactory2.FIELD_AGGREGATION_PROPERTY)
+	addProperty(FIELD_AGGREGATION_PROPERTY)
+	addProperty(EMPTY_VALUE_PROPERTY)
+	addProperty(MIN_COUNT_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
 		val analyticType = getPropertyValue(FieldValueExtractorFactory2.FIELD_AGGREGATION_PROPERTY).toLowerCase()
-		val analytic = analyticType match {
-			case "min" => new NumericMinBinningAnalytic[T, JT]()(numeric, conversion)
-			case "minimum" => new NumericMinBinningAnalytic[T, JT]()(numeric, conversion)
-			case "max" => new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion)
-			case "maximum" => new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion)
-			case _ => new NumericSumBinningAnalytic[T, JT]()(numeric, conversion)
+
+		def createFieldExtractor (analytic: BinningAnalytic[T, JT]): ValueExtractor[_, _] =
+			new FieldValueExtractor2[T, JT](field, analytic)(tag, numeric, conversion)
+
+		def createMeanExtractor (): ValueExtractor[_, _] = {
+			val emptyValue = optionalGet(EMPTY_VALUE_PROPERTY)
+			val minCount = optionalGet(MIN_COUNT_PROPERTY).map(_.intValue())
+
+			new MeanValueExtractor2[T](field, emptyValue, minCount)(tag, numeric)
 		}
-		new FieldValueExtractor2[T, JT](field, analytic)(tag, numeric, conversion)
+
+		analyticType match {
+			case "min" =>     createFieldExtractor(new NumericMinBinningAnalytic[T, JT]()(numeric, conversion))
+			case "minimum" => createFieldExtractor(new NumericMinBinningAnalytic[T, JT]()(numeric, conversion))
+			case "max" =>     createFieldExtractor(new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion))
+			case "maximum" => createFieldExtractor(new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion))
+			case "mean" =>    createMeanExtractor()
+			case "average" => createMeanExtractor()
+			case _ =>         createFieldExtractor(new NumericSumBinningAnalytic[T, JT]()(numeric, conversion))
+		}
 	}
 }
 
@@ -248,36 +267,6 @@ class FieldValueExtractor2[T: ClassTag, JT] (field: String, _binningAnalytic: Bi
 		new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
-object MeanValueExtractorFactory2 {
-	private[datasets] val EMPTY_VALUE_PROPERTY =
-		new DoubleProperty("empty", "The value to be used in bins without enough data for validity", 0.0)
-	private[datasets] val MIN_COUNT_PROPERTY =
-		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 0)
-}
-
-/**
- * A constructor for MeanValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
- * constructor
- *
- * @see MeanValueExtractor2
- */
-class MeanValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("mean", parent, path)
-{
-	addProperty(ValueExtractorFactory2.FIELD_PROPERTY)
-	addProperty(MeanValueExtractorFactory2.EMPTY_VALUE_PROPERTY)
-	addProperty(MeanValueExtractorFactory2.MIN_COUNT_PROPERTY)
-
-	override protected def typedCreate[T, JT] (tag: ClassTag[T],
-	                                           numeric: ExtendedNumeric[T],
-	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
-		val emptyValue = optionalGet(MeanValueExtractorFactory2.EMPTY_VALUE_PROPERTY)
-		val minCount = optionalGet(MeanValueExtractorFactory2.MIN_COUNT_PROPERTY).map(_.intValue())
-
-		new MeanValueExtractor2[T](field, emptyValue, minCount)(tag, numeric)
-	}
-}
 /**
  * A value extractor that uses the mean of the (numeric) value of a single field as the value of each record.
  * @param field The field whose value is used as the record's value
