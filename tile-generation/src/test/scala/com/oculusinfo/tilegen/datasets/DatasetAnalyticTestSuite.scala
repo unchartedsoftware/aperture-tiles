@@ -81,26 +81,30 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 
 		val props = new Properties()
 		props.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
+		props.setProperty("oculus.binning.projection.type", "areaofinterest")
 		props.setProperty("oculus.binning.projection.autobounds", "false")
-		props.setProperty("oculus.binning.projection.minx", "0.0")
+		props.setProperty("oculus.binning.projection.minX", "0.0")
 		props.setProperty("oculus.binning.projection.maxX", "256.0")
-		props.setProperty("oculus.binning.projection.miny", "0.0")
-		props.setProperty("oculus.binning.projection.maxy", "256.0")
+		props.setProperty("oculus.binning.projection.minY", "0.0")
+		props.setProperty("oculus.binning.projection.maxY", "256.0")
 		props.setProperty("oculus.binning.parsing.separator", ",")
 		props.setProperty("oculus.binning.parsing.x.index", "0")
 		props.setProperty("oculus.binning.parsing.y.index", "1")
 		props.setProperty("oculus.binning.parsing.v.index", "2")
 		props.setProperty("oculus.binning.parsing.v.fieldType", "long")
-		props.setProperty("oculus.binning.parsing.v.fieldAggregation", "mean")
 		props.setProperty("oculus.binning.index.type", "cartesian")
-		props.setProperty("oculus.binning.xField", "x")
-		props.setProperty("oculus.binning.yField", "y")
-		props.setProperty("oculus.binning.valueField", "v")
+		props.setProperty("oculus.binning.index.field.0", "x")
+		props.setProperty("oculus.binning.index.field.1", "y")
+		props.setProperty("oculus.binning.value.type", "field")
+		props.setProperty("oculus.binning.value.valueType", "long")
+		props.setProperty("oculus.binning.value.field", "v")
+		props.setProperty("oculus.binning.value.aggregation", "mean")
 		props.setProperty("oculus.binning.levels.0", "0,1,2,3,4,5,6")
-		props.setProperty("oculus.binning.analytics.tile.0",
+		props.setProperty("oculus.binning.analytics.tile.0.analytic",
 		                  "com.oculusinfo.tilegen.datasets.TestTileAnalytic")
-		props.setProperty("oculus.binning.analytics.data.0",
+		props.setProperty("oculus.binning.analytics.data.0.analytic",
 		                  "com.oculusinfo.tilegen.datasets.TestDataAnalytic")
+		props.setProperty("oculus.binning.analytics.data.0.fields.0", "v")
 
 		pyramidIo = new OnDemandBinningPyramidIO(sqlc)
 		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
@@ -181,9 +185,10 @@ class TestTileAnalytic
 {}
 
 class TestDataAnalytic
-		extends MonolithicAnalysisDescription[((Double, Double), (Long, Int)), Double] (
+		extends MonolithicAnalysisDescription[Seq[Any], Double] (
 	v => {
-		val result = ((v._2._1+1)*(v._2._1+1))
+		val num = v(0).asInstanceOf[Long]+1.0
+		val result = num*num
 		result
 	},
 	new NumericMinTileAnalytic[Double]("data test"))
