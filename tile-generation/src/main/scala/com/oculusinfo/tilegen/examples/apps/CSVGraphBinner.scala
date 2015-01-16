@@ -364,7 +364,7 @@ object CSVGraphBinner {
 					"oculus.binning.caching.processed",
 					"Cache the data, in a parsed and processed form, if true",
 					Some(true))
-				if (cache) reader.asSchemaRDD.cache()
+				if (cache) sqlc.cacheTable(table)
 
 				// regular tile generation
 				processDatasetGeneric(sc, TilingTask(sqlc, table, props), tileIO)
@@ -421,7 +421,7 @@ object CSVGraphBinner {
 						"oculus.binning.caching.processed",
 						"Cache the data, in a parsed and processed form, if true",
 						Some(true))
-					if (cache) reader.asSchemaRDD.cache()
+					if (cache) sqlc.cacheTable(table)
 
 					// perform tile generation
 					processDatasetGeneric(sc, TilingTask(sqlc, table, props), tileIO)

@@ -116,10 +116,11 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						"oculus.binning.caching.processed",
 						"Cache the data, in a parsed and processed form, if true",
 						Some(true))
-					if (cache) reader.asSchemaRDD.cache()
 					// Register it as a table
 					val table = TilingTask.rectifyTableName("table "+pyramidId)
 					reader.asSchemaRDD.registerTempTable(table)
+					if (cache) sqlc.cacheTable(table)
+
 					// Create our tiling task
 					val newTask = TilingTask(sqlc, table, dataDescription)
 					newTask.getTileAnalytics.map(_.addGlobalAccumulator(sc))

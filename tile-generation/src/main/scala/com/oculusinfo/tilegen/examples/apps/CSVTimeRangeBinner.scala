@@ -333,10 +333,11 @@ object CSVTimeRangeBinner {
 				"oculus.binning.caching.processed",
 				"Cache the data, in a parsed and processed form, if true",
 				Some(true))
-			if (cache) reader.asSchemaRDD.cache()
 			// Register it as a table
 			val table = "table"+argIdx
 			reader.asSchemaRDD.registerTempTable(table)
+			if (cache) sqlc.cacheTable(table)
+
 			// Process the data
 			processDatasetGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO, props)
 
