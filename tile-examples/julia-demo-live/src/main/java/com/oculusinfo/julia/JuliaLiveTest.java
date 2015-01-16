@@ -6,15 +6,15 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -23,11 +23,13 @@ import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 
+import com.oculusinfo.tilegen.tiling.RDDBinner;
 import org.apache.avro.file.CodecFactory;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SQLContext;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -81,22 +83,80 @@ public class JuliaLiveTest extends JFrame {
 			rawConfig += line;
 		configReader.close();
 
-		_config = new JSONObject(rawConfig)
-			.getJSONArray("layers")
+		_config = new JSONArray(rawConfig)
 			.getJSONObject(0)
+			.getJSONObject("private")
 			.getJSONObject("data")
 			.getJSONObject("pyramidio")
 			.getJSONObject("data");
 	}
 
+
+	private String getJar (Class<?> forClass) {
+		// Find the source location of our class
+		File path = new File(forClass.getProtectionDomain().getCodeSource().getLocation().getPath());
+		String searchName = forClass.getName().replace(".", "/");
+		return searchJarsForFile(path, searchName);
+	}
+	private String searchJarsForFile (File path, String searchName) {
+		// Look for a jar file in that location, walking up the path until we find one.
+		String jarLoc = null;
+		String lastChild = null;
+		while (jarLoc == null && path != null) {
+			final String currentLast = lastChild;
+			// Check direct children for jars
+			File[] children = path.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return !name.equals(currentLast) && name.toLowerCase().endsWith(".jar");
+				}
+			});
+			for (File child: children) {
+				try {
+					// See if this child has our class
+					ZipInputStream zip = new ZipInputStream(new FileInputStream(child));
+					boolean found = false;
+					while (zip.available()>0) {
+						ZipEntry entry = zip.getNextEntry();
+						String entryName = entry.getName();
+						if (entryName.startsWith(searchName)) {
+							return child.getAbsolutePath();
+						}
+					}
+				} catch (IOException e) {
+				}
+			}
+			// Check for libs directory
+			if (!"libs".equals(lastChild)) {
+				File libs = new File(path, "libs");
+				if (libs.exists() && libs.isDirectory()) {
+					return searchJarsForFile(libs, searchName);
+				}
+			}
+			lastChild = path.getName();
+			path = path.getParentFile();
+		}
+		return null;
+	}
+
+
 	private void setupSparkContext () throws JSONException {
+		// Determine the CWD
+		try {
+			System.out.println("The CWD is:");
+			System.out.println("\t" + (new File(".").getAbsolutePath()));
+			String path = RDDBinner.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+			System.out.println("Ideal path: " + path);
+		} catch (URISyntaxException e) {
+			throw new JSONException(e);
+		}
 		SparkConf conf = new SparkConf();
 		conf.setMaster("spark://hadoop-s1.oculus.local:7077");
 		conf.setAppName("Julia live tile testing");
 		conf.setSparkHome("/opt/spark");
 		conf.setJars(new String[] {
-				"target/tile-generation-0.4-SNAPSHOT.jar",
-				"../binning-utilities/target/binning-utilities-0.4-SNAPSHOT.jar"                        
+				getJar(RDDBinner.class),
+				getJar(TileData.class)
 			});
 
 		for (String key: JSONObject.getNames(_config)) {
