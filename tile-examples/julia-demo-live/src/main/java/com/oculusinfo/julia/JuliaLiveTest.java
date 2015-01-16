@@ -27,6 +27,7 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SQLContext;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -55,6 +56,7 @@ public class JuliaLiveTest extends JFrame {
 
 	private JSONObject                   _config;
 	private SparkContext                 _sc;
+	private SQLContext                   _sqlc;
 	private OnDemandAccumulatorPyramidIO _pyramidIO;
 	private TileSerializer<Double>       _serializer;
 
@@ -105,6 +107,7 @@ public class JuliaLiveTest extends JFrame {
 
 		JavaSparkContext jsc = new JavaSparkContext(conf);
 		_sc = JavaSparkContext.toSparkContext(jsc);
+		_sqlc = new SQLContext(_sc);
 		_sc.cancelAllJobs();
 	}
 
@@ -113,7 +116,7 @@ public class JuliaLiveTest extends JFrame {
 		for (String key: JSONObject.getNames(_config))
 			config.setProperty(key, _config.getString(key));
 
-		_pyramidIO = new OnDemandAccumulatorPyramidIO(_sc);
+		_pyramidIO = new OnDemandAccumulatorPyramidIO(_sqlc);
 		_pyramidIO.initializeForRead(ID, 256, 256, config);
 	}
 
