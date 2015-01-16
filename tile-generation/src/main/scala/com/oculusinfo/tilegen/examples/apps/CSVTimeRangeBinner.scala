@@ -33,6 +33,8 @@ import java.util.Date
 import java.util.Properties
 import java.util.TimeZone
 
+import org.apache.spark.sql.SQLContext
+
 import scala.collection.JavaConverters._
 import scala.collection.immutable.List
 import scala.reflect.ClassTag
@@ -49,18 +51,7 @@ import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.tilegen.datasets.CSVDatasetBase
-import com.oculusinfo.tilegen.datasets.CSVDataSource
-import com.oculusinfo.tilegen.datasets.CSVFieldExtractor
-import com.oculusinfo.tilegen.datasets.CSVIndexExtractor
-import com.oculusinfo.tilegen.datasets.CSVRecordParser
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
-import com.oculusinfo.tilegen.datasets.CSVDataset
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
-import com.oculusinfo.tilegen.datasets.StaticProcessingStrategy
-import com.oculusinfo.tilegen.datasets.TimeRangeCartesianIndexExtractor
-import com.oculusinfo.tilegen.datasets.TimeRangeCSVIndexExtractor
+import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
@@ -71,7 +62,7 @@ import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.tiling.SqliteTileIO
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.tiling.TimeIndexScheme
-import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
 
 
 /**
@@ -182,7 +173,7 @@ object CSVTimeRangeBinner {
 	                   BT] (sc: SparkContext,
 	                        dataset: Dataset[IT, PT, DT, AT, BT],
 	                        tileIO: TileIO,
-	                        properties: CSVRecordPropertiesWrapper): Unit = {
+	                        properties: KeyValueArgumentSource): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 
@@ -279,17 +270,28 @@ object CSVTimeRangeBinner {
 	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
 	                                               dataset: Dataset[IT, PT, DT, AT, BT],
 	                                               tileIO: TileIO,
-	                                               properties: CSVRecordPropertiesWrapper):
+	                                               properties: KeyValueArgumentSource):
 			Unit =
 		processDataset(sc, dataset, tileIO, properties)(dataset.indexTypeTag,
 		                                                dataset.binTypeTag,
 		                                                dataset.dataAnalysisTypeTag,
 		                                                dataset.tileAnalysisTypeTag)
 
+
+
+	private def readFile (file: String, props: Properties): Properties = {
+		val stream = new FileInputStream(file)
+		props.load(stream)
+		stream.close()
+		props
+	}
+
+
+
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {
 			println("Usage:")
-			println("\tCSVBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
+			println("\tCSVTimeRangeBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
 			System.exit(1)
 		}
 
@@ -299,9 +301,7 @@ object CSVTimeRangeBinner {
 
 		while ("-d" == args(argIdx)) {
 			argIdx = argIdx + 1
-			val stream = new FileInputStream(args(argIdx))
-			defProps.load(stream)
-			stream.close()
+			readFile(args(argIdx), defProps)
 			argIdx = argIdx + 1
 		}
 		defProps.setProperty("oculus.binning.index.type", "timerange")
@@ -311,6 +311,7 @@ object CSVTimeRangeBinner {
 		val connectorProperties = new PropertiesWrapper(defProps)
 		val connector = connectorProperties.getSparkConnector()
 		val sc = connector.createContext(Some("Pyramid Binning"))
+		val sqlc = new SQLContext(sc)
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val tileIO = TileIO.fromArguments(defaultProperties)
@@ -319,18 +320,29 @@ object CSVTimeRangeBinner {
 		val startTime = System.currentTimeMillis()
 		while (argIdx < args.size) {
 			val fileStartTime = System.currentTimeMillis()
-			val props = new Properties(defProps)
-			val propStream = new FileInputStream(args(argIdx))
-			props.load(propStream)
-			propStream.close()
+			val rawProps = readFile(args(argIdx), new Properties(defProps))
+			val props = new PropertiesWrapper(rawProps)
 
-			// If the user hasn't explicitly set us not to cache, cache processed data to make
-			// multiple runs more efficient
-			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
-				props.setProperty("oculus.binning.caching.processed", "true")
+			// Read our CSV data
+			val source = new CSVDataSource(props)
+			// Read the CSV into a schema file
+			val reader = new CSVReader(sqlc, source.getData(sc), props)
+			// Unless the user has specifically said not to, cache processed data so as to make multiple runs
+			// more efficient.
+			val cache = props.getBoolean(
+				"oculus.binning.caching.processed",
+				"Cache the data, in a parsed and processed form, if true",
+				Some(true))
+			if (cache) reader.asSchemaRDD.cache()
+			// Register it as a table
+			val table = "table"+argIdx
+			reader.asSchemaRDD.registerTempTable(table)
+			// Process the data
+			processDatasetGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO, props)
 
-			processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props),
-			                      tileIO, new CSVRecordPropertiesWrapper(props))
+			val fileEndTime = System.currentTimeMillis()
+			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
+
 			argIdx += 1
 		}
 		val endTime = System.currentTimeMillis()

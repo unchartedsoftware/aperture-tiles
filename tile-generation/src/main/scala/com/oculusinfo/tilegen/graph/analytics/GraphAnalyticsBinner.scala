@@ -43,7 +43,6 @@ import org.apache.spark.rdd.RDD
 import java.util.Properties
 import java.io.FileInputStream
 import scala.util.Try
-	import com.oculusinfo.tilegen.datasets.DatasetFactory
 import org.apache.spark.SparkContext
 import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import java.util.{List => JavaList}
