@@ -18,6 +18,7 @@ ext.clientServerProjects = [
 		'annotation-service',
 		'tile-client',
 		'tile-client-template',
+		'tile-quickstart',
 		'tile-examples:julia-demo',
 		'tile-examples:julia-demo-live',
 		'tile-examples:twitter-topics:twitter-topics-utilities',
