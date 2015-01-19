@@ -109,6 +109,18 @@ class OnDemandAccumulatorPyramidIO (sc: SparkContext) extends PyramidIO {
 		}
 	}
 
+	def initializeDirectly (pyramidId: String, dataset: Dataset[_, _, _, _, _]): Unit ={
+		if (!datasets.contains(pyramidId)) {
+			datasets.synchronized {
+				if (!datasets.contains(pyramidId)) {
+					dataset.getTileAnalytics.map(_.addGlobalAccumulator(sc))
+					dataset.getDataAnalytics.map(_.addGlobalAccumulator(sc))
+					datasets(pyramidId) = dataset
+				}
+			}
+		}
+	}
+
 	def readTiles[BT] (pyramidId: String,
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]): JavaList[TileData[BT]] = {

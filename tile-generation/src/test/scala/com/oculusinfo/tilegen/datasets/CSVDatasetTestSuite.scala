@@ -73,7 +73,7 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		props.setProperty("oculus.binning.parsing.c.index", "2")
 		props.setProperty("oculus.binning.parsing.c.fieldType", "Median")
 
-		// Make sure that both 'mean' and 'average' field types use our 
+		// Make sure that both 'mean' and 'average' field types use our
 		// MeanValueExtractor
 		props.setProperty("oculus.binning.valueField", "a")
 		val CSVPropsA = new CSVRecordPropertiesWrapper(props)
@@ -92,8 +92,8 @@ class CSVDatasetPropertiesTestSuite extends FunSuite {
 		props.setProperty("oculus.binning.valueField", "c")
 		val CSVPropsC = new CSVRecordPropertiesWrapper(props)
 		assert(!CSVValueExtractor.fromProperties(CSVPropsC,
-		                                          CSVValueExtractor.standardFactories)
-			         .isInstanceOf[MeanValueExtractor[_]])
+		                                         CSVValueExtractor.standardFactories)
+			       .isInstanceOf[MeanValueExtractor[_]])
 	}
 }
 

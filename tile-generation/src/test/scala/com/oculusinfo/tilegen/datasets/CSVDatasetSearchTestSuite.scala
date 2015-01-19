@@ -90,7 +90,7 @@ class CSVDatasetSearchTestSuite extends FunSuite with SharedSparkContext {
 			readProps.setProperty("oculus.binning.parsing.d.index", "3")
 			readProps.setProperty("oculus.binning.parsing.e.index", "4")
 			val csvProps = new CSVRecordPropertiesWrapper(readProps);
-			val csvIndexer = new CartesianIndexExtractor("x", "y")
+			val csvIndexer = new CartesianCSVIndexExtractor("x", "y")
 			val csvValuer = new CountValueExtractor
 			val dataAnalytics:
 					Option[AnalysisDescription[((Double, Double), Double), Int]] = None

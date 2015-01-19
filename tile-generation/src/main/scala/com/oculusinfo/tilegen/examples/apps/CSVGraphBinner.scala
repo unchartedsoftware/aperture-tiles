@@ -176,48 +176,48 @@ object CSVGraphBinner {
 		}
 	}
 
-//	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
-//
-//		_graphDataType = properties.getString("oculus.binning.graph.data",
-//		                                      "The type of graph data to tile (nodes or edges). "+
-//			                                      "Default is nodes.",
-//		                                      Some("nodes"))
-//
-//		// NOTE!  currently, indexType is assumed to be cartesian for graph data
-//		//		val indexType = properties.getString("oculus.binning.index.type",
-//		//		                                     "The type of index to use in the data.  Currently "+
-//		//			                                     "suppoted options are cartesian (the default) "+
-//		//			                                     "and ipv4.",
-//		//		                                     Some("cartesian"))
-//
-//		_graphDataType match {
-//			case "nodes" => {
-//				val xVar = properties.getString("oculus.binning.xField",
-//				                                "The field to use for the X axis of tiles produced",
-//				                                Some(CSVDatasetBase.ZERO_STR))
-//				val yVar = properties.getString("oculus.binning.yField",
-//				                                "The field to use for the Y axis of tiles produced",
-//				                                Some(CSVDatasetBase.ZERO_STR))
-//				new CartesianIndexExtractor(xVar, yVar)
-//			}
-//			case "edges" => {
-//				// edges require two cartesian endpoints
-//				val xVar1 = properties.getString("oculus.binning.xField",
-//				                                 "The field to use for the X axis for edge start pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				val yVar1 = properties.getString("oculus.binning.yField",
-//				                                 "The field to use for the Y axis for edge start pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				val xVar2 = properties.getString("oculus.binning.xField2",
-//				                                 "The field to use for the X axis for edge end pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				val yVar2 = properties.getString("oculus.binning.yField2",
-//				                                 "The field to use for the Y axis for edge end pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				new LineSegmentIndexExtractor(xVar1, yVar1, xVar2, yVar2)
-//			}
-//		}
-//	}
+	//	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
+	//
+	//		_graphDataType = properties.getString("oculus.binning.graph.data",
+	//		                                      "The type of graph data to tile (nodes or edges). "+
+	//			                                      "Default is nodes.",
+	//		                                      Some("nodes"))
+	//
+	//		// NOTE!  currently, indexType is assumed to be cartesian for graph data
+	//		//		val indexType = properties.getString("oculus.binning.index.type",
+	//		//		                                     "The type of index to use in the data.  Currently "+
+	//		//			                                     "suppoted options are cartesian (the default) "+
+	//		//			                                     "and ipv4.",
+	//		//		                                     Some("cartesian"))
+	//
+	//		_graphDataType match {
+	//			case "nodes" => {
+	//				val xVar = properties.getString("oculus.binning.xField",
+	//				                                "The field to use for the X axis of tiles produced",
+	//				                                Some(CSVDatasetBase.ZERO_STR))
+	//				val yVar = properties.getString("oculus.binning.yField",
+	//				                                "The field to use for the Y axis of tiles produced",
+	//				                                Some(CSVDatasetBase.ZERO_STR))
+	//				new CartesianIndexExtractor(xVar, yVar)
+	//			}
+	//			case "edges" => {
+	//				// edges require two cartesian endpoints
+	//				val xVar1 = properties.getString("oculus.binning.xField",
+	//				                                 "The field to use for the X axis for edge start pt",
+	//				                                 Some(CSVDatasetBase.ZERO_STR))
+	//				val yVar1 = properties.getString("oculus.binning.yField",
+	//				                                 "The field to use for the Y axis for edge start pt",
+	//				                                 Some(CSVDatasetBase.ZERO_STR))
+	//				val xVar2 = properties.getString("oculus.binning.xField2",
+	//				                                 "The field to use for the X axis for edge end pt",
+	//				                                 Some(CSVDatasetBase.ZERO_STR))
+	//				val yVar2 = properties.getString("oculus.binning.yField2",
+	//				                                 "The field to use for the Y axis for edge end pt",
+	//				                                 Some(CSVDatasetBase.ZERO_STR))
+	//				new LineSegmentIndexExtractor(xVar1, yVar1, xVar2, yVar2)
+	//			}
+	//		}
+	//	}
 	
 	def processDataset[IT: ClassTag,
 	                   PT: ClassTag,
@@ -291,7 +291,7 @@ object CSVGraphBinner {
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
-						                    dataset.getValueScheme,
+						                    dataset.getTileSerializer,
 						                    tileAnalytics,
 						                    dataAnalytics,
 						                    dataset.getName,
@@ -330,7 +330,7 @@ object CSVGraphBinner {
 						tileIO.writeTileSet(dataset.getTilePyramid,
 						                    dataset.getName,
 						                    tiles,
-						                    dataset.getValueScheme,
+						                    dataset.getTileSerializer,
 						                    tileAnalytics,
 						                    dataAnalytics,
 						                    dataset.getName,

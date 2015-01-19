@@ -257,13 +257,13 @@ class CSVDataSource (properties: CSVRecordPropertiesWrapper) {
 			Try(
 				{
 					var tmp = if ( getIdealPartitions.isDefined ) {
-					    sc.textFile( file, getIdealPartitions.get )
-				    } else {
-					    sc.textFile( file )
-				    }
-				    tmp.partitions // force exception if file does not exist
-				    tmp
-			    }
+						sc.textFile( file, getIdealPartitions.get )
+					} else {
+						sc.textFile( file )
+					}
+					tmp.partitions // force exception if file does not exist
+					tmp
+				}
 			).getOrElse( sc.emptyRDD )
 		}.reduce(_ union _)
 }
@@ -454,8 +454,8 @@ abstract class CSVDatasetBase[IT: ClassTag,
 	override def getConsolidationPartitions: Option[Int] = consolidationPartitions
 
 	def getIndexScheme = indexer.indexScheme
-	def getValueScheme: ValueDescription[BT] = valuer
-	
+	def getTileSerializer: TileSerializer[BT] = valuer.getSerializer
+
 	def getBinningAnalytic: BinningAnalytic[PT, BT] = valuer.getBinningAnalytic
 
 	def getDataAnalytics: Option[AnalysisDescription[(IT, PT), DT]] = dataAnalytics

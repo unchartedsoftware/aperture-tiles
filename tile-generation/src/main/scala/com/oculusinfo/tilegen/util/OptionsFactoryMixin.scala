@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -22,21 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
-package com.oculusinfo.tilegen.graph.analytics
+package com.oculusinfo.tilegen.util
 
-import java.util.{List => JavaList}
-import org.apache.avro.file.CodecFactory
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.tilegen.datasets.ValueDescription
 
-//import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord
-//import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsAvroSerializer
 
-class GraphAnalyticsValueDescription
-		extends ValueDescription[JavaList[GraphAnalyticsRecord]]
-		with Serializable
-{
-	def getSerializer: TileSerializer[JavaList[GraphAnalyticsRecord]] =
-		new GraphAnalyticsAvroSerializer(CodecFactory.bzip2Codec())
+import com.oculusinfo.factory.{ConfigurationProperty, ConfigurableFactory}
+
+
+
+/**
+ * A mixin trait for configurable factories to allow them to easily get optional properties in a scala-friendly way.
+ */
+trait OptionsFactoryMixin[T] extends ConfigurableFactory[T] {
+	/** Get a property value, but only if it is present */
+	def optionalGet[T] (property: ConfigurationProperty[T]): Option[T] = {
+		if (hasPropertyValue(property)) {
+			Some(getPropertyValue(property))
+		} else {
+			None
+		}
+	}
 }

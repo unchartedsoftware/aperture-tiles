@@ -35,7 +35,8 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescription, CompositeAnalysisDescription}
 import com.oculusinfo.tilegen.tiling.{CartesianIndexScheme, RDDBinner, TileIO}
 import com.oculusinfo.tilegen.util.ArgumentParser
-import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
+import com.oculusinfo.twitter.binning.{TwitterTopicAvroSerializer, TwitterDemoTopicRecord}
+import org.apache.avro.file.CodecFactory
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
@@ -70,15 +71,15 @@ object TwitterTopicBinner {
 		// For each file, attempt create an RDD, then immediately force an
 		// exception in the case it does not exist. Union all RDDs together.
 		val rawData = files.map { file =>
-		    Try({
-		        val tmp = if (0 == partitions) {
-		            sc.textFile( file )
-		        } else {
-		            sc.textFile( file , partitions)
-		        }
-		        tmp.partitions // force exception if file does not exist
-		        tmp
-		    }).getOrElse( sc.emptyRDD )
+			Try({
+				    val tmp = if (0 == partitions) {
+					    sc.textFile( file )
+				    } else {
+					    sc.textFile( file , partitions)
+				    }
+				    tmp.partitions // force exception if file does not exist
+				    tmp
+			    }).getOrElse( sc.emptyRDD )
 		}.reduce(_ union _)
 
 		val minAnalysis:
@@ -199,7 +200,7 @@ object TwitterTopicBinner {
 				tileIO.writeTileSet(tilePyramid,
 				                    pyramidId,
 				                    tiles,
-				                    new TwitterTopicValueDescription,
+				                    new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec()),
 				                    tileAnalytics,
 				                    dataAnalytics,
 				                    pyramidName,

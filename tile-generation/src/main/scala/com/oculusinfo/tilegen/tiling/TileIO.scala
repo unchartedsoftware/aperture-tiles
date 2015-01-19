@@ -148,7 +148,7 @@ trait TileIO extends Serializable {
 	def writeTileSet[BT, AT, DT] (pyramider: TilePyramid,
 	                              baseLocation: String,
 	                              data: RDD[TileData[BT]],
-	                              valueDesc: ValueDescription[BT],
+	                              serializer: TileSerializer[BT],
 	                              tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	                              dataAnalytics: Option[AnalysisDescription[_, DT]],
 	                              name: String = "unknown",
@@ -174,7 +174,6 @@ trait TileIO extends Serializable {
 		data.mapPartitions(_.grouped(1024)).foreach(group =>
 			{
 				val pyramidIO = getPyramidIO
-				val serializer = valueDesc.getSerializer
 				// Write out tje group of tiles
 				pyramidIO.writeTiles(baseLocation, serializer, group)
 

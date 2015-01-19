@@ -109,6 +109,7 @@ sourceSets {
 dependencies {
 	// Compile config - needed to build
 	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-sql_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
