@@ -89,7 +89,7 @@ configurations {
 	// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
 	// the impl of the servlet api, which ends up generating a security exception.  We force exclude
 	// the signed api jar here, and force include the unsigned api jar below.
-	compile.exclude group: "org.eclipse.jetty.orbit", module: "servlet-api"
+	compile.exclude group: "org.eclipse.jetty.orbit", module: "javax.servlet"
 }
 
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
