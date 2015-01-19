@@ -15,7 +15,7 @@
 				"id": "julia.x.y.v",
 	            "pyramidio" : {
 	                "type" : "file",
-	                "root.path" : "file:///julia.x.y.v.zip",
+	                "root.path" : "res:///julia.x.y.v.zip",
 	                "extension" : "avro"
 	            }
 	        }
