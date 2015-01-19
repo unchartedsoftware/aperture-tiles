@@ -43,7 +43,6 @@ import org.apache.spark.SharedSparkContext
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
 
-import com.oculusinfo.tilegen.datasets.CountValueExtractor
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 

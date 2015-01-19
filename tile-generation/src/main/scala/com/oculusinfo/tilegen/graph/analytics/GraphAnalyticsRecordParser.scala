@@ -29,10 +29,11 @@ import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
+import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+
 import scala.collection.JavaConverters._
 import scala.util.parsing.json.JSON
 import com.oculusinfo.binning.util.Pair
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import org.apache.spark.graphx._
 
 /**
@@ -41,7 +42,7 @@ import org.apache.spark.graphx._
 object GraphAnalyticsRecordParser {
 }
 
-class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: CSVRecordPropertiesWrapper) extends Serializable {
+class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: KeyValueArgumentSource) extends Serializable {
 
 	val hierlevel = hierarchyLevel
 	val delimiter = properties.getString("oculus.binning.parsing.separator", "", Some("\t"))

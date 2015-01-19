@@ -46,7 +46,6 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileAndBinIndices
-import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.EndPointsToLine
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic

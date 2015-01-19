@@ -166,12 +166,11 @@ object CSVTimeRangeBinner {
 	}
 	
 	
-	def processDataset[IT: ClassTag,
-	                   PT: ClassTag,
+	def processDataset[PT: ClassTag,
 	                   DT: ClassTag,
 	                   AT: ClassTag,
 	                   BT] (sc: SparkContext,
-	                        dataset: Dataset[IT, PT, DT, AT, BT],
+	                        dataset: TilingTask[PT, DT, AT, BT],
 	                        tileIO: TileIO,
 	                        properties: KeyValueArgumentSource): Unit = {
 		val binner = new RDDBinner
@@ -193,18 +192,18 @@ object CSVTimeRangeBinner {
 					levels.map(level => analytic.addLevelAccumulator(sc, level))
 				)
 
-				val localIndexer: TimeRangeCSVIndexExtractor[IT] =
+				val localIndexer: TimeRangeCartesianSchemaIndexExtractor =
 					dataset
-						.asInstanceOf[CSVDataset[IT, PT, DT, AT, BT]]
+						.asInstanceOf[TilingTask[PT, AT, DT, BT]]
 						.getIndexer
-						.asInstanceOf[TimeRangeCSVIndexExtractor[IT]]
+						.asInstanceOf[TimeRangeCartesianSchemaIndexExtractor]
 
-				val procFcn: RDD[(IT, PT, Option[DT])] => Unit = rdd =>
+				val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = rdd =>
 				{
 					// get the unique time ranges
 					val timeRanges = rdd.map(record =>
 						{
-							val scheme: TimeIndexScheme[IT] = localIndexer.timeIndexScheme
+							val scheme = localIndexer.indexScheme
 							scheme.extractTime(record._1)
 						}
 					).distinct.collect()
@@ -214,9 +213,9 @@ object CSVTimeRangeBinner {
 							val timeRangeRdd = rdd.filter(record =>
 								{
 									val curTime =
-										localIndexer.timeIndexScheme.extractTime(record._1)
+										localIndexer.indexScheme.extractTime(record._1)
 									(curTime >= startTime &&
-										 curTime < (startTime + localIndexer.msPerTimeRange))
+										 curTime < (startTime + localIndexer.indexScheme.msPerTimeRange))
 								}
 							)
 
@@ -268,12 +267,11 @@ object CSVTimeRangeBinner {
 	 * so that they can be used as params for other types.
 	 */
 	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
-	                                               dataset: Dataset[IT, PT, DT, AT, BT],
+	                                               dataset: TilingTask[PT, DT, AT, BT],
 	                                               tileIO: TileIO,
 	                                               properties: KeyValueArgumentSource):
 			Unit =
-		processDataset(sc, dataset, tileIO, properties)(dataset.indexTypeTag,
-		                                                dataset.binTypeTag,
+		processDataset(sc, dataset, tileIO, properties)(dataset.binTypeTag,
 		                                                dataset.dataAnalysisTypeTag,
 		                                                dataset.tileAnalysisTypeTag)
 

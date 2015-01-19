@@ -70,7 +70,7 @@ class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with NumberConver
 class TimeRangeCartesianSchemaIndexScheme (startDate: Double, secsPerPeriod: Double)
 		extends TimeIndexScheme[Seq[Any]] with NumberConverter with Serializable
 {
-	private val msPerTimeRange = secsPerPeriod * 1000
+	val msPerTimeRange = secsPerPeriod * 1000
 	def toCartesian (coords: Seq[Any]): (Double, Double) = (asDouble(coords(1)), asDouble(coords(2)))
 	def extractTime (coords: Seq[Any]): Double = {
 		def floorDate(d: Double) = Math.floor((d - startDate) / msPerTimeRange) * msPerTimeRange + startDate

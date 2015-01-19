@@ -30,7 +30,7 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
 import com.oculusinfo.tilegen.tiling.TileIO
 import com.oculusinfo.tilegen.tiling.HBaseTileIO
 import com.oculusinfo.tilegen.tiling.SqliteTileIO
@@ -44,7 +44,6 @@ import java.util.Properties
 import java.io.FileInputStream
 import scala.util.Try
 import org.apache.spark.SparkContext
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper
 import java.util.{List => JavaList}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription
@@ -189,7 +188,7 @@ object GraphAnalyticsBinner {
 	                          hierarchyLevel: Int = 0) = {
 		
 		// Wrap parameters more usefully
-		val properties = new CSVRecordPropertiesWrapper(dataDescription)
+		val properties = new PropertiesWrapper(dataDescription)
 		
 		val source = properties.getString("oculus.binning.source.location", "The hdfs file name from which to get the CSV data")
 		val partitions = properties.getInt("oculus.binning.source.partitions",
@@ -261,7 +260,7 @@ object GraphAnalyticsBinner {
 		 dataAnalytics: Option[AnalysisDescription[((Double, Double), GraphAnalyticsRecord), DT]],
 		 pyramidName: String,
 		 pyramidDescription: String,
-		 properties: CSVRecordPropertiesWrapper,
+		 properties: KeyValueArgumentSource,
 		 hierarchyLevel: Int = 0) =
 	{
 		val tileAnalyticsTag: ClassTag[AT] = tileAnalytics.map(_.analysisTypeTag).getOrElse(ClassTag.apply(classOf[Int]))
@@ -281,7 +280,7 @@ object GraphAnalyticsBinner {
 		 dataAnalytics: Option[AnalysisDescription[((Double, Double), GraphAnalyticsRecord), DT]],
 		 pyramidName: String,
 		 pyramidDescription: String,
-		 properties: CSVRecordPropertiesWrapper,
+		 properties: KeyValueArgumentSource,
 		 hierarchyLevel: Int = 0) =
 	{
 		val recordParser = new GraphAnalyticsRecordParser(hierarchyLevel, properties)
@@ -355,7 +354,7 @@ object GraphAnalyticsBinner {
 	}
 	
 	//----------------
-	def getTilePyramid(properties: CSVRecordPropertiesWrapper): TilePyramid = {
+	def getTilePyramid(properties: KeyValueArgumentSource): TilePyramid = {
 		val autoBounds = properties.getBoolean("oculus.binning.projection.autobounds",
 		                                       "If true, calculate tile pyramid bounds automatically",
 		                                       Some(false))

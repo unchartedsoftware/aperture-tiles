@@ -106,8 +106,8 @@ object TilingTask {
 			// Tell the tiling task constructor about the analytic type tags
 			def withTilingTags[AT: ClassTag, DT: ClassTag] (dataAnalytics: AnalysisWithTag[Seq[Any], DT],
 			                                                tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
-					TilingTask[T, AT, DT, JT] = {
-				new StaticTilingTask[T, AT, DT, JT](sqlc, table, taskConfig, indexer, valuer, deferredPyramid,
+					TilingTask[T, DT, AT, JT] = {
+				new StaticTilingTask[T, DT, AT, JT](sqlc, table, taskConfig, indexer, valuer, deferredPyramid,
 				                                    dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis).initialize()
 			}
 			withTilingTags(dataAnalytics, tileAnalytics)
@@ -144,11 +144,11 @@ object TilingTask {
  * @param dataAnalytics
  *
  * @tparam PT The processing value type used by this tiling task when calculating bin values.
- * @tparam BT The final bin type used by this tiling task when writing tiles.
- * @tparam AT The type of tile analytic used by this tiling task.
  * @tparam DT The type of data analytic used by this tiling task.
+ * @tparam AT The type of tile analytic used by this tiling task.
+ * @tparam BT The final bin type used by this tiling task when writing tiles.
  */
-abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	(sqlc: SQLContext,
 	 table: String,
 	 config: TilingTaskParameters,
@@ -178,6 +178,10 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	def getTilePyramid = {
 		deferredPyramid.getTilePyramid(getAxisBounds)
 	}
+
+	/** Needed just for the TimeRangeBinner */
+	def getIndexer = indexer
+
 
 	/** Inheritors may override this to disallow auto-bounds calculations when they make no sense. */
 	protected def allowAutoBounds = true
@@ -244,7 +248,7 @@ abstract class TilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(minX, maxX, minY, maxY)
 	}
 }
-class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	(sqlc: SQLContext,
 	 table: String,
 	 config: TilingTaskParameters,
@@ -254,12 +258,12 @@ class StaticTilingTask[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 	 dataAnalyticFields: Seq[String],
 	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
 	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
-		extends TilingTask[PT, AT, DT, BT](sqlc, table, config, indexer, valuer, deferredPyramid,
+		extends TilingTask[PT, DT, AT, BT](sqlc, table, config, indexer, valuer, deferredPyramid,
 		                                   dataAnalyticFields, dataAnalytics, tileAnalytics)
 {
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null
-	def initialize (): TilingTask[PT, AT, DT, BT] = {
+	def initialize (): TilingTask[PT, DT, AT, BT] = {
 		initialize(new StaticTilingTaskProcessingStrategy())
 		this
 	}
