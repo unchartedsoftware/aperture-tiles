@@ -96,7 +96,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);
 
 		if ("log10".equals(name)) {
-			return new Log10ValueTransformer(layerMax);
+			return new Log10ValueTransformer(layerMin, layerMax);
 		} else if ("minmax".equals(name)) {
 			double max;
 			if (hasPropertyValue(TRANSFORM_MAXIMUM)) max = getPropertyValue(TRANSFORM_MAXIMUM);
