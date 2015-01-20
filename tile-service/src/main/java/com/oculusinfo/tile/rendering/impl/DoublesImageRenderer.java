@@ -105,8 +105,9 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
 			int[] rgbArray = new int[outputWidth*outputHeight];
 
-			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
+			double scaledMax = rangeMax/100;
+			double scaledMin = rangeMin/100;
+			double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
 
 			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
 
@@ -172,13 +173,10 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 					double binCount = data.getBin(tx + xBinStart, ty + yBinStart);
 					double transformedValue = t.transform(binCount);
-					// Clamp to [0,1], values out of range get ramp end values
-					transformedValue = Math.max(Math.min(transformedValue, 1), 0);
 					int rgb;
 
 					if (binCount > 0) {
-						double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
-						rgb = colorRamp.getRGB( ( transformedValue - scaledLevelMinFreq ) * factor );
+						rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
 					} else {
 						rgb = COLOR_BLANK.getRGB();
 					}
