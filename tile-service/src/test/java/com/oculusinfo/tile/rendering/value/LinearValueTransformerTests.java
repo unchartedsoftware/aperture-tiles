@@ -24,7 +24,7 @@
  */
 package com.oculusinfo.tile.rendering.value;
 
-import com.oculusinfo.tile.rendering.transformations.value.LinearCappedValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.LinearValueTransformer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class LinearValueTransformerTests {
 
 	@Test
 	public void testGeneral () {
-		LinearCappedValueTransformer t = new LinearCappedValueTransformer(100,200);
+		LinearValueTransformer t = new LinearValueTransformer(100,200);
 		Assert.assertEquals(t.transform(100.0), 0, EPS);
 		Assert.assertEquals(t.transform(150.0), 0.5, EPS);
 		Assert.assertEquals(t.transform(200.0), 1, EPS);
@@ -41,14 +41,14 @@ public class LinearValueTransformerTests {
 
 	@Test
 	public void testOutOfBounds () {
-		LinearCappedValueTransformer t = new LinearCappedValueTransformer(100,200);
+		LinearValueTransformer t = new LinearValueTransformer(100,200);
 		Assert.assertEquals(t.transform(90.0), 0, EPS);
 		Assert.assertEquals(t.transform(5000.0), 1, EPS);
 	}
 
 	@Test
 	public void testNegativeSpan () {
-		LinearCappedValueTransformer t = new LinearCappedValueTransformer(-10,20);
+		LinearValueTransformer t = new LinearValueTransformer(-10,20);
 		Assert.assertEquals(t.transform(-10.0), 0, EPS);
 		Assert.assertEquals(t.transform(5.0), 0.5, EPS);
 		Assert.assertEquals(t.transform(20.0), 1, EPS);
