@@ -34,23 +34,23 @@ public class LinearValueTransformerTests {
 	@Test
 	public void testGeneral () {
 		LinearValueTransformer t = new LinearValueTransformer(100,200);
-		Assert.assertEquals(t.transform(100.0), 0, EPS);
-		Assert.assertEquals(t.transform(150.0), 0.5, EPS);
-		Assert.assertEquals(t.transform(200.0), 1, EPS);
+		Assert.assertEquals(0, t.transform(100.0), EPS);
+		Assert.assertEquals(0.5, t.transform(150.0), EPS);
+		Assert.assertEquals(1, t.transform(200.0), EPS);
 	}
 
 	@Test
 	public void testOutOfBounds () {
 		LinearValueTransformer t = new LinearValueTransformer(100,200);
-		Assert.assertEquals(t.transform(90.0), 0, EPS);
-		Assert.assertEquals(t.transform(5000.0), 1, EPS);
+		Assert.assertEquals(0, t.transform(90.0), EPS);
+		Assert.assertEquals(1, t.transform(5000.0), EPS);
 	}
 
 	@Test
 	public void testNegativeSpan () {
 		LinearValueTransformer t = new LinearValueTransformer(-10,20);
-		Assert.assertEquals(t.transform(-10.0), 0, EPS);
-		Assert.assertEquals(t.transform(5.0), 0.5, EPS);
-		Assert.assertEquals(t.transform(20.0), 1, EPS);
+		Assert.assertEquals(0, t.transform(-10.0), EPS);
+		Assert.assertEquals(0.5, t.transform(5.0), EPS);
+		Assert.assertEquals(1, t.transform(20.0), EPS);
 	}
 }
