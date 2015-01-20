@@ -107,7 +107,6 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
             int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
-            double maximumValue = getLevelExtrema(config).getSecond();
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
