@@ -128,11 +128,12 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 	private lazy val _parsed: SchemaRDD = {
 		val separator = _separator
 		val parsers = _parsers
+		val indices = _indices
 		val N = _fields
 		val rowRDD: RDD[Row] = data.map(record =>
 			{
 				val fields = record.split(separator)
-				val values = (0 until N).map(n => parsers(n)(fields(n)))
+				val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
 				row(values:_*)
 			}
 		)
