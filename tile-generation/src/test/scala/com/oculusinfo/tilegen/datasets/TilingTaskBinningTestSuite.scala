@@ -43,7 +43,7 @@ import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 /**
  * Created by nkronenfeld on 11/24/2014.
  */
-class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+class TilingTaskBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
 	val pyramidId = "live-tile test"
 	var dataFile: File = null
 	var pyramidIo: OnDemandAccumulatorPyramidIO = null
@@ -101,7 +101,7 @@ class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with Befo
 		pyramidIo = null
 	}
 
-	test("Simple one-dimensional binning using datasets") {
+	test("Simple one-dimensional binning using TilingTask") {
 		// Noting that visually, the tiles should look exactly as we enter them here.
 		val tile000: TileData[_] =
 			pyramidIo.readTiles(pyramidId, null,

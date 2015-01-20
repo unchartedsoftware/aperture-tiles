@@ -30,7 +30,7 @@ package com.oculusinfo.tilegen.examples.apps
 import java.io.FileInputStream
 import java.util.Properties
 
-import com.oculusinfo.tilegen.datasets._
+import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
 import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.SparkContext
@@ -89,27 +89,26 @@ import scala.reflect.ClassTag
 
 object CSVBinner {
 
-	def processDataset[IT: ClassTag,
-	                   PT: ClassTag,
-	                   DT: ClassTag,
-	                   AT: ClassTag,
-	                   BT] (sc: SparkContext,
-	                        dataset: Dataset[IT, PT, DT, AT, BT],
-	                        tileIO: TileIO): Unit = {
+	def processTask[PT: ClassTag,
+	                DT: ClassTag,
+	                AT: ClassTag,
+	                BT] (sc: SparkContext,
+	                     task: TilingTask[PT, DT, AT, BT],
+	                     tileIO: TileIO): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 
-		val tileAnalytics = dataset.getTileAnalytics
-		val dataAnalytics = dataset.getDataAnalytics
+		val tileAnalytics = task.getTileAnalytics
+		val dataAnalytics = task.getDataAnalytics
 
-		println("Tiling dataset "+dataset.getName)
+		println("Tiling task "+task.getName)
 		println("\tTile analytics: "+tileAnalytics)
 		println("\tData analytics: "+dataAnalytics)
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
 		dataAnalytics.map(_.addGlobalAccumulator(sc))
 
-		dataset.getLevels.map(levels =>
+		task.getLevels.map(levels =>
 			{
 				println("\tProcessing levels "+levels)
 
@@ -121,29 +120,29 @@ object CSVBinner {
 					levels.map(level => analytic.addLevelAccumulator(sc, level))
 				)
 
-				val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
+				val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 					rdd =>
 				{
 					val tiles = binner.processDataByLevel(rdd,
-					                                      dataset.getIndexScheme,
-					                                      dataset.getBinningAnalytic,
+					                                      task.getIndexScheme,
+					                                      task.getBinningAnalytic,
 					                                      tileAnalytics,
 					                                      dataAnalytics,
-					                                      dataset.getTilePyramid,
+					                                      task.getTilePyramid,
 					                                      levels,
-					                                      dataset.getNumXBins,
-					                                      dataset.getNumYBins,
-					                                      dataset.getConsolidationPartitions)
+					                                      task.getNumXBins,
+					                                      task.getNumYBins,
+					                                      task.getConsolidationPartitions)
 
-					tileIO.writeTileSet(dataset.getTilePyramid,
-					                    dataset.getName,
+					tileIO.writeTileSet(task.getTilePyramid,
+					                    task.getName,
 					                    tiles,
-					                    dataset.getTileSerializer,
+					                    task.getTileSerializer,
 					                    tileAnalytics, dataAnalytics,
-					                    dataset.getName,
-					                    dataset.getDescription)
+					                    task.getName,
+					                    task.getDescription)
 				}
-				dataset.process(procFcn, None)
+				task.process(procFcn, None)
 			}
 		)
 	}
@@ -152,13 +151,12 @@ object CSVBinner {
 	 * This function is simply for pulling out the generic params from the DatasetFactory,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
-	                                               dataset: Dataset[IT, PT, DT, AT, BT],
-	                                               tileIO: TileIO): Unit =
-		processDataset(sc, dataset, tileIO)(dataset.indexTypeTag,
-		                                    dataset.binTypeTag,
-		                                    dataset.dataAnalysisTypeTag,
-		                                    dataset.tileAnalysisTypeTag)
+	def processTaskGeneric[PT, DT, AT, BT] (sc: SparkContext,
+	                                        task: TilingTask[PT, DT, AT, BT],
+	                                        tileIO: TileIO): Unit =
+		processTask(sc, task, tileIO)(task.binTypeTag,
+		                              task.dataAnalysisTypeTag,
+		                              task.tileAnalysisTypeTag)
 
 
 
@@ -216,7 +214,7 @@ object CSVBinner {
 			if (cache) sqlc.cacheTable(table)
 
 			// Process the data
-			processDatasetGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO)
+			processTaskGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

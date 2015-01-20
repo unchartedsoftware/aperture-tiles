@@ -37,7 +37,6 @@ import com.oculusinfo.tilegen.tiling.SqliteTileIO
 import com.oculusinfo.tilegen.tiling.LocalTileIO
 import org.apache.avro.file.CodecFactory
 import scala.reflect.ClassTag
-import com.oculusinfo.tilegen.datasets.Dataset
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import org.apache.spark.rdd.RDD
 import java.util.Properties
@@ -60,7 +59,7 @@ import scala.collection.JavaConverters._
  * a graph's edge
  * 
  * The following properties control how the application runs: 
- * (See code comments in CSVDataset.scala for more info and settings)
+ * (See code comments in TilingTask.scala for more info and settings)
  * 
  *            
  *  oculus.binning.hierarchical.clusters

@@ -29,138 +29,18 @@ package com.oculusinfo.tilegen.datasets
 
 
 
-import java.lang.{Integer => JavaInt}
-import java.lang.{Double => JavaDouble}
-import java.util.ArrayList
-import java.util.Properties
-
-import scala.collection.mutable.MutableList
 import scala.reflect.ClassTag
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.Time
 
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.binning.util.Pair
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
-import com.oculusinfo.tilegen.tiling.IndexScheme
 
 
 
 
-/**
- * A Dataset encapsulates all that is needed to retrieve data for binning.
- * The goal is that Datasets can be constructed (via a DatasetFactory) from
- * simple property files, which can be passed into a binning process from any
- * place that needs raw data to be binned.
- */
-abstract class Dataset[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag, BT] {
-	val indexTypeTag = implicitly[ClassTag[IT]]
-	val binTypeTag = implicitly[ClassTag[PT]]
-	val dataAnalysisTypeTag = implicitly[ClassTag[DT]]
-	val tileAnalysisTypeTag = implicitly[ClassTag[AT]]
-	var _debug = true;
-
-
-
-	/**
-	 * Get a name for this dataset
-	 */
-	def getName: String
-
-	/**
-	 * Get a description of this dataset
-	 */
-	def getDescription: String
-
-	def getLevels: Seq[Seq[Int]]
-
-	def getTilePyramid: TilePyramid
-
-	def getNumXBins: Int = 256
-	def getNumYBins: Int = 256
-
-	def getConsolidationPartitions: Option[Int] = None
-	
-	def getIndexScheme: IndexScheme[IT]
-	def getTileSerializer: TileSerializer[BT]
-
-	/**
-	 * Get an analytic that defines how to aggregate this data
-	 */
-	def getBinningAnalytic: BinningAnalytic[PT, BT]
-
-	/**
-	 * Creates a blank metadata describing this dataset
-	 */
-	def createMetaData (pyramidId: String): PyramidMetaData = {
-		val tilePyramid = getTilePyramid
-		val fullBounds = tilePyramid.getTileBounds(
-			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
-		)
-		new PyramidMetaData(pyramidId,
-		                    getDescription,
-		                    getNumXBins, getNumYBins,
-		                    tilePyramid.getTileScheme(),
-		                    tilePyramid.getProjection(),
-		                    null,
-		                    fullBounds,
-		                    new ArrayList[Pair[JavaInt, String]](),
-		                    new ArrayList[Pair[JavaInt, String]]())
-	}
-
-
-	type STRATEGY_TYPE <: ProcessingStrategy[IT, PT, DT]
-
-	protected var strategy: STRATEGY_TYPE
-	def initialize (strategy: STRATEGY_TYPE): Unit = {
-		this.strategy = strategy
-	}
-	
-	
-	/**
-	 * Completely process this data set in some way.
-	 *
-	 * Note that these function may be serialized remotely, so any context-stored
-	 * parameters must be serializable
-	 */
-	def process[OUTPUT] (fcn: (RDD[(IT, PT, Option[DT])]) => OUTPUT,
-	                     completionCallback: Option[OUTPUT => Unit]): Unit = {
-		if (null == strategy) {
-			throw new Exception("Attempt to process uninitialized dataset "+getName)
-		} else {
-			strategy.process(fcn, completionCallback)
-		}
-	}
-
-	def getDataAnalytics: Option[AnalysisDescription[_, DT]]
-
-	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]]
-
-	def transformRDD[OUTPUT_TYPE: ClassTag]
-		(fcn: (RDD[(IT, PT, Option[DT])]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
-		if (null == strategy) {
-			throw new Exception("Attempt to process uninitialized dataset "+getName)
-		} else {
-			strategy.transformRDD[OUTPUT_TYPE](fcn)
-		}
-
-	def transformDStream[OUTPUT_TYPE: ClassTag]
-		(fcn: (RDD[(IT, PT, Option[DT])]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
-		if (null == strategy) {
-			throw new Exception("Attempt to process uninitialized dataset "+getName)
-		} else {
-			strategy.transformDStream[OUTPUT_TYPE](fcn)
-		}
-}
 
 trait StreamingProcessor[IT, PT, DT] {
 	def processWithTime[OUTPUT] (fcn: Time => RDD[(IT, PT, Option[DT])] => OUTPUT,

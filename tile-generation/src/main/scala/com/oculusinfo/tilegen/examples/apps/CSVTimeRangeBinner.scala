@@ -33,6 +33,7 @@ import java.util.Date
 import java.util.Properties
 import java.util.TimeZone
 
+import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TimeRangeCartesianSchemaIndexExtractor, TilingTask}
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.JavaConverters._
@@ -51,7 +52,6 @@ import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
@@ -166,23 +166,23 @@ object CSVTimeRangeBinner {
 	}
 	
 	
-	def processDataset[PT: ClassTag,
-	                   DT: ClassTag,
-	                   AT: ClassTag,
-	                   BT] (sc: SparkContext,
-	                        dataset: TilingTask[PT, DT, AT, BT],
-	                        tileIO: TileIO,
-	                        properties: KeyValueArgumentSource): Unit = {
+	def processTask[PT: ClassTag,
+	                DT: ClassTag,
+	                AT: ClassTag,
+	                BT] (sc: SparkContext,
+	                     task: TilingTask[PT, DT, AT, BT],
+	                     tileIO: TileIO,
+	                     properties: KeyValueArgumentSource): Unit = {
 		val binner = new RDDBinner
 		binner.debug = true
 
-		val tileAnalytics = dataset.getTileAnalytics
-		val dataAnalytics = dataset.getDataAnalytics
+		val tileAnalytics = task.getTileAnalytics
+		val dataAnalytics = task.getDataAnalytics
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
 		dataAnalytics.map(_.addGlobalAccumulator(sc))
 
-		dataset.getLevels.map(levels =>
+		task.getLevels.map(levels =>
 			{
 				// Add level accumulators for all analytics for these levels (for now at least)
 				tileAnalytics.map(analytic =>
@@ -193,7 +193,7 @@ object CSVTimeRangeBinner {
 				)
 
 				val localIndexer: TimeRangeCartesianSchemaIndexExtractor =
-					dataset
+					task
 						.asInstanceOf[TilingTask[PT, AT, DT, BT]]
 						.getIndexer
 						.asInstanceOf[TimeRangeCartesianSchemaIndexExtractor]
@@ -230,15 +230,15 @@ object CSVTimeRangeBinner {
 
 
 							val tiles = binner.processDataByLevel(timeRangeRdd,
-							                                      dataset.getIndexScheme,
-							                                      dataset.getBinningAnalytic,
+							                                      task.getIndexScheme,
+							                                      task.getBinningAnalytic,
 							                                      tileAnalytics,
 							                                      dataAnalytics,
-							                                      dataset.getTilePyramid,
+							                                      task.getTilePyramid,
 							                                      levels,
-							                                      dataset.getNumXBins,
-							                                      dataset.getNumYBins,
-							                                      dataset.getConsolidationPartitions)
+							                                      task.getNumXBins,
+							                                      task.getNumYBins,
+							                                      task.getConsolidationPartitions)
 							// TODO: This doesn't actually write the tiles, does it?
 							// I think we need to write them to do anyting.
 							val rangeMD = tileIO.readMetaData(name).get
@@ -247,33 +247,33 @@ object CSVTimeRangeBinner {
 					).reduce(_ ++ _)
 					
 					writeBaseMetaData(tileIO,
-					                  dataset.getTilePyramid,
-					                  dataset.getName,
+					                  task.getTilePyramid,
+					                  task.getName,
 					                  levelRange,
 					                  tileAnalytics,
 					                  dataAnalytics,
-					                  dataset.getNumXBins,
-					                  dataset.getNumYBins,
-					                  dataset.getName,
-					                  dataset.getDescription)
+					                  task.getNumXBins,
+					                  task.getNumYBins,
+					                  task.getName,
+					                  task.getDescription)
 				}
-				dataset.process(procFcn, None)
+				task.process(procFcn, None)
 			}
 		)
 	}
 
 	/**
-	 * This function is simply for pulling out the generic params from the DatasetFactory,
+	 * This function is simply for pulling out the generic params from the TilingTask
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
-	                                               dataset: TilingTask[PT, DT, AT, BT],
-	                                               tileIO: TileIO,
-	                                               properties: KeyValueArgumentSource):
+	def processTaskGeneric[PT, DT, AT, BT] (sc: SparkContext,
+	                                        task: TilingTask[PT, DT, AT, BT],
+	                                        tileIO: TileIO,
+	                                        properties: KeyValueArgumentSource):
 			Unit =
-		processDataset(sc, dataset, tileIO, properties)(dataset.binTypeTag,
-		                                                dataset.dataAnalysisTypeTag,
-		                                                dataset.tileAnalysisTypeTag)
+		processTask(sc, task, tileIO, properties)(task.binTypeTag,
+		                                          task.dataAnalysisTypeTag,
+		                                          task.tileAnalysisTypeTag)
 
 
 
@@ -337,7 +337,7 @@ object CSVTimeRangeBinner {
 			if (cache) sqlc.cacheTable(table)
 
 			// Process the data
-			processDatasetGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO, props)
+			processTaskGeneric(sc, TilingTask(sqlc, table, rawProps), tileIO, props)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

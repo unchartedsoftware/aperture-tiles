@@ -38,6 +38,7 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
+import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.JavaConverters._
@@ -58,7 +59,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
 
-import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
 
@@ -70,7 +70,7 @@ import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
  */
 class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	private val sc = sqlc.sparkContext
-	private val datasets = MutableMap[String, Dataset[_, _, _, _, _]]()
+	private val tasks = MutableMap[String, TilingTask[_, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
 	private var consolidationPartitions: Option[Int] = Some(1)
 	def eliminateConsolidationPartitions: Unit =
@@ -79,7 +79,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 		consolidationPartitions = Some(partitions)
 	def getConsolidationPartitions = consolidationPartitions
 
-	def getDataset (pyramidId: String) = datasets(pyramidId)
+	def getTask (pyramidId: String) = tasks(pyramidId)
 	
 	def initializeForWrite (pyramidId: String): Unit = {
 	}
@@ -96,9 +96,9 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	def initializeForRead (pyramidId: String,
 	                       width: Int, height: Int,
 	                       dataDescription: Properties): Unit = {
-		if (!datasets.contains(pyramidId)) {
-			datasets.synchronized {
-				if (!datasets.contains(pyramidId)) {
+		if (!tasks.contains(pyramidId)) {
+			tasks.synchronized {
+				if (!tasks.contains(pyramidId)) {
 					// Note our tile width and height appropriately
 					dataDescription.setProperty("oculus.binning.tileWidth", width.toString)
 					dataDescription.setProperty("oculus.binning.tileHeight", height.toString)
@@ -124,7 +124,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 					val newTask = TilingTask(sqlc, table, dataDescription)
 					newTask.getTileAnalytics.map(_.addGlobalAccumulator(sc))
 					newTask.getDataAnalytics.map(_.addGlobalAccumulator(sc))
-					datasets(pyramidId) = newTask
+					tasks(pyramidId) = newTask
 				}
 			}
 		}
@@ -178,16 +178,16 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]):
 			JavaList[TileData[BT]] = {
-		def inner[IT: ClassTag, PT: ClassTag, DT: ClassTag, AT: ClassTag]: JavaList[TileData[BT]] = {
+		def inner[PT: ClassTag, DT: ClassTag, AT: ClassTag]: JavaList[TileData[BT]] = {
 			// Note that all tiles given _must_ have the same dimensions.
-			if (!datasets.contains(pyramidId) || null == javaTiles || !javaTiles.iterator.hasNext) {
+			if (!tasks.contains(pyramidId) || null == javaTiles || !javaTiles.iterator.hasNext) {
 				null
 			} else {
 				val tiles: Iterable[TileIndex] = javaTiles.asScala
-				val dataset = datasets(pyramidId).asInstanceOf[Dataset[IT, PT, DT, AT, BT]]
-				val indexScheme = dataset.getIndexScheme
-				val binningAnalytic = dataset.getBinningAnalytic
-				val pyramid = dataset.getTilePyramid
+				val task = tasks(pyramidId).asInstanceOf[TilingTask[PT, DT, AT, BT]]
+				val indexScheme = task.getIndexScheme
+				val binningAnalytic = task.getBinningAnalytic
+				val pyramid = task.getTilePyramid
 
 				val xBins = tiles.head.getXBins()
 				val yBins = tiles.head.getXBins()
@@ -195,16 +195,16 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 				val levels = tiles.map(_.getLevel).toSet
 
 				// Make sure to gather appropriate metadata
-				dataset.getTileAnalytics.map(analytic =>
+				task.getTileAnalytics.map(analytic =>
 					levels.map(level => analytic.addLevelAccumulator(sc, level))
 				)
-				dataset.getDataAnalytics.map(analytic =>
+				task.getDataAnalytics.map(analytic =>
 					levels.map(level => analytic.addLevelAccumulator(sc, level))
 				)
 
 				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
 				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)
-				val spreaderFcn: IT => TraversableOnce[(TileIndex, BinIndex)] =
+				val spreaderFcn: Seq[Any] => TraversableOnce[(TileIndex, BinIndex)] =
 					index => {
 						val cartesianIndex = indexScheme.toCartesian(index)
 
@@ -215,39 +215,39 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 				val binner = new RDDBinner
 				binner.debug = true
 
-				val results: Array[TileData[BT]] = dataset.transformRDD[TileData[BT]](
+				val results: Array[TileData[BT]] = task.transformRDD[TileData[BT]](
 					rdd => {
-						binner.processData[IT, PT, AT, DT, BT](rdd,
-						                                       binningAnalytic,
-						                                       dataset.getTileAnalytics,
-						                                       dataset.getDataAnalytics,
-						                                       spreaderFcn,
-						                                       consolidationPartitions)
+						binner.processData[Seq[Any], PT, AT, DT, BT](rdd,
+						                                             binningAnalytic,
+						                                             task.getTileAnalytics,
+						                                             task.getDataAnalytics,
+						                                             spreaderFcn,
+						                                             consolidationPartitions)
 					}
 				).collect
 
 				// Update metadata for these levels
-				val datasetMetaData = getMetaData(pyramidId).get
+				val taskMetaData = getMetaData(pyramidId).get
 
-				val newDatasetMetaData =
-					new PyramidMetaData(datasetMetaData.getName(),
-					                    datasetMetaData.getDescription(),
-					                    datasetMetaData.getTileSizeX(),
-					                    datasetMetaData.getTileSizeY(),
-					                    datasetMetaData.getScheme(),
-					                    datasetMetaData.getProjection(),
-					                    datasetMetaData.getValidZoomLevels(),
-					                    datasetMetaData.getBounds(),
+				val newTaskMetaData =
+					new PyramidMetaData(taskMetaData.getName(),
+					                    taskMetaData.getDescription(),
+					                    taskMetaData.getTileSizeX(),
+					                    taskMetaData.getTileSizeY(),
+					                    taskMetaData.getScheme(),
+					                    taskMetaData.getProjection(),
+					                    taskMetaData.getValidZoomLevels(),
+					                    taskMetaData.getBounds(),
 					                    null, null)
-				dataset.getTileAnalytics.map(_.applyTo(newDatasetMetaData))
-				dataset.getDataAnalytics.map(_.applyTo(newDatasetMetaData))
-				newDatasetMetaData.addValidZoomLevels(
+				task.getTileAnalytics.map(_.applyTo(newTaskMetaData))
+				task.getDataAnalytics.map(_.applyTo(newTaskMetaData))
+				newTaskMetaData.addValidZoomLevels(
 					results.map(tile =>
 						new JavaInt(tile.getDefinition().getLevel())
 					).toSet.asJava
 				)
 
-				metaData(pyramidId) = newDatasetMetaData
+				metaData(pyramidId) = newTaskMetaData
 
 				// Finally, return our tiles
 				results.toList.asJava
@@ -275,8 +275,8 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 	private def getMetaData (pyramidId: String): Option[PyramidMetaData] = {
 		if (!metaData.contains(pyramidId) || null == metaData(pyramidId))
-			if (datasets.contains(pyramidId))
-				metaData(pyramidId) = datasets(pyramidId).createMetaData(pyramidId)
+			if (tasks.contains(pyramidId))
+				metaData(pyramidId) = tasks(pyramidId).createMetaData(pyramidId)
 		metaData.get(pyramidId)
 	}
 

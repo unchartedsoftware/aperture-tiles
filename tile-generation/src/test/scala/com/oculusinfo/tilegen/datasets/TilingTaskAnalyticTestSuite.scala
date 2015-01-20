@@ -156,7 +156,7 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 	test("Test min/max values") {
 		// Note that visually, the tiles should look exactly as we enter them here
 
-		val analytics = pyramidIo.getDataset(pyramidId).getTileAnalytics
+		val analytics = pyramidIo.getTask(pyramidId).getTileAnalytics
 		assert(analytics.isDefined)
 
 		val i400 = new TileIndex(4, 0, 0, 4, 4)
@@ -168,7 +168,7 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 	test("Custom analytics") {
 		// Note that visually, the tiles should look exactly as we enter them here
 
-		val analytics = pyramidIo.getDataset(pyramidId).getDataAnalytics
+		val analytics = pyramidIo.getTask(pyramidId).getDataAnalytics
 		assert(analytics.isDefined)
 
 		val i400 = new TileIndex(4, 0, 0, 4, 4)

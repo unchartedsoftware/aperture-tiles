@@ -158,7 +158,16 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 dataAnalyticFields: Seq[String],
 	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
 	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
-		extends Dataset[Seq[Any], PT, DT, AT, BT] {
+{
+	val binTypeTag = implicitly[ClassTag[PT]]
+	val dataAnalysisTypeTag = implicitly[ClassTag[DT]]
+	val tileAnalysisTypeTag = implicitly[ClassTag[AT]]
+
+	type STRATEGY_TYPE <: ProcessingStrategy[Seq[Any], PT, DT]
+	protected var strategy: STRATEGY_TYPE
+
+
+
 	/** Get the name by which the tile pyramid produced by this task should be known. */
 	val getName = {
 		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + config.name
@@ -187,13 +196,13 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	protected def allowAutoBounds = true
 
 	/** The number of bins per tile, along the X axis, in tiles produced by this task */
-	override def getNumXBins = config.tileWidth
+	def getNumXBins = config.tileWidth
 
 	/** The number of bins per tile, along the Y axis, in tiles produced by this task */
-	override def getNumYBins = config.tileHeight
+	def getNumYBins = config.tileHeight
 
 	/** Get the number of partitions to use when reducing data to tiles */
-	override def getConsolidationPartitions = config.consolidationPartitions
+	def getConsolidationPartitions = config.consolidationPartitions
 
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
@@ -205,15 +214,15 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	def getBinningAnalytic = valuer.binningAnalytic
 
 	/** Get the data analytics to be used and inserted into our tiles */
-	def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
+	def getDataAnalytics: Option[AnalysisDescription[Seq[Any], DT]] = dataAnalytics
 
 	/** Get the tile analytics to apply to and record in our tiles */
 	def getTileAnalytics: Option[AnalysisDescription[TileData[BT], AT]] = tileAnalytics
 
 	/**
-	 * Creates a blank metadata describing this dataset
+	 * Creates a blank metadata describing this tiling task
 	 */
-	override def createMetaData(pyramidId: String): PyramidMetaData = {
+	def createMetaData(pyramidId: String): PyramidMetaData = {
 		val tilePyramid = getTilePyramid
 		val fullBounds = tilePyramid.getTileBounds(
 			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
@@ -230,22 +239,66 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	}
 
 
-	private def transformRDD[T](transformation: RDD[(Seq[Any], PT, Option[DT])] => RDD[T]): RDD[T] = {
-		null
-	}
 
+	// Axis-related methods and fields
 	private lazy val axisBounds = getAxisBounds()
 
 	private def getAxisBounds(): (Double, Double, Double, Double) = {
 		val selectStmt =
 			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
-				.mkString("SELECT ", ", ", " FROM " + table)
+					.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
 		val minBounds = bounds.grouped(2).map(_(0)).toSeq
 		val maxBounds = bounds.grouped(2).map(_(1)).toSeq
 		val (minX, minY) = indexer.indexScheme.toCartesian(minBounds)
 		val (maxX, maxY) = indexer.indexScheme.toCartesian(maxBounds)
 		(minX, maxX, minY, maxY)
+	}
+
+
+
+	// Strategy facades
+	/**
+	 * Called to transform the data represented by this TilingTask, assuming it is an RDD
+	 * @param fcn The function to apply to this task's data
+	 * @tparam OUTPUT_TYPE The output type of the resultant RDD
+	 * @return An RDD of this task's data, transformed by the given function.
+	 */
+	def transformRDD[OUTPUT_TYPE: ClassTag]
+	(fcn: (RDD[(Seq[Any], PT, Option[DT])]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized tiling task "+getName)
+		} else {
+			strategy.transformRDD[OUTPUT_TYPE](fcn)
+		}
+
+	/**
+	 * Called to transform the data represented by this TilingTask, assuming it is a DStream
+	 * @param fcn The function to apply to this task's data
+	 * @tparam OUTPUT_TYPE The output type of the resultant DStream
+	 * @return A DStream of this task's data, transformed by the given function.
+	 */
+	def transformDStream[OUTPUT_TYPE: ClassTag]
+	(fcn: (RDD[(Seq[Any], PT, Option[DT])]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized tiling task "+getName)
+		} else {
+			strategy.transformDStream[OUTPUT_TYPE](fcn)
+		}
+
+	/**
+	 * Completely process this data set in some way, whether it is an RDD or a DStream
+	 *
+	 * Note that these function may be serialized remotely, so any context-stored
+	 * parameters must be serializable
+	 */
+	def process[OUTPUT] (fcn: (RDD[(Seq[Any], PT, Option[DT])]) => OUTPUT,
+	                     completionCallback: Option[OUTPUT => Unit]): Unit = {
+		if (null == strategy) {
+			throw new Exception("Attempt to process uninitialized tiling task "+getName)
+		} else {
+			strategy.process(fcn, completionCallback)
+		}
 	}
 }
 class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
@@ -264,7 +317,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null
 	def initialize (): TilingTask[PT, DT, AT, BT] = {
-		initialize(new StaticTilingTaskProcessingStrategy())
+		strategy = new StaticTilingTaskProcessingStrategy()
 		this
 	}
 	class StaticTilingTaskProcessingStrategy
