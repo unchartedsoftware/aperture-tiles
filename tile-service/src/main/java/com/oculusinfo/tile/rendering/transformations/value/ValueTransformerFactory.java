@@ -108,15 +108,12 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 
 			return new LinearValueTransformer(min, max);
 		} else if ("half-sigmoid".equals(name)) {
-            double min = getPropertyValue(LAYER_MINIMUM);
-		    return new HalfSigmoidValueTransformer(min, layerMax);
+		    return new HalfSigmoidValueTransformer(layerMin, layerMax);
 		} else if ("sigmoid".equals(name)) {
-            double min = getPropertyValue(LAYER_MINIMUM);
-            return new SigmoidValueTransformer(min, layerMax);
+            return new SigmoidValueTransformer(layerMin, layerMax);
 		} else {
 			// Linear is default, even if passed an unknown type.
-			double min = getPropertyValue(LAYER_MINIMUM);
-			return new LinearValueTransformer(min, layerMax);
+			return new LinearValueTransformer(layerMin, layerMax);
 		}
 	}
 
