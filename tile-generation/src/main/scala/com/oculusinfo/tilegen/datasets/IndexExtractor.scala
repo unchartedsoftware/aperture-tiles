@@ -131,7 +131,7 @@ class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
 		val fields = getPropertyValue(IndexExtractorFactory.FIELDS_PROPERTY).asScala
 		val xField = fields(0)
 		val yField = if (fields.size < 2) "zero" else fields(1)
-		new CartesianSchemaIndexExtractor(xField, yField)
+		new CartesianIndexExtractor(xField, yField)
 	}
 }
 /**
@@ -140,7 +140,7 @@ class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
  * @param xField The field from which to get the X coordinate of a given record
  * @param yField The field from which to get the Y coordinate of a given record
  */
-class CartesianSchemaIndexExtractor (xField: String, yField: String) extends IndexExtractor() {
+class CartesianIndexExtractor (xField: String, yField: String) extends IndexExtractor() {
 	private def checkForZero (field: String): String = if ("zero" == field) "0" else field
 	@transient lazy private val _fields = Seq(checkForZero(xField), checkForZero(yField))
 	def fields = _fields
@@ -160,7 +160,7 @@ class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: Ja
 		val y1Field = if (fields.size < 4) "zero" else fields(1)
 		val x2Field = if (fields.size < 4) fields(1) else fields(2)
 		val y2Field = if (fields.size < 4) "zero" else fields(3)
-		new LineSegmentSchemaIndexExtractor(x1Field, y1Field, x2Field, y2Field)
+		new LineSegmentIndexExtractor(x1Field, y1Field, x2Field, y2Field)
 	}
 }
 
@@ -171,7 +171,7 @@ class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: Ja
  * @param x2Var The field from which to get the X coordinate of the second point of the described line segment from a given record.
  * @param y2Var The field from which to get the Y coordinate of the second point of the described line segment from a given record.
  */
-class LineSegmentSchemaIndexExtractor (x1Var: String, y1Var: String, x2Var: String, y2Var: String)
+class LineSegmentIndexExtractor (x1Var: String, y1Var: String, x2Var: String, y2Var: String)
 		extends IndexExtractor()
 {
 	@transient lazy private val _fields = Seq(x1Var, y1Var, x2Var, y2Var)
@@ -189,7 +189,7 @@ class IP4VIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[
 	override protected def create (): IndexExtractor = {
 		val fields = getPropertyValue(IndexExtractorFactory.FIELDS_PROPERTY).asScala
 		val ipField = fields(0)
-		new IPv4SchemaIndexExtractor(ipField)
+		new IPv4IndexExtractor(ipField)
 	}
 }
 
@@ -197,7 +197,7 @@ class IP4VIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[
  * An index extractor that extracts an IP address (v4) from a record
  * @param ipField The field from which to get the IPv4 address of a given record
  */
-class IPv4SchemaIndexExtractor (ipField: String) extends IndexExtractor() {
+class IPv4IndexExtractor (ipField: String) extends IndexExtractor() {
 	@transient lazy private val _fields = Seq(ipField)
 	def fields = _fields
 	def indexScheme = new IPv4ZCurveSchemaIndexScheme
@@ -230,7 +230,7 @@ class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
 		val timeField = fields(0)
 		val xField = fields(1)
 		val yField = if (fields.length < 3) "zero" else fields(2)
-		new TimeRangeCartesianSchemaIndexExtractor(timeField, xField, yField, start, period)
+		new TimeRangeCartesianIndexExtractor(timeField, xField, yField, start, period)
 	}
 }
 
@@ -243,7 +243,7 @@ class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
  * @param startDate The start time of the first time bin, as per standard Java date math
  * @param secsPerPeriod The size of each time bin, in seconds
  */
-class TimeRangeCartesianSchemaIndexExtractor (timeVar: String, xVar: String, yVar: String,
+class TimeRangeCartesianIndexExtractor (timeVar: String, xVar: String, yVar: String,
                                               startDate: Double, val secsPerPeriod: Double)
 		extends IndexExtractor()
 {

@@ -33,7 +33,7 @@ import java.util.Date
 import java.util.Properties
 import java.util.TimeZone
 
-import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TimeRangeCartesianSchemaIndexExtractor, TilingTask}
+import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TimeRangeCartesianIndexExtractor, TilingTask}
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.JavaConverters._
@@ -192,11 +192,11 @@ object CSVTimeRangeBinner {
 					levels.map(level => analytic.addLevelAccumulator(sc, level))
 				)
 
-				val localIndexer: TimeRangeCartesianSchemaIndexExtractor =
+				val localIndexer: TimeRangeCartesianIndexExtractor =
 					task
 						.asInstanceOf[TilingTask[PT, AT, DT, BT]]
 						.getIndexer
-						.asInstanceOf[TimeRangeCartesianSchemaIndexExtractor]
+						.asInstanceOf[TimeRangeCartesianIndexExtractor]
 
 				val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = rdd =>
 				{

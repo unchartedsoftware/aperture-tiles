@@ -77,7 +77,7 @@ object TilingTask {
 		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
 		indexerFactory.readConfiguration(jsonConfig)
 
-		val valuerFactory = ValueExtractorFactory2(null, java.util.Arrays.asList("oculus", "binning", "value"))
+		val valuerFactory = ValueExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "value"))
 		valuerFactory.readConfiguration(jsonConfig)
 
 		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))

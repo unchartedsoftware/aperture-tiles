@@ -102,7 +102,7 @@ abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
 /**
  * General constructors and properties for default value extractor factories
  */
-object ValueExtractorFactory2 {
+object ValueExtractorFactory {
 	private[datasets] val FIELD_PROPERTY =
 		new StringProperty("field", "The field used by this value extractor", "")
 	private[datasets] val FIELDS_PROPERTY =
@@ -115,13 +115,13 @@ object ValueExtractorFactory2 {
 	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
 			JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] =
 		Seq[ConfigurableFactory[_ <: ValueExtractor[_, _]]](
-			new CountValueExtractorFactory2(parent, path),
-			new FieldValueExtractorFactory2(parent, path),
-			new MultiFieldValueExtractorFactory2(parent, path),
-			new SeriesValueExtractorFactory2(parent, path),
-			new IndirectSeriesValueExtractorFactory2(parent, path),
-			new StringValueExtractorFactory2(parent, path),
-			new SubstringValueExtractorFactory2(parent, path)
+			new CountValueExtractorFactory(parent, path),
+			new FieldValueExtractorFactory(parent, path),
+			new MultiFieldValueExtractorFactory(parent, path),
+			new SeriesValueExtractorFactory(parent, path),
+			new IndirectSeriesValueExtractorFactory(parent, path),
+			new StringValueExtractorFactory(parent, path),
+			new SubstringValueExtractorFactory(parent, path)
 		).asJava
 
 
@@ -153,7 +153,7 @@ object ValueExtractorFactory2 {
  * @param name The name of this specific value extractor factory; this will be what must be specified as the value
  *             type in configuration files.
  */
-abstract class ValueExtractorFactory2 (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
+abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
 		extends NumericallyConfigurableFactory[ValueExtractor[_,_]](name, classOf[ValueExtractor[_,_]], parent, path)
 		with OptionsFactoryMixin[ValueExtractor[_, _]]
 {
@@ -163,13 +163,13 @@ abstract class ValueExtractorFactory2 (name: String, parent: ConfigurableFactory
  * A constructor for CountValueExtractor2 value extractors.  All arguments are pass-throughs to
  * @see CountValueExtractor2
  */
-class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("count", parent, path)
+class CountValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("count", parent, path)
 {
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		new CountValueExtractor2[T, JT]()(tag, numeric, conversion)
+		new CountValueExtractor[T, JT]()(tag, numeric, conversion)
 	}
 }
 
@@ -178,7 +178,7 @@ class CountValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam T The numeric type to use for the count when processing
  * @tparam JT The numeric type to use for the count when writing tiles (generally a Java version of T)
  */
-class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+class CountValueExtractor[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable
 {
 	def name = "count"
@@ -192,7 +192,7 @@ class CountValueExtractor2[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric
 	def serializer = new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
-object FieldValueExtractorFactory2 {
+object FieldValueExtractorFactory {
 	private[datasets] val FIELD_AGGREGATION_PROPERTY = new StringProperty("aggregation",
 	                                                                      "The way to aggregate the value field when binning",
 	                                                                      "add")
@@ -207,12 +207,12 @@ object FieldValueExtractorFactory2 {
  *
  * @see FieldValueExtractor2
  */
-class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("field", parent, path)
+class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("field", parent, path)
 {
-	import FieldValueExtractorFactory2._
+	import FieldValueExtractorFactory._
 
-	addProperty(ValueExtractorFactory2.FIELD_PROPERTY)
+	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
 	addProperty(FIELD_AGGREGATION_PROPERTY)
 	addProperty(EMPTY_VALUE_PROPERTY)
 	addProperty(MIN_COUNT_PROPERTY)
@@ -220,17 +220,17 @@ class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLis
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
-		val analyticType = getPropertyValue(FieldValueExtractorFactory2.FIELD_AGGREGATION_PROPERTY).toLowerCase()
+		val field = getPropertyValue(ValueExtractorFactory.FIELD_PROPERTY)
+		val analyticType = getPropertyValue(FieldValueExtractorFactory.FIELD_AGGREGATION_PROPERTY).toLowerCase()
 
 		def createFieldExtractor (analytic: BinningAnalytic[T, JT]): ValueExtractor[_, _] =
-			new FieldValueExtractor2[T, JT](field, analytic)(tag, numeric, conversion)
+			new FieldValueExtractor[T, JT](field, analytic)(tag, numeric, conversion)
 
 		def createMeanExtractor (): ValueExtractor[_, _] = {
 			val emptyValue = optionalGet(EMPTY_VALUE_PROPERTY)
 			val minCount = optionalGet(MIN_COUNT_PROPERTY).map(_.intValue())
 
-			new MeanValueExtractor2[T](field, emptyValue, minCount)(tag, numeric)
+			new MeanValueExtractor[T](field, emptyValue, minCount)(tag, numeric)
 		}
 
 		analyticType match {
@@ -252,7 +252,7 @@ class FieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam T The numeric type expected for the field in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class FieldValueExtractor2[T: ClassTag, JT] (field: String, _binningAnalytic: BinningAnalytic[T, JT])
+class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: BinningAnalytic[T, JT])
                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable {
 	def name = field
@@ -274,7 +274,7 @@ class FieldValueExtractor2[T: ClassTag, JT] (field: String, _binningAnalytic: Bi
  * @param minCount The minimum number of records allowed in a bin before it is considered valid.
  * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
  */
-class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
+class MeanValueExtractor[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
                          (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
 	def name = field
@@ -296,16 +296,16 @@ class MeanValueExtractor2[T: ClassTag] (field: String, emptyValue: Option[JavaDo
  *
  * @see SeriesValueExtractor2
  */
-class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("series", parent, path)
+class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("series", parent, path)
 {
-	addProperty(ValueExtractorFactory2.FIELDS_PROPERTY)
+	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		def fields = getPropertyValue(ValueExtractorFactory2.FIELDS_PROPERTY).asScala.toArray
-		new SeriesValueExtractor2[T, JT](fields)(tag, numeric, conversion)
+		def fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
+		new SeriesValueExtractor[T, JT](fields)(tag, numeric, conversion)
 	}
 }
 
@@ -316,7 +316,7 @@ class SeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
+class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String])
                            (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
 	def name = "series"
@@ -335,7 +335,7 @@ class SeriesValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
 		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
-object IndirectSeriesValueExtractor2 {
+object IndirectSeriesValueExtractor {
 	val KEY_PROPERTY = new StringProperty("key",
 	                                      "The field in which to find the key of a given record for the indirect series",
 	                                      "")
@@ -351,23 +351,23 @@ object IndirectSeriesValueExtractor2 {
  * A constructor for IndirectSeriesValueExtractor2 value extractors.  All arguments are pass-throughs to the
  * super-class's constructor.
  *
- * @see IndirectSeriesValueExtractor2
+ * @see IndirectSeriesValueExtractor
  */
-class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("indirectSeries", parent, path)
+class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("indirectSeries", parent, path)
 {
-	addProperty(IndirectSeriesValueExtractor2.KEY_PROPERTY)
-	addProperty(IndirectSeriesValueExtractor2.VALUE_PROPERTY)
-	addProperty(IndirectSeriesValueExtractor2.VALID_KEYS_PROPERTY)
+	addProperty(IndirectSeriesValueExtractor.KEY_PROPERTY)
+	addProperty(IndirectSeriesValueExtractor.VALUE_PROPERTY)
+	addProperty(IndirectSeriesValueExtractor.VALID_KEYS_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		import IndirectSeriesValueExtractor2._
+		import IndirectSeriesValueExtractor._
 		def keyField = getPropertyValue(KEY_PROPERTY)
 		def valueField = getPropertyValue(VALUE_PROPERTY)
 		def validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
-		new IndirectSeriesValueExtractor2[T, JT](keyField, valueField, validKeys)(tag, numeric, conversion)
+		new IndirectSeriesValueExtractor[T, JT](keyField, valueField, validKeys)(tag, numeric, conversion)
 	}
 }
 
@@ -381,7 +381,7 @@ class IndirectSeriesValueExtractorFactory2 (parent: ConfigurableFactory[_], path
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
+class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
                                    (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]]
 {
@@ -409,18 +409,18 @@ class IndirectSeriesValueExtractor2[T: ClassTag, JT] (keyField: String, valueFie
  * A constructor for MultiFieldValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
  * constructor.
  *
- * @see MultiFieldValueExtractor2
+ * @see MultiFieldValueExtractor
  */
-class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("fieldMap", parent, path)
+class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("fieldMap", parent, path)
 {
-	addProperty(ValueExtractorFactory2.FIELDS_PROPERTY)
+	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		val fields = getPropertyValue(ValueExtractorFactory2.FIELDS_PROPERTY).asScala.toArray
-		new MultiFieldValueExtractor2[T, JT](fields)(tag, numeric, conversion)
+		val fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
+		new MultiFieldValueExtractor[T, JT](fields)(tag, numeric, conversion)
 	}
 }
 
@@ -431,7 +431,7 @@ class MultiFieldValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Ja
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
+class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String])
                                (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
 	def name = "fieldMap"
@@ -446,7 +446,7 @@ class MultiFieldValueExtractor2[T: ClassTag, JT] (_fields: Array[String])
 		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
 }
 
-object StringScoreBinningAnalyticFactory2 {
+object StringScoreBinningAnalyticFactory {
 	val AGGREGATION_LIMIT_PROPERTY = new IntegerProperty("aggregationLimit",
 	                                                     "The maximum number of elements to keep internally when calculating bins",
 	                                                     100)
@@ -482,12 +482,12 @@ object StringScoreBinningAnalyticFactory2 {
 				)
 			case _ => None
 		}
-	def addProperties (factory: ValueExtractorFactory2): Unit = {
+	def addProperties (factory: ValueExtractorFactory): Unit = {
 		factory.addProperty(AGGREGATION_LIMIT_PROPERTY)
 		factory.addProperty(BIN_LIMIT_PROPERTY)
 		factory.addProperty(ORDER_PROPERTY)
 	}
-	def getBinningAnalytic[T, JT] (factory: ValueExtractorFactory2)
+	def getBinningAnalytic[T, JT] (factory: ValueExtractorFactory)
 	                      (implicit numeric: ExtendedNumeric[T],
 	                       conversion: TypeConversion[T, JT]): BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = {
 		val aggregationLimit = factory.optionalGet(AGGREGATION_LIMIT_PROPERTY).map(_.intValue())
@@ -502,18 +502,18 @@ object StringScoreBinningAnalyticFactory2 {
  *
  * @see SubstringValueExtractor2
  */
-class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("string", parent, path)
+class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("string", parent, path)
 {
-	addProperty(ValueExtractorFactory2.FIELD_PROPERTY)
-	StringScoreBinningAnalyticFactory2.addProperties(this)
+	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
+	StringScoreBinningAnalyticFactory.addProperties(this)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
-		val binningAnalytic = StringScoreBinningAnalyticFactory2.getBinningAnalytic[T, JT](this)(numeric, conversion)
-		new StringValueExtractor2[T, JT](field, binningAnalytic)(tag, numeric, conversion)
+		val field = getPropertyValue(ValueExtractorFactory.FIELD_PROPERTY)
+		val binningAnalytic = StringScoreBinningAnalyticFactory.getBinningAnalytic[T, JT](this)(numeric, conversion)
+		new StringValueExtractor[T, JT](field, binningAnalytic)(tag, numeric, conversion)
 	}
 }
 /**
@@ -524,7 +524,7 @@ class StringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaLi
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class StringValueExtractor2[T: ClassTag, JT] (field: String,
+class StringValueExtractor[T: ClassTag, JT] (field: String,
                                               _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
                            (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
@@ -540,7 +540,7 @@ class StringValueExtractor2[T: ClassTag, JT] (field: String,
 		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
 }
 
-object SubstringValueExtractorFactory2 {
+object SubstringValueExtractorFactory {
 	val PARSING_DELIMITER_PROPERTY = new StringProperty("parsingDelimiter",
 	                                                    "A delimiter to split the value of the field of interest into parts",
 	                                                    ",")
@@ -561,27 +561,27 @@ object SubstringValueExtractorFactory2 {
  *
  * @see SubstringValueExtractor2
  */
-class SubstringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory2("string", parent, path)
+class SubstringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ValueExtractorFactory("string", parent, path)
 {
-	addProperty(ValueExtractorFactory2.FIELD_PROPERTY)
-	addProperty(SubstringValueExtractorFactory2.PARSING_DELIMITER_PROPERTY)
-	addProperty(SubstringValueExtractorFactory2.AGGREGATION_DELIMITER_PROPERTY)
-	addProperty(SubstringValueExtractorFactory2.INDICES_PROPERTY)
-	StringScoreBinningAnalyticFactory2.addProperties(this)
+	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
+	addProperty(SubstringValueExtractorFactory.PARSING_DELIMITER_PROPERTY)
+	addProperty(SubstringValueExtractorFactory.AGGREGATION_DELIMITER_PROPERTY)
+	addProperty(SubstringValueExtractorFactory.INDICES_PROPERTY)
+	StringScoreBinningAnalyticFactory.addProperties(this)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		import SubstringValueExtractorFactory2._
-		val field = getPropertyValue(ValueExtractorFactory2.FIELD_PROPERTY)
+		import SubstringValueExtractorFactory._
+		val field = getPropertyValue(ValueExtractorFactory.FIELD_PROPERTY)
 		val parsingDelimiter = getPropertyValue(PARSING_DELIMITER_PROPERTY)
 		val aggregationDelimiter = getPropertyValue(AGGREGATION_DELIMITER_PROPERTY)
 		val indices = getPropertyValue(INDICES_PROPERTY).asScala.toSeq.map(p =>
 			(p.getFirst.intValue, p.getSecond.intValue)
 		)
-		val binningAnalytic = StringScoreBinningAnalyticFactory2.getBinningAnalytic[T, JT](this)(numeric, conversion)
-		new SubstringValueExtractor2[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic)(tag, numeric, conversion)
+		val binningAnalytic = StringScoreBinningAnalyticFactory.getBinningAnalytic[T, JT](this)(numeric, conversion)
+		new SubstringValueExtractor[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic)(tag, numeric, conversion)
 	}
 }
 
@@ -594,7 +594,7 @@ class SubstringValueExtractorFactory2 (parent: ConfigurableFactory[_], path: Jav
  * @tparam T The numeric type to use for the counts when processing
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class SubstringValueExtractor2[T: ClassTag, JT] (field: String,
+class SubstringValueExtractor[T: ClassTag, JT] (field: String,
                                                  parsingDelimiter: String,
                                                  aggregationDelimiter: String,
                                                  indices: Seq[(Int, Int)],
