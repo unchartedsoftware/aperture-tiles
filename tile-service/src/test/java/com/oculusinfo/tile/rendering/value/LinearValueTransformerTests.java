@@ -22,27 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations.value;
+package com.oculusinfo.tile.rendering.value;
 
-public class LinearCappedValueTransformer implements ValueTransformer<Double> {
-	private final double _min;
-	private final double _max;
-	private final double _range;
-	
-	public LinearCappedValueTransformer (double minRange, double maxRange) {
-		_min = Math.min(minRange, maxRange);
-		_max = Math.max(minRange, maxRange);
+import com.oculusinfo.tile.rendering.transformations.value.LinearCappedValueTransformer;
+import org.junit.Assert;
+import org.junit.Test;
 
-		_range = _max - _min;
-	}
-	
-	@Override
-	public Double transform(Double value) {
-		return (Math.max(Math.min(value, _max), _min) - _min) / _range;
+public class LinearValueTransformerTests {
+	private final static double EPS = 0.00001;
+
+	@Test
+	public void testGeneral () {
+		LinearCappedValueTransformer t = new LinearCappedValueTransformer(100,200);
+		Assert.assertEquals(t.transform(100.0), 0, EPS);
+		Assert.assertEquals(t.transform(150.0), 0.5, EPS);
+		Assert.assertEquals(t.transform(200.0), 1, EPS);
 	}
 
-	@Override
-	public Double getMaximumValue () {
-		return _max;
+	@Test
+	public void testOutOfBounds () {
+		LinearCappedValueTransformer t = new LinearCappedValueTransformer(100,200);
+		Assert.assertEquals(t.transform(90.0), 0, EPS);
+		Assert.assertEquals(t.transform(5000.0), 1, EPS);
+	}
+
+	@Test
+	public void testNegativeSpan () {
+		LinearCappedValueTransformer t = new LinearCappedValueTransformer(-10,20);
+		Assert.assertEquals(t.transform(-10.0), 0, EPS);
+		Assert.assertEquals(t.transform(5.0), 0.5, EPS);
+		Assert.assertEquals(t.transform(20.0), 1, EPS);
 	}
 }

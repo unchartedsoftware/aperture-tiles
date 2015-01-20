@@ -92,6 +92,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 	@Override
 	protected ValueTransformer create () {
 		String name = getPropertyValue(TRANSFORM_NAME);
+		double layerMin = getPropertyValue(LAYER_MINIMUM);
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);
 
 		if ("log10".equals(name)) {
@@ -103,9 +104,9 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 
 			double min;
 			if (hasPropertyValue(TRANSFORM_MINIMUM)) min = getPropertyValue(TRANSFORM_MINIMUM);
-			else min = getPropertyValue(LAYER_MINIMUM);
+			else min = layerMin;
 
-			return new LinearCappedValueTransformer(min, max, layerMax);
+			return new LinearCappedValueTransformer(min, max);
 		} else if ("half-sigmoid".equals(name)) {
             double min = getPropertyValue(LAYER_MINIMUM);
 		    return new HalfSigmoidValueTransformer(min, layerMax);
@@ -115,7 +116,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		} else {
 			// Linear is default, even if passed an unknown type.
 			double min = getPropertyValue(LAYER_MINIMUM);
-			return new LinearCappedValueTransformer(min, layerMax, layerMax);
+			return new LinearCappedValueTransformer(min, layerMax);
 		}
 	}
 

@@ -85,7 +85,7 @@ public class LegendServiceImpl implements LegendService {
 				min = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
 			}
 			
-			ValueTransformer<Double> t = new LinearCappedValueTransformer(min, max, levelMax);
+			ValueTransformer<Double> t = new LinearCappedValueTransformer(min, max);
 
 			if ( renderHorizontally ) {
 				for (int i = 0; i < width; i++){
