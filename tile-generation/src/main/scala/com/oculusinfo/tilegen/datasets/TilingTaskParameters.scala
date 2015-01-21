@@ -84,13 +84,13 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 	private def parseLevels (levelsDescriptions: Seq[String]): Seq[Seq[Int]] = {
 		levelsDescriptions.map(levelSet =>
 			levelSet.split(',').map(levelRange =>
-			    {
-				    val extrema = levelRange.split('-')
+				{
+					val extrema = levelRange.split('-')
 
-				    if ((0 == extrema.size) || (levelRange=="")) Seq[Int]()
-				    else if (1 == extrema.size) Seq[Int](extrema(0).trim.toInt)
-				    else Range(extrema(0).trim.toInt, extrema(1).trim.toInt+1).toSeq
-			    }
+					if ((0 == extrema.size) || (levelRange=="")) Seq[Int]()
+					else if (1 == extrema.size) Seq[Int](extrema(0).trim.toInt)
+					else Range(extrema(0).trim.toInt, extrema(1).trim.toInt+1).toSeq
+				}
 			).fold(Seq[Int]())(_ ++ _)
 		)
 	}

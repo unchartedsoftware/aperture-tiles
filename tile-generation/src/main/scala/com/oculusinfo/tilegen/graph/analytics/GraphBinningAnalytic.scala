@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 package com.oculusinfo.tilegen.graph.analytics
 
 
@@ -58,5 +58,5 @@ class GraphBinningAnalytic
 
 	def finish (value: GraphAnalyticsRecord): JavaList[GraphAnalyticsRecord] = List(value).asJava
 //		value.values.toList.sortBy(-_.getNumCommunities()).slice(0, 10).asJava
-//	def finish (value: GraphAnalyticsRecord): GraphAnalyticsRecord = value		
+//	def finish (value: GraphAnalyticsRecord): GraphAnalyticsRecord = value
 }

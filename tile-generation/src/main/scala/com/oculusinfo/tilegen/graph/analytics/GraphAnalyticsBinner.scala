@@ -42,7 +42,7 @@ import org.apache.spark.rdd.RDD
 import java.util.Properties
 import java.io.FileInputStream
 import scala.util.Try
-import org.apache.spark.SparkContext
+	import org.apache.spark.SparkContext
 import java.util.{List => JavaList}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.CompositeAnalysisDescription

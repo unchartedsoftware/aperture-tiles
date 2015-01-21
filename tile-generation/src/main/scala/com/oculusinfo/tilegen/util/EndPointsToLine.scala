@@ -65,7 +65,7 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 	 *         line between the two endoint bins.  If the line segment is longer than _maxLen then
 	 *         the middle of the line is faded out.
 	 */
-	 val endpointsToLineBins: (BinIndex, BinIndex, Double) => IndexedSeq[(BinIndex, Double)] =
+	val endpointsToLineBins: (BinIndex, BinIndex, Double) => IndexedSeq[(BinIndex, Double)] =
 		(start, end, binValue) => {
 			
 			val len = calcLen(start, end)
@@ -75,7 +75,7 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 			val (steep, x0, y0, x1, y1) = getPoints(start, end)
 
 			var x0_mid = 0
-			var x1_mid = 0		
+			var x1_mid = 0
 			var x0_slope = 0.0
 			var x1_slope = 0.0
 			if (len > _lenThres) {
@@ -83,9 +83,9 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 				val lenXends = ((x1-x0)*(endsLength.toDouble/len)).toInt
 				x0_mid = lenXends + x0
 				x1_mid = x1 - lenXends
-				x0_slope = -18.4/lenXends	// -18.4 == log(1e-8) -- need to use a very small number here, but > 0 (b/c log(0) = -Inf) 
-							//1.0/lenXends	// slope used for fading-out line pixels for long lines
-				x1_slope = x0_slope //-x0_slope
+				x0_slope = -18.4/lenXends	// -18.4 == log(1e-8) -- need to use a very small number here, but > 0 (b/c log(0) = -Inf)
+					//1.0/lenXends	// slope used for fading-out line pixels for long lines
+					x1_slope = x0_slope //-x0_slope
 			}
 			
 			val deltax = x1-x0
@@ -112,36 +112,36 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 			if (len > _lenThres) {
 				// discard middle of line segment if endpoints are too far apart, and fade out ends
 				if (steep)
-					pixels.filter(bin => (bin.getY() <= x0_mid || bin.getY() >= x1_mid)).map(b => {
-
-						var scale = if (b.getY <= x0_mid) Math.exp((b.getY - x0)*x0_slope) //1.0 - Math.pow((b.getY - x0)*x0_slope, fadeExp)	// fade out line near src endpoint
-									else Math.exp((x1 - b.getY)*x0_slope) //1.0 - Math.pow((x1 - b.getY)*x1_slope, fadeExp)					//  or fade out near dst endpoint
-						scale = if (scale > 1.0) 1.0
+					pixels.filter(bin => (bin.getY() <= x0_mid || bin.getY() >= x1_mid)).map(b =>
+						{
+							var scale = if (b.getY <= x0_mid) Math.exp((b.getY - x0)*x0_slope) //1.0 - Math.pow((b.getY - x0)*x0_slope, fadeExp)	// fade out line near src endpoint
+							else Math.exp((x1 - b.getY)*x0_slope) //1.0 - Math.pow((x1 - b.getY)*x1_slope, fadeExp)					//  or fade out near dst endpoint
+								scale = if (scale > 1.0) 1.0
 								else if (scale < 0.0) 0.0
 								else scale
-						//val scale = if (b.getY <= x0_mid) x0_slope*(b.getY - x0_mid)
-						//			else x1_slope*(b.getY - x1_mid)		
-						(b, scale*binValue)
-					}) 
-					
+							//val scale = if (b.getY <= x0_mid) x0_slope*(b.getY - x0_mid)
+							//			else x1_slope*(b.getY - x1_mid)
+							(b, scale*binValue)
+						}
+					)
 				else
-					pixels.filter(bin => (bin.getX() <= x0_mid || bin.getX() >= x1_mid)).map(b => {
-
-						var scale = if (b.getX <= x0_mid) Math.exp((b.getX - x0)*x1_slope) //1.0 - Math.pow((b.getX - x0)*x0_slope, fadeExp)	// fade out line near src endpoint
-									else Math.exp((x1 - b.getX)*x1_slope) //1.0 - Math.pow((x1 - b.getX)*x1_slope, fadeExp)					//  or fade out near dst endpoint
-						scale = if (scale > 1.0) 1.0
+					pixels.filter(bin => (bin.getX() <= x0_mid || bin.getX() >= x1_mid)).map(b =>
+						{
+							var scale = if (b.getX <= x0_mid) Math.exp((b.getX - x0)*x1_slope) //1.0 - Math.pow((b.getX - x0)*x0_slope, fadeExp)	// fade out line near src endpoint
+							else Math.exp((x1 - b.getX)*x1_slope) //1.0 - Math.pow((x1 - b.getX)*x1_slope, fadeExp)					//  or fade out near dst endpoint
+								scale = if (scale > 1.0) 1.0
 								else if (scale < 0.0) 0.0
 								else scale
-						//val scale = if (b.getX <= x0_mid) x0_slope*(b.getX - x0_mid)
-						//			else x1_slope*(b.getX - x1_mid)		
-						(b, scale*binValue)
-					}) 
-			}
-			else {
+							//val scale = if (b.getX <= x0_mid) x0_slope*(b.getX - x0_mid)
+							//			else x1_slope*(b.getX - x1_mid)
+							(b, scale*binValue)
+						}
+					)
+			} else {
 				pixels.map(b => (b, binValue))	// line section is not too long, so don't 'fade out' (all pixels have scale = 1.0)
 			}
 		}
-	
+
 	/**
 	 * Determine all bins that are required to draw an arc between two endpoint bins.
 	 *
@@ -161,10 +161,10 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 	 *         line between the two endoint bins.  If the line segment is longer than _maxLen then
 	 *         the middle of the arc is faded out.
 	 */
-	 val endpointsToArcBins: (BinIndex, BinIndex, Double) => IndexedSeq[(BinIndex, Double)] =
+	val endpointsToArcBins: (BinIndex, BinIndex, Double) => IndexedSeq[(BinIndex, Double)] =
 		(start, end, binValue) => {
 			var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
-	
+			
 			val len = calcLen(start, end)
 			val endsLength = _tileLen
 			
@@ -205,10 +205,10 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 				val segmentRad = endsLength.toDouble/r // angle of each arc segment (with arclenth = endsLength)
 				midRad0 = startRad - segmentRad
 				midRad1 = stopRad + segmentRad
-				x0_slope = -18.4/segmentRad	// -18.4 == log(1e-8) -- need to use a very small number here, but > 0 (b/c log(0) = -Inf) 
-				//x0_slope = 1.0/segmentRad	// slope used for fading-out line pixels for long lines (note: +ve slope because arcs are CW)
-				x1_slope = x0_slope //-x0_slope
-			}			
+				x0_slope = -18.4/segmentRad	// -18.4 == log(1e-8) -- need to use a very small number here, but > 0 (b/c log(0) = -Inf)
+					//x0_slope = 1.0/segmentRad	// slope used for fading-out line pixels for long lines (note: +ve slope because arcs are CW)
+					x1_slope = x0_slope //-x0_slope
+			}
 			
 			val arcBins = scala.collection.mutable.ArrayBuffer[(BinIndex, Double)]()
 
@@ -243,36 +243,36 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 			}
 
 			//------ Func to save pixel on arc line
-			def saveArcPoint(point: (Int, Int), angle: Double) = {		
+			def saveArcPoint(point: (Int, Int), angle: Double) = {
 				var newAngle = angle
 				if (bWrapNeg && newAngle < 0.0)
 					newAngle += 2.0*Math.PI
-					
+				
 				if (segments==1) {
 					if (newAngle <= startRad && newAngle >= stopRad) {
 						val b = new BinIndex(point._1, point._2)
-						val bin = (b, binValue)		// arc section is not too long, so don't 'fade out' (all pixels have scale = 1.0) 
-						arcBins += bin
+						val bin = (b, binValue)		// arc section is not too long, so don't 'fade out' (all pixels have scale = 1.0)
+							arcBins += bin
 					}
 				}
 				else {
 					if (newAngle <= startRad && newAngle >= midRad0) {
 						val b = new BinIndex(point._1, point._2)
 						var scale = Math.exp((startRad - newAngle)*x0_slope)  //1.0 - Math.pow((startRad - newAngle)*x0_slope, fadeExp)
-						//var scale = x0_slope*(newAngle - midRad0)
-						scale = if (scale > 1.0) 1.0
-								else if (scale < 0.0) 0.0
-								else scale			
+						                                                      //var scale = x0_slope*(newAngle - midRad0)
+							scale = if (scale > 1.0) 1.0
+							else if (scale < 0.0) 0.0
+							else scale
 						val bin = (b, scale*binValue)
 						arcBins += bin
 					}
 					else if (newAngle <= midRad1 && newAngle >= stopRad) {
 						val b = new BinIndex(point._1, point._2)
 						var scale = Math.exp((newAngle - stopRad)*x1_slope)   //1.0 - Math.pow((newAngle - stopRad)*x1_slope, fadeExp)
-						//val scale = x1_slope*(newAngle - midRad1)
-						scale = if (scale > 1.0) 1.0
-								else if (scale < 0.0) 0.0
-								else scale					
+						                                                      //val scale = x1_slope*(newAngle - midRad1)
+							scale = if (scale > 1.0) 1.0
+							else if (scale < 0.0) 0.0
+							else scale
 						val bin = (b, scale*binValue)
 						arcBins += bin
 					}
@@ -317,6 +317,6 @@ class EndPointsToLine(lenThres: Int = 1024, xBins: Int = 256, yBins: Int = 256) 
 		var (x0, y0, x1, y1) = (start.getX(), start.getY(), end.getX(), end.getY())
 		val dx = x1-x0
 		val dy = y1-y0
-		Math.sqrt(dx*dx + dy*dy).toInt	
+		Math.sqrt(dx*dx + dy*dy).toInt
 	}
 }

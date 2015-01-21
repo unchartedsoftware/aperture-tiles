@@ -244,7 +244,7 @@ class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
  * @param secsPerPeriod The size of each time bin, in seconds
  */
 class TimeRangeCartesianIndexExtractor (timeVar: String, xVar: String, yVar: String,
-                                              startDate: Double, val secsPerPeriod: Double)
+                                        startDate: Double, val secsPerPeriod: Double)
 		extends IndexExtractor()
 {
 	@transient lazy private val _scheme = new TimeRangeCartesianSchemaIndexScheme(startDate, secsPerPeriod)

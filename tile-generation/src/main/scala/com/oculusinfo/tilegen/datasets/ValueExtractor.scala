@@ -253,7 +253,7 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: BinningAnalytic[T, JT])
-                          (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                         (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable {
 	def name = field
 	def fields = Seq(field)
@@ -275,7 +275,7 @@ class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: Bin
  * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
  */
 class MeanValueExtractor[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
-                         (implicit numeric: ExtendedNumeric[T])
+                        (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
 	def name = field
 	def fields = Seq(field)
@@ -317,7 +317,7 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String])
-                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                          (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
 	def name = "series"
 	def fields = _fields
@@ -382,7 +382,7 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
-                                   (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                                  (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]]
 {
 	def name = "indirectSeries"
@@ -432,7 +432,7 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String])
-                               (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                              (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
 	def name = "fieldMap"
 	def fields = _fields
@@ -525,8 +525,8 @@ class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class StringValueExtractor[T: ClassTag, JT] (field: String,
-                                              _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
-                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                                             _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
+                          (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
 {
 	def name = field
@@ -595,11 +595,11 @@ class SubstringValueExtractorFactory (parent: ConfigurableFactory[_], path: Java
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class SubstringValueExtractor[T: ClassTag, JT] (field: String,
-                                                 parsingDelimiter: String,
-                                                 aggregationDelimiter: String,
-                                                 indices: Seq[(Int, Int)],
-                                                 _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
-                              (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+                                                parsingDelimiter: String,
+                                                aggregationDelimiter: String,
+                                                indices: Seq[(Int, Int)],
+                                                _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
+                             (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
 {
 	def name = field

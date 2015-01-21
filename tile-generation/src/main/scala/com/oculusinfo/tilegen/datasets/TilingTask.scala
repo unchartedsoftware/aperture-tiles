@@ -246,7 +246,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	private def getAxisBounds(): (Double, Double, Double, Double) = {
 		val selectStmt =
 			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
-					.mkString("SELECT ", ", ", " FROM " + table)
+				.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
 		val minBounds = bounds.grouped(2).map(_(0)).toSeq
 		val maxBounds = bounds.grouped(2).map(_(1)).toSeq
@@ -265,7 +265,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * @return An RDD of this task's data, transformed by the given function.
 	 */
 	def transformRDD[OUTPUT_TYPE: ClassTag]
-	(fcn: (RDD[(Seq[Any], PT, Option[DT])]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
+		(fcn: (RDD[(Seq[Any], PT, Option[DT])]) => RDD[OUTPUT_TYPE]): RDD[OUTPUT_TYPE] =
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized tiling task "+getName)
 		} else {
@@ -279,7 +279,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * @return A DStream of this task's data, transformed by the given function.
 	 */
 	def transformDStream[OUTPUT_TYPE: ClassTag]
-	(fcn: (RDD[(Seq[Any], PT, Option[DT])]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
+		(fcn: (RDD[(Seq[Any], PT, Option[DT])]) => RDD[OUTPUT_TYPE]): DStream[OUTPUT_TYPE] =
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized tiling task "+getName)
 		} else {
