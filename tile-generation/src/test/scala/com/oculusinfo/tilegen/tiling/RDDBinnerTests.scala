@@ -29,6 +29,8 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
 
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
+
 import scala.collection.JavaConverters._
 import scala.util.{Try, Success, Failure}
 
@@ -41,7 +43,6 @@ import org.apache.spark.SharedSparkContext
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
 
-import com.oculusinfo.tilegen.datasets.CountValueExtractor
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 
@@ -70,7 +71,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		                       new NumericSumBinningAnalytic[Double, JavaDouble](),
 		                       tileAnalytics,
 		                       dataAnalytics,
-		                       new CountValueExtractor(),
+		                       new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
 		                       pyramid,
 		                       None,
 		                       pyramidId,
@@ -122,7 +123,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		                       new NumericSumBinningAnalytic[Double, JavaDouble](),
 		                       tileAnalytics,
 		                       dataAnalytics,
-		                       new CountValueExtractor(),
+		                       new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
 		                       pyramid,
 		                       None,
 		                       pyramidId,

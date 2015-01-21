@@ -201,7 +201,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			def MATH_UTIL_BUILD = "${rootDir}/math-utilities/build/libs"
 			def EXPLODED_DIR = "$buildDir/exploded"
 			def EXPLODED_LIBS = EXPLODED_DIR + "/WEB-INF/lib"
-
+			def APPLICATION_DIR = "$projectDir/src/main/webapp"
 
 			// Create a watch daemon thread
 			task watchThread() << {
@@ -216,6 +216,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_DIR
 			}
 			copyClientJsToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyClientJsToExploded.inputs.dir EXPLODED_DIR
 			copyClientJsToExploded.outputs.dir EXPLODED_DIR
 
 			// Copy client css build files into the exploded war
@@ -224,6 +225,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_DIR
 			}
 			copyClientCssToExploded.inputs.dir TILE_CLIENT_BUILD
+			copyClientCssToExploded.inputs.dir EXPLODED_DIR
 			copyClientCssToExploded.outputs.dir EXPLODED_DIR
 
 			// Copy tile-service jar files into the exploded war
@@ -232,6 +234,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
+			copyTileServiceToExploded.inputs.dir EXPLODED_DIR
 			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy binning-utilities jar into the exploded war
@@ -240,6 +243,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyBinningUtilToExploded.inputs.dir BINNING_UTIL_BUILD
+			copyBinningUtilToExploded.inputs.dir EXPLODED_DIR
 			copyBinningUtilToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy math-utilities jar into the exploded war
@@ -248,6 +252,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyMathUtilToExploded.inputs.dir MATH_UTIL_BUILD
+			copyMathUtilToExploded.inputs.dir EXPLODED_DIR
 			copyMathUtilToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy annotation-service jar into the exploded war
@@ -256,7 +261,17 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyAnnotationServiceToExploded.inputs.dir ANNOTATION_SERVICE_BUILD
+			copyAnnotationServiceToExploded.inputs.dir EXPLODED_DIR
 			copyAnnotationServiceToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy the application files into the exploded war
+			task copyAppToExploded(type: Copy) {
+				from fileTree(APPLICATION_DIR)
+			    into EXPLODED_DIR
+			}
+			copyAppToExploded.inputs.dir APPLICATION_DIR
+			copyAppToExploded.inputs.dir EXPLODED_DIR
+			copyAppToExploded.outputs.dir EXPLODED_DIR
 
 			// Configure the watch task
 			watch {
@@ -283,6 +298,10 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    clientCssWatch {
 			        files fileTree(TILE_CLIENT_SRC).include('**/*.css')
 			        tasks ':tile-client:build_debug_css', 'copyClientCssToExploded'
+			    }
+			    appWatch {
+			    	files fileTree(APPLICATION_DIR)
+			        tasks 'copyAppToExploded'
 			    }
 			}
 

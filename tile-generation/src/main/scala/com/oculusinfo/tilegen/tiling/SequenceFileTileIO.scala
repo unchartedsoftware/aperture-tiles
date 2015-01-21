@@ -61,7 +61,6 @@ import com.oculusinfo.binning.io.impl.FileSystemPyramidSource
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 
-import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.ArgumentParser
@@ -155,14 +154,14 @@ class SequenceFileTileIO (connection: String) extends TileIO {
 	override def writeTileSet[BT, AT, DT] (pyramider: TilePyramid,
 	                                       baseLocation: String,
 	                                       data: RDD[TileData[BT]],
-	                                       valueScheme: ValueDescription[BT],
+	                                       serializer: TileSerializer[BT],
 	                                       tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	                                       dataAnalytics: Option[AnalysisDescription[_, DT]],
 	                                       name: String = "unknown",
 	                                       description: String = "unknown"): Unit = {
 		checkBaseLocation(fs, baseLocation, true)
 
-		// Record and report the total number of tiles we write, because it's 
+		// Record and report the total number of tiles we write, because it's
 		// basically free and easy
 		val tileCount = data.context.accumulator(0)
 		// Record the levels we write
@@ -178,8 +177,6 @@ class SequenceFileTileIO (connection: String) extends TileIO {
 		// run it
 		val tileSequence: RDD[(String, Array[Byte])] = data.mapPartitions(iter =>
 			{
-				val serializer = valueScheme.getSerializer
-
 				iter.map(tile =>
 					{
 						val index = tile.getDefinition()

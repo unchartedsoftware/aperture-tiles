@@ -28,6 +28,7 @@ package com.oculusinfo.binning;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.util.Collection;
 
 
@@ -56,7 +57,7 @@ import java.util.Collection;
  * 
  * @author nkronenfeld
  */
-public interface TilePyramid {
+public interface TilePyramid extends Serializable {
 	/**
 	 * Convert from root to tile coordinates
 	 * 

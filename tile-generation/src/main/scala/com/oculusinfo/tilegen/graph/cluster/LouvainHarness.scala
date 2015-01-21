@@ -62,69 +62,64 @@ import org.apache.spark.Logging
  */
 class  LouvainHarness(minProgressFactor:Double,progressCounter:Int) {
 
-  
-  def run[VD: ClassTag](sc:SparkContext,graph:Graph[VD,Long]) = {
-    
-    var louvainGraphTemp = LouvainCore.createLouvainGraph(graph)   
-    var louvainGraph = (Graph(louvainGraphTemp.vertices, LouvainCore.tempPartitionBy(louvainGraphTemp.edges, PartitionStrategy.EdgePartition2D)))
-    					.groupEdges(_+_)
-    louvainGraph.cache
-    
-    
-    var level = -1  // number of times the graph has been compressed
-	var q = -1.0    // current modularity value
-	var halt = false
-    do {
-	  level += 1
-	  println(s"\nStarting Louvain level $level")
-	   
-	  val minProgress = (minProgressFactor * louvainGraph.numVertices).toInt max 10
-	  
-	  // label each vertex with its best community choice at this level of compression
-	  val (currentQ,currentGraph,passes) = LouvainCore.louvain(sc, louvainGraph,minProgress,progressCounter)
-	  currentGraph.cache
-	  louvainGraph.unpersistVertices(blocking=false)
-	  
-	  saveLevel(sc,level,currentQ,currentGraph)
-	  
-	  // If modularity was increased by at least 0.001 compress the graph and repeat
-	  // halt immediately if the community labeling took less than 3 passes
-	  //println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
-	  if (passes > 2 && currentQ > q + 0.001 ){ 	    
-	 	//q = currentQ
-	    //louvainGraph = LouvainCore.compressGraph(louvainGraph)
-	  }
-	  else {
-	    halt = true
-	  }
-	  q = currentQ
-	  louvainGraph = LouvainCore.compressGraph(currentGraph)
-	 
-	}while ( !halt )
-	//level += 1
-	//saveLevel(sc,level,q,louvainGraph)	// save final level after graph compression
-	finalSave(sc,level,q,louvainGraph)  
-  }
+	
+	def run[VD: ClassTag](sc:SparkContext,graph:Graph[VD,Long]) = {
+		
+		var louvainGraphTemp = LouvainCore.createLouvainGraph(graph)
+		var louvainGraph = (Graph(louvainGraphTemp.vertices, LouvainCore.tempPartitionBy(louvainGraphTemp.edges, PartitionStrategy.EdgePartition2D)))
+			.groupEdges(_+_)
+		louvainGraph.cache
+		
+		
+		var level = -1  // number of times the graph has been compressed
+		var q = -1.0    // current modularity value
+		var halt = false
+		do {
+			level += 1
+			println(s"\nStarting Louvain level $level")
+			
+			val minProgress = (minProgressFactor * louvainGraph.numVertices).toInt max 10
+			
+			// label each vertex with its best community choice at this level of compression
+			val (currentQ,currentGraph,passes) = LouvainCore.louvain(sc, louvainGraph,minProgress,progressCounter)
+			currentGraph.cache
+			louvainGraph.unpersistVertices(blocking=false)
+			
+			saveLevel(sc,level,currentQ,currentGraph)
+			
+			// If modularity was increased by at least 0.001 compress the graph and repeat
+			// halt immediately if the community labeling took less than 3 passes
+			//println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
+			if (passes > 2 && currentQ > q + 0.001 ){
+				//q = currentQ
+				//louvainGraph = LouvainCore.compressGraph(louvainGraph)
+			}
+			else {
+				halt = true
+			}
+			q = currentQ
+			louvainGraph = LouvainCore.compressGraph(currentGraph)
 
-  /**
-   * Save the graph at the given level of compression with community labels
-   * level 0 = no compression
-   * 
-   * override to specify save behavior
-   */
-  def saveLevel(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
-    
-  }
-  
-  /**
-   * Complete any final save actions required
-   * 
-   * override to specify save behavior
-   */
-  def finalSave(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
-    
-  }
-  
-  
-  
+		} while ( !halt )
+			//level += 1
+			//saveLevel(sc,level,q,louvainGraph)	// save final level after graph compression
+			finalSave(sc,level,q,louvainGraph)
+	}
+
+	/**
+	 * Save the graph at the given level of compression with community labels
+	 * level 0 = no compression
+	 * 
+	 * override to specify save behavior
+	 */
+	def saveLevel(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
+	}
+
+	/**
+	 * Complete any final save actions required
+	 * 
+	 * override to specify save behavior
+	 */
+	def finalSave(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
+	}	
 }
