@@ -23,7 +23,7 @@
  */
 package com.oculusinfo.annotation;
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 import java.io.Serializable;
 import java.util.*;

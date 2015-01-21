@@ -25,14 +25,11 @@ package com.oculusinfo.factory.providers;
 
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
-import com.oculusinfo.factory.providers.FactoryProvider;
 
 
 
@@ -55,7 +52,10 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 			return path2;
 		if (path2 == null)
 			return path1;
-		return Lists.newArrayList(Iterables.concat(path1, path2));
+		List<String> results = new ArrayList<>(path1.size()+path2.size());
+		results.addAll(path1);
+		results.addAll(path2);
+		return results;
 	}
 
 
@@ -65,7 +65,7 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 
 
 	protected StandardUberFactoryProvider (Set<DelegateFactoryProviderTarget<T>> providers) {
-		_childFactories = Lists.newArrayList();
+		_childFactories = new ArrayList<>();
 		for (DelegateFactoryProviderTarget<T> provider: providers) {
 			_childFactories.add(provider);
 		}
@@ -82,7 +82,7 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 	 * @return The created children.
 	 */
 	protected List<ConfigurableFactory<? extends T>> createChildren (List<String> path) {
-		List<ConfigurableFactory<? extends T>> children = Lists.newArrayList();
+		List<ConfigurableFactory<? extends T>> children = new ArrayList<>();
 		for (DelegateFactoryProviderTarget<T> childProvider: _childFactories) {
 			ConfigurableFactory<? extends T> factory = childProvider.createFactory(path);
 			children.add(factory);

@@ -30,7 +30,7 @@ import java.util.List;
 
 import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 public interface AnnotationSource {
 

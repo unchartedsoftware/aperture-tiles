@@ -37,7 +37,7 @@ import org.junit.Test;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 public class PairAvroSerializerTests {
 	@SafeVarargs

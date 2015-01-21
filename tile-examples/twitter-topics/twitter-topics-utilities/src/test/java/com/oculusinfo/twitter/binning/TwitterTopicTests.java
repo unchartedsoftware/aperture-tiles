@@ -30,7 +30,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 public class TwitterTopicTests {
 

@@ -29,7 +29,7 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 import java.lang.{Double => JavaDouble}
 
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.tilegen.util.ExtendedNumeric
 import com.oculusinfo.tilegen.util.TypeConversion
 

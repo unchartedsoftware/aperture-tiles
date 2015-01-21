@@ -27,7 +27,7 @@ package com.oculusinfo.binning.io.impl;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;

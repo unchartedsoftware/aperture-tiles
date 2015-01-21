@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 
 public class StringLongPairArrayMapJsonSerializerFactory extends ConfigurableFactory<TileSerializer<Map<String, List<Pair<String, Long>>>>> {

@@ -43,7 +43,7 @@ import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.{TilePyramid, TileData}
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.analytics.ArrayBinningAnalytic

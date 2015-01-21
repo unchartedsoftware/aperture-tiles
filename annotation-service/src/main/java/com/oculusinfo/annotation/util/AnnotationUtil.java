@@ -31,7 +31,7 @@ import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

@@ -34,7 +34,8 @@ import java.util.{Properties, ArrayList}
 import com.oculusinfo.binning.impl.{AOITilePyramid, WebMercatorTilePyramid}
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.binning.util.{JsonUtilities, Pair}
+import com.oculusinfo.factory.util.Pair
+import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.binning.{TileIndex, TileData, TilePyramid}
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.tilegen.spark.{DoubleMaxAccumulatorParam, DoubleMinAccumulatorParam}

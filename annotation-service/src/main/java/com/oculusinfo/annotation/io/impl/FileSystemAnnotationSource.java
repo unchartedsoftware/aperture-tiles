@@ -27,7 +27,7 @@ package com.oculusinfo.annotation.io.impl;
 import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 import java.io.File;
 import java.io.FileInputStream;

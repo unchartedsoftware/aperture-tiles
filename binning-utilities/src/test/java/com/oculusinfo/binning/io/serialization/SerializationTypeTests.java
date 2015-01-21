@@ -27,7 +27,7 @@ package com.oculusinfo.binning.io.serialization;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 import org.apache.avro.file.CodecFactory;

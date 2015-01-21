@@ -33,7 +33,7 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

@@ -43,7 +43,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 @SuppressWarnings("deprecation")
 public class SerializationTests {

@@ -29,7 +29,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam;
 import com.oculusinfo.tilegen.spark.MinMaxAccumulableParam;
