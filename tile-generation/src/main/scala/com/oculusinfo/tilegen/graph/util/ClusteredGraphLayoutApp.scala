@@ -37,14 +37,14 @@ object ClusteredGraphLayoutApp {
 
 		val sc = argParser.getSparkConnector.createContext(Some("Clustered Graph Layout"))
 		val sourceDir = argParser.getString("source", "The source directory where to find clustered graph data")
-		val outputDir = argParser.getString("output", "The output location where to save data")		
+		val outputDir = argParser.getString("output", "The output location where to save data")
 		val partitions = argParser.getInt("parts", "The number of partitions into which to read the raw data", Some(0))
 		val consolidationPartitions = argParser.getInt("p", "The number of partitions for data processing. Default=based on input partitions", Some(0))
 		val dataDelimiter = argParser.getString("d", "Delimiter for the source graph data. Default is tab-delimited", Some("\t"))
 		val maxIterations = argParser.getInt("i", "Max number of iterations for force-directed algorithm", Some(500))
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderPercent = argParser.getDouble("border","Percent of parent bounding box to leave as whitespace between neighbouring communities during initial layout. Default is 2 percent", Some(2.0))
-		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))	
+		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))
 		val numNodesThres = argParser.getInt("nThres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
 		val nodeAreaPercent = argParser.getInt("nArea", "Used for Hierarchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 30 percent", Some(30))
 		val bUseEdgeWeights = argParser.getBoolean("eWeight", "Use edge weights, if present, to scale force-directed attraction forces.  Default is false", Some(false))
@@ -55,25 +55,25 @@ object ClusteredGraphLayoutApp {
 		// Hierarchical Force-Directed layout scheme
 		val layouter = new HierarchicFDLayout()
 		
-		layouter.determineLayout(sc, 
-								maxIterations, 
-								maxHierarchyLevel, 
-								partitions, 
-								consolidationPartitions, 
-								sourceDir, 
-								dataDelimiter,
-								(layoutLength,layoutLength),
-								borderPercent,
-								nodeAreaPercent,
-								bUseEdgeWeights,
-								gravity,
-								outputDir)
-																										
+		layouter.determineLayout(sc,
+		                         maxIterations,
+		                         maxHierarchyLevel,
+		                         partitions,
+		                         consolidationPartitions,
+		                         sourceDir,
+		                         dataDelimiter,
+		                         (layoutLength,layoutLength),
+		                         borderPercent,
+		                         nodeAreaPercent,
+		                         bUseEdgeWeights,
+		                         gravity,
+		                         outputDir)
+		
 		val fileEndTime = System.currentTimeMillis()
 		println("Finished hierarchic graph layout job in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")
 		
 		println("DONE!!")
 	}
-		
+	
 	
 }

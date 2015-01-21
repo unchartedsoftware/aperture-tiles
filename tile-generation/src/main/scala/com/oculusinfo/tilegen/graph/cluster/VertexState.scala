@@ -34,21 +34,21 @@ package com.oculusinfo.tilegen.graph.cluster
  */
 class VertexState extends Serializable{
 
-  var community = -1L
-  var communitySigmaTot = 0L
-  var internalWeight = 0L  	// self edges
-  var nodeWeight = 0L  		// out degree
-  var internalNodes = 1L	// number of internal nodes (unweighted)
-  var nodeDegree = 0		// out degree (unweighted)
-  var extraAttributes = ""	// extra node attributes
-  var changed = false
-   
-  override def toString(): String = {
-    "community:"+community+",communitySigmaTot:"+communitySigmaTot+
-    ",internalWeight:"+internalWeight+
-    ",internalNodes:"+internalNodes+
-    ",nodeWeight:"+nodeWeight+
-    ",nodeDegree:"+nodeDegree+
-    ",extraAttributes:"+extraAttributes
-  }
+	var community = -1L
+	var communitySigmaTot = 0L
+	var internalWeight = 0L  	// self edges
+	var nodeWeight = 0L  		// out degree
+	var internalNodes = 1L	// number of internal nodes (unweighted)
+	var nodeDegree = 0		// out degree (unweighted)
+	var extraAttributes = ""	// extra node attributes
+	var changed = false
+	
+	override def toString(): String = {
+		"community:"+community+",communitySigmaTot:"+communitySigmaTot+
+		",internalWeight:"+internalWeight+
+		",internalNodes:"+internalNodes+
+		",nodeWeight:"+nodeWeight+
+		",nodeDegree:"+nodeDegree+
+		",extraAttributes:"+extraAttributes
+	}
 }
