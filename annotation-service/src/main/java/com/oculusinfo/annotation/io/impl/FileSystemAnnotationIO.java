@@ -27,6 +27,7 @@ package com.oculusinfo.annotation.io.impl;
 import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.io.impl.PyramidSource;
 import com.oculusinfo.binning.util.Pair;
 
 import java.io.File;
@@ -38,87 +39,44 @@ import java.util.List;
 
 
 public class FileSystemAnnotationIO implements AnnotationIO {
-	private String _rootPath;
-	private String _extension;
-	public final static String ANNOTATIONS_FOLDERNAME  = "data";
 
-	public FileSystemAnnotationIO (String rootPath, String extension){
-		//if there's no root path, then it should be based on a relative path, so make sure to set root path to '.'
-		if (rootPath == null || rootPath.trim().length() == 0) {
-			rootPath = "./";
-		}
-		
-		//make sure the root path ends with a slash
-		_rootPath = (rootPath.trim().endsWith("/"))? rootPath : rootPath.trim() + "/";
-		_extension = extension;
+	private AnnotationSource _source;
+
+	public FileSystemAnnotationIO(AnnotationSource source){
+		_source = source;
 	}
 
-	public Object getRootPath () {
-		return _rootPath;
+	public AnnotationSource getSource () {
+		return _source;
 	}
-
-	private File getAnnotationFile (String basePath, Pair<String, Long> certificate) {
-		return new File(String.format("%s/" + ANNOTATIONS_FOLDERNAME
-		                              + "/%s." + _extension,
-		                              _rootPath + basePath,
-		                              certificate.getFirst() ) );
-	}
-	
 
 	@Override
 	public void initializeForWrite (String basePath) throws IOException {
+		_source.initializeForWrite( basePath );
 	}
 
 	@Override
 	public void writeData (String basePath, AnnotationSerializer serializer,
 	                            Iterable<AnnotationData<?>> data) throws IOException {
-		for (AnnotationData<?> d: data) {
-			File annotationFile = getAnnotationFile( basePath, d.getCertificate() );
-			File parent = annotationFile.getParentFile();
-			if (!parent.exists()) parent.mkdirs();
-
-			FileOutputStream fileStream = new FileOutputStream(annotationFile);
-			serializer.serialize(d, fileStream);
-			fileStream.close();
-		}
+		_source.writeData( basePath, serializer, data );
 	}
-
 
 	@Override
-	public void initializeForRead(String pyramidId) {
+	public void initializeForRead(String basePath) {
 		// Noop
+		_source.initializeForRead( basePath );
 	}
 
-	
 	@Override
 	public List<AnnotationData<?>> readData (String basePath,
 	                                        AnnotationSerializer serializer,
 	                                        Iterable<Pair<String, Long>> certificates) throws IOException {
-		List<AnnotationData<?>> results = new LinkedList<>();
-		for (Pair<String, Long> certificate: certificates) {
-			if (certificate == null) {
-				continue;
-			}
-			File annotationFile = getAnnotationFile(basePath, certificate);
-
-			if (annotationFile.exists() && annotationFile.isFile()) {
-				FileInputStream stream = new FileInputStream(annotationFile);
-				AnnotationData<?> data = serializer.deserialize(stream);
-				results.add(data);
-				stream.close();
-			}
-		}
-		return results;
+		return _source.readData( basePath, serializer, certificates );
 	}
-
 
 	@Override
 	public void removeData (String basePath, Iterable<Pair<String, Long>> certificates ) throws IOException {
-		
-		for (Pair<String, Long> certificate: certificates) {
-			File annotationFile = getAnnotationFile(basePath, certificate);
-			annotationFile.delete();
-		}
+		_source.removeData( basePath, certificates );
 	}
     
 }

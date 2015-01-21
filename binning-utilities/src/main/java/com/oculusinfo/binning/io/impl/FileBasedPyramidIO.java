@@ -24,50 +24,50 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
-public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
-	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
+/**
+ * Implements a PyramidIO for reading tiles that are based on the filesystem (zip, resource, or directory)
+ * 	This class will be injected with a PyramidSource object that will provide the necesarry tile access depending
+ *  on the particular type of file system tile used.
+ *  
+ */
+public class FileBasedPyramidIO implements PyramidIO {
 	
-	private PyramidStreamSource _stream;
+	private PyramidSource _source;
 	
-	public ResourceStreamReadOnlyPyramidIO(PyramidStreamSource stream){
-		_stream = stream;
+	public FileBasedPyramidIO(PyramidSource source){
+		_source = source;
 	}
 
-	public PyramidStreamSource getStream () {
-		return _stream;
+	public PyramidSource getSource () {
+		return _source;
 	}
 
 	@Override
 	public void initializeForWrite (String basePath) throws IOException {
-		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+		_source.initializeForWrite(basePath);
 	}
 
 	@Override
 	public <T> void writeTiles (String basePath, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
     	
-		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+		_source.writeTiles(basePath, serializer, data);
 	}
 
 	@Override
 	public void writeMetaData (String basePath, String metaData) throws IOException {
-		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+		_source.writeMetaData(basePath, metaData);
 	}
 
 	@Override
@@ -79,44 +79,23 @@ public class ResourceStreamReadOnlyPyramidIO implements PyramidIO {
 	public <T> List<TileData<T>> readTiles (String basePath,
 	                                        TileSerializer<T> serializer,
 	                                        Iterable<TileIndex> tiles) throws IOException {
-		List<TileData<T>> results = new LinkedList<TileData<T>>();
-		for (TileIndex tile: tiles) {
-			InputStream stream = _stream.getTileStream(basePath, tile);
-			//stream will be null if the tile cannot be found
-			if(stream==null){
-				LOGGER.info("no tile data found for " + tile.toString() );
-				continue;
-			}
-            
-			TileData<T> data = serializer.deserialize(tile, stream);
-			results.add(data);
-			stream.close();
-		}
-		return results;
+		return _source.readTiles(basePath, serializer, tiles);
 	}
 
 	@Override
 	public <T> InputStream getTileStream (String basePath,
 	                                      TileSerializer<T> serializer,
 	                                      TileIndex tile) throws IOException {
-		return _stream.getTileStream(basePath, tile);
+		return _source.getTileStream(basePath, serializer, tile);
 	}
 
 	@Override
 	public String readMetaData (String basePath) throws IOException {
-		InputStream stream = _stream.getMetaDataStream(basePath);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-		String rawMetaData = "";
-		String line;
-		while (null != (line = reader.readLine())) {
-			rawMetaData = rawMetaData + line;
-		}
-		reader.close();
-		return rawMetaData;
+		return _source.readMetaData(basePath);
 	}
 	
 	@Override
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
-		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
+		_source.removeTiles(id, tiles);
 	}
 }

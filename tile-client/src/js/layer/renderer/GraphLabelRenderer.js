@@ -44,15 +44,20 @@
 
     /**
      * Instantiate a GraphLabelRenderer object.
+     * @class GraphLabelRenderer
+     * @augments Renderer
+     * @classDesc A Renderer implementation that renders a set of graph labels.
      *
      * @param spec {Object} The specification object.
+     * <pre>
      * {
      *     text: {
-     *         xKey   {String} The attribute for the x coordinate.
-     *         yKey   {String} The attribute for the y coordinate.
-     *         themes {Array}  The array of RenderThemes to be attached to this component.
+     *         xKey   {String} - The attribute for the x coordinate.
+     *         yKey   {String} - The attribute for the y coordinate.
+     *         themes {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
+     * </pre>
      */
     function GraphLabelRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value[0].communities";
@@ -62,6 +67,15 @@
 
     GraphLabelRenderer.prototype = Object.create( Renderer.prototype );
 
+    /**
+     * Implementation specific rendering function.
+     * @memberof GraphLabelRenderer
+     * @private
+     *
+     * @param {Object} data - The raw data for a tile to be rendered.
+     *
+     * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
+     */
     GraphLabelRenderer.prototype.render = function( data ) {
 
         var GRAPH_COORD_RANGE = 256,

@@ -35,7 +35,7 @@ import java.beans.PropertyChangeListener;
 
 
 /**
- * Class to allow a user to specify parameters for a FileSystemPyramidIO, and to
+ * Class to allow a user to specify parameters for a SQLitePyramidIO, and to
  * create one.
  * 
  * @author nkronenfeld

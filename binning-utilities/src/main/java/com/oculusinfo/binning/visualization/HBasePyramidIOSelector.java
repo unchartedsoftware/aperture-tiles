@@ -37,7 +37,7 @@ import java.io.IOException;
 
 
 /**
- * Class to allow a user to specify parameters for a FileSystemPyramidIO, and to
+ * Class to allow a user to specify parameters for a HBasePyramidIO, and to
  * create one.
  * 
  * @author nkronenfeld

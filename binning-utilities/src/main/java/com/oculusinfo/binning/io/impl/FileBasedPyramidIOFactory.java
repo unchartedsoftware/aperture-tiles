@@ -34,35 +34,60 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 
-public class ResourcePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ResourcePyramidIOFactory.class);
+/**
+ * Extends a ConfigurableFactory for file system based (zip, resource, or directory) PyramidIO types.
+ * 	This class will be injected with a PyramidSource object that will provide the necesarry tile access depending
+ *  on the particular type of file system tile used.
+ *  
+ */
+public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(FileBasedPyramidIOFactory.class);
 
-
+	public static final String NAME = "file";
 
 	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
-		   "Indicates the root path of the tile pyramid - a package name.  There is no default for this property.",
+		   "Indicates the root path of the tile pyramid - the full path to an archive file(zip), directory, or resource location."
+		   + "  There is no default for this property.",
 		   null);
 	public static StringProperty EXTENSION              = new StringProperty("extension",
 		   "The file extension which the serializer should expect to find on individual tiles.",
 		   "avro");
 	
-	public ResourcePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
-		super("resource", PyramidIO.class, parent, path);
+	public FileBasedPyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+		super(NAME, PyramidIO.class, parent, path);
 		
 		addProperty(ROOT_PATH);
 		addProperty(EXTENSION);
 	}
 
+
 	@Override
 	protected PyramidIO create() {
 		try {
-			String rootPath = getPropertyValue(ROOT_PATH);
+			String rootpath = getPropertyValue(ROOT_PATH).trim();
 			String extension = getPropertyValue(EXTENSION);
-			PyramidStreamSource source = new ResourcePyramidStreamSource(rootPath, extension);
-			return new ResourceStreamReadOnlyPyramidIO(source);
+			PyramidSource source = null;
+			
+			if (rootpath.endsWith(".zip")) {
+				// currently only handle zip, can expand to others (tar, rar, etc...)
+				// We need a cache of zip sources - they are slow to read.
+				source = ZipResourcePyramidSource.getZipSource(rootpath, extension);					
+			} else if (rootpath.startsWith("file://")) {
+				// a file/directory on the file system
+				rootpath = rootpath.substring(7);
+				source = new FileSystemPyramidSource(rootpath, extension); 
+			} else if (rootpath.startsWith("res://")) {
+				// a file/directory within the webapp resources
+				rootpath = rootpath.substring(6);
+				source = new ResourcePyramidSource(rootpath, extension);
+			} else {
+				// no prefix / postfix supplied, default to file for legacy support
+				source = new FileSystemPyramidSource(rootpath, extension);
+			}
+			return new FileBasedPyramidIO(source);
 		}
 		catch (Exception e) {
-			LOGGER.error("Error trying to create ResourcePyramidIO", e);
+			LOGGER.error("Error trying to create FileBasedPyramidIO", e);
 		}
 		return null;
 	}

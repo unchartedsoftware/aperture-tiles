@@ -23,11 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A base layer object that serves as the underlying layer of the map. Supports
- * blank baselayers that are simply a color, geographic baselayers using the
- * Google Maps API, or standard TMS layers.
- */
 ( function() {
 
 	"use strict";
@@ -36,20 +31,27 @@
 
     /**
      * Instantiate a BaseLayer object.
+     * @class BaseLayer
+     * @augments Layer
+     * @classdesc A base layer object that serves as the underlying layer of the
+     *            map. Supports blank baselayers that are simply a color, geographic
+     *            baselayers using the Google Maps API, or standard TMS layers.
      *
      * @param spec {Object} The specification object.
+     * <pre>
      * {
-     *     type    {String}  The type of baselayer, ["Blank", "Google", "TMS"]. Default = "Blank"
-     *     opacity {float}   The opacity of the layer. Default = 1.0
-     *     enabled {boolean} Whether the layer is visible or not. Default = true
-     *     url     {String}  if TMS layer, the url for tile requests. Default = undefined
-     *     options {Object}  type specific instantiation attributes. Default = {color:rgb(0,0,0)}
+     *     type    {String}  - The type of baselayer, ["Blank", "Google", "TMS"]. Default = "Blank"
+     *     opacity {float}   - The opacity of the layer. Default = 1.0
+     *     enabled {boolean} - Whether the layer is visible or not. Default = true
+     *     url     {String}  - if TMS layer, the url for tile requests. Default = undefined
+     *     options {Object}  - type specific instantiation attributes. Default = {color:rgb(0,0,0)}
      * }
+     *</pre>
      */
 	function BaseLayer( spec ) {
         // set defaults
         spec = spec || {};
-        spec.type = spec.type || "Blank";
+        spec.type = spec.type || "blank";
         spec.options = spec.options || {
             color : "rgb(0,0,0)"
         };
@@ -60,20 +62,25 @@
 
     BaseLayer.prototype = Object.create( Layer.prototype );
 
+    /**
+     * Activates the layer object. This should never be called manually.
+     * @memberof AnnotationLayer
+     * @private
+     */
     BaseLayer.prototype.activate = function() {
 
         var spec = this.spec,
             styledMapType;
 
-        switch ( this.spec.type ) {
+        switch ( this.spec.type.toLowerCase() ) {
 
-            case "Blank":
+            case "blank":
 
                 this.olLayer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
                 this.map.getElement().style['background-color'] = spec.options.color;
                 break;
 
-            case "Google":
+            case "google":
 
                 if ( spec.options.styles ) {
                     spec.options.type = "styled";
@@ -81,7 +88,7 @@
                 this.olLayer = new OpenLayers.Layer.Google( "BaseLayer", spec.options );
                 break;
 
-            case "TMS":
+            case "tms":
 
                 this.olLayer = new OpenLayers.Layer.TMS( "BaseLayer", spec.url, spec.options );
                 break;
@@ -102,6 +109,11 @@
         this.setVisibility( this.getVisibility() );
     };
 
+    /**
+     * Dectivates the layer object. This should never be called manually.
+     * @memberof AnnotationLayer
+     * @private
+     */
     BaseLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );

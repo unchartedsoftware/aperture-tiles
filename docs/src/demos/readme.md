@@ -36,7 +36,7 @@ Among the interesting patterns that the demo reveals are:
 
 The source dataset for this demo was acquired from the [NYC Taxi and Limousine Commission](http://www.nyc.gov/html/tlc/html/home/home.shtml) by [Chris Whong](http://chriswhong.com/open-data/foil_nyc_taxi/) through a Freedom of Information Law (FOIL) request. Each trip record contains latitude/longitude coordinates and timestamps for the pickup and drop-off locations, along with other stats related to the fare, tip and taxes.
 
-&gt; Explore the [NYC Taxi Trip demo](https://strata.oculusinfo.com/nyc-taxi/?map=6&baselayer=0)
+&gt; Explore the [NYC Taxi Trip demo](http://aperturetiles.com/nyc-taxi/?map=6&baselayer=0)
 
 Tile-based Heatmap of Twitter Messages
 --------------------------------------

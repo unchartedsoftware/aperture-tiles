@@ -25,7 +25,8 @@
 package com.oculusinfo.binning.visualization;
 
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.FileSystemPyramidIO;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIO;
+import com.oculusinfo.binning.io.impl.FileSystemPyramidSource;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -38,7 +39,7 @@ import java.io.File;
 
 
 /**
- * Class to allow a user to specify parameters for a FileSystemPyramidIO, and to
+ * Class to allow a user to specify parameters for a FileSystemPyramidSource, and to
  * create one.
  * 
  * @author nkronenfeld
@@ -50,7 +51,7 @@ public class FileSystemPyramidIOSelector extends JPanel implements PyramidIOSele
 
 	private String              _rootPath;
 	private String              _extension;
-	private FileSystemPyramidIO _io;
+	private FileBasedPyramidIO	_io;
 	private JTextField          _rootPathField;
 	private JTextField          _extensionField;
 	private JFileChooser        _fileChooser;
@@ -141,9 +142,9 @@ public class FileSystemPyramidIOSelector extends JPanel implements PyramidIOSele
 	}
 
 	private void updatePyramid () {
-		FileSystemPyramidIO oldIO = _io;
+		FileBasedPyramidIO oldIO = _io;
 		if (null != _rootPath && null != _extension) {
-			_io = new FileSystemPyramidIO(_rootPath, _extension);
+			_io = new FileBasedPyramidIO(new FileSystemPyramidSource(_rootPath, _extension));
 			firePropertyChange(BinVisualizer.PYRAMID_IO, oldIO, _io);
 		} else if (null != _io) {
 			_io = null;

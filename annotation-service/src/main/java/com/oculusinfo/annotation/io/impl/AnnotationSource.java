@@ -22,14 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileIndex;
+package com.oculusinfo.annotation.io.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.util.List;
 
-public interface PyramidStreamSource {
-	public InputStream getTileStream(String basePath, TileIndex tile) throws IOException;
-	public InputStream getMetaDataStream (String basePath) throws IOException;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
+import com.oculusinfo.binning.util.Pair;
+
+public interface AnnotationSource {
+
+	public void initializeForWrite (String basePath) throws IOException;
+
+	public void writeData (String basePath, AnnotationSerializer serializer,
+	                            Iterable<AnnotationData<?>> data) throws IOException;
+
+	public void initializeForRead(String basePath);
+
+	public List<AnnotationData<?>> readData (String basePath,
+	                                        AnnotationSerializer serializer,
+	                                        Iterable<Pair<String, Long>> certificates) throws IOException;
+
+	public void removeData (String basePath, Iterable<Pair<String, Long>> certificates ) throws IOException;
 }

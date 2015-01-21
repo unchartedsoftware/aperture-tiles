@@ -23,11 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A client rendered layer object. Uses JSON data retrieved from the server
- * in conjunction with a Renderer object or html function to create interactible
- * DOM elements.
- */
 ( function() {
 
     "use strict";
@@ -38,20 +33,23 @@
         PubSub = require('../util/PubSub');
 
     /**
-     * Instantiate a client renderer layer, passing the "top-tweets" layer as its source.
+     * Instantiate a ClientLayer object.
+     * @class ClientLayer
+     * @augments Layer
+     * @classdesc A client rendered layer object. Uses JSON data retrieved from the
+     *            server in conjunction with a Renderer object or html function to
+     *            create interactable DOM elements.
      *
-     * opacity {float}   The opacity of the layer. Default = 1.0
-     * enabled {boolean} Whether the layer is visible or not. Default = true
-     * zIndex {integer}  The z index of the layer. Default = 1000
-     *
-     * Rendering options:
-     *
-     *     renderer {Renderer} The tile renderer object.
-     *
-     *          or
-     *
-     *     html {String|Function|HTMLElement|jQuery} The html for the tile.
-     *
+     * @param {Object} spec - The specification object.
+     * <pre>
+     * {
+     *     opacity  {float}    - The opacity of the layer. Default = 1.0
+     *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
+     *     zIndex   {integer}  - The z index of the layer. Default = 1000
+     *     renderer {Renderer} - The tile renderer object. (optional)
+     *     html {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     * }
+     * </pre>
      */
     function ClientLayer( spec ) {
         // set reasonable defaults
@@ -63,6 +61,11 @@
 
     ClientLayer.prototype = Object.create( Layer.prototype );
 
+    /**
+     * Activates the layer object. This should never be called manually.
+     * @memberof ClientLayer
+     * @private
+     */
     ClientLayer.prototype.activate = function() {
 
         // add the new layer
@@ -95,6 +98,11 @@
         }
     };
 
+    /**
+     * Dectivates the layer object. This should never be called manually.
+     * @memberof ClientLayer
+     * @private
+     */
     ClientLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
@@ -103,21 +111,30 @@
     };
 
     /**
-     * Updates the theme associated with the layer
+     * Updates the theme associated with the layer.
+     * @memberof ClientLayer
+     *
+     * @param {String} theme - The theme identifier string.
      */
     ClientLayer.prototype.setTheme = function( theme ) {
         this.spec.theme = theme;
     };
 
     /**
-     * Get the current theme for the layer
+     * Get the current theme for the layer.
+     * @memberof ClientLayer
+     *
+     * @returns {String} The theme identifier string.
      */
     ClientLayer.prototype.getTheme = function() {
         return this.spec.theme;
     };
 
     /**
-     * @param zIndex {number} The new z-order value of the layer, where 0 is front.
+     * Set the z index of the layer.
+     * @memberof ClientLayer
+     *
+     * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
      */
     ClientLayer.prototype.setZIndex = function ( zIndex ) {
         // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
@@ -130,7 +147,10 @@
     };
 
     /**
-     * Get the layers zIndex
+     * Get the layers zIndex.
+     * @memberof ClientLayer
+     *
+     * @returns {integer} The zIndex for the layer.
      */
     ClientLayer.prototype.getZIndex = function () {
         return this.spec.zIndex;

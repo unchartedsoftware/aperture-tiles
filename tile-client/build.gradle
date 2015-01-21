@@ -2,28 +2,69 @@ plugins {
 	id "com.moowork.gulp" version "0.1"
 }
 
+// pull in maven publish plugin to let us upload the .zip file
+apply plugin: 'maven-publish'
+
+// module description
 description = "A basic map client that allows for client-side user interaction with"
 
-task exportClientFiles {
-	ext.clientOutput = file(buildDir)
-}
+// The 'test' task is typically provided by the 'java' plugin, an empty task is added here to 
+// provide a similar interface.
+task test {}
+test.dependsOn assemble
+test.dependsOn gulp_test
 
+/**
+ *	DEBUG BUILD (builds non-minified files with source maps, assumes dependencies are installed)
+ */
+// empty tasks for debug build, these are called by the 'watch' plugin in an external build file
+task build_debug_js {}
+task build_debug_css {}
+// build js
+gulp_debugjs.inputs.dir "$projectDir/src"
+gulp_debugjs.outputs.dir "$buildDir"
+build_debug_js.dependsOn gulp_debugjs
+// build css
+gulp_debugcss.inputs.dir "$projectDir/src"
+gulp_debugcss.outputs.dir "$buildDir"
+build_debug_css.dependsOn gulp_debugcss
+
+/**
+ *	FULL BUILD (builds everything, will check for dependencies)
+ */
+
+// gulp_build task calls 'gulp build'
 gulp_build.inputs.dir "$projectDir/src"
 gulp_build.outputs.dir "$buildDir"
-gulp_build.dependsOn 'installGulp'
 gulp_build.dependsOn 'npmInstall'
 
-exportClientFiles.dependsOn gulp_build
+npmInstall.outputs.dir "$projectDir/node_install"
 
-assemble.dependsOn exportClientFiles
-
-// Define a configuration for the war overlay process.
-configurations {
-	clientFiles
+// take the files from the build directory and zip them
+task zipMinifiedFiles(type: Zip) {
+ 	from buildDir
+ 	include "*.js", "*.css"
+ 	destinationDir file( buildDir.getPath() + "/distribution" ) 
 }
+zipMinifiedFiles.dependsOn gulp_build
+assemble.dependsOn zipMinifiedFiles
 
-// Add the tile service war to the overlay config so we can reference it below.  Pull the 
-// tile service war out of that project's exposed config.
-artifacts {
-	clientFiles exportClientFiles.clientOutput
+// The 'build' task is typically provided by the 'java' plugin, an empty task is added here to 
+// provide a similar interface.
+task build {}
+build.dependsOn assemble
+build.dependsOn test
+
+// The 'install' task is typically provided by the 'maven' plugin, an empty task is added here to 
+// provide a similar interface, with the implementation provided by the 'maven-publish' plugin.
+task install {}
+install.dependsOn assemble
+install.dependsOn publishToMavenLocal
+
+publishing {
+    publications {
+        uploadMaven(MavenPublication) {
+            artifact zipMinifiedFiles
+        }
+    }
 }

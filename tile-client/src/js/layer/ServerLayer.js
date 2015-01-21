@@ -25,9 +25,7 @@
 
 
 /**
- * A server rendered image layer that displays images retrieved from the server.
- * Respective server side rendering parameters may be modified using the interface
- * of the object.
+
  */
 ( function() {
 
@@ -71,7 +69,7 @@
                 min: null,
                 max: null
             };
-        layer.levelMinMax =  [ minMax.min, minMax.max ];
+        layer.levelMinMax = minMax;
         PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: minMax });
     };
 
@@ -90,28 +88,32 @@
 
     /**
      * Instantiate a ServerLayer object.
+     * @class ServerLayer
+     * @classdesc A server rendered image layer that displays images retrieved from the server.
+     *            Respective server side rendering parameters may be modified using the interface
+     *            of the object.
      *
      * @param spec {Object} The Specification object.
+     * <pre>
      * {
-     *     opacity {float}   The opacity of the layer. Default = 1.0
-     *     enabled {boolean} Whether the layer is visible or not. Default = true
-     *     zIndex  {integer} The z index of the layer. Default = 1
+     *     opacity {float}   - The opacity of the layer. Default = 1.0.
+     *     enabled {boolean} - Whether the layer is visible or not. Default = true.
+     *     zIndex  {integer} - The z index of the layer. Default = 1.
      *     renderer: {
-     *         coarseness {integer} The pixel by pixel coarseness. Default based on server configuration.
-     *         ramp       {String}  The color ramp type. Default based on server configuration.
-     *         rangeMin   {integer} The minimum percentage to clamp the low end of the color ramp. Default based on
-     *                                server configuration.
-     *         rangeMax   {integer} The maximum percentage to clamp the high end of the color ramp. Default based on
-     *                              server configuration.
+     *         coarseness {integer} - The pixel by pixel coarseness. Default based on server configuration.
+     *         ramp       {String}  - The color ramp type. Default based on server configuration.
+     *         rangeMin   {integer} - The minimum percentage to clamp the low end of the color ramp. Default based on server configuration.
+     *         rangeMax   {integer} - The maximum percentage to clamp the high end of the color ramp. Default based on server configuration.
      *     },
      *     valueTransform: {
-     *         type {String} Value transformer type. Default based on server configuration.
+     *         type {String} - Value transformer type. Default based on server configuration.
      *     },
      *     tileTransform: {
-     *         type {String} Tile transformer type. Default based on server configuration.
-     *         data {Object} The tile transformer data initialization object. Default based on server configuration.
+     *         type {String} - Tile transformer type. Default based on server configuration.
+     *         data {Object} - The tile transformer data initialization object. Default based on server configuration.
      *     }
      * }
+     * </pre>
      */
     function ServerLayer( spec ) {
         // set reasonable defaults
@@ -126,6 +128,11 @@
 
     ServerLayer.prototype = Object.create( Layer.prototype );
 
+    /**
+     * Activates the layer object. This should never be called manually.
+     * @memberof ServerLayer
+     * @private
+     */
     ServerLayer.prototype.activate = function() {
 
         var that = this;
@@ -160,6 +167,11 @@
         setLevelMinMax( this );
     };
 
+    /**
+     * Dectivates the layer object. This should never be called manually.
+     * @memberof ServerLayer
+     * @private
+     */
     ServerLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
@@ -170,9 +182,34 @@
     };
 
     /**
-     * Set the z index of the layer.
+     * Updates the theme associated with the layer.
+     * @memberof ServerLayer
      *
-     * @param {number} zIndex - The new z-order value of the layer, where 0 is front.
+     * @param {String} theme - The theme identifier string.
+     */
+    ServerLayer.prototype.setTheme = function( theme ) {
+        var that = this;
+        this.spec.renderer.theme = theme;
+        setRampImageUrl( that );
+        this.olLayer.redraw();
+        this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
+    };
+
+    /**
+     * Get the current theme for the layer.
+     * @memberof ServerLayer
+     *
+     * @returns {String} The theme identifier string.
+     */
+    ServerLayer.prototype.getTheme = function() {
+        return this.spec.renderer.theme;
+    };
+
+    /**
+     * Set the z index of the layer.
+     * @memberof ServerLayer
+     *
+     * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
      */
     ServerLayer.prototype.setZIndex = function ( zIndex ) {
         // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
@@ -187,7 +224,10 @@
     };
 
     /**
-     * Get the layers z index.
+     * Get the layers zIndex.
+     * @memberof ServerLayer
+     *
+     * @returns {integer} The zIndex for the layer.
      */
     ServerLayer.prototype.getZIndex = function () {
         return this.spec.zIndex;
@@ -195,8 +235,9 @@
 
     /**
      * Set the ramp type associated with the layer.
+     * @memberof ServerLayer
      *
-     * @param rampType {String} The ramp type used to render the images.
+     * @param {String} rampType - The ramp type used to render the images.
      */
     ServerLayer.prototype.setRampType = function ( rampType ) {
         var that = this;
@@ -206,69 +247,63 @@
     };
 
     /**
-     *  Get ramp type for layer
+     * Get ramp type for layer.
+     * @memberof ServerLayer
+     *
+     * @returns {String} The ramp identification string.
      */
     ServerLayer.prototype.getRampType = function() {
         return this.spec.renderer.ramp;
     };
 
     /**
-     * Set the theme associated with the layer.
-     *
-     * @param theme {String} The theme of the layer.
-     */
-    ServerLayer.prototype.setTheme = function( theme ) {
-        var that = this;
-        this.spec.renderer.theme = theme;
-        setRampImageUrl( that );
-        this.olLayer.redraw();
-        this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
-    };
-
-    /**
-     * Get the current theme for the layer.
-     */
-    ServerLayer.prototype.getTheme = function() {
-        return this.spec.renderer.theme;
-    };
-
-    /**
      * Get the current minimum and maximum values for the current zoom level.
+     * @memberof ServerLayer
+     *
+     * @param {Object} The min and max of the level.
      */
     ServerLayer.prototype.getLevelMinMax = function() {
         return this.levelMinMax;
     };
 
     /**
-     * Get the current ramp image URL string
+     * Get the current ramp image URL string.
+     * @memberof ServerLayer
+     *
+     * @returns {String} The encoded ramp image url.
      */
     ServerLayer.prototype.getRampImageUrl = function() {
         return this.rampImageUrl;
     };
 
     /**
-     * Updates the ramp function associated with the layer.  Results in a POST
-     * to the server.
+     * Updates the value transform function associated with the layer. Results in a POST
+     * request to the server.
+     * @memberof ServerLayer
      *
-     * @param {string} rampFunction - The new new ramp function.
+     * @param {String} transformType - The new new ramp function.
      */
-    ServerLayer.prototype.setValueTransformType = function ( rampFunction ) {
-        this.spec.valueTransform = { type: rampFunction };
+    ServerLayer.prototype.setValueTransformType = function ( transformType ) {
+        this.spec.valueTransform = { type: transformType };
         this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: rampFunction });
+        PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: transformType });
     };
 
     /**
-     * Get the current ramps function
+     * Get the current value transform function type.
+     * @memberof ServerLayer
+     *
+     * @return {String} The value transform type.
      */
     ServerLayer.prototype.getValueTransformType = function() {
         return this.spec.valueTransform.type;
     };
 
     /**
-     * Set the layers tile transform type
+     * Set the layers tile transform function type.
+     * @memberof ServerLayer
      *
-     * @param transformType {String} The tile transformer type.
+     * @param {String} transformType - The tile transformer type.
      */
     ServerLayer.prototype.setTileTransformType = function ( transformType ) {
         this.spec.tileTransform.type = transformType;
@@ -277,7 +312,10 @@
     };
 
     /**
-     * Get the layers transformer type
+     * Get the layers transformer type.
+     * @memberof ServerLayer
+     *
+     * @return {String} The tile transform type.
      */
     ServerLayer.prototype.getTileTransformType = function () {
         return this.spec.tileTransform.type;
@@ -285,8 +323,9 @@
 
     /**
      * Set the tile transform data attribute
+     * @memberof ServerLayer
      *
-     * @param transformData {Object} The tile transform data attribute.
+     * @param {Object} transformData - The tile transform data attribute.
      */
     ServerLayer.prototype.setTileTransformData = function ( transformData ) {
         this.spec.tileTransform.data = transformData;
@@ -295,16 +334,20 @@
     };
 
     /**
-     * Get the transformer data arguments
+     * Get the transformer data attribute.
+     * @memberof ServerLayer
+     *
+     * @returns {Object} The tile transform data attribute.
      */
     ServerLayer.prototype.getTileTransformData = function () {
         return this.spec.tileTransform.data;
     };
 
     /**
-     * Set the layer coarseness.
+     * Set the layers pixel coarseness.
+     * @memberof ServerLayer
      *
-     * @param coarseness {int} The pixel by pixel coarseness of the layer
+     * @param coarseness {integer} The pixel by pixel coarseness of the layer
      */
     ServerLayer.prototype.setCoarseness = function( coarseness ) {
         this.spec.renderer.coarseness = coarseness;
@@ -314,7 +357,10 @@
     };
 
     /**
-     * Get the layer coarseness
+     * Get the layers pixel coarseness.
+     * @memberof ServerLayer
+     *
+     * @returns {integer} The layers coarseness in N by N pixels.
      */
     ServerLayer.prototype.getCoarseness = function() {
         return this.spec.renderer.coarseness;
@@ -322,6 +368,9 @@
 
     /**
      * Generate query parameters based on state of layer
+     * @memberof ServerLayer
+     *
+     * @returns {String} The query parameter string based on the attributes of this layer.
      */
     ServerLayer.prototype.getQueryParamString = function() {
         var query = {

@@ -23,10 +23,6 @@
  * SOFTWARE.
  */
 
-/**
- * A map object that acts as a central containing for all layers and other map
- * components.
- */
 ( function() {
 
 	"use strict";
@@ -52,8 +48,9 @@
         removeAxis;
 
     /**
-     * Private: Set callbacks to update the maps tile focus, identifying which tile
+     * Set callbacks to update the maps tile focus, identifying which tile
      * the user is currently hovering over.
+     * @private
      *
      * @param map {Map} The map object.
      */
@@ -94,7 +91,8 @@
     };
 
     /**
-     * Private: Activates a component.
+     * Activates a component.
+     * @private
      *
      * @param map       {Map} The map object.
      * @param component {*}   The component to activate.
@@ -108,7 +106,8 @@
     };
 
     /**
-     * Private: Deactivates a component.
+     * Deactivates a component.
+     * @private
      *
      * @param map       {Map} The map object.
      * @param component {*}   The component to deactivate.
@@ -124,7 +123,8 @@
     };
 
     /**
-     * Private: Activates deferred components when the map is ready.
+     * Activates deferred components when the map is ready.
+     * @private
      *
      * @param map {Map} The map object.
      */
@@ -137,9 +137,10 @@
     };
 
     /**
-     * Private: Adds a base layer to the map. If no baselayer is attached, it
+     * Adds a base layer to the map. If no baselayer is attached, it
      * will also activate it, along with any deferred components that were attached
      * first.
+     * @private
      *
      * @param map       {Map}       The map object.
      * @param baselayer {BaseLayer} The baselayer object.
@@ -166,9 +167,10 @@
     };
 
     /**
-     * Private: Adds a layer object to the map and activates it.
+     * Adds a layer object to the map and activates it.
+     * @private
      *
-     * @param map       {Map}   The map object.
+     * @param map   {Map}   The map object.
      * @param layer {Layer} The layer object.
      */
     addLayer = function( map, layer ) {
@@ -182,9 +184,10 @@
     };
 
     /**
-     * Private: Adds an Axis object to the map and activates it.
+     * Adds an Axis object to the map and activates it.
+     * @private
      *
-     * @param map  {Map}   The map object.
+     * @param map  {Map}  The map object.
      * @param axis {Axis} The layer object.
      */
     addAxis = function( map, axis ) {
@@ -215,8 +218,9 @@
     };
 
     /**
-     * Private: Removes a base layer from the map. If no other baselayer is attached, it
+     * Removes a base layer from the map. If no other baselayer is attached, it
      * will refuse to do so.
+     * @private
      *
      * @param map       {Map}       The map object.
      * @param baselayer {BaseLayer} The baselayer object.
@@ -240,9 +244,10 @@
     };
 
     /**
-     * Private: Removes a layer object from the map and deactivates it.
+     * Removes a layer object from the map and deactivates it.
+     * @private
      *
-     * @param map       {Map}   The map object.
+     * @param map   {Map}   The map object.
      * @param layer {Layer} The layer object.
      */
     removeLayer = function( map, layer ) {
@@ -254,7 +259,8 @@
     };
 
     /**
-     * Private: Removes an Axis object from the map and deactivates it.
+     * Removes an Axis object from the map and deactivates it.
+     * @private
      *
      * @param map  {Map}   The map object.
      * @param axis {Axis} The layer object.
@@ -267,6 +273,23 @@
         axis.map = null;
     };
 
+    /**
+     * Instantiate a Map object.
+     * @class Map
+     * @classdesc A map object that acts as a central container for all layers and other map
+     *            components.
+     *
+     * @param {String} id - The DOM element id string.
+     * @param {Object} spec - The specification object.
+     * <pre>
+     * {
+     *     pyramid {String} - The pyramid type for the map. Defaults to 'WebMercator'
+     *     options: {
+     *         numZoomLevels {integer} - The number of zoom levels.
+     *     }
+     * }
+     * </pre>
+     */
 	function Map( id, spec ) {
 
         spec = spec || {};
@@ -276,7 +299,7 @@
         // element id
         this.id = id;
         // set map tile pyramid
-        if ( spec.pyramid.type === "AreaOfInterest" ) {
+        if ( spec.pyramid.type && spec.pyramid.type.toLowerCase() === "areaofinterest" ) {
             this.pyramid = new AreaOfInterestTilePyramid( spec.pyramid );
         } else {
             this.pyramid = new WebMercatorTilePyramid();
@@ -287,9 +310,9 @@
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
             theme: null, // prevent OpenLayers from checking for default css
-            projection: new OpenLayers.Projection( spec.options.projection || "EPSG:900913" ),
-            displayProjection: new OpenLayers.Projection( spec.options.displayProjection || "EPSG:4326" ),
-            maxExtent: OpenLayers.Bounds.fromArray( spec.options.maxExtent || [
+            projection: new OpenLayers.Projection( "EPSG:900913" ),
+            displayProjection: new OpenLayers.Projection( "EPSG:4326" ),
+            maxExtent: OpenLayers.Bounds.fromArray([
                 -20037508.342789244,
 				-20037508.342789244,
 				20037508.342789244,
@@ -308,8 +331,9 @@
 
         /**
          * Adds a component to the map.
+         * @memberof Map.prototype
          *
-         * @param component {*} The component object.
+         * @param {Layer|Axis} component - The component object.
          */
         add: function( component ) {
             if ( component instanceof BaseLayer ) {
@@ -330,8 +354,9 @@
 
         /**
          * Removes a component from the map.
+         * @memberof Map.prototype
          *
-         * @param component {*} The component object.
+         * @param {Layer|Axis} component - The component object.
          */
         remove: function( component ) {
             if ( this.baseLayerIndex < 0 ) {
@@ -347,6 +372,9 @@
 
         /**
          * Returns the tilekey for the tile currently under the mouse.
+         * @memberof Map.prototype
+         *
+         * @returns {String} The tilekey currently under the mouse.
          */
         getTileFocus: function() {
             return this.tileFocus;
@@ -354,9 +382,10 @@
 
         /**
          * If multiple baselayers are attached to the map, this function is
-         * used to change the index.
+         * used to change the currently active one by index.
+         * @memberof Map.prototype
          *
-         * @param index {int} The index of the baselayer to switch to.
+         * @param {integer} index - The index of the baselayer to switch to.
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
@@ -375,18 +404,34 @@
 
         /**
          * Returns the currently active baselayer index.
+         * @memberof Map.prototype
          *
-         * @returns {number|*}
+         * @returns {integer} The currently active baselayer index.
          */
         getBaseLayerIndex: function() {
             return this.baseLayerIndex;
         },
 
         /**
+         * Set the theme of the map. Currently restricted to "dark" and "light".
+         * @memberof Map.prototype
+         *
+         * @param {String} theme - The theme identification string of the map.
+         */
+        setTheme: function( theme ) {
+            if ( theme === 'dark' ) {
+                $( this.olMap.div ).removeClass( "light-theme" ).addClass( "dark-theme" );
+            } else if ( theme === 'light' ) {
+                $( this.olMap.div ).removeClass( "dark-theme" ).addClass( "light-theme" );
+            }
+        },
+
+        /**
          * Returns the current theme of the map. Currently restricted to "dark"
          * and "light".
+         * @memberof Map.prototype
          *
-         * @returns {string} The theme of the map.
+         * @returns {String} The theme of the map.
          */
         getTheme: function() {
         	return $( this.olMap.div ).hasClass( "light-theme" ) ? 'light' : 'dark';
@@ -395,6 +440,7 @@
         /**
          * Returns the map DOM element. This is the element to which
          * the map object is 'attached'.
+         * @memberof Map.prototype
          *
          * @returns {HTMLElement} The map div element.
          */
@@ -403,8 +449,9 @@
         },
 
         /**
-         * Returns the map viewport DOM element. This the element that matches
+         * Returns the map viewport DOM element. This the element that encompasses
          * the viewable portion of the map.
+         * @memberof Map.prototype
          *
          * @returns {HTMLElement} The map viewport div element.
          */
@@ -415,6 +462,7 @@
         /**
          * Returns the map container DOM element. This is the element to which all
          * 'pannable' layers are attached to.
+         * @memberof Map.prototype
          *
          * @returns {HTMLElement} The map container div element.
          */
@@ -423,19 +471,21 @@
         },
 
         /**
-         * Returns the tile pyramid used for the map.
+         * Returns the tile pyramid used by the map.
+         * @memberof Map.prototype
          *
-         * @returns { AreaOfInterestTilePyramid | WebMercatorTilePyramid } TilePyramid Object.
+         * @returns {AreaOfInterestTilePyramid|WebMercatorTilePyramid} The TilePyramid object.
          */
 		getPyramid: function() {
 			return this.pyramid;
 		},
 
         /**
-         * Returns a TileIterator object. This TileIterator contains all viewable
-         * tiles currently in the map.
+         * Returns a TileIterator object. This TileIterator contains all tiles currently
+         * visible in the map.
+         * @memberof Map.prototype
          *
-         * @returns {TileIterator} TileIterator object.
+         * @returns {TileIterator} A TileIterator object containing all visible tiles.
          */
 		getTileIterator: function() {
 			var level = this.olMap.getZoom(),
@@ -462,7 +512,8 @@
 		},
 
         /**
-         * Returns an array of all tilekeys currently in view.
+         * Returns an array of all tilekeys currently visible in the map.
+         * @memberof Map.prototype
          *
          * @returns {Array} An array of tilekey strings.
          */
@@ -483,12 +534,13 @@
 		},
 
         /**
-         * Zooms the map to a particular coordinate, and zoom level. This
+         * Zooms the map to a particular coordinate and zoom level. The
          * transition is instantaneous.
+         * @memberof Map.prototype
          *
-         * @param x    {float} x coordinate (longitude for geospatial)
-         * @param y    {float} y coordinate (latitude for geospatial)
-         * @param zoom {int}   zoom level
+         * @param {number} x - The x coordinate (longitude for geospatial).
+         * @param {number} y - The y coordinate (latitude for geospatial).
+         * @param {integer} zoom - The zoom level.
          */
         zoomTo: function( x, y, zoom ) {
             var projection,
@@ -511,11 +563,13 @@
         },
 
         /**
-         * Pans the map to a particular coordniate. This
-         * transition is gradual.
+         * Pans the map to a particular coordinate. The transition is
+         * animated if the region is currently in view, instantaneous if
+         * not.
+         * @memberof Map.prototype
          *
-         * @param x    {float} x coordinate (longitude for geospatial)
-         * @param y    {float} y coordinate (latitude for geospatial)
+         * @param {number} x - The x coordinate (longitude for geospatial).
+         * @param {number} y - The y coordinate (latitude for geospatial).
          */
         panTo: function( x, y ) {
             var projection,
@@ -539,8 +593,9 @@
 
         /**
          * Returns the width of the entire map in pixels.
+         * @memberof Map.prototype
          *
-         * @returns {number}
+         * @returns {integer} The width of the map in pixels.
          */
         getWidth: function() {
             return TILESIZE * Math.pow( 2, this.getZoom() );
@@ -548,8 +603,9 @@
 
         /**
          * Returns the height of the entire map in pixels.
+         * @memberof Map.prototype
          *
-         * @returns {number}
+         * @returns {integer} The height of the map in pixels.
          */
         getHeight: function() {
             return TILESIZE * Math.pow( 2, this.getZoom() );
@@ -557,8 +613,9 @@
 
         /**
          * Returns the width of the viewport in pixels.
+         * @memberof Map.prototype
          *
-         * @returns {number}
+         * @returns {integer} The width of the viewport in pixels.
          */
 		getViewportWidth: function() {
 			return this.olMap.viewPortDiv.clientWidth;
@@ -566,47 +623,83 @@
 
         /**
          * Returns the height of the viewport in pixels.
+         * @memberof Map.prototype
          *
-         * @returns {number}
+         * @returns {integer} The height of the viewport in pixels.
          */
 		getViewportHeight: function() {
 			return this.olMap.viewPortDiv.clientHeight;
         },
 
         /**
-         * Returns the maps current zoom level. Level 0 is the highest point of aggregation.
+         * Returns the maps current zoom level. Level 0 is contains the most
+         * of aggregation.
+         * @memberof Map.prototype
          *
-         * @returns {int} The zoom level.
+         * @returns {integer} The zoom level.
          */
 		getZoom: function () {
 			return this.olMap.getZoom();
 		},
 
         /**
-         * Set a map event callback.
+         * Set a map event callback. Supports all of the following OpenLayers.Map events:
+         * <pre>
+         *     movestart - triggered after the start of a drag, pan, or zoom.  The event object may include a zoomChanged property that tells whether the zoom has changed.
+         *     move - triggered after each drag, pan, or zoom
+         *     moveend - triggered after a drag, pan, or zoom completes
+         *     zoomstart - triggered when a zoom starts.  Listeners receive an object with center and zoom properties, for the target center and zoom level.
+         *     zoomend - triggered after a zoom completes
+         *     mouseover - triggered after mouseover the map
+         *     mouseout - triggered after mouseout the map
+         *     mousemove - triggered after mousemove the map
+         * </pre>
+         * @memberof Map.prototype
          *
-         * @param eventType {string}   The event type.
-         * @param callback  {Function} The callback.
+         * @param {String} eventType - The event type.
+         * @param {Function} callback - The callback.
          */
 		on: function( eventType, callback ) {
             this.olMap.events.register( eventType, this.olMap, callback );
 		},
 
         /**
-         * Remove a map event callback.
+         * Remove a map event callback. Supports all of the following OpenLayers.Map events:
+         * <pre>
+         *     movestart - triggered after the start of a drag, pan, or zoom.  The event object may include a zoomChanged property that tells whether the zoom has changed.
+         *     move - triggered after each drag, pan, or zoom
+         *     moveend - triggered after a drag, pan, or zoom completes
+         *     zoomstart - triggered when a zoom starts.  Listeners receive an object with center and zoom properties, for the target center and zoom level.
+         *     zoomend - triggered after a zoom completes
+         *     mouseover - triggered after mouseover the map
+         *     mouseout - triggered after mouseout the map
+         *     mousemove - triggered after mousemove the map
+         * </pre>
+         * @memberof Map.prototype
          *
-         * @param eventType {string}   The event type.
-         * @param callback  {Function} The callback.
+         * @param {String} eventType - The event type.
+         * @param {Function} callback - The callback.
          */
 		off: function( eventType, callback ) {
 			this.olMap.events.unregister( eventType, this.olMap, callback );
 		},
 
         /**
-         * Trigger a map event.
+         * Trigger a map event. Supports all of the following OpenLayers.Map events:
+         * <pre>
+         *     movestart - triggered after the start of a drag, pan, or zoom.  The event object may include a zoomChanged property that tells whether the zoom has changed.
+         *     move - triggered after each drag, pan, or zoom
+         *     moveend - triggered after a drag, pan, or zoom completes
+         *     zoomstart - triggered when a zoom starts.  Listeners receive an object with center and zoom properties, for the target center and zoom level.
+         *     zoomend - triggered after a zoom completes
+         *     mouseover - triggered after mouseover the map
+         *     mouseout - triggered after mouseout the map
+         *     mousemove - triggered after mousemove the map
+         * </pre>
+         * @memberof Map.prototype
          *
-         * @param eventType {string} The event type.
-         * @param event     {Object} The event object to be passed to the event.
+         * @param {String} eventType - The event type.
+         * @param {Object} event - The event object to be passed to the event.
          */
 		trigger: function( eventType, event ) {
             this.olMap.events.triggerEvent( eventType, event );

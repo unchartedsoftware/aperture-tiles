@@ -26,43 +26,34 @@ package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 
-public class ZipResourcePyramidStreamSource implements PyramidStreamSource {
 
-	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-
-	private ZipFile      _tileSetArchive;
-	private String       _tileExtension;
-
-
+/**
+ * Extends the PyramidSource abstract class for resource based tiles.
+ *  
+ */
+public class ResourcePyramidSource extends PyramidSourceStream {
 	
-	public ZipResourcePyramidStreamSource (String zipFilePath, String tileExtension) {
-		try {
-			_tileSetArchive = new ZipFile(zipFilePath);
-			_tileExtension = tileExtension;
-		} catch (IOException e) {
-			LOGGER.warn("Could not create zip file for " + zipFilePath, e);
-		}
+	private String _rootPath;
+	private String _extension;
+
+	public ResourcePyramidSource (String rootPath, String extension) {
+		_rootPath = rootPath;
+		_extension = extension;
 	}
 	
 	@Override
-	public InputStream getTileStream(String basePath, TileIndex tile) throws IOException {
-		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _tileExtension, basePath, tile.getLevel(), tile.getX(), tile.getY());
-		ZipArchiveEntry entry = _tileSetArchive.getEntry(tileLocation);
-		return _tileSetArchive.getInputStream(entry);
+	protected InputStream getSourceTileStream(String basePath, TileIndex tile) {
+		String tileLocation = String.format("%s/"+PyramidIO.TILES_FOLDERNAME+"/%d/%d/%d." + _extension, _rootPath + basePath, tile.getLevel(), tile.getX(), tile.getY());
+		return ResourcePyramidSource.class.getResourceAsStream(tileLocation);
 	}
 
 	@Override
-	public InputStream getMetaDataStream(String basePath) throws IOException {
-		String location = basePath+"/"+PyramidIO.METADATA_FILENAME;
-		ZipArchiveEntry entry = _tileSetArchive.getEntry(location);
-		return _tileSetArchive.getInputStream(entry);
+	protected InputStream getSourceMetaDataStream (String basePath) {
+		String location = _rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME;
+		return ResourcePyramidSource.class.getResourceAsStream(location);
 	}
+
 }

@@ -24,13 +24,8 @@
  */
 
 /**
- * A namespace that provides annotation service functionality. Functionality
- * includes:
- *
- *      - Retrieving a tiles worth of annotation data via GET request
- *      - Writing an annotation via POST request
- *      - Modifying an annotation via PPOST request
- *      - Removing an annotation via POST request
+ * @namespace AnnotationService
+ * @classdesc A utility namespace that provides annotation service REST functionality.
  */
 ( function() {
 
@@ -43,17 +38,22 @@
         /**
          * Get a tiles worth of annotations from the server. Upon success, will execute success
          * callback function passing the resulting object as first argument.
+         * @memberof AnnotationService
          *
-         * @param layerId   {String}   annotation layer id
-         * @param level     {int}      tile level
-         * @param x         {int}      tile x index
-         * @param y         {int}      tile y index
-         * @param [params]  {Object}   query parameter configuration overrides (optional)
-         * @param [success] {Function} function called after success received (optional)
+         * @param {String} layerId - The annotation layer identification string.
+         * @param {integer} level - The zoom level.
+         * @param {integer} x - The tile x index.
+         * @param {integer} y - The tile y index.
+         * @param {Object} params - The query parameter configuration overrides (optional).
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         getTileJSON: function( layerId, level, x, y, params, success ) {
             var _params = ( typeof params === "object" ) ? params : null,
-                _success = ( typeof success === "function" ) ? success : null;
+                _success = ( typeof success === "function" )
+                    ? success
+                    : ( typeof params === "function" )
+                        ? params
+                        : null;
             $.get(
                 'rest/v1.0/annotation/'
                 + layerId + "/"
@@ -67,17 +67,18 @@
         },
 
         /**
-         * Write the annotation to the server. Upon success, will execute success
+         * Write an annotation to the server. Upon success, will execute success
          * callback function passing the resulting certificate as first argument.
+         * @memberof AnnotationService
          *
-         * @param layerId    {String}   annotation layer id
-         * @param annotation {Object}   annotation to be written
-         * @param [success]  {Function} function called after success received (optional)
+         * @param {String} layerId - The annotation layer identification string.
+         * @param {Object} annotation - The annotation to be written.
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         writeAnnotation: function( layerId, annotation, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/annotation/',
+                'rest/v1.0/annotation',
                 JSON.stringify({
                     type: "write",
                     annotation: annotation,
@@ -90,17 +91,18 @@
         },
 
         /**
-         * Modify an the annotation on the server. Upon success, will execute success
+         * Modify an annotation on the server. Upon success, will execute success
          * callback function passing the resulting certificate as first argument.
+         * @memberof AnnotationService
          *
-         * @param layerId    {String}   annotation layer id
-         * @param annotation {Object}   annotation to be modified
-         * @param [success]  {Function} function called after success received (optional)
+         * @param {String} layerId - The annotation layer identification string.
+         * @param {Object} annotation - The annotation to be modified.
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         modifyAnnotation: function( layerId, annotation, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/annotation/',
+                'rest/v1.0/annotation',
                 JSON.stringify({
                     type: "modify",
                     annotation: annotation,
@@ -113,16 +115,17 @@
         },
 
         /**
-         * Remove the annotation from the server.
+         * Remove an annotation from the server.
+         * @memberof AnnotationService
          *
-         * @param layerId     {String}   annotation layer id
-         * @param certificate {Object}   certificate of annotation to be removed
-         * @param [success]   {Function} function called after success received (optional)
+         * @param {String} layerId - The annotation layer identification string.
+         * @param {Object} certificate - The certificate of the annotation to be removed.
+         * @param {Function} success - The callback function executed after success received (optional).
          */
         removeAnnotation: function( layerId, certificate, success ) {
             var _success = ( typeof success === "function" ) ? success : null;
             $.post(
-                'rest/v1.0/annotation/',
+                'rest/v1.0/annotation',
                 JSON.stringify({
                     type: "remove",
                     certificate: certificate,
