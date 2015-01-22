@@ -52,13 +52,13 @@ public class StandardTileSerializerFactoryProvider extends StandardUberFactoryPr
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
 	                                                             List<String> path) {
-		return new TileSerializerFactory(parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
+		return new TileSerializerFactory(parent, path, createChildren(parent, path));
 	}
 
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (String factoryName,
 	                                                             ConfigurableFactory<?> parent,
 	                                                             List<String> path) {
-		return new TileSerializerFactory(factoryName, parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
+		return new TileSerializerFactory(factoryName, parent, path, createChildren(parent, path));
 	}
 }

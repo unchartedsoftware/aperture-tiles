@@ -39,27 +39,6 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * @author nkronenfeld, pulled out from code by cregnier
  */
 abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<T> {
-	/**
-	 * Concatenates two string lists together.
-	 * 
-	 * @return If either of the input lists are null, then the other is
-	 *         returned, othwerise a new list is created that contains both
-	 *         lists.
-	 */
-	protected static List<String> getMergedPath (List<String> path1,
-	                                             List<String> path2) {
-		if (path1 == null)
-			return path2;
-		if (path2 == null)
-			return path1;
-		List<String> results = new ArrayList<>(path1.size()+path2.size());
-		results.addAll(path1);
-		results.addAll(path2);
-		return results;
-	}
-
-
-
 	private List<DelegateFactoryProviderTarget<T>> _childFactories;
 
 
@@ -74,17 +53,39 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 
 
 	/**
-	 * Creates a List of factories for all the 'child' factory providers.<br>
-	 * Each factory is passed a relative base path where its configuration can
-	 * be found, and then it will add its own path, if needed.
+	 * Creates a List of factories for all the 'child' factory providers.
+	 *
+	 * Each factory is passed a relative base path where its configuration can be found, and then it will add its own
+	 * path, if needed.
 	 * 
-	 * @param path The relative base path where the configuration can be found
+	 * @param path The absolute base path where the configuration can be found
 	 * @return The created children.
 	 */
 	protected List<ConfigurableFactory<? extends T>> createChildren (List<String> path) {
 		List<ConfigurableFactory<? extends T>> children = new ArrayList<>();
 		for (DelegateFactoryProviderTarget<T> childProvider: _childFactories) {
 			ConfigurableFactory<? extends T> factory = childProvider.createFactory(path);
+			children.add(factory);
+		}
+
+		return children;
+	}
+
+	/**
+	 * Creates a List of factories for all the 'child' factory providers.
+	 *
+	 * Each factory is passed a relative base path where its configuration can be found, and then it will add its own
+	 * path, if needed.
+	 *
+	 * @param parent The parent factory under which to create sub-factories.  Sub-factories will have the same parent
+	 *               as the UberFactory
+	 * @param path The base path where the configuration can be found, relative to the parent's path.
+	 * @return The created children.
+	 */
+	protected List<ConfigurableFactory<? extends T>> createChildren (ConfigurableFactory<?> parent, List<String> path)  {
+		List<ConfigurableFactory<? extends T>> children = new ArrayList<>();
+		for (DelegateFactoryProviderTarget<T> childProvider: _childFactories) {
+			ConfigurableFactory<? extends T> factory = childProvider.createFactory(parent, path);
 			children.add(factory);
 		}
 

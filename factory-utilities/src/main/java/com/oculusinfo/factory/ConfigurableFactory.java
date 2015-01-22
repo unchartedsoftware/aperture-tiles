@@ -48,6 +48,20 @@ import org.slf4j.LoggerFactory;
 abstract public class ConfigurableFactory<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableFactory.class);
 
+	public static List<String> mergePaths (ConfigurableFactory<?> parent, List<String> childPath) {
+		List<String> parentPath = null;
+		if (null != parent) parentPath = parent.getRootPath();
+		return mergePaths(parentPath, childPath);
+	}
+	public static List<String> mergePaths (List<String> parentPath, List<String> childPath) {
+		List<String> fullPath = new ArrayList<>();
+		if (null != parentPath) fullPath.addAll(parentPath);
+		if (null != childPath) fullPath.addAll(childPath);
+		return fullPath;
+	}
+
+
+
 	private String                        _name;
 	private Class<T>                      _factoryType;
 	private List<String>                  _rootPath;
@@ -131,14 +145,7 @@ abstract public class ConfigurableFactory<T> {
 	protected ConfigurableFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
         _name = name;
         _factoryType = factoryType;
-        List<String> rootPath = new ArrayList<>();
-        if (null != parent) {
-            rootPath.addAll(parent.getRootPath());
-        }
-        if (null != path) {
-            rootPath.addAll(path);
-        }
-        _rootPath = Collections.unmodifiableList( rootPath );
+		_rootPath = Collections.unmodifiableList(mergePaths(parent, path));
         _children = new ArrayList<>();
         _configured = false;
         _properties = new HashSet<>();
