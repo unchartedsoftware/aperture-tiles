@@ -37,6 +37,7 @@ import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
+import com.oculusinfo.tile.util.TileDataView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,10 +94,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 		String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
-			int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-			int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-
-			int coarseness = 4;//config.getPropertyValue(LayerConfiguration.COARSENESS);
+			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
 
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
@@ -129,20 +127,11 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			TileData<Double> data = tileDatas.get(0);
 
-			//calculate the tile tree multiplier to go between tiles at each level.
-			//this is also the number of x/y tiles in the base level for every tile in the scaled level
-			int tileTreeMultiplier = (int)Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
+			if (scaleLevelIndex != null) {
+				data = new TileDataView<Double>(data, index);
+			}
 
-			int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier;
-
-			//the y tiles are backwards, so we need to shift the order around by reversing the counting direction
-			int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
-
-			//figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
-			int xBinStart = (int)Math.floor(data.getDefinition().getXBins() * (((double)(index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-			int yBinStart = ((int)Math.floor(data.getDefinition().getYBins() * (((double)(yTileIndex) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-
-			bi = render(config, data, new Rectangle(xBinStart, yBinStart, outputWidth / tileTreeMultiplier, outputHeight / tileTreeMultiplier));
+			bi = render(config, data);
 
 		} catch (Exception e) {
 			LOGGER.warn("Tile is corrupt: " + layerId + ":" + index);
@@ -153,7 +142,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	}
 
 
-	private BufferedImage render(LayerConfiguration config, TileData<Double> data, Rectangle dataBounds) {
+	private BufferedImage render(LayerConfiguration config, TileData<Double> data) {
 		int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 		int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 		BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
@@ -170,7 +159,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
-			bi = renderImage(data, dataBounds, t, scaledLevelMinFreq, scaledLevelMaxFreq, colorRamp, bi);
+			bi = renderImage(data, t, scaledLevelMinFreq, scaledLevelMaxFreq, colorRamp, bi);
 		} catch (Exception e) {
 			LOGGER.warn("Configuration error: ", e);
 			return null;
@@ -179,29 +168,33 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 		return bi;
 	}
 
-	private BufferedImage renderImage(TileData<Double> data, Rectangle dataBounds,
+	private BufferedImage renderImage(TileData<Double> data,
 								   ValueTransformer<Double> t, double valueMin, double valueMax,
 								   ColorRamp colorRamp, BufferedImage bi) {
 
 		int outWidth = bi.getWidth();
 		int outHeight = bi.getHeight();
+		int xBins = data.getDefinition().getXBins();
+		int yBins = data.getDefinition().getYBins();
 
-		float xScale = outWidth / dataBounds.width;
-		float yScale = outHeight / dataBounds.height;
+		float xScale = outWidth / xBins;
+		float yScale = outHeight / yBins;
+
+		System.out.println(xScale);
 
 		double oneOverScaledRange = 1.0 / (valueMax - valueMin);
 
 		int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
 
-		for(int ty = 0; ty < dataBounds.height; ty++){
-			for(int tx = 0; tx < dataBounds.width; tx++){
+		for(int ty = 0; ty < yBins; ty++){
+			for(int tx = 0; tx < xBins; tx++){
 				//calculate the scaled dimensions of this 'pixel' within the image
 				int minX = (int) Math.round(tx*xScale);
 				int maxX = (int) Math.round((tx+1)*xScale);
 				int minY = (int) Math.round(ty*yScale);
 				int maxY = (int) Math.round((ty+1)*yScale);
 
-				double binCount = data.getBin(tx + dataBounds.x, ty + dataBounds.y);
+				double binCount = data.getBin(tx, ty);
 				double transformedValue = t.transform(binCount);
 				// Clamp to [0,1], values out of range get ramp end values
 				transformedValue = Math.max(Math.min(transformedValue, 1), 0);
