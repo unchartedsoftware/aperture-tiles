@@ -64,6 +64,49 @@ public class TileServiceImpl implements TileService {
 	}
 
 
+	private <T> TileData<T> tileDataForIndex(TileIndex index, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO, int coarseness) throws IOException {
+		TileData<T> data = null;
+		if (coarseness > 1) {
+			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
+
+			// Coarseness support:
+			// Find the appropriate tile data for the given level and coarseness
+			java.util.List<TileData<T>> tileDatas = null;
+			TileIndex scaleLevelIndex = null;
+
+			// need to get the tile data for the level of the base level minus the coarseness
+			for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
+				scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
+						(int) Math.floor(index.getX() / coarsenessFactor),
+						(int) Math.floor(index.getY() / coarsenessFactor));
+
+				tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
+				if (tileDatas.size() >= 1) {
+					//we got data for this level so use it
+					break;
+				}
+			}
+
+			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
+			if (tileDatas.size() < 1) {
+				LOGGER.info("Missing tile " + index + " for layer data id " + dataId);
+				return null;
+			}
+
+			// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
+			data = TileDataView.fromSourceAbsolute(tileDatas.get(0), index);
+		} else {
+			// No coarseness - use requested tile
+			java.util.List<TileData<T>> tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));
+			if (!tileDatas.isEmpty()) {
+				data = tileDatas.get(0);
+			}
+		}
+
+		return data;
+	}
+
+
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
 	 */
@@ -93,44 +136,8 @@ public class TileServiceImpl implements TileService {
 					tileRenderer.getAcceptedBinClass(),
 					tileRenderer.getAcceptedTypeDescriptor());
 
-			TileData<?> data = null;
 			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
-			if (coarseness > 1) {
-				int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
-
-				// Coarseness support:
-				// Find the appropriate tile data for the given level and coarseness
-				java.util.List<TileData<Double>> tileDatas = null;
-				TileIndex scaleLevelIndex = null;
-
-				// need to get the tile data for the level of the base level minus the coarseness
-				for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
-					scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
-							(int) Math.floor(index.getX() / coarsenessFactor),
-							(int) Math.floor(index.getY() / coarsenessFactor));
-
-					tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
-					if (tileDatas.size() >= 1) {
-						//we got data for this level so use it
-						break;
-					}
-				}
-
-				// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
-				if (tileDatas.size() < 1) {
-					LOGGER.info("Missing tile " + index + " for layer " + layer);
-					return null;
-				}
-
-				// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
-				data = TileDataView.fromSourceAbsolute(tileDatas.get(0), index);
-			} else {
-				// No coarseness - use requested tile
-				java.util.List<TileData<Double>> tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));
-				if (!tileDatas.isEmpty()) {
-					data = tileDatas.get(0);
-				}
-			}
+			TileData<?> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
 
 			if (data != null) {
 				bi = tileRenderer.render(data, config);

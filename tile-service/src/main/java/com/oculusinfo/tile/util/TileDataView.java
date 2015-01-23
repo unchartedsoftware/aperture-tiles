@@ -26,7 +26,6 @@ package com.oculusinfo.tile.util;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 
-import java.awt.Rectangle;
 
 /**
  * A TileData instance that wraps and provides a subset view of the data of another TileData. Effectively
@@ -37,6 +36,15 @@ import java.awt.Rectangle;
  */
 public class TileDataView<T> extends TileData<T> {
 
+    /**
+     * Factory method that creates a TileDataView given a source tile and a target tile index which must be contained
+     * within the source tile. The returned view will appear to users as a tile at the target index but with data sourced
+     * from the given source parent tile.
+     * @param source The source tile for the data
+     * @param targetIndex The index of the tile within (child of) the source to emulate with the view
+     * @param <T> The type of tile data
+     * @return A view TileData object representing the target index
+     */
     public static <T> TileDataView<T> fromSourceAbsolute(TileData<T> source, TileIndex targetIndex) {
         TileIndex sourceIndex = source.getDefinition();
         int levelDelta = targetIndex.getLevel() - sourceIndex.getLevel();
@@ -44,10 +52,10 @@ public class TileDataView<T> extends TileData<T> {
         if (levelDelta < 0) {
             throw new IllegalArgumentException("Target index must be greater than or equal to source index in absolute tile view");
         }
-        if ((targetIndex.getX() >> levelDelta) << levelDelta != sourceIndex.getX()) {
+        if (targetIndex.getX() >> levelDelta != sourceIndex.getX()) {
             throw new IllegalArgumentException("Target index be for tile contained within source tile");
         }
-        if ((targetIndex.getY() >> levelDelta) << levelDelta != sourceIndex.getY()) {
+        if (targetIndex.getY() >> levelDelta != sourceIndex.getY()) {
             throw new IllegalArgumentException("Target index be for tile contained within source tile");
         }
 
@@ -81,6 +89,7 @@ public class TileDataView<T> extends TileData<T> {
         _yOffset = yOffset;
     }
 
+    @Override
     public T getBin (int x, int y) {
         return _source.getBin(x + _xOffset, y + _yOffset);
     }

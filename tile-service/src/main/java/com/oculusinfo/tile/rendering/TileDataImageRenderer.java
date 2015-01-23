@@ -56,7 +56,8 @@ public interface TileDataImageRenderer<T> {
 
 	/**
 	 * Render an individual tile based on the given input parameters
-	 * 
+	 *
+	 * @param data The tile data to be rendered
 	 * @param config The layer configuration object.
 	 * @return The buffered image.
 	 */
