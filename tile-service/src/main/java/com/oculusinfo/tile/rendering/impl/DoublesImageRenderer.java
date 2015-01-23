@@ -123,8 +123,6 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 		float xScale = outWidth / xBins;
 		float yScale = outHeight / yBins;
 
-		System.out.println(xScale);
-
 		double oneOverScaledRange = 1.0 / (valueMax - valueMin);
 
 		int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
