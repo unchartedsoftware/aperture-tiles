@@ -27,7 +27,6 @@ import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.IntegerProperty;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 import org.json.JSONException;
@@ -47,7 +46,7 @@ public class StandardUberFactoryProviderTests {
     // Test whether or not path merging works properly
     @Test
     public void testPathMergingWithParent () throws JSONException, ConfigurationException {
-        Set<DelegateFactoryProviderTarget<TestConstruct>> subProviders = new HashSet<>();
+        Set<FactoryProvider<TestConstruct>> subProviders = new HashSet<>();
         subProviders.add(new ConstructFactoryProvider("A", "a"));
         subProviders.add(new ConstructFactoryProvider("B", "b"));
         subProviders.add(new ConstructFactoryProvider("C", "c"));
@@ -61,29 +60,24 @@ public class StandardUberFactoryProviderTests {
             public ConfigurableFactory<TestConstruct> createFactory(ConfigurableFactory<?> parent, List<String> path) {
                 return new UberFactory<TestConstruct>(TestConstruct.class, parent, path, createChildren(parent, path), "A");
             }
-
-            @Override
-            public ConfigurableFactory<TestConstruct> createFactory(String factoryName, ConfigurableFactory<?> parent, List<String> path) {
-                return new UberFactory<TestConstruct>(factoryName, TestConstruct.class, parent, path, createChildren(parent, path), "A");
-            }
         };
 
         ConfigurableFactory<String> parent = new TestParent(Arrays.asList("root"));
-        ConfigurableFactory<TestConstruct> factoryA = provider.createFactory(parent, Arrays.asList("branch"));
+        ConfigurableFactory<? extends TestConstruct> factoryA = provider.createFactory(parent, Arrays.asList("branch"));
         factoryA.readConfiguration(new JSONObject("{root: {branch: {type: \"A\", a: {value: 1}}}}"));
         TestConstruct a = factoryA.produce(TestConstruct.class);
         Assert.assertEquals("A", a._name);
         assertPathsEqual(Arrays.asList("root", "branch", "a"), a._path);
         Assert.assertEquals(1, a._value);
 
-        ConfigurableFactory<TestConstruct> factoryB = provider.createFactory(parent, Arrays.asList("branch"));
+        ConfigurableFactory<? extends TestConstruct> factoryB = provider.createFactory(parent, Arrays.asList("branch"));
         factoryB.readConfiguration(new JSONObject("{root: {branch: {type: \"B\", b: {value: 2}}}}"));
         TestConstruct b = factoryB.produce(TestConstruct.class);
         Assert.assertEquals("B", b._name);
         assertPathsEqual(Arrays.asList("root", "branch", "b"), b._path);
         Assert.assertEquals(2, b._value);
 
-        ConfigurableFactory<TestConstruct> factoryC = provider.createFactory(parent, Arrays.asList("branch"));
+        ConfigurableFactory<? extends TestConstruct> factoryC = provider.createFactory(parent, Arrays.asList("branch"));
         factoryC.readConfiguration(new JSONObject("{root: {branch: {type: \"C\", c: {value: 3}}}}"));
         TestConstruct c = factoryC.produce(TestConstruct.class);
         Assert.assertEquals("C", c._name);
@@ -134,7 +128,7 @@ public class StandardUberFactoryProviderTests {
         }
     }
 
-    public static class ConstructFactoryProvider implements DelegateFactoryProviderTarget<TestConstruct> {
+    public static class ConstructFactoryProvider implements FactoryProvider<TestConstruct> {
         private String _name;
         private List<String> _pathAdditions;
         public ConstructFactoryProvider (String name, String... pathAdditions) {

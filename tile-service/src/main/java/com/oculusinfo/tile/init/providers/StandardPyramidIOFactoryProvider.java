@@ -32,14 +32,14 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 
 
 @Singleton
 public class StandardPyramidIOFactoryProvider extends StandardUberFactoryProvider<PyramidIO> {
 	@Inject
-	public StandardPyramidIOFactoryProvider (Set<DelegateFactoryProviderTarget<PyramidIO>> providers) {
+	public StandardPyramidIOFactoryProvider (Set<FactoryProvider<PyramidIO>> providers) {
 		super(providers);
 	}
 
@@ -53,12 +53,4 @@ public class StandardPyramidIOFactoryProvider extends StandardUberFactoryProvide
 	                                                     List<String> path) {
 		return new PyramidIOFactory(parent, path, createChildren(parent, path));
 	}
-
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
-	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new PyramidIOFactory(factoryName, parent, path, createChildren(parent, path));
-	}
-	
 }

@@ -39,13 +39,13 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * @author nkronenfeld, pulled out from code by cregnier
  */
 abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<T> {
-	private List<DelegateFactoryProviderTarget<T>> _childFactories;
+	private List<FactoryProvider<T>> _childFactories;
 
 
 
-	protected StandardUberFactoryProvider (Set<DelegateFactoryProviderTarget<T>> providers) {
+	protected StandardUberFactoryProvider (Set<FactoryProvider<T>> providers) {
 		_childFactories = new ArrayList<>();
-		for (DelegateFactoryProviderTarget<T> provider: providers) {
+		for (FactoryProvider<T> provider: providers) {
 			_childFactories.add(provider);
 		}
 	}
@@ -63,7 +63,7 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 	 */
 	protected List<ConfigurableFactory<? extends T>> createChildren (List<String> path) {
 		List<ConfigurableFactory<? extends T>> children = new ArrayList<>();
-		for (DelegateFactoryProviderTarget<T> childProvider: _childFactories) {
+		for (FactoryProvider<T> childProvider: _childFactories) {
 			ConfigurableFactory<? extends T> factory = childProvider.createFactory(path);
 			children.add(factory);
 		}
@@ -84,7 +84,7 @@ abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<
 	 */
 	protected List<ConfigurableFactory<? extends T>> createChildren (ConfigurableFactory<?> parent, List<String> path)  {
 		List<ConfigurableFactory<? extends T>> children = new ArrayList<>();
-		for (DelegateFactoryProviderTarget<T> childProvider: _childFactories) {
+		for (FactoryProvider<T> childProvider: _childFactories) {
 			ConfigurableFactory<? extends T> factory = childProvider.createFactory(parent, path);
 			children.add(factory);
 		}
