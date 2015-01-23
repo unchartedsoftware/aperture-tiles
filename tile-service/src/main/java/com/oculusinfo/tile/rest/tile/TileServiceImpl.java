@@ -26,6 +26,7 @@ package com.oculusinfo.tile.rest.tile;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -33,9 +34,11 @@ import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.util.AvroJSONConverter;
+import com.oculusinfo.tile.util.TileDataView;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -45,6 +48,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.*;
 
 
 @Singleton
@@ -77,20 +81,69 @@ public class TileServiceImpl implements TileService {
             String minimum = metadata.getCustomMetaData(""+index.getLevel(), "minimum");
             String maximum = metadata.getCustomMetaData(""+index.getLevel(), "maximum");
             config.setLevelProperties( index, minimum, maximum );
-			// record image dimensions in case of error.
-			width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-			height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+
             // produce the tile renderer from the configuration
 			TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
             // prepare for rendering
 			config.prepareForRendering(layer, index, tileSet);
-            // render to buffered image
-			bi = tileRenderer.render(config);
+
+			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			PyramidIO pyramidIO = config.produce(PyramidIO.class);
+			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+					tileRenderer.getAcceptedBinClass(),
+					tileRenderer.getAcceptedTypeDescriptor());
+
+			TileData<?> data = null;
+			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
+			if (coarseness > 1) {
+				int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
+
+				// Coarseness support:
+				// Find the appropriate tile data for the given level and coarseness
+				java.util.List<TileData<Double>> tileDatas = null;
+				TileIndex scaleLevelIndex = null;
+
+				// need to get the tile data for the level of the base level minus the coarseness
+				for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
+					scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
+							(int) Math.floor(index.getX() / coarsenessFactor),
+							(int) Math.floor(index.getY() / coarsenessFactor));
+
+					tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
+					if (tileDatas.size() >= 1) {
+						//we got data for this level so use it
+						break;
+					}
+				}
+
+				// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
+				if (tileDatas.size() < 1) {
+					LOGGER.info("Missing tile " + index + " for layer " + layer);
+					return null;
+				}
+
+				// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
+				data = new TileDataView<>(tileDatas.get(0), index);
+			} else {
+				// No coarseness - use requested tile
+				java.util.List<TileData<Double>> tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));
+				if (!tileDatas.isEmpty()) {
+					data = tileDatas.get(0);
+				}
+			}
+
+			if (data != null) {
+				bi = tileRenderer.render(data, config);
+			}
+
 		} catch (ConfigurationException e) {
 			LOGGER.warn("No renderer specified for tile request. "+ e.getMessage());
 		} catch (IllegalArgumentException e) {
             LOGGER.info("Renderer configuration not recognized.");
-        }
+		} catch (Exception e) {
+			LOGGER.warn("Tile is corrupt: " + layer + ":" + index);
+			LOGGER.warn("Tile error: ", e);
+		}
 
 		if (bi == null){
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);

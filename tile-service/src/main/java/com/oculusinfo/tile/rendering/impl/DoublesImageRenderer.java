@@ -25,9 +25,6 @@
 package com.oculusinfo.tile.rendering.impl;
 
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -37,30 +34,30 @@ import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
-import com.oculusinfo.tile.util.TileDataView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author  dgray
  */
-public class DoublesImageRenderer implements TileDataImageRenderer {
+public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-	public static Class<Double> getRuntimeBinClass () {
+
+	@Override
+	public Class<Double> getAcceptedBinClass () {
 		return Double.class;
 	}
-	public static TypeDescriptor getRuntimeTypeDescriptor () {
+
+	@Override
+	public TypeDescriptor getAcceptedTypeDescriptor () {
 		return new TypeDescriptor(Double.class);
 	}
-
 
 
 	private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
@@ -88,61 +85,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render (LayerConfiguration config) {
-		BufferedImage bi;
-		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-		String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
-		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
-		try {
-			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
-			int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
-
-			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
-			                                                                           getRuntimeBinClass(),
-			                                                                           getRuntimeTypeDescriptor());
-
-			List<TileData<Double>> tileDatas = null;
-
-			// Get the coarseness-scaled true tile index
-			TileIndex scaleLevelIndex = null;
-			// need to get the tile data for the level of the base level minus the coarseness
-			for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
-				scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
-				                                (int)Math.floor(index.getX() / coarsenessFactor),
-				                                (int)Math.floor(index.getY() / coarsenessFactor));
-
-				tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(scaleLevelIndex));
-				if (tileDatas.size() >= 1) {
-					//we got data for this level so use it
-					break;
-				}
-			}
-
-			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
-			if (tileDatas.size() < 1) {
-				LOGGER.info("Missing tile " + index + " for layer " + layerId);
-				return null;
-			}
-
-			TileData<Double> data = tileDatas.get(0);
-
-			if (scaleLevelIndex != null) {
-				data = new TileDataView<Double>(data, index);
-			}
-
-			bi = render(config, data);
-
-		} catch (Exception e) {
-			LOGGER.warn("Tile is corrupt: " + layerId + ":" + index);
-			LOGGER.warn("Tile error: ", e);
-			bi = null;
-		}
-		return bi;
-	}
-
-
-	private BufferedImage render(LayerConfiguration config, TileData<Double> data) {
+	public BufferedImage render(TileData<Double> data, LayerConfiguration config) {
 		int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 		int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 		BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
@@ -168,7 +111,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 		return bi;
 	}
 
-	private BufferedImage renderImage(TileData<Double> data,
+	protected BufferedImage renderImage(TileData<Double> data,
 								   ValueTransformer<Double> t, double valueMin, double valueMax,
 								   ColorRamp colorRamp, BufferedImage bi) {
 

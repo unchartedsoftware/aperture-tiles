@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.oculusinfo.binning.util.TypeDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
-public class MetaDataRenderer implements TileDataImageRenderer {
+public class MetaDataRenderer implements TileDataImageRenderer<Object> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetaDataRenderer.class);
     private static final double TEXT_SCALE_FACTOR = 6.0;
 
@@ -61,7 +62,17 @@ public class MetaDataRenderer implements TileDataImageRenderer {
     }
 
     @Override
-    public BufferedImage render (LayerConfiguration config) {
+    public Class<Object> getAcceptedBinClass() {
+        return null;
+    }
+
+    @Override
+    public TypeDescriptor getAcceptedTypeDescriptor() {
+        return new TypeDescriptor(getAcceptedBinClass());
+    }
+
+    @Override
+    public BufferedImage render (TileData<Object> _unused_, LayerConfiguration config) {
         try {
             TileSerializer<?> serializer = config.produce(TileSerializer.class);
 

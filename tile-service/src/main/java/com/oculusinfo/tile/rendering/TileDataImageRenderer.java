@@ -24,8 +24,10 @@
  */
 package com.oculusinfo.tile.rendering;
 
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 
 import java.awt.image.BufferedImage;
@@ -36,7 +38,21 @@ import java.awt.image.BufferedImage;
  * 
  * @author dgray, nkronenfeld
  */
-public interface TileDataImageRenderer {
+public interface TileDataImageRenderer<T> {
+
+	/**
+	 * Retrieves the class of the data type used for the bin data of tiles possible
+	 * to render with this renderer. For example, a simple tile renderer may accept
+	 * bins of Doubles.
+	 * @return class of Bin data type
+	 */
+	public Class<T> getAcceptedBinClass();
+
+	/**
+	 * Returns a type descriptor matching the #getBinClass() results
+	 * @return type descriptor for the data accepted by this renderer
+	 */
+	public TypeDescriptor getAcceptedTypeDescriptor();
 
 	/**
 	 * Render an individual tile based on the given input parameters
@@ -44,7 +60,7 @@ public interface TileDataImageRenderer {
 	 * @param config The layer configuration object.
 	 * @return The buffered image.
 	 */
-	public abstract BufferedImage render (LayerConfiguration config);
+	public abstract BufferedImage render (TileData<T> data, LayerConfiguration config);
 
 	/**
 	 * Determine how many images are available to be rendered given a set of
