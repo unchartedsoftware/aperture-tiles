@@ -26,14 +26,15 @@ package com.oculusinfo.tilegen.datasets
 
 import java.sql.Timestamp
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{Map => MutableMap}
+
 import org.apache.spark.sql.catalyst.expressions.GenericRow
 import org.apache.spark.sql.{Row, StructField, DataType, StructType, ArrayType}
 import org.apache.spark.sql.{BooleanType, StringType}
 import org.apache.spark.sql.{ByteType, ShortType, IntegerType, LongType}
 import org.apache.spark.sql.{FloatType, DoubleType}
 import org.apache.spark.sql.{TimestampType}
-
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * Created by nkronenfeld on 12/16/2014.
@@ -188,10 +189,37 @@ object SchemaTypeUtilities {
 	}
 
 	/**
+	 * Get the type of the point in a schema specified by a hierarchical index
+	 */
+	private[datasets] def getType (indexPath: Array[Int], schema: StructType): DataType = {
+		if (0 == indexPath.length) schema
+		else if (1 == indexPath.length) schema.fields(indexPath(0)).dataType
+		else {
+			val currentType = schema.fields(indexPath(0)).dataType
+			currentType match {
+				case struct: StructType => getType(indexPath.drop(1), struct)
+				case array: ArrayType => getType(indexPath.drop(1), array)
+			}
+		}
+	}
+	private[datasets] def getType (indexPath: Array[Int], schema: ArrayType): DataType = {
+		if (0 == indexPath.length) schema
+		else if (1 == indexPath.length) schema.elementType
+		else {
+			val elementType = schema.elementType
+			elementType match {
+				case struct: StructType => getType(indexPath.drop(1), struct)
+				case array: ArrayType => getType(indexPath.drop(1), array)
+			}
+		}
+	}
+
+	/**
 	 * Calculate a function to extract a single, typed field from a SchemaRDD.  calculateExtractor does not in itself
 	 * extract these values, it just returns a function that does.
 	 *
 	 * @param columnSpec A specification of the field of interest
+	 * @param schema The schema of the RDD from which to pull the column
 	 * @return A function to pull the field of interest out of a row of the given schema
 	 */
 	def calculateExtractor(columnSpec: String, schema: StructType): Row => Any = {
@@ -199,6 +227,143 @@ object SchemaTypeUtilities {
 		val indices = fieldSpecToIndices(fieldSpec, schema)
 
 		r: Row => getElement(indices, r)
+	}
+
+	/**
+	 * Calculate a function to convert between two types, as could be specified by a schema
+	 * @param from The type from which to convert
+	 * @param to The type to which to convert
+	 * @return A function that will convert as stated.  Behavior of this function is undetermined when passed a value not of the proper input type.
+	 */
+	def calculateConverter (from: DataType, to: DataType): Any => Any = {
+		val equals = (from == to)
+		if (from == to) {
+			(v: Any) => v
+		} else if (StringType == to) {
+			(v: Any) => v.toString
+		} else if (conversions.contains((from, to))) {
+			conversions((from, to))
+		} else if (to.isInstanceOf[StructType] && from.isInstanceOf[StructType]) {
+			val fromStruct = from.asInstanceOf[StructType]
+			val toStruct = to.asInstanceOf[StructType]
+
+			val commonFields = toStruct.fieldNames.filter(name => fromStruct.fieldNames.contains(name))
+			val fromFields = fromStruct.fields.zipWithIndex
+					.filter(fi => commonFields.contains(fi._1.name))
+					.map(fi => (fi._1.name, fi)).toMap
+			val toFields = toStruct.fields.zipWithIndex
+				.filter(fi => commonFields.contains(fi._1.name))
+				.map(fi => (fi._1.name, fi)).toMap
+			val toSize = toStruct.fields.size
+
+			val fieldConverters = commonFields.map(field =>
+				{
+					val iF = fromFields(field)._2
+					val typeF = fromFields(field)._1.dataType
+
+					val iT = toFields(field)._2
+					val typeT = toFields(field)._1.dataType
+
+					val converter = calculateConverter(typeF, typeT)
+
+					(iT, (field, iF, converter))
+				}
+			).toMap
+
+			input: Any => {
+				val row = input.asInstanceOf[Row]
+				val values: Array[Any] = (1 to toSize).map(toIndex =>
+					{
+						if (fieldConverters.contains(toIndex)) {
+							val (field, fromIndex, converter) = fieldConverters(toIndex)
+							converter(row(fromIndex))
+						} else {
+							null
+						}
+					}
+				).toArray
+				new GenericRow(values)
+			}
+		} else if (to.isInstanceOf[ArrayType] && from.isInstanceOf[ArrayType]) {
+			val fromArray = from.asInstanceOf[ArrayType]
+			val fromType = fromArray.elementType
+			val toArray = to.asInstanceOf[ArrayType]
+			val toType = toArray.elementType
+
+			val conversion = calculateConverter(fromType, toType)
+
+			input: Any => input.asInstanceOf[ArrayBuffer[Any]].map(conversion)
+		} else {
+			throw new IllegalArgumentException("Cannot convert from " + from + " to " + to)
+		}
+	}
+
+	private val conversions: MutableMap[(DataType, DataType), Any => Any] = MutableMap()
+	private def addConverter (from: DataType, to: DataType, conversion: Any => Any): Unit = {
+		conversions((from, to)) = conversion
+	}
+	addConverter(BooleanType, ByteType,    (b: Any) => if (b.asInstanceOf[Boolean]) 1.toByte else 0.toByte)
+	addConverter(BooleanType, ShortType,   (b: Any) => if (b.asInstanceOf[Boolean]) 1.toShort else 0.toShort)
+	addConverter(BooleanType, IntegerType, (b: Any) => if (b.asInstanceOf[Boolean]) 1 else 0)
+	addConverter(BooleanType, LongType,    (b: Any) => if (b.asInstanceOf[Boolean]) 1L else 0L)
+	addConverter(BooleanType, FloatType,   (b: Any) => if (b.asInstanceOf[Boolean]) 1.0f else 0.0f)
+	addConverter(BooleanType, DoubleType,  (b: Any) => if (b.asInstanceOf[Boolean]) 1.0 else 0.0)
+	addConverter(StringType,  BooleanType, (s: Any) => s.asInstanceOf[String].toBoolean)
+	addConverter(StringType,  ByteType,    (s: Any) => s.asInstanceOf[String].toByte)
+	addConverter(StringType,  ShortType,   (s: Any) => s.asInstanceOf[String].toShort)
+	addConverter(StringType,  IntegerType, (s: Any) => s.asInstanceOf[String].toInt)
+	addConverter(StringType,  LongType,    (s: Any) => s.asInstanceOf[String].toLong)
+	addConverter(StringType,  FloatType,   (s: Any) => s.asInstanceOf[String].toFloat)
+	addConverter(StringType,  DoubleType,  (s: Any) => s.asInstanceOf[String].toDouble)
+	addConverter(ByteType,    BooleanType, (b: Any) => b.asInstanceOf[Byte] != 0.toByte)
+	addConverter(ByteType,    ShortType,   (b: Any) => b.asInstanceOf[Byte].toShort)
+	addConverter(ByteType,    IntegerType, (b: Any) => b.asInstanceOf[Byte].toInt)
+	addConverter(ByteType,    LongType,    (b: Any) => b.asInstanceOf[Byte].toLong)
+	addConverter(ByteType,    FloatType,   (b: Any) => b.asInstanceOf[Byte].toFloat)
+	addConverter(ByteType,    DoubleType,  (b: Any) => b.asInstanceOf[Byte].toDouble)
+	addConverter(ShortType,   BooleanType, (b: Any) => b.asInstanceOf[Short] != 0.toShort)
+	addConverter(ShortType,   ByteType,    (b: Any) => b.asInstanceOf[Short].toByte)
+	addConverter(ShortType,   IntegerType, (b: Any) => b.asInstanceOf[Short].toInt)
+	addConverter(ShortType,   LongType,    (b: Any) => b.asInstanceOf[Short].toLong)
+	addConverter(ShortType,   FloatType,   (b: Any) => b.asInstanceOf[Short].toFloat)
+	addConverter(ShortType,   DoubleType,  (b: Any) => b.asInstanceOf[Short].toDouble)
+	addConverter(IntegerType, BooleanType, (b: Any) => b.asInstanceOf[Int] != 0)
+	addConverter(IntegerType, ByteType,    (b: Any) => b.asInstanceOf[Int].toByte)
+	addConverter(IntegerType, ShortType,   (b: Any) => b.asInstanceOf[Int].toShort)
+	addConverter(IntegerType, LongType,    (b: Any) => b.asInstanceOf[Int].toLong)
+	addConverter(IntegerType, FloatType,   (b: Any) => b.asInstanceOf[Int].toFloat)
+	addConverter(IntegerType, DoubleType,  (b: Any) => b.asInstanceOf[Int].toDouble)
+	addConverter(LongType,    BooleanType, (b: Any) => b.asInstanceOf[Long] != 0L)
+	addConverter(LongType,    ByteType,    (b: Any) => b.asInstanceOf[Long].toByte)
+	addConverter(LongType,    ShortType,   (b: Any) => b.asInstanceOf[Long].toShort)
+	addConverter(LongType,    IntegerType, (b: Any) => b.asInstanceOf[Long].toInt)
+	addConverter(LongType,    FloatType,   (b: Any) => b.asInstanceOf[Long].toFloat)
+	addConverter(LongType,    DoubleType,  (b: Any) => b.asInstanceOf[Long].toDouble)
+	addConverter(FloatType,   BooleanType, (b: Any) => b.asInstanceOf[Float] != 0.toFloat)
+	addConverter(FloatType,   ByteType,    (b: Any) => b.asInstanceOf[Float].toByte)
+	addConverter(FloatType,   ShortType,   (b: Any) => b.asInstanceOf[Float].toShort)
+	addConverter(FloatType,   IntegerType, (b: Any) => b.asInstanceOf[Float].toInt)
+	addConverter(FloatType,   LongType,    (b: Any) => b.asInstanceOf[Float].toLong)
+	addConverter(FloatType,   DoubleType,  (b: Any) => b.asInstanceOf[Float].toDouble)
+	addConverter(DoubleType,  BooleanType, (b: Any) => b.asInstanceOf[Double] != 0.0)
+	addConverter(DoubleType,  ByteType,    (b: Any) => b.asInstanceOf[Double].toByte)
+	addConverter(DoubleType,  ShortType,   (b: Any) => b.asInstanceOf[Double].toShort)
+	addConverter(DoubleType,  IntegerType, (b: Any) => b.asInstanceOf[Double].toInt)
+	addConverter(DoubleType,  LongType,    (b: Any) => b.asInstanceOf[Double].toLong)
+	addConverter(DoubleType,  FloatType,   (b: Any) => b.asInstanceOf[Double].toFloat)
+
+	/**
+	 * Figure out from a schema the type of a particular column.
+	 *
+	 * @param columnSpec A specification of the field of interest
+	 * @param schema The schema of the RDD from which to pull the column
+	 * @return The data type of the given column in the given schema
+	 */
+	def getColumnType (columnSpec: String, schema: StructType): DataType = {
+		val fieldSpec = parseColumnSpec(columnSpec)
+		val indices = fieldSpecToIndices(fieldSpec, schema)
+
+		getType(indices, schema)
 	}
 
 	private val _classesOfDataTypes: Map[DataType, Class[_]] =

@@ -25,11 +25,15 @@
 package com.oculusinfo.tilegen.datasets
 
 
+import java.lang.{Integer => JavaInt}
+import java.lang.{Long => JavaLong}
+import java.lang.{Double => JavaDouble}
+
 import org.apache.spark.sql.catalyst.types.ArrayType
 import org.scalatest.FunSuite
 
 import org.apache.spark.sql.{Row, StructField, StructType}
-import org.apache.spark.sql.{BooleanType, StringType}
+import org.apache.spark.sql.{BooleanType, StringType, TimestampType}
 import org.apache.spark.sql.{ByteType, ShortType, IntegerType, LongType}
 import org.apache.spark.sql.{FloatType, DoubleType}
 import org.apache.spark.sql.catalyst.expressions.GenericRow
@@ -127,5 +131,89 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		assert( 12  === calculateExtractor("a2[1][1].b1[1]", schema)(r))
 		assert( 13  === calculateExtractor("a2[1][1].b2",    schema)(r))
 		assert("14" === calculateExtractor("a3",             schema)(r))
+	}
+
+	test("Field type determination") {
+		val schema = structSchema(schemaField("a", IntegerType),
+		                          schemaField("b", FloatType),
+		                          schemaField("c", arraySchema(DoubleType)),
+		                          schemaField("d", arraySchema(structSchema(schemaField("e", StringType),
+		                                                                    schemaField("f", TimestampType)))),
+		                          schemaField("g", structSchema(schemaField("h", BooleanType),
+		                                                        schemaField("i", ByteType))))
+
+		assert(IntegerType === getColumnType("a", schema))
+		assert(FloatType === getColumnType("b", schema))
+		assert(getColumnType("c", schema).isInstanceOf[ArrayType])
+		assert(DoubleType === getColumnType("c[0]", schema))
+		assert(DoubleType === getColumnType("c[1]", schema))
+		assert(getColumnType("d", schema).isInstanceOf[ArrayType])
+		assert(getColumnType("d[0]", schema).isInstanceOf[StructType])
+		assert(StringType === getColumnType("d[1].e", schema))
+		assert(TimestampType === getColumnType("d[1].f", schema))
+		assert(getColumnType("g", schema).isInstanceOf[StructType])
+		assert(BooleanType === getColumnType("g.h", schema))
+		assert(ByteType === getColumnType("g.i", schema))
+	}
+
+	test("Primitive type conversion - sample conversions") {
+		val schema = structSchema(schemaField("a", IntegerType),
+		                          schemaField("b", DoubleType),
+		                          schemaField("c", StringType))
+
+		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
+		                new GenericRow(Array(2, 2.2, "2.22")),
+		                new GenericRow(Array(3, 3.3, "3.33")),
+		                new GenericRow(Array(4, 4.4, "4.44")),
+		                new GenericRow(Array(5, 5.5, "5.55")),
+		                new GenericRow(Array(6, 6.6, "6.66")),
+		                new GenericRow(Array(7, 7.7, "7.77")),
+		                new GenericRow(Array(8, 8.8, "8.88")),
+		                new GenericRow(Array(9, 9.9, "9.99")))
+
+		assert(IntegerType == getColumnType("a", schema))
+		val aExtractor = calculateExtractor("a", schema)
+		assert(DoubleType == getColumnType("b", schema))
+		val bExtractor = calculateExtractor("b", schema)
+		assert(StringType == getColumnType("c", schema))
+		val cExtractor = calculateExtractor("c", schema)
+
+		def mappedInstanceCheck (toCheck: List[Any], checkTypes: Class[_]*): Unit = {
+			toCheck.foreach(item => assert(checkTypes.map(ct => ct.isInstance(item)).reduce(_ || _)))
+		}
+
+		val iToS = calculateConverter(IntegerType, StringType)
+		val aAsS = data.map(r => iToS(aExtractor(r))).toList
+		assert(List("1", "2", "3", "4", "5", "6", "7", "8", "9") === aAsS)
+		mappedInstanceCheck(aAsS, classOf[String])
+
+		val iToL = calculateConverter(IntegerType, LongType)
+		val aAsL = data.map(r => iToL(aExtractor(r))).toList
+		assert(List(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L) === aAsL)
+		// Because aAsL is a list of Any, it ends up boxing the contents, so we really have to check for JavaLong
+		// instead of Long here; we pass in both, just in case this changes, because either should, theoretically,
+		// be acceptable.
+		mappedInstanceCheck(aAsL, classOf[Long], classOf[JavaLong])
+
+		val iToD = calculateConverter(IntegerType, DoubleType)
+		val aAsD = data.map(r => iToD(aExtractor(r))).toList
+		assert(List(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0) === aAsD)
+		// Similar to Longs, above.
+		mappedInstanceCheck(aAsD, classOf[Double], classOf[JavaDouble])
+
+		val dToI = calculateConverter(DoubleType, IntegerType)
+		val bAsI = data.map(r => {
+			val d = bExtractor(r)
+			val i = dToI(d)
+			dToI(bExtractor(r))
+		}).toList
+		assert(List(1, 2, 3, 4, 5, 6, 7, 8, 9) === bAsI)
+		// Similar to Longs, above.
+		mappedInstanceCheck(bAsI, classOf[Int], classOf[JavaInt])
+
+		val dToS = calculateConverter(DoubleType, StringType)
+		val bAsS = data.map(r => dToS(bExtractor(r))).toList
+		assert(List("1.1", "2.2", "3.3", "4.4", "5.5", "6.6", "7.7", "8.8", "9.9") === bAsS)
+		mappedInstanceCheck(bAsS, classOf[String])
 	}
 }
