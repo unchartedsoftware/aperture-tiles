@@ -28,12 +28,92 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 
 import java.lang.{Double => JavaDouble}
+import java.util.{List => JavaList}
 
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.properties.{IntegerProperty, DoubleProperty, StringProperty}
 import com.oculusinfo.factory.util.Pair
-import com.oculusinfo.tilegen.util.ExtendedNumeric
-import com.oculusinfo.tilegen.util.TypeConversion
+import com.oculusinfo.tilegen.util.{NumericallyConfigurableFactory, ExtendedNumeric, TypeConversion}
+
+import scala.reflect.ClassTag
 
 
+object NumericAnalyticFactory {
+	val AGGREGATION_TYPE = new StringProperty("aggregation", "The type of analytic to use", "sum",
+	                                          Array[String]("sum", "min", "max", "mean", "stats"))
+	val MIN_COUNT = new IntegerProperty("mincount", "The minimum number of data points a bin must have to be considered for statistical binning", 1)
+	val EMPTY_MEAN = new DoubleProperty("emptymean", "The value to use as a bin's mean when it doesn't have enough data", JavaDouble.NaN)
+	val EMPTY_DEV = new DoubleProperty("emptydev", "The value to use as a bin's standard deviation when it doesn't have enough data", JavaDouble.NaN)
+}
+class NumericBinningAnalyticFactory (name: String = null,
+                                     parent: ConfigurableFactory[_],
+                                     path: JavaList[String])
+		extends NumericallyConfigurableFactory[BinningAnalytic[_, _]](name, classOf[BinningAnalytic[_, _]], parent, path, true)
+{
+	import NumericAnalyticFactory._
+	addProperty(AGGREGATION_TYPE)
+	addProperty(EMPTY_MEAN)
+	addProperty(EMPTY_DEV)
+	addProperty(MIN_COUNT)
+
+	/**
+	 * This function serves the purpose of the {@link ConfigurableFactory#create} function in normal factories.
+	 * It includes generic numeric types to allow factories to create objects generified with the appropriate generic
+	 * numeric.
+	 * @param tag A ClassTag of the scala numeric base type
+	 * @param numeric The scala extended numeric object that represents the type to use
+	 * @param conversion A conversion object between the scala and java numeric types
+	 * @tparam ST The scala extended numeric type to use
+	 * @tparam JT The java numeric type to use
+	 * @return The factory to be returned by ConfigurableFactory.create.
+	 */
+	override protected def typedCreate[ST, JT](tag: ClassTag[ST], numeric: ExtendedNumeric[ST], conversion: TypeConversion[ST, JT]): BinningAnalytic[_, _] = {
+		getPropertyValue(AGGREGATION_TYPE).toLowerCase match {
+			case "sum" => new NumericSumBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "min" => new NumericMinBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "minimum" => new NumericMinBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "max" => new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "maximum" => new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "mean" => new NumericMeanBinningAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
+			case "stats" => new NumericStatsBinningAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
+			                                                    getPropertyValue(MIN_COUNT))(numeric)
+		}
+	}
+}
+
+class NumericTileAnalyticFactory (name: String = null,
+                                  parent: ConfigurableFactory[_],
+                                  path: JavaList[String])
+		extends NumericallyConfigurableFactory[TileAnalytic[_]](name, classOf[TileAnalytic[_]], parent, path, true)
+{
+	import NumericAnalyticFactory._
+	addProperty(AGGREGATION_TYPE)
+	addProperty(EMPTY_MEAN)
+	addProperty(EMPTY_DEV)
+	addProperty(MIN_COUNT)
+
+	/**
+	 * This function serves the purpose of the {@link ConfigurableFactory#create} function in normal factories.
+	 * It includes generic numeric types to allow factories to create objects generified with the appropriate generic
+	 * numeric.
+	 * @param tag A ClassTag of the scala numeric base type
+	 * @param numeric The scala extended numeric object that represents the type to use
+	 * @param conversion A conversion object between the scala and java numeric types
+	 * @tparam ST The scala extended numeric type to use
+	 * @tparam JT The java numeric type to use
+	 * @return The factory to be returned by ConfigurableFactory.create.
+	 */
+	override protected def typedCreate[ST, JT](tag: ClassTag[ST], numeric: ExtendedNumeric[ST], conversion: TypeConversion[ST, JT]): TileAnalytic[_] = {
+		getPropertyValue(AGGREGATION_TYPE) match {
+			case "sum" => new NumericSumTileAnalytic[ST]()(numeric)
+			case "min" => new NumericMinTileAnalytic[ST]()(numeric)
+			case "max" => new NumericMaxTileAnalytic[ST]()(numeric)
+			case "mean" => new NumericMeanTileAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
+			case "stats" => new NumericStatsTileAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
+			                                                    getPropertyValue(MIN_COUNT))(numeric)
+		}
+	}
+}
 
 /**
  * The simplest of numeric analytics, this takes in numbers and spits out their 
@@ -371,7 +451,7 @@ class NumericStatsBinningAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble
 		new Pair[JavaDouble, JavaDouble](Double.box(mean), Double.box(stddev))
 	}
 }
-class NumericStatstileAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
+class NumericStatsTileAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
                                    minCount: Int = 1,
                                    analyticName: String = "")(implicit numeric: ExtendedNumeric[T])
 		extends NumericStatsAnalytic[T]
