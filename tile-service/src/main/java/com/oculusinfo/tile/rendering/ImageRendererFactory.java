@@ -90,11 +90,6 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 			return new TopAndBottomTextScoresImageRenderer();
 		} else if ("doublestatistics".equals(rendererType)) {
 			return new DoublesStatisticImageRenderer();
-		} else if ("metadata".equals(rendererType)) {
-		    List<String> components = getPropertyValue(METADATA_COMPONENTS);
-            double halign = getPropertyValue(HORIZONTAL_ALIGNMENT);
-            double valign = getPropertyValue(VERTICAL_ALIGNMENT);
-		    return new MetaDataRenderer(components, halign, valign);
 		} else {
 			return null;
 		}
