@@ -33,6 +33,7 @@ import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
+import com.oculusinfo.factory.providers.{StandardUberFactoryProvider, FactoryProvider}
 import com.oculusinfo.factory.{ConfigurationProperty, UberFactory, ConfigurableFactory}
 import com.oculusinfo.factory.properties._
 
@@ -110,38 +111,42 @@ object ValueExtractorFactory {
 		                         "fields", "The fields used by this value extractor")
 
 	val defaultFactory = "count"
+	/** Default child factories */
+	val defaultSubFactories = Set[FactoryProvider[ValueExtractor[_, _]]](CountValueExtractorFactory.provider,
+	                                                                     FieldValueExtractorFactory.provider,
+	                                                                     MultiFieldValueExtractorFactory.provider,
+	                                                                     SeriesValueExtractorFactory.provider,
+	                                                                     IndirectSeriesValueExtractorFactory.provider,
+	                                                                     StringValueExtractorFactory.provider,
+	                                                                     SubstringValueExtractorFactory.provider)
+	/** Create a standard index extractor uber-factory provider */
+	def provider (defaultProvider: String = defaultFactory,
+	              subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
+		new StandardUberFactoryProvider[ValueExtractor[_, _]](subFactoryProviders.asJava) {
+			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], null, path, createChildren(path), defaultProvider)
+			override def createFactory(parent: ConfigurableFactory[_],
+			                           path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, createChildren(path), defaultProvider)
+		}
 
-	/** Default function to use when creating child factories */
-	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
-			JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] =
-		Seq[ConfigurableFactory[_ <: ValueExtractor[_, _]]](
-			new CountValueExtractorFactory(parent, path),
-			new FieldValueExtractorFactory(parent, path),
-			new MultiFieldValueExtractorFactory(parent, path),
-			new SeriesValueExtractorFactory(parent, path),
-			new IndirectSeriesValueExtractorFactory(parent, path),
-			new StringValueExtractorFactory(parent, path),
-			new SubstringValueExtractorFactory(parent, path)
-		).asJava
+	/** Short-hand for accessing the standard index extractor uber-factory easily. */
+	def apply (parent: ConfigurableFactory[_],
+	           path: JavaList[String],
+	           defaultProvider: String = defaultFactory,
+	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
+		provider(defaultProvider, subFactoryProviders).createFactory(parent, path)
 
+	/** Helper method for quick and easy construction of factory providers for sub-factories. */
+	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => ValueExtractorFactory) =
+		new FactoryProvider[ValueExtractor[_, _]] {
+			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				ctor(null, path)
 
-	/** Create an un-named uber-factory for value extractors */
-	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
-	           defaultType: String = defaultFactory,
-	           childProviders: (ConfigurableFactory[_],
-	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
-			ConfigurableFactory[ValueExtractor[_, _]] =
-		new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, true,
-		                                      createChildren(parent, path), defaultType)
-
-	/** Create a named uber-factory for value extractors */
-	def named (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
-	           defaultType: String = defaultFactory,
-	           childProviders: (ConfigurableFactory[_],
-	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: ValueExtractor[_, _]]] = createChildren):
-			ConfigurableFactory[ValueExtractor[_, _]] =
-		new UberFactory[ValueExtractor[_, _]](name, classOf[ValueExtractor[_, _]], parent, path, true,
-		                                      createChildren(parent, path), defaultType)
+			override def createFactory(parent: ConfigurableFactory[_],
+			                           path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				ctor(parent, path)
+		}
 }
 
 /**
@@ -159,6 +164,10 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 {
 }
 
+object CountValueExtractorFactory {
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new CountValueExtractorFactory(parent, path))
+}
 /**
  * A constructor for CountValueExtractor2 value extractors.  All arguments are pass-throughs to
  * @see CountValueExtractor2
@@ -200,6 +209,9 @@ object FieldValueExtractorFactory {
 		new DoubleProperty("empty", "The value to be used in bins without enough data for validity", 0.0)
 	private[datasets] val MIN_COUNT_PROPERTY =
 		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 0)
+
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new FieldValueExtractorFactory(parent, path))
 }
 /**
  * A constructor for FieldValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
@@ -290,6 +302,10 @@ class MeanValueExtractor[T: ClassTag] (field: String, emptyValue: Option[JavaDou
 		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
 }
 
+object SeriesValueExtractorFactory {
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new SeriesValueExtractorFactory(parent, path))
+}
 /**
  * A constructor for SeriesValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
  * constructor.
@@ -335,7 +351,7 @@ class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String])
 		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
-object IndirectSeriesValueExtractor {
+object IndirectSeriesValueExtractorFactory {
 	val KEY_PROPERTY = new StringProperty("key",
 	                                      "The field in which to find the key of a given record for the indirect series",
 	                                      "")
@@ -345,6 +361,9 @@ object IndirectSeriesValueExtractor {
 	val VALID_KEYS_PROPERTY = new ListProperty(KEY_PROPERTY,
 	                                           "validKeys",
 	                                           "A list of the valid values that may be found in a records key property; all other values will be ignored.")
+
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new IndirectSeriesValueExtractorFactory(parent, path))
 }
 
 /**
@@ -356,14 +375,14 @@ object IndirectSeriesValueExtractor {
 class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory("indirectSeries", parent, path)
 {
-	addProperty(IndirectSeriesValueExtractor.KEY_PROPERTY)
-	addProperty(IndirectSeriesValueExtractor.VALUE_PROPERTY)
-	addProperty(IndirectSeriesValueExtractor.VALID_KEYS_PROPERTY)
+	addProperty(IndirectSeriesValueExtractorFactory.KEY_PROPERTY)
+	addProperty(IndirectSeriesValueExtractorFactory.VALUE_PROPERTY)
+	addProperty(IndirectSeriesValueExtractorFactory.VALID_KEYS_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		import IndirectSeriesValueExtractor._
+		import IndirectSeriesValueExtractorFactory._
 		def keyField = getPropertyValue(KEY_PROPERTY)
 		def valueField = getPropertyValue(VALUE_PROPERTY)
 		def validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
@@ -405,6 +424,10 @@ class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueFiel
 		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
 }
 
+object MultiFieldValueExtractorFactory {
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new MultiFieldValueExtractorFactory(parent, path))
+}
 /**
  * A constructor for MultiFieldValueExtractor2 value extractors.  All arguments are pass-throughs to the super-class's
  * constructor.
@@ -496,6 +519,10 @@ object StringScoreBinningAnalyticFactory {
 		new StringScoreBinningAnalytic[T, JT](new NumericSumBinningAnalytic(), aggregationLimit, ordering, binLimit)
 	}
 }
+object StringValueExtractorFactory {
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new StringValueExtractorFactory(parent, path))
+}
 /**
  * A constructor for SubstringValueExtrator2 value extractors.  All arguments are pass-throughs to the super-class's
  * constructor.
@@ -553,6 +580,9 @@ object SubstringValueExtractorFactory {
 		                                        "bounds", "relevant substring bounds", new Pair(0, 1)),
 	                                        "indices",
 	                                        "The bounds of relevant substring groups, where groups are delimited by the parsing delimiter");
+
+	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
+		new SubstringValueExtractorFactory(parent, path))
 }
 
 /**
