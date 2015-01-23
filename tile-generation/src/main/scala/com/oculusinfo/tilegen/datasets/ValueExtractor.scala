@@ -43,32 +43,10 @@ import scala.util.{Try, Success, Failure}
 import org.apache.avro.file.CodecFactory
 import com.oculusinfo.binning.{TilePyramid, TileData}
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer
+import com.oculusinfo.binning.io.serialization.impl.{PairAvroSerializer, PairArrayAvroSerializer, PrimitiveArrayAvroSerializer, PrimitiveAvroSerializer}
 import com.oculusinfo.factory.util.Pair
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
-import com.oculusinfo.tilegen.tiling.analytics.ArrayBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.ArrayTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.CategoryValueAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.CategoryValueBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.CustomGlobalMetadata
-import com.oculusinfo.tilegen.tiling.analytics.NumericMaxAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMaxBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMaxTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMinAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMinBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMinTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericSumAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericSumTileAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.NumericMeanBinningAnalytic
-import com.oculusinfo.tilegen.tiling.analytics.StringScoreBinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics._
 import com.oculusinfo.tilegen.util._
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
-
-
 
 
 /**
@@ -205,10 +183,12 @@ object FieldValueExtractorFactory {
 	private[datasets] val FIELD_AGGREGATION_PROPERTY = new StringProperty("aggregation",
 	                                                                      "The way to aggregate the value field when binning",
 	                                                                      "add")
-	private[datasets] val EMPTY_VALUE_PROPERTY =
-		new DoubleProperty("empty", "The value to be used in bins without enough data for validity", 0.0)
+	private[datasets] val EMPTY_MEAN_PROPERTY =
+		new DoubleProperty("emptyMean", "The value to be used as the mean in bins without enough data for validity", JavaDouble.NaN)
+	private[datasets] val EMPTY_STD_DEV_PROPERTY =
+		new DoubleProperty("emptyStdDev", "The value to be used as the standard deviation in bins without enough data for validity", JavaDouble.NaN)
 	private[datasets] val MIN_COUNT_PROPERTY =
-		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 0)
+		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 1)
 
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new FieldValueExtractorFactory(parent, path))
@@ -226,7 +206,8 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
 
 	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
 	addProperty(FIELD_AGGREGATION_PROPERTY)
-	addProperty(EMPTY_VALUE_PROPERTY)
+	addProperty(EMPTY_MEAN_PROPERTY)
+	addProperty(EMPTY_STD_DEV_PROPERTY)
 	addProperty(MIN_COUNT_PROPERTY)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
@@ -239,12 +220,19 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
 			new FieldValueExtractor[T, JT](field, analytic)(tag, numeric, conversion)
 
 		def createMeanExtractor (): ValueExtractor[_, _] = {
-			val emptyValue = optionalGet(EMPTY_VALUE_PROPERTY)
+			val emptyMean = optionalGet(EMPTY_MEAN_PROPERTY).map(_.doubleValue())
 			val minCount = optionalGet(MIN_COUNT_PROPERTY).map(_.intValue())
 
-			new MeanValueExtractor[T](field, emptyValue, minCount)(tag, numeric)
+			new MeanValueExtractor[T](field, emptyMean, minCount)(tag, numeric)
 		}
 
+		def createStatsExtractor (): ValueExtractor[_, _] = {
+			val emptyMean = optionalGet(EMPTY_MEAN_PROPERTY).map(_.doubleValue())
+			val emptySigma = optionalGet(EMPTY_STD_DEV_PROPERTY).map(_.doubleValue())
+			val minCount = optionalGet(MIN_COUNT_PROPERTY).map(_.intValue())
+
+			new StatsValueExtractor[T](field, emptyMean, emptySigma, minCount)(tag, numeric)
+		}
 		analyticType match {
 			case "min" =>     createFieldExtractor(new NumericMinBinningAnalytic[T, JT]()(numeric, conversion))
 			case "minimum" => createFieldExtractor(new NumericMinBinningAnalytic[T, JT]()(numeric, conversion))
@@ -282,17 +270,18 @@ class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: Bin
 /**
  * A value extractor that uses the mean of the (numeric) value of a single field as the value of each record.
  * @param field The field whose value is used as the record's value
- * @param emptyValue The value to use for bins without enough valid data
+ * @param emptyMean The value to use for bins without enough valid data
  * @param minCount The minimum number of records allowed in a bin before it is considered valid.
  * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
  */
-class MeanValueExtractor[T: ClassTag] (field: String, emptyValue: Option[JavaDouble], minCount: Option[Int])
+class MeanValueExtractor[T: ClassTag] (field: String, emptyMean: Option[Double], minCount: Option[Int])
                         (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
 	def name = field
 	def fields = Seq(field)
 	override def convert: (Seq[Any]) => (T, Int) = s => (s(0).asInstanceOf[T], 1)
-	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = new NumericMeanBinningAnalytic[T]()
+	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] =
+		new NumericMeanBinningAnalytic[T](emptyMean.getOrElse(JavaDouble.NaN), minCount.getOrElse(1))
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
 		val convertFcn: JavaDouble => T = bt => numeric.fromDouble(bt.doubleValue())
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMinTileAnalytic[T]()),
@@ -300,6 +289,40 @@ class MeanValueExtractor[T: ClassTag] (field: String, emptyValue: Option[JavaDou
 	}
 	override def serializer: TileSerializer[JavaDouble] =
 		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
+}
+/**
+ * A value extractor that uses the mean and standard deviation of the (numeric) value of a single field
+ * as the value of each record.
+ * @param field The field whose value is used as the record's value
+ * @tparam T The numeric type expected for the field in question.  Bins are always written as pairs of Java Doubles
+ */
+class StatsValueExtractor[T: ClassTag] (field: String,
+                                       emptyMean: Option[Double],
+                                       emptySigma: Option[Double],
+                                       minCount: Option[Int])
+                                       (implicit numeric: ExtendedNumeric[T])
+		extends ValueExtractor[(T, T, Int), Pair[JavaDouble, JavaDouble]] with Serializable
+{
+	override def name = field
+	override def fields = Seq(field)
+	override def convert: (Seq[Any]) => (T, T, Int) = s => {
+		val v = s(0).asInstanceOf[T]
+		(v, numeric.times(v, v), 1)
+	}
+	override def binningAnalytic: BinningAnalytic[(T, T, Int), Pair[JavaDouble, JavaDouble]] =
+		new NumericStatsBinningAnalytic[T]((emptyMean.getOrElse(JavaDouble.NaN),
+				                            emptySigma.getOrElse(JavaDouble.NaN)),
+				                           minCount.getOrElse(1))
+	override def getTileAnalytics: Seq[AnalysisDescription[TileData[Pair[JavaDouble, JavaDouble]], _]] = {
+		val convertMean:  Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getFirst.doubleValue())
+		val convertSigma: Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getSecond.doubleValue())
+		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T]("minMean")),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T]("maxMean")),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T]("minStdDev")),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T]("maxStdDev")))
+	}
+	override def serializer: TileSerializer[Pair[JavaDouble, JavaDouble]] =
+		new PairAvroSerializer(classOf[JavaDouble], classOf[JavaDouble], CodecFactory.bzip2Codec())
 }
 
 object SeriesValueExtractorFactory {
