@@ -123,7 +123,7 @@ public class TileServiceImpl implements TileService {
 				}
 
 				// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
-				data = new TileDataView<>(tileDatas.get(0), index);
+				data = TileDataView.fromSourceAbsolute(tileDatas.get(0), index);
 			} else {
 				// No coarseness - use requested tile
 				java.util.List<TileData<Double>> tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));

@@ -36,49 +36,52 @@ import java.awt.Rectangle;
  * @author robharper
  */
 public class TileDataView<T> extends TileData<T> {
-    private final TileData<T> _source;
-    private final Rectangle _bounds;
 
-    /**
-     * Creates a TileDataView of an existing TileData given an alternate tile index. The new index
-     * must be contained within the source at a higher level.
-     * @param source
-     * @param targetIndex
-     */
-    public TileDataView(TileData<T> source, TileIndex targetIndex) {
-        // TileData view of the target index but with a lower bin count (calculated as a fraction of source bins using level difference)
-        super(new TileIndex(targetIndex.getLevel(), targetIndex.getX(), targetIndex.getY(),
-                source.getDefinition().getXBins() / ((int)Math.pow(2, targetIndex.getLevel() - source.getDefinition().getLevel())),
-                source.getDefinition().getYBins() / ((int)Math.pow(2, targetIndex.getLevel() - source.getDefinition().getLevel()))
-        ));
-
+    public static <T> TileDataView<T> fromSourceAbsolute(TileData<T> source, TileIndex targetIndex) {
         TileIndex sourceIndex = source.getDefinition();
+        int levelDelta = targetIndex.getLevel() - sourceIndex.getLevel();
 
-        //calculate the tile tree multiplier to go between tiles at each level.
-        //this is also the number of x/y tiles in the base level for every tile in the scaled level
-        int tileTreeMultiplier = (int)Math.pow(2, targetIndex.getLevel() - sourceIndex.getLevel());
+        if (levelDelta < 0) {
+            throw new IllegalArgumentException("Target index must be greater than or equal to source index in absolute tile view");
+        }
+        if ((targetIndex.getX() >> levelDelta) << levelDelta != sourceIndex.getX()) {
+            throw new IllegalArgumentException("Target index be for tile contained within source tile");
+        }
+        if ((targetIndex.getY() >> levelDelta) << levelDelta != sourceIndex.getY()) {
+            throw new IllegalArgumentException("Target index be for tile contained within source tile");
+        }
 
-        int baseLevelFirstTileY = sourceIndex.getY() * tileTreeMultiplier;
+        int tileCountRatio = 1 << levelDelta;
 
-        //the y tiles are backwards, so we need to shift the order around by reversing the counting direction
-        int yTileIndex = ((tileTreeMultiplier - 1) - (targetIndex.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
+        // Fraction of the way through the tile that the subview should begin
+        // In the case of y the axis is inverted so the end of the desired tile is the beginning of the next, hence +1
+        float xPosFraction = ((float)targetIndex.getX() / tileCountRatio) - sourceIndex.getX();
+        float yPosFraction = ((float)(targetIndex.getY()+1) / tileCountRatio) - sourceIndex.getY();
 
-        //figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
-        int xBinStart = (int)Math.floor(sourceIndex.getXBins() * (((double)(targetIndex.getX()) / tileTreeMultiplier) - sourceIndex.getX()));
-        int yBinStart = ((int)Math.floor(sourceIndex.getYBins() * (((double)(yTileIndex) / tileTreeMultiplier) - sourceIndex.getY())) ) ;
+        int xBinStart = (int)(xPosFraction * sourceIndex.getXBins());
+        // Flip the bin counts (y axis opposite direction to bin y axis)
+        int yBinStart = sourceIndex.getYBins() - (int)(yPosFraction * sourceIndex.getYBins());
 
-        _source = source;
-        _bounds = new Rectangle(xBinStart, yBinStart, sourceIndex.getXBins() / tileTreeMultiplier, sourceIndex.getYBins() / tileTreeMultiplier);
+        return new TileDataView<>(source,
+                new TileIndex(targetIndex.getLevel(), targetIndex.getX(), targetIndex.getY(), sourceIndex.getXBins()/tileCountRatio, sourceIndex.getYBins()/tileCountRatio),
+                xBinStart, yBinStart);
     }
 
-    public TileDataView(TileData<T> source, Rectangle bounds) {
-        super(new TileIndex(source.getDefinition().getLevel(), source.getDefinition().getX(), source.getDefinition().getY(), bounds.width, bounds.height));
+
+
+    private final TileData<T> _source;
+    private final int _xOffset;
+    private final int _yOffset;
+
+    private TileDataView(TileData<T> source, TileIndex index, int xOffset, int yOffset) {
+        super(index);
 
         _source = source;
-        _bounds = bounds;
+        _xOffset = xOffset;
+        _yOffset = yOffset;
     }
 
     public T getBin (int x, int y) {
-        return _source.getBin(x + _bounds.x, y + _bounds.y);
+        return _source.getBin(x + _xOffset, y + _yOffset);
     }
 }
