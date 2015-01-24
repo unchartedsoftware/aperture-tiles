@@ -229,6 +229,37 @@ object SchemaTypeUtilities {
 		r: Row => getElement(indices, r)
 	}
 
+	/** A simple trait to allow creation of typed numeric functions, solely for use passing in to withNumeric */
+	trait FunctionCreator {
+		def createFunction[T: Numeric] (t: T): T
+	}
+	/** Act on a value as the appropriate type of numeric, in a type-safe manner. */
+	def withNumeric[T] (value: Any, functionCreator: FunctionCreator): Any = {
+		value match {
+			case b: Byte =>      functionCreator.createFunction[Byte](b)
+			case s: Short =>     functionCreator.createFunction[Short](s)
+			case i: Int =>       functionCreator.createFunction[Int](i)
+			case l: Long =>      functionCreator.createFunction[Long](l)
+			case f: Float =>     functionCreator.createFunction[Float](f)
+			case d: Double =>    functionCreator.createFunction[Double](d)
+			case t: Timestamp => functionCreator.createFunction[Long](t.getTime)
+		}
+	}
+
+	/**
+	 * Figure out from a schema the type of a particular column.
+	 *
+	 * @param columnSpec A specification of the field of interest
+	 * @param schema The schema of the RDD from which to pull the column
+	 * @return The data type of the given column in the given schema
+	 */
+	def getColumnType (columnSpec: String, schema: StructType): DataType = {
+		val fieldSpec = parseColumnSpec(columnSpec)
+		val indices = fieldSpecToIndices(fieldSpec, schema)
+
+		getType(indices, schema)
+	}
+
 	/**
 	 * Calculate a function to convert between two types, as could be specified by a schema
 	 * @param from The type from which to convert
@@ -351,20 +382,6 @@ object SchemaTypeUtilities {
 	addConverter(DoubleType,  IntegerType, (b: Any) => b.asInstanceOf[Double].toInt)
 	addConverter(DoubleType,  LongType,    (b: Any) => b.asInstanceOf[Double].toLong)
 	addConverter(DoubleType,  FloatType,   (b: Any) => b.asInstanceOf[Double].toFloat)
-
-	/**
-	 * Figure out from a schema the type of a particular column.
-	 *
-	 * @param columnSpec A specification of the field of interest
-	 * @param schema The schema of the RDD from which to pull the column
-	 * @return The data type of the given column in the given schema
-	 */
-	def getColumnType (columnSpec: String, schema: StructType): DataType = {
-		val fieldSpec = parseColumnSpec(columnSpec)
-		val indices = fieldSpecToIndices(fieldSpec, schema)
-
-		getType(indices, schema)
-	}
 
 	private val _classesOfDataTypes: Map[DataType, Class[_]] =
 		Map(BooleanType -> classOf[Boolean],

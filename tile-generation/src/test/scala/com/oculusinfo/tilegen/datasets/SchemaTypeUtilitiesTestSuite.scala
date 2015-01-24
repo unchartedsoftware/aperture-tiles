@@ -216,4 +216,55 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		assert(List("1.1", "2.2", "3.3", "4.4", "5.5", "6.6", "7.7", "8.8", "9.9") === bAsS)
 		mappedInstanceCheck(bAsS, classOf[String])
 	}
+
+	test("Check conversion boxing") {
+		val schema = structSchema(schemaField("a", IntegerType),
+		                          schemaField("b", DoubleType),
+		                          schemaField("c", StringType))
+
+		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
+		                new GenericRow(Array(2, 2.2, "2.22")),
+		                new GenericRow(Array(3, 3.3, "3.33")),
+		                new GenericRow(Array(4, 4.4, "4.44")),
+		                new GenericRow(Array(5, 5.5, "5.55")),
+		                new GenericRow(Array(6, 6.6, "6.66")),
+		                new GenericRow(Array(7, 7.7, "7.77")),
+		                new GenericRow(Array(8, 8.8, "8.88")),
+		                new GenericRow(Array(9, 9.9, "9.99")))
+
+		val aExtractor = calculateExtractor("a", schema)
+		val iToL = calculateConverter(IntegerType, LongType)
+
+		val results = data.map(row => iToL(aExtractor(row)).asInstanceOf[Long]+4)
+		assert(List(5, 6, 7, 8, 9, 10, 11, 12, 13) === results)
+	}
+
+	test("Numeric Function Passing") {
+		val schema = structSchema(schemaField("a", IntegerType),
+		                          schemaField("b", DoubleType),
+		                          schemaField("c", StringType))
+
+		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
+		                new GenericRow(Array(2, 2.2, "2.22")),
+		                new GenericRow(Array(3, 3.3, "3.33")),
+		                new GenericRow(Array(4, 4.4, "4.44")),
+		                new GenericRow(Array(5, 5.5, "5.55")),
+		                new GenericRow(Array(6, 6.6, "6.66")),
+		                new GenericRow(Array(7, 7.7, "7.77")),
+		                new GenericRow(Array(8, 8.8, "8.88")),
+		                new GenericRow(Array(9, 9.9, "9.99")))
+
+		val aExtractor = calculateExtractor("a", schema)
+		val functionCreator = new FunctionCreator {
+			import Numeric.Implicits._
+			override def createFunction[T: Numeric](t: T): T = {
+				val four = implicitly[Numeric[T]].fromInt(4)
+				t + four
+			}
+		}
+
+		val results = data.map(row => withNumeric(aExtractor(row), functionCreator))
+		assert(List(5, 6, 7, 8, 9, 10, 11, 12, 13) === results)
+	}
 }
+
