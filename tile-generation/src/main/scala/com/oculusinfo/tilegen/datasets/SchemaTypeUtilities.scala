@@ -229,6 +229,23 @@ object SchemaTypeUtilities {
 		r: Row => getElement(indices, r)
 	}
 
+	/**
+	 * A combination of the simpler calculateExtractor and calculateConverter, so the result is guaranteed to be
+	 * a particular type.
+	 *
+	 * @param columnSpec A specification of the field of interest
+	 * @param schema The schema of the RDD from which to pull the column
+	 * @param targetType The type to which to convert the result within the returned function
+	 * @return A function to pull the field of interest out of a row of the given schema
+	 */
+	def calculateExtractor (columnSpec: String, schema: StructType, targetType: DataType): Row => Any = {
+		val sourceType = getColumnType(columnSpec, schema)
+		val converter = calculateConverter(sourceType, targetType)
+		val baseExtractor = calculateExtractor(columnSpec, schema)
+
+		row => converter(baseExtractor(row))
+	}
+
 	/** A simple trait to allow creation of typed numeric functions, solely for use passing in to withNumeric */
 	trait FunctionCreator {
 		def createFunction[T: Numeric] (t: T): T
