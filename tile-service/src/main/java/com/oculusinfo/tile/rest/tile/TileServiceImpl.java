@@ -132,7 +132,7 @@ public class TileServiceImpl implements TileService {
 
 			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+			TileSerializer<?> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
 					tileRenderer.getAcceptedBinClass(),
 					tileRenderer.getAcceptedTypeDescriptor());
 
