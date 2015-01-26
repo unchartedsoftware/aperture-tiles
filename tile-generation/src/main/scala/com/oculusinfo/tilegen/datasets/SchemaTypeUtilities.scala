@@ -26,15 +26,13 @@ package com.oculusinfo.tilegen.datasets
 
 import java.sql.Timestamp
 
+import org.apache.spark.rdd.RDD
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{Map => MutableMap}
 
-import org.apache.spark.sql.catalyst.expressions.GenericRow
-import org.apache.spark.sql.{Row, StructField, DataType, StructType, ArrayType}
-import org.apache.spark.sql.{BooleanType, StringType}
-import org.apache.spark.sql.{ByteType, ShortType, IntegerType, LongType}
-import org.apache.spark.sql.{FloatType, DoubleType}
-import org.apache.spark.sql.{TimestampType}
+import org.apache.spark.sql.catalyst.expressions.{Expression, GenericRow}
+import org.apache.spark.sql._
 
 /**
  * Created by nkronenfeld on 12/16/2014.
@@ -345,6 +343,37 @@ object SchemaTypeUtilities {
 			throw new IllegalArgumentException("Cannot convert from " + from + " to " + to)
 		}
 	}
+
+	/**
+	 * Take an existing SchemaRDD, and add a new column to it.
+	 * @param base The existing SchemaRDD
+	 * @param columnName The name of the column to add
+	 * @param columnType the type of the column to add
+	 * @param columnFcn A function mapping the values of the base data specified by inputColumns onto an output value,
+	 *                  which had darn well better be of the right type.
+	 * @param inputColumns The input columns needed to calculate the output column; their extracted values become the
+	 *                     inputs to columnFcn
+	 * @return A new SchemaRDD with the named added value.
+	 */
+	def addColumn (base: SchemaRDD, columnName: String, columnType: DataType,
+	               columnFcn: Array[Any] => Any, inputColumns: String*): SchemaRDD = {
+		val baseSchema = base.schema
+		val baseLen = baseSchema.fields.size
+
+		val extractors = inputColumns.map(calculateExtractor(_, base.schema)).toArray
+		val newData: RDD[Row] = base.map(row =>
+			{
+				val selectData = extractors.map(_(row))
+				val newValue = columnFcn(selectData)
+				new GenericRow((row :+ newValue).toArray)
+			}
+		)
+
+		val newSchema = new StructType(baseSchema.fields :+ StructField(columnName, columnType, true))
+		base.sqlContext.applySchema(newData, newSchema)
+	}
+
+
 
 	private val conversions: MutableMap[(DataType, DataType), Any => Any] = MutableMap()
 	private def addConverter (from: DataType, to: DataType, conversion: Any => Any): Unit = {

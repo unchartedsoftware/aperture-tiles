@@ -29,6 +29,7 @@ import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.lang.{Double => JavaDouble}
 
+import org.apache.spark.SharedSparkContext
 import org.apache.spark.sql.catalyst.types.ArrayType
 import org.scalatest.FunSuite
 
@@ -268,3 +269,58 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 	}
 }
 
+
+class SchemaTypeUtilitiesSparkTestSuite extends FunSuite with SharedSparkContext {
+	import SchemaTypeUtilities._
+
+	test("Programatic column addition") {
+		val localSqlc = sqlc
+		import localSqlc._
+
+		val jsonData = sc.parallelize(1 to 10).map(n => "{\"a\": %d, \"b\": %d, \"c\": %d}".format(n, n*n, 11-n))
+		val data = localSqlc.jsonRDD(jsonData)
+
+		assert(3 === data.schema.fields.size)
+		assert("a" == data.schema.fields(0).name)
+		assert(IntegerType == data.schema.fields(0).dataType)
+		assert("b" == data.schema.fields(1).name)
+		assert(IntegerType == data.schema.fields(1).dataType)
+		assert("c" == data.schema.fields(2).name)
+		assert(IntegerType == data.schema.fields(2).dataType)
+
+		val converter = calculateConverter(IntegerType, DoubleType)
+		val augmentFcn: Array[Any] => Any = row =>
+			{
+				val c = converter(row(0)).asInstanceOf[Double]
+				val a = converter(row(1)).asInstanceOf[Double]
+				(1.0+a)*c
+			}
+		val augmentedData = addColumn(data, "d", DoubleType, augmentFcn, "c", "a")
+		assert(4 === augmentedData.schema.fields.size)
+		assert("a" == augmentedData.schema.fields(0).name)
+		assert(IntegerType == augmentedData.schema.fields(0).dataType)
+		assert("b" == augmentedData.schema.fields(1).name)
+		assert(IntegerType == augmentedData.schema.fields(1).dataType)
+		assert("c" == augmentedData.schema.fields(2).name)
+		assert(IntegerType == augmentedData.schema.fields(2).dataType)
+		assert("d" == augmentedData.schema.fields(3).name)
+		assert(DoubleType == augmentedData.schema.fields(3).dataType)
+
+		val collectedData = augmentedData.collect
+
+		assert(10 === collectedData.size)
+		for (i <- 1 to 10) {
+			val row = collectedData(i-1)
+			assert(4 === row.size)
+			val a = row(0).asInstanceOf[Int]
+			val b = row(1).asInstanceOf[Int]
+			val c = row(2).asInstanceOf[Int]
+			val d = row(3).asInstanceOf[Double]
+
+			assert(i === a)
+			assert(b === a * a)
+			assert(c === 11 - a)
+			assert(d === (1.0 + a) * c)
+		}
+	}
+}
