@@ -26,6 +26,8 @@ package com.oculusinfo.tile.util;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 
+import java.util.List;
+
 
 /**
  * A TileData instance that wraps and provides a subset view of the data of another TileData. Effectively
@@ -91,6 +93,22 @@ public class TileDataView<T> extends TileData<T> {
 
     @Override
     public T getBin (int x, int y) {
+        if (x < 0 || x >= getDefinition().getXBins()) {
+            throw new ArrayIndexOutOfBoundsException("Bin x index is outside of tile's valid bin range");
+        }
+        if (y < 0 || y >= getDefinition().getYBins()) {
+            throw new ArrayIndexOutOfBoundsException("Bin y index is outside of tile's valid bin range");
+        }
         return _source.getBin(x + _xOffset, y + _yOffset);
+    }
+
+    @Override
+    public List<T> getData() {
+        throw new UnsupportedOperationException("Getting all data from a TileDataView not yet supported");
+    }
+
+    @Override
+    public void setBin(int x, int y, T value) {
+        _source.setBin(x + _xOffset, y + _yOffset, value);
     }
 }
