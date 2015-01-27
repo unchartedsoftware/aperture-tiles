@@ -109,6 +109,12 @@ public class TileDataView<T> extends TileData<T> {
 
     @Override
     public void setBin(int x, int y, T value) {
+        if (x < 0 || x >= getDefinition().getXBins()) {
+            throw new ArrayIndexOutOfBoundsException("Bin x index is outside of tile's valid bin range");
+        }
+        if (y < 0 || y >= getDefinition().getYBins()) {
+            throw new ArrayIndexOutOfBoundsException("Bin y index is outside of tile's valid bin range");
+        }
         _source.setBin(x + _xOffset, y + _yOffset, value);
     }
 }
