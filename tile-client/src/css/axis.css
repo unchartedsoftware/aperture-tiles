@@ -39,14 +39,6 @@
 .dark-theme .axis-header {
     background: #222;
 }
-  
-.light-theme .axis-header-back {
-    box-shadow: 0 0 5px #999;
-}
-
-.dark-theme .axis-header-back {
-    box-shadow: 0 0 5px #000;
-}
 
 .light-theme .axis-header:hover {
     background: #888;
@@ -64,7 +56,7 @@
 }
 
 .dark-theme .top-axis-header { 
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #111;
 }
 
 .bottom-axis-header {
@@ -79,7 +71,7 @@
 }
 
 .dark-theme .bottom-axis-header { 
-    border-top: 1px solid #333;
+    border-top: 1px solid #111;
 }
 
 .left-axis-header {
@@ -95,7 +87,7 @@
 }
 
 .dark-theme .left-axis-header { 
-    border-right: 1px solid #333;
+    border-right: 1px solid #111;
 }
 
 .right-axis-header {
@@ -110,7 +102,7 @@
 }
 
 .dark-theme .right-axis-header { 
-    border-left: 1px solid #333;
+    border-left: 1px solid #111;
 }
 
 /********************************************/
@@ -137,6 +129,10 @@
     color : #D3D3D3;
 }
 
+.dark-theme .axis-header:hover .axis-title-label {    
+    color : #fff;
+}
+
 /********************************************/
 /*                  Content                 */
 /********************************************/
@@ -149,12 +145,10 @@
 
 .light-theme .axis-content {
 	background-color: #fff;
-    box-shadow: 0 0 5px #999;
 }
 
 .dark-theme .axis-content {
     background: #111;
-    box-shadow: 0 0 5px #000;
 }
 
 .top-axis-content {    
@@ -168,7 +162,7 @@
 }
 
 .dark-theme .top-axis-content { 
-    border-left: 1px solid #333;
+    border-left: 1px solid #111;
 }
 
 .bottom-axis-content {
@@ -182,7 +176,7 @@
 }
 
 .dark-theme .bottom-axis-content { 
-    border-top: 1px solid #333;
+    border-top: 1px solid #111;
 }
 
 .left-axis-content {
@@ -196,7 +190,7 @@
 }
 
 .dark-theme .left-axis-content { 
-    border-right: 1px solid #333;
+    border-right: 1px solid #111;
 }
 
 .right-axis-content {
@@ -210,7 +204,7 @@
 }
 
 .dark-theme .right-axis-content { 
-    border-left: 1px solid #333;
+    border-left: 1px solid #111;
 }
 
 /********************************************/

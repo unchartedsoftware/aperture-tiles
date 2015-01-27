@@ -52,11 +52,14 @@
      * </pre>
      */
     function ClientLayer( spec ) {
-        // set reasonable defaults
-        spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
-        spec.domain = "client";
-        // call base constructor    
+        // call base constructor
         Layer.call( this, spec );
+        // set reasonable defaults
+        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+        this.domain = "client";
+        this.source = spec.source;
+        this.renderer = spec.renderer || null;
+        this.html = spec.html || null;
     }
 
     ClientLayer.prototype = Object.create( Layer.prototype );
@@ -71,30 +74,29 @@
         // add the new layer
         this.olLayer = new HtmlTileLayer(
             'Client Rendered Tile Layer',
-            this.spec.source.tms,
+            this.source.tms,
             {
-                layername: this.spec.source.id,
+                layername: this.source.id,
                 type: 'json',
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: LayerUtil.getURL,
-                html: this.spec.html,
-                renderer: this.spec.renderer,
-                entry: this.spec.entry
+                html: this.html,
+                renderer: this.renderer
             });
 
         this.map.olMap.addLayer( this.olLayer );
 
-        this.setZIndex( this.spec.zIndex );
-        this.setOpacity( this.spec.opacity );
-        this.setVisibility( this.spec.enabled );
+        this.setZIndex( this.zIndex );
+        this.setOpacity( this.opacity );
+        this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
 
-        if ( this.spec.renderer ) {
-            this.spec.renderer.meta = this.spec.source.meta.meta;
-            this.spec.renderer.map = this.map;
-            this.spec.renderer.parent = this;
+        if ( this.renderer ) {
+            this.renderer.meta = this.source.meta.meta;
+            this.renderer.map = this.map;
+            this.renderer.parent = this;
         }
     };
 
@@ -117,7 +119,7 @@
      * @param {String} theme - The theme identifier string.
      */
     ClientLayer.prototype.setTheme = function( theme ) {
-        this.spec.theme = theme;
+        this.theme = theme;
     };
 
     /**
@@ -127,7 +129,7 @@
      * @returns {String} The theme identifier string.
      */
     ClientLayer.prototype.getTheme = function() {
-        return this.spec.theme;
+        return this.theme;
     };
 
     /**
@@ -141,7 +143,7 @@
         // set the z-index of the layer dev. setLayerIndex sets a relative
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
-        this.spec.zIndex = zIndex;
+        this.zIndex = zIndex;
         $( this.olLayer.div ).css( 'z-index', zIndex );
         PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
@@ -153,7 +155,7 @@
      * @returns {integer} The zIndex for the layer.
      */
     ClientLayer.prototype.getZIndex = function () {
-        return this.spec.zIndex;
+        return this.zIndex;
     };
 
     module.exports = ClientLayer;
