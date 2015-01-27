@@ -30,6 +30,8 @@ import com.oculusinfo.factory.JSONNode;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.UUID;
+
 /**
  * Created by nkronenfeld on 1/7/2015.
  */
@@ -39,6 +41,7 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 	private ConfigurationProperty<K> _keyDescriptor;
 	private ConfigurationProperty<V> _valueDescriptor;
 	private Pair<K, V> _defaultValue;
+	private String _uuid;
 
 	public PairProperty(ConfigurationProperty<K> keyDescriptor, ConfigurationProperty<V> valueDescriptor,
 	                    String name, String description,
@@ -48,6 +51,7 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		_name = name;
 		_description = description;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 
@@ -77,6 +81,11 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 	@Override
 	public Pair<K, V> getDefaultValue () {
 		return _defaultValue;
+	}
+
+	@Override
+	public String getUUID () {
+		return _uuid;
 	}
 
 	private String escape (String value) {
