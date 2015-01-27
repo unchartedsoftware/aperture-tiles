@@ -20,22 +20,32 @@ import java.lang.{Double => JavaDouble}
 trait TypeConversion[S, T] extends Serializable {
 	def forwards (n: S): T
 	def backwards (n: T): S
+	def fromClass: Class[_ <: S]
+	def toClass: Class[_ <: T]
 }
 object TypeConversion {
 	implicit object IntPair extends TypeConversion[Int, JavaInt] {
 		def forwards (n: Int): JavaInt = Int.box(n)
 		def backwards (n: JavaInt): Int = Int.unbox(n)
+		def fromClass = classOf[Int]
+		def toClass = classOf[JavaInt]
 	}
 	implicit object LongPair extends TypeConversion[Long, JavaLong] {
 		def forwards (n: Long): JavaLong = Long.box(n)
 		def backwards (n: JavaLong): Long = Long.unbox(n)
+		def fromClass = classOf[Long]
+		def toClass = classOf[JavaLong]
 	}
 	implicit object FloatPair extends TypeConversion[Float, JavaFloat] {
 		def forwards (n: Float): JavaFloat = Float.box(n)
 		def backwards (n: JavaFloat): Float = Float.unbox(n)
+		def fromClass = classOf[Float]
+		def toClass = classOf[JavaFloat]
 	}
 	implicit object DoublePair extends TypeConversion[Double, JavaDouble] {
 		def forwards (n: Double): JavaDouble = Double.box(n)
 		def backwards (n: JavaDouble): Double = Double.unbox(n)
+		def fromClass = classOf[Double]
+		def toClass = classOf[JavaDouble]
 	}
 }

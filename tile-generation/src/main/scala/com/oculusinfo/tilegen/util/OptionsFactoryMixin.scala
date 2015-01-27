@@ -22,21 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.sparktile.rest;
+package com.oculusinfo.tilegen.util
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-import com.oculusinfo.sparktile.rest.data.DataResource;
-import oculus.aperture.common.rest.ResourceDefinition;
 
-public class SparkRestConfigModule extends AbstractModule {
-	@Override
-	protected void configure() {
 
-		// Bind REST endpoints for clients.
-		MapBinder<String, ResourceDefinition> resourceBinder =
-			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
+import com.oculusinfo.factory.{ConfigurationProperty, ConfigurableFactory}
 
-		resourceBinder.addBinding("/data").toInstance(new ResourceDefinition(DataResource.class));
+
+
+/**
+ * A mixin trait for configurable factories to allow them to easily get optional properties in a scala-friendly way.
+ */
+trait OptionsFactoryMixin[T] extends ConfigurableFactory[T] {
+	/** Get a property value, but only if it is present */
+	def optionalGet[T] (property: ConfigurationProperty[T]): Option[T] = {
+		if (hasPropertyValue(property)) {
+			Some(getPropertyValue(property))
+		} else {
+			None
+		}
 	}
 }

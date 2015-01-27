@@ -110,11 +110,9 @@
 .text-by-frequency-label {
 	cursor: pointer;
 	position:relative;
-	text-align: left;
-	vertical-align: middle;
 	bottom: -3px;
-	font-size : 14px;
-	line-height: 14px;
+	font-size : 16px;
+	line-height: 16px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

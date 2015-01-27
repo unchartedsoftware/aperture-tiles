@@ -43,7 +43,7 @@ import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 /**
  * Created by nkronenfeld on 11/24/2014.
  */
-class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+class TilingTaskBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
 	val pyramidId = "live-tile test"
 	var dataFile: File = null
 	var pyramidIo: OnDemandAccumulatorPyramidIO = null
@@ -71,21 +71,22 @@ class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with Befo
 		writer.close()
 
 		// Create our pyramid IO
-		pyramidIo = new OnDemandAccumulatorPyramidIO(sc)
+		pyramidIo = new OnDemandAccumulatorPyramidIO(sqlc)
 
 		// Read the one into the other
 		val props = new Properties()
 		props.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
 		props.setProperty("oculus.binning.projection.autobounds", "false")
-		props.setProperty("oculus.binning.projection.minx", "0.0")
-		props.setProperty("oculus.binning.projection.maxx", "7.9999")
-		props.setProperty("oculus.binning.projection.miny", "0.0")
-		props.setProperty("oculus.binning.projection.maxy", "7.9999")
+		props.setProperty("oculus.binning.projection.type", "areaofinterest")
+		props.setProperty("oculus.binning.projection.minX", "0.0")
+		props.setProperty("oculus.binning.projection.maxX", "7.9999")
+		props.setProperty("oculus.binning.projection.minY", "0.0")
+		props.setProperty("oculus.binning.projection.maxY", "7.9999")
 		props.setProperty("oculus.binning.parsing.separator", ",")
 		props.setProperty("oculus.binning.parsing.x.index", "0")
 		props.setProperty("oculus.binning.parsing.y.index", "1")
 		props.setProperty("oculus.binning.index.type", "cartesian")
-		props.setProperty("oculus.binning.xField", "x")
+		props.setProperty("oculus.binning.index.field.0", "x")
 		props.setProperty("oculus.binning.levels.0", "1")
 
 		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
@@ -100,7 +101,7 @@ class DatasetBinningTestSuite extends FunSuite with SharedSparkContext with Befo
 		pyramidIo = null
 	}
 
-	test("Simple one-dimensional binning using datasets") {
+	test("Simple one-dimensional binning using TilingTask") {
 		// Noting that visually, the tiles should look exactly as we enter them here.
 		val tile000: TileData[_] =
 			pyramidIo.readTiles(pyramidId, null,

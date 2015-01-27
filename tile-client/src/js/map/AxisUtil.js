@@ -192,8 +192,8 @@
      */
     function formatThousand( value, decimals, allowStepDown ) {
         var truncValue = value / 1e3;
-        if ( allowStepDown && Math.abs( truncValue ) < 1 && value !== 0 ) {
-            return formatNumber( value, 0 );
+        if ( allowStepDown && Math.abs( truncValue ) < 1 ) {
+            return formatNumber( value, decimals, true );
         }
         return Util.roundToDecimals( truncValue, decimals ) + 'K';
     }
@@ -209,8 +209,8 @@
      */
     function formatMillion( value, decimals, allowStepDown ) {
         var truncValue = value / 1e6;
-        if ( allowStepDown && Math.abs( truncValue ) < 1 && value !== 0 ) {
-            return formatThousand( value, 0 );
+        if ( allowStepDown && Math.abs( truncValue ) < 1 ) {
+            return formatThousand( value, decimals, true );
         }
         return Util.roundToDecimals( truncValue, decimals ) + 'M';
     }
@@ -226,8 +226,8 @@
      */
     function formatBillion( value, decimals, allowStepDown ) {
         var truncValue = value / 1e9;
-        if ( allowStepDown && Math.abs( truncValue ) < 1 && value !== 0 ) {
-            return formatMillion( value, 0 );
+        if ( allowStepDown && Math.abs( truncValue ) < 1 ) {
+            return formatMillion( value, decimals, true );
         }
         return Util.roundToDecimals( truncValue, decimals ) + 'B';
     }

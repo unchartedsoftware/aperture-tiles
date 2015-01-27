@@ -30,6 +30,8 @@ package com.oculusinfo.tilegen.tiling
 import java.io.FileInputStream
 import java.util.Properties
 
+import org.apache.spark.sql.SQLContext
+
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
 
@@ -42,8 +44,7 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 
-import com.oculusinfo.tilegen.datasets.Dataset
-import com.oculusinfo.tilegen.datasets.DatasetFactory
+import com.oculusinfo.tilegen.datasets.{TilingTask, CSVReader, CSVDataSource}
 import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
@@ -117,11 +118,11 @@ class SortedBinner {
 	 * but minimal, data into an RDD of tiles.
 	 * 
 	 * @param data The data to be processed
-	 * @param binDesc A description of how raw values are to be aggregated into
-	 *                bin values
+	 * @param binAnalytic A description of how raw values are to be aggregated into bin values
+	 * @param tileAnalytics Analytics to apply to entire produced tiles
+	 * @param dataAnalytics Analytics to apply to raw data and incorporate into tiles
 	 * @param indexToTiles A function that spreads a data point out over the
 	 *                     tiles and bins of interest
-	 * @param levels A list of levels on which to create tiles
 	 * @param xBins The number of bins along the horizontal axis of each tile
 	 * @param yBins The number of bins along the vertical axis of each tile
 	 * @param consolidationPartitions The number of partitions to use when
@@ -361,59 +362,66 @@ object SortedBinnerTest {
 		}
 	}
 	
-	def processDataset[IT: ClassTag,
-	                   PT: ClassTag,
-	                   DT: ClassTag,
-	                   AT: ClassTag,
-	                   BT] (dataset: Dataset[IT, PT, DT, AT, BT],
-	                        tileIO: TileIO): Unit = {
+	def processTask[PT: ClassTag,
+	                DT: ClassTag,
+	                AT: ClassTag,
+	                BT] (task: TilingTask[PT, DT, AT, BT],
+	                     tileIO: TileIO): Unit = {
 		val binner = new SortedBinner
 		binner.debug = true
-		dataset.getLevels.map(levels =>
+		task.getLevels.map(levels =>
 			{
-				val procFcn: RDD[(IT, PT, Option[DT])] => Unit = rdd =>
+				val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = rdd =>
 				{
 					val tiles = binner.processDataByLevel(
 						rdd,
-						dataset.getIndexScheme,
-						dataset.getBinningAnalytic,
-						dataset.getTileAnalytics,
-						dataset.getDataAnalytics,
-						dataset.getTilePyramid,
+						task.getIndexScheme,
+						task.getBinningAnalytic,
+						task.getTileAnalytics,
+						task.getDataAnalytics,
+						task.getTilePyramid,
 						levels,
-						dataset.getNumXBins,
-						dataset.getNumYBins,
-						dataset.getConsolidationPartitions)
-					tileIO.writeTileSet(dataset.getTilePyramid,
-					                    dataset.getName,
+						task.getNumXBins,
+						task.getNumYBins,
+						task.getConsolidationPartitions)
+					tileIO.writeTileSet(task.getTilePyramid,
+					                    task.getName,
 					                    tiles,
-					                    dataset.getValueScheme,
-					                    dataset.getTileAnalytics,
-					                    dataset.getDataAnalytics,
-					                    dataset.getName,
-					                    dataset.getDescription)
+					                    task.getTileSerializer,
+					                    task.getTileAnalytics,
+					                    task.getDataAnalytics,
+					                    task.getName,
+					                    task.getDescription)
 				}
-				dataset.process(procFcn, None)
+				task.process(procFcn, None)
 			}
 		)
 	}
 	
 	/**
-	 * This function is simply for pulling out the generic params from the DatasetFactory,
+	 * This function is simply for pulling out the generic params from the TilingTask,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (dataset: Dataset[IT, PT, DT, AT, BT],
-	                                               tileIO: TileIO): Unit =
-		processDataset(dataset, tileIO)(dataset.indexTypeTag,
-		                                dataset.binTypeTag,
-		                                dataset.dataAnalysisTypeTag,
-		                                dataset.tileAnalysisTypeTag)
+	def processTaskGeneric[PT, DT, AT, BT] (task: TilingTask[PT, DT, AT, BT],
+	                                        tileIO: TileIO): Unit =
+		processTask(task, tileIO)(task.binTypeTag,
+		                          task.dataAnalysisTypeTag,
+		                          task.tileAnalysisTypeTag)
+
+
+	private def readFile (file: String, props: Properties): Properties = {
+		val stream = new FileInputStream(file)
+		props.load(stream)
+		stream.close()
+		props
+	}
+
 
 
 	def main (args: Array[String]): Unit = {
 		if (args.size<1) {
 			println("Usage:")
-			println("\tCSVBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
+			println("\tSortedBinner [-d default_properties_file] job_properties_file_1 job_properties_file_2 ...")
 			System.exit(1)
 		}
 
@@ -423,31 +431,39 @@ object SortedBinnerTest {
 
 		while ("-d" == args(argIdx)) {
 			argIdx = argIdx + 1
-			val stream = new FileInputStream(args(argIdx))
-			defProps.load(stream)
-			stream.close()
+			readFile(args(argIdx), defProps)
 			argIdx = argIdx + 1
 		}
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
 		val sc = connector.createContext(Some("Pyramid Binning"))
+		val sqlc = new SQLContext(sc)
 		val tileIO = getTileIO(defaultProperties)
 
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
 		while (argIdx < args.size) {
 			val fileStartTime = System.currentTimeMillis()
-			val props = new Properties(defProps)
-			val propStream = new FileInputStream(args(argIdx))
-			props.load(propStream)
-			propStream.close()
+			val rawProps = readFile(args(argIdx), new Properties(defProps))
+			val props = new PropertiesWrapper(rawProps)
 
-			// If the user hasn't explicitly set us not to cache, cache processed data to make
-			// multiple runs more efficient
-			if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
-				props.setProperty("oculus.binning.caching.processed", "true")
+			// Read our CSV data
+			val source = new CSVDataSource(props)
+			// Read the CSV into a schema file
+			val reader = new CSVReader(sqlc, source.getData(sc), props)
+			// Unless the user has specifically said not to, cache processed data so as to make multiple runs
+			// more efficient.
+			val cache = props.getBoolean(
+				"oculus.binning.caching.processed",
+				"Cache the data, in a parsed and processed form, if true",
+				Some(true))
+			// Register it as a table
+			val table = "table"+argIdx
+			reader.asSchemaRDD.registerTempTable(table)
+			if (cache) sqlc.cacheTable(table)
 
-			processDatasetGeneric(DatasetFactory.createDataset(sc, props), tileIO)
+			// Process the data
+			processTaskGeneric(TilingTask(sqlc, table, rawProps), tileIO)
 
 			val fileEndTime = System.currentTimeMillis()
 			println("Finished binning "+args(argIdx)+" in "+((fileEndTime-fileStartTime)/60000.0)+" minutes")

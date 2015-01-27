@@ -50,7 +50,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.Pair
-import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.ArgumentParser
@@ -148,7 +147,7 @@ trait TileIO extends Serializable {
 	def writeTileSet[BT, AT, DT] (pyramider: TilePyramid,
 	                              baseLocation: String,
 	                              data: RDD[TileData[BT]],
-	                              valueDesc: ValueDescription[BT],
+	                              serializer: TileSerializer[BT],
 	                              tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 	                              dataAnalytics: Option[AnalysisDescription[_, DT]],
 	                              name: String = "unknown",
@@ -174,7 +173,6 @@ trait TileIO extends Serializable {
 		data.mapPartitions(_.grouped(1024)).foreach(group =>
 			{
 				val pyramidIO = getPyramidIO
-				val serializer = valueDesc.getSerializer
 				// Write out tje group of tiles
 				pyramidIO.writeTiles(baseLocation, serializer, group)
 

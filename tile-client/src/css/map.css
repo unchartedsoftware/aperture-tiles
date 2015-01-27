@@ -18,15 +18,19 @@
 }
 
 div.olControlZoom {
-	right: 10px !important;
-	top: 60px !important;
-	left:auto !important;
+    right: 0px !important;
+	margin-right: 10px !important;
+	top: 55px !important;
+	left: auto !important;
     z-index: 2999 !important; 
 }
 
-div.olHandlerBoxZoomBox {
-    border: 2px solid rgba(128, 128, 128, 0.75);
-    background-color: rgba(128, 128, 128, 0.5);
+div.olControlZoom a {
+    background-color: #333!important;
+}
+
+div.olControlZoom a:hover {
+    background-color: #444!important;
 }
 
 .olLayerGoogleV3 {

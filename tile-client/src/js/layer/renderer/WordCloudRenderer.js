@@ -244,7 +244,7 @@
             cloud;
 
          // get maximum count for layer if it exists in meta data
-        maxCount = meta.minMax.max[ countKey ];
+        maxCount = meta.minMax.max[ countKey ] / 3;
 
         for (i=0; i<numEntries; i++) {
             value = values[i];

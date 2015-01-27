@@ -49,24 +49,24 @@ import org.apache.spark.graphx._
  **/ 
 class HierarchicGIBLayout extends Serializable {
 
-	def determineLayout(sc: SparkContext, 
-						maxIterations: Int = 500, 
-						maxHierarchyLevel: Int, 
-						partitions: Int = 0,
-						consolidationPartitions: Int = 0,
-						sourceDir: String,
-						delimiter: String = ",",
-						layoutDimensions: (Double, Double) = (256.0, 256.0),
-						borderOffset: Int = 5,
-						numNodesThres: Int = 1000): RDD[(Long, Double, Double)] = {	
+	def determineLayout(sc: SparkContext,
+	                    maxIterations: Int = 500,
+	                    maxHierarchyLevel: Int,
+	                    partitions: Int = 0,
+	                    consolidationPartitions: Int = 0,
+	                    sourceDir: String,
+	                    delimiter: String = ",",
+	                    layoutDimensions: (Double, Double) = (256.0, 256.0),
+	                    borderOffset: Int = 5,
+	                    numNodesThres: Int = 1000): RDD[(Long, Double, Double)] = {
 		
 		
-		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0") 
+		if (maxHierarchyLevel < 0) throw new IllegalArgumentException("maxLevel parameter must be >= 0")
 		
 		val boxLayouter = new GroupInBox()	//group-in-a-box layout scheme
-				
-		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle) 
-		//var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))  
+		
+		// init results for 'parent group' rectangle with group ID 0   (rectangle format is bottem-left corner, width, height of rectangle)
+		//var localLastLevelLayout = Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2))
 		var lastLevelLayout = sc.parallelize(Seq(0L -> (0.0,0.0,layoutDimensions._1,layoutDimensions._2)))
 		
 		var level = maxHierarchyLevel
@@ -75,10 +75,10 @@ class HierarchicGIBLayout extends Serializable {
 
 			//val lastLevelLayout = sc.parallelize(localLastLevelLayout)
 			
-			// For each hierarchical level > 0, get community ID's, community degree (num outgoing edges), 
+			// For each hierarchical level > 0, get community ID's, community degree (num outgoing edges),
 			// and num internal nodes, and the parent community ID.
 			// Group by parent community, and do Group-in-Box layout once for each parent community.
-			// Then consolidate results and save in format (community id, rectangle in 'global coordinates') 
+			// Then consolidate results and save in format (community id, rectangle in 'global coordinates')
 
 			// parse node data ... and re-format as (parent communityID, (communityID,numInternalNodes, community degree))
 			val gparser = new GraphCSVParser
@@ -87,15 +87,15 @@ class HierarchicGIBLayout extends Serializable {
 			} else {
 				sc.textFile( sourceDir + "/level_" + level, partitions)
 			}
-	
+			
 			val parsedNodeData = gparser.parseNodeData(sc, rawData,	partitions, delimiter, 1, 2, 3, 4)
 			val groups = if (level == maxHierarchyLevel) {
-				parsedNodeData.map(node => (0L, (node._1, node._2._2, node._2._3)))	// force parentGroupID = 0L for top level group		
+				parsedNodeData.map(node => (0L, (node._1, node._2._2, node._2._3)))	// force parentGroupID = 0L for top level group
 			}
 			else {
-				parsedNodeData.map(node => (node._2._1, (node._1, node._2._2, node._2._3)))	
-			}		
-						
+				parsedNodeData.map(node => (node._2._1, (node._1, node._2._2, node._2._3)))
+			}
+			
 			val groupsByParent = if (consolidationPartitions==0) {		// group by parent community ID
 				groups.groupByKey()
 			} else {
@@ -107,25 +107,27 @@ class HierarchicGIBLayout extends Serializable {
 			joinedGroups.count
 			lastLevelLayout.unpersist(blocking=false)
 			
-			val levelLayout = joinedGroups.flatMap(n => {
-				val data = n._2._1
-				val parentRectangle = n._2._2
-				//data format is (parent communityID, Iterable(communityID,numInternalNodes, community degree))				
-				val rects = boxLayouter.run(data, parentRectangle, numNodesThres)
-				rects
-			})
-			
+			val levelLayout = joinedGroups.flatMap(n =>
+				{
+					val data = n._2._1
+					val parentRectangle = n._2._2
+					//data format is (parent communityID, Iterable(communityID,numInternalNodes, community degree))
+					val rects = boxLayouter.run(data, parentRectangle, numNodesThres)
+					rects
+				}
+			)
+
 			lastLevelLayout = levelLayout
 			//localLastLevelLayout = levelLayout.collect
 			level -= 1
 		}
-				
+
 		// Do Level 0...
-		// For lowest hierarchical level, get raw node ID's, parent community ID's, 
+		// For lowest hierarchical level, get raw node ID's, parent community ID's,
 		// and corresponding intra-community edges for each parent community
-		// Group nodes and intra-community edges by parent community, and do Force-directed layout for 
+		// Group nodes and intra-community edges by parent community, and do Force-directed layout for
 		// each parent community.
-		// Then consolidate results and save final results in format (node id, node location in 'global coordinates') 
+		// Then consolidate results and save final results in format (node id, node location in 'global coordinates')
 
 		println("Starting Force Directed Layout for hierarchy level 0")
 		
@@ -146,38 +148,42 @@ class HierarchicGIBLayout extends Serializable {
 		// parse node data ... format is (node ID, parent community ID, internal number of nodes)
 		//val nodes = gparser.parseNodeData(sc, sourceDir + "/level_" + level + "_vertices", partitions, delimiter)
 		val nodes = gparser.parseNodeData(sc, rawData, partitions, delimiter, 1, 2, 3, 4)
-					.map(node => (node._1, node._2._1, node._2._2, node._2._3, node._2._4))
-					
+			.map(node => (node._1, node._2._1, node._2._2, node._2._3, node._2._4))
+		
 		// swap so parent ID is the key, join with parent rectangle, and store
 		// as (node ID, parent rect)
 		val nodesWithRectangles = nodes.map(n => (n._2, (n._1, n._3, n._4, n._5)))
-									   .join(lastLevelLayout)
-									   .map(n => { 
-									  	   val id = n._2._1._1
-									  	   val numInternalNodes = n._2._1._2
-									  	   val degree = n._2._1._3
-									  	   val metaData = n._2._1._4
-									  	   //val parentId = n._1
-									  	   val parentRect = n._2._2
-									  	   (id, (parentRect, numInternalNodes, degree, metaData))
-									   })
-									   
+			.join(lastLevelLayout)
+			.map(n =>
+			{
+				val id = n._2._1._1
+				val numInternalNodes = n._2._1._2
+				val degree = n._2._1._3
+				val metaData = n._2._1._4
+				//val parentId = n._1
+				val parentRect = n._2._2
+				(id, (parentRect, numInternalNodes, degree, metaData))
+			}
+		)
+		
 		val graph = Graph(nodesWithRectangles, edges)	// create graph with parent rectangle as Vertex attribute
 
 		// find all intra-community edges and store with parent rectangle as map key
-		val edgesByRect = graph.triplets.flatMap(et => {
-			val srcParentRect = et.srcAttr._1	// parent rect for edge's source node
-			val dstParentRect = et.dstAttr._1	// parent rect for edge's destination node
-			
-			if (srcParentRect == dstParentRect) {
-				// this is an INTRA-community edge (so save result with parent community ID as key)
-				Iterator( (srcParentRect, (et.srcId, et.dstId, et.attr)) )
+		val edgesByRect = graph.triplets.flatMap(et =>
+			{
+				val srcParentRect = et.srcAttr._1	// parent rect for edge's source node
+				val dstParentRect = et.dstAttr._1	// parent rect for edge's destination node
+
+				if (srcParentRect == dstParentRect) {
+					// this is an INTRA-community edge (so save result with parent community ID as key)
+					Iterator( (srcParentRect, (et.srcId, et.dstId, et.attr)) )
+				}
+				else {
+					// this is an INTER-community edge (so disregard for force-directed layout of leaf communities)
+					Iterator.empty
+				}
 			}
-			else {
-				// this is an INTER-community edge (so disregard for force-directed layout of leaf communities)
-				Iterator.empty
-			}		
-		})
+		)
 		
 		val groupedEdges = if (consolidationPartitions==0) {	// group intra-community edges by parent rectangle
 			edgesByRect.groupByKey()
@@ -186,30 +192,33 @@ class HierarchicGIBLayout extends Serializable {
 		}
 		
 		// now re-map nodes by (parent rect, (node ID, numInternalNodes)) and group by parent rectangle
-		val groupedNodes = if (consolidationPartitions==0) {	
+		val groupedNodes = if (consolidationPartitions==0) {
 			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3, n._2._4))).groupByKey()
 		} else {
 			nodesWithRectangles.map(n => (n._2._1, (n._1, n._2._2, n._2._3, n._2._4))).groupByKey(consolidationPartitions)
 		}
-			
+		
 		//join raw nodes with intra-community edges (key is parent rectangle)
-		val joinedData = groupedNodes.leftOuterJoin(groupedEdges).map({case (parentRect, (nodeData, edgesOption)) =>
+		val joinedData = groupedNodes.leftOuterJoin(groupedEdges).map{case (parentRect, (nodeData, edgesOption)) =>
 			// create a dummy edge for any communities without intra-cluster edges
 			// (ie for leaf communities containing only 1 node)
 			val edgeResults = edgesOption.getOrElse(Iterable( (-1L, -1L, 0L) ))
 			(parentRect, (nodeData, edgeResults))
-		})
+		}
 		
 		// perform force-directed layout algorithm on all nodes and edges in a given parent rectangle
-		val finalNodeCoords = joinedData.flatMap(p => {
-			val parentRectangle = p._1
-			val communityNodes = p._2._1		// List of raw node IDs and internal number of nodes for a given community (Long, Long)
-			val communityEdges = p._2._2
-			//TODO -- could add in proper parentID to this forceDirect run call (if want primary node to be located in the bounding area's centre)
-			val coords = forceDirectedLayouter.run(communityNodes, communityEdges, -1L, parentRectangle, borderOffset, maxIterations)
-			coords
-		})				
-					
+		val finalNodeCoords = joinedData.flatMap(p =>
+			{
+				val parentRectangle = p._1
+				// List of raw node IDs and internal number of nodes for a given community (Long, Long)
+				val communityNodes = p._2._1
+				val communityEdges = p._2._2
+				//TODO -- could add in proper parentID to this forceDirect run call (if want primary node to be located in the bounding area's centre)
+				val coords = forceDirectedLayouter.run(communityNodes, communityEdges, -1L, parentRectangle, borderOffset, maxIterations)
+				coords
+			}
+		)
+		
 		finalNodeCoords.map(data => (data._1, data._2, data._3))	// store coordinate results as (nodeId, x, y)
 	}
 }

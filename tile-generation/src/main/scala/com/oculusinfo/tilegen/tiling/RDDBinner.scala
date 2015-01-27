@@ -53,8 +53,8 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning.io.serialization.TileSerializer
 
-import com.oculusinfo.tilegen.datasets.ValueDescription
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
@@ -132,7 +132,7 @@ class RDDBinner {
 		binAnalytic: BinningAnalytic[PT, BT],
 		tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		dataAnalytics: Option[AnalysisDescription[RT, DT]],
-		valueScheme: ValueDescription[BT],
+		serializer: TileSerializer[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
 		writeLocation: String,
@@ -179,7 +179,7 @@ class RDDBinner {
 				                               consolidationPartitions)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
-				                    valueScheme, tileAnalytics, dataAnalytics,
+				                    serializer, tileAnalytics, dataAnalytics,
 				                    name, description)
 				if (debug) {
 					val levelEndTime = System.currentTimeMillis()
