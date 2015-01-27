@@ -45,7 +45,7 @@ object NumericAnalyticFactory {
 	val EMPTY_MEAN = new DoubleProperty("emptymean", "The value to use as a bin's mean when it doesn't have enough data", JavaDouble.NaN)
 	val EMPTY_DEV = new DoubleProperty("emptydev", "The value to use as a bin's standard deviation when it doesn't have enough data", JavaDouble.NaN)
 }
-class NumericBinningAnalyticFactory (name: String = null,
+class NumericBinningAnalyticFactory (name: String,
                                      parent: ConfigurableFactory[_],
                                      path: JavaList[String])
 		extends NumericallyConfigurableFactory[BinningAnalytic[_, _]](name, classOf[BinningAnalytic[_, _]], parent, path, true)
@@ -55,6 +55,11 @@ class NumericBinningAnalyticFactory (name: String = null,
 	addProperty(EMPTY_MEAN)
 	addProperty(EMPTY_DEV)
 	addProperty(MIN_COUNT)
+
+
+
+	def this (parent: ConfigurableFactory[_], path: JavaList[String]) = this(null, parent, path)
+
 
 	/**
 	 * This function serves the purpose of the {@link ConfigurableFactory#create} function in normal factories.
@@ -75,6 +80,7 @@ class NumericBinningAnalyticFactory (name: String = null,
 			case "max" => new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
 			case "maximum" => new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
 			case "mean" => new NumericMeanBinningAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
+			case "average" => new NumericMeanBinningAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
 			case "stats" => new NumericStatsBinningAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
 			                                                    getPropertyValue(MIN_COUNT))(numeric)
 		}

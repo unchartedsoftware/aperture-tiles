@@ -180,16 +180,6 @@ class CountValueExtractor[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[
 }
 
 object FieldValueExtractorFactory {
-	private[datasets] val FIELD_AGGREGATION_PROPERTY = new StringProperty("aggregation",
-	                                                                      "The way to aggregate the value field when binning",
-	                                                                      "add")
-	private[datasets] val EMPTY_MEAN_PROPERTY =
-		new DoubleProperty("emptyMean", "The value to be used as the mean in bins without enough data for validity", JavaDouble.NaN)
-	private[datasets] val EMPTY_STD_DEV_PROPERTY =
-		new DoubleProperty("emptyStdDev", "The value to be used as the standard deviation in bins without enough data for validity", JavaDouble.NaN)
-	private[datasets] val MIN_COUNT_PROPERTY =
-		new IntegerProperty("minCount", "The minimum number of records in a bin for the bin to be considered valid", 1)
-
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new FieldValueExtractorFactory(parent, path))
 }
@@ -205,42 +195,22 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
 	import FieldValueExtractorFactory._
 
 	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
-	addProperty(FIELD_AGGREGATION_PROPERTY)
-	addProperty(EMPTY_MEAN_PROPERTY)
-	addProperty(EMPTY_STD_DEV_PROPERTY)
-	addProperty(MIN_COUNT_PROPERTY)
+	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory.FIELD_PROPERTY)
-		val analyticType = getPropertyValue(FieldValueExtractorFactory.FIELD_AGGREGATION_PROPERTY).toLowerCase()
+		// Guaranteed the same numeric type because the numeric type of the analytic will be determined by the exact
+		// same property by which our numeric type is determined.
+		val analytic = produce(classOf[BinningAnalytic[T, JT]])
 
-		def createFieldExtractor (analytic: BinningAnalytic[T, JT]): ValueExtractor[_, _] =
+		if (analytic.isInstanceOf[NumericMeanBinningAnalytic[_]]) {
+			new MeanValueExtractor[T](field, analytic.asInstanceOf[NumericMeanBinningAnalytic[T]])(tag, numeric)
+		} else if (analytic.isInstanceOf[NumericStatsBinningAnalytic[_]]) {
+			new StatsValueExtractor[T](field, analytic.asInstanceOf[NumericStatsBinningAnalytic[T]])(tag, numeric)
+		} else {
 			new FieldValueExtractor[T, JT](field, analytic)(tag, numeric, conversion)
-
-		def createMeanExtractor (): ValueExtractor[_, _] = {
-			val emptyMean = optionalGet(EMPTY_MEAN_PROPERTY).map(_.doubleValue())
-			val minCount = optionalGet(MIN_COUNT_PROPERTY).map(_.intValue())
-
-			new MeanValueExtractor[T](field, emptyMean, minCount)(tag, numeric)
-		}
-
-		def createStatsExtractor (): ValueExtractor[_, _] = {
-			val emptyMean = optionalGet(EMPTY_MEAN_PROPERTY).map(_.doubleValue())
-			val emptySigma = optionalGet(EMPTY_STD_DEV_PROPERTY).map(_.doubleValue())
-			val minCount = optionalGet(MIN_COUNT_PROPERTY).map(_.intValue())
-
-			new StatsValueExtractor[T](field, emptyMean, emptySigma, minCount)(tag, numeric)
-		}
-		analyticType match {
-			case "min" =>     createFieldExtractor(new NumericMinBinningAnalytic[T, JT]()(numeric, conversion))
-			case "minimum" => createFieldExtractor(new NumericMinBinningAnalytic[T, JT]()(numeric, conversion))
-			case "max" =>     createFieldExtractor(new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion))
-			case "maximum" => createFieldExtractor(new NumericMaxBinningAnalytic[T, JT]()(numeric, conversion))
-			case "mean" =>    createMeanExtractor()
-			case "average" => createMeanExtractor()
-			case _ =>         createFieldExtractor(new NumericSumBinningAnalytic[T, JT]()(numeric, conversion))
 		}
 	}
 }
@@ -270,18 +240,16 @@ class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: Bin
 /**
  * A value extractor that uses the mean of the (numeric) value of a single field as the value of each record.
  * @param field The field whose value is used as the record's value
- * @param emptyMean The value to use for bins without enough valid data
- * @param minCount The minimum number of records allowed in a bin before it is considered valid.
+ * @param analytic The mean binning analytic used for aggregation by this extractor
  * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
  */
-class MeanValueExtractor[T: ClassTag] (field: String, emptyMean: Option[Double], minCount: Option[Int])
-                        (implicit numeric: ExtendedNumeric[T])
+class MeanValueExtractor[T: ClassTag] (field: String, analytic: NumericMeanBinningAnalytic[T])
+                                      (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
 	def name = field
 	def fields = Seq(field)
 	override def convert: (Seq[Any]) => (T, Int) = s => (s(0).asInstanceOf[T], 1)
-	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] =
-		new NumericMeanBinningAnalytic[T](emptyMean.getOrElse(JavaDouble.NaN), minCount.getOrElse(1))
+	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = analytic
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
 		val convertFcn: JavaDouble => T = bt => numeric.fromDouble(bt.doubleValue())
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMinTileAnalytic[T]()),
@@ -294,12 +262,10 @@ class MeanValueExtractor[T: ClassTag] (field: String, emptyMean: Option[Double],
  * A value extractor that uses the mean and standard deviation of the (numeric) value of a single field
  * as the value of each record.
  * @param field The field whose value is used as the record's value
+ * @param analytic The stats binning analytic used for aggregation by this extractor
  * @tparam T The numeric type expected for the field in question.  Bins are always written as pairs of Java Doubles
  */
-class StatsValueExtractor[T: ClassTag] (field: String,
-                                       emptyMean: Option[Double],
-                                       emptySigma: Option[Double],
-                                       minCount: Option[Int])
+class StatsValueExtractor[T: ClassTag] (field: String, analytic: NumericStatsBinningAnalytic[T])
                                        (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, T, Int), Pair[JavaDouble, JavaDouble]] with Serializable
 {
@@ -309,10 +275,7 @@ class StatsValueExtractor[T: ClassTag] (field: String,
 		val v = s(0).asInstanceOf[T]
 		(v, numeric.times(v, v), 1)
 	}
-	override def binningAnalytic: BinningAnalytic[(T, T, Int), Pair[JavaDouble, JavaDouble]] =
-		new NumericStatsBinningAnalytic[T]((emptyMean.getOrElse(JavaDouble.NaN),
-				                            emptySigma.getOrElse(JavaDouble.NaN)),
-				                           minCount.getOrElse(1))
+	override def binningAnalytic: BinningAnalytic[(T, T, Int), Pair[JavaDouble, JavaDouble]] = analytic
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[Pair[JavaDouble, JavaDouble]], _]] = {
 		val convertMean:  Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getFirst.doubleValue())
 		val convertSigma: Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getSecond.doubleValue())
@@ -339,12 +302,14 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 		extends ValueExtractorFactory("series", parent, path)
 {
 	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
+	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		def fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
-		new SeriesValueExtractor[T, JT](fields)(tag, numeric, conversion)
+		def elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
+		new SeriesValueExtractor[T, JT](fields, elementAnalytic)(tag, numeric, conversion)
 	}
 }
 
@@ -352,10 +317,11 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
  * A value extractor that sets as the value for each record a (dense) array of the values of various fields in the
  * record.
  * @param _fields The record fields whose values should be used as the record's value
+ * @param elementAnalytic The binning analytic used to aggregate individual series value entries
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String])
+class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnalytic: BinningAnalytic[T, JT])
                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
 	def name = "series"
@@ -363,7 +329,7 @@ class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String])
 	override def convert: (Seq[Any]) => Seq[T] =
 		s => s.map(v => Try(v.asInstanceOf[T]).getOrElse(numeric.fromInt(0)))
 	override def binningAnalytic: BinningAnalytic[Seq[T], JavaList[JT]] =
-		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
+		new ArrayBinningAnalytic[T, JT](elementAnalytic)
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
 		val convertFcn: JavaList[JT] => Seq[T] = bt => bt.asScala.map(conversion.backwards(_))
 		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
@@ -401,6 +367,7 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
 	addProperty(IndirectSeriesValueExtractorFactory.KEY_PROPERTY)
 	addProperty(IndirectSeriesValueExtractorFactory.VALUE_PROPERTY)
 	addProperty(IndirectSeriesValueExtractorFactory.VALID_KEYS_PROPERTY)
+	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
@@ -409,7 +376,8 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
 		def keyField = getPropertyValue(KEY_PROPERTY)
 		def valueField = getPropertyValue(VALUE_PROPERTY)
 		def validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
-		new IndirectSeriesValueExtractor[T, JT](keyField, valueField, validKeys)(tag, numeric, conversion)
+		def elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
+		new IndirectSeriesValueExtractor[T, JT](keyField, valueField, validKeys, elementAnalytic)(tag, numeric, conversion)
 	}
 }
 
@@ -420,10 +388,12 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
  * @param keyField The field from which the name of the non-zero entry for each record is taken
  * @param valueField The field from which the value of the non-zero entry for each record is taken
  * @param validKeys The list of valid entry names
+ * @param elementAnalytic The binning analytic used to aggregate individual series value entries
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String])
+class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String],
+                                                     elementAnalytic: BinningAnalytic[T, JT])
                                   (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]]
 {
@@ -436,7 +406,7 @@ class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueFiel
 			validKeys.map(k => if (k == key) value else numeric.fromInt(0))
 		}
 	def binningAnalytic: BinningAnalytic[Seq[T], JavaList[JT]] =
-		new ArrayBinningAnalytic[T, JT](new NumericSumBinningAnalytic())
+		new ArrayBinningAnalytic[T, JT](elementAnalytic)
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
 		val convertFcn: JavaList[JT] => Seq[T] = bt =>
 		for (b <- bt.asScala) yield conversion.backwards(b)
@@ -461,12 +431,14 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
 		extends ValueExtractorFactory("fieldMap", parent, path)
 {
 	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
+	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
-		new MultiFieldValueExtractor[T, JT](fields)(tag, numeric, conversion)
+		val analytic = produce(classOf[BinningAnalytic[T, JT]])
+		new MultiFieldValueExtractor[T, JT](fields, analytic)(tag, numeric, conversion)
 	}
 }
 
@@ -474,10 +446,11 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
  * A value extractor that sets as the value for each record a set of values of various fields in the
  * record.  This set is kept as a dense array during processing, but is written out as a sparse array.
  * @param _fields The record fields whose values should be used as the record's value
+ * @param elementAnalytic The binning analytic used to aggregate individual field value entries
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String])
+class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnalytic: BinningAnalytic[T, JT])
                               (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
 	def name = "fieldMap"
@@ -485,7 +458,7 @@ class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String])
 	override def convert: (Seq[Any]) => Seq[T] =
 		s => s.map(v => Try(v.asInstanceOf[T]).getOrElse(numeric.fromInt(0)))
 	def binningAnalytic: BinningAnalytic[Seq[T], JavaList[Pair[String, JT]]] =
-		new CategoryValueBinningAnalytic[T, JT](_fields, new NumericSumBinningAnalytic())
+		new CategoryValueBinningAnalytic[T, JT](_fields, elementAnalytic)
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
 		Seq()
 	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
@@ -532,6 +505,7 @@ object StringScoreBinningAnalyticFactory {
 		factory.addProperty(AGGREGATION_LIMIT_PROPERTY)
 		factory.addProperty(BIN_LIMIT_PROPERTY)
 		factory.addProperty(ORDER_PROPERTY)
+		factory.addChildFactory(new NumericBinningAnalyticFactory(factory, List[String]().asJava))
 	}
 	def getBinningAnalytic[T, JT] (factory: ValueExtractorFactory)
 	                      (implicit numeric: ExtendedNumeric[T],
@@ -539,7 +513,8 @@ object StringScoreBinningAnalyticFactory {
 		val aggregationLimit = factory.optionalGet(AGGREGATION_LIMIT_PROPERTY).map(_.intValue())
 		val binLimit = factory.optionalGet(BIN_LIMIT_PROPERTY).map(_.intValue())
 		val ordering = getOrder(factory.optionalGet(ORDER_PROPERTY))
-		new StringScoreBinningAnalytic[T, JT](new NumericSumBinningAnalytic(), aggregationLimit, ordering, binLimit)
+		val elementAnalytic = factory.produce(classOf[BinningAnalytic[T, JT]])
+		new StringScoreBinningAnalytic[T, JT](elementAnalytic, aggregationLimit, ordering, binLimit)
 	}
 }
 object StringValueExtractorFactory {
