@@ -4,6 +4,10 @@
 /*                    Axis                  */
 /********************************************/
 
+.axis {  
+    cursor: pointer; 
+}
+
 .top-axis {
     bottom: 0px;
 }
@@ -25,70 +29,124 @@
 /********************************************/
 
 .axis-header {
-    position:absolute;  
-    cursor: pointer;
+    position:absolute;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
 }
 
-.light-theme .axis-header {
-	background: #9c9c9c;
+.vertical-header {
+    border-top: 32px solid transparent;
+    border-bottom: 32px solid transparent;
 }
 
-.dark-theme .axis-header {
-    background: #222;
+.horizontal-header {  
+    border-left: 32px solid transparent;
+    border-right: 32px solid transparent;
 }
 
-.light-theme .axis-header:hover {
-    background: #888;
+.vertical-header-back {
+    height: 100%;
+    width: 33px;
 }
+
+.horizontal-header-back {
+    height: 33px;
+    width: 100%;
+}
+
+.light-theme .axis-header-back { 
+    border: 1px solid #999;
+    background-color: #ebebeb;
+}
+
+.dark-theme .axis-header-back { 
+    border: 1px solid #111;
+    background-color: #333;
+}
+
+.light-theme .axis:hover .axis-header-back {     
+    background-color: #dbdbdb;
+}
+
+.dark-theme .axis:hover .axis-header-back { 
+    background-color: #222;
+}
+
+/******************* TOP ********************/
 
 .top-axis-header {  
     width:100%;
-    height:32px;
     top:0px;
     left:0px;
 }
 
-.light-theme .top-axis-header { 
-    border-bottom: 1px solid #fff;
+.light-theme .top-axis-header {
+    border-top: 32px solid #ebebeb;
 }
 
-.dark-theme .top-axis-header { 
-    border-bottom: 1px solid #111;
+.dark-theme .top-axis-header {     
+    border-top: 32px solid #333;
 }
+
+.light-theme .axis:hover .top-axis-header { 
+    border-top: 32px solid #dbdbdb;
+}
+
+.dark-theme .axis:hover .top-axis-header { 
+    border-top: 32px solid #222; 
+}
+
+/****************** BOTTOM ******************/
 
 .bottom-axis-header {
     width:100%;
-    height:32px;
     bottom:0px;
     left:0px;
 }
 
-.light-theme .bottom-axis-header { 
-    border-top: 1px solid #fff;
+.light-theme .bottom-axis-header {
+    border-bottom: 32px solid #ebebeb;
 }
 
-.dark-theme .bottom-axis-header { 
-    border-top: 1px solid #111;
+.dark-theme .bottom-axis-header {     
+    border-bottom: 32px solid #333;
 }
+
+.light-theme .axis:hover .bottom-axis-header { 
+    border-bottom: 32px solid #dbdbdb;
+}
+
+.dark-theme .axis:hover .bottom-axis-header { 
+    border-bottom: 32px solid #222; 
+}
+
+/******************* LEFT *******************/
 
 .left-axis-header {
     height:auto;
-    width:32px;
     left:0px;
     top:0px;
     bottom:0px;              
 }
 
-.light-theme .left-axis-header { 
-    border-right: 1px solid #fff;
+.light-theme .left-axis-header {
+    border-left: 32px solid #ebebeb;
 }
 
-.dark-theme .left-axis-header { 
-    border-right: 1px solid #111;
+.dark-theme .left-axis-header {
+    border-left: 32px solid #333;
 }
+
+.light-theme .axis:hover .left-axis-header { 
+    border-left: 32px solid #dbdbdb;
+}
+
+.dark-theme .axis:hover .left-axis-header { 
+    border-left: 32px solid #222; 
+}
+
+/******************* RIGHT ******************/
 
 .right-axis-header {
     height:100%;
@@ -97,12 +155,20 @@
     top:0px;
 }
 
-.light-theme .right-axis-header { 
-    border-left: 1px solid #fff;
+.light-theme .right-axis-header {
+    border-right: 32px solid #ebebeb;
 }
 
-.dark-theme .right-axis-header { 
-    border-left: 1px solid #111;
+.dark-theme .right-axis-header {
+    border-right: 32px solid #333;
+}
+
+.light-theme .axis:hover .right-axis-header { 
+    border-right: 32px solid #dbdbdb;
+}
+
+.dark-theme .axis:hover .right-axis-header { 
+    border-right: 32px solid #222; 
 }
 
 /********************************************/
@@ -110,26 +176,33 @@
 /********************************************/
 
 .axis-title-label {
-    font-size: 1em;
+    font-size: 14px;
+    line-height: 32px;
     white-space: nowrap;
-    padding-top: 7px;
-    padding-left:50%;
-    padding-right:50%;
     pointer-events:none;
-    -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+}
+
+.top-axis-header .axis-title-label {
+    top: -32px; /* move up by header width due to border text positioning */
+}
+
+.left-axis-header .axis-title-label {
+    left: -32px; /* move left by header width due to border text positioning */
 }
 
 .light-theme .axis-title-label {
-    color : #fff;
+    color : #444;
 }
 
 .dark-theme .axis-title-label {    
-    color : #D3D3D3;
+    color : #fff;
 }
 
-.dark-theme .axis-header:hover .axis-title-label {    
+.light-theme .axis:hover .axis-title-label {
+    color : #222;
+}
+
+.dark-theme .axis:hover .axis-title-label {    
     color : #fff;
 }
 
@@ -140,16 +213,17 @@
 .axis-content {
     position:absolute;
     overflow:hidden;
-    cursor: pointer; 
 }
 
 .light-theme .axis-content {
-	background-color: #fff;
+	background-color: #fbfbfb;
 }
 
 .dark-theme .axis-content {
     background: #111;
 }
+
+/******************* TOP ********************/
 
 .top-axis-content {    
     width:100%;
@@ -158,12 +232,14 @@
 }
 
 .light-theme .top-axis-content { 
-    border-left: 1px solid #fff;
+    border-bottom: 1px solid #999;
 }
 
 .dark-theme .top-axis-content { 
-    border-left: 1px solid #111;
+    border-bottom: 1px solid #333;
 }
+
+/****************** BOTTOM ******************/
 
 .bottom-axis-content {
     width:100%;
@@ -172,11 +248,11 @@
 }
 
 .light-theme .bottom-axis-content { 
-    border-top: 1px solid #fff;
+    border-top: 1px solid #999;
 }
 
 .dark-theme .bottom-axis-content { 
-    border-top: 1px solid #111;
+    border-top: 1px solid #333;
 }
 
 .left-axis-content {
@@ -184,14 +260,17 @@
     left:0px;
     top:0px;
 }
+/******************* LEFT *******************/
 
 .light-theme .left-axis-content { 
-    border-right: 1px solid #fff;
+    border-right: 1px solid #999;
 }
 
 .dark-theme .left-axis-content { 
-    border-right: 1px solid #111;
+    border-right: 1px solid #333;
 }
+
+/****************** RIGHT *******************/
 
 .right-axis-content {
     height:100%;
@@ -200,11 +279,11 @@
 }
 
 .light-theme .right-axis-content { 
-    border-left: 1px solid #fff;
+    border-left: 1px solid #999;
 }
 
 .dark-theme .right-axis-content { 
-    border-left: 1px solid #111;
+    border-left: 1px solid #333;
 }
 
 /********************************************/
@@ -212,7 +291,7 @@
 /********************************************/
 
 .light-theme .axis-marker {
-    background-color: #000; 
+    background-color: #444; 
 }
 
 .dark-theme .axis-marker {
@@ -220,34 +299,34 @@
 }
 
 .large-horizontal-axis-marker {
-    height: 10px;
+    height: 6px;
     width: 1px;
 }
 
 .medium-horizontal-axis-marker {
-    height: 6px;   
+    height: 4px;   
     width: 1px;
 }
 
 .small-horizontal-axis-marker {
-    height: 4px;
+    height: 2px;
     width: 1px;
 }
 
 .large-vertical-axis-marker {
-    width: 10px;
-    height: 1px;
-    margin-top: -1px;
-}
-
-.medium-vertical-axis-marker {
     width: 6px;
     height: 1px;
     margin-top: -1px;
 }
 
-.small-vertical-axis-marker {
+.medium-vertical-axis-marker {
     width: 4px;
+    height: 1px;
+    margin-top: -1px;
+}
+
+.small-vertical-axis-marker {
+    width: 2px;
     height: 1px;
     margin-top: -1px;
 }
@@ -257,15 +336,14 @@
 /********************************************/
 
 .axis-marker-label {
-    font-size:0.8em;
+    font-size: 12px;
 }
 
 .light-theme .axis-marker-label {
-    color : #000;
+    color : #444;
 }
 
 .dark-theme .axis-marker-label {
-    font-size:0.8em;
     color : #D3D3D3;
 }
 

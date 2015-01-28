@@ -23,14 +23,34 @@ div.olControlZoom {
 	top: 55px !important;
 	left: auto !important;
     z-index: 2999 !important; 
+    padding: 0px !important;
 }
 
-div.olControlZoom a {
+.light-theme div.olControlZoom {
+    background: #999!important;
+}
+
+.dark-theme div.olControlZoom {
+    background: #111!important;
+}
+
+.light-theme div.olControlZoom a {
+    color: #444;
+    background-color: #ebebeb!important;
+}
+
+.dark-theme div.olControlZoom a {
+    color: #fff;
     background-color: #333!important;
 }
 
-div.olControlZoom a:hover {
-    background-color: #444!important;
+.light-theme  div.olControlZoom a:hover {
+    color: #444;
+    background-color: #dbdbdb!important;
+}
+
+.dark-theme  div.olControlZoom a:hover {
+    background-color: #222!important;
 }
 
 .olLayerGoogleV3 {
