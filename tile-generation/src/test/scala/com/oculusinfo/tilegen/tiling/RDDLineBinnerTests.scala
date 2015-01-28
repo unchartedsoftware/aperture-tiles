@@ -145,7 +145,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 256, 256))
 		assert(tile11.isEmpty)
 
-		for (x <- 0 to 255) assert(tile00.get.getBin(x, 14) == 1.0 && tile10.get.getBin(x, 15) == 1.0)
+		for (x <- 0 to 255) assert(tile00.get.getBin(x, 14) == 1.0 && tile10.get.getBin(x, 14) == 1.0)
 	}
 	
 	
