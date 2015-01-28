@@ -30,6 +30,8 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class JSONUtilitiesTests {
@@ -149,5 +151,21 @@ public class JSONUtilitiesTests {
         JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
         JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
         Assert.assertEquals(expected.toString(), actual.toString());
+	}
+
+	@Test
+	public void testStringMapToJSONConversion () throws Exception {
+		Map<String, String> p = new HashMap<>();
+		p.put("a", "aval");
+		p.put("b.0", "bval0");
+		p.put("b.2", "bval2");
+		p.put("c.1", "cval1");
+		p.put("c.a", "cvala");
+		p.put("c.b.a", "cbaval");
+		p.put("c.b.b", "cbbval");
+
+		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
+		JSONObject actual = JsonUtilities.mapToJSON(p);
+		Assert.assertEquals(expected.toString(), actual.toString());
 	}
 }
