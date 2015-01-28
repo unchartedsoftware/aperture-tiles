@@ -55,6 +55,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.DenseTileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
@@ -238,7 +239,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 				if (data.accumulable.value.isEmpty) {
 					Seq[TileData[BT]]()
 				} else {
-					val tile = new TileData[BT](index)
+					val tile = new DenseTileData[BT](index)
 
 					// Put the proper default in all bins
 					val defaultBinValue =

@@ -43,7 +43,7 @@ import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 /**
  * Created by nkronenfeld on 11/24/2014.
  */
-class TilingTaskBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+class TilingTaskBinningTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
 	val pyramidId = "live-tile test"
 	var dataFile: File = null
 	var pyramidIo: OnDemandAccumulatorPyramidIO = null
@@ -108,21 +108,18 @@ class TilingTaskBinningTestSuite extends FunSuite with SharedSparkContext with B
 			                    List(new TileIndex(0, 0, 0, 4, 1)).asJava).get(0)
 		assert(tile000.getDefinition.getXBins() === 4)
 		assert(tile000.getDefinition.getYBins() === 1)
-		assert(tile000.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](2.0, 2.0, 2.0, 1.0))
+		assertTileContents(List[Double](2.0, 2.0, 2.0, 1.0), tile000)
 		val tile100: TileData[_] =
 			pyramidIo.readTiles(pyramidId, null,
 			                    List(new TileIndex(1, 0, 0, 4, 1)).asJava).get(0)
 		assert(tile100.getDefinition.getXBins() === 4)
 		assert(tile100.getDefinition.getYBins() === 1)
-		assert(tile100.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](1.0, 1.0, 1.0, 1.0))
+		assertTileContents(List[Double](1.0, 1.0, 1.0, 1.0), tile100)
 		val tile110: TileData[_] =
 			pyramidIo.readTiles(pyramidId, null,
 			                    List(new TileIndex(1, 1, 0, 4, 1)).asJava).get(0)
 		assert(tile110.getDefinition.getXBins() === 4)
 		assert(tile110.getDefinition.getYBins() === 1)
-		assert(tile110.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](1.0, 1.0, 1.0, 0.0))
+		assertTileContents(List[Double](1.0, 1.0, 1.0, 0.0), tile110)
 	}
 }

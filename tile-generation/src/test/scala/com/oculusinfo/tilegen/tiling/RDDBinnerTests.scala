@@ -30,6 +30,7 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble}
 
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
+import com.oculusinfo.tilegen.datasets.TileAssertions
 
 import scala.collection.JavaConverters._
 import scala.util.{Try, Success, Failure}
@@ -48,7 +49,7 @@ import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
 
 
 
-class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
+class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAssertions {
 	test("Simple binning") {
 		val data = sc.parallelize(Range(0, 8)).map(n =>
 			((n.toDouble, (7-n).toDouble), 1.0)
@@ -87,18 +88,16 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		// Noting that visually, the tiles should look exactly as we enter them here.
 		val tile01 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 1, 4, 4))
 		assert(tile01.isDefined)
-		assert(tile01.get.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](1.0, 0.0, 0.0, 0.0,
-			                    0.0, 1.0, 0.0, 0.0,
-			                    0.0, 0.0, 1.0, 0.0,
-			                    0.0, 0.0, 0.0, 1.0))
+		assertTileContents(List[Double](1.0, 0.0, 0.0, 0.0,
+		                                0.0, 1.0, 0.0, 0.0,
+		                                0.0, 0.0, 1.0, 0.0,
+		                                0.0, 0.0, 0.0, 1.0), tile01.get)
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 4))
 		assert(tile10.isDefined)
-		assert(tile10.get.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](1.0, 0.0, 0.0, 0.0,
-			                    0.0, 1.0, 0.0, 0.0,
-			                    0.0, 0.0, 1.0, 0.0,
-			                    0.0, 0.0, 0.0, 1.0))
+		assertTileContents(List[Double](1.0, 0.0, 0.0, 0.0,
+		                                0.0, 1.0, 0.0, 0.0,
+		                                0.0, 0.0, 1.0, 0.0,
+		                                0.0, 0.0, 0.0, 1.0), tile10.get)
 	}
 
 	test("One-dimensional binning") {
@@ -134,8 +133,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext {
 		// Noting that visually, the tiles should look exactly as we enter them here.
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 1))
 		assert(tile10.isDefined)
-		assert(tile10.get.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](1.0, 1.0, 1.0, 0.0))
+		assertTileContents(List[Double](1.0, 1.0, 1.0, 0.0), tile10.get)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 1))
 		assert(!tile11.isDefined)
 	}

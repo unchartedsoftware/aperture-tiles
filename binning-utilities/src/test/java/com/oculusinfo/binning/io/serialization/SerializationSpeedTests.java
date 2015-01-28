@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.oculusinfo.binning.DenseTileData;
 import org.apache.avro.file.CodecFactory;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -55,14 +56,14 @@ public class SerializationSpeedTests {
 	private static final int ITERATIONS = 10;	
 	
 	private TileData<Double>       _scalarRata;
-	private TileData<List<Double>> _vectorData;	
+	private TileData<List<Double>> _vectorData;
 
 	@Before
 	public void setup () {
 		
 		// Create some data
 		Random random = new Random(15485863);
-		_scalarRata = new TileData<>(new TileIndex(0, 0, 0, 256, 256));
+		_scalarRata = new DenseTileData<>(new TileIndex(0, 0, 0, 256, 256));
 		for (int x=0; x < BIN_SIZE; ++x) {
 			for (int y=0; y < BIN_SIZE; ++y) {
 				_scalarRata.setBin(x, y, random.nextDouble());
@@ -70,7 +71,7 @@ public class SerializationSpeedTests {
 		}
 		
 		// Random vector data for more complex types.
-		_vectorData = new TileData<>(new TileIndex(0, 0, 0, 256, 256));
+		_vectorData = new DenseTileData<>(new TileIndex(0, 0, 0, 256, 256));
 		for (int x=0; x < BIN_SIZE; ++x) {
 			for (int y=0; y < BIN_SIZE; ++y) {
 				List<Double> binData = new ArrayList<Double>(1);

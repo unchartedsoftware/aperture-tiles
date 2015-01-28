@@ -144,11 +144,8 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 256, 256))
 		assert(tile11.isEmpty)
-		
-		val data00 = tile00.get.getData.asScala
-		val data10 = tile10.get.getData.asScala
-		val base = 14 * 256
-		for (i <- (base until (base + 256))) assert(data00(i) == 1.0 && data10(i) == 1.0)
+
+		for (x <- 0 to 255) assert(tile00.get.getBin(x, 14) == 1.0 && tile10.get.getBin(x, 15) == 1.0)
 	}
 	
 	
@@ -171,13 +168,11 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
 		assert(tile11.isEmpty)
-		
-		val data00 = tile00.get.getData.asScala.map(_.toString.toDouble)
-		val data10 = tile10.get.getData.asScala.map(_.toString.toDouble)
-		
-		val base = 14 * 256
-		for (i <- (base + 1 until (base + 256))) assert(data00(i) < data00(i-1))
-		for (i <- (base + 1 until (base + 256))) assert(data10(i) > data10(i-1))
+
+		for (x <- 1 to 255) {
+			assert(tile00.get.getBin(x, 14).toString.toDouble < tile00.get.getBin(x-1, 14).toString.toDouble)
+			assert(tile10.get.getBin(x, 14).toString.toDouble > tile10.get.getBin(x-1, 14).toString.toDouble)
+		}
 	}
 	
 	

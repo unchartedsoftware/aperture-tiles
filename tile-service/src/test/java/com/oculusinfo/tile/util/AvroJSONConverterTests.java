@@ -46,7 +46,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer;
@@ -118,7 +118,7 @@ public class AvroJSONConverterTests {
 		// Create a tile to test
 		TileSerializer<List<Pair<String, Double>>> serializer = new PairArrayAvroSerializer<>(String.class, Double.class, CodecFactory.nullCodec());
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
-		TileData<List<Pair<String, Double>>> tile = new TileData<>(index);
+		DenseTileData<List<Pair<String, Double>>> tile = new DenseTileData<>(index);
 		List<Pair<String, Double>> bin = new ArrayList<>();
 		bin.add(new Pair<String, Double>("abc", 1.0));
 		bin.add(new Pair<String, Double>("def", 1.5));

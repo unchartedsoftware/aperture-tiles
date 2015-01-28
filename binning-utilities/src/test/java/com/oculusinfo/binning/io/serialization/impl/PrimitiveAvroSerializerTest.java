@@ -35,6 +35,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
@@ -46,7 +47,7 @@ public class PrimitiveAvroSerializerTest {
 
 		// Create our tile
 		int size = (int) Math.ceil(Math.sqrt(data.length));
-		TileData<T> input = new TileData<>(new TileIndex(0, 0, 0, size, size));
+		TileData<T> input = new DenseTileData<>(new TileIndex(0, 0, 0, size, size));
 		for (int y=0; y<size; ++y) {
 			for (int x=0; x<size; ++x) {
 				int i = (x+size*y) % data.length;

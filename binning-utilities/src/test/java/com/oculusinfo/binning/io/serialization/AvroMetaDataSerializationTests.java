@@ -26,6 +26,7 @@ package com.oculusinfo.binning.io.serialization;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import com.oculusinfo.binning.DenseTileData;
 import org.apache.avro.file.CodecFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -48,7 +49,7 @@ public class AvroMetaDataSerializationTests {
 		_index = new TileIndex(0, 0, 0, 2, 2);
 
 
-		_tile = new TileData<>(_index);
+		_tile = new DenseTileData<>(_index);
 		_tile.setBin(0, 0, 1.0);
 		_tile.setBin(0, 1, 2.0);
 		_tile.setBin(1, 0, 3.0);

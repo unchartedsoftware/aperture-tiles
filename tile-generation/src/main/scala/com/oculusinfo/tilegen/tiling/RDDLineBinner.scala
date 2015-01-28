@@ -27,23 +27,18 @@ package com.oculusinfo.tilegen.tiling
 
 
 
-import java.awt.geom.Point2D
-import java.awt.geom.Rectangle2D
 import scala.collection.TraversableOnce
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
-import scala.util.{Try, Success, Failure}
-import org.apache.spark._
+import scala.util.Try
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.BinIterator
 import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.DenseTileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileAndBinIndices
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -61,9 +56,6 @@ class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double
  * This takes an RDD of line segment data (ie pairs of endpoints) and transforms it
  * into a pyramid of tiles.  minBins and maxBins define the min and max valid rane for
  * line segments that are included in the binning process
- * 
- *
- * @param tileScheme the type of tile pyramid this binner can bin.
  */
 object RDDLineBinner {
 	
@@ -152,10 +144,12 @@ class RDDLineBinner(minBins: Int = 2,
 	 * Fully process a dataset of input records into output tiles written out
 	 * somewhere
 	 * 
-	 * @param RT The raw input record type
-	 * @param IT The coordinate type
-	 * @param PT The processing bin type
-	 * @param BT The output bin type
+	 * @tparam RT The raw input record type
+	 * @tparam IT The coordinate type
+	 * @tparam PT The processing bin type
+	 * @tparam AT The type of tile analytic to apply to tiles
+	 * @tparam DT The type of data analytic to apply to raw data
+	 * @tparam BT The output bin type
 	 */
 	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT] (
 		data: RDD[RT],
@@ -267,13 +261,11 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                       or by tile.  Defaults to using point based consolidation.
 	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
 	 *                    or arcs.  Defaults to lines.
-	 * @param IT the index type, convertible to a cartesian pair with the 
-	 *           coordinateFromIndex function
-	 * @param PT The bin type, when processing and aggregating
-	 * @param AT The type of tile-level analytic to calculate for each tile.
-	 * @param DT The type of raw data-level analytic that already has been 
-	 *           calculated for each tile.
-	 * @param BT The final bin type, ready for writing to tiles
+	 * @tparam IT the index type, convertible to a cartesian pair with the coordinateFromIndex function
+	 * @tparam PT The bin type, when processing and aggregating
+	 * @tparam AT The type of tile-level analytic to calculate for each tile.
+	 * @tparam DT The type of raw data-level analytic that already has been calculated for each tile.
+	 * @tparam BT The final bin type, ready for writing to tiles
 	 */
 	def processDataByLevel[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(data: RDD[(IT, PT, Option[DT])],
@@ -356,9 +348,7 @@ class RDDLineBinner(minBins: Int = 2,
 	 * @param dataAnalytics A description of analytics that can be run on the
 	 *                      raw data, and recorded (in the aggregate) on each
 	 *                      tile
-	 * @param datumToTiles A function that spreads a data point out over the
-	 *                     tiles and bins of interest
-	 * @param levels A list of levels on which to create tiles
+	 * @param indexToUniversalBins A function that spreads a data point out over the tiles and bins of interest
 	 * @param xBins The number of bins along the horizontal axis of each tile
 	 * @param yBins The number of bins along the vertical axis of each tile
 	 * @param consolidationPartitions The number of partitions to use when
@@ -371,12 +361,11 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                       or by tile.  Defaults to using point based consolidation.
 	 * @param linesAsArcs Indicates whether the endpoints have lines drawn between them,
 	 *                    or arcs.  Defaults to lines.
-	 * @param IT The index type, convertable to tile and bin
-	 * @param PT The bin type, when processing and aggregating
-	 * @param AT The type of tile-level analytic to calculate for each tile.
-	 * @param DT The type of raw data-level analytic that already has been 
-	 *           calculated for each tile.
-	 * @param BT The final bin type, ready for writing to tiles
+	 * @tparam IT The index type, convertable to tile and bin
+	 * @tparam PT The bin type, when processing and aggregating
+	 * @tparam AT The type of tile-level analytic to calculate for each tile.
+	 * @tparam DT The type of raw data-level analytic that already has been calculated for each tile.
+	 * @tparam BT The final bin type, ready for writing to tiles
 	 */
 	def processData[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(data: RDD[(IT, PT, Option[DT])],
@@ -446,15 +435,16 @@ class RDDLineBinner(minBins: Int = 2,
 	/**
 	 * Process a simplified input dataset to run any raw data-based analysis
 	 * 
-	 * @param IT The index type of the data set
-	 * @param DT The type of data analytic used
+	 * @tparam IT The index type of the data set
+	 * @tparam PT The type of data to be processed into tiles
+	 * @tparam DT The type of data analytic used
 	 * @param data The data to process
 	 * @param indexToUniversalBins A function that spreads a data point out over
 	 *                             area of interest
-	 * @param dataAnalytic An optional transformation from a raw data record
-	 *                     into an aggregable analytic value.  If None, this
-	 *                     should cause no extra processing. If multiple
-	 *                     analytics are desired, use ComposedTileAnalytic
+	 * @param dataAnalytics An optional transformation from a raw data record
+	 *                      into an aggregable analytic value.  If None, this
+	 *                      should cause no extra processing. If multiple
+	 *                      analytics are desired, use ComposedTileAnalytic
 	 */
 	def processMetaData[IT: ClassTag, PT: ClassTag, DT: ClassTag]
 		(data: RDD[(IT, PT, Option[DT])],
@@ -574,7 +564,7 @@ class RDDLineBinner(minBins: Int = 2,
 				val yLimit = index.getYBins()
 
 				// Create our tile
-				val tile = new TileData[BT](index)
+				val tile = new DenseTileData[BT](index)
 
 				// Put the proper default in all bins
 				val defaultBinValue =
@@ -735,7 +725,7 @@ class RDDLineBinner(minBins: Int = 2,
 				
 				// convert aggregated bin values from type PT to BT, and save tile results
 				// Create our tile
-				val tile = new TileData[BT](index)
+				val tile = new DenseTileData[BT](index)
 
 				for (x <- 0 until xLimit) {
 					for (y <- 0 until yLimit) {

@@ -25,6 +25,7 @@
 package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -54,7 +55,7 @@ public class FileSystemPyramidSourceTest {
 		ArrayList<TileData<Integer>> writeTiles = new ArrayList<TileData<Integer>>();
 
 		TileIndex index = new TileIndex(4, 3, 2);
-		TileData<Integer> tile = new TileData<Integer>(index);
+		TileData<Integer> tile = new DenseTileData<Integer>(index);
 		for (int x=0; x<256; ++x) {
 			for (int y=0; y<256; ++y) {
 				tile.setBin(x, y, x+256*y);
@@ -68,19 +69,17 @@ public class FileSystemPyramidSourceTest {
 		for (int i=0; i<writeTiles.size(); i++){
 			TileData<Integer> writeTile = writeTiles.get(i);
 			TileIndex writeTileDef = writeTile.getDefinition();
-			List<Integer> writeTileData = writeTile.getData();
 
 			TileData<Integer> readTile = readTiles.get(i);
 			TileIndex readTileDef = readTile.getDefinition();
-			List<Integer> readTileData = readTile.getData();
-
-			Assert.assertEquals(readTileData.size(), writeTileData.size());
-
-			for (int j=0; j<readTileData.size(); j++){
-				Assert.assertEquals(readTileData.get(j), writeTileData.get(j));
-			}
 
 			Assert.assertEquals(writeTileDef, readTileDef);
+
+			for (int x = 0; x < writeTile.getDefinition().getXBins(); ++x) {
+				for (int y = 0; y < writeTile.getDefinition().getYBins(); ++y) {
+					Assert.assertEquals(writeTile.getBin(x, y), readTile.getBin(x, y));
+				}
+			}
 		}
 	}
 

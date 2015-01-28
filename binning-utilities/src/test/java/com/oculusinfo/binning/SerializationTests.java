@@ -54,7 +54,7 @@ public class SerializationTests {
                 = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
 		
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
-		TileData<Double> tile = new TileData<Double>(index);
+		TileData<Double> tile = new DenseTileData<Double>(index);
 		tile.setBin(0, 0, 5.0);
 		io.initializeForWrite("backwardsCompatibilityTest");
 		io.writeTiles("backwardsCompatibilityTest", serializer, Collections.singleton(tile));
@@ -63,7 +63,7 @@ public class SerializationTests {
 		
 		List<TileData<Double>> tiles = io.readTiles("backwardsCompatibilityTest", serializer, Collections.singleton(index));
 		TileData<Double> tileOut = tiles.get(0);
-		double dataOut = tileOut.getData().get(0);
+		double dataOut = tileOut.getBin(0, 0);
 
 		Assert.assertEquals(5.0, dataOut);
 	}
@@ -73,7 +73,7 @@ public class SerializationTests {
 		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJsonSerializer();
 
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
-		TileData<List<Pair<String, Integer>>> tile = new TileData<List<Pair<String,Integer>>>(index);
+		TileData<List<Pair<String, Integer>>> tile = new DenseTileData<List<Pair<String,Integer>>>(index);
 		List<Pair<String, Integer>> data = new ArrayList<Pair<String,Integer>>();
 		data.add(new Pair<String, Integer>("a", 1));
 		data.add(new Pair<String, Integer>("b", 2));
@@ -105,7 +105,7 @@ public class SerializationTests {
 	@Test
 	public void testDoubleTileSerialization() throws IOException {
 		TileIndex index = new TileIndex(2, 0, 1, 10, 20);
-		TileData<Double> tile = new TileData<Double>(index);
+		TileData<Double> tile = new DenseTileData<Double>(index);
 		for (int x=0; x<10; ++x) {
 			for (int y=0; y<20; ++y) {
 				tile.setBin(x, y, ((x+10*y)%7)/2.0);
@@ -117,18 +117,19 @@ public class SerializationTests {
 
 		List<TileData<Double>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
-		List<Double> inData = tile.getData();
-		List<Double> outData = tilesOut.get(0).getData();
-		Assert.assertEquals(inData.size(), outData.size());
-		for (int i=0; i<inData.size(); ++i) {
-			Assert.assertEquals(inData.get(i), outData.get(i));
+		TileData<Double> firstOut = tilesOut.get(0);
+		Assert.assertEquals(tile.getDefinition(), firstOut.getDefinition());
+		for (int x = 0; x < tile.getDefinition().getXBins(); ++x) {
+			for (int y = 0; y < tile.getDefinition().getYBins(); ++y) {
+				Assert.assertEquals(tile.getBin(x, y), firstOut.getBin(x, y), 1E-12);
+			}
 		}
 	}
 
 	@Test
 	public void testDoubleArrayTileSerialization() throws IOException {
 		TileIndex index = new TileIndex(2, 0, 1, 10, 20);
-		TileData<List<Double>> tile = new TileData<List<Double>>(index);
+		TileData<List<Double>> tile = new DenseTileData<List<Double>>(index);
 		for (int x=0; x<10; ++x) {
 			for (int y=0; y<20; ++y) {
 				tile.setBin(x, y, Arrays.asList(1.0*x, 2.0*y));
@@ -140,13 +141,16 @@ public class SerializationTests {
 
 		List<TileData<List<Double>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
-		List<List<Double>> inData = tile.getData();
-		List<List<Double>> outData = tilesOut.get(0).getData();
-		Assert.assertEquals(inData.size(), outData.size());
-		for (int i=0; i<inData.size(); ++i) {
-			Assert.assertEquals(inData.get(i).size(), outData.get(i).size());
-			for (int j=0; j<inData.get(i).size(); ++j) {
-				Assert.assertEquals(inData.get(i).get(j), outData.get(i).get(j), 1E-12);
+		TileData<List<Double>> firstOut = tilesOut.get(0);
+		Assert.assertEquals(tile.getDefinition(), firstOut.getDefinition());
+		for (int x = 0; x < tile.getDefinition().getXBins(); ++x) {
+			for (int y = 0; y < tile.getDefinition().getYBins(); ++y) {
+				List<Double> inData = tile.getBin(x, y);
+				List<Double> outData = firstOut.getBin(x, y);
+				Assert.assertEquals(inData.size(), outData.size());
+				for (int j=0; j<inData.size(); ++j) {
+					Assert.assertEquals(inData.get(j), outData.get(j), 1E-12);
+				}
 			}
 		}
 	}
@@ -154,7 +158,7 @@ public class SerializationTests {
 	@Test
 	public void testStringArrayTileSerialization() throws IOException {
 		TileIndex index = new TileIndex(2, 0, 1, 10, 20);
-		TileData<List<String>> tile = new TileData<List<String>>(index);
+		TileData<List<String>> tile = new DenseTileData<List<String>>(index);
 		for (int x=0; x<10; ++x) {
 			for (int y=0; y<20; ++y) {
 				tile.setBin(x, y, Arrays.asList(String.format("bin [%d, %d]", x, y), "second", "third"));
@@ -166,13 +170,16 @@ public class SerializationTests {
 
 		List<TileData<List<String>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
 		Assert.assertEquals(1, tilesOut.size());
-		List<List<String>> inData = tile.getData();
-		List<List<String>> outData = tilesOut.get(0).getData();
-		Assert.assertEquals(inData.size(), outData.size());
-		for (int i=0; i<inData.size(); ++i) {
-			Assert.assertEquals(inData.get(i).size(), outData.get(i).size());
-			for (int j=0; j<inData.get(i).size(); ++j) {
-				Assert.assertEquals(inData.get(i).get(j), outData.get(i).get(j));
+		TileData<List<String>> firstOut = tilesOut.get(0);
+		Assert.assertEquals(tile.getDefinition(), firstOut.getDefinition());
+		for (int x = 0; x < tile.getDefinition().getXBins(); ++x) {
+			for (int y = 0; y < tile.getDefinition().getYBins(); ++y) {
+				List<String> inData = tile.getBin(x, y);
+				List<String> outData = firstOut.getBin(x, y);
+				Assert.assertEquals(inData.size(), outData.size());
+				for (int j=0; j<inData.size(); ++j) {
+					Assert.assertEquals(inData.get(j), outData.get(j));
+				}
 			}
 		}
 	}
@@ -182,7 +189,7 @@ public class SerializationTests {
 		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJsonSerializer();
 
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
-		TileData<List<Pair<String, Integer>>> tile = new TileData<List<Pair<String,Integer>>>(index);
+		TileData<List<Pair<String, Integer>>> tile = new DenseTileData<List<Pair<String,Integer>>>(index);
 		List<Pair<String, Integer>> data = new ArrayList<Pair<String,Integer>>();
         
 		String[] unicode_examples = {

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.oculusinfo.binning.DenseTileData;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -98,7 +99,7 @@ public class SQLitePyramidIOTest {
 			TileIndex tileDef = new TileIndex(0, 0, 0, 1, 1);
 			StringIntPairArrayJsonSerializer serializer = new StringIntPairArrayJsonSerializer();
 
-			TileData<List<Pair<String, Integer>>> tileToWrite = new TileData<List<Pair<String, Integer>>>(tileDef);
+			TileData<List<Pair<String, Integer>>> tileToWrite = new DenseTileData<List<Pair<String, Integer>>>(tileDef);
 			List<Pair<String, Integer>> binVals = new ArrayList<Pair<String,Integer>>();
 			Pair<String, Integer> binVal = new Pair<String, Integer>("name", 1);
 			binVals.add(binVal);
@@ -112,7 +113,17 @@ public class SQLitePyramidIOTest {
 			Assert.assertTrue(readResult.size()==1);
 
 			TileData<List<Pair<String, Integer>>> readTileData = readResult.get(0);
-			Assert.assertTrue(readTileData.getData().equals(tileToWrite.getData()));
+			Assert.assertEquals(tileToWrite.getDefinition(), readTileData.getDefinition());
+			for (int x = 0; x < tileToWrite.getDefinition().getXBins(); ++x) {
+				for (int y = 0; y < tileToWrite.getDefinition().getYBins(); ++y) {
+					List<Pair<String, Integer>> writeData = tileToWrite.getBin(x, y);
+					List<Pair<String, Integer>> readData = readTileData.getBin(x, y);
+					Assert.assertEquals(writeData.size(), readData.size());
+					for (int i = 0; i < writeData.size(); ++i) {
+						Assert.assertEquals(writeData.get(i), readData.get(i));
+					}
+				}
+			}
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
