@@ -132,7 +132,8 @@ object CSVBinner {
 					                                      levels,
 					                                      task.getNumXBins,
 					                                      task.getNumYBins,
-					                                      task.getConsolidationPartitions)
+					                                      task.getConsolidationPartitions,
+					                                      task.getTileType)
 
 					tileIO.writeTileSet(task.getTilePyramid,
 					                    task.getName,

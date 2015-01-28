@@ -27,15 +27,12 @@ package com.oculusinfo.tilegen.tiling
 
 
 
-import java.awt.geom.Point2D
-import java.awt.geom.Rectangle2D
-
-import scala.collection.JavaConverters._
+import com.oculusinfo.binning.TileData.StorageType
 
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
-import scala.util.{Try, Success, Failure}
+import scala.util.Try
 
 
 
@@ -127,6 +124,7 @@ class RDDBinner {
 		serializer: TileSerializer[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
+		tileType: Option[StorageType],
 		writeLocation: String,
 		tileIO: TileIO,
 		levelSets: Seq[Seq[Int]],
@@ -168,7 +166,8 @@ class RDDBinner {
 				                               levels,
 				                               xBins,
 				                               yBins,
-				                               consolidationPartitions)
+				                               consolidationPartitions,
+				                               tileType)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
 				                    serializer, tileAnalytics, dataAnalytics,
@@ -214,11 +213,12 @@ class RDDBinner {
 	 * @param levels A list of levels on which to create tiles
 	 * @param xBins The number of bins along the horizontal axis of each tile
 	 * @param yBins The number of bins along the vertical axis of each tile
-	 * @param consolidationPartitions The number of partitions to use when
-	 *                                grouping values in the same bin or the same
-	 *                                tile.  None to use the default determined
-	 *                                by Spark.
-	 * 
+	 * @param consolidationPartitions The number of partitions to use when grouping values in the same bin or the same
+	 *                                tile.  None to use the default determined by Spark.
+	 * @param tileType A specification of how data should be stored.  If None, a heuristic will be used that will use
+	 *                 the optimal type for a double-valued tile, and isn't too bad for smaller-valued types.  For
+	 *                 significantly larger-valued types, Some(Sparse) would probably work best.
+	 *
 	 * @tparam IT the index type, convertable to a cartesian pair with the
 	 *            coordinateFromIndex function
 	 * @tparam PT The bin type, when processing and aggregating
@@ -237,7 +237,8 @@ class RDDBinner {
 		 levels: Seq[Int],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
-		 consolidationPartitions: Option[Int] = None): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None): RDD[TileData[BT]] =
 	{
 		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
 			index => {
@@ -252,7 +253,7 @@ class RDDBinner {
 			}
 
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
-		            mapOverLevels, consolidationPartitions)
+		            mapOverLevels, consolidationPartitions, tileType)
 	}
 
 
@@ -266,10 +267,11 @@ class RDDBinner {
 	 * @param tileAnalytics An optional description of extra analytics to be run on complete tiles
 	 * @param dataAnalytics An optional description of extra analytics to be run on the raw data
 	 * @param indexToTiles A function that spreads a data point out over the tiles and bins of interest
-	 * @param consolidationPartitions The number of partitions to use when
-	 *                                grouping values in the same bin or the same
-	 *                                tile.  None to use the default determined
-	 *                                by Spark.
+	 * @param consolidationPartitions The number of partitions to use when grouping values in the same bin or the same
+	 *                                tile.  None to use the default determined by Spark.
+	 * @param tileType A specification of how data should be stored.  If None, a heuristic will be used that will use
+	 *                 the optimal type for a double-valued tile, and isn't too bad for smaller-valued types.  For
+	 *                 significantly larger-valued types, Some(Sparse) would probably work best.
 	 * 
 	 * @tparam IT The index type, convertable to tile and bin
 	 * @tparam PT The bin type, when processing and aggregating
@@ -281,7 +283,8 @@ class RDDBinner {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
-		 consolidationPartitions: Option[Int] = None): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None): RDD[TileData[BT]] =
 	{
 		// Determine metadata
 		val metaData = processMetaData(data, indexToTiles, dataAnalytics)
@@ -313,7 +316,7 @@ class RDDBinner {
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		consolidate(partitionBins, binAnalytic, tileAnalytics,
-		            metaData, consolidationPartitions)
+		            metaData, consolidationPartitions, tileType)
 	}
 
 	/**
@@ -370,7 +373,8 @@ class RDDBinner {
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
-		 consolidationPartitions: Option[Int]): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int],
+		 tileType: Option[StorageType]): RDD[TileData[BT]] =
 	{
 		// We need to consolidate both metadata and binning data, so our result
 		// has two slots, and each half populates one of them.
@@ -415,20 +419,23 @@ class RDDBinner {
 				val xLimit = index.getXBins()
 				val yLimit = index.getYBins()
 
-				// Create our tile
-				val tile: TileData[BT] = new DenseTileData[BT](index)
+				val definedTileData = tileData.filter(_._1.isDefined)
 
-				// Put the proper default in all bins
+				// Create our tile
+				// Use the type passed in; if no type is passed in, use dense if more than half full.
+				val typeToUse = tileType.getOrElse(
+					if (definedTileData.size >= xLimit*yLimit/2) StorageType.Dense
+					else StorageType.Sparse
+				)
 				val defaultBinValue =
 					binAnalytic.finish(binAnalytic.defaultProcessedValue)
-				for (x <- 0 until xLimit) {
-					for (y <- 0 until yLimit) {
-						tile.setBin(x, y, defaultBinValue)
-					}
+				val tile: TileData[BT] = typeToUse match {
+					case StorageType.Dense => new DenseTileData[BT](index, defaultBinValue)
+					case StorageType.Sparse => new SparseTileData[BT](index, defaultBinValue)
 				}
 
 				// Put the proper value into each bin
-				tileData.filter(_._1.isDefined).foreach(p =>
+				definedTileData.foreach(p =>
 					{
 						val bin = p._1.get._1
 						val value = p._1.get._2

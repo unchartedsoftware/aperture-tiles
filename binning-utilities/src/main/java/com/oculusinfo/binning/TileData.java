@@ -8,6 +8,26 @@ import java.util.Collection;
  */
 public interface TileData<T> extends Serializable {
 	/**
+	 * A catalog of available types of ways to store tiles available in the system.
+	 */
+	public static enum StorageType {
+		/** Tiles stored as dense arrays */
+		Dense(DenseTileData.class),
+		/** Tiles stored as sparse maps, indexed by bin */
+		Sparse(SparseTileData.class);
+
+		private Class<? extends TileData> _tileClass;
+		private StorageType (Class<? extends TileData> tileClass) {
+			_tileClass = tileClass;
+		}
+		public Class<? extends TileData> tileClass () {
+			return _tileClass;
+		}
+	}
+
+
+
+	/**
 	 * Get the tile index defining which tile is associated with this data
 	 *
 	 * @return The TileIndex of the tile

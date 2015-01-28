@@ -41,7 +41,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.apache.spark.SparkContext
 import org.apache.spark.SharedSparkContext
 
-import com.oculusinfo.binning.{TileData, TileIndex}
+import com.oculusinfo.binning.{SparseTileData, TileData, TileIndex}
 
 
 class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
@@ -121,6 +121,9 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 			                            0.0, 2.0, 0.0, 0.0,
 			                            0.0, 0.0, 2.0, 0.0,
 			                            0.0, 0.0, 0.0, 2.0),  tile000)
+		// Tile should definitely be sparse - it's only 1/4 full
+		assert(tile000.isInstanceOf[SparseTileData[_]])
+
 		val tile101: TileData[_] =
 			pyramidIoA.readTiles(pyramidId, null,
 			                     List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
@@ -130,6 +133,9 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		                                0.0, 1.0, 0.0, 0.0,
 		                                0.0, 0.0, 1.0, 0.0,
 		                                0.0, 0.0, 0.0, 1.0), tile101)
+		// Tile should definitely be sparse - it's only 1/4 full
+		assert(tile101.isInstanceOf[SparseTileData[_]])
+
 		val tile110: TileData[_] =
 			pyramidIoA.readTiles(pyramidId, null,
 			                     List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
@@ -139,6 +145,8 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		                                0.0, 1.0, 0.0, 0.0,
 		                                0.0, 0.0, 1.0, 0.0,
 		                                0.0, 0.0, 0.0, 1.0), tile110)
+		// Tile should definitely be sparse - it's only 1/4 full
+		assert(tile110.isInstanceOf[SparseTileData[_]])
 	}
 
 
@@ -164,6 +172,9 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		                                0.0, 2.0, 0.0, 0.0,
 		                                0.0, 0.0, 2.0, 0.0,
 		                                0.0, 0.0, 0.0, 2.0), tile000)
+		// Tile should definitely be sparse - it's only 1/4 full
+		assert(tile000.isInstanceOf[SparseTileData[_]])
+
 		val tile101: TileData[_] =
 			pyramidIoB.readTiles(pyramidId, null,
 			                     List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
@@ -173,6 +184,9 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		                                0.0, 1.0, 0.0, 0.0,
 		                                0.0, 0.0, 1.0, 0.0,
 		                                0.0, 0.0, 0.0, 1.0), tile101)
+		// Tile should definitely be sparse - it's only 1/4 full
+		assert(tile101.isInstanceOf[SparseTileData[_]])
+
 		val tile110: TileData[_] =
 			pyramidIoB.readTiles(pyramidId, null,
 			                     List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
@@ -182,6 +196,8 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		                                0.0, 1.0, 0.0, 0.0,
 		                                0.0, 0.0, 1.0, 0.0,
 		                                0.0, 0.0, 0.0, 1.0), tile110)
+		// Tile should definitely be sparse - it's only 1/4 full
+		assert(tile110.isInstanceOf[SparseTileData[_]])
 	}
 
 

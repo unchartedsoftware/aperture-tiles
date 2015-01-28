@@ -38,6 +38,7 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
+import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.sql.SQLContext
@@ -53,10 +54,7 @@ import org.apache.spark.AccumulableParam
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.DenseTileData
-import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning._
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
@@ -205,6 +203,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 		val pyramid = task.getTilePyramid
 		val identity: RDD[(Seq[Any], PT, Option[DT])] => RDD[(Seq[Any], PT, Option[DT])] =
 			rdd => rdd
+		val tileType = task.getTileType
 		task.transformRDD(identity).foreach{case (index, value, analyticValue) =>
 			{
 				val (x, y) = indexScheme.toCartesian(index)
@@ -239,19 +238,20 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 				if (data.accumulable.value.isEmpty) {
 					Seq[TileData[BT]]()
 				} else {
-					val tile = new DenseTileData[BT](index)
-
-					// Put the proper default in all bins
+					val tileData = data.accumulable.value
+					val typeToUse = tileType.getOrElse(
+						if (tileData.size >= xBins*yBins/2) StorageType.Dense
+						else StorageType.Sparse
+					)
 					val defaultBinValue =
 						analytic.finish(analytic.defaultProcessedValue)
-					for (x <- 0 until xBins) {
-						for (y <- 0 until yBins) {
-							tile.setBin(x, y, defaultBinValue)
-						}
+					val tile: TileData[BT] = typeToUse match {
+						case StorageType.Dense => new DenseTileData[BT](index, defaultBinValue)
+						case StorageType.Sparse => new SparseTileData[BT](index, defaultBinValue)
 					}
 
 					// Put the proper value into each bin
-					data.accumulable.value.foreach{case (bin, value) =>
+					tileData.foreach{case (bin, value) =>
 						tile.setBin(bin.getX, bin.getY, analytic.finish(value))
 					}
 

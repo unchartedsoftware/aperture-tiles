@@ -29,7 +29,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 
-import com.oculusinfo.binning.*;
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
+import com.oculusinfo.binning.SparseTileData;
+import com.oculusinfo.binning.TileData.StorageType;
 import com.oculusinfo.binning.util.Pair;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
@@ -46,7 +51,6 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 5775555328063499845L;
-	private static enum StorageType {Dense, Sparse};
 
 
 
@@ -99,7 +103,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
 	}
 	
-	protected Schema getTileSchema (StorageType storage) throws IOException {
+	protected Schema getTileSchema (TileData.StorageType storage) throws IOException {
 		if (_tileSchema == null) {
 			_tileSchema = createTileSchema(storage);
 		}

@@ -28,6 +28,8 @@ package com.oculusinfo.tilegen.datasets
 
 import java.util.{List => JavaList}
 
+import com.oculusinfo.binning.TileData.StorageType
+
 import scala.collection.JavaConverters._
 
 import com.oculusinfo.factory.{ConfigurationProperty, ConfigurableFactory}
@@ -53,7 +55,8 @@ case class TilingTaskParameters (name: String,
                                  levels: Seq[Seq[Int]],
                                  tileWidth: Int,
                                  tileHeight: Int,
-                                 consolidationPartitions: Option[Int])
+                                 consolidationPartitions: Option[Int],
+                                 tileType: Option[StorageType])
 {
 }
 
@@ -67,6 +70,7 @@ object TilingTaskParametersFactory {
 	val TILE_WIDTH_PROPERTY = new IntegerProperty("tileWidth", "The width of created tiles, in bins", 256)
 	val TILE_HEIGHT_PROPERTY = new IntegerProperty("tileHeight", "The height of created tiles, in bins", 256)
 	val PARTITIONS_PROPERTY = new IntegerProperty("consolidationPartitions", "The number of partitions into which to consolidate data when performign reduce operations", 0)
+	val TILE_TYPE_PROPERTY = new StringProperty("tileType", "The type of tile storage to use when creating tiles.  If unspecified, a heuristic will be used that is ideal for tiles whose bin values are the size of doubles.  If tiles have bins significantly larger than doubles, sparse is recommended.", "unspecified", Array("unspecified", "dense", "sparse"))
 }
 class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
@@ -80,6 +84,7 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 	addProperty(TILE_WIDTH_PROPERTY)
 	addProperty(TILE_HEIGHT_PROPERTY)
 	addProperty(PARTITIONS_PROPERTY)
+	addProperty(TILE_TYPE_PROPERTY)
 
 	private def parseLevels (levelsDescriptions: Seq[String]): Seq[Seq[Int]] = {
 		levelsDescriptions.map(levelSet =>
@@ -96,12 +101,18 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 	}
 
 	override protected def create(): TilingTaskParameters = {
+		val tileType = optionalGet(TILE_TYPE_PROPERTY).map(_.toLowerCase) match {
+			case Some("dense") => Some(StorageType.Dense)
+			case Some("sparse") => Some(StorageType.Sparse)
+			case _ => None
+		}
 		new TilingTaskParameters(getPropertyValue(NAME_PROPERTY),
 		                         getPropertyValue(DESC_PROPERTY),
 		                         optionalGet(PREFIX_PROPERTY),
 		                         parseLevels(getPropertyValue(LEVELS_PROPERTY).asScala),
 		                         getPropertyValue(TILE_WIDTH_PROPERTY),
 		                         getPropertyValue(TILE_HEIGHT_PROPERTY),
-		                         optionalGet(PARTITIONS_PROPERTY).map(_.intValue()))
+		                         optionalGet(PARTITIONS_PROPERTY).map(_.intValue()),
+		                         tileType)
 	}
 }
