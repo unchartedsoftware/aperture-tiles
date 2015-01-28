@@ -77,13 +77,13 @@ public class TileDataViewTests {
 		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source, new TileIndex(2, 2, 1));
 	}
 
-	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testOutOfBoundsXBin () {
 		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
 		underTest.getBin(2,1);
 	}
 
-	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testOutOfBoundsYBin () {
 		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
 		underTest.getBin(1,2);

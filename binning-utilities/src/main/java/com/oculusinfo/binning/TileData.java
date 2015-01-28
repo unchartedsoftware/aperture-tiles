@@ -128,6 +128,13 @@ public class TileData<T> implements Serializable {
 	 * @param value The value to which to set the bin in question.
 	 */
 	public void setBin (int x, int y, T value) {
+		if (x < 0 || x >= _definition.getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= _definition.getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+
 		_data.set(x + y * _definition.getXBins(), value);
 	}
 
@@ -139,6 +146,13 @@ public class TileData<T> implements Serializable {
 	 * @return The value of the bin in question.
 	 */
 	public T getBin (int x, int y) {
+		if (x < 0 || x >= _definition.getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= _definition.getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+
 		return _data.get(x + y * _definition.getXBins());
 	}
 
