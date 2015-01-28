@@ -244,6 +244,23 @@ object SchemaTypeUtilities {
 		row => converter(baseExtractor(row))
 	}
 
+	/**
+	 * A combination of the simpler calculateExtractor and calculatePrimitiveConverter, so the result is guaranteed to
+	 * be a particular primitive type, cast correctly.
+	 *
+	 * @param columnSpec A specification of the field of interest
+	 * @param schema The schema of the RDD from which to pull the column
+	 * @param targetType The class to which to convert.  This must be one of those types listed by _dataTypesOfClasses
+	 * @return A function to pull the field of interest out of a row of the given schema
+	 */
+	def calculatePrimitiveExtractor[T] (columnSpec: String, schema: StructType, targetType: Class[T]): Row => T = {
+		val sourceType = getColumnType(columnSpec, schema)
+		val converter = calculatePrimitiveConverter(sourceType, targetType)
+		val baseExtractor = calculateExtractor(columnSpec, schema)
+
+		row => converter(baseExtractor(row))
+	}
+
 	/** A simple trait to allow creation of typed numeric functions, solely for use passing in to withNumeric */
 	trait FunctionCreator {
 		def createFunction[T: Numeric] (t: T): T
@@ -342,6 +359,18 @@ object SchemaTypeUtilities {
 		} else {
 			throw new IllegalArgumentException("Cannot convert from " + from + " to " + to)
 		}
+	}
+
+	/**
+	 * Calculate a function to convert from a given existing data type to a concrete, but primitive type.
+	 *
+	 * @param from The Spark-SQL data type from which to convert
+	 * @param to The class to which to convert.  This must be one of those types listed by _dataTypesOfClasses
+	 * @return A function to convert from the from type into the to type.
+	 */
+	def calculatePrimitiveConverter[T] (from: DataType, to: Class[T]): Any => T = {
+		val toType = _dataTypesOfClasses(to)
+		input: Any => (calculateConverter(from, toType)(input)).asInstanceOf[T]
 	}
 
 	/**

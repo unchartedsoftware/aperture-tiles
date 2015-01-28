@@ -196,11 +196,19 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		// be acceptable.
 		mappedInstanceCheck(aAsL, classOf[Long], classOf[JavaLong])
 
+		val iToLp = calculatePrimitiveConverter(IntegerType, classOf[Long])
+		val aAsLp: List[Long] = data.map(r => iToLp(aExtractor(r))).toList
+		assert(List(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L) === aAsLp)
+
 		val iToD = calculateConverter(IntegerType, DoubleType)
 		val aAsD = data.map(r => iToD(aExtractor(r))).toList
 		assert(List(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0) === aAsD)
 		// Similar to Longs, above.
 		mappedInstanceCheck(aAsD, classOf[Double], classOf[JavaDouble])
+
+		val iToDp = calculatePrimitiveConverter(IntegerType, classOf[Double])
+		val aAsDp: List[Double] = data.map(r => iToDp(aExtractor(r))).toList
+		assert(List(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0) === aAsDp)
 
 		val dToI = calculateConverter(DoubleType, IntegerType)
 		val bAsI = data.map(r => {
@@ -216,6 +224,10 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		val bAsS = data.map(r => dToS(bExtractor(r))).toList
 		assert(List("1.1", "2.2", "3.3", "4.4", "5.5", "6.6", "7.7", "8.8", "9.9") === bAsS)
 		mappedInstanceCheck(bAsS, classOf[String])
+
+		val dToSp = calculatePrimitiveConverter(DoubleType, classOf[String])
+		val bAsSp = data.map(r => dToSp(bExtractor(r))).toList
+		assert(List("1.1", "2.2", "3.3", "4.4", "5.5", "6.6", "7.7", "8.8", "9.9") === bAsSp)
 	}
 
 	test("Check conversion boxing") {
@@ -238,6 +250,10 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 
 		val results = data.map(row => iToL(aExtractor(row)).asInstanceOf[Long]+4)
 		assert(List(5, 6, 7, 8, 9, 10, 11, 12, 13) === results)
+
+		val iToLp = calculatePrimitiveConverter(IntegerType, classOf[Long])
+		val resultsP = data.map(row => iToLp(aExtractor(row))+4)
+		assert(List(5, 6, 7, 8, 9, 10, 11, 12, 13) === resultsP)
 	}
 
 	test("Numeric Function Passing") {
@@ -288,11 +304,11 @@ class SchemaTypeUtilitiesSparkTestSuite extends FunSuite with SharedSparkContext
 		assert("c" == data.schema.fields(2).name)
 		assert(IntegerType == data.schema.fields(2).dataType)
 
-		val converter = calculateConverter(IntegerType, DoubleType)
+		val converter = calculatePrimitiveConverter(IntegerType, classOf[Double])
 		val augmentFcn: Array[Any] => Any = row =>
 			{
-				val c = converter(row(0)).asInstanceOf[Double]
-				val a = converter(row(1)).asInstanceOf[Double]
+				val c = converter(row(0))
+				val a = converter(row(1))
 				(1.0+a)*c
 			}
 		val augmentedData = addColumn(data, "d", DoubleType, augmentFcn, "c", "a")
