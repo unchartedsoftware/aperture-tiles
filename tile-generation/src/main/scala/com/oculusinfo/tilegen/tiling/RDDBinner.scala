@@ -424,7 +424,7 @@ class RDDBinner {
 				// Create our tile
 				// Use the type passed in; if no type is passed in, use dense if more than half full.
 				val typeToUse = tileType.getOrElse(
-					if (definedTileData.size >= xLimit*yLimit/2) StorageType.Dense
+					if (definedTileData.size > xLimit*yLimit/2) StorageType.Dense
 					else StorageType.Sparse
 				)
 				val defaultBinValue =
