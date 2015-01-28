@@ -42,7 +42,7 @@ import org.apache.avro.file.CodecFactory
 import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
+import com.oculusinfo.binning._
 
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
@@ -93,12 +93,17 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		                                0.0, 1.0, 0.0, 0.0,
 		                                0.0, 0.0, 1.0, 0.0,
 		                                0.0, 0.0, 0.0, 1.0), tile01.get)
+		// Only 1/4 full - should be sparse
+		assert(tile01.get.isInstanceOf[SparseTileData[_]])
+
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 4))
 		assert(tile10.isDefined)
 		assertTileContents(List[Double](1.0, 0.0, 0.0, 0.0,
 		                                0.0, 1.0, 0.0, 0.0,
 		                                0.0, 0.0, 1.0, 0.0,
 		                                0.0, 0.0, 0.0, 1.0), tile10.get)
+		// Only 1/4 full - should be sparse
+		assert(tile10.get.isInstanceOf[SparseTileData[_]])
 	}
 
 	test("One-dimensional binning") {
@@ -136,6 +141,9 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 1))
 		assert(tile10.isDefined)
 		assertTileContents(List[Double](1.0, 1.0, 1.0, 0.0), tile10.get)
+		// 3/4 full - should be dense
+		assert(tile10.get.isInstanceOf[DenseTileData[_]])
+
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 1))
 		assert(!tile11.isDefined)
 	}
