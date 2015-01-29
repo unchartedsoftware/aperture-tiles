@@ -89,14 +89,14 @@
      * </pre>
      */
     function AnnotationLayer( spec ) {
+        // call base constructor
+        Layer.call( this, spec );
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 500;
         this.domain = "annotation";
         this.source = spec.source;
         this.renderer = spec.renderer || null;
         this.html = spec.html || null;
-        // call base constructor
-        Layer.call( this, spec );
     }
 
     AnnotationLayer.prototype = Object.create( Layer.prototype );
