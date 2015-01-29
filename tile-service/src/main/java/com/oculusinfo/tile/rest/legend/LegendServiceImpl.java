@@ -29,7 +29,7 @@ import com.google.inject.Singleton;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.value.LinearCappedValueTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.LinearValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import com.oculusinfo.tile.rest.layer.LayerService;
@@ -85,7 +85,7 @@ public class LegendServiceImpl implements LegendService {
 				min = config.getPropertyValue(ValueTransformerFactory.TRANSFORM_MINIMUM);
 			}
 			
-			ValueTransformer<Double> t = new LinearCappedValueTransformer(min, max, levelMax);
+			ValueTransformer<Double> t = new LinearValueTransformer(min, max);
 
 			if ( renderHorizontally ) {
 				for (int i = 0; i < width; i++){

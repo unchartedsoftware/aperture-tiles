@@ -26,7 +26,6 @@ package com.oculusinfo.tile.rendering.impl;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.util.Collections;
 import java.util.List;
 
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
@@ -103,7 +102,6 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
-            double maximumValue = getLevelExtrema(config).getSecond();
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
@@ -111,8 +109,9 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             ValueTransformer<Double> t = config.produce(ValueTransformer.class);
             int[] rgbArray = new int[outputWidth*outputHeight];
 
-            double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
-            double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
+            double scaledMax = rangeMax/100;
+            double scaledMin = rangeMin/100;
+            double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
 
             @SuppressWarnings("unchecked")
             TileTransformer<List<Double>> tileTransformer = config.produce(TileTransformer.class);
@@ -142,12 +141,8 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
                     //log/linear
                     double transformedValue = t.transform(binCount);
                     int rgb;
-                    if (binCount > 0
-                            && transformedValue >= scaledLevelMinFreq
-                            && transformedValue <= scaledLevelMaxFreq) {
-
-                        double factor = 1.0 / ( scaledLevelMaxFreq - scaledLevelMinFreq ) ;
-                        rgb = colorRamp.getRGB( ( transformedValue - scaledLevelMinFreq ) * factor );
+                    if (binCount > 0) {
+                        rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
                     } else {
                         rgb = COLOR_BLANK.getRGB();
                     }

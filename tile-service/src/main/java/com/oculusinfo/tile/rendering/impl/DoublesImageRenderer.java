@@ -94,15 +94,13 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
 			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 
-			double maximumValue = getLevelExtrema(config).getSecond();
-
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
-			double scaledLevelMaxFreq = t.transform(maximumValue)*rangeMax/100;
-			double scaledLevelMinFreq = t.transform(maximumValue)*rangeMin/100;
+			double scaledMax = rangeMax/100;
+			double scaledMin = rangeMin/100;
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
-			bi = renderImage(data, t, scaledLevelMinFreq, scaledLevelMaxFreq, colorRamp, bi);
+			bi = renderImage(data, t, scaledMin, scaledMax, colorRamp, bi);
 		} catch (Exception e) {
 			LOGGER.warn("Configuration error: ", e);
 			return null;
@@ -137,8 +135,6 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 
 				double binCount = data.getBin(tx, ty);
 				double transformedValue = t.transform(binCount);
-				// Clamp to [0,1], values out of range get ramp end values
-				transformedValue = Math.max(Math.min(transformedValue, 1), 0);
 				int rgb;
 
 				if (binCount > 0) {
