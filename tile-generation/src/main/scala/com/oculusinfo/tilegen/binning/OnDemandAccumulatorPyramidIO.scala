@@ -240,7 +240,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 				} else {
 					val tileData = data.accumulable.value
 					val typeToUse = tileType.getOrElse(
-						if (tileData.size >= xBins*yBins/2) StorageType.Dense
+						if (tileData.size > xBins*yBins/2) StorageType.Dense
 						else StorageType.Sparse
 					)
 					val defaultBinValue =
