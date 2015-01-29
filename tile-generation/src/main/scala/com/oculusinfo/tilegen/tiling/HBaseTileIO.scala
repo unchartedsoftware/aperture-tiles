@@ -122,17 +122,20 @@ class HBaseTileIO (zookeeperQuorum: String,
 			                                  classOf[TableInputFormat],
 			                                  classOf[ImmutableBytesWritable],
 			                                  classOf[Result])
-			val tiles = hBaseRDD.map(_._2).map(result =>
-				{
-					val key = new String(result.getRow())
-					val value = result.getValue(TILE_COLUMN.getFamily(),
-					                            TILE_COLUMN.getQualifier())
-					serializer.deserialize(
-						tileIndexFromRowId(key),
-						new ByteArrayInputStream(value)
-					)
-				}
-			)
+			val tiles = hBaseRDD.map(_._2).flatMap(result =>
+                {
+                    val key = new String(result.getRow())
+                    if ("metadata" == key) None
+                    else {
+                        val value = result.getValue(TILE_COLUMN.getFamily(),
+                                                    TILE_COLUMN.getQualifier())
+                        Some(serializer.deserialize(
+                            tileIndexFromRowId(key),
+                            new ByteArrayInputStream(value)
+                        ))
+                    }
+                }
+            )
 
 			if (null == levels) {
 				tiles
