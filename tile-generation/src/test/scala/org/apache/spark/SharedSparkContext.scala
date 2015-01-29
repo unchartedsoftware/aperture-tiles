@@ -18,6 +18,7 @@
 package org.apache.spark
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+import org.apache.spark.sql.SQLContext
 
 import org.scalatest.Suite
 import org.scalatest.BeforeAndAfterAll
@@ -26,18 +27,22 @@ import org.scalatest.BeforeAndAfterAll
 trait SharedSparkContext extends BeforeAndAfterAll { self: Suite =>
 
 	@transient private var _sc: SparkContext = _
+	@transient private var _sqlc: SQLContext = _
 
 	def sc: SparkContext = _sc
+	def sqlc: SQLContext = _sqlc
 
 	var conf = new SparkConf(false)
 
 	override def beforeAll() {
 		_sc = new SparkContext("local", "test", conf)
+		_sqlc = new SQLContext(_sc)
 		super.beforeAll()
 	}
 
 	override def afterAll() {
 		LocalSparkContext.stop(_sc)
+		_sqlc = null
 		_sc = null
 		super.afterAll()
 	}

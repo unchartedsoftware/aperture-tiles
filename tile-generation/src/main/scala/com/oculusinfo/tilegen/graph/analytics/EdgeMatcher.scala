@@ -30,7 +30,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.graphx._
 
 
-// Class for inserting edge info into appropriate GraphCommunity objects.  Used for Graph Analytics. 
+// Class for inserting edge info into appropriate GraphCommunity objects.  Used for Graph Analytics.
 
 class EdgeMatcher extends Serializable {
 	
@@ -46,40 +46,42 @@ class EdgeMatcher extends Serializable {
 	 *      
 	 *  Output format is RDD with ((x-coord,y-coord), GraphCommunity)    
 	 **/
-	def matchEdgesWithCommunities(communities: RDD[(Long, GraphCommunity)], 
-								edges: RDD[Edge[(Long, Boolean)]]):
-								RDD[((Double, Double), GraphCommunity)] = {
+	def matchEdgesWithCommunities(communities: RDD[(Long, GraphCommunity)],
+	                              edges: RDD[Edge[(Long, Boolean)]]):
+			RDD[((Double, Double), GraphCommunity)] = {
 		
 		val graph = Graph(communities, edges)	// create graph of communities and edges
 		
 		// map across all edge triplets...
-		val edgesTwice = graph.triplets.flatMap(et => {
-			
-			val srcID = et.srcAttr.getID
-			val srcCoords = ((et.srcAttr.getCoords.getFirst).toDouble, (et.srcAttr.getCoords.getSecond).toDouble) 
-			
-			val dstID = et.dstAttr.getID
-			val dstCoords = ((et.dstAttr.getCoords.getFirst).toDouble, (et.dstAttr.getCoords.getSecond).toDouble)
-			
-			val (weight, isInterEdge) = et.attr
-			
-			// Need to store info for each edge twice in preparation for join operation below
-			// (i.e., store with each of source and dest node ID's as key)
-			Iterator((srcID, (dstID, dstCoords, weight, isInterEdge)), (dstID, (srcID, srcCoords, weight, isInterEdge)))			
-		})
-				
+		val edgesTwice = graph.triplets.flatMap(et =>
+			{
+				val srcID = et.srcAttr.getID
+				val srcCoords = ((et.srcAttr.getCoords.getFirst).toDouble, (et.srcAttr.getCoords.getSecond).toDouble)
+
+				val dstID = et.dstAttr.getID
+				val dstCoords = ((et.dstAttr.getCoords.getFirst).toDouble, (et.dstAttr.getCoords.getSecond).toDouble)
+
+				val (weight, isInterEdge) = et.attr
+
+				// Need to store info for each edge twice in preparation for join operation below
+				// (i.e., store with each of source and dest node ID's as key)
+				Iterator((srcID, (dstID, dstCoords, weight, isInterEdge)), (dstID, (srcID, srcCoords, weight, isInterEdge)))
+			}
+		)
+
 		val groupedEdges = edgesTwice.groupByKey	// group edges by key nodeID
-		
-		val communitiesWithEdgeInfo = communities.leftOuterJoin(groupedEdges).map({case (parentID, (community, edgesOption)) =>
-				// create a dummy edge to account for any communities without edges,
-				// and/or if edge data wasn't included with this graph analytics tile-gen job
-				val edgeResults = edgesOption.getOrElse(Iterable((-1L, (0.0, 0.0), -1L, false)))
-				
-				var currentCommunity = community
-				val xy = ((community.getCoords.getFirst).toDouble, (community.getCoords.getSecond).toDouble)
-				
-				// add edges to this GraphCommunity
-				edgeResults.foreach(e => {
+
+		val communitiesWithEdgeInfo = communities.leftOuterJoin(groupedEdges).map{case (parentID, (community, edgesOption)) =>
+			// create a dummy edge to account for any communities without edges,
+			// and/or if edge data wasn't included with this graph analytics tile-gen job
+			val edgeResults = edgesOption.getOrElse(Iterable((-1L, (0.0, 0.0), -1L, false)))
+
+			var currentCommunity = community
+			val xy = ((community.getCoords.getFirst).toDouble, (community.getCoords.getSecond).toDouble)
+
+			// add edges to this GraphCommunity
+			edgeResults.foreach(e =>
+				{
 					val (dstID, (dstX, dstY), weight, isInterEdge) = e
 					if ((dstID != -1L) && (dstID != currentCommunity.getID)) {
 						val gEdge = new GraphEdge(dstID, dstX, dstY, weight)
@@ -90,11 +92,12 @@ class EdgeMatcher extends Serializable {
 							currentCommunity.addIntraEdgeToCommunity(gEdge)
 						}
 					}
-				})
-				
-				(xy, currentCommunity)
-			})
-		
+				}
+			)
+
+			(xy, currentCommunity)
+		}
+
 		communitiesWithEdgeInfo
 	}
 }

@@ -49,7 +49,9 @@ import com.oculusinfo.binning.TileIndex
 class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
 	val pyramidId = "live-tile test"
 	var dataFile: File = null
-	var pyramidIo: OnDemandAccumulatorPyramidIO = null
+	var pyramidIoA: OnDemandAccumulatorPyramidIO = null
+	var pyramidIoB: OnDemandBinningPyramidIO = null
+	var properties: Properties = null
 
 	override def beforeAll = {
 		super.beforeAll
@@ -72,26 +74,22 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		writer.flush()
 		writer.close()
 
-		// Create our pyramid IO
-		pyramidIo = new OnDemandAccumulatorPyramidIO(sc)
-
 		// Read the one into the other
-		val props = new Properties()
-		props.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
-		props.setProperty("oculus.binning.projection.autobounds", "false")
-		props.setProperty("oculus.binning.projection.minx", "0.0")
-		props.setProperty("oculus.binning.projection.maxx", "7.9999")
-		props.setProperty("oculus.binning.projection.miny", "0.0")
-		props.setProperty("oculus.binning.projection.maxy", "7.9999")
-		props.setProperty("oculus.binning.parsing.separator", ",")
-		props.setProperty("oculus.binning.parsing.x.index", "0")
-		props.setProperty("oculus.binning.parsing.y.index", "1")
-		props.setProperty("oculus.binning.index.type", "cartesian")
-		props.setProperty("oculus.binning.xField", "x")
-		props.setProperty("oculus.binning.yField", "y")
-		props.setProperty("oculus.binning.levels.0", "1")
-
-		pyramidIo.initializeForRead(pyramidId, 4, 4, props)
+		properties = new Properties()
+		properties.setProperty("oculus.binning.source.location.0", dataFile.getAbsolutePath())
+		properties.setProperty("oculus.binning.projection.autobounds", "false")
+		properties.setProperty("oculus.binning.projection.type", "areaofinterest")
+		properties.setProperty("oculus.binning.projection.minX", "0.0")
+		properties.setProperty("oculus.binning.projection.maxX", "7.9999")
+		properties.setProperty("oculus.binning.projection.minY", "0.0")
+		properties.setProperty("oculus.binning.projection.maxY", "7.9999")
+		properties.setProperty("oculus.binning.parsing.separator", ",")
+		properties.setProperty("oculus.binning.parsing.x.index", "0")
+		properties.setProperty("oculus.binning.parsing.y.index", "1")
+		properties.setProperty("oculus.binning.index.type", "cartesian")
+		properties.setProperty("oculus.binning.index.field.0", "x")
+		properties.setProperty("oculus.binning.index.field.1", "y")
+		properties.setProperty("oculus.binning.levels.0", "1")
 	}
 
 	private def cleanupDataset: Unit = {
@@ -100,21 +98,25 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 			dataFile.delete
 		}
 		dataFile = null
-		pyramidIo = null
+		properties = null
 	}
 
-	test("Simple binning") {
-		val tile100 = pyramidIo.readTiles(pyramidId, null,
-		                                  List(new TileIndex(1, 0, 0, 4, 4)).asJava)
+	test("Simple binning - accumulator") {
+		// Create our pyramid IO
+		val pyramidIoA = new OnDemandAccumulatorPyramidIO(sqlc)
+		pyramidIoA.initializeForRead(pyramidId, 4, 4, properties)
+
+		val tile100 = pyramidIoA.readTiles(pyramidId, null,
+		                                   List(new TileIndex(1, 0, 0, 4, 4)).asJava)
 		assert(tile100.isEmpty)
-		val tile111 = pyramidIo.readTiles(pyramidId, null,
-		                                  List(new TileIndex(1, 1, 1, 4, 4)).asJava)
+		val tile111 = pyramidIoA.readTiles(pyramidId, null,
+		                                   List(new TileIndex(1, 1, 1, 4, 4)).asJava)
 		assert(tile111.isEmpty)
 
 		// Noting that visually, the tiles should look exactly as we enter them here.
 		val tile000: TileData[_] =
-			pyramidIo.readTiles(pyramidId, null,
-			                    List(new TileIndex(0, 0, 0, 4, 4)).asJava).get(0)
+			pyramidIoA.readTiles(pyramidId, null,
+			                     List(new TileIndex(0, 0, 0, 4, 4)).asJava).get(0)
 		assert(tile000.getDefinition.getXBins() === 4)
 		assert(tile000.getDefinition.getYBins() === 4)
 		assert(tile000.getData.asScala.map(_.toString.toDouble) ===
@@ -123,8 +125,8 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 			                    0.0, 0.0, 2.0, 0.0,
 			                    0.0, 0.0, 0.0, 2.0))
 		val tile101: TileData[_] =
-			pyramidIo.readTiles(pyramidId, null,
-			                    List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
+			pyramidIoA.readTiles(pyramidId, null,
+			                     List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
 		assert(tile101.getDefinition.getXBins() === 4)
 		assert(tile101.getDefinition.getYBins() === 4)
 		assert(tile101.getData.asScala.map(_.toString.toDouble) ===
@@ -133,8 +135,54 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 			                    0.0, 0.0, 1.0, 0.0,
 			                    0.0, 0.0, 0.0, 1.0))
 		val tile110: TileData[_] =
-			pyramidIo.readTiles(pyramidId, null,
-			                    List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
+			pyramidIoA.readTiles(pyramidId, null,
+			                     List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
+		assert(tile110.getDefinition.getXBins() === 4)
+		assert(tile110.getDefinition.getYBins() === 4)
+		assert(tile110.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 0.0, 0.0, 0.0,
+			                    0.0, 1.0, 0.0, 0.0,
+			                    0.0, 0.0, 1.0, 0.0,
+			                    0.0, 0.0, 0.0, 1.0))
+	}
+
+
+	test("Simple binning - binning") {
+		// Create our pyramid IO
+		val pyramidIoB = new OnDemandBinningPyramidIO(sqlc)
+		pyramidIoB.initializeForRead(pyramidId, 4, 4, properties)
+
+		val tile100 = pyramidIoB.readTiles(pyramidId, null,
+		                                   List(new TileIndex(1, 0, 0, 4, 4)).asJava)
+		assert(tile100.isEmpty)
+		val tile111 = pyramidIoB.readTiles(pyramidId, null,
+		                                   List(new TileIndex(1, 1, 1, 4, 4)).asJava)
+		assert(tile111.isEmpty)
+
+		// Noting that visually, the tiles should look exactly as we enter them here.
+		val tile000: TileData[_] =
+			pyramidIoB.readTiles(pyramidId, null,
+			                     List(new TileIndex(0, 0, 0, 4, 4)).asJava).get(0)
+		assert(tile000.getDefinition.getXBins() === 4)
+		assert(tile000.getDefinition.getYBins() === 4)
+		assert(tile000.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](2.0, 0.0, 0.0, 0.0,
+			                    0.0, 2.0, 0.0, 0.0,
+			                    0.0, 0.0, 2.0, 0.0,
+			                    0.0, 0.0, 0.0, 2.0))
+		val tile101: TileData[_] =
+			pyramidIoB.readTiles(pyramidId, null,
+			                     List(new TileIndex(1, 0, 1, 4, 4)).asJava).get(0)
+		assert(tile101.getDefinition.getXBins() === 4)
+		assert(tile101.getDefinition.getYBins() === 4)
+		assert(tile101.getData.asScala.map(_.toString.toDouble) ===
+			       List[Double](1.0, 0.0, 0.0, 0.0,
+			                    0.0, 1.0, 0.0, 0.0,
+			                    0.0, 0.0, 1.0, 0.0,
+			                    0.0, 0.0, 0.0, 1.0))
+		val tile110: TileData[_] =
+			pyramidIoB.readTiles(pyramidId, null,
+			                     List(new TileIndex(1, 1, 0, 4, 4)).asJava).get(0)
 		assert(tile110.getDefinition.getXBins() === 4)
 		assert(tile110.getDefinition.getYBins() === 4)
 		assert(tile110.getData.asScala.map(_.toString.toDouble) ===
@@ -146,29 +194,33 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 
 
 	test("Accumulator cleanup") {
-		val store = pyramidIo.debugAccumulatorStore
+		// Create our pyramid IO
+		val pyramidIoA = new OnDemandAccumulatorPyramidIO(sqlc)
+		pyramidIoA.initializeForRead(pyramidId, 4, 4, properties)
 
-		pyramidIo.readTiles(pyramidId, null,
-		                    List(new TileIndex(1, 0, 0, 4, 4)).asJava)
+		val store = pyramidIoA.debugAccumulatorStore
+
+		pyramidIoA.readTiles(pyramidId, null,
+		                     List(new TileIndex(1, 0, 0, 4, 4)).asJava)
 		assert(store.inUseCount === 0)
 		assert(store.availableCount === 1)
 
-		pyramidIo.readTiles(pyramidId, null,
-		                    List(new TileIndex(1, 1, 0, 4, 4)).asJava)
+		pyramidIoA.readTiles(pyramidId, null,
+		                     List(new TileIndex(1, 1, 0, 4, 4)).asJava)
 		assert(store.inUseCount === 0)
 		assert(store.availableCount === 1)
 
 
-		pyramidIo.readTiles(pyramidId, null,
-		                    List(new TileIndex(1, 0, 0, 4, 4),
-		                         new TileIndex(1, 0, 1, 4, 4),
-		                         new TileIndex(1, 1, 0, 4, 4),
-		                         new TileIndex(1, 1, 1, 4, 4)).asJava)
+		pyramidIoA.readTiles(pyramidId, null,
+		                     List(new TileIndex(1, 0, 0, 4, 4),
+		                          new TileIndex(1, 0, 1, 4, 4),
+		                          new TileIndex(1, 1, 0, 4, 4),
+		                          new TileIndex(1, 1, 1, 4, 4)).asJava)
 		assert(store.inUseCount === 0)
 		assert(store.availableCount === 4)
 
-		pyramidIo.readTiles(pyramidId, null,
-		                    List(new TileIndex(2, 1, 1, 4, 4)).asJava)
+		pyramidIoA.readTiles(pyramidId, null,
+		                     List(new TileIndex(2, 1, 1, 4, 4)).asJava)
 		assert(store.inUseCount === 0)
 		assert(store.availableCount === 4)
 	}

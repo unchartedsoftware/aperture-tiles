@@ -1,3 +1,7 @@
+# Spark connection details
+spark.connection.url=local
+
+
 # general input properties
 oculus.binning.source.location=datasets/julia
 oculus.binning.separator=\t
@@ -5,8 +9,9 @@ oculus.binning.separator=\t
 oculus.binning.parsing.x.index=0
 oculus.binning.parsing.y.index=1
 oculus.binning.parsing.v.index=2
-oculus.binning.parsing.v.fieldAggregation=min
+
 
 # General output properties
 oculus.tileio.type=file
 oculus.binning.name=tilesets/julia
+oculus.binning.description=Julia set, real=-0.8, imaginary=0.156

@@ -30,8 +30,6 @@ import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.binning.util.Pair;
-import com.oculusinfo.tilegen.datasets.CSVRecordParser;
-import com.oculusinfo.tilegen.datasets.CSVRecordPropertiesWrapper;
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
 import com.oculusinfo.tilegen.spark.DoubleMinAccumulatorParam;
 import com.oculusinfo.tilegen.spark.MinMaxAccumulableParam;
@@ -104,8 +102,6 @@ public class TileRegistrator implements KryoRegistrator {
 		// com.oculusinfo.tilegen.util
 		kryo.register(PropertiesWrapper.class);
 		kryo.register(Rectangle.class);
-		kryo.register(CSVRecordPropertiesWrapper.class);
-		kryo.register(CSVRecordParser.class);
 
 		// com.oculusinfo.binning
 		kryo.register(BinIndex.class);

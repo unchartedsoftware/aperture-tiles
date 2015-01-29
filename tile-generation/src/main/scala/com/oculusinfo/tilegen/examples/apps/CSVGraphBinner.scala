@@ -31,18 +31,19 @@ import java.io.FileInputStream
 import java.util.Properties
 
 import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.tilegen.datasets.{Dataset, DatasetFactory}
+import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, RDDBinner, RDDLineBinner, SqliteTileIO, TileIO}
 import com.oculusinfo.tilegen.util.{EndPointsToLine, PropertiesWrapper}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
 
 import scala.reflect.ClassTag
 import scala.util.Try
 
 
 /**
- * This application handles reading in a graph dataset from a CSV file, and generating
+ * This application handles reading in a graph from a CSV file, and generating
  * tiles for the graph's nodes or edges.
  * 
  * NOTE:  It is expected that the 1st column of the CSV graph data will contain either the keyword "node"
@@ -50,7 +51,7 @@ import scala.util.Try
  * a graph's edge
  * 
  * The following properties control how the application runs: 
- * (See code comments in CSVDataset.scala for more info and settings)
+ * (See code comments in TilingTask.scala for more info and settings)
  * 
  * 
  *  oculus.binning.graph.data
@@ -62,7 +63,7 @@ import scala.util.Try
  *      
  *  oculus.binning.graph.edges.type
  *      The type of edges to use for tile generation (for hierarchically clustered data only).  Set to "all"
- *      to generate tiles using all edges in a graph dataset [default].  Set to "inter" to only use inter-community
+ *      to generate tiles using all edges in a graph [default].  Set to "inter" to only use inter-community
  *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the
  *      'edges.type.index' column (above) is used to determine which raw edges to use for tile generation.
  *      
@@ -143,91 +144,15 @@ object CSVGraphBinner {
 	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
 	private var _bDrawLineEnds = false	// [Boolean] switch to draw just the ends of very long line segments
 	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
-		
-	def getTileIO(properties: PropertiesWrapper): TileIO = {
-		properties.getString("oculus.tileio.type",
-		                     "Where to put tiles",
-		                     Some("hbase")) match {
-			case "hbase" => {
-				val quorum = properties.getStringOption("hbase.zookeeper.quorum",
-				                                        "The HBase zookeeper quorum").get
-				val port = properties.getString("hbase.zookeeper.port",
-				                                "The HBase zookeeper port",
-				                                Some("2181"))
-				val master = properties.getStringOption("hbase.master",
-				                                        "The HBase master").get
-				new HBaseTileIO(quorum, port, master)
-			}
-			case "sqlite" => {
-				val path =
-					properties.getString("oculus.tileio.sqlite.path",
-					                     "The path to the database",
-					                     Some(""))
-				new SqliteTileIO(path)
-				
-			}
-			case _ => {
-				val extension =
-					properties.getString("oculus.tileio.file.extension",
-					                     "The extension with which to write tiles",
-					                     Some("avro"))
-				new LocalTileIO(extension)
-			}
-		}
-	}
 
-//	def createIndexExtractor (properties: PropertiesWrapper): CSVIndexExtractor[_] = {
-//
-//		_graphDataType = properties.getString("oculus.binning.graph.data",
-//		                                      "The type of graph data to tile (nodes or edges). "+
-//			                                      "Default is nodes.",
-//		                                      Some("nodes"))
-//
-//		// NOTE!  currently, indexType is assumed to be cartesian for graph data
-//		//		val indexType = properties.getString("oculus.binning.index.type",
-//		//		                                     "The type of index to use in the data.  Currently "+
-//		//			                                     "suppoted options are cartesian (the default) "+
-//		//			                                     "and ipv4.",
-//		//		                                     Some("cartesian"))
-//
-//		_graphDataType match {
-//			case "nodes" => {
-//				val xVar = properties.getString("oculus.binning.xField",
-//				                                "The field to use for the X axis of tiles produced",
-//				                                Some(CSVDatasetBase.ZERO_STR))
-//				val yVar = properties.getString("oculus.binning.yField",
-//				                                "The field to use for the Y axis of tiles produced",
-//				                                Some(CSVDatasetBase.ZERO_STR))
-//				new CartesianIndexExtractor(xVar, yVar)
-//			}
-//			case "edges" => {
-//				// edges require two cartesian endpoints
-//				val xVar1 = properties.getString("oculus.binning.xField",
-//				                                 "The field to use for the X axis for edge start pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				val yVar1 = properties.getString("oculus.binning.yField",
-//				                                 "The field to use for the Y axis for edge start pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				val xVar2 = properties.getString("oculus.binning.xField2",
-//				                                 "The field to use for the X axis for edge end pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				val yVar2 = properties.getString("oculus.binning.yField2",
-//				                                 "The field to use for the Y axis for edge end pt",
-//				                                 Some(CSVDatasetBase.ZERO_STR))
-//				new LineSegmentIndexExtractor(xVar1, yVar1, xVar2, yVar2)
-//			}
-//		}
-//	}
-	
-	def processDataset[IT: ClassTag,
-	                   PT: ClassTag,
+	def processTask[PT: ClassTag,
 	                   DT: ClassTag,
 	                   AT: ClassTag,
 	                   BT] (sc: SparkContext,
-	                        dataset: Dataset[IT, PT, DT, AT, BT],
+	                        task: TilingTask[PT, DT, AT, BT],
 	                        tileIO: TileIO): Unit = {
-		val tileAnalytics = dataset.getTileAnalytics
-		val dataAnalytics = dataset.getDataAnalytics
+		val tileAnalytics = task.getTileAnalytics
+		val dataAnalytics = task.getDataAnalytics
 
 		// Add global accumulators to analytics
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
@@ -237,10 +162,10 @@ object CSVGraphBinner {
 			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins, _bDrawLineEnds)
 			
 			val lenThres = if (_bDrawLineEnds) _lineMaxBins else Int.MaxValue
-			val lineDrawer = new EndPointsToLine(lenThres, dataset.getNumXBins, dataset.getNumYBins)
+			val lineDrawer = new EndPointsToLine(lenThres, task.getNumXBins, task.getNumYBins)
 			
 			binner.debug = true
-			dataset.getLevels.map(levels =>
+			task.getLevels.map(levels =>
 				{
 					// Add level accumulators for all analytics for these levels (for now at least)
 					tileAnalytics.map(analytic =>
@@ -250,13 +175,13 @@ object CSVGraphBinner {
 						levels.map(level => analytic.addLevelAccumulator(sc, level))
 					)
 
-					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
+					val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 						rdd =>
 					{
 						
 						// Assign generic line drawing function for either drawing straight lines or arcs
 						// (to be passed into processDataByLevel func)
-						val calcLinePixels = if (dataset.binTypeTag == scala.reflect.classTag[Double])	{
+						val calcLinePixels = if (task.binTypeTag == scala.reflect.classTag[Double])	{
 							// PT is type Double, so assign line drawing func (using hard-casting)
 							val lineDrawFcn = if (_bLinesAsArcs)
 								lineDrawer.endpointsToArcBins
@@ -276,35 +201,35 @@ object CSVGraphBinner {
 						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
 						
 						val tiles = binner.processDataByLevel(rdd,
-						                                      dataset.getIndexScheme,
-						                                      dataset.getBinningAnalytic,
+						                                      task.getIndexScheme,
+						                                      task.getBinningAnalytic,
 						                                      tileAnalytics,
 						                                      dataAnalytics,
-						                                      dataset.getTilePyramid,
+						                                      task.getTilePyramid,
 						                                      levels,
-						                                      dataset.getNumXBins,
-						                                      dataset.getNumYBins,
-						                                      dataset.getConsolidationPartitions,
+						                                      task.getNumXBins,
+						                                      task.getNumYBins,
+						                                      task.getConsolidationPartitions,
 						                                      calcLinePixels,
 						                                      bUsePointBinner,
 						                                      _bLinesAsArcs)
-						tileIO.writeTileSet(dataset.getTilePyramid,
-						                    dataset.getName,
+						tileIO.writeTileSet(task.getTilePyramid,
+						                    task.getName,
 						                    tiles,
-						                    dataset.getValueScheme,
+						                    task.getTileSerializer,
 						                    tileAnalytics,
 						                    dataAnalytics,
-						                    dataset.getName,
-						                    dataset.getDescription)
+						                    task.getName,
+						                    task.getDescription)
 					}
-					dataset.process(procFcn, None)
+					task.process(procFcn, None)
 				}
 			)
 		}
 		else  {//if (_graphDataType == "nodes")
 			val binner = new RDDBinner
 			binner.debug = true
-			dataset.getLevels.map(levels =>
+			task.getLevels.map(levels =>
 				{
 					// Add level accumulators for all analytics for these levels (for now at least)
 					tileAnalytics.map(analytic =>
@@ -314,45 +239,53 @@ object CSVGraphBinner {
 						levels.map(level => analytic.addLevelAccumulator(sc, level))
 					)
 
-					val procFcn: RDD[(IT, PT, Option[DT])] => Unit =
+					val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 						rdd =>
 					{
 						val tiles = binner.processDataByLevel(rdd,
-						                                      dataset.getIndexScheme,
-						                                      dataset.getBinningAnalytic,
+						                                      task.getIndexScheme,
+						                                      task.getBinningAnalytic,
 						                                      tileAnalytics,
 						                                      dataAnalytics,
-						                                      dataset.getTilePyramid,
+						                                      task.getTilePyramid,
 						                                      levels,
-						                                      dataset.getNumXBins,
-						                                      dataset.getNumYBins,
-						                                      dataset.getConsolidationPartitions)
-						tileIO.writeTileSet(dataset.getTilePyramid,
-						                    dataset.getName,
+						                                      task.getNumXBins,
+						                                      task.getNumYBins,
+						                                      task.getConsolidationPartitions)
+						tileIO.writeTileSet(task.getTilePyramid,
+						                    task.getName,
 						                    tiles,
-						                    dataset.getValueScheme,
+						                    task.getTileSerializer,
 						                    tileAnalytics,
 						                    dataAnalytics,
-						                    dataset.getName,
-						                    dataset.getDescription)
+						                    task.getName,
+						                    task.getDescription)
 					}
-					dataset.process(procFcn, None)
+					task.process(procFcn, None)
 				}
 			)
 		}
 	}
 
 	/**
-	 * This function is simply for pulling out the generic params from the DatasetFactory,
+	 * This function is simply for pulling out the generic params from the the TilingTask,
 	 * so that they can be used as params for other types.
 	 */
-	def processDatasetGeneric[IT, PT, DT, AT, BT] (sc: SparkContext,
-	                                               dataset: Dataset[IT, PT, DT, AT, BT],
-	                                               tileIO: TileIO): Unit =
-		processDataset(sc, dataset, tileIO)(dataset.indexTypeTag,
-		                                    dataset.binTypeTag,
-		                                    dataset.dataAnalysisTypeTag,
-		                                    dataset.tileAnalysisTypeTag)
+	def processTaskGeneric[PT, DT, AT, BT] (sc: SparkContext,
+	                                        task: TilingTask[PT, DT, AT, BT],
+	                                        tileIO: TileIO): Unit =
+		processTask(sc, task, tileIO)(task.binTypeTag,
+		                              task.dataAnalysisTypeTag,
+		                              task.tileAnalysisTypeTag)
+
+
+	private def readFile (file: String, props: Properties): Properties = {
+		val stream = new FileInputStream(file)
+		props.load(stream)
+		stream.close()
+		props
+	}
+
 
 
 	def main (args: Array[String]): Unit = {
@@ -368,9 +301,7 @@ object CSVGraphBinner {
 
 		while ("-d" == args(argIdx)) {
 			argIdx = argIdx + 1
-			val stream = new FileInputStream(args(argIdx))
-			defProps.load(stream)
-			stream.close()
+			readFile(args(argIdx), defProps)
 			argIdx = argIdx + 1
 		}
 		defProps.setProperty("oculus.binning.index.type", "graph")
@@ -378,18 +309,15 @@ object CSVGraphBinner {
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
 		val sc = connector.createContext(Some("Pyramid Binning"))
+		val sqlc = new SQLContext(sc)
 		val tileIO = TileIO.fromArguments(defaultProperties)
 
 		// Run for each real properties file
 		val startTime = System.currentTimeMillis()
 		while (argIdx < args.size) {
 			val fileStartTime = System.currentTimeMillis()
-			val props = new Properties(defProps)
-			val propStream = new FileInputStream(args(argIdx))
-			props.load(propStream)
-			propStream.close()
-			
-			
+			val props = readFile(args(argIdx), new Properties(defProps))
+
 			// init type of graph tile generation job (nodes or edges)
 			_graphDataType = Try(props.getProperty("oculus.binning.graph.data",
 			                                       "The type of graph data to tile (nodes or edges). "+
@@ -419,17 +347,26 @@ object CSVGraphBinner {
 			// check if hierarchical mode is enabled
 			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");
 			var hierarchicalClusters = if (valTemp=="true") true else false
-			
+
 			if (!hierarchicalClusters) {
-				// If the user hasn't explicitly set us not to cache, cache processed data to make
-				// multiple runs more efficient
-				if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
-					props.setProperty("oculus.binning.caching.processed", "true")
+				// Read our CSV data
+				val wrappedProps = new PropertiesWrapper(props)
+				val source = new CSVDataSource(wrappedProps)
+				// Read the CSV into a schema file
+				val reader = new CSVReader(sqlc, source.getData(sc), wrappedProps)
+				// Register it as a table
+				val table = "table"+argIdx
+				reader.asSchemaRDD.registerTempTable(table)
+
+				val cache = wrappedProps.getBoolean(
+					"oculus.binning.caching.processed",
+					"Cache the data, in a parsed and processed form, if true",
+					Some(true))
+				if (cache) sqlc.cacheTable(table)
 
 				// regular tile generation
-				processDatasetGeneric(sc, DatasetFactory.createDataset(sc, props), tileIO)
-			}
-			else {
+				processTaskGeneric(sc, TilingTask(sqlc, table, props), tileIO)
+			} else {
 				// hierarchical-based tile generation
 				var nn = 0;
 				var levelsList:scala.collection.mutable.MutableList[String] =
@@ -468,14 +405,25 @@ object CSVGraphBinner {
 					props.setProperty("oculus.binning.levels."+m, levelsList(m))
 					// set raw data source
 					props.setProperty("oculus.binning.source.location", sourcesList(m))
-					// If the user hasn't explicitly set us not to cache, cache processed data to make
-					// multiple runs more efficient
-					if (!props.stringPropertyNames.contains("oculus.binning.caching.processed"))
-						props.setProperty("oculus.binning.caching.processed", "true")
+
+					// Read our CSV data
+					val wrappedProps = new PropertiesWrapper(props)
+					val source = new CSVDataSource(wrappedProps)
+					// Read the CSV into a schema file
+					val reader = new CSVReader(sqlc, source.getData(sc), wrappedProps)
+					// Register it as a table
+					val table = "table"+argIdx
+					reader.asSchemaRDD.registerTempTable(table)
+
+					val cache = wrappedProps.getBoolean(
+						"oculus.binning.caching.processed",
+						"Cache the data, in a parsed and processed form, if true",
+						Some(true))
+					if (cache) sqlc.cacheTable(table)
+
 					// perform tile generation
-					processDatasetGeneric(sc,
-					                      DatasetFactory.createDataset(sc, props),
-					                      tileIO)
+					processTaskGeneric(sc, TilingTask(sqlc, table, props), tileIO)
+
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
 				}

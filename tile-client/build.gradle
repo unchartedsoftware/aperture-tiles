@@ -36,8 +36,9 @@ build_debug_css.dependsOn gulp_debugcss
 // gulp_build task calls 'gulp build'
 gulp_build.inputs.dir "$projectDir/src"
 gulp_build.outputs.dir "$buildDir"
-gulp_build.dependsOn 'installGulp'
 gulp_build.dependsOn 'npmInstall'
+
+npmInstall.outputs.dir "$projectDir/node_install"
 
 // take the files from the build directory and zip them
 task zipMinifiedFiles(type: Zip) {

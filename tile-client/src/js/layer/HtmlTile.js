@@ -102,6 +102,7 @@
         if ( !this.div ) {
             this.div = document.createElement( 'div' );
             this.div.style.position = 'absolute';
+            this.div.style.opacity = 0;
             this.div.className = 'olTileHtml';
             this.layer.div.appendChild( this.div );
         }
@@ -122,8 +123,8 @@
 
     OpenLayers.Tile.HTML.prototype.clear = function() {
         OpenLayers.Tile.prototype.clear.apply( this, arguments );
-        this.tileData = null;
-        this.url = null;
+        //this.tileData = null;
+        //this.url = null;
         if ( this.div ) {
             this.layer.div.removeChild( this.div );
             this.div = null;
@@ -132,16 +133,28 @@
 
     OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
 
-        if ( !this.layer || !this.div || !data.tile ) {
+        if ( !this.layer || !this.div ) {
+            // if the div or layer is no longer available, exit gracefully
             return;
         }
 
-        var renderer = this.layer.renderer,
-            html = this.layer.html,
+        var div = this.div,
+            renderer,
+            html,
             render,
-            entries,
-            elements,
-            i;
+            entries;
+
+        // always style the opacity and visibility of the tile
+        div.style.opacity = this.layer.opacity;
+        div.style.visibility = 'inherit';
+
+        if ( !data.tile ) {
+            // exit early if not data to render
+            return;
+        }
+
+        renderer = this.layer.renderer;
+        html = this.layer.html;
 
         if ( renderer ) {
             // if renderer is attached, use it
@@ -157,28 +170,18 @@
 
         if ( html instanceof $ ) {
             // if generated a jquery object, append it
-            $( this.div ).append( html );
+            $( div ).append( html );
         } else if ( html instanceof HTMLElement ) {
             // if generated an HTMLElement, get html text
-            this.div.appendChild( html );
+            div.appendChild( html );
         } else {
             // if generated string, set inner html
-            this.div.innerHTML = html;
-        }
-
-        this.div.style.visibility = 'inherit';
-        this.div.style.opacity = 'inherit';
-        this.div.style['pointer-events'] = 'none';
-
-        // set pointer-events on tile elements to 'all'
-        elements = this.div.children;
-        for ( i=0; i<elements.length; i++ ) {
-            elements[i].style['pointer-events'] = 'all';
+            div.innerHTML = html;
         }
 
         if ( renderer ) {
             // if renderer is attached, call hook function
-            renderer.hook( elements, entries, data );
+            renderer.hook( div.children, entries, data );
         }
     };
 

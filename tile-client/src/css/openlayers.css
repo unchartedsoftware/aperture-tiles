@@ -10,8 +10,8 @@ div.olMapViewport {
 }
 
 div.olLayerDiv {
-   -moz-user-select: none;
-   -khtml-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
 }
 
 .olLayerGrid .olTileImage {
@@ -20,7 +20,7 @@ div.olLayerDiv {
 }
 
 .olLayerGrid .olTileHtml {
-    pointer-events: none;
+    /*pointer-events: none;*/
     -webkit-backface-visibility: hidden;
 }
 
@@ -268,8 +268,8 @@ div.olControlSaveFeaturesItemInactive {
 }
 
 .olPopupCloseBox {
-  background: url("img/close.gif") no-repeat;
-  cursor: pointer;
+    background: url("img/close.gif") no-repeat;
+    cursor: pointer;
 }
 
 .olFramedCloudPopupContent {
@@ -278,8 +278,8 @@ div.olControlSaveFeaturesItemInactive {
 }
 
 .olControlNoSelect {
- -moz-user-select: none;
- -khtml-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
 }
 
 .olImageLoadError {
@@ -481,21 +481,35 @@ a.olControlZoomOut {
     border-radius: 0 0 4px 4px;
 }
 
+.olTileHtml {
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(150,150,150,0.1);
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.olTileHtml:hover {
+    opacity: 1;
+    background-color: rgba(0,0,0,0.5);
+}
 
 /**
  * Animations
  */
-
-.olLayerGrid .olTileImage {
+ 
+/*
+.olTileImage { 
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;
     transition: opacity 0.2s linear;
 }
 
-.olLayerGrid .olTileHtml {
+.olTileHtml {   
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;
-    transition: opacity 0.2s linear;
+    transition: opacity 0.2s linear;   
 }
+*/

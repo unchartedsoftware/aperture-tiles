@@ -78,17 +78,51 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 		return new ArrayList<>();
 	}
 
+	private String escape (String value) {
+		return value.replace("\\", "\\\\").replace(",", "\\,");
+	}
 	@Override
 	public String encode (List<T> value) {
-        
-		// TODO Auto-generated method stub
-		return null;
+		String res = "";
+		for (int i=0; i<value.size(); ++i) {
+			if (0 == i) res = escape(_baseProperty.encode(value.get(i)));
+			else res = res + "," + escape(_baseProperty.encode(value.get(i)));
+		}
+
+		return res;
 	}
 
+	private String unescape (String value) {
+		return value.replace("\\,", ",").replace("\\\\", "\\");
+	}
 	@Override
-	public List<T> unencode (String string) throws ConfigurationException {
-		// TODO Auto-generated method stub
-		return null;
+	public List<T> unencode (String value) throws ConfigurationException {
+		List<T> res = new ArrayList<>();
+
+		// Find our split location
+		int commaIndex = -1;
+		do {
+			int startIndex = commaIndex+1;
+			boolean found = false;
+			do {
+				commaIndex = value.indexOf(',', commaIndex+1);
+				int firstEscape = commaIndex;
+				while (firstEscape > 0 && value.charAt(firstEscape - 1) == '\\')
+					firstEscape--;
+				int numEscapes = commaIndex - firstEscape;
+				if (0 == (numEscapes % 2)) {
+					found = true;
+				}
+			} while (!found && -1 != commaIndex);
+
+			String subValue;
+			if (-1 == commaIndex) subValue = unescape(value.substring(startIndex));
+			else subValue = unescape(value.substring(startIndex, commaIndex));
+
+			res.add(_baseProperty.unencode(subValue));
+		} while (-1 != commaIndex);
+
+		return res;
 	}
 
 	public T unencodeEntry (String value) throws ConfigurationException {

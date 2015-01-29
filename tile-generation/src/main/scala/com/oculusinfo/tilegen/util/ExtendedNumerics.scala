@@ -26,10 +26,20 @@
 package com.oculusinfo.tilegen.util
 
 
+import java.util.{List => JavaList}
+import java.lang.{Integer => JavaInt}
+import java.lang.{Long => JavaLong}
+import java.lang.{Float => JavaFloat}
+import java.lang.{Double => JavaDouble}
+
+import com.oculusinfo.factory.properties.StringProperty
 
 import scala.math.Numeric
 import scala.math.Ordering
 
+import com.oculusinfo.factory.ConfigurableFactory
+
+import scala.reflect.ClassTag
 
 
 /**
@@ -43,6 +53,7 @@ trait ExtendedNumeric[T] extends Numeric[T] {
 	def name: String
 
 	// Extended conversion methods
+	// Numeric has fromInt, and toX for all appropriate X.
 	def fromLong (x: Long): T
 	def fromFloat (x: Float): T
 	def fromDouble (x: Double): T
@@ -53,6 +64,7 @@ trait ExtendedNumeric[T] extends Numeric[T] {
 	def isNaN (x: T): Boolean
 	def minValue: T
 	def maxValue: T
+	def getNumericClass: Class[_ <: T]
 
 	class ExtendedOps (lhs: T) extends Ops(lhs) {
 		def / (rhs: T)  = div(lhs, rhs)
@@ -80,6 +92,7 @@ object ExtendedNumeric {
 		def isNaN (n: Int): Boolean = false
 		def minValue: Int = Int.MinValue
 		def maxValue: Int = Int.MaxValue
+		def getNumericClass = classOf[Int]
 	}
 	implicit object ExtendedInt extends ExtendedInt with Ordering.IntOrdering
 
@@ -96,6 +109,7 @@ object ExtendedNumeric {
 		def isNaN (n: Long): Boolean = false
 		def minValue: Long = Long.MinValue
 		def maxValue: Long = Long.MaxValue
+		def getNumericClass = classOf[Long]
 	}
 	implicit object ExtendedLong extends ExtendedLong with Ordering.LongOrdering
 
@@ -110,6 +124,7 @@ object ExtendedNumeric {
 		def isNaN (x: Float): Boolean = x.isNaN
 		def minValue: Float = Float.MinValue
 		def maxValue: Float = Float.MaxValue
+		def getNumericClass = classOf[Float]
 	}
 	implicit object ExtendedFloat extends ExtendedFloat with Ordering.FloatOrdering
 
@@ -124,6 +139,77 @@ object ExtendedNumeric {
 		def isNaN (x: Double): Boolean = x.isNaN
 		def minValue: Double = Double.MinValue
 		def maxValue: Double = Double.MaxValue
+		def getNumericClass = classOf[Double]
 	}
 	implicit object ExtendedDouble extends ExtendedDouble with Ordering.DoubleOrdering
+}
+
+
+/** A quick case class to encapsulate an extended numeric and type conversion of related types together. */
+private[util] case class ExtendedNumericWithConversion[T: ClassTag, JT]
+	(implicit n: ExtendedNumeric[T], c: TypeConversion[T, JT])
+{
+	def tag = implicitly[ClassTag[T]]
+	def numeric = n
+	def conversion = c
+}
+object NumericallyConfigurableFactory {
+	private[util] val NUMERIC_TYPE_PROPERTY =
+		new StringProperty("valueType", "The type of numeric value used by this value extractor", "double",
+		                   Array("int", "long", "float", "double"))
+
+}
+
+/**
+ * An abstract factory that allows sub-factories to create objects of generic numeric types.
+ *
+ * All arguments are pass-throughs to {@see ConfigurableFactory}.
+ */
+abstract class NumericallyConfigurableFactory[T]
+	(name: String, factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String], isSingleton: Boolean = false)
+		extends ConfigurableFactory[T](name, factoryType, parent, path, isSingleton) {
+	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String]) =
+		this("", factoryType, parent, path)
+	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String], isSingleton: Boolean) =
+		this("", factoryType, parent, path, isSingleton)
+
+	import NumericallyConfigurableFactory._
+	addProperty(NUMERIC_TYPE_PROPERTY)
+
+	/**
+	 * Run something with what is, in its calling place, an ExtendedNumeric of unspecified type, this time with
+	 * the generification specified
+	 */
+	protected def withNumericType[RT] (fcn: ExtendedNumericWithConversion[_, _] => RT): RT = {
+		val typeName = getPropertyValue(NUMERIC_TYPE_PROPERTY)
+		val numericWithConversion: ExtendedNumericWithConversion[_, _] = typeName match {
+			case "int" => new ExtendedNumericWithConversion[Int, JavaInt]()
+			case "long" => new ExtendedNumericWithConversion[Long, JavaLong]()
+			case "float" => new ExtendedNumericWithConversion[Float, JavaFloat]()
+			case "double" => new ExtendedNumericWithConversion[Double, JavaDouble]()
+		}
+		fcn(numericWithConversion)
+	}
+
+	/**
+	 * This function serves the purpose of the {@link ConfigurableFactory#create} function in normal factories.
+	 * It includes generic numeric types to allow factories to create objects generified with the appropriate generic
+	 * numeric.
+	 * @param tag A ClassTag of the scala numeric base type
+	 * @param numeric The scala extended numeric object that represents the type to use
+	 * @param conversion A conversion object between the scala and java numeric types
+	 * @tparam ST The scala extended numeric type to use
+	 * @tparam JT The java numeric type to use
+	 * @return The factory to be returned by ConfigurableFactory.create.
+	 */
+	protected def typedCreate[ST, JT] (tag: ClassTag[ST],
+	                                   numeric: ExtendedNumeric[ST],
+	                                   conversion: TypeConversion[ST, JT]): T
+
+	override protected final def create(): T = {
+		def extractNumerics[ST, JT] (nc: ExtendedNumericWithConversion[ST, JT]): T = {
+			typedCreate(nc.tag, nc.numeric, nc.conversion)
+		}
+		withNumericType(extractNumerics(_))
+	}
 }

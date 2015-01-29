@@ -389,7 +389,8 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index ];
+                newBaseLayer = this.baselayers[ index],
+                i;
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -399,6 +400,12 @@
             }
             newBaseLayer.activate();
             this.baseLayerIndex = index;
+            // update z index, since changing baselayer resets them
+            if ( this.layers ) {
+                for ( i=0; i<this.layers.length; i++ ) {
+                    this.layers[i].setZIndex( this.layers[i].getZIndex() );
+                }
+            }
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -419,10 +426,18 @@
          * @param {String} theme - The theme identification string of the map.
          */
         setTheme: function( theme ) {
+            var key;
+            // toggle theme in html
             if ( theme === 'dark' ) {
-                $( this.olMap.div ).removeClass( "light-theme" ).addClass( "dark-theme" );
+                $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
             } else if ( theme === 'light' ) {
-                $( this.olMap.div ).removeClass( "dark-theme" ).addClass( "light-theme" );
+                $( 'body' ).removeClass( "dark-theme" ).addClass( "light-theme" );
+            }
+            // update theme for all attached layers
+            for ( key in this.layers ) {
+                if ( this.layers.hasOwnProperty( key ) ) {
+                    this.layers[ key ].setTheme( theme );
+                }
             }
         },
 
@@ -434,7 +449,7 @@
          * @returns {String} The theme of the map.
          */
         getTheme: function() {
-        	return $( this.olMap.div ).hasClass( "light-theme" ) ? 'light' : 'dark';
+        	return $( 'body' ).hasClass( "light-theme" ) ? 'light' : 'dark';
         },
 
         /**

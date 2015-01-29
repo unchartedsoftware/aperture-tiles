@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.util.Collections;
 import java.util.List;
 
@@ -99,10 +100,11 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 
 			bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
+			int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
 
 			@SuppressWarnings("unchecked")
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
-			int[] rgbArray = new int[outputWidth*outputHeight];
+
 
 			double scaledMax = rangeMax/100;
 			double scaledMin = rangeMin/100;
@@ -189,8 +191,6 @@ public class DoublesImageRenderer implements TileDataImageRenderer {
 					}
 				}
 			}
-
-			bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
 		} catch (Exception e) {
 			LOGGER.warn("Tile is corrupt: " + layerId + ":" + index);
 			LOGGER.warn("Tile error: ", e);

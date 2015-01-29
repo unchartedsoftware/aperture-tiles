@@ -15,4 +15,6 @@ ext.clientProject = true
 dependencies {
 	compile project(":tile-generation")
 	compile project(":binning-utilities")	
+	compile project(":spark-tile-utilities")
 }
+
