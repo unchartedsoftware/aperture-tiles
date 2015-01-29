@@ -40,9 +40,7 @@ import org.scalatest.FunSuite
 import org.apache.spark.SharedSparkContext
 import org.apache.spark.rdd.RDD
 
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.{SparseTileData, BinIndex, TileData, TileIndex}
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -145,6 +143,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 256, 256))
 		assert(tile11.isEmpty)
 
+		assert(tile00.get.isInstanceOf[SparseTileData[_]])
 		for (x <- 0 to 255) assert(tile00.get.getBin(x, 14) == 1.0 && tile10.get.getBin(x, 14) == 1.0)
 	}
 	
@@ -168,6 +167,9 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
 		assert(tile11.isEmpty)
+
+		assert(tile00.get.isInstanceOf[SparseTileData[_]])
+		assert(tile10.get.isInstanceOf[SparseTileData[_]])
 
 		for (x <- 1 to 255) {
 			assert(tile00.get.getBin(x, 14).toString.toDouble < tile00.get.getBin(x-1, 14).toString.toDouble)
@@ -226,6 +228,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			dataAnalytics,
 			new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
 			pyramid,
+			None,
 			None,
 			pyramidId,
 			tileIO,

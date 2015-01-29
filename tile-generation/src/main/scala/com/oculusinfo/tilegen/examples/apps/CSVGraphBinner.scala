@@ -210,6 +210,7 @@ object CSVGraphBinner {
 						                                      task.getNumXBins,
 						                                      task.getNumYBins,
 						                                      task.getConsolidationPartitions,
+						                                      task.getTileType,
 						                                      calcLinePixels,
 						                                      bUsePointBinner,
 						                                      _bLinesAsArcs)

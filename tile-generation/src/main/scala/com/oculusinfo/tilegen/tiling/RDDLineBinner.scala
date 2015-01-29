@@ -26,6 +26,7 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import com.oculusinfo.binning.TileData.StorageType
 
 import scala.collection.TraversableOnce
 import scala.collection.mutable.{Map => MutableMap}
@@ -34,13 +35,8 @@ import scala.util.Try
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.DenseTileData
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning._
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.TileAndBinIndices
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.EndPointsToLine
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
@@ -162,6 +158,7 @@ class RDDLineBinner(minBins: Int = 2,
 		serializer: TileSerializer[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
+		tileType: Option[StorageType],
 		writeLocation: String,
 		tileIO: TileIO,
 		levelSets: Seq[Seq[Int]],
@@ -206,6 +203,7 @@ class RDDLineBinner(minBins: Int = 2,
 				                               xBins,
 				                               yBins,
 				                               consolidationPartitions,
+				                               tileType,
 				                               calcLinePixels)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
@@ -251,10 +249,11 @@ class RDDLineBinner(minBins: Int = 2,
 	 * @param levels A list of levels on which to create tiles
 	 * @param xBins The number of bins along the horizontal axis of each tile
 	 * @param yBins The number of bins along the vertical axis of each tile
-	 * @param consolidationPartitions The number of partitions to use when
-	 *                                grouping values in the same bin or the same
-	 *                                tile.  None to use the default determined
-	 *                                by Spark.
+	 * @param consolidationPartitions The number of partitions to use when grouping values in the same bin or the same
+	 *                                tile.  None to use the default determined by Spark.
+	 * @param tileType A specification of how data should be stored.  If None, a heuristic will be used that will use
+	 *                 the optimal type for a double-valued tile, and isn't too bad for smaller-valued types.  For
+	 *                 significantly larger-valued types, Some(Sparse) would probably work best.
 	 * @param calcLinePixels A function used to rasterize the line/arc between
 	 *                       two end points.  Defaults to a line based implementation.
 	 * @param usePointBinner Indicates whether the lines will be consolidate by point
@@ -278,6 +277,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None,
 		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	=
 			 new EndPointsToLine().endpointsToLineBins,
 		 usePointBinner: Boolean = true,
@@ -330,7 +330,7 @@ class RDDLineBinner(minBins: Int = 2,
 			}
 
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
-		            mapOverLevels, xBins, yBins, consolidationPartitions, calcLinePixels,
+		            mapOverLevels, xBins, yBins, consolidationPartitions, tileType, calcLinePixels,
 		            usePointBinner, linesAsArcs)
 	}
 
@@ -355,6 +355,9 @@ class RDDLineBinner(minBins: Int = 2,
 	 *                                grouping values in the same bin or the same
 	 *                                tile.  None to use the default determined
 	 *                                by Spark.
+	 * @param tileType A specification of how data should be stored.  If None, a heuristic will be used that will use
+	 *                 the optimal type for a double-valued tile, and isn't too bad for smaller-valued types.  For
+	 *                 significantly larger-valued types, Some(Sparse) would probably work best.
 	 * @param calcLinePixels A function used to rasterize the line/arc between
 	 *                       two end points.  Defaults to a line based implementation.
 	 * @param usePointBinner Indicates whether the lines will be consolidate by point
@@ -376,6 +379,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None,
 		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)] =
 			 new EndPointsToLine().endpointsToLineBins,
 		 usePointBinner: Boolean = true,
@@ -421,7 +425,7 @@ class RDDLineBinner(minBins: Int = 2,
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		if (usePointBinner) {
 			consolidateByPoints(partitionBins, binAnalytic, tileAnalytics,
-			                    metaData, consolidationPartitions,
+			                    metaData, consolidationPartitions, tileType,
 			                    xBins, yBins, uniBinToTileBin, calcLinePixels)
 		} else {
 			consolidateByTiles(partitionBins, binAnalytic, tileAnalytics,
@@ -494,6 +498,7 @@ class RDDLineBinner(minBins: Int = 2,
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
 		 consolidationPartitions: Option[Int],
+		 tileType: Option[StorageType],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 uniBinToTileBin: (TileIndex, BinIndex) => TileAndBinIndices,
@@ -563,20 +568,23 @@ class RDDLineBinner(minBins: Int = 2,
 				val xLimit = index.getXBins()
 				val yLimit = index.getYBins()
 
-				// Create our tile
-				val tile = new DenseTileData[BT](index)
+				val definedTileData = tileData.filter(_._1.isDefined)
 
-				// Put the proper default in all bins
+				// Create our tile
+				// Use the type passed in; if no type is passed in, use dense if more than half full.
+				val typeToUse = tileType.getOrElse(
+					if (definedTileData.size > xLimit*yLimit/2) StorageType.Dense
+					else StorageType.Sparse
+				)
 				val defaultBinValue =
 					binAnalytic.finish(binAnalytic.defaultProcessedValue)
-				for (x <- 0 until xLimit) {
-					for (y <- 0 until yLimit) {
-						tile.setBin(x, y, defaultBinValue)
-					}
+				val tile: TileData[BT] = typeToUse match {
+					case StorageType.Dense => new DenseTileData[BT](index, defaultBinValue)
+					case StorageType.Sparse => new SparseTileData[BT](index, defaultBinValue)
 				}
 
 				// Put the proper value in each bin
-				tileData.filter(_._1.isDefined).foreach(p =>
+				definedTileData.foreach(p =>
 					{
 						val bin = p._1.get._1
 						val value = p._1.get._2
