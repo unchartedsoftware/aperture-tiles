@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -56,7 +54,7 @@ import com.oculusinfo.tile.rendering.color.ColorRamp;
  * @author mkielo
  */
 
-public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
+public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<List<Double>> {
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
@@ -64,11 +62,11 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
     // This is the only way to get a generified class; because of type erasure,
     // it is definitionally accurate.
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Class<List<Double>> getRuntimeBinClass () {
+    public Class<List<Double>> getAcceptedBinClass () {
         return (Class) List.class;
     }
 
-    public static TypeDescriptor getRuntimeTypeDescriptor () {
+    public TypeDescriptor getAcceptedTypeDescriptor () {
         return new TypeDescriptor(List.class, new TypeDescriptor(Double.class));
     }
 
@@ -96,17 +94,15 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
-    public BufferedImage render (LayerConfiguration config) {
+    public BufferedImage render (TileData<List<Double>> data, LayerConfiguration config) {
         BufferedImage bi;
         String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
         TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
         try {
             int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
             int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
-            int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
@@ -118,38 +114,6 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             double scaledMin = rangeMin/100;
             double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
 
-            int coarsenessFactor = (int)Math.pow(2, coarseness - 1);
-
-            PyramidIO pyramidIO = config.produce(PyramidIO.class);
-            TileSerializer<List<Double>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
-                    getRuntimeBinClass(),
-                    getRuntimeTypeDescriptor());
-
-            List<TileData<List<Double>>> tileDatas = null;
-
-            // Get the coarseness-scaled true tile index
-            TileIndex scaleLevelIndex = null;
-            // need to get the tile data for the level of the base level minus the coarseness
-            for (int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel) {
-                scaleLevelIndex = new TileIndex(index.getLevel() - coarsenessLevel,
-                        (int)Math.floor(index.getX() / coarsenessFactor),
-                        (int)Math.floor(index.getY() / coarsenessFactor));
-
-                tileDatas = pyramidIO.readTiles( dataId , serializer, Collections.singleton(scaleLevelIndex));
-                if (tileDatas.size() >= 1) {
-                    //we got data for this level so use it
-                    break;
-                }
-            }
-
-            // Missing tiles are commonplace and we didn't find any data up the
-            // tree either. We don't want a big long error for that.
-            if (tileDatas.size() < 1) {
-                LOGGER.info("Missing tile " + index + " for layer " + layerId);
-                return null;
-            }
-
-            TileData<List<Double>> data = tileDatas.get(0);
             @SuppressWarnings("unchecked")
             TileTransformer<List<Double>> tileTransformer = config.produce(TileTransformer.class);
             TileData<List<Double>> transformedContents = tileTransformer.transform( data );
@@ -157,29 +121,12 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer {
             int xBins = data.getDefinition().getXBins();
             int yBins = data.getDefinition().getYBins();
 
-            //calculate the tile tree multiplier to go between tiles at each level.
-            //this is also the number of x/y tiles in the base level for every tile in the scaled level
-            int tileTreeMultiplier = (int)Math.pow(2, index.getLevel() - scaleLevelIndex.getLevel());
-
-            int baseLevelFirstTileY = scaleLevelIndex.getY() * tileTreeMultiplier;
-
-            //the y tiles are backwards, so we need to shift the order around by reversing the counting direction
-            int yTileIndex = ((tileTreeMultiplier - 1) - (index.getY() - baseLevelFirstTileY)) + baseLevelFirstTileY;
-
-            //figure out which bins to use for this tile based on the proportion of the base level tile within the scale level tile
-            int xBinStart = (int)Math.floor(xBins * (((double)(index.getX()) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-            int xBinEnd = (int)Math.floor(xBins * (((double)(index.getX() + 1) / tileTreeMultiplier) - scaleLevelIndex.getX()));
-            int yBinStart = ((int)Math.floor(yBins * (((double)(yTileIndex) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-            int yBinEnd = ((int)Math.floor(yBins * (((double)(yTileIndex + 1) / tileTreeMultiplier) - scaleLevelIndex.getY())) ) ;
-
-            int numBinsWide = xBinEnd - xBinStart;
-            int numBinsHigh = yBinEnd - yBinStart;
-            double xScale = ((double) bi.getWidth())/numBinsWide;
-            double yScale = ((double) bi.getHeight())/numBinsHigh;
+            double xScale = ((double) bi.getWidth())/xBins;
+            double yScale = ((double) bi.getHeight())/yBins;
             ColorRamp colorRamp = config.produce(ColorRamp.class);
 
-            for(int ty = 0; ty < numBinsHigh; ty++){
-                for(int tx = 0; tx < numBinsWide; tx++){
+            for(int ty = 0; ty < yBins; ty++){
+                for(int tx = 0; tx < xBins; tx++){
                     //calculate the scaled dimensions of this 'pixel' within the image
                     int minX = (int) Math.round(tx*xScale);
                     int maxX = (int) Math.round((tx+1)*xScale);
