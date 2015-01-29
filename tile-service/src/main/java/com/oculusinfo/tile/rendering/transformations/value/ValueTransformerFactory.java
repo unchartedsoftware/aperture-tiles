@@ -56,6 +56,10 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		"For use by the server only",
 		Double.MIN_VALUE);
 
+	public static final DoubleProperty LOG_MINIMUM = new DoubleProperty("log10DefaultMin",
+			"The minimum value used for the log transform when the input data minimum is <= 0",
+			1);
+
 
 	public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {
 		this(null, parent, path);
@@ -69,6 +73,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		addProperty(TRANSFORM_MINIMUM);
 		addProperty(LAYER_MAXIMUM);
 		addProperty(LAYER_MINIMUM);
+		addProperty(LOG_MINIMUM);
 	}
 
 	private double _layerMaximum;
@@ -96,6 +101,15 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);
 
 		if ("log10".equals(name)) {
+			// Log transformations only work on values > 0
+			// In many cases (such as counts) we have a minimum value of 0 which essentially maps to "no data"
+			// In this case we want the log to scale from 1 up and treat zeros as no data (transformer will return
+			// NaN indicating out of bounds input).
+			// This is ugly and full of assumptions but for the time being it is necessary to maintain backwards
+			// compatibility with existing tiled layers and rendering code
+			if (layerMin <= 0) {
+				layerMin = getPropertyValue(LOG_MINIMUM);
+			}
 			return new Log10ValueTransformer(layerMin, layerMax);
 		} else if ("minmax".equals(name)) {
 			double max;

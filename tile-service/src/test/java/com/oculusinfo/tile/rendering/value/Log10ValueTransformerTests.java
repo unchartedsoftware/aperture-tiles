@@ -49,27 +49,10 @@ public class Log10ValueTransformerTests {
 
 
 	@Test
-	public void testZero () {
-		// Test handling values close to zero (or zero) - Set threshold of 0.1, yields midpoint at 1
-		Log10ValueTransformer t = new Log10ValueTransformer(0,10,0.1);
-		Assert.assertEquals(0, t.transform(0.0), EPS);
-		Assert.assertEquals(0.5, t.transform(1.0), EPS);
-		Assert.assertEquals(1, t.transform(10.0), EPS);
-	}
-
-	@Test
 	public void testOutOfBounds () {
 		Log10ValueTransformer t = new Log10ValueTransformer(100,200);
 		Assert.assertEquals(0, t.transform(90.0), EPS);
 		Assert.assertEquals(1, t.transform(5000.0), EPS);
 	}
 
-	@Test
-	public void testNegativeSpan () {
-		// Test spanning zero - equal span leads to midpoint at zero, negative values map to [0,0.5]
-		Log10ValueTransformer t = new Log10ValueTransformer(-100,100);
-		Assert.assertEquals(0, t.transform(-100.0), EPS);
-		Assert.assertEquals(0.5, t.transform(0.0), EPS);
-		Assert.assertEquals(1, t.transform(100.0), EPS);
-	}
 }
