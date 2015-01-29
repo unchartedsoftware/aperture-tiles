@@ -94,16 +94,13 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
 			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 
-			double maximumValue = getLevelExtrema(config).getSecond();
-
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
 			double scaledMax = rangeMax/100;
 			double scaledMin = rangeMin/100;
-			double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
-			bi = renderImage(data, t, scaledLevelMinFreq, scaledLevelMaxFreq, colorRamp, bi);
+			bi = renderImage(data, t, scaledMin, scaledMax, colorRamp, bi);
 		} catch (Exception e) {
 			LOGGER.warn("Configuration error: ", e);
 			return null;

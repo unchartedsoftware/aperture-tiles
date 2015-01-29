@@ -26,7 +26,6 @@ package com.oculusinfo.tile.rendering.impl;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.util.Collections;
 import java.util.List;
 
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
