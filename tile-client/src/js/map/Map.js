@@ -78,12 +78,13 @@
             updateTileFocus( previousMouse.x, previousMouse.y );
         });
         // if mousedown while map is panning, interrupt pan
-        $( map.getElement() ).mousedown( function(){
+        map.olMap.events.register( "mousedown", map, function(){
             if ( map.olMap.panTween ) {
-                 map.olMap.panTween.callbacks = null;
-                 map.olMap.panTween.stop();
+                map.olMap.panTween.callbacks = null;
+                map.olMap.panTween.stop();
+                map.olMap.panTween = null;
             }
-        });
+        }, true );
         // set resize callback
         $( window ).resize( function() {
             map.olMap.updateSize();
