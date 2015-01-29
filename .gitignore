@@ -16,3 +16,4 @@ test-output
 bin
 */**/coverage
 tile-quickstart.zip
+out/*
