@@ -31,9 +31,12 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 
 import org.apache.avro.file.CodecFactory;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +46,10 @@ public class FileSystemPyramidSourceTest {
 	
 	private static String SOURCE_DIR = "./src/test/file_pyramid/";
 	private static String SOURCE_EXT = "avro";
-
+	private static String SOURCE_LAYER = "test";
+	private static int LEVEL = 4;
+	private static int X_INDEX = 3;
+	private static int Y_INDEX = 2;
 
 
 	@Test 
@@ -51,19 +57,19 @@ public class FileSystemPyramidSourceTest {
 		FileBasedPyramidIO io = new FileBasedPyramidIO(new FileSystemPyramidSource(SOURCE_DIR, SOURCE_EXT));
 		TileSerializer<Integer> serializer = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
 
-		ArrayList<TileData<Integer>> writeTiles = new ArrayList<TileData<Integer>>();
+		ArrayList<TileData<Integer>> writeTiles = new ArrayList<>();
 
-		TileIndex index = new TileIndex(4, 3, 2);
-		TileData<Integer> tile = new TileData<Integer>(index);
+		TileIndex index = new TileIndex( LEVEL, X_INDEX, Y_INDEX );
+		TileData<Integer> tile = new TileData<>(index);
 		for (int x=0; x<256; ++x) {
 			for (int y=0; y<256; ++y) {
 				tile.setBin(x, y, x+256*y);
 			}
 		}
 		writeTiles.add(tile);
-		writeAvroTiles(io, serializer, "test", writeTiles);
+		writeAvroTiles(io, serializer, SOURCE_LAYER, writeTiles);
 
-		List<TileData<Integer>> readTiles = readAvroTiles(io, serializer, "test");
+		List<TileData<Integer>> readTiles = readAvroTiles(io, serializer, SOURCE_LAYER);
 
 		for (int i=0; i<writeTiles.size(); i++){
 			TileData<Integer> writeTile = writeTiles.get(i);
@@ -82,6 +88,15 @@ public class FileSystemPyramidSourceTest {
 
 			Assert.assertEquals(writeTileDef, readTileDef);
 		}
+	}
+
+	@After
+	public void removeWrittenFile() {
+		try {
+            FileUtils.deleteDirectory(  new File( SOURCE_DIR ) );
+        } catch ( Exception e ) {
+            // swallow exception
+        }
 	}
 
 	private <T> void writeAvroTiles (PyramidIO pio, TileSerializer<T> serializer,
