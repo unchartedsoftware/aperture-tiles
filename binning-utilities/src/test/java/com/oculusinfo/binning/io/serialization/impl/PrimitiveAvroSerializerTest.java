@@ -26,10 +26,13 @@ package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oculusinfo.binning.SparseTileData;
 import org.apache.avro.file.CodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -127,5 +130,43 @@ public class PrimitiveAvroSerializerTest {
 	public void testReferenceType () throws Exception {
 		List<Integer> sample = new ArrayList<>();
 		testRoundTrip(sample.getClass(), sample);
+	}
+
+	// Test that a single serializer can be used to serialize both dense and sparse data.
+	@Test
+	public void testMultiDensitySerialization ()  throws IOException {
+		TileIndex index = new TileIndex(0, 0, 0);
+		TileData<Double> dense = new DenseTileData<>(index, 0.0);
+		TileData<Double> sparse = new SparseTileData<>(index, 0.0);
+
+		for (int x=0; x<256; ++x) {
+			for (int y=0; y<256; ++y) {
+				if (0 == ((x+y)%2)) {
+					double value = Math.random();
+					dense.setBin(x, y, value);
+					sparse.setBin(x, y, value);
+				}
+			}
+		}
+
+		TileSerializer<Double> serializer = new PrimitiveAvroSerializer<Double>(Double.class, CodecFactory.nullCodec());
+
+		ByteArrayOutputStream baosDense = new ByteArrayOutputStream();
+		serializer.serialize(dense, baosDense);
+		baosDense.flush();
+		baosDense.close();
+
+		ByteArrayOutputStream baosSparse = new ByteArrayOutputStream();
+		serializer.serialize(sparse, baosSparse);
+		baosSparse.flush();
+		baosSparse.close();
+
+		int denseSize = baosDense.toByteArray().length;
+		int sparseSize = baosSparse.toByteArray().length;
+
+		// Should be roughly equal in size - there is no compression, and the tile is half full.
+		// But within an order of magnitude is close enough.
+		Assert.assertTrue(denseSize < sparseSize * 10);
+		Assert.assertTrue(sparseSize < denseSize * 10);
 	}
 }

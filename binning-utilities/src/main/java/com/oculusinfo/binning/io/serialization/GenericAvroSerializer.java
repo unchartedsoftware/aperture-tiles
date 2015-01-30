@@ -73,15 +73,17 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 
 
 
-	private Schema _tileSchema = null;
-	private Schema _recordSchema = null;
+	private Map<StorageType, Schema> _tileSchema;
+	private Schema                   _recordSchema;
 
-	private String _compressionCodec;
-	private TypeDescriptor _typeDescription;
+	private String                   _compressionCodec;
+	private TypeDescriptor           _typeDescription;
 
 	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
 		_compressionCodec = codecToDescription(compressionCodec);
 		_typeDescription = typeDescription;
+		_tileSchema = new HashMap<>();
+		_recordSchema = null;
 	}
 
 	abstract protected String getRecordSchemaFile ();
@@ -103,21 +105,21 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
 	}
 	
-	protected Schema getTileSchema (TileData.StorageType storage) throws IOException {
-		if (_tileSchema == null) {
-			_tileSchema = createTileSchema(storage);
+	protected Schema getTileSchema (StorageType storage) throws IOException {
+		if (!_tileSchema.containsKey(storage)) {
+			_tileSchema.put(storage, createTileSchema(storage));
 		}
-		return _tileSchema;
+		return _tileSchema.get(storage);
 	}
 	
 	protected Schema createTileSchema (StorageType storage) throws IOException {
 		switch (storage) {
-			case Dense:
-				return new AvroSchemaComposer().add(getRecordSchema()).addResource("denseTile.avsc").resolved();
-			case Sparse:
-				return new AvroSchemaComposer().add(getRecordSchema()).addResource("sparseTile.avsc").resolved();
-			default:
-				return null;
+		case Dense:
+			return new AvroSchemaComposer().add(getRecordSchema()).addResource("denseTile.avsc").resolved();
+		case Sparse:
+			return new AvroSchemaComposer().add(getRecordSchema()).addResource("sparseTile.avsc").resolved();
+		default:
+			return null;
 		}
 	}
 	
@@ -169,32 +171,32 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 			TileData<T> newTile = null;
 
 			switch (storage) {
-				case Dense: {
-					List<T> data = new ArrayList<T>(xBins * yBins);
-					int i = 0;
-					for (GenericRecord bin : bins) {
-						data.add(getValue(bin));
-						if (i >= xBins * yBins) break;
-					}
-
-					newTile = new DenseTileData<T>(newTileIndex, data);
-					break;
+			case Dense: {
+				List<T> data = new ArrayList<T>(xBins * yBins);
+				int i = 0;
+				for (GenericRecord bin : bins) {
+					data.add(getValue(bin));
+					if (i >= xBins * yBins) break;
 				}
-				case Sparse: {
-					Map<Integer, Map<Integer, T>> data = new HashMap<>();
-					for (GenericRecord bin : bins) {
-						int x = (Integer) (bin.get("xIndex"));
-						int y = (Integer) (bin.get("yIndex"));
-						T value = getValue((GenericRecord) bin.get("value"));
-						if (!data.containsKey(x)) data.put(x, new HashMap<Integer, T>());
-						data.get(x).put(y, value);
-					}
-					T defaultValue = getValue((GenericRecord) r.get("default"));
 
-					newTile = new SparseTileData<T>(newTileIndex, data, defaultValue);
-					break;
+				newTile = new DenseTileData<T>(newTileIndex, data);
+				break;
+			}
+			case Sparse: {
+				Map<Integer, Map<Integer, T>> data = new HashMap<>();
+				for (GenericRecord bin : bins) {
+					int x = (Integer) (bin.get("xIndex"));
+					int y = (Integer) (bin.get("yIndex"));
+					T value = getValue((GenericRecord) bin.get("value"));
+					if (!data.containsKey(x)) data.put(x, new HashMap<Integer, T>());
+					data.get(x).put(y, value);
 				}
-				default: return null;
+				T defaultValue = getValue((GenericRecord) r.get("default"));
+
+				newTile = new SparseTileData<T>(newTileIndex, data, defaultValue);
+				break;
+			}
+			default: return null;
 			}
 
 			// Add in metaData
