@@ -33,8 +33,7 @@
         var theme = renderTheme.selector,
             selector = ( percent !== undefined ) ? options.selector + "-" + percent : options.selector,
             parentSelector = options.parentSelector,
-            css;
-        css = '<style class="render-theme" type="text/css">';
+            css = '';
 
         // set color
         if ( spec['background-color'] ) {
@@ -69,8 +68,8 @@
         if ( spec.border ) {
             css += theme + ' ' + selector + '{' + getOutlineCss( 'border', spec.border ) + ';}';
         }
-        css += '</style>';
-        $( document.body ).prepend( css );
+
+        return css;
     }
 
     function getOutlineCss( type, value ) {
@@ -154,14 +153,16 @@
      * @param {Object} options - The options object containing the selector and parentSelector.
      */
     RenderTheme.prototype.injectTheme = function( options ) {
-        var blendSpec,
+        var css,
+            blendSpec,
             from,
             to,
             i;
+        css = '<style class="render-theme" type="text/css">';
         if ( this.spec.from && this.spec.to ) {
             from = this.spec.from;
             to = this.spec.to;
-            for ( i=0; i<=10; i++ ) {
+            for ( i=10; i>=0; i-- ) {
                 blendSpec = {};
                 if ( from['background-color'] && to['background-color'] ) {
                      blendSpec['background-color'] = RendererUtil.hexBlend(
@@ -199,12 +200,19 @@
                          from.border,
                          i/10 );
                 }
-                injectSingleTheme( this, blendSpec, options, i*10 );
+                // inject percentage theme
+                css += injectSingleTheme( this, blendSpec, options, i*10 );
+                // add the theme for '100' without the '100' tag as well
+                if ( i === 10 ) {
+                    css += injectSingleTheme( this, blendSpec, options );
+                }
             }
-            injectSingleTheme( this, blendSpec, options );
         } else {
-            injectSingleTheme( this, this.spec, options );
+            css += injectSingleTheme( this, this.spec, options );
         }
+
+        css += '</style>';
+        $( document.body ).prepend( css );
     };
 
     module.exports = RenderTheme;

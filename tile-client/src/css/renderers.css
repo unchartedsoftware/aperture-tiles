@@ -82,9 +82,9 @@
 
 .text-by-frequency-entry {
 	position:absolute;
-	width: 200px;
+	width: 220px;
 	height: 20px;
-	left: 28px;
+	left: 18px;
 	z-index: 1;
 }
 
@@ -103,7 +103,7 @@
 .text-by-frequency-right {
 	position: relative;
 	float:right;
-	width: 95px;
+	width: 115px;
 	height: 100%;
 }
 

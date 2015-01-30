@@ -391,7 +391,7 @@
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
                 newBaseLayer = this.baselayers[ index],
-                i;
+                key;
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -399,12 +399,16 @@
             if ( oldBaseLayer ) {
                 oldBaseLayer.deactivate();
             }
+
             newBaseLayer.activate();
             this.baseLayerIndex = index;
+
             // update z index, since changing baselayer resets them
             if ( this.layers ) {
-                for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[i].setZIndex( this.layers[i].getZIndex() );
+                for ( key in this.layers ) {
+                     if ( this.layers.hasOwnProperty( key ) ) {
+                        this.layers[key].setZIndex( this.layers[key].getZIndex() );
+                    }
                 }
             }
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });

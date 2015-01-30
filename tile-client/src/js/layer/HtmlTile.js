@@ -148,7 +148,7 @@
         div.style.opacity = this.layer.opacity;
         div.style.visibility = 'inherit';
 
-        if ( !data.tile ) {
+        if ( !data || !data.tile ) {
             // exit early if not data to render
             return;
         }
