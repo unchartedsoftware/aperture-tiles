@@ -25,7 +25,7 @@
 package com.oculusinfo.tilegen.tiling
 
 import com.oculusinfo.tilegen.tiling.TilePipelines.PipelineArgParser
-import org.apache.spark.sql.{SQLContext, SchemaRDD}
+import org.apache.spark.sql.{SQLContext, SchemaRDD, StructType}
 
 /**
  * Defines the data that is passed from stage to stage of the tile pipeline.
@@ -65,8 +65,7 @@ object TilePipelines {
     input match {
       case Some(i) => ex(start, i)
       case None =>
-        // TODO: Find correct way to create an empty schema RDD
-        val emptySchema = sqlContext.createSchemaRDD(sqlContext.sparkContext.parallelize(List(new Empty(0))))
+        val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
         ex(start, new PipelineData(sqlContext, emptySchema))
     }
 
