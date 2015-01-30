@@ -78,12 +78,13 @@
             updateTileFocus( previousMouse.x, previousMouse.y );
         });
         // if mousedown while map is panning, interrupt pan
-        $( map.getElement() ).mousedown( function(){
+        map.olMap.events.register( "mousedown", map, function(){
             if ( map.olMap.panTween ) {
-                 map.olMap.panTween.callbacks = null;
-                 map.olMap.panTween.stop();
+                map.olMap.panTween.callbacks = null;
+                map.olMap.panTween.stop();
+                map.olMap.panTween = null;
             }
-        });
+        }, true );
         // set resize callback
         $( window ).resize( function() {
             map.olMap.updateSize();
@@ -389,7 +390,8 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index ];
+                newBaseLayer = this.baselayers[ index],
+                key;
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -397,8 +399,18 @@
             if ( oldBaseLayer ) {
                 oldBaseLayer.deactivate();
             }
+
             newBaseLayer.activate();
             this.baseLayerIndex = index;
+
+            // update z index, since changing baselayer resets them
+            if ( this.layers ) {
+                for ( key in this.layers ) {
+                     if ( this.layers.hasOwnProperty( key ) ) {
+                        this.layers[key].setZIndex( this.layers[key].getZIndex() );
+                    }
+                }
+            }
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -419,10 +431,18 @@
          * @param {String} theme - The theme identification string of the map.
          */
         setTheme: function( theme ) {
+            var key;
+            // toggle theme in html
             if ( theme === 'dark' ) {
-                $( this.olMap.div ).removeClass( "light-theme" ).addClass( "dark-theme" );
+                $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
             } else if ( theme === 'light' ) {
-                $( this.olMap.div ).removeClass( "dark-theme" ).addClass( "light-theme" );
+                $( 'body' ).removeClass( "dark-theme" ).addClass( "light-theme" );
+            }
+            // update theme for all attached layers
+            for ( key in this.layers ) {
+                if ( this.layers.hasOwnProperty( key ) ) {
+                    this.layers[ key ].setTheme( theme );
+                }
             }
         },
 
@@ -434,7 +454,7 @@
          * @returns {String} The theme of the map.
          */
         getTheme: function() {
-        	return $( this.olMap.div ).hasClass( "light-theme" ) ? 'light' : 'dark';
+        	return $( 'body' ).hasClass( "light-theme" ) ? 'light' : 'dark';
         },
 
         /**

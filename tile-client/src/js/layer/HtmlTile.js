@@ -133,19 +133,28 @@
 
     OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
 
-        var renderer = this.layer.renderer,
-            html = this.layer.html,
-            div = this.div,
-            style = div.style,
+        if ( !this.layer || !this.div ) {
+            // if the div or layer is no longer available, exit gracefully
+            return;
+        }
+
+        var div = this.div,
+            renderer,
+            html,
             render,
             entries;
 
-        style.opacity = this.layer.opacity;
-        style.visibility = 'inherit';
+        // always style the opacity and visibility of the tile
+        div.style.opacity = this.layer.opacity;
+        div.style.visibility = 'inherit';
 
-        if ( !this.layer || !this.div || !data.tile ) {
+        if ( !data || !data.tile ) {
+            // exit early if not data to render
             return;
         }
+
+        renderer = this.layer.renderer;
+        html = this.layer.html;
 
         if ( renderer ) {
             // if renderer is attached, use it

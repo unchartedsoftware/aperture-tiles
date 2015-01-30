@@ -95,7 +95,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	    "The output image height, defaults to the standard 256",
 	    256);
 	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
-	    "The maximum value set to the lower bound of the color ramp spectrum",
+	    "The minimum value set to the lower bound of the color ramp spectrum",
 	    0);
 	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
 	    "The maximum value set to the upper bound of the color ramp spectrum",
