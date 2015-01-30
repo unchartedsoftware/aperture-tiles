@@ -18,15 +18,39 @@
 }
 
 div.olControlZoom {
-	right: 10px !important;
-	top: 60px !important;
-	left:auto !important;
+    right: 0px !important;
+	margin-right: 10px !important;
+	top: 55px !important;
+	left: auto !important;
     z-index: 2999 !important; 
+    padding: 0px !important;
 }
 
-div.olHandlerBoxZoomBox {
-    border: 2px solid rgba(128, 128, 128, 0.75);
-    background-color: rgba(128, 128, 128, 0.5);
+.light-theme div.olControlZoom {
+    background: #999!important;
+}
+
+.dark-theme div.olControlZoom {
+    background: #111!important;
+}
+
+.light-theme div.olControlZoom a {
+    color: #444;
+    background-color: #ebebeb!important;
+}
+
+.dark-theme div.olControlZoom a {
+    color: #fff;
+    background-color: #333!important;
+}
+
+.light-theme  div.olControlZoom a:hover {
+    color: #444;
+    background-color: #dbdbdb!important;
+}
+
+.dark-theme  div.olControlZoom a:hover {
+    background-color: #222!important;
 }
 
 .olLayerGoogleV3 {

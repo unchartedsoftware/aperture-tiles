@@ -27,9 +27,53 @@
 
     "use strict";
 
-    var getOutlineCss;
+    var RendererUtil = require('./RendererUtil');
 
-    getOutlineCss = function( type, value ) {
+    function injectSingleTheme( renderTheme, spec, options, percent ) {
+        var theme = renderTheme.selector,
+            selector = ( percent !== undefined ) ? options.selector + "-" + percent : options.selector,
+            parentSelector = options.parentSelector,
+            css;
+        css = '<style class="render-theme" type="text/css">';
+
+        // set color
+        if ( spec['background-color'] ) {
+            css += theme + ' ' + selector + '{background-color:'+spec['background-color']+';}';
+        }
+        if ( spec.color ) {
+            css += theme + ' ' + selector + '{color:' + spec.color + ';}';
+        }
+
+        // set :hover color
+        if ( parentSelector ) {
+            if ( spec['background-color:hover'] ) {
+                css += theme + ' '+parentSelector+':hover '+selector+' {background-color:'+spec['background-color:hover']+';}';
+            }
+            if ( spec['color:hover'] ) {
+                css += theme + ' '+parentSelector+':hover '+selector+' {color:'+spec['color:hover']+';}';
+            }
+        } else {
+            if ( spec['background-color:hover'] ) {
+                css += theme + ' '+selector+':hover {background-color:'+spec['background-color:hover']+';}';
+            }
+            if ( spec['color:hover'] ) {
+                css += theme + ' '+selector+':hover {color:'+spec['color:hover']+';}';
+            }
+        }
+
+        // set borders
+        if ( spec['text-shadow'] ) {
+            css += theme + ' ' + selector + '{' + getOutlineCss( 'text-shadow', spec['text-shadow'] ) + ';}';
+        }
+
+        if ( spec.border ) {
+            css += theme + ' ' + selector + '{' + getOutlineCss( 'border', spec.border ) + ';}';
+        }
+        css += '</style>';
+        $( document.body ).prepend( css );
+    }
+
+    function getOutlineCss( type, value ) {
         function isColor( val ) {
             var split = val.replace(/\s+/g, '').split(/[\(\)]/);
             if ( split[0] === "rgb" || split[0] === "rgba" ) {
@@ -63,7 +107,7 @@
             return "border:" + value + ";";
         }
         return "";
-    };
+    }
 
     /**
      * Instantiate a RenderTheme object.
@@ -110,48 +154,57 @@
      * @param {Object} options - The options object containing the selector and parentSelector.
      */
     RenderTheme.prototype.injectTheme = function( options ) {
-        var theme = this.selector,
-            spec = this.spec,
-            selector = options.selector,
-            parentSelector = options.parentSelector,
-            css;
-        css = '<style class="render-theme" type="text/css">';
-
-        // set color
-        if ( spec['background-color'] ) {
-            css += theme + ' ' + selector + '{background-color:'+spec['background-color']+';}';
-        }
-        if ( spec.color ) {
-            css += theme + ' ' + selector + '{color:' + spec.color + ';}';
-        }
-
-        // set :hover color
-        if ( parentSelector ) {
-            if ( spec['background-color:hover'] ) {
-                css += theme + ' '+parentSelector+':hover '+selector+' {background-color:'+spec['background-color:hover']+';}';
+        var blendSpec,
+            from,
+            to,
+            i;
+        if ( this.spec.from && this.spec.to ) {
+            from = this.spec.from;
+            to = this.spec.to;
+            for ( i=0; i<=10; i++ ) {
+                blendSpec = {};
+                if ( from['background-color'] && to['background-color'] ) {
+                     blendSpec['background-color'] = RendererUtil.hexBlend(
+                         to['background-color'],
+                         from['background-color'],
+                         i/10 );
+                }
+                if ( from.color && to.color ) {
+                     blendSpec.color = RendererUtil.hexBlend(
+                         to.color,
+                         from.color,
+                         i/10 );
+                }
+                if ( from['background-color:hover'] && to['background-color:hover'] ) {
+                     blendSpec['background-color:hover'] = RendererUtil.hexBlend(
+                         to['background-color:hover'],
+                         from['background-color:hover'],
+                         i/10 );
+                }
+                if ( from['color:hover'] && to['color:hover'] ) {
+                     blendSpec['color:hover'] = RendererUtil.hexBlend(
+                         to['color:hover'],
+                         from['color:hover'],
+                         i/10 );
+                }
+                if ( from['text-shadow'] && to['text-shadow'] ) {
+                     blendSpec['text-shadow'] = RendererUtil.hexBlend(
+                         to['text-shadow'],
+                         from['text-shadow'],
+                         i/10 );
+                }
+                if ( from.border && to.border ) {
+                     blendSpec.border = RendererUtil.hexBlend(
+                         to.border,
+                         from.border,
+                         i/10 );
+                }
+                injectSingleTheme( this, blendSpec, options, i*10 );
             }
-            if ( spec['color:hover'] ) {
-                css += theme + ' '+parentSelector+':hover '+selector+' {color:'+spec['color:hover']+';}';
-            }
+            injectSingleTheme( this, blendSpec, options );
         } else {
-            if ( spec['background-color:hover'] ) {
-                css += theme + ' '+selector+':hover {background-color:'+spec['background-color:hover']+';}';
-            }
-            if ( spec['color:hover'] ) {
-                css += theme + ' '+selector+':hover {color:'+spec['color:hover']+';}';
-            }
+            injectSingleTheme( this, this.spec, options );
         }
-
-        // set borders
-        if ( spec['text-shadow'] ) {
-            css += theme + ' ' + selector + '{' + getOutlineCss( 'text-shadow', spec['text-shadow'] ) + ';}';
-        }
-
-        if ( spec.border ) {
-            css += theme + ' ' + selector + '{' + getOutlineCss( 'border', spec.border ) + ';}';
-        }
-        css += '</style>';
-        $( document.body ).prepend( css );
     };
 
     module.exports = RenderTheme;

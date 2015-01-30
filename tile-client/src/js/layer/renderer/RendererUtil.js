@@ -187,12 +187,12 @@
          *
          * @param {String} hexA - The hex code color A.
          * @param {String} hexB - The hex code color B.
-         * @param {float} aIntoBPercentage - The percentage to blend hexA into hexB (optional).
+         * @param {number} aIntoBPercentage - The percentage to blend hexA into hexB (optional).
          *
          * @returns {String} The blended hex code color value.
          */
         hexBlend: function( hexA, hexB, aIntoBPercentage ) {
-            var aPerc = Math.min( 1, aIntoBPercentage ) || 0.5,
+            var aPerc = ( aIntoBPercentage !== undefined ) ? Math.min( 1, aIntoBPercentage ) : 0.5,
                 bPerc = 1 - aPerc,
                 rgb1 = this.hexToRgb( hexA ),
                 rgb2 = this.hexToRgb( hexB );

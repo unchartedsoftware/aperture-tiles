@@ -138,13 +138,16 @@
      * Returns the word cloud words containing font size and x and y coordinates
      */
     createWordCloud = function( wordCounts, maxCount ) {
-        var boundingBox = {
+        var minFontSize = 10,
+            maxFontSize = 28,
+            boundingBox = {
                 width: 256 - HORIZONTAL_OFFSET*2,
                 height: 256 - VERTICAL_OFFSET*2,
                 x: 0,
                 y: 0
             },
             cloud = [],
+            percent,
             i, word, count, dim,
             fontSize, pos;
         // sort words by frequency
@@ -157,10 +160,12 @@
             count = wordCounts[i].count;
             // get font size based on font size function
             fontSize = RendererUtil.getFontSize( count, maxCount, {
-                maxFontSize: 30,
-                minFontSize: 12,
+                maxFontSize: maxFontSize,
+                minFontSize: minFontSize,
                 bias: -i/2
             });
+            // frequency percent
+            percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
             // get dimensions of word
             dim = getWordDimensions( word, fontSize );
             // starting spiral position
@@ -182,6 +187,7 @@
                     cloud.push({
                         word: word,
                         fontSize: fontSize,
+                        percentLabel: Math.round( percent / 10 ) * 10, // round to nearest 10
                         x:pos.x,
                         y:pos.y,
                         width: dim.width,
@@ -244,7 +250,7 @@
             cloud;
 
          // get maximum count for layer if it exists in meta data
-        maxCount = meta.minMax.max[ countKey ];
+        maxCount = meta.minMax.max[ countKey ] / 4;
 
         for (i=0; i<numEntries; i++) {
             value = values[i];
@@ -262,7 +268,7 @@
             word = cloud[i];
             value = values[i];
 
-            html += '<div class="word-cloud-label" style="'
+            html += '<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'

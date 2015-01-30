@@ -23,10 +23,6 @@
  * SOFTWARE.
  */
 
-
-/**
-
- */
 ( function() {
 
     "use strict";
@@ -43,14 +39,18 @@
     /**
      * Private: Request colour ramp image from server and set layer property when received.
      *
-     * @param layer {Object} the layer object
+     * @param {Object} layer - The layer object
+     * @param {Function} callback - Optional callback function.
      */
-    setRampImageUrl = function( layer ) {
-        LegendService.getEncodedImage( layer.spec.source.id, {
-                renderer: layer.spec.renderer
+    setRampImageUrl = function( layer, callback ) {
+        LegendService.getEncodedImage( layer.source.id, {
+                renderer: layer.renderer
             }, function ( url ) {
                 layer.rampImageUrl = url;
                 PubSub.publish( layer.getChannel(), { field: 'rampImageUrl', value: url });
+                if ( callback ) {
+                    callback( url );
+                }
             });
     };
 
@@ -61,9 +61,9 @@
      */
     setLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
-            coarseness = layer.spec.renderer.coarseness,
+            coarseness = layer.renderer.coarseness,
             adjustedZoom = zoomLevel - ( coarseness-1 ),
-            meta =  layer.spec.source.meta,
+            meta =  layer.source.meta,
             levelMinMax = meta.minMax[ adjustedZoom ],
             minMax = levelMinMax ? levelMinMax.minMax : {
                 min: null,
@@ -116,14 +116,15 @@
      * </pre>
      */
     function ServerLayer( spec ) {
-        // set reasonable defaults
-        spec.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
-        spec.renderer = spec.renderer || {};
-        spec.valueTransform = spec.valueTransform || {};
-        spec.tileTransform = spec.tileTransform || {};
-        spec.domain = "server";
         // call base constructor
         Layer.call( this, spec );
+        // set reasonable defaults
+        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
+        this.renderer = spec.renderer || {};
+        this.valueTransform = spec.valueTransform || {};
+        this.tileTransform = spec.tileTransform || {};
+        this.domain = "server";
+        this.source = spec.source;
     }
 
     ServerLayer.prototype = Object.create( Layer.prototype );
@@ -148,9 +149,9 @@
         // add the new layer
         this.olLayer = new OpenLayers.Layer.TMS(
             'Server Rendered Tile Layer',
-            this.spec.source.tms,
+            this.source.tms,
             {
-                layername: this.spec.source.id,
+                layername: this.source.id,
                 type: 'png',
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
                     20037500,  20037500),
@@ -160,9 +161,9 @@
             });
         this.map.olMap.addLayer( this.olLayer );
 
-        this.setZIndex( this.spec.zIndex );
-        this.setOpacity( this.spec.opacity );
-        this.setVisibility( this.spec.enabled );
+        this.setZIndex( this.zIndex );
+        this.setOpacity( this.opacity );
+        this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
         setLevelMinMax( this );
     };
@@ -189,10 +190,9 @@
      */
     ServerLayer.prototype.setTheme = function( theme ) {
         var that = this;
-        this.spec.renderer.theme = theme;
+        this.renderer.theme = theme;
         setRampImageUrl( that );
         this.olLayer.redraw();
-        this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
     };
 
     /**
@@ -202,7 +202,7 @@
      * @returns {String} The theme identifier string.
      */
     ServerLayer.prototype.getTheme = function() {
-        return this.spec.renderer.theme;
+        return this.renderer.theme;
     };
 
     /**
@@ -216,7 +216,7 @@
         // set the z-index of the layer dev. setLayerIndex sets a relative
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
-        this.spec.zIndex = zIndex;
+        this.zIndex = zIndex;
         if ( this.olLayer ) {
             $( this.olLayer.div ).css( 'z-index', zIndex );
             PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
@@ -230,7 +230,7 @@
      * @returns {integer} The zIndex for the layer.
      */
     ServerLayer.prototype.getZIndex = function () {
-        return this.spec.zIndex;
+        return this.zIndex;
     };
 
     /**
@@ -238,12 +238,15 @@
      * @memberof ServerLayer
      *
      * @param {String} rampType - The ramp type used to render the images.
+     * @param {Function} callback - Optional callback function.
      */
-    ServerLayer.prototype.setRampType = function ( rampType ) {
-        var that = this;
-        this.spec.renderer.ramp = rampType;
-        setRampImageUrl( that );
-        this.olLayer.redraw();
+    ServerLayer.prototype.setRampType = function ( rampType, callback ) {
+        if ( this.renderer.ramp !== rampType ) {
+            this.renderer.ramp = rampType;
+            setRampImageUrl( this, callback );
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), {field: 'rampType', value: rampType} );
+        }
     };
 
     /**
@@ -253,7 +256,7 @@
      * @returns {String} The ramp identification string.
      */
     ServerLayer.prototype.getRampType = function() {
-        return this.spec.renderer.ramp;
+        return this.renderer.ramp;
     };
 
     /**
@@ -277,6 +280,118 @@
     };
 
     /**
+     * Set the current value by which the minimum color ramp is clamped to by percentage
+     * in the range [0-1].
+     * @memberof ServerLayer
+     *
+     * @param {number} min - The range min in percentage.
+     */
+    ServerLayer.prototype.setRangeMinPercentage = function( min ) {
+        min = Math.max( Math.min( min, 1 ), 0 ) * 100;
+        if ( this.renderer.rangeMin !== min ) {
+            this.renderer.rangeMin = min;
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), { field: 'rangeMin', value: min });
+        }
+    };
+
+    /**
+     * Get the current value by which the minimum color ramp is clamped to by percentage
+     * in the range [0-1].
+     * @memberof ServerLayer
+     *
+     * @returns {number} The range max in percentage.
+     */
+    ServerLayer.prototype.getRangeMinPercentage = function() {
+        return this.renderer.rangeMin / 100;
+    };
+
+    /**
+     * Set the current value by which the maximum color ramp is clamped to by percentage
+     * in the range [0-1].
+     * @memberof ServerLayer
+     *
+     * @param {number} max - The range max in percentage.
+     */
+    ServerLayer.prototype.setRangeMaxPercentage = function( max ) {
+        max = Math.max( Math.min( max, 1 ), 0 ) * 100;
+        if ( this.renderer.rangeMax !== max ) {
+            this.renderer.rangeMax = max;
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), {field: 'rangeMax', value: max} );
+        }
+    };
+
+    /**
+     * Get the current value by which the maximum color ramp is clamped to by percentage
+     * in the range [0-1].
+     * @memberof ServerLayer
+     *
+     * @returns {number} The range min in percentage.
+     */
+    ServerLayer.prototype.getRangeMaxPercentage = function() {
+        return this.renderer.rangeMax / 100;
+    };
+
+    /**
+    * Set the current value by which the minimum color ramp is clamped to.
+    * @memberof ServerLayer
+    *
+    * @param {number} min - The range min by value.
+    */
+    ServerLayer.prototype.setRangeMinValue = function( min ) {
+        this.setRangeMinPercentage(
+            Util.normalizeValue(
+                min,
+                this.getLevelMinMax(),
+                this.getValueTransformType()
+            )
+        );
+    };
+
+    /**
+    * Get the current value by which the minimum color ramp is clamped to.
+    * @memberof ServerLayer
+    *
+    * @returns {number} The range min by value.
+    */
+    ServerLayer.prototype.getRangeMinValue = function() {
+        return Util.denormalizeValue(
+            this.getRangeMinPercentage(),
+            this.getLevelMinMax(),
+            this.getValueTransformType() );
+    };
+
+    /**
+    * Set the current value by which the maximum color ramp is clamped to.
+    * @memberof ServerLayer
+    *
+    * @param {number} max - The range max by value.
+    */
+    ServerLayer.prototype.setRangeMaxValue = function( max ) {
+        this.setRangeMaxPercentage(
+            Util.normalizeValue(
+                max,
+                this.getLevelMinMax(),
+                this.getValueTransformType()
+            )
+        );
+    };
+
+    /**
+    * Get the current value by which the maximum color ramp is clamped to.
+    * @memberof ServerLayer
+    *
+    * @returns {number} The range max by value.
+    */
+    ServerLayer.prototype.getRangeMaxValue = function() {
+        return Util.denormalizeValue(
+            this.getRangeMaxPercentage(),
+            this.getLevelMinMax(),
+            this.getValueTransformType() );
+    };
+
+    /**
      * Updates the value transform function associated with the layer. Results in a POST
      * request to the server.
      * @memberof ServerLayer
@@ -284,9 +399,11 @@
      * @param {String} transformType - The new new ramp function.
      */
     ServerLayer.prototype.setValueTransformType = function ( transformType ) {
-        this.spec.valueTransform = { type: transformType };
-        this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: transformType });
+        if ( this.valueTransform.type !== transformType ) {
+            this.valueTransform.type = transformType;
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: transformType });
+        }
     };
 
     /**
@@ -296,7 +413,7 @@
      * @return {String} The value transform type.
      */
     ServerLayer.prototype.getValueTransformType = function() {
-        return this.spec.valueTransform.type;
+        return this.valueTransform.type;
     };
 
     /**
@@ -306,9 +423,11 @@
      * @param {String} transformType - The tile transformer type.
      */
     ServerLayer.prototype.setTileTransformType = function ( transformType ) {
-        this.spec.tileTransform.type = transformType;
-        this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'tileTransformType', value: transformType });
+        if ( this.tileTransform.type !== transformType ) {
+            this.tileTransform.type = transformType;
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), {field: 'tileTransformType', value: transformType} );
+        }
     };
 
     /**
@@ -318,7 +437,7 @@
      * @return {String} The tile transform type.
      */
     ServerLayer.prototype.getTileTransformType = function () {
-        return this.spec.tileTransform.type;
+        return this.tileTransform.type;
     };
 
     /**
@@ -328,9 +447,11 @@
      * @param {Object} transformData - The tile transform data attribute.
      */
     ServerLayer.prototype.setTileTransformData = function ( transformData ) {
-        this.spec.tileTransform.data = transformData;
-        this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'tileTransformData', value: transformData });
+        if ( this.tileTransform.data !== transformData ) {
+            this.tileTransform.data = transformData;
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
+        }
     };
 
     /**
@@ -340,7 +461,7 @@
      * @returns {Object} The tile transform data attribute.
      */
     ServerLayer.prototype.getTileTransformData = function () {
-        return this.spec.tileTransform.data;
+        return this.tileTransform.data;
     };
 
     /**
@@ -350,10 +471,12 @@
      * @param coarseness {integer} The pixel by pixel coarseness of the layer
      */
     ServerLayer.prototype.setCoarseness = function( coarseness ) {
-        this.spec.renderer.coarseness = coarseness;
-        setLevelMinMax( this ); // coarseness modifies the min/max
-        this.olLayer.redraw();
-        PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
+        if ( this.renderer.coarseness !== coarseness ) {
+            this.renderer.coarseness = coarseness;
+            setLevelMinMax( this ); // coarseness modifies the min/max
+            this.olLayer.redraw();
+            PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
+        }
     };
 
     /**
@@ -363,7 +486,7 @@
      * @returns {integer} The layers coarseness in N by N pixels.
      */
     ServerLayer.prototype.getCoarseness = function() {
-        return this.spec.renderer.coarseness;
+        return this.renderer.coarseness;
     };
 
     /**
@@ -374,9 +497,9 @@
      */
     ServerLayer.prototype.getQueryParamString = function() {
         var query = {
-            renderer: this.spec.renderer,
-            tileTransform: this.spec.tileTransform,
-            valueTransform: this.spec.valueTransform
+            renderer: this.renderer,
+            tileTransform: this.tileTransform,
+            valueTransform: this.valueTransform
         };
         return Util.encodeQueryParams( query );
     };

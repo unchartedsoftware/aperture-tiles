@@ -24,24 +24,25 @@
  */
 package com.oculusinfo.tile.rendering.transformations.value;
 
-public class LinearCappedValueTransformer implements ValueTransformer<Double> {
+public class LinearValueTransformer implements ValueTransformer<Double> {
 	private final double _min;
 	private final double _max;
-	private final double _layerMax;
+	private final double _range;
 	
-	public LinearCappedValueTransformer (double minCap, double maxCap, double layerMax) {
-		_min = Math.min(minCap, maxCap);
-		_max = Math.max(minCap, maxCap);
-		_layerMax = layerMax;
+	public LinearValueTransformer(double minRange, double maxRange) {
+		_min = Math.min(minRange, maxRange);
+		_max = Math.max(minRange, maxRange);
+
+		_range = _max - _min;
 	}
 	
 	@Override
 	public Double transform(Double value) {
-		return Math.max(Math.min(value, _max), _min) / (_max - _min);
+		return (Math.max(Math.min(value, _max), _min) - _min) / _range;
 	}
 
 	@Override
 	public Double getMaximumValue () {
-		return _layerMax;
+		return _max;
 	}
 }
