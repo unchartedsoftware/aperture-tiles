@@ -31,6 +31,7 @@ import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.QueryParamDecoder;
 import org.json.JSONObject;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -45,17 +46,12 @@ public class LayerServiceTests {
 
 	@Before
 	public void setup () {
-    	
 		try {
-
 			String configFile = "res:///unit-test-config.json";
-
             Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
-
             Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
             serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
-
             FactoryProvider<LayerConfiguration> layerConfigurationProvider = new StandardLayerConfigurationProvider(
                 new StandardPyramidIOFactoryProvider( tileIoSet ),
                 new StandardTilePyramidFactoryProvider(),
@@ -63,9 +59,7 @@ public class LayerServiceTests {
                 new StandardImageRendererFactoryProvider(),
                 new StandardTileTransformerFactoryProvider()
             );
-
             _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
-
 		} catch (Exception e) {
 			throw e;
 		}
@@ -88,30 +82,29 @@ public class LayerServiceTests {
 	@Test
 	public void getLayerIdsTest() {
 		List< String > layerIds = _layerService.getLayerIds();
-		assert( layerIds.get(0).equals("test-layer0") );
-		assert( layerIds.get(1).equals("test-layer1") );
+		assert( layerIds.get(0).equals( "test-layer0" ) );
+		assert( layerIds.get(1).equals( "test-layer1" ) );
 	}
 
 	@Test
 	public void getLayerConfigurationTest() {
-		LayerConfiguration layerConfig0 = _layerService.getLayerConfiguration("test-layer0", null);
-		LayerConfiguration layerConfig1 = _layerService.getLayerConfiguration("test-layer1", null);
+		LayerConfiguration layerConfig0 = _layerService.getLayerConfiguration( "test-layer0", null );
+		LayerConfiguration layerConfig1 = _layerService.getLayerConfiguration( "test-layer1", null );
 		System.out.println( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ) );
 		System.out.println( layerConfig1.getPropertyValue( LayerConfiguration.LAYER_ID ) );
-		assert( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ).equals("test-layer0") );
-		assert( layerConfig1.getPropertyValue( LayerConfiguration.LAYER_ID ).equals("test-layer1") );
+		assert( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ).equals( "test-layer0" ) );
+		assert( layerConfig1.getPropertyValue( LayerConfiguration.LAYER_ID ).equals( "test-layer1" ) );
 	}
 
 	@Test
-	public void saveLayerStateTest() {
+	public void saveAndGetLayerStateTest() {
 		try {
-			JSONObject override = new JSONObject();
-			JSONObject renderer = new JSONObject();
-			renderer.put( "ramp", "cool" );
-			override.put( "renderer", renderer );
+			// create overrides
+			JSONObject override = QueryParamDecoder.decode( "renderer.ramp=cool&renderer.coarseness=3" );
 			String stateId = _layerService.saveLayerState( "test-layer0", override );
 			JSONObject overrideState = _layerService.getLayerState( "test-layer0", stateId );
-			assert( overrideState.getJSONObject("renderer" ).getString("ramp").equals("cool") );
+			assert( overrideState.getJSONObject( "renderer" ).getString( "ramp" ).equals( "cool" ) );
+			assert( overrideState.getJSONObject( "renderer" ).getString( "coarseness" ).equals( "3" ) );
 		} catch ( Exception e ) {
 			LOGGER.error( "Error overriding layer config", e );
 		}
@@ -120,12 +113,18 @@ public class LayerServiceTests {
 	@Test
 	public void getLayerStatesTest() {
 		try {
-
+			// save state
+			JSONObject override = QueryParamDecoder.decode( "renderer.ramp=cool&renderer.coarseness=3&valueTransform.type=linear" );
+			String stateId = _layerService.saveLayerState( "test-layer0", override );
 			// ensure default is that set in config, NOT propertyValue defaults (unless unconfigured)
 			JSONObject states = _layerService.getLayerStates( "test-layer0" );
-			assert( states.getJSONObject("default" ).getJSONObject("renderer" ).getString("ramp").equals("hot") );
-			assert( states.getJSONObject("default" ).getJSONObject("valueTransform" ).getString("type").equals("log10") );
-
+			// default
+			assert( states.getJSONObject( "default" ).getJSONObject( "renderer" ).getString( "ramp" ).equals( "hot" ) );
+			assert( states.getJSONObject( "default" ).getJSONObject( "valueTransform" ).getString( "type" ).equals( "log10" ) );
+			// saved
+			assert( states.getJSONObject( stateId  ).getJSONObject( "renderer" ).getString( "ramp" ).equals( "cool" ) );
+			assert( states.getJSONObject( stateId ).getJSONObject( "renderer" ).getString( "coarseness" ).equals( "3" ) );
+			assert( states.getJSONObject( stateId ).getJSONObject( "valueTransform" ).getString( "type" ).equals( "linear" ) );
 		} catch ( Exception e ) {
 			LOGGER.error( "Error overriding layer config", e );
 		}
