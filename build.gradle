@@ -195,6 +195,8 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			def TILE_SERVICE_BUILD = "${rootDir}/tile-service/build/libs"
 			def ANNOTATION_SERVICE_SRC = "${rootDir}/annotation-service/src"
 			def ANNOTATION_SERVICE_BUILD = "${rootDir}/annotation-service/build/libs"
+			def TILE_RENDERING_SRC = "${rootDir}/tile-rendering/src"
+			def TILE_RENDERING_BUILD = "${rootDir}/tile-rendering/build/libs"
 			def BINNING_UTIL_SRC = "${rootDir}/binning-utilities/src"
 			def BINNING_UTIL_BUILD = "${rootDir}/binning-utilities/build/libs"
 			def MATH_UTIL_SRC = "${rootDir}/math-utilities/src"
@@ -233,6 +235,14 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			}
 			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
 			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
+
+			// Copy tile-rendering jar into the exploded war
+			task copyTileRenderingToExploded(type: Copy) {
+				from fileTree(TILE_RENDERING_BUILD).include("*.jar")
+				into EXPLODED_LIBS
+			}
+			copyTileRenderingToExploded.inputs.dir TILE_RENDERING_BUILD
+			copyTileRenderingToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy binning-utilities jar into the exploded war
 			task copyBinningUtilToExploded(type: Copy) {
@@ -276,6 +286,10 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			        files fileTree(ANNOTATION_SERVICE_SRC).include('**/*.java')
 			        tasks ':annotation-service:jar', 'copyAnnotationServiceToExploded'
 			    }
+				renderingWatch {
+					files fileTree(TILE_RENDERING_SRC).include('**/*.java')
+					tasks ':tile-rendering:jar', 'copyTileRenderingToExploded'
+				}
 			    binningWatch {
 			        files fileTree(BINNING_UTIL_SRC).include('**/*.java')
 			        tasks ':binning-utilities:jar', 'copyBinningUtilToExploded'
