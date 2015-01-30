@@ -25,17 +25,19 @@
 package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble}
+import java.lang.{Long => JavaLong}
 import java.text.SimpleDateFormat
 
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
-import com.oculusinfo.tilegen.datasets.{CartesianIndexExtractor, CountValueExtractor, _}
-import com.oculusinfo.tilegen.tiling.SparkSqlUtils._
-import com.oculusinfo.tilegen.tiling.analytics._
+import com.oculusinfo.tilegen.datasets._
+import com.oculusinfo.tilegen.tiling.analytics.{
+  AnalysisDescriptionTileWrapper,
+  ComposedTileAnalytic,
+  NumericMaxTileAnalytic,
+  NumericMinTileAnalytic}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-
-import scala.collection.JavaConversions._
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 
 /**
  * Provides operations and companion argument parsers that can be bound into a TilePipeline
@@ -46,6 +48,9 @@ import scala.collection.JavaConversions._
 // TODO: Document args for each operation
 // TODO: Add error checking to all operations and parsers
 object TileOperations {
+  import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
+
+  import scala.collection.JavaConversions._
 
   /**
    * KeyValueArgumentSource implementation that simply passes the supplied map through.
@@ -74,7 +79,7 @@ object TileOperations {
   def parseLoadJsonDataOp(args: Map[String, String]) = {
     val argParser = KeyValuePassthrough(args)
     val path = argParser.getString("ops.path", "HDFS path to data")
-    loadJsonDataOp(path)_
+    loadJsonDataOp(path)(_)
   }
 
   /**
@@ -90,7 +95,7 @@ object TileOperations {
   def parseLoadCsvDataOp(args: Map[String, String]) = {
     val argParser = KeyValuePassthrough(args)
     val path = argParser.getString("ops.path", "HDFS path to data")
-    loadCsvDataOp(path, argParser)_
+    loadCsvDataOp(path, argParser)(_)
   }
 
   /**
@@ -110,7 +115,7 @@ object TileOperations {
     val start = argParser.getString("ops.start", "Start date")
     val end = argParser.getString("ops.end", "End date")
     val formatter = argParser.getString("ops.format", "Date format string")
-    dateFilterOp(start, end, formatter, timeCol)_
+    dateFilterOp(start, end, formatter, timeCol)(_)
   }
 
   /**
@@ -132,7 +137,7 @@ object TileOperations {
    * Parses args for cache data.  No arguments required.
    */
   def parseCacheDataOp(args: Map[String, String]) = {
-    cacheDataOp()_
+    cacheDataOp()(_)
   }
 
   /**
@@ -151,7 +156,7 @@ object TileOperations {
     val max = argParser.getLongSeq("ops.max", "max value")
     val exclude = argParser.getBoolean("ops.exclude", "exclude values in the range", Some(false))
     val colSpecs = argParser.getStringSeq("ops.columns", "numeric column id")
-    integralRangeFilterOp(min, max, colSpecs, exclude)_
+    integralRangeFilterOp(min, max, colSpecs, exclude)(_)
   }
 
   /**
@@ -176,7 +181,7 @@ object TileOperations {
     val max = argParser.getDoubleSeq("ops.max", "max value")
     val exclude = argParser.getBoolean("ops.exclude", "exclude values in the range", Some(false))
     val colSpecs = argParser.getStringSeq("ops.columns", "numeric column id")
-    fractionalRangeFilterOp(min, max, colSpecs, exclude)_
+    fractionalRangeFilterOp(min, max, colSpecs, exclude)(_)
   }
 
   /**
@@ -200,7 +205,7 @@ object TileOperations {
     val regex = argParser.getString("ops.regex", "regex to use as filter")
     val colSpec = argParser.getString("ops.column", "numeric column id")
     val exclude = argParser.getBoolean("ops.exclude", "exclude values that match", Some(false))
-    regexFilterOp(regex, colSpec, exclude)_
+    regexFilterOp(regex, colSpec, exclude)(_)
   }
 
   /**
@@ -224,14 +229,14 @@ object TileOperations {
   def parseColumnSelectOp(args: Map[String, String]) = {
     val argParser = KeyValuePassthrough(args)
     val colSpecs = argParser.getStringSeq("ops.columns", "Col specs denoting columns to select")
-    columnSelectOp(colSpecs)_
+    columnSelectOp(colSpecs)(_)
   }
 
   /**
    * Operation to create a new SchemaRDD from selected columns
    */
   def columnSelectOp(colSpecs: Seq[String])(input: PipelineData) = {
-    val colExprs = colSpecs.map(colSpecToExpression(input.sqlContext, _))
+    val colExprs = colSpecs.map(UnresolvedAttribute(_))
     val result = input.srdd.select(colExprs:_*)
     PipelineData(input.sqlContext, result)
   }
@@ -246,7 +251,7 @@ object TileOperations {
     val hbaseMaster = argParser.getString("hbase.master", "Zookeeper quorum addresses")
     val heatmapParams = parseHeatMapOpImpl(args, argParser)
 
-    hbaseHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, zookeeperQuorum, zookeeperPort, hbaseMaster)_
+    hbaseHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, zookeeperQuorum, zookeeperPort, hbaseMaster)(_)
   }
 
   private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -281,7 +286,7 @@ object TileOperations {
   def parseFileHeatmapOp(args: Map[String, String]) = {
     val argParser = KeyValuePassthrough(args)
     val heatmapParams = parseHeatMapOpImpl(args, argParser)
-    fileHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3)_
+    fileHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3)(_)
   }
 
   /**
@@ -301,7 +306,7 @@ object TileOperations {
                     tileIO: TileIO)
                    (input: PipelineData) = {
     // TODO: Switch to the factory based invocation
-    val valuer = new CountValueExtractor[Double, java.lang.Double]()
+    val valuer = new CountValueExtractor[Long, java.lang.Long]()
     val indexer = new CartesianIndexExtractor(xColSpec, yColSpec)
     val deferredPyramid = new DeferredTilePyramid(new AOITilePyramid(0.0, 0.0, 1.0, 1.0), true)
 
@@ -330,24 +335,24 @@ object TileOperations {
   /**
    * Composite analytic to compute local min/max value of Double data for each tile the pyramid.
    */
-  class ExtremaTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, (Double, Double)](
-    d => (d.doubleValue(), d.doubleValue()),
-    new ComposedTileAnalytic[Double, Double](
-      new NumericMinTileAnalytic[Double](),
-      new NumericMaxTileAnalytic[Double]()))
+  class ExtremaTileAnalytic extends AnalysisDescriptionTileWrapper[JavaLong, (Long, Long)](
+    d => (d.longValue(), d.longValue()),
+    new ComposedTileAnalytic[Long, Long](
+      new NumericMinTileAnalytic[Long](),
+      new NumericMaxTileAnalytic[Long]()))
 
   /**
    * Analytic to compute local max value of Double data for each tile in the pyramid.
    */
-  class MaxTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, Double](
-    _.doubleValue,
-    new NumericMaxTileAnalytic[Double]()) {}
+  class MaxTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, Long](
+    _.longValue,
+    new NumericMaxTileAnalytic[Long]()) {}
 
   /**
    * Analytic to compute local min value of Double data for each tile in the pyramid.
    */
-  class MinTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, Double](
-    _.doubleValue,
-    new NumericMaxTileAnalytic[Double]()) {}
+  class MinTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, Long](
+    _.longValue,
+    new NumericMaxTileAnalytic[Long]()) {}
 
 }

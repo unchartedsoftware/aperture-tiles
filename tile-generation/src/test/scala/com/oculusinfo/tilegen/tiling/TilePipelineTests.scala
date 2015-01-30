@@ -50,11 +50,11 @@ class TestTilePipeline extends FunSuite with SharedSparkContext {
       input
     }
 
-    val parent = new PipelineStage("parent", testOp("p")_)
-    val child0 = new PipelineStage("child0", testOp("c0")_)
-    val child1 = new PipelineStage("child1", testOp("c1")_)
-    val grandchild0 = new PipelineStage("grandchild0", testOp("g0")_)
-    val grandchild1 = new PipelineStage("grandchild1", testOp("g1")_)
+    val parent = new PipelineStage("parent", testOp("p")(_))
+    val child0 = new PipelineStage("child0", testOp("c0")(_))
+    val child1 = new PipelineStage("child1", testOp("c1")(_))
+    val grandchild0 = new PipelineStage("grandchild0", testOp("g0")(_))
+    val grandchild1 = new PipelineStage("grandchild1", testOp("g1")(_))
 
     parent.addChild(child0)
     parent.addChild(child1)

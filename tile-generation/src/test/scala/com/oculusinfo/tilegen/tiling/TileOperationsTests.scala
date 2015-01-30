@@ -25,22 +25,15 @@
 package com.oculusinfo.tilegen.tiling
 
 
-import java.util.Properties
-
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.io.serialization.GenericAvroSerializer
-import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
-import com.oculusinfo.tilegen.datasets.{TilingTask, SchemaTypeUtilities}
-import org.apache.spark.{SparkContext, SharedSparkContext}
-import TileOperations._
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.api.java.StructField
+import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
+import org.apache.spark.SharedSparkContext
 import org.apache.spark.sql.catalyst.types.StructType
 import org.scalatest.FunSuite
 
 import scala.collection.mutable.ListBuffer
 
 class TestTileOperations extends FunSuite with SharedSparkContext {
+  import com.oculusinfo.tilegen.tiling.TileOperations._
 
   def outputOps(colSpecs: List[String], output: ListBuffer[Any])(input: PipelineData) = {
     val extractors = colSpecs.map(SchemaTypeUtilities.calculateExtractor(_, input.srdd.schema))
@@ -60,7 +53,7 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
     val argsMap = Map("ops.path" -> resPath)
 
     val loadStage = new PipelineStage("load", parseLoadJsonDataOp(argsMap))
-    loadStage.addChild(new PipelineStage("output", outputOps(List("val", "time"), resultList)_))
+    loadStage.addChild(new PipelineStage("output", outputOps(List("val", "time"), resultList)(_)))
     TilePipelines.execute(loadStage, sqlc)
 
     assertResult(List(
@@ -100,7 +93,7 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 
   test("Test date filter parse and operation") {
     val resultList = ListBuffer[Any]()
-val argMap = Map(
+    val argMap = Map(
       "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
       "ops.column" -> "time",
       "ops.start" -> "2015-01-01 15:15:30",
@@ -109,7 +102,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("date_filter", parseDateFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("time", resultList)_))
+      .addChild(PipelineStage("output", outputOp("time", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -126,7 +119,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("num", resultList)_))
+      .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -144,7 +137,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("num", resultList)_))
+      .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -163,7 +156,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("num", resultList)_))
+      .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -183,7 +176,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("num", resultList)_))
+      .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -202,7 +195,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("regex_filter", parseRegexFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("desc", resultList)_))
+      .addChild(PipelineStage("output", outputOp("desc", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -221,7 +214,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("regex_filter", parseRegexFilterOp(argMap)))
-      .addChild(PipelineStage("output", outputOp("desc", resultList)_))
+      .addChild(PipelineStage("output", outputOp("desc", resultList)(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -242,7 +235,7 @@ val argMap = Map(
 
     val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
     rootStage.addChild(PipelineStage("column_select", parseColumnSelectOp(argMap)))
-      .addChild(PipelineStage("output", schemaOp()_))
+      .addChild(PipelineStage("output", schemaOp()(_)))
 
     TilePipelines.execute(rootStage, sqlc)
 
@@ -252,11 +245,9 @@ val argMap = Map(
   }
 
   test("Test file heatmap parse and operation") {
-
     // pipeline stage to create test data
     def createDataOp(count: Int)(input: PipelineData) = {
       val jsonData = for (x <- 0 until count; y <- 0 until count if y % 2 == 0) yield s"""{"x":$x, "y":$y}\n"""
-      println(jsonData)
       val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
       PipelineData(sqlc, srdd)
     }
@@ -272,14 +263,14 @@ val argMap = Map(
       "ops.tileWidth" -> "4",
       "ops.tileHeight" -> "4")
 
-    val rootStage = PipelineStage("create_data", createDataOp(8)_)
+    val rootStage = PipelineStage("create_data", createDataOp(8)(_))
     rootStage.addChild(PipelineStage("file_heatmap_op", parseFileHeatmapOp(args)))
     TilePipelines.execute(rootStage, sqlc)
 
     // Load the metadata and validate its contents - gives us an indication of whether or not the
     // job completed successfully.
     val tileIO = new LocalTileIO(".avro")
-    val metaData = tileIO.readMetaData("test_prefix..x.y.count").getOrElse(fail("Metadata not created"))
+    val metaData = tileIO.readMetaData("test_prefix.test.x.y.count").getOrElse(fail("Metadata not created"))
 
     val bounds = metaData.getBounds
     assertResult(bounds.getMinX)(0.0)
@@ -287,6 +278,6 @@ val argMap = Map(
     assertResult(bounds.getMaxX)(7.0)
     assertResult(bounds.getMaxY)(6.0)
     val customMeta = metaData.getAllCustomMetaData
-    assertResult(customMeta.toString)("{0.minimum=0.0, global.minimum=0.0, global.maximum=2.0, 0.maximum=2.0, 1.minimum=0.0, 1.maximum=1.0}")
+    assertResult(customMeta.toString)("{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")
   }
 }

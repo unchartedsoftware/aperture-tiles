@@ -24,8 +24,8 @@
  */
 package com.oculusinfo.tilegen.tiling
 
+import com.oculusinfo.tilegen.tiling.TilePipelines.PipelineArgParser
 import org.apache.spark.sql.{SQLContext, SchemaRDD}
-import com.oculusinfo.tilegen.tiling.TilePipelines._
 
 /**
  * Defines the data that is passed from stage to stage of the tile pipeline.
@@ -104,7 +104,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map(), val p
   }
 
   def runPipeline(pipelineId: String, sqlContext: SQLContext) = {
-    execute(pipelineRoots(pipelineId), sqlContext)
+    TilePipelines.execute(pipelineRoots(pipelineId), sqlContext)
   }
 
   private def findNode(nodeId: String, toVisit: List[PipelineStage]): Option[PipelineStage] = {
