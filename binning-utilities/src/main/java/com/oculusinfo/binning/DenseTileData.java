@@ -44,8 +44,8 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 
 
 
-    private TileIndex           _definition;
-    private List<T>             _data;
+	private TileIndex           _definition;
+	private List<T>             _data;
 
 
 
@@ -82,16 +82,16 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 		}
 	}
 
-    /**
-     * Construct a tile for a particular tile index, with preset data. Note the passed-in preset data is used as is,
+	/**
+	 * Construct a tile for a particular tile index, with preset data. Note the passed-in preset data is used as is,
 	 * not copied.
-     * 
-     * @param definition
-     *            The index of the tile whose data is to be represented by this
-     *            object.
-     * @param tileData
-     *            The data for this tile
-     */
+	 * 
+	 * @param definition
+	 *            The index of the tile whose data is to be represented by this
+	 *            object.
+	 * @param tileData
+	 *            The data for this tile
+	 */
 	public DenseTileData(TileIndex definition, List<T> tileData) {
 
 		_definition = definition;
@@ -115,12 +115,26 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 	/** {@inheritDoc} */
 	@Override
 	public void setBin(int x, int y, T value) {
+		if (x < 0 || x >= _definition.getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= _definition.getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+
 		_data.set(x + y * _definition.getXBins(), value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public T getBin(int x, int y) {
+		if (x < 0 || x >= _definition.getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= _definition.getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+
 		return _data.get(x + y * _definition.getXBins());
 	}
 

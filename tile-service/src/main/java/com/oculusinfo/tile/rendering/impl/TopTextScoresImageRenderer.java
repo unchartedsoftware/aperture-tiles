@@ -26,8 +26,6 @@ package com.oculusinfo.tile.rendering.impl;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -55,15 +53,18 @@ import java.util.List;
  * 
  * @author nkronenfeld
  */
-public class TopTextScoresImageRenderer implements TileDataImageRenderer {
+public class TopTextScoresImageRenderer implements TileDataImageRenderer<List<Pair<String, Double>>> {
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	// Best we can do here :-(
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static Class<List<Pair<String, Double>>> getRuntimeBinClass () {
+	@Override
+	public Class<List<Pair<String, Double>>> getAcceptedBinClass () {
 		return (Class)List.class;
 	}
-	public static TypeDescriptor getRuntimeTypeDescriptor () {
+
+	@Override
+	public TypeDescriptor getAcceptedTypeDescriptor () {
 		return new TypeDescriptor(List.class,
 		                          new TypeDescriptor(Pair.class,
 		                                             new TypeDescriptor(String.class),
@@ -116,28 +117,17 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BufferedImage render(LayerConfiguration config) {
+	public BufferedImage render(TileData<List<Pair<String, Double>>> data, LayerConfiguration config) {
 		BufferedImage bi;
 		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 		try {
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			TileSerializer<List<Pair<String, Double>>> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
-				                         getRuntimeBinClass(),
-				                         getRuntimeTypeDescriptor());
 
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-			List<TileData<List<Pair<String, Double>>>> tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton(index));
-			if (tileDatas.isEmpty()) {
-				LOGGER.debug("Layer {} is missing tile ().", layerId, index);
-				return null;
-			}
-			TileData<List<Pair<String, Double>>> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
 

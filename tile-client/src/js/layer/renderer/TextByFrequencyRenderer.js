@@ -30,7 +30,9 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 8,
-        injectCss;
+        injectCss,
+        getYOffset,
+        getHighestCount;
 
     injectCss = function( spec ) {
         var i;
@@ -50,6 +52,34 @@
                 });
             }
         }
+    };
+
+    /**
+     * Utility function for positioning the labels
+     */
+    getYOffset = function( index, numEntries ) {
+        var SPACING = 20;
+        return 118 - ( (( numEntries - 1) / 2 ) - index ) * SPACING;
+    };
+
+    /**
+     * Utility function to get the highest count in the tile
+     */
+    getHighestCount = function( numEntries, values, countKey ) {
+        // get the highest single count
+        var highestCount = 0,
+            value,
+            counts,
+            i, j;
+        for ( i=0; i<numEntries; i++ ) {
+            value = values[i];
+            counts = value[countKey];
+            for ( j=0; j<counts.length; j++ ) {
+                // get highest count
+                highestCount = Math.max( highestCount, counts[j] );
+            }
+        }
+        return highestCount;
     };
 
     /**
@@ -96,100 +126,48 @@
             countKey = this.spec.frequency.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
+            percentLabel,
             html = '',
             entries = [],
             value,
             entryText,
-            maxPercentage,
+            highestCount,
+            counts,
             relativePercent,
             visibility,
             chartSize,
             i, j;
 
-        /*
-            Utility function for positioning the labels
-        */
-        function getYOffset( index, numEntries ) {
-            var SPACING = 20;
-            return 118 - ( (( numEntries - 1) / 2 ) - index ) * SPACING;
-        }
+        highestCount = getHighestCount( numEntries, values, countKey );
 
-        function getChartSize( value, countKey ) {
-            return value[ countKey ].length;
-        }
-
-        /*
-            Returns the total count for single value
-        */
-        function getCount( value, index, countKey ) {
-            return RendererUtil.getAttributeValue( value, countKey )[index];
-        }
-
-        /*
-            Returns the total sum count
-        */
-        function getCountArraySum( value, countKey ) {
-            var sum = 0, i;
-            for ( i=0; i<value[ countKey ].length; i++ ) {
-                sum += value[ countKey ][i];
-            }
-            return sum;
-        }
-
-        /*
-            Returns the percentage count
-        */
-        function getPercentage( value, index, countKey ) {
-            return ( getCount( value, index, countKey ) / getCountArraySum( value, countKey ) ) || 0;
-        }
-
-        /*
-            Returns the maximum percentage count
-        */
-        function getMaxPercentage( value, countKey ) {
-            var i,
-                percent,
-                chartSize = getChartSize( value, countKey ),
-                maxPercent = 0,
-                count = getCountArraySum( value, countKey );
-
-            if (count === 0) {
-                return 0;
-            }
-
-            for (i=0; i<chartSize; i++) {
-                // get maximum percent
-                percent = getCount( value, i, countKey ) / count;
-                if (percent > maxPercent) {
-                    maxPercent = percent;
-                }
-            }
-            return maxPercent;
-        }
-
-        for (i=0; i<numEntries; i++) {
+        for ( i=0; i<numEntries; i++ ) {
 
             value = values[i];
             entries.push( value );
+            counts = value[ countKey ];
+            chartSize = counts.length;
             entryText = RendererUtil.getAttributeValue( value, textKey );
-            chartSize = getChartSize( value, countKey );
-            maxPercentage = getMaxPercentage( value, countKey );
 
             html += '<div class="text-by-frequency-entry" style="'
-                  + 'top:' +  getYOffset( i, numEntries ) + 'px;">';
+                  + 'top:' + getYOffset( i, numEntries ) + 'px;">';
 
             // create chart
             html += '<div class="text-by-frequency-left">';
             for (j=0; j<chartSize; j++) {
-                relativePercent = ( getPercentage( value, j, countKey ) / maxPercentage ) * 100;
-                visibility = (relativePercent > 0) ? '' : 'hidden';
+                // get the percent relative to the highest count in the tile
+                relativePercent = ( counts[j] / highestCount ) * 100;
+                // if percent === 0, hide bar
+                visibility = ( relativePercent > 0 ) ? '' : 'hidden';
+                // class percent in increments of 10
+                percentLabel = Math.round( relativePercent / 10 ) * 10;
+                // set minimum bar length
                 relativePercent = Math.max( relativePercent, 20 );
                 // create bar
-                html += '<div class="text-by-frequency-bar" style="'
-                      + 'visibility:'+visibility+';'
-                      + 'height:'+relativePercent+'%;'
-                      + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
-                      + 'top:'+(100-relativePercent)+'%;"></div>';
+                html += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
+                    + 'visibility:'+visibility+';'
+                    + 'height:'+relativePercent+'%;'
+                    + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
+                    + 'top:'+(100-relativePercent)+'%;"></div>';
             }
             html += '</div>';
 

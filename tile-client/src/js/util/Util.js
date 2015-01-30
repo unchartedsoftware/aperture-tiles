@@ -73,10 +73,8 @@
          * @param [events] {Array}                 Array of events to propagate through (optional).
          */
         enableEventPropagation: function( elem, events ) {
-
             var domElement = ( elem instanceof $ ) ? elem[0] : elem,
                 i;
-
             if ( !events ) {
                 domElement.addEventListener( 'mousedown', propagateEvent );
                 domElement.addEventListener( 'mouseup', propagateEvent );
@@ -86,7 +84,7 @@
                 domElement.addEventListener( 'click', propagateEvent );
                 domElement.addEventListener( 'dblclick', propagateEvent );
             } else {
-                events = ( events instanceof Array ) ? events : [events];
+                events = ( events instanceof Array ) ? events : [ events ];
                 for ( i=0; i<events.length; i++ ) {
                     domElement.addEventListener( events[i], propagateEvent );
                 }
@@ -100,7 +98,6 @@
          * @param [events] {Array}               Array of events to remove (optional).
          */
         disableEventPropagation: function( elem, events ) {
-
             var domElement = ( elem instanceof $ ) ? elem[0] : elem,
                 i;
             if ( !events ) {
@@ -112,7 +109,7 @@
                 domElement.removeEventListener( 'click', propagateEvent );
                 domElement.removeEventListener( 'dblclick', propagateEvent );
             } else {
-                events = ( events instanceof Array ) ? events : [events];
+                events = ( events instanceof Array ) ? events : [ events ];
                 for ( i=0; i<events.length; i++ ) {
                     domElement.removeEventListener( events[i], propagateEvent );
                 }

@@ -193,7 +193,6 @@
         this.renderer.theme = theme;
         setRampImageUrl( that );
         this.olLayer.redraw();
-        this.setZIndex( this.getZIndex() ); // update z index, since changing baselayer resets them
     };
 
     /**

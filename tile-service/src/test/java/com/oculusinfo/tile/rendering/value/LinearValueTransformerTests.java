@@ -22,38 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rendering.transformations.value;
+package com.oculusinfo.tile.rendering.value;
 
-public class Log10ValueTransformer implements ValueTransformer<Double> {
-	private final double _min;
-	private final double _max;
+import com.oculusinfo.tile.rendering.transformations.value.LinearValueTransformer;
+import org.junit.Assert;
+import org.junit.Test;
 
-	private final double _logMin;
-	private final double _oneOverLogRange;
+public class LinearValueTransformerTests {
+	private final static double EPS = 0.00001;
 
-	public Log10ValueTransformer(double minRange, double maxRange) {
-		_min = minRange;
-		_max = maxRange;
-
-
-		if (_min <= 0) {
-			throw new IllegalArgumentException("Log 10 transformer does not support ranges that include zero or negative numbers");
-		}
-
-		_logMin = Math.log10(minRange);
-		double logMax = Math.log10(maxRange);
-
-		_oneOverLogRange = 1 / (logMax - _logMin);
+	@Test
+	public void testGeneral () {
+		LinearValueTransformer t = new LinearValueTransformer(100,200);
+		Assert.assertEquals(0, t.transform(100.0), EPS);
+		Assert.assertEquals(0.5, t.transform(150.0), EPS);
+		Assert.assertEquals(1, t.transform(200.0), EPS);
 	}
 
-	@Override
-	public Double transform(Double value) {
-		// Out of range is clamped
-		return ( Math.log10( Math.max(Math.min(value, _max), _min)) - _logMin ) * _oneOverLogRange;
+	@Test
+	public void testOutOfBounds () {
+		LinearValueTransformer t = new LinearValueTransformer(100,200);
+		Assert.assertEquals(0, t.transform(90.0), EPS);
+		Assert.assertEquals(1, t.transform(5000.0), EPS);
 	}
 
-	@Override
-	public Double getMaximumValue () {
-		return _max;
+	@Test
+	public void testNegativeSpan () {
+		LinearValueTransformer t = new LinearValueTransformer(-10,20);
+		Assert.assertEquals(0, t.transform(-10.0), EPS);
+		Assert.assertEquals(0.5, t.transform(5.0), EPS);
+		Assert.assertEquals(1, t.transform(20.0), EPS);
 	}
 }

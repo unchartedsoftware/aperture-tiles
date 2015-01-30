@@ -55,17 +55,19 @@ import java.util.List;
  * 
  * @author  dgray
  */
-public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
+public class DoublesStatisticImageRenderer implements TileDataImageRenderer<Double> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesStatisticImageRenderer.class);
 	private static final Font   FONT   = new Font("Tahoma", Font.PLAIN, 13);
 
 
-
-	public static Class<Double> getRuntimeBinClass () {
+	@Override
+	public Class<Double> getAcceptedBinClass () {
 		return Double.class;
 	}
-	public static TypeDescriptor getRuntimeTypeDescriptor () {
-		return new TypeDescriptor(Double.class);
+
+	@Override
+	public TypeDescriptor getAcceptedTypeDescriptor() {
+		return new TypeDescriptor(getAcceptedBinClass());
 	}
 	
 
@@ -81,34 +83,18 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer {
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render(LayerConfiguration config) {
+	public BufferedImage render(TileData<Double> data, LayerConfiguration config) {
 		BufferedImage bi;
 		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-        String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
  		
 		try {
 			index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			TileSerializer<Double> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
-				     getRuntimeBinClass(),
-				     getRuntimeTypeDescriptor());
 
 			bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
 		
-			List<TileData<Double>> tileDatas = pyramidIO.readTiles(dataId,
-			                                                       serializer,
-			                                                       Collections.singleton(index));
-			
-			// Missing tiles are commonplace.  We don't want a big long error for that.
-			if (tileDatas.size() < 1) {
-				LOGGER.info("Missing tile " + index + " for layer " + layerId);
-				return null;
-			}
-
-			TileData<Double> data = tileDatas.get(0);
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
 			

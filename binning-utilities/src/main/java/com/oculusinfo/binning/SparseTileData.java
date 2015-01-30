@@ -108,6 +108,13 @@ public class SparseTileData<T> extends TileDataMetadataImpl<T> implements TileDa
     /** {@inheritDoc} */
     @Override
     public void setBin(int x, int y, T value) {
+        if (x < 0 || x >= _definition.getXBins()) {
+            throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+        }
+        if (y < 0 || y >= _definition.getYBins()) {
+            throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+        }
+
         if (!_data.containsKey(x)) _data.put(x, new HashMap<Integer, T>());
         _data.get(x).put(y, value);
     }
@@ -115,6 +122,13 @@ public class SparseTileData<T> extends TileDataMetadataImpl<T> implements TileDa
     /** {@inheritDoc} */
     @Override
     public T getBin(int x, int y) {
+        if (x < 0 || x >= _definition.getXBins()) {
+            throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+        }
+        if (y < 0 || y >= _definition.getYBins()) {
+            throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+        }
+
         if (_data.containsKey(x)) {
             Map<Integer, T> xMap = _data.get(x);
             if (xMap.containsKey(y)) {
