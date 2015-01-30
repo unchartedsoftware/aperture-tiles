@@ -64,13 +64,15 @@ object TileOperations {
    */
   def registerOperations(tilePipeline: TilePipelines) = {
     // Register basic pipeline operations
-    tilePipeline.registerPipelineOp("json_load", parseLoadCsvDataOp)
-    tilePipeline.registerPipelineOp("csv_load", parseLoadJsonDataOp)
+    tilePipeline.registerPipelineOp("csv_load", parseLoadCsvDataOp)
+    tilePipeline.registerPipelineOp("json_load", parseLoadJsonDataOp)
     tilePipeline.registerPipelineOp("cache", parseCacheDataOp)
     tilePipeline.registerPipelineOp("date_filter", parseDateFilterOp)
     tilePipeline.registerPipelineOp("integral_range_filter", parseIntegralRangeFilterOp)
     tilePipeline.registerPipelineOp("fractional_range_filter", parseFractionalRangeFilterOp)
     tilePipeline.registerPipelineOp("regex_filter", parseRegexFilterOp)
+    tilePipeline.registerPipelineOp("file_heatmap_tiling", parseFileHeatmapOp)
+    tilePipeline.registerPipelineOp("hbase_heatmap_tiling", parseHbaseHeatmapOp)
   }
 
   /**
@@ -144,7 +146,9 @@ object TileOperations {
    * Pipeline op to cache data
    */
   def cacheDataOp()(input: PipelineData) = {
-    PipelineData(input.sqlContext, input.srdd.cache())
+    input.srdd.registerTempTable("cached_table")
+    input.sqlContext.cacheTable("cached_table")
+    PipelineData(input.sqlContext, input.srdd, Some("cached_table"))
   }
 
   /**
@@ -162,11 +166,13 @@ object TileOperations {
   /**
    * A generalized n-dimensional range filter operation for integral types.
    */
-  def integralRangeFilterOp(min: Seq[Long], max: Seq[Long], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
+  def integralRangeFilterOp[T: Ordering](min: Seq[T], max: Seq[T], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
+    val ordering = implicitly [Ordering[T]]
     val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
     val result = input.srdd.filter { row =>
-      val data = extractors.map(_(row).asInstanceOf[Number].longValue)
-      val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
+      val exr = extractors.map(_(row))
+      val data = extractors.map(_(row).asInstanceOf[T])
+      val inRange = data.zip(min).forall(x => ordering.gteq(x._1, x._2)) && data.zip(max).forall(x => ordering.lteq(x._1, x._2))
       if (exclude) !inRange else inRange
     }
     PipelineData(input.sqlContext, result)
