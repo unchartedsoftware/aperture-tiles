@@ -34,11 +34,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 
 
@@ -77,7 +78,7 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 
 
 			TileIndex tileIndex = new TileIndex(level, x, y, xBins, yBins);
-			TileData<T> tile = new TileData<T>( tileIndex, values);
+			TileData<T> tile = new DenseTileData<T>( tileIndex, values);
 			
 			if (json.has("meta")) {
 				JSONObject metaData = json.getJSONObject("meta");
@@ -127,12 +128,16 @@ public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {
 			jsonEntry.put("yBinCount", tileIndex.getYBins() );
 			
 			JSONArray bins = new JSONArray();
-			for (T value: tile.getData()) {
-				
-				if (value == null) {
-					bins.put( new JSONObject() );
-				} else {
-					bins.put( translateToJSON(value) );
+			int xBins = tile.getDefinition().getXBins();
+			int yBins = tile.getDefinition().getYBins();
+			for (int y = 0; y < yBins; ++y) {
+				for (int x = 0; x < xBins; ++x) {
+					T value = tile.getBin(x, y);
+					if (value == null) {
+						bins.put( new JSONObject() );
+					} else {
+						bins.put( translateToJSON(value) );
+					}
 				}				
 			}
 			

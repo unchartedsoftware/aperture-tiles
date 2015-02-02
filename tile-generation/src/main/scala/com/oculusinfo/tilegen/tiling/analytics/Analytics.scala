@@ -182,9 +182,7 @@ class ComposedTileAnalytic[T1, T2]
  * 
  * @param analytic An analytic defining an aggregation function to be used to 
  *                 accumulate values
- * @param filter A filter to be used with this accumulator to define in which 
- *               tiles it is insterested
- * 
+ *
  * @tparam T The type of value to be accumulated
  */
 class AnalyticAccumulatorParam[T] (analytic: Analytic[T]) extends AccumulatorParam[T] {
@@ -196,26 +194,6 @@ class AnalyticAccumulatorParam[T] (analytic: Analytic[T]) extends AccumulatorPar
 
 
 
-/**
- * An AnalysisDescription describes an analysis that needs to be executed 
- * during the tiling process.  Both tile and data analytics use this class
- * as their basic description.
- * 
- * There are three main parts to an analysis description:
- * <ol>
- * <li>The conversion function, convert, which extracts the needed values for 
- * analysis from the raw data</li>
- * <li>The analytic, which describes how analytic values are treated</li>
- * <li>Accumulator-related methods, which describe how analyses are aggregated
- * across the data set.</li>
- * </ol>
- * 
- * @tparam RT The raw type of data on which this analysis takes place
- * @tparam AT The type of data collected by this analysis, to be aggregated and
- *            stored.  In an AnalyticDescription, the result of analyzing a 
- *            single record of type RT is a single record of type AT, and this 
- *            analysis is captured by the convert method.
- */
 object AnalysisDescription {
 	def getStandardLevelMetadataMap (name: String, min: Int, max: Int):
 			Map[String, TileIndex => Boolean] =
@@ -229,6 +207,26 @@ object AnalysisDescription {
 			Map[String, TileIndex => Boolean] =
 		Map("global."+name -> ((t: TileIndex) => true))
 }
+/**
+ * An AnalysisDescription describes an analysis that needs to be executed
+ * during the tiling process.  Both tile and data analytics use this class
+ * as their basic description.
+ *
+ * There are three main parts to an analysis description:
+ * <ol>
+ * <li>The conversion function, convert, which extracts the needed values for
+ * analysis from the raw data</li>
+ * <li>The analytic, which describes how analytic values are treated</li>
+ * <li>Accumulator-related methods, which describe how analyses are aggregated
+ * across the data set.</li>
+ * </ol>
+ *
+ * @tparam RT The raw type of data on which this analysis takes place
+ * @tparam AT The type of data collected by this analysis, to be aggregated and
+ *            stored.  In an AnalyticDescription, the result of analyzing a
+ *            single record of type RT is a single record of type AT, and this
+ *            analysis is captured by the convert method.
+ */
 trait AnalysisDescription[RT, AT] extends Serializable {
 	val analysisTypeTag: ClassTag[AT]
 	def convert: RT => AT

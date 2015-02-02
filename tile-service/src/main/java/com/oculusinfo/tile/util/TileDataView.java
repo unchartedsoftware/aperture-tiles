@@ -26,6 +26,7 @@ package com.oculusinfo.tile.util;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -36,7 +37,7 @@ import java.util.List;
  *
  * @author robharper
  */
-public class TileDataView<T> extends TileData<T> {
+public class TileDataView<T> implements TileData<T> {
 
     /**
      * Factory method that creates a TileDataView given a source tile and a target tile index which must be contained
@@ -80,15 +81,20 @@ public class TileDataView<T> extends TileData<T> {
 
 
     private final TileData<T> _source;
-    private final int _xOffset;
-    private final int _yOffset;
+    private final TileIndex   _index;
+    private final int         _xOffset;
+    private final int         _yOffset;
 
     private TileDataView(TileData<T> source, TileIndex index, int xOffset, int yOffset) {
-        super(index);
-
         _source = source;
+        _index = index;
         _xOffset = xOffset;
         _yOffset = yOffset;
+    }
+
+    @Override
+    public TileIndex getDefinition() {
+        return _index;
     }
 
     @Override
@@ -103,11 +109,6 @@ public class TileDataView<T> extends TileData<T> {
     }
 
     @Override
-    public List<T> getData() {
-        throw new UnsupportedOperationException("Getting all data from a TileDataView not yet supported");
-    }
-
-    @Override
     public void setBin(int x, int y, T value) {
         if (x < 0 || x >= getDefinition().getXBins()) {
             throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
@@ -116,5 +117,22 @@ public class TileDataView<T> extends TileData<T> {
             throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
         }
         _source.setBin(x + _xOffset, y + _yOffset, value);
+    }
+
+    @Override
+    public Collection<String> getMetaDataProperties () {
+        return _source.getMetaDataProperties();
+    }
+
+    @Override
+    public String getMetaData (String property) {
+        return _source.getMetaData(property);
+    }
+
+    @Override
+    public void setMetaData (String property, Object value) {
+        // We don't allow this because anyone trying wouldn't have a complete view of the tile into which
+        // the metadata would be set.
+        throw new UnsupportedOperationException("Cannot set metadata on a view into another tile");
     }
 }

@@ -26,8 +26,6 @@ package com.oculusinfo.tilegen.datasets
 
 
 
-import java.lang.{Double => JavaDouble}
-import java.lang.{Float => JavaFloat}
 import java.io.File
 import java.io.FileWriter
 import java.util.Properties
@@ -40,9 +38,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.apache.spark.SparkContext
 import org.apache.spark.SharedSparkContext
 
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.binning.{TileData, TileIndex}
 import com.oculusinfo.tilegen.binning.OnDemandBinningPyramidIO
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 import com.oculusinfo.tilegen.tiling.analytics.MonolithicAnalysisDescription
@@ -51,7 +47,7 @@ import com.oculusinfo.tilegen.tiling.analytics.NumericMinTileAnalytic
 
 
 
-class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
 	val pyramidId: String = "test"
 	var dataFile: File = null
 	var pyramidIo: OnDemandBinningPyramidIO = null
@@ -126,30 +122,30 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		val i600=new TileIndex(6, 0, 0, 4, 4)
 		val tile600: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i600).asJava).get(0)
 		assert(tile600.getDefinition === i600)
-		assert(tile600.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](3.0, 4.0, 5.0, 6.0,
-			                    2.0, 3.0, 4.0, 5.0,
-			                    1.0, 2.0, 3.0, 4.0,
-			                    0.0, 1.0, 2.0, 3.0))
+		assertTileContents(List[Double](3.0, 4.0, 5.0, 6.0,
+			                            2.0, 3.0, 4.0, 5.0,
+			                            1.0, 2.0, 3.0, 4.0,
+			                            0.0, 1.0, 2.0, 3.0),
+		                   tile600)
 
 		// Now test one and two levels up to make sure that averaging works properly
 		val i500 = new TileIndex(5, 0, 0, 4, 4)
 		val tile500: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i500).asJava).get(0)
 		assert(tile500.getDefinition === i500)
-		assert(tile500.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double]( 7.0,  9.0, 11.0, 13.0,
-			                     5.0,  7.0,  9.0, 11.0,
-			                     3.0,  5.0,  7.0,  9.0,
-			                     1.0,  3.0,  5.0,  7.0))
+		assertTileContents(List[Double]( 7.0,  9.0, 11.0, 13.0,
+			                             5.0,  7.0,  9.0, 11.0,
+			                             3.0,  5.0,  7.0,  9.0,
+			                             1.0,  3.0,  5.0,  7.0),
+		                   tile500)
 
 		val i400 = new TileIndex(4, 0, 0, 4, 4)
 		val tile400: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i400).asJava).get(0)
 		assert(tile400.getDefinition === i400)
-		assert(tile400.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](15.0, 19.0, 23.0, 27.0,
-			                    11.0, 15.0, 19.0, 23.0,
-			                    7.0, 11.0, 15.0, 19.0,
-			                    3.0,  7.0, 11.0, 15.0))
+		assertTileContents(List[Double](15.0, 19.0, 23.0, 27.0,
+			                            11.0, 15.0, 19.0, 23.0,
+			                             7.0, 11.0, 15.0, 19.0,
+			                             3.0,  7.0, 11.0, 15.0),
+		                   tile400)
 
 	}
 
