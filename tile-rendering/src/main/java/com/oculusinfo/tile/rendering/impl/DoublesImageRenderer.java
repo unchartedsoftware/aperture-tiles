@@ -95,8 +95,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
-			double scaledMax = rangeMax/100;
-			double scaledMin = rangeMin/100;
+			double scaledMax = (double)rangeMax/100;
+			double scaledMin = (double)rangeMin/100;
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 

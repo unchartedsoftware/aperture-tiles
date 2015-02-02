@@ -109,8 +109,8 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             ValueTransformer<Double> t = config.produce(ValueTransformer.class);
             int[] rgbArray = new int[outputWidth*outputHeight];
 
-            double scaledMax = rangeMax/100;
-            double scaledMin = rangeMin/100;
+            double scaledMax = (double)rangeMax/100;
+            double scaledMin = (double)rangeMin/100;
             double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
 
             @SuppressWarnings("unchecked")
