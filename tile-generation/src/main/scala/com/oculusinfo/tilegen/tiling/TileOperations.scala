@@ -24,18 +24,13 @@
  */
 package com.oculusinfo.tilegen.tiling
 
-import java.lang.{Double => JavaDouble}
-import java.lang.{Long => JavaLong}
+import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
 
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
-import com.oculusinfo.tilegen.tiling.analytics.{
-  AnalysisDescriptionTileWrapper,
-  ComposedTileAnalytic,
-  NumericMaxTileAnalytic,
-  NumericMinTileAnalytic}
+import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescriptionTileWrapper, ComposedTileAnalytic, NumericMaxTileAnalytic, NumericMinTileAnalytic}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 
@@ -50,7 +45,7 @@ import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 object TileOperations {
   import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 
-  import scala.collection.JavaConversions._
+import scala.collection.JavaConversions._
 
   /**
    * KeyValueArgumentSource implementation that simply passes the supplied map through.
@@ -164,15 +159,13 @@ object TileOperations {
   }
 
   /**
-   * A generalized n-dimensional range filter operation for integral types.
-   */
-  def integralRangeFilterOp[T: Ordering](min: Seq[T], max: Seq[T], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
-    val ordering = implicitly [Ordering[T]]
+  * A generalized n-dimensional range filter operation for integral types.
+  */
+  def integralRangeFilterOp(min: Seq[Long], max: Seq[Long], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
     val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
     val result = input.srdd.filter { row =>
-      val exr = extractors.map(_(row))
-      val data = extractors.map(_(row).asInstanceOf[T])
-      val inRange = data.zip(min).forall(x => ordering.gteq(x._1, x._2)) && data.zip(max).forall(x => ordering.lteq(x._1, x._2))
+      val data = extractors.map(_(row).asInstanceOf[Number].longValue)
+      val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
       if (exclude) !inRange else inRange
     }
     PipelineData(input.sqlContext, result)
