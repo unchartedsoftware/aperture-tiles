@@ -295,7 +295,7 @@ import scala.collection.JavaConversions._
                 yColSpec: String,
                 tilingParms: TilingTaskParameters)
                (input: PipelineData) = {
-    val tileIO = new LocalTileIO(".avro")
+    val tileIO = new LocalTileIO("avro")
     heatMapOpImpl(xColSpec, yColSpec, tilingParms, tileIO)(input)
   }
 
