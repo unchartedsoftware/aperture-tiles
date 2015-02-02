@@ -24,18 +24,13 @@
  */
 package com.oculusinfo.binning.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 
 /**
@@ -432,6 +427,20 @@ public class JsonUtilities {
         }
 
         return json;
+    }
+
+    /**
+     * Transform a string -> string map into a json object, nesting levels
+     * based on a period.
+     *
+     * @param map The string -> string map to translate
+     *
+     * @return The same data, as a JSON object
+     */
+    public static JSONObject mapToJSON (Map<String, String> map) {
+        Properties properties = new Properties();
+        properties.putAll(map);
+        return propertiesObjToJSON(properties);
     }
 
     private static void addKey (JSONObject json, String key, String value) throws JSONException {
