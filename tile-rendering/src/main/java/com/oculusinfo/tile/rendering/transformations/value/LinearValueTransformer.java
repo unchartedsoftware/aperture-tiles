@@ -28,14 +28,14 @@ public class LinearValueTransformer implements ValueTransformer<Double> {
 	private final double _min;
 	private final double _max;
 	private final double _range;
-	
+
 	public LinearValueTransformer(double minRange, double maxRange) {
 		_min = Math.min(minRange, maxRange);
 		_max = Math.max(minRange, maxRange);
 
 		_range = _max - _min;
 	}
-	
+
 	@Override
 	public Double transform(Double value) {
 		return (Math.max(Math.min(value, _max), _min) - _min) / _range;
