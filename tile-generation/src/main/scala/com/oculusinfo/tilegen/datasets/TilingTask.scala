@@ -204,6 +204,9 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the number of partitions to use when reducing data to tiles */
 	def getConsolidationPartitions = config.consolidationPartitions
 
+	/** Get the type of tile storage to create when this task creates tiles */
+	def getTileType = config.tileType
+
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
 

@@ -423,8 +423,7 @@ public class JsonUtilities {
     public static JSONObject propertiesObjToJSON (Properties properties) {
         JSONObject json = new JSONObject();
 
-        for (Object keyObj: properties.keySet()) {
-            String key = keyObj.toString();
+        for (String key: properties.stringPropertyNames()) {
             try {
                 addKey(json, key, properties.getProperty(key));
             } catch (JSONException e) {

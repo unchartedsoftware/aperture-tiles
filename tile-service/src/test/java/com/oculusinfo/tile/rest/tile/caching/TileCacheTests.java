@@ -25,6 +25,7 @@ package com.oculusinfo.tile.rest.tile.caching;
 
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
 import org.junit.After;
@@ -88,7 +89,7 @@ public class TileCacheTests {
 
 		int i;
 		for (i=0; i<_N; ++i) {
-			TileData<Integer> data = new TileData<Integer>(_indices[i], i);
+			TileData<Integer> data = new DenseTileData<Integer>(_indices[i], i);
 
 			// provide and listen to each tile
 			checkRequest(_indices[i], true);
@@ -135,7 +136,7 @@ public class TileCacheTests {
 	public void testUnrequestedCacheRemoval () {
 		int i;
 		for (i=0; i<_N; ++i) {
-			TileData<Integer> data = new TileData<Integer>(_indices[i], i);
+			TileData<Integer> data = new DenseTileData<Integer>(_indices[i], i);
 
 			// provide and listen to each tile
 			checkRequest(_indices[i], true);
@@ -157,7 +158,7 @@ public class TileCacheTests {
 	public void testUnrequestedCacheRemovalTimeout () throws InterruptedException {
 		int i;
 		for (i=0; i<_N; ++i) {
-			TileData<Integer> data = new TileData<Integer>(_indices[i], i);
+			TileData<Integer> data = new DenseTileData<Integer>(_indices[i], i);
 
 			// provide and listen to each tile
 			checkRequest(_indices[i], true);

@@ -26,6 +26,7 @@
 package com.oculusinfo.tile.util;
 
 
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import org.junit.Assert;
@@ -36,7 +37,7 @@ import java.util.Arrays;
 
 public class TileDataViewTests {
 
-	private static TileData<Integer> source16 = new TileData<>(new TileIndex(0, 0, 0, 4, 4), Arrays.asList(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15));
+	private static TileData<Integer> source16 = new DenseTileData<>(new TileIndex(0, 0, 0, 4, 4), Arrays.asList(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15));
 
 	@Test
 	public void testSimple () {
@@ -67,13 +68,13 @@ public class TileDataViewTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadRelativeLevel() {
-		TileData<Integer> source = new TileData<>(new TileIndex(3, 0, 0));
+		TileData<Integer> source = new DenseTileData<>(new TileIndex(3, 0, 0));
 		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source, new TileIndex(2, 1, 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadRelativeIndex () {
-		TileData<Integer> source = new TileData<>(new TileIndex(1, 0, 0));
+		TileData<Integer> source = new DenseTileData<>(new TileIndex(1, 0, 0));
 		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source, new TileIndex(2, 2, 1));
 	}
 

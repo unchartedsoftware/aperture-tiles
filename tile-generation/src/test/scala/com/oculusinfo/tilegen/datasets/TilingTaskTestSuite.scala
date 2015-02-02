@@ -26,17 +26,9 @@ package com.oculusinfo.tilegen.datasets
 
 
 
-import java.lang.{Double => JavaDouble}
-import java.io.{FileWriter, File}
 import java.util.Properties
 
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import org.apache.spark.sql.{SQLContext, SchemaRDD}
+import org.apache.spark.sql.SchemaRDD
 
 import scala.collection.JavaConverters._
 
@@ -47,13 +39,11 @@ import org.apache.spark.{SparkContext, SharedSparkContext}
 import com.oculusinfo.binning.{TileData, TileIndex}
 import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 
-import scala.reflect.ClassTag
-
 
 /**
  * Basic tests for the TilingTask object
  */
-class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll {
+class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
 	val pyramidId = "unknown.x.y.count"
 	var data: SchemaRDD = null
 	var task: TilingTask[_, _, _, _] = null
@@ -111,9 +101,9 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 			                    List(new TileIndex(0, 0, 0, 2, 2)).asJava).get(0)
 		assert(tile000.getDefinition.getXBins() === 2)
 		assert(tile000.getDefinition.getYBins() === 2)
-		assert(tile000.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](4.0, 0.0,
-			                    0.0, 3.0))
+		assertTileContents(List[Double](4.0, 0.0,
+		                                0.0, 3.0),
+		                   tile000)
 
 		val tile100: Seq[TileData[_]] =
 			pyramidIo.readTiles(pyramidId, null,
@@ -125,18 +115,18 @@ class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAn
 			                    List(new TileIndex(1, 1, 0, 2, 2)).asJava).get(0)
 		assert(tile110.getDefinition.getXBins() === 2)
 		assert(tile110.getDefinition.getYBins() === 2)
-		assert(tile110.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](2.0, 0.0,
-			                    0.0, 1.0))
+		assertTileContents(List[Double](2.0, 0.0,
+		                                0.0, 1.0),
+		                   tile110)
 
 		val tile101: TileData[_] =
 			pyramidIo.readTiles(pyramidId, null,
 			                    List(new TileIndex(1, 0, 1, 2, 2)).asJava).get(0)
 		assert(tile101.getDefinition.getXBins() === 2)
 		assert(tile101.getDefinition.getYBins() === 2)
-		assert(tile101.getData.asScala.map(_.toString.toDouble) ===
-			       List[Double](2.0, 0.0,
-			                    0.0, 2.0))
+		assertTileContents(List[Double](2.0, 0.0,
+		                                0.0, 2.0),
+		                   tile101)
 
 		val tile111: Seq[TileData[_]] =
 			pyramidIo.readTiles(pyramidId, null,

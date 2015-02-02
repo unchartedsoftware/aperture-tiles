@@ -40,9 +40,7 @@ import org.scalatest.FunSuite
 import org.apache.spark.SharedSparkContext
 import org.apache.spark.rdd.RDD
 
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.{SparseTileData, BinIndex, TileData, TileIndex}
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -144,11 +142,9 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 256, 256))
 		assert(tile11.isEmpty)
-		
-		val data00 = tile00.get.getData.asScala
-		val data10 = tile10.get.getData.asScala
-		val base = 14 * 256
-		for (i <- (base until (base + 256))) assert(data00(i) == 1.0 && data10(i) == 1.0)
+
+		assert(tile00.get.isInstanceOf[SparseTileData[_]])
+		for (x <- 0 to 255) assert(tile00.get.getBin(x, 14) == 1.0 && tile10.get.getBin(x, 14) == 1.0)
 	}
 	
 	
@@ -171,13 +167,14 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
 		assert(tile11.isEmpty)
-		
-		val data00 = tile00.get.getData.asScala.map(_.toString.toDouble)
-		val data10 = tile10.get.getData.asScala.map(_.toString.toDouble)
-		
-		val base = 14 * 256
-		for (i <- (base + 1 until (base + 256))) assert(data00(i) < data00(i-1))
-		for (i <- (base + 1 until (base + 256))) assert(data10(i) > data10(i-1))
+
+		assert(tile00.get.isInstanceOf[SparseTileData[_]])
+		assert(tile10.get.isInstanceOf[SparseTileData[_]])
+
+		for (x <- 1 to 255) {
+			assert(tile00.get.getBin(x, 14).toString.toDouble < tile00.get.getBin(x-1, 14).toString.toDouble)
+			assert(tile10.get.getBin(x, 14).toString.toDouble > tile10.get.getBin(x-1, 14).toString.toDouble)
+		}
 	}
 	
 	
@@ -231,6 +228,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			dataAnalytics,
 			new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
 			pyramid,
+			None,
 			None,
 			pyramidId,
 			tileIO,

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oculusinfo.binning.DenseTileData;
 import junit.framework.Assert;
 
 import org.apache.avro.file.CodecFactory;
@@ -75,7 +76,7 @@ public class HBaseAvroPyramidIOTest {
 		ArrayList<TileData<Integer>> writeTiles = new ArrayList<TileData<Integer>>();
 
 		TileIndex index = new TileIndex(4, 3, 2);
-		TileData<Integer> tile = new TileData<Integer>(index);
+		TileData<Integer> tile = new DenseTileData<Integer>(index);
 		for (int x=0; x<256; ++x) {
 			for (int y=0; y<256; ++y) {
 				tile.setBin(x, y, x+256*y);
@@ -89,19 +90,16 @@ public class HBaseAvroPyramidIOTest {
 		for (int i=0; i<writeTiles.size(); i++){
 			TileData<Integer> writeTile = writeTiles.get(i);
 			TileIndex writeTileDef = writeTile.getDefinition();
-			List<Integer> writeTileData = writeTile.getData();
 
 			TileData<Integer> readTile = readTiles.get(i);
 			TileIndex readTileDef = readTile.getDefinition();
-			List<Integer> readTileData = readTile.getData();
-
-			Assert.assertEquals(readTileData.size(), writeTileData.size());
-
-			for (int j=0; j<readTileData.size(); j++){
-				Assert.assertEquals(readTileData.get(j), writeTileData.get(j));
-			}
 
 			Assert.assertEquals(writeTileDef, readTileDef);
+			for (int x = 0; x < writeTileDef.getXBins(); ++x) {
+				for (int y = 0; y < writeTileDef.getYBins(); ++y) {
+					Assert.assertEquals(writeTile.getBin(x, y), readTile.getBin(x, y));
+				}
+			}
 		}
 	}
 }

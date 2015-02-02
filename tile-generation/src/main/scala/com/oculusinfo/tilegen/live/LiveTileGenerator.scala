@@ -26,20 +26,13 @@
 package com.oculusinfo.tilegen.live
 
 
-
-import java.awt.geom.Point2D
+import com.oculusinfo.binning.{TileIndex, DenseTileData, TileData, TilePyramid}
 
 import scala.reflect.ClassTag
 
-import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.BinIterator
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.TileData
 
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
@@ -69,7 +62,7 @@ class LiveTileGenerator[PT: ClassTag,
 			}
 		).reduceByKey(localBinAnalytic.aggregate(_, _)).collect()
 
-		val tile = new TileData[BT](targetTile)
+		val tile = new DenseTileData[BT](targetTile)
 		val defaultBinValue = localBinAnalytic.finish(localBinAnalytic.defaultProcessedValue)
 		for (x <- 0 until numXBins) {
 			for (y <- 0 until numYBins) {

@@ -222,7 +222,8 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						                                             task.getTileAnalytics,
 						                                             task.getDataAnalytics,
 						                                             spreaderFcn,
-						                                             consolidationPartitions)
+						                                             consolidationPartitions,
+						                                             task.getTileType)
 					}
 				).collect
 

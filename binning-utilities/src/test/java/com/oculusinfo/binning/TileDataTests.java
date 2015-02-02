@@ -37,7 +37,7 @@ import java.util.List;
 public class TileDataTests {
 	private TileData<Double> createRandomTile () {
 		TileIndex index = new TileIndex(0, 0, 0);
-		TileData<Double> datum = new TileData<>(index);
+		TileData<Double> datum = new DenseTileData<>(index);
 		for (int x=0; x<index.getXBins(); ++x) {
 			for (int y=0; y<index.getYBins(); ++y) {
 				datum.setBin(x, y, Math.random());
@@ -46,13 +46,15 @@ public class TileDataTests {
 		return datum;
 	}
 	private TileData<Double> addTiles (TileData<Double> a, TileData<Double> b) {
-		List<Double> da = a.getData();
-		List<Double> db = b.getData();
+		int xBins = a.getDefinition().getXBins();
+		int yBins = a.getDefinition().getYBins();
 		List<Double> dc = new ArrayList<>();
-		for (int n=0; n<da.size(); ++n) {
-			dc.add(da.get(n)+db.get(n));
+		for (int y = 0; y < yBins; ++y) {
+			for (int x = 0; x < xBins; ++x) {
+				dc.add(a.getBin(x, y) + b.getBin(x, y));
+			}
 		}
-		return new TileData<Double>(a.getDefinition(), dc);
+		return new DenseTileData<Double>(a.getDefinition(), dc);
 	}
 
 	@Test

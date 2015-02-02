@@ -36,9 +36,9 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
-import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.DenseTileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.DenseTileData
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.ipArrayToString
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.longToIPArray
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
@@ -121,7 +121,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	}
 
 	test("Minimum Double Analytic ignores NaN") {
-		val sampleTile = new TileData[JavaDouble](new TileIndex(0, 0, 0, 4, 4), JavaDouble.NaN)
+		val sampleTile = new DenseTileData[JavaDouble](new TileIndex(0, 0, 0, 4, 4), JavaDouble.NaN)
 		sampleTile.setBin(0, 0, 1.0)
 		sampleTile.setBin(1, 1, 2.0)
 		sampleTile.setBin(2, 2, 3.0)
@@ -161,7 +161,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	}
 
 	test("Maximum Double Analytic ignores NaN") {
-		val sampleTile = new TileData[JavaDouble](new TileIndex(0, 0, 0, 4, 4), JavaDouble.NaN)
+		val sampleTile = new DenseTileData[JavaDouble](new TileIndex(0, 0, 0, 4, 4), JavaDouble.NaN)
 		sampleTile.setBin(0, 0, 1.0)
 		sampleTile.setBin(1, 1, 2.0)
 		sampleTile.setBin(2, 2, 3.0)

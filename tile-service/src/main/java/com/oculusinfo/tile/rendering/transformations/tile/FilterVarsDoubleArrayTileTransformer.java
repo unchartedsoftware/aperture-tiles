@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 
+import com.oculusinfo.binning.TileIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -128,21 +130,21 @@ public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<
         if (_variables == null) {
             resultTile = null;
         } else {
-            List<List<T>> rawData = inputData.getData();
-            List<List<T>> transformedData = new ArrayList<>(rawData.size());
+			TileIndex index = inputData.getDefinition();
+			List<List<T>> rawData = DenseTileData.getData(inputData);
+			List<List<T>> transformedData = new ArrayList<>(index.getXBins()*index.getYBins());
+			for (List<T> rawEntry: rawData) {
+				int size = rawEntry.size();
+				List<T> transformedEntry = new ArrayList<>(_variables.size());
 
-            for (List<T> rawEntry: rawData) {
-                int size = rawEntry.size();
-                List<T> transformedEntry = new ArrayList<>(_variables.size());
+				for (int varIndex : _variables) {
+					if (varIndex < size)
+						transformedEntry.add(rawEntry.get(varIndex));
+				}
+				transformedData.add(transformedEntry);
+			}
 
-                for ( int varIndex : _variables ) {
-                    if (varIndex < size)
-                        transformedEntry.add( rawEntry.get(varIndex) );
-                }
-                transformedData.add(transformedEntry);
-            }
-
-            resultTile = new TileData<>(inputData.getDefinition(), transformedData);
+            resultTile = new DenseTileData<>(inputData.getDefinition(), transformedData);
         }
 
         return resultTile;

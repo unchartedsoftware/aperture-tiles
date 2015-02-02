@@ -35,6 +35,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import com.google.common.primitives.Doubles;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -65,7 +66,7 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 		try {
 			double[] data = (double[]) ois.readObject();
 			List<Double> d = Doubles.asList(data);
-			TileData<Double> tileData = new TileData<Double>(index, d);
+			TileData<Double> tileData = new DenseTileData<Double>(index, d);
 			return tileData;			
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -81,7 +82,7 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 		zip.putNextEntry(new ZipEntry("tile.data"));
 
 		ObjectOutputStream oos = new ObjectOutputStream(zip);
-		double[] array = Doubles.toArray(data.getData());
+		double[] array = getTileData(data);
 		oos.writeObject(array);
 		oos.flush();
 
@@ -89,4 +90,13 @@ public class BackwardCompatibilitySerializer implements TileSerializer<Double>{
 		zip.close();
 	}
 
+	private double[] getTileData (TileData<Double> tile) {
+		List<Double> data = DenseTileData.getData(tile);
+
+		double[] result = new double[data.size()];
+		for (int i=0; i<data.size(); ++i) {
+			result[i] = ((Number) data.get(i)).doubleValue();
+		}
+		return result;
+	}
 }

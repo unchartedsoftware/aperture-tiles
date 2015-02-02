@@ -1,5 +1,5 @@
 {
-  "name" : "tile",
+  "name" : "denseTile",
   "namespace" : "ar.avro",
   "type" : "record",
   "fields" : 

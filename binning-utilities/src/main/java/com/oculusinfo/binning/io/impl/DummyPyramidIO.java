@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
@@ -98,7 +99,7 @@ public class DummyPyramidIO implements PyramidIO {
         List<TileData<T>> results = new ArrayList<>();
         for (TileIndex rawIndex: tiles) {
             TileIndex index = new TileIndex(rawIndex.getLevel(), rawIndex.getX(), rawIndex.getY(), 1, 1);
-            TileData<T> tile = new TileData<>(index);
+            TileData<T> tile = new DenseTileData<>(index);
             results.add(tile);
         }
 
@@ -111,7 +112,7 @@ public class DummyPyramidIO implements PyramidIO {
                                           TileIndex rawIndex) throws IOException {
         TileIndex index = new TileIndex(rawIndex.getLevel(), rawIndex.getX(), rawIndex.getY(), 1, 1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        serializer.serialize(new TileData<T>(index), baos);
+        serializer.serialize(new DenseTileData<T>(index), baos);
 
         return new ByteArrayInputStream(baos.toByteArray());
     }
