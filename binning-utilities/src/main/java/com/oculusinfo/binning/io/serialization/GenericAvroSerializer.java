@@ -89,22 +89,22 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	abstract protected String getRecordSchemaFile ();
 	abstract protected T getValue (GenericRecord bin);
 	abstract protected void setValue (GenericRecord bin, T value) throws IOException ;
-    
+
 	public String getFileExtension(){
 		return "avro";
 	}
-    
+
 	protected Schema getRecordSchema () throws IOException {
 		if (_recordSchema == null) {
 			_recordSchema = createRecordSchema();
 		}
 		return _recordSchema;
 	}
-	
+
 	protected Schema createRecordSchema() throws IOException {
 		return new AvroSchemaComposer().addResource(getRecordSchemaFile()).resolved();
 	}
-	
+
 	protected Schema getTileSchema (StorageType storage) throws IOException {
 		if (!_tileSchema.containsKey(storage)) {
 			_tileSchema.put(storage, createTileSchema(storage));
@@ -176,6 +176,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 				int i = 0;
 				for (GenericRecord bin : bins) {
 					data.add(getValue(bin));
+					++i;
 					if (i >= xBins * yBins) break;
 				}
 
@@ -292,7 +293,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		writeRecord(tileRecord, tileSchema, stream);
 	}
 
-	private void writeRecord (GenericRecord record, Schema schema, OutputStream stream) throws IOException {
+	protected void writeRecord (GenericRecord record, Schema schema, OutputStream stream) throws IOException {
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
