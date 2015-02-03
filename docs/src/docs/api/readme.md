@@ -2,7 +2,7 @@
 section: Docs
 subtitle: API
 chapter: Overview
-permalink: docs/api/index.html
+permalink: docs/api/
 layout: submenu
 ---
 

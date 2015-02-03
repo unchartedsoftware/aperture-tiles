@@ -1,7 +1,7 @@
 ---
 section: Tour
 subtitle: Process
-permalink: tour/process/index.html
+permalink: tour/process/
 layout: submenu
 ---
 

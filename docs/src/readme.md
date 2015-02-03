@@ -1,6 +1,6 @@
 ---
 section: Home
-permalink: index.html
+permalink: /
 layout: section
 ---
 

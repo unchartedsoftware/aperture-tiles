@@ -2,7 +2,7 @@
 section: Docs
 subtitle: Development
 chapter: Generation
-permalink: docs/development/generation/index.html
+permalink: docs/development/generation/
 layout: submenu
 ---
 

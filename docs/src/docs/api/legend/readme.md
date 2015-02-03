@@ -2,7 +2,7 @@
 section: Docs
 subtitle: API
 chapter: Legend
-permalink: docs/api/legend/index.html
+permalink: docs/api/legend/
 layout: submenu
 ---
 

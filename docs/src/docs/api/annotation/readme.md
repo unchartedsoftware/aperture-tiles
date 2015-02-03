@@ -2,7 +2,7 @@
 section: Docs
 subtitle: API
 chapter: Annotation
-permalink: docs/api/annotation/index.html
+permalink: docs/api/annotation/
 layout: submenu
 ---
 

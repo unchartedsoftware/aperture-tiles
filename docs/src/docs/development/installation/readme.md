@@ -2,7 +2,7 @@
 section: Docs
 subtitle: Development
 chapter: Installation
-permalink: docs/development/installation/index.html
+permalink: docs/development/installation/
 layout: submenu
 ---
 

@@ -1,7 +1,7 @@
 ---
 section: Contact
 layout: section
-permalink: contact/index.html
+permalink: contact/
 ---
 
 # Overview #

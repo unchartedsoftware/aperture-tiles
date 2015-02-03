@@ -2,7 +2,7 @@
 section: Docs
 subtitle: API
 chapter: Tile
-permalink: docs/api/tile/index.html
+permalink: docs/api/tile/
 layout: submenu
 ---
 

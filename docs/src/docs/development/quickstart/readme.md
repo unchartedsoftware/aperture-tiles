@@ -2,7 +2,7 @@
 section: Docs
 subtitle: Development
 chapter: Quick Start
-permalink: docs/development/quickstart/index.html
+permalink: docs/development/quickstart/
 layout: submenu
 ---
 

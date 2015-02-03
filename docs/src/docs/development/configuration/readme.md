@@ -2,7 +2,7 @@
 section: Docs
 subtitle: Development
 chapter: Configuration
-permalink: docs/development/configuration/index.html
+permalink: docs/development/configuration/
 layout: submenu
 ---
 

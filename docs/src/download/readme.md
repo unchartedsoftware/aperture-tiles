@@ -1,6 +1,6 @@
 ---
 section: Download
-permalink: download/index.html
+permalink: download/
 layout: section
 ---
 

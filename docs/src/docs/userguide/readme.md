@@ -1,7 +1,7 @@
 ---
 section: Docs
 subtitle: User Guide
-permalink: docs/userguide/index.html
+permalink: docs/userguide/
 layout: submenu
 ---
 

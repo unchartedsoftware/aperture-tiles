@@ -2,7 +2,7 @@
 section: Docs
 subtitle: API
 chapter: Layer
-permalink: docs/api/layer/index.html
+permalink: docs/api/layer/
 layout: submenu
 ---
 
