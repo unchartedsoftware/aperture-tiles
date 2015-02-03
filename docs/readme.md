@@ -12,7 +12,7 @@ Note that the latest versions of the pre-built Aperture website are available fo
 
 - Aperture JS: [http://aperturejs.com/](http://aperturejs.com/)
 - Aperture Tiles: [https://aperturetiles.com/](https://aperturetiles.com/)
-- Influent: [http://influent.org/](http://influent.org/))
+- Influent: [http://influent.org/](http://influent.org/)
 
 ## Prerequisites
 
