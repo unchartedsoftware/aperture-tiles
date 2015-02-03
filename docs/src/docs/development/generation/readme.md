@@ -669,7 +669,7 @@ val tiles = binner.processDataByLevel(data,
 				                      yBins=1)
 ```
 
-**Binner.processDataByLevel** is defined in the following file on line 238: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
+**Binner.processDataByLevel** is defined in the following file on line 230: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
 
 It accepts the following properties:
 
@@ -731,6 +731,12 @@ It accepts the following properties:
 					consolidationPartitions (Optional)
 				</dt>
 				<dd>The number of reducers to use when aggregating data records into bins and tiles. Defaults to the same number of partitions as the original data set. Alter if you encounter problems with the tiling job due to lack of resources.</dd>
+
+				<dt>
+					tileType (Optional)
+				</dt>
+				<dd>A specification of how data should be stored, <em>sparse</em> or <em>dense</em>. If not specified, a heuristic will use the optimal type for a double-valued tile. For significantly larger-valued types, <em>sparse</em> is recommended.</dd>
+
 			</dl>
 		</ul>
 	</div>
@@ -751,7 +757,7 @@ tileIO.writeTileSet(tilePyramid,
 				    pyramidDescription)
 ```
 
-**tileIO.writeTileSet** is defined in the following file on line 181: <em>/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/<strong>RDDBinner.scala</strong></em>
+**tileIO.writeTileSet** is defined in the following file on line 172: <em>/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/<strong>RDDBinner.scala</strong></em>
 
 It accepts the following properties:
 
@@ -775,9 +781,9 @@ It accepts the following properties:
 				<dd>The binned data set produced by binner.processDataByLevel.</dd>
 				
 				<dt>
-					valueScheme
+					serializer
 				</dt>
-				<dd>The bin descriptor describing the dataset.  This must match the bin	descriptor used when creating the tiles.</dd>
+				<dd>The bin descriptor describing the dataset. This must match the bin descriptor used when creating the tiles.</dd>
 	
 				<dt>
 					tileAnalytics (Optional)
