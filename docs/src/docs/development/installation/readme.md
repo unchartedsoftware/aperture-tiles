@@ -11,10 +11,10 @@ Installation and Compilation
 
 The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects.
 
-For quick examples of the capabilities of Aperture Tiles:
+For quick examples of the capabilities of Aperture Tiles, see the following topics:
 
-- See the [Demos](../../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
-- See the [Download](../../../download) page to access a pre-built distribution designed to help you quickly get started using Aperture Tiles and to understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
+- [Demos](../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
+- [Download](../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
@@ -114,7 +114,11 @@ This project has the following prerequisites:
 
 ## <a name="source-code"></a> Source Code ##
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master).
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master).
+
+### Dependencies ###
+
+Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master).
 
 ### <a name="project-structure"></a> Project Structure ###
 
@@ -170,19 +174,39 @@ Aperture Tiles is made up of the following sub-projects:
 
 NOTE: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
 
-Prior to building the project, you need to specify the version of Hadoop and/or HBase installed (if applicable). Review the *Deployment Variants* section of the *aperture-tiles/***build.gradle** file to check for valid settings for your version.
+Prior to building the project, you must specify which version of Hadoop and/or HBase you have installed (if applicable): 
 
-If your version is not included, you must build a new case for it. See the comments in the file for more details.
+1. Review the *Deployment Variants* section of the *aperture-tiles/***build.gradle** file to check for valid settings for your version.
+2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
+
+#### Installing Dependencies ####
+
+Install the [Aperture JS](https://github.com/oculusinfo/aperturejs/tree/master) project by running the following command in your root Aperture JS directory. Note that this step requires [Apache Maven](http://maven.apache.org/).
+	
+```bash
+mvn build
+```
 
 #### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
 
-Before you compile the Aperture Tiles source code, you must install the Aperture JS project:
+To build Aperture Tiles, run the following command in your root Aperture Tiles directory:
 
-- Run the `mvn build` command in your root Aperture JS directory.
+```bash
+gradlew install -PbuildType=<buildType>
+``` 
 
-Once the Aperture JS installation is complete:
+Where:
 
-- Run the `gradlew install -PbuildType=<buildType>` command in your root Aperture Tiles directory, where `buildType` is a case in the **build.gradle** file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., *cdh5.1.2*).<p class=list-paragraph">NOTE: If you do not specify a buildType, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>buildType</dt>
+				<dd>A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).<p class="list-paragraph">If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p></dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
 

@@ -8,13 +8,13 @@ layout: submenu
 
 # Quick Start Guide #
 
-The following guide provides a short tutorial that walks you through the process of creating and configuring an Aperture Tiles project. This Quick Start Guide covers the following processes:
+This guide, which provides a short tutorial on the process of creating and configuring an Aperture Tiles project, covers the following topics:
 
 1. Generating a sample data set to analyze
 2. Tiling and storing the sample data set
 3. Configuring a client to serve and display the tiles in a web browser
 
-At the end of this guide you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
+At the end of this guide, you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
 
 <img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
@@ -147,7 +147,7 @@ These properties specify the location of your Julia set data.
         <ul class="methodDetail" id="MethodDetail">
             <dl class="detailList params">              
                 <dt>oculus.binning.source.location</dt>
-                <dd>Path of the source data files in your local file system (ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).</dd>
+                <dd>Path of the source data files in your local file system (e.g., <em>/data/julia</em>) or HDFS path (e.g., <em>hdfs://hadoop.example.com/data/julia</em>).</dd>
             </dl>
         </ul>
     </div>
@@ -162,7 +162,7 @@ These properties specify where to save the generated tiles.
         <ul class="methodDetail" id="MethodDetail">
             <dl class="detailList params">
                 <dt>oculus.tileio.type</dt>
-                <dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.</dd>
+                <dd>Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</dd>
 
                 <dt>oculus.binning.name</dt>
                 <dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
@@ -184,7 +184,7 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
                 <dd>Zookeeper quorum location needed to connect to HBase.</dd>
                 
                 <dt>hbase.zookeeper.port</dt>
-                <dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
+                <dd>Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</dd>
                 
                 <dt>hbase.master</dt>
                 <dd>Location of the HBase master to which to save the tiles.</dd>
@@ -205,7 +205,8 @@ With the required properties files, execute the standard spark-submit script aga
 
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
-.CSVBinner --master local[2] --driver-memory 1G lib/tile-generation-assembly.jar -d examples/julia-base.bd examples/julia-tiling.bd
+.CSVBinner --master local[2] --driver-memory 1G lib/tile-generation-assembly.jar 
+-d examples/julia-base.bd examples/julia-tiling.bd
 ```
 
 When the tile generation is complete, you should have a folder containing six subfolders, each of which corresponds to a zoom level in your project (0, being the highest, through 5, being the lowest). Across all the folders, you should have a total of 1,365 Avro tile files.
