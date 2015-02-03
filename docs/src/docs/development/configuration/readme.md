@@ -40,14 +40,14 @@ The remainder of the tile server configuration, which includes instantiation of 
 
 ### <a name="webxml"></a> Web XML ###
 
-Edit the **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
+Edit the client **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 
 1. If you performed a custom tile generation, edit the guice-modules parameter to pass in any custom modules you created (e.g., your custom Tile Serialization Factory).
 2. If required, uncomment the relevant Spark lines in the guice-modules to enable live tiling or drill-through to raw data.
 		
 ### <a name="tileproperties"></a> Tile Properties ###
 
-Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as the location of your layer and annotation directories. Additional Spark parameters are available for on-demand tile generation and data drill down:
+Edit the client **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as the location of your layer and annotation directories. Additional Spark parameters are available for on-demand tile generation and data drill down:
 
 - The location of your Spark master
 - The name under which the Aperture Tiles web service should appear in the Spark web interface.
