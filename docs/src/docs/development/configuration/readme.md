@@ -466,7 +466,7 @@ The previous sections focus largely on the process of implementing an Aperture T
 
 A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
 
-For example, lines 39-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
+For example, lines 41-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
 
 ```javascript
 layers = tiles.LayerUtil.parse( layers.layers );
