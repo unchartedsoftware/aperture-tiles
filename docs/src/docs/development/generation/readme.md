@@ -143,7 +143,7 @@ A standard Aperture Tiles tiling job uses the CSVBinner tool in the source code 
 
 During the tiling job, the CSVBinner creates a collection of Avro tile data files in the location (HBase or local file system) specified in the base properties file.
 
-The following sections describe how to execute the CSVBinner and edit the configurable components of the base properties and tiling properties files. For a list of sample properties files in the Aperture Tiles source code, see the [Examples](#examples) section.
+The following sections describe how to execute the CSVBinner and edit the configurable components of the base properties and tiling properties files.
 
 ### Executing the CSVBinner ###
 
@@ -432,18 +432,6 @@ The tiling properties files define the tiling job parameters for each layer in y
 		</ul>
 	</div>
 </div>
-
-### <a name="examples"></a> Example Properties Files ###
-
-Several example properties files can be found in the <em>tile-generation/<wbr>data</em> directory.
-
-- **twitter-local-base.bd** is a base properties file for a source dataset (of ID, time, latitude and longitude) where:
-	- Raw data is stored in the local file system
-	- Tiles are output to the local file system
-- **twitter-hdfs-base.bd** is a base properties file for the same source dataset where:
-	- Raw data is stored in HDFS
-	- Tiles are output to HBase
-- **twitter-lon-lat.bd** is a tiling properties file that, in conjunction with either of the base files above, defines a tile set of longitude and latitude data aggregated at 10 levels (0-9).
 
 ## <a name="custom-tiling"></a> Custom Tiling Jobs ##
 
