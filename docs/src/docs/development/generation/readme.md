@@ -533,7 +533,7 @@ def aggregate (a: Map[String, TwitterDemoTopicRecord],
 
 ###### <a name="custom-aggregation"></a> Custom Aggregation Methods ######
 
-Lines 84-92  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
+Lines 85-93  of **TwitterTopicBinner.scala** (found in the same folder as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
 ```scala
 val minAnalysis:
@@ -632,7 +632,7 @@ val data: RDD[((Double, Double), PROCESSING_TYPE)]
 
 Where **PROCESSING_TYPE** is the processing type from your [Binning Analytic](#binning-analytic).
 
-Lines 148 - 163 in **TwitterTopicBinner.scala** retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
+Lines 149 - 164 in **TwitterTopicBinner.scala** retrieve the raw data from the Record Parser and create a mapping from (longitude, latitude) pairs to Twitter topic records.
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i =>
@@ -655,7 +655,7 @@ data.cache
 
 #### <a name="binning"></a> Binning ####
 
-Lines 190 - 198 of **TwitterTopicBinner.scala** transform the data into tiles:
+Lines 191 - 199 of **TwitterTopicBinner.scala** transform the data into tiles:
 
 ```scala
 val tiles = binner.processDataByLevel(data,
@@ -738,13 +738,13 @@ It accepts the following properties:
 
 #### <a name="writing-tiles"></a> Writing Tiles ####
 
-Lines 199 - 206 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
+Lines 200 - 207 of **TwitterTopicBinner.scala** specify how to write the tiles created from your transformed data.
 
 ```scala
 tileIO.writeTileSet(tilePyramid,
 				    pyramidId,
 				    tiles,
-				    new TwitterTopicValueDescription,
+				    new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec()),
 				    tileAnalytics,
 				    dataAnalytics,
 				    pyramidName,
