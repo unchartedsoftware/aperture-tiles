@@ -233,7 +233,7 @@ The Source Data properties describe the raw data from which you want to create t
 				<dd>Path (local file system or HDFS) to the source data file or files to be tiled.</dd>
 				
 				<dt>
-					oculus.binning.prefix
+					oculus.binning.prefix (Optional)
 				</dt>
 				<dd>Prefix to be added to the name of every pyramid location. Used to separate this tile generation from previous runs. If not present, no prefix is used.</dd>
    
