@@ -140,6 +140,9 @@ Aperture Tiles is made up of the following sub-projects:
 				<dt>tile-generation</dt>
 				<dd>Spark-based tools to generate tile pyramids from raw data.</dd>
 				
+				<dt>tile-rendering</dt>
+				<dd>Library that handles turning tile data into useful output formats, generally graphical.</dd>
+
 				<dt>tile-service</dt>
 				<dd>Web service to serve tiles from tile pyramids to web clients.</dd>
 				
