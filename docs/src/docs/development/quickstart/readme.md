@@ -30,15 +30,74 @@ To begin this Quick Start example, you must perform the following steps:
 
 Aperture Tiles requires the following third-party tools on your local system:
 
-- **Operating System**: The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. <p class="list-paragraph">Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.</p>
-- **Cluster Computing**: To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 1.0.0 or greater. Spark is the distributed framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Component</th>
+                <th scope="col" width="30%">Required</th>
+                <th scope="col" width="50%">Notes</th>
+            </thead>
+            <tr >
+                <td style="vertical-align: text-top" class="attributes">Operating System</td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        Linux or OS X
+                    </div>
+                </td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
+                </td>
+            </tr>
+            <tr >
+                <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        <a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+                    </div>
+                </td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </nav>
+</div>
 
-If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
+If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install the following tools. Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
-- Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs.<p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the automatically installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</a>
-- [Apache HBase](http://hbase.apache.org/), which acts as a data store for your Hadoop/HDFS cluster
-
-Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Component</th>
+                <th scope="col" width="30%">Required</th>
+                <th scope="col" width="50%">Notes</th>
+            </thead>
+            <tr >
+                <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        <a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
+                        <ul>
+                            <li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+                            <li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
+                            <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
+                            <li><a href="http://hortonworks.com/">HortonWorks</a></li>
+                        </ul>
+                    </div>
+                </td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </nav>
+</div>
 
 ### <a name="aperture-tiles-utilities"></a> Aperture Tiles Packaged Distribution ###
 

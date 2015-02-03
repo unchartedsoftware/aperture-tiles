@@ -70,11 +70,60 @@ Aperture Tiles uses a distributed framework built on the Apache Spark engine to 
 
 See the [Installation](../installation/#prerequisites) topic for full details on required third-party tools.
 
-- **Languages**:
-	- *Scala* version 2.10.3
-- **Cluster Computing**:
-	- *Apache Spark* version 1.0.0 or greater.<p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
-	- *Hadoop/HDFS/HBase* (Optional) - Choose your preferred version. <p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the automatically installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</p>
+<div class="props">
+	<nav>
+		<table class="summaryTable" width="100%">
+			<thead >
+				<th scope="col" width="20%">Component</th>
+				<th scope="col" width="30%">Required</th>
+				<th scope="col" width="50%">Notes</th>
+			</thead>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes">Languages</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://www.scala-lang.org/">Scala</a> v2.10.3
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description"></div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<p>You must configure the version of Hadoop with which Spark will be working (if applicable).</p>
+							<p>The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</p>
+					</div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
+						<ul>
+							<li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+							<li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
+							<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
+							<li><a href="http://hortonworks.com/">HortonWorks</a></li>
+						</ul>
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+					</div>
+				</td>
+			</tr>
+		</table>
+	</nav>
+</div>
 
 ### <a name="spark-config"></a> Apache Spark Configuration ###
 
