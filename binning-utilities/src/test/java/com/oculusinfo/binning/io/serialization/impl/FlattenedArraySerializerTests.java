@@ -63,11 +63,16 @@ public class FlattenedArraySerializerTests {
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         TileData<List<Integer>> output = serializer.deserialize(index, bais);
 
+        assertDenseTilesEqual(input, output);
+    }
+
+    private <T> void assertDenseTilesEqual (TileData<List<T>> input, TileData<List<T>> output) {
         Assert.assertEquals(input.getDefinition(), output.getDefinition());
+        TileIndex index = input.getDefinition();
         for (int x = 0; x < index.getXBins(); ++x) {
             for (int y = 0; y < index.getYBins(); ++y) {
-                List<Integer> inVal = input.getBin(x, y);
-                List<Integer> outVal = output.getBin(x, y);
+                List<T> inVal = input.getBin(x, y);
+                List<T> outVal = output.getBin(x, y);
                 Assert.assertEquals(inVal.size(), outVal.size());
                 for (int z = 0; z < inVal.size(); ++z) {
                     Assert.assertEquals(inVal.get(z), outVal.get(z));
