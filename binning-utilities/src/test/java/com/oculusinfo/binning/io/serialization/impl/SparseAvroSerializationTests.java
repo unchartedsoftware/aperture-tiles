@@ -24,20 +24,20 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.SparseTileData;
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.Pair;
-import org.apache.avro.file.CodecFactory;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.avro.file.CodecFactory;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.oculusinfo.binning.SparseTileData;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 // Test that primitive avro serialization works with sparse tile datas
 public class SparseAvroSerializationTests {
