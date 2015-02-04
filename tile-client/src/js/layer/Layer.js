@@ -76,7 +76,7 @@
          * Set whether or not the layer is enabled.
          * @memberof Layer.prototype
          *
-         * @param visibility {boolean} whether the layer is visible or not
+         * @param enabled {boolean} whether the layer is visible or not
          */
         setEnabled: function( enabled ) {
             this.enabled = enabled;

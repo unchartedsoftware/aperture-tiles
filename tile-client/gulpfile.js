@@ -52,8 +52,8 @@ function handleError( err ) {
 }
 
 gulp.task('clean', function () {
-   	del([ 'build/*']);
-    del([ 'docs/*']);
+   	del.sync([ 'build/*']);
+    del.sync([ 'docs/*']);
 });
 
 gulp.task('lint', function() {
@@ -74,24 +74,24 @@ gulp.task('test', function() {
         });
 });
 
-gulp.task('build-min-css', function () {
+gulp.task('build_min_css', function () {
     return gulp.src( 'src/css/*.css' )
         .pipe( csso() )
         .pipe( concat('tiles.min.css') )
         .pipe( gulp.dest('build') );
 });
 
-gulp.task('build-css', function () {
+gulp.task('build_css', function () {
     return gulp.src( 'src/css/*.css' )
         .pipe( concat('tiles.css') )
         .pipe( gulp.dest('build') );
 });
 
-gulp.task('build-min-js', [ 'lint' ], function() {
+gulp.task('build_min_js', [ 'lint' ], function() {
     return buildMin( './src/js/api.js', 'tiles.min.js' );
 });
 
-gulp.task('build-js', function() {
+gulp.task('build_js', function() {
     return build( './src/js/api.js', 'tiles.js' );
 });
 
@@ -103,26 +103,18 @@ gulp.task('build-js', function() {
 //     return build( './src/js/rest-api.js', 'tiles-rest.js' );
 // });
 
-gulp.task('generate-docs', function () { 
+gulp.task('generate_docs', function () { 
   run('jsdoc src/js/ --destination docs --recurse --template node_modules/jaguarjs-jsdoc').exec()  // prints "Hello World\n".
 })
 
 gulp.task('build', [ 'clean' ], function() {
-    gulp.start( 'build-js' );   
-    gulp.start( 'build-css' );   
-    gulp.start( 'build-min-js' );
-    gulp.start( 'build-min-css' );
-    gulp.start( 'generate-docs' );
+    gulp.start( 'build_js' );   
+    gulp.start( 'build_css' );   
+    gulp.start( 'build_min_js' );
+    gulp.start( 'build_min_css' );
+    gulp.start( 'generate_docs' );
     //gulp.start( 'build-rest-min-js' );
     //gulp.start( 'build-rest-js' );
-});
-
-gulp.task('debugjs', function() {
-    gulp.start( 'build-js' );
-});
-
-gulp.task('debugcss', function() {
-    gulp.start( 'build-css' );
 });
 
 gulp.task('default', [ 'build' ], function() {

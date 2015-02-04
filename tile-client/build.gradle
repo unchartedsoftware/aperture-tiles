@@ -18,16 +18,16 @@ test.dependsOn gulp_test
  *	DEBUG BUILD (builds non-minified files with source maps, assumes dependencies are installed)
  */
 // empty tasks for debug build, these are called by the 'watch' plugin in an external build file
-task build_debug_js {}
-task build_debug_css {}
+task build_js {}
+task build_css {}
 // build js
-gulp_debugjs.inputs.dir "$projectDir/src"
-gulp_debugjs.outputs.dir "$buildDir"
-build_debug_js.dependsOn gulp_debugjs
+gulp_build_js.inputs.dir "$projectDir/src"
+gulp_build_js.outputs.dir "$buildDir"
+build_js.dependsOn gulp_build_js
 // build css
-gulp_debugcss.inputs.dir "$projectDir/src"
-gulp_debugcss.outputs.dir "$buildDir"
-build_debug_css.dependsOn gulp_debugcss
+gulp_build_css.inputs.dir "$projectDir/src"
+gulp_build_css.outputs.dir "$buildDir"
+build_css.dependsOn gulp_build_css
 
 /**
  *	FULL BUILD (builds everything, will check for dependencies)

@@ -301,11 +301,11 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    }
 			    clientJsWatch {
 			        files fileTree(TILE_CLIENT_SRC).include('**/*.js')
-			        tasks ':tile-client:build_debug_js', 'copyClientJsToExploded'
+			        tasks ':tile-client:build_js', 'copyClientJsToExploded'
 			    }
 			    clientCssWatch {
 			        files fileTree(TILE_CLIENT_SRC).include('**/*.css')
-			        tasks ':tile-client:build_debug_css', 'copyClientCssToExploded'
+			        tasks ':tile-client:build_css', 'copyClientCssToExploded'
 			    }
 			    appWatch {
 			    	files fileTree(APPLICATION_DIR)
@@ -317,8 +317,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			dependencies {
 				compile project(path: ":tile-service")
 				compile project(path: ":annotation-service")
-			}
-		
+			}		
 		
 			// configure the war task to pick up the tile client build files
 			war {
