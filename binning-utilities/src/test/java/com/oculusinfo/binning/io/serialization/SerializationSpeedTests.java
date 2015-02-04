@@ -41,6 +41,7 @@ import org.junit.Test;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.impl.GenericJavaSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
@@ -148,22 +149,22 @@ public class SerializationSpeedTests {
 
 	@Test
 	public void testKryoTileSerialization () throws Exception {
-		serialize(KRYO, SCALAR_DATA, _scalarData, new GenericKryoSerializer<Double>(new TypeDescriptor(Double.class)));
+		serialize(KRYO, SCALAR_DATA, _scalarData, new KryoSerializer<Double>(new TypeDescriptor(Double.class)));
 	}
 
 	@Test
 	public void testKryoTileDeSerialization () throws Exception {
-		deserialize(KRYO, SCALAR_DATA, _scalarData, new GenericKryoSerializer<Double>(new TypeDescriptor(Double.class)));
+		deserialize(KRYO, SCALAR_DATA, _scalarData, new KryoSerializer<Double>(new TypeDescriptor(Double.class)));
 	}
 
 	@Test
 	public void testKryoVectorTileSerialization () throws Exception {
-		serialize(KRYO, VECTOR_DATA, _vectorData, new GenericKryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class))));
+		serialize(KRYO, VECTOR_DATA, _vectorData, new KryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class))));
 	}
 
 	@Test
 	public void testKryoVectorTileDeSerialization () throws Exception {
-		deserialize(KRYO, VECTOR_DATA, _vectorData, new GenericKryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class))));
+		deserialize(KRYO, VECTOR_DATA, _vectorData, new KryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class))));
 	}
 
 

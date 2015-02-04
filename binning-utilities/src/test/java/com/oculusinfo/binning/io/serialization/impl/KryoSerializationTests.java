@@ -21,11 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning.io.serialization;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +33,8 @@ import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class KryoSerializationTests {
@@ -48,7 +49,7 @@ public class KryoSerializationTests {
 		tile.setMetaData("a", "abc");
 		tile.setMetaData("b", "bcd");
 
-		TileSerializer<Double> serializer = new GenericKryoSerializer<Double>(new TypeDescriptor(Double.class));
+		TileSerializer<Double> serializer = new KryoSerializer<Double>(new TypeDescriptor(Double.class));
 
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		serializer.serialize(tile, output);
@@ -68,7 +69,7 @@ public class KryoSerializationTests {
 
 	@SafeVarargs
 	final <T> void testRoundTripDense(TypeDescriptor type, T... data) throws Exception {
-		TileSerializer<T> serializer = new GenericKryoSerializer<T>(type);
+		TileSerializer<T> serializer = new KryoSerializer<T>(type);
 
 		// Create our tile
 		int size = (int) Math.ceil(Math.sqrt(data.length));
@@ -101,7 +102,7 @@ public class KryoSerializationTests {
 
 	@SafeVarargs
 	final <T> void testRoundTripSparse(TypeDescriptor type, T defaultValue, T... data) throws Exception {
-		TileSerializer<T> serializer = new GenericKryoSerializer<T>(type);
+		TileSerializer<T> serializer = new KryoSerializer<T>(type);
 
 		// Create our tile
 		int size = (int) Math.ceil(Math.sqrt(data.length*2));
@@ -173,7 +174,7 @@ public class KryoSerializationTests {
 
 	@Test
 	public void testCustom () throws Exception {
-	    GenericKryoSerializer.registerClasses(CustomTestData.class);
+	    KryoSerializer.registerClasses(CustomTestData.class);
         testRoundTripDense(new TypeDescriptor(CustomTestData.class),
                            new CustomTestData(1, 1.1, "one"),
                            new CustomTestData(2, 2.2, "two"),

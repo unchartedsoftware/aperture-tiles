@@ -1,4 +1,4 @@
-package com.oculusinfo.binning.io.serialization;
+package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +23,7 @@ import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
@@ -35,7 +36,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
  *
  * @param <T> The type of data this instance of the serializer intends to serialize.
  */
-public class GenericKryoSerializer<T> implements TileSerializer<T> {
+public class KryoSerializer<T> implements TileSerializer<T> {
     private static final long serialVersionUID = -1983162656743117212L;
 
 
@@ -199,7 +200,7 @@ public class GenericKryoSerializer<T> implements TileSerializer<T> {
      *            class was created; there is no way of enforcing this, but
      *            violating it will cause a host of problems.
      */
-	public GenericKryoSerializer (TypeDescriptor typeDesc) {
+	public KryoSerializer (TypeDescriptor typeDesc) {
 		_typeDesc = typeDesc;
 	}
 
