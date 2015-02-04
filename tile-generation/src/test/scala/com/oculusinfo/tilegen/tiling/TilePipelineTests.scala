@@ -25,10 +25,9 @@
 package com.oculusinfo.tilegen.tiling
 
 import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.SQLContext
 import org.scalatest.FunSuite
 
-class TestTilePipeline extends FunSuite with SharedSparkContext {
+class TilePipelineTests extends FunSuite with SharedSparkContext {
 
   case class TestData(x: Int, y: String)
 
@@ -41,8 +40,6 @@ class TestTilePipeline extends FunSuite with SharedSparkContext {
   }
 
   test("Test functional pipeline tree traversal") {
-    val sqlc = new SQLContext(sc)
-
     var data = List[String]()
 
     def testOp(opName: String)(input: PipelineData) = {
@@ -50,11 +47,11 @@ class TestTilePipeline extends FunSuite with SharedSparkContext {
       input
     }
 
-    val parent = new PipelineStage("parent", testOp("p")(_))
-    val child0 = new PipelineStage("child0", testOp("c0")(_))
-    val child1 = new PipelineStage("child1", testOp("c1")(_))
-    val grandchild0 = new PipelineStage("grandchild0", testOp("g0")(_))
-    val grandchild1 = new PipelineStage("grandchild1", testOp("g1")(_))
+    val parent = PipelineStage("parent", testOp("p")(_))
+    val child0 = PipelineStage("child0", testOp("c0")(_))
+    val child1 = PipelineStage("child1", testOp("c1")(_))
+    val grandchild0 = PipelineStage("grandchild0", testOp("g0")(_))
+    val grandchild1 = PipelineStage("grandchild1", testOp("g1")(_))
 
     parent.addChild(child0)
     parent.addChild(child1)
@@ -67,14 +64,14 @@ class TestTilePipeline extends FunSuite with SharedSparkContext {
   }
 
   test("Test symbolic pipeline creation") {
-    val pipelines = new TilePipelines()
+    val pipelines = TilePipelines()
       .createPipeline("pipeline")
 
     assert(pipelines.pipelineRoots.contains("pipeline"))
   }
 
   test("Test symbolic pipeline op registration") {
-    val pipelines = new TilePipelines()
+    val pipelines = TilePipelines()
       .registerPipelineOp("some_op_one", parseTestOp)
       .registerPipelineOp("some_op_two", parseTestOp)
       .registerPipelineOp("some_op_three", parseTestOp)
@@ -85,11 +82,11 @@ class TestTilePipeline extends FunSuite with SharedSparkContext {
   }
 
   test("Test symbolic pipeline stage add") {
-    val pipelines = new TilePipelines()
+    val pipelines = TilePipelines()
       .registerPipelineOp("operation", parseTestOp)
       .createPipeline("pipeline")
-      .addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", new SQLContext(sc))
-      .addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", new SQLContext(sc))
+      .addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
+      .addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", sqlc)
 
     val stage0 = pipelines.getPipelineStage("pipeline", "stage-0")
     val stage1 = pipelines.getPipelineStage("pipeline", "stage-1")
@@ -103,6 +100,24 @@ class TestTilePipeline extends FunSuite with SharedSparkContext {
   }
 
   test("Test symbolic pipeline execute") {
+    var data = List[String]()
 
+    def parseTestOp(args: Map[String, String]) = {
+      testOp(args("name"))_
+    }
+
+    def testOp(opName: String)(input: PipelineData) = {
+      data = data :+ opName
+      input
+    }
+
+    TilePipelines()
+      .registerPipelineOp("operation", parseTestOp)
+      .createPipeline("pipeline")
+      .addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
+      .addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", sqlc)
+      .runPipeline("pipeline", sqlc)
+
+    assertResult(List("foo-0", "foo-1"))(data)
   }
 }

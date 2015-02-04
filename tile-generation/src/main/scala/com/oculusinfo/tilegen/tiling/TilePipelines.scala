@@ -80,6 +80,9 @@ object TilePipelines {
    */
   type PipelineOpBinding = Map[String, String] => (PipelineData => PipelineData)
 
+  def apply(pipelineRoots: Map[String, PipelineStage] = Map.empty,
+            pipelineOps: Map[String, PipelineOpBinding] = Map.empty) = new TilePipelines(pipelineRoots, pipelineOps)
+
   /**
    * Executes the pipeline via depth first tree traversal.
    *
@@ -98,7 +101,7 @@ object TilePipelines {
       case Some(i) => ex(start, i)
       case None =>
         val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
-        ex(start, new PipelineData(sqlContext, emptySchema))
+        ex(start, PipelineData(sqlContext, emptySchema))
     }
 
   }
@@ -139,7 +142,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
    * @return Updated instance of this object.
    */
   def registerPipelineOp(pipelineOpId: String, pipelineOpBinding: PipelineOpBinding) = {
-      new TilePipelines(pipelineRoots, pipelineOps + (pipelineOpId -> pipelineOpBinding))
+      TilePipelines(pipelineRoots, pipelineOps + (pipelineOpId -> pipelineOpBinding))
   }
 
   /**
@@ -149,7 +152,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
    * @return Updated instance of this object.
    */
   def createPipeline(pipelineId: String) = {
-    new TilePipelines(pipelineRoots + (pipelineId -> new PipelineStage("root", input => input)), pipelineOps)
+    TilePipelines(pipelineRoots + (pipelineId -> PipelineStage("root", input => input)), pipelineOps)
   }
 
   /**
@@ -171,7 +174,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
                        sqlContext: SQLContext) = {
     val pipelineFunc = pipelineOps(stageType)(stageArgs)
     findNode(parentStageId, List(pipelineRoots(pipelineId)))
-      .map(_.addChild(new PipelineStage(stageId, pipelineFunc)))
+      .map(_.addChild(PipelineStage(stageId, pipelineFunc)))
     this
   }
 
