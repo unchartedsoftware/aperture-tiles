@@ -297,9 +297,9 @@ class RDDLineBinner(minBins: Int = 2,
 				levels.map(level =>
 					{
 						if (tileScheme.getProjection.equals("EPSG:900913") &&
-							(y1 > 80.0 || y1 < -80.0 || y2 > 80.0 || y2 < -80.0)) {
+							(y1 > 85.05115 || y1 < -85.05115 || y2 > 85.05115 || y2 < -85.05115)) {
 							// If using mercator projection then exclude line segments if
-							// either endpoint is near the poles (latitude > 80 or < -80 degrees)
+							// either endpoint is near the poles (latitude > 85.05115 or < -85.05115 degrees)
 							(null, null, null)
 						}
 						else {
