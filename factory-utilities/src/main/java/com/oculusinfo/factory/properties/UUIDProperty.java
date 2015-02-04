@@ -31,14 +31,15 @@ import org.json.JSONException;
 import java.util.UUID;
 
 public class UUIDProperty implements ConfigurationProperty<UUID> {
-	private String   _name;
-	private String   _description;
 
-
+    private String _name;
+	private String _description;
+	private String _uuid;
 
 	public UUIDProperty (String name, String description) {
 		_name = name;
 		_description = description;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -99,11 +100,9 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
 		return unencode(propertyNode.getAsString());
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -113,7 +112,7 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
 		if (!(that instanceof UUIDProperty)) return false;
 
 		UUIDProperty thatP = (UUIDProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

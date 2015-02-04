@@ -16,6 +16,7 @@ ext.clientServerProjects = [
 		'binning-utilities',
 		'tile-generation',
 		'spark-tile-utilities',
+		'tile-rendering',
 		'tile-service',
 		'annotation-service',
 		'tile-client',

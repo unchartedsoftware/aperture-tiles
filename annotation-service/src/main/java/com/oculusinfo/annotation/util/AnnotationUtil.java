@@ -29,7 +29,7 @@ import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.annotation.AnnotationTile;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.factory.util.Pair;
 import org.json.JSONArray;
@@ -317,7 +317,7 @@ public class AnnotationUtil {
                     AnnotationIndexer.NUM_BINS );
 
             // create tile with empty bins
-            TileData<AnnotationBin> tile = new TileData<>( index );
+            DenseTileData<AnnotationBin> tile = new DenseTileData<>( index );
 
             // for all binkeys
             Iterator<?> binKeys = json.keys();

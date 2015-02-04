@@ -34,6 +34,7 @@ import org.apache.avro.file.CodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -48,7 +49,7 @@ public class PairArrayAvroSerializerTests {
 		// Create our tile
 		int n = (int) Math.ceil(data.length/(double)arraySize);
 		int size = (int) Math.ceil(Math.sqrt(n));
-		TileData<List<Pair<S, T>>> input = new TileData<>(new TileIndex(0, 0, 0, size, size));
+		TileData<List<Pair<S, T>>> input = new DenseTileData<>(new TileIndex(0, 0, 0, size, size));
 		for (int y=0; y<size; ++y) {
 			for (int x=0; x<size; ++x) {
 				int i = ((x+size*y) % data.length)*arraySize;

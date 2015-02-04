@@ -23,6 +23,8 @@
  */
 package com.oculusinfo.annotation;
 
+import com.oculusinfo.binning.DenseTileData;
+import com.oculusinfo.binning.TileData;
 import com.oculusinfo.factory.util.Pair;
 
 import java.io.Serializable;
@@ -76,10 +78,10 @@ public class AnnotationBin implements Serializable {
     }
 
 
-    public static List< AnnotationBin > convertFromRaw( List< Map<String, List<Pair<String, Long>>> > rawBins ) {
-
+    public static List< AnnotationBin > convertFromRaw( TileData<Map<String, List<Pair<String, Long>>>> rawTile ) {
+        List<Map<String, List<Pair<String, Long>>>> rawData = DenseTileData.getData(rawTile);
         List< AnnotationBin > bins = new ArrayList<>();
-        for ( Map<String, List<Pair<String, Long>>> rawBin : rawBins) {
+        for (Map<String, List<Pair<String, Long>>> rawBin: rawData) {
             if ( rawBin != null ) {
                 bins.add( new AnnotationBin( rawBin ) );
             } else {

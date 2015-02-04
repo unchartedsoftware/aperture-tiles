@@ -183,7 +183,23 @@
         axis.MAX_LABEL_HEIGHT = 0;
         axis.MAX_LABEL_UNROTATED_WIDTH = 0;
         axis.ROTATION_RADIANS = 0;
-        axis.HEADER_WIDTH = axis.isXAxis ? axis.$header.height() : axis.$header.width();
+        // header width
+        switch ( axis.position ) {
+            case "top":
+                axis.HEADER_WIDTH = parseInt( axis.$header.css("border-top-width"), 10 );
+                break;
+            case "right":
+                axis.HEADER_WIDTH = parseInt( axis.$header.css("border-right-width"), 10 );
+                break;
+            case "bottom":
+                axis.HEADER_WIDTH = parseInt( axis.$header.css("border-bottom-width"), 10 );
+                break;
+            case "left":
+                axis.HEADER_WIDTH = parseInt( axis.$header.css("border-left-width"), 10 );
+                break;
+        }
+        // title width
+        axis.TITLE_WIDTH = axis.$title.width();
         // measure large markers
         $temp = $(createLargeMarkerHTML( axis, {pixel:0} )).hide().appendTo(axis.$content);
         axis.LARGE_MARKER_LENGTH = $temp[axis.markerWidthOrHeight]();
@@ -220,13 +236,8 @@
         var rotation = "",
             transformOrigin ="";
         if ( !axis.isXAxis ) {
-            if (axis.position === "left") {
-                rotation = "rotate(" + (-90) + "deg)";
-                transformOrigin = "top left";
-            } else {
-                rotation = "rotate(" + 90 + "deg)";
-                transformOrigin = "bottom left";
-            }
+            rotation = "rotate(-90deg)";
+            transformOrigin = "top left";
         }
         return $('<span class="'+AXIS_TITLE_CLASS+'"'
             + 'style="position:absolute;'
@@ -250,21 +261,8 @@
      * @param axis {Axis} the axis object.
      */
     function createHeader( axis ) {
-        var marginLeft = 0,
-            marginRight = 0,
-            marginTop = 0,
-            marginBottom = 0;
-        // add margins in case other axis exist, this prevents an ugly border overlap
-        if ( axis.isXAxis ) {
-            marginLeft = axis.$map.find('.left' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
-            marginRight = axis.$map.find('.right' + AXIS_HEADER_CLASS_SUFFIX ).width() || 0;
-        } else {
-            marginTop = axis.$map.find('.top' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
-            marginBottom = axis.$map.find('.bottom' + AXIS_HEADER_CLASS_SUFFIX ).height() || 0;
-        }
-        return $('<div class="'+ AXIS_HEADER_CLASS + " " + axis.position + AXIS_HEADER_CLASS_SUFFIX + '"'
-               + 'style="z-index:'+(Z_INDEX+2)+';'
-               + 'margin:'+marginTop+'px '+marginRight+'px '+marginBottom+'px '+marginLeft+'px;"></div>');
+        return $('<div class="'+ AXIS_HEADER_CLASS + " " + axis.horizontalOrVertical + '-header' +" " + axis.position + AXIS_HEADER_CLASS_SUFFIX + '"'
+               + 'style="z-index:'+(Z_INDEX+2)+';"></div>');
     }
 
     /**
@@ -275,8 +273,10 @@
      * @param axis {Axis} the axis object.
      */
     function createHeaderBack( axis ) {
-        return $('<div class="'+ AXIS_HEADER_CLASS + " " + AXIS_HEADER_CLASS + "-back " + axis.position + AXIS_HEADER_CLASS_SUFFIX + '"'
-               + 'style="z-index:'+(Z_INDEX+1)+';"></div>' );
+        return $('<div class="'+ AXIS_HEADER_CLASS + " " + AXIS_HEADER_CLASS + "-back " + axis.horizontalOrVertical + '-header-back' + '"'
+               + 'style="z-index:'+(Z_INDEX+1)+';'
+               + axis.position + ':0px;'
+               + ( axis.isXAxis ? '' : 'top:0px;') + '"></div>' );
     }
 
     /**
@@ -335,7 +335,7 @@
         axis.$title = createTitle( axis );
         axis.$header = createHeader( axis ).append( axis.$title );
         axis.$content = createContent( axis );
-        $axis = $('<div class="'+ axis.position + AXIS_DIV_CLASS_SUFFIX + '"></div>')
+        $axis = $('<div class="axis '+ axis.position + AXIS_DIV_CLASS_SUFFIX + '"></div>')
                     .append( axis.$content )
                         .append( axis.$header )
                             .append( createHeaderBack( axis ) );
@@ -354,21 +354,20 @@
     function updateAxisTitle( axis ) {
         // update axis length
         var $title = axis.$title,
-            axisLength = axis.$map.css( axis.axisWidthOrHeight ).replace('px', ''), // strip px suffix
+            axisLength,
             padding;
-        // add position offset for vertical axes
-        if ( !axis.isXAxis ) {
-            if (axis.position === 'left') {
-                $title.css( axis.leftOrTop, axisLength + "px" );
-            } else {
-                $title.css( axis.leftOrTop, -$title.width()*0.5 + "px" );
-            }
+        // calc new axis length
+        if ( axis.isXAxis ) {
+            axisLength = axis.$map.outerWidth();
+        } else {
+            axisLength = axis.$map.outerHeight() - (axis.HEADER_WIDTH*2);
+            // add position offset for vertical axes
+            $title.css( axis.leftOrTop, axisLength+"px" );
         }
         // calc padding
-        padding = (axisLength*0.5 - $title.width()*0.5);
+        padding = ( axisLength/2 ) - ( axis.TITLE_WIDTH/2 );
         // add padding for hover hit box
-        $title.css('padding-left', padding + "px");
-        $title.css('padding-right', padding + "px" );
+        $title.css( 'padding-left', padding + "px" );
     }
 
     /**
@@ -517,7 +516,7 @@
         }
         // allow events to propagate below to map except 'click'
         Util.enableEventPropagation( this.$axis );
-        Util.disableEventPropagation( this.$axis, ['onclick', 'ondblclick'] );
+        Util.disableEventPropagation( this.$axis, ['click', 'dblclick'] );
     };
 
     /**

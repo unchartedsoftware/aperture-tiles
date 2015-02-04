@@ -27,15 +27,12 @@ package com.oculusinfo.tilegen.tiling
 
 
 
-import java.awt.geom.Point2D
-import java.awt.geom.Rectangle2D
-
-import scala.collection.JavaConverters._
+import com.oculusinfo.binning.TileData.StorageType
 
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
-import scala.util.{Try, Success, Failure}
+import scala.util.Try
 
 
 
@@ -46,13 +43,7 @@ import org.apache.spark.storage.StorageLevel
 
 
 
-import com.oculusinfo.binning.BinIndex
-import com.oculusinfo.binning.BinIterator
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.impl.AOITilePyramid
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning._
 import com.oculusinfo.binning.io.serialization.TileSerializer
 
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -63,8 +54,6 @@ import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
  * This class is the basis of all (or, at least, nearly all) of the
  * other binning classes.  This takes an RDD of data and transforms it
  * into a pyramid of tiles.
- *
- * @param tileScheme the type of tile pyramid this binner can bin.
  */
 class RDDBinner {
 	var debug: Boolean = true
@@ -78,23 +67,23 @@ class RDDBinner {
 	 * in will not be populated when this method is complete.  They will be 
 	 * populated once the data actually has been used.
 	 * 
-	 * @param RT The raw data type
-	 * @param IT The index type, used as input into the pyramid transformation 
-	 *           that determins in which tile and bin any given piece of data 
-	 *           falls
-	 * @param PT The processing bin type, to be used as the values in resulting 
-	 *           tiles
-	 * @param DT The data analytic type, used to attach analytic values to tiles
-	 *           calculated from raw data
+	 * @tparam RT The raw data type
+	 * @tparam IT The index type, used as input into the pyramid transformation
+	 *            that determins in which tile and bin any given piece of data
+	 *            falls
+	 * @tparam PT The processing bin type, to be used as the values in resulting
+	 *            tiles
+	 * @tparam DT The data analytic type, used to attach analytic values to tiles
+	 *            calculated from raw data
 	 * @param data The raw data to be tiled
 	 * @param indexFcn A function to transform a raw data record into an index 
 	 *                 (see parameter IT)
 	 * @param valueFcn A function to transform a raw data record into a value 
 	 *                 to be binned (see parameter RT)
-	 * @param dataAnalytic An optional transformation from a raw data record 
-	 *                     into an aggregable analytic value.  If None, this 
-	 *                     should cause no extra processing.  If multiple 
-	 *                     analytics are desired, use ComposedTileAnalytic
+	 * @param dataAnalytics An optional transformation from a raw data record
+	 *                      into an aggregable analytic value.  If None, this
+	 *                      should cause no extra processing.  If multiple
+	 *                      analytics are desired, use ComposedTileAnalytic
 	 */
 	def transformData[RT: ClassTag, IT: ClassTag, PT: ClassTag, DT: ClassTag]
 		(data: RDD[RT],
@@ -116,12 +105,12 @@ class RDDBinner {
 	 * Fully process a dataset of input records into output tiles written out
 	 * somewhere
 	 * 
-	 * @param RT The raw input record type
-	 * @param IT The coordinate type
-	 * @param PT The processing bin type
-	 * @param AT The tile analytic type
-	 * @param DT The data anlytic type
-	 * @param BT The output bin type
+	 * @tparam RT The raw input record type
+	 * @tparam IT The coordinate type
+	 * @tparam PT The processing bin type
+	 * @tparam AT The tile analytic type
+	 * @tparam DT The data anlytic type
+	 * @tparam BT The output bin type
 	 */
 	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
 	                    AT: ClassTag, DT: ClassTag, BT] (
@@ -135,6 +124,7 @@ class RDDBinner {
 		serializer: TileSerializer[BT],
 		tileScheme: TilePyramid,
 		consolidationPartitions: Option[Int],
+		tileType: Option[StorageType],
 		writeLocation: String,
 		tileIO: TileIO,
 		levelSets: Seq[Seq[Int]],
@@ -176,7 +166,8 @@ class RDDBinner {
 				                               levels,
 				                               xBins,
 				                               yBins,
-				                               consolidationPartitions)
+				                               consolidationPartitions,
+				                               tileType)
 				// ... and write them out.
 				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
 				                    serializer, tileAnalytics, dataAnalytics,
@@ -222,18 +213,19 @@ class RDDBinner {
 	 * @param levels A list of levels on which to create tiles
 	 * @param xBins The number of bins along the horizontal axis of each tile
 	 * @param yBins The number of bins along the vertical axis of each tile
-	 * @param consolidationPartitions The number of partitions to use when
-	 *                                grouping values in the same bin or the same
-	 *                                tile.  None to use the default determined
-	 *                                by Spark.
-	 * 
-	 * @param IT the index type, convertable to a cartesian pair with the 
-	 *           coordinateFromIndex function
-	 * @param PT The bin type, when processing and aggregating
-	 * @param AT The type of tile-level analytic to calculate for each tile.
-	 * @param DT The type of raw data-level analytic that already has been 
-	 *           calculated for each tile.
-	 * @param BT The final bin type, ready for writing to tiles
+	 * @param consolidationPartitions The number of partitions to use when grouping values in the same bin or the same
+	 *                                tile.  None to use the default determined by Spark.
+	 * @param tileType A specification of how data should be stored.  If None, a heuristic will be used that will use
+	 *                 the optimal type for a double-valued tile, and isn't too bad for smaller-valued types.  For
+	 *                 significantly larger-valued types, Some(Sparse) would probably work best.
+	 *
+	 * @tparam IT the index type, convertable to a cartesian pair with the
+	 *            coordinateFromIndex function
+	 * @tparam PT The bin type, when processing and aggregating
+	 * @tparam AT The type of tile-level analytic to calculate for each tile.
+	 * @tparam DT The type of raw data-level analytic that already has been
+	 *            calculated for each tile.
+	 * @tparam BT The final bin type, ready for writing to tiles
 	 */
 	def processDataByLevel[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(data: RDD[(IT, PT, Option[DT])],
@@ -245,7 +237,8 @@ class RDDBinner {
 		 levels: Seq[Int],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
-		 consolidationPartitions: Option[Int] = None): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None): RDD[TileData[BT]] =
 	{
 		val mapOverLevels: IT => TraversableOnce[(TileIndex, BinIndex)] =
 			index => {
@@ -260,7 +253,7 @@ class RDDBinner {
 			}
 
 		processData(data, binAnalytic, tileAnalytics, dataAnalytics,
-		            mapOverLevels, consolidationPartitions)
+		            mapOverLevels, consolidationPartitions, tileType)
 	}
 
 
@@ -270,20 +263,19 @@ class RDDBinner {
 	 * but minimal, data into an RDD of tiles.
 	 * 
 	 * @param data The data to be processed
-	 * @param binAnalytic A description of how raw values are to be aggregated into
-	 *                bin values
-	 * @param indexToTiles A function that spreads a data point out over the
-	 *                     tiles and bins of interest
-	 * @param xBins The number of bins along the horizontal axis of each tile
-	 * @param yBins The number of bins along the vertical axis of each tile
-	 * @param consolidationPartitions The number of partitions to use when
-	 *                                grouping values in the same bin or the same
-	 *                                tile.  None to use the default determined
-	 *                                by Spark.
+	 * @param binAnalytic A description of how raw values are to be aggregated into bin values
+	 * @param tileAnalytics An optional description of extra analytics to be run on complete tiles
+	 * @param dataAnalytics An optional description of extra analytics to be run on the raw data
+	 * @param indexToTiles A function that spreads a data point out over the tiles and bins of interest
+	 * @param consolidationPartitions The number of partitions to use when grouping values in the same bin or the same
+	 *                                tile.  None to use the default determined by Spark.
+	 * @param tileType A specification of how data should be stored.  If None, a heuristic will be used that will use
+	 *                 the optimal type for a double-valued tile, and isn't too bad for smaller-valued types.  For
+	 *                 significantly larger-valued types, Some(Sparse) would probably work best.
 	 * 
-	 * @param IT The index type, convertable to tile and bin
-	 * @param PT The bin type, when processing and aggregating
-	 * @param BT The final bin type, ready for writing to tiles
+	 * @tparam IT The index type, convertable to tile and bin
+	 * @tparam PT The bin type, when processing and aggregating
+	 * @tparam BT The final bin type, ready for writing to tiles
 	 */
 	def processData[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(data: RDD[(IT, PT, Option[DT])],
@@ -291,7 +283,8 @@ class RDDBinner {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
-		 consolidationPartitions: Option[Int] = None): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None): RDD[TileData[BT]] =
 	{
 		// Determine metadata
 		val metaData = processMetaData(data, indexToTiles, dataAnalytics)
@@ -323,21 +316,21 @@ class RDDBinner {
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		consolidate(partitionBins, binAnalytic, tileAnalytics,
-		            metaData, consolidationPartitions)
+		            metaData, consolidationPartitions, tileType)
 	}
 
 	/**
 	 * Process a simplified input dataset to run any raw data-based analysis
 	 * 
-	 * @param IT The index type of the data set
-	 * @param DT The type of data analytic used
+	 * @tparam IT The index type of the data set
+	 * @tparam DT The type of data analytic used
 	 * @param data The data to process
 	 * @param indexToTiles A function that spreads a data point out over the
 	 *                     tiles and bins of interest
-	 * @param dataAnalytic An optional transformation from a raw data record 
-	 *                     into an aggregable analytic value.  If None, this 
-	 *                     should cause no extra processing.  If multiple 
-	 *                     analytics are desired, use ComposedTileAnalytic
+	 * @param dataAnalytics An optional transformation from a raw data record
+	 *                      into an aggregable analytic value.  If None, this
+	 *                      should cause no extra processing.  If multiple
+	 *                      analytics are desired, use ComposedTileAnalytic
 	 */
 	def processMetaData[IT: ClassTag, PT: ClassTag, DT: ClassTag]
 		(data: RDD[(IT, PT, Option[DT])],
@@ -380,7 +373,8 @@ class RDDBinner {
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
-		 consolidationPartitions: Option[Int]): RDD[TileData[BT]] =
+		 consolidationPartitions: Option[Int],
+		 tileType: Option[StorageType]): RDD[TileData[BT]] =
 	{
 		// We need to consolidate both metadata and binning data, so our result
 		// has two slots, and each half populates one of them.
@@ -425,20 +419,23 @@ class RDDBinner {
 				val xLimit = index.getXBins()
 				val yLimit = index.getYBins()
 
-				// Create our tile
-				val tile = new TileData[BT](index)
+				val definedTileData = tileData.filter(_._1.isDefined)
 
-				// Put the proper default in all bins
+				// Create our tile
+				// Use the type passed in; if no type is passed in, use dense if more than half full.
+				val typeToUse = tileType.getOrElse(
+					if (definedTileData.size > xLimit*yLimit/2) StorageType.Dense
+					else StorageType.Sparse
+				)
 				val defaultBinValue =
 					binAnalytic.finish(binAnalytic.defaultProcessedValue)
-				for (x <- 0 until xLimit) {
-					for (y <- 0 until yLimit) {
-						tile.setBin(x, y, defaultBinValue)
-					}
+				val tile: TileData[BT] = typeToUse match {
+					case StorageType.Dense => new DenseTileData[BT](index, defaultBinValue)
+					case StorageType.Sparse => new SparseTileData[BT](index, defaultBinValue)
 				}
 
 				// Put the proper value into each bin
-				tileData.filter(_._1.isDefined).foreach(p =>
+				definedTileData.foreach(p =>
 					{
 						val bin = p._1.get._1
 						val value = p._1.get._2

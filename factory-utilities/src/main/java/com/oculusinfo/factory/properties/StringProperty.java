@@ -28,19 +28,22 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 
+import java.util.UUID;
+
 public class StringProperty implements ConfigurationProperty<String> {
-	private String   _name;
-	private String   _description;
-	private String   _defaultValue;
+
+    private String _name;
+	private String _description;
+	private String _defaultValue;
 	private String[] _possibleValues;
-
-
+	private String _uuid;
 
 	public StringProperty (String name, String description, String defaultValue) {
 		_name = name;
 		_description = description;
 		_defaultValue = defaultValue;
 		_possibleValues = null;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	public StringProperty (String name, String description, String defaultValue, String[] possibleValues) {
@@ -48,6 +51,7 @@ public class StringProperty implements ConfigurationProperty<String> {
 		_description = description;
 		_defaultValue = defaultValue;
 		_possibleValues = possibleValues;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -95,11 +99,9 @@ public class StringProperty implements ConfigurationProperty<String> {
 		return unencode(propertyNode.getAsString());
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -109,15 +111,13 @@ public class StringProperty implements ConfigurationProperty<String> {
 		if (!(that instanceof StringProperty)) return false;
         
 		StringProperty thatP = (StringProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override
 	public String toString () {
 		return String.format("<property name=\"%s\" type=\"string\"/>", _name);
 	}
-
-
 
 	/**
 	 * Create a duplicate property, identical in all but the list of possible
@@ -130,8 +130,6 @@ public class StringProperty implements ConfigurationProperty<String> {
 	public StringProperty overridePossibleValues (String[] newPossibilities) {
 		return new StringProperty(_name, _description, _defaultValue, newPossibilities);
 	}
-
-
 
 	/**
 	 * A utility function, mostly for use with the above

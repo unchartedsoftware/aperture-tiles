@@ -43,6 +43,7 @@ import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.DenseTileData
 
 import com.oculusinfo.tilegen.datasets.{TilingTask, CSVReader, CSVDataSource}
 import com.oculusinfo.tilegen.spark.SparkConnector
@@ -146,7 +147,7 @@ class SortedBinner {
 			val xLimit = a.getDefinition().getXBins()
 			val yLimit = a.getDefinition().getYBins()
 
-			val c = new TileData[PT](a.getDefinition())
+			val c = new DenseTileData[PT](a.getDefinition())
 			for (x <- 0 until xLimit) {
 				for (y <- 0 until yLimit) {
 					c.setBin(x, y, binAnalytic.aggregate(a.getBin(x, y),
@@ -178,7 +179,7 @@ class SortedBinner {
 									// with which to start
 									val xLimit = tileIndex.getXBins()
 									val yLimit = tileIndex.getYBins()
-									val tile = new TileData[PT](tileIndex)
+									val tile = new DenseTileData[PT](tileIndex)
 									for (x <- 0 until xLimit) {
 										for (y <- 0 until yLimit) {
 											tile.setBin(x, y, defaultRawBin)
@@ -241,7 +242,7 @@ class SortedBinner {
 				val defaultRawBin = binAnalytic.defaultUnprocessedValue
 				val defaultCookedBin = binAnalytic.defaultProcessedValue
 
-				val output = new TileData[BT](index)
+				val output = new DenseTileData[BT](index)
 
 				val withTiles = tileData.filter(_._1.isDefined)
 				if (withTiles.isEmpty) {

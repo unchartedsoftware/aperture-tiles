@@ -1,16 +1,8 @@
 var gulp = require('gulp'),
-  	del = require('del'),
     concat = require('gulp-concat'),
-    csso = require('gulp-csso'),    
-    istanbul = require('gulp-istanbul'),
-    mocha = require('gulp-mocha'),
-    jshint = require('gulp-jshint'),
     browserify = require('browserify'),
-    source = require('vinyl-source-stream'),
-    buffer = require('vinyl-buffer'),
-    run = require('gulp-run'),
-    uglify = require('gulp-uglify');
-
+    source = require('vinyl-source-stream');
+    
 function bundle( b, output ) {
     return b.bundle()
         .on( 'error', function( e ) {
@@ -21,6 +13,8 @@ function bundle( b, output ) {
 }
 
 function bundleMin( b, output ) {
+    var uglify = require('gulp-uglify'),
+        buffer = require('vinyl-buffer');
     return b.bundle()
         .on( 'error', function( e ) {
             console.log( e );
@@ -52,11 +46,13 @@ function handleError( err ) {
 }
 
 gulp.task('clean', function () {
-   	del([ 'build/*']);
-    del([ 'docs/*']);
+    var del = require('del');
+   	del.sync([ 'build/*']);
+    del.sync([ 'docs/*']);
 });
 
 gulp.task('lint', function() {
+    var jshint = require('gulp-jshint');
      return gulp.src( ['src/js/**/*.js'] )
              .pipe( jshint() )
              .pipe( jshint('.jshintrc') )
@@ -64,6 +60,8 @@ gulp.task('lint', function() {
 });
 
 gulp.task('test', function() {
+    var istanbul = require('gulp-istanbul'),
+        mocha = require('gulp-mocha');
     return gulp.src( [ 'src/js/**/*.js' ] )
        .pipe( istanbul( { includeUntested: false } ) ) // Covering files
        .on( 'finish', function () {
@@ -75,6 +73,7 @@ gulp.task('test', function() {
 });
 
 gulp.task('build-min-css', function () {
+    var csso = require('gulp-csso');
     return gulp.src( 'src/css/*.css' )
         .pipe( csso() )
         .pipe( concat('tiles.min.css') )
@@ -95,16 +94,9 @@ gulp.task('build-js', function() {
     return build( './src/js/api.js', 'tiles.js' );
 });
 
-// gulp.task('build-rest-min-js', [ 'lint' ], function() {
-//     return buildMin( './src/js/rest-api.js', 'tiles-rest.min.js' );
-// });
-
-// gulp.task('build-rest-js', [ 'lint' ], function() {
-//     return build( './src/js/rest-api.js', 'tiles-rest.js' );
-// });
-
-gulp.task('generate-docs', function () { 
-  run('jsdoc src/js/ --destination docs --recurse --template node_modules/jaguarjs-jsdoc').exec()  // prints "Hello World\n".
+gulp.task('generate-docs', function () {
+    var run = require('gulp-run');
+    run('jsdoc src/js/ --destination docs --recurse --template node_modules/jaguarjs-jsdoc').exec();
 })
 
 gulp.task('build', [ 'clean' ], function() {
@@ -113,16 +105,6 @@ gulp.task('build', [ 'clean' ], function() {
     gulp.start( 'build-min-js' );
     gulp.start( 'build-min-css' );
     gulp.start( 'generate-docs' );
-    //gulp.start( 'build-rest-min-js' );
-    //gulp.start( 'build-rest-js' );
-});
-
-gulp.task('debugjs', function() {
-    gulp.start( 'build-js' );
-});
-
-gulp.task('debugcss', function() {
-    gulp.start( 'build-css' );
 });
 
 gulp.task('default', [ 'build' ], function() {

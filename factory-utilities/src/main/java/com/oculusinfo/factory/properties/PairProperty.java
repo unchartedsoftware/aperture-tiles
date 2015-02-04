@@ -30,15 +30,19 @@ import com.oculusinfo.factory.JSONNode;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.UUID;
+
 /**
  * Created by nkronenfeld on 1/7/2015.
  */
 public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
-	private String _name;
+
+    private String _name;
 	private String _description;
 	private ConfigurationProperty<K> _keyDescriptor;
 	private ConfigurationProperty<V> _valueDescriptor;
 	private Pair<K, V> _defaultValue;
+	private String _uuid;
 
 	public PairProperty(ConfigurationProperty<K> keyDescriptor, ConfigurationProperty<V> valueDescriptor,
 	                    String name, String description,
@@ -48,10 +52,8 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		_name = name;
 		_description = description;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 	}
-
-
-
 
 	@Override
 	public String getName () {
@@ -130,11 +132,9 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		return new Pair<K, V>(key, value);
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -144,9 +144,7 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		if (!(that instanceof PairProperty)) return false;
 
 		PairProperty<?, ?> thatP = (PairProperty<?, ?>) that;
-		return (thatP._name.equals(this._name) &&
-		        thatP._keyDescriptor.equals(this._keyDescriptor) &&
-		        thatP._valueDescriptor.equals(this._valueDescriptor));
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

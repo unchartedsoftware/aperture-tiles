@@ -36,6 +36,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.util.Pair;
@@ -63,7 +64,7 @@ public class SerializerSerializabilityTests {
         PrimitiveAvroSerializer<Double> serialRD = (PrimitiveAvroSerializer) result;
 
         // Make sure they work the same
-        TileData<Double> tile = new TileData<>(new TileIndex(0, 0, 0, 4, 4),
+        TileData<Double> tile = new DenseTileData<>(new TileIndex(0, 0, 0, 4, 4),
                 Arrays.asList(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
                               8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0));
 
@@ -116,7 +117,7 @@ public class SerializerSerializabilityTests {
         PrimitiveArrayAvroSerializer<Float> serialRD = (PrimitiveArrayAvroSerializer) result;
 
         // Make sure they work the same
-        TileData<List<Float>> tile = new TileData<>(new TileIndex(0, 0, 0, 2, 2),
+        TileData<List<Float>> tile = new DenseTileData<>(new TileIndex(0, 0, 0, 2, 2),
                 Arrays.asList(Arrays.asList( 0.0f,  1.0f,  2.0f),
                               Arrays.asList( 3.0f,  4.0f,  5.0f,  6.0f),
                               Arrays.asList( 7.0f,  8.0f,  9.0f, 10.0f, 11.0f),
@@ -180,7 +181,7 @@ public class SerializerSerializabilityTests {
         PairArrayAvroSerializer<String, Integer> serialRD = (PairArrayAvroSerializer) result;
 
         // Make sure they work the same
-        TileData<List<Pair<String, Integer>>> tile = new TileData<>(new TileIndex(0, 0, 0, 2, 2),
+        TileData<List<Pair<String, Integer>>> tile = new DenseTileData<>(new TileIndex(0, 0, 0, 2, 2),
                 Arrays.asList(Arrays.asList(p("a", 1)),
                               Arrays.asList(p("b", 2), p("c", 3)),
                               Arrays.asList(p("d", 4), p("e", 5), p("f", 6)),

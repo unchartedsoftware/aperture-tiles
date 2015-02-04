@@ -24,6 +24,7 @@
 package com.oculusinfo.annotation;
 
 import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.factory.util.Pair;
@@ -39,12 +40,12 @@ import java.util.Map;
  * the binning-utilities package, this class is used to encapsulate the unique behaviour
  * needed for adding and removing annotations from each TileData<> object
  *
- * This class wraps a TileData< AnnotationBin > object, but massages the data into
- * a more generic TileData< Map<String, List<Pair<String,Long>>> > that is used by
+ * This class wraps a DenseTileData< AnnotationBin > object, but massages the data into
+ * a more generic DenseTileData< Map<String, List<Pair<String,Long>>> > that is used by
  * the serializer when writing / reading the data from the PyramidIO
  */
 
-public class AnnotationTile extends TileData< AnnotationBin > {
+public class AnnotationTile extends DenseTileData< AnnotationBin > {
 
     public AnnotationTile( TileIndex index ) {
         super( index );
@@ -57,11 +58,11 @@ public class AnnotationTile extends TileData< AnnotationBin > {
 
 
     public AnnotationTile( TileData< Map<String, List<Pair<String,Long>>> > rawTile ) {
-        super( rawTile.getDefinition(),  AnnotationBin.convertFromRaw( rawTile.getData() ) );
+        super( rawTile.getDefinition(),  AnnotationBin.convertFromRaw( rawTile ) );
     }
 
 
-    public static List< AnnotationTile > convertFromRaw( List< TileData<Map<String, List<Pair<String,Long>>>> > rawTiles ) {
+    public static List< AnnotationTile > convertFromRaw( List<TileData<Map<String, List<Pair<String,Long>>>>> rawTiles ) {
 
         List< AnnotationTile > tiles = new ArrayList<>();
         for ( TileData<Map<String, List<Pair<String,Long>>>> rawTile : rawTiles ) {
@@ -71,9 +72,9 @@ public class AnnotationTile extends TileData< AnnotationBin > {
     }
 
 
-    public static List< TileData<Map<String, List<Pair<String,Long>>>> > convertToRaw( List< AnnotationTile > tiles ) {
+    public static List<TileData<Map<String, List<Pair<String,Long>>>>> convertToRaw( List< AnnotationTile > tiles ) {
 
-        List< TileData<Map<String, List<Pair<String,Long>>>> > rawTiles = new ArrayList<>();
+        List<TileData<Map<String, List<Pair<String,Long>>>>> rawTiles = new ArrayList<>();
         for ( AnnotationTile tile : tiles ) {
             rawTiles.add( tile.getRawData() );
         }
@@ -82,9 +83,8 @@ public class AnnotationTile extends TileData< AnnotationBin > {
 
 
     public TileData<Map<String, List<Pair<String,Long>>>> getRawData() {
-
         List< Map<String, List<Pair<String,Long>>> > rawBins = AnnotationBin.convertToRaw( getData() );
-        return new TileData<>( getDefinition(), rawBins );
+        return new DenseTileData<>( getDefinition(), rawBins );
     }
 
     public boolean isEmpty() {

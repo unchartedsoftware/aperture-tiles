@@ -47,5 +47,21 @@
 
     OpenLayers.Layer.HTML.prototype = Object.create( OpenLayers.Layer.Grid.prototype );
 
+    OpenLayers.Layer.HTML.prototype.setOpacity = function( opacity ) {
+        if ( opacity !== this.opacity ) {
+            this.opacity = Math.max( Math.min( opacity, 1 ), 0 );
+            var childNodes = this.div.childNodes;
+            for( var i = 0, len = childNodes.length; i < len; ++i ) {
+                childNodes[i].style.opacity = this.opacity;
+            }
+            if (this.map !== null) {
+                this.map.events.triggerEvent("changelayer", {
+                    layer: this,
+                    property: "opacity"
+                });
+            }
+        }
+    };
+
     module.exports = OpenLayers.Layer.HTML;
 }());

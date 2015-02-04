@@ -1,0 +1,41 @@
+{
+  "name" : "sparseTile",
+  "namespace" : "ar.avro",
+  "type" : "record",
+  "fields" :
+    [
+      {"name": "level", "type": "int",
+       "doc": "The Z-level at which this tile lies.  Z=0 is the least-precise (zoomed-farthest-out) tile"},
+      {"name": "xIndex", "type": "int",
+       "doc": "The x index of this tile"},
+      {"name": "yIndex", "type": "int",
+       "doc": "The y index of this tile"},
+      {"name": "xBinCount", "type": "int",
+       "doc": "The number of bins along the x axis for this tile"},
+      {"name": "yBinCount", "type": "int",
+       "doc": "The number of bins along the y axis for this tile"},
+
+      {
+        "name": "values",
+        "type": {
+          "type": "array",
+          "items":{
+            "name": "entry",
+            "type": "record",
+            "fields": [
+              {"name": "xIndex", "type": "int"},
+              {"name": "yIndex", "type": "int"},
+              {"name": "value", "type": "ar.avro.recordType"}
+            ]
+          }
+        },
+        "doc": "The actual data for this tile"
+      },
+
+      {"name": "default", "type": ["ar.avro.recordType","null"], "default":"null",
+        "doc": "Default value inside the system.  Analogous to an image's background color or null"},
+
+      {"name": "meta", "type":[{"type":"map", "values":"string"}, "null"], "default":"null",
+        "doc": "Pass-through metadata location.  For things like provenance, time stamps, etc."}
+    ]
+}

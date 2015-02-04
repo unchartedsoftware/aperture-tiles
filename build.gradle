@@ -25,6 +25,7 @@ task setBuildVersions {
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
+            break
 		case "cdh5.1.0":
 			logger.info "Valid build type found - using $buildType"
 			project.ext {
@@ -78,7 +79,7 @@ task wrapper(type: Wrapper) {
 allprojects {
 	idea {
 		module {
-			testOutputDir = file('build/test')
+			inheritOutputDirs = true
 		}
 	}
 }
@@ -195,6 +196,8 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			def TILE_SERVICE_BUILD = "${rootDir}/tile-service/build/libs"
 			def ANNOTATION_SERVICE_SRC = "${rootDir}/annotation-service/src"
 			def ANNOTATION_SERVICE_BUILD = "${rootDir}/annotation-service/build/libs"
+			def TILE_RENDERING_SRC = "${rootDir}/tile-rendering/src"
+			def TILE_RENDERING_BUILD = "${rootDir}/tile-rendering/build/libs"
 			def BINNING_UTIL_SRC = "${rootDir}/binning-utilities/src"
 			def BINNING_UTIL_BUILD = "${rootDir}/binning-utilities/build/libs"
 			def FACTORY_UTIL_SRC = "${rootDir}/factory-utilities/src"
@@ -218,7 +221,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_DIR
 			}
 			copyClientJsToExploded.inputs.dir TILE_CLIENT_BUILD
-			copyClientJsToExploded.inputs.dir EXPLODED_DIR
 			copyClientJsToExploded.outputs.dir EXPLODED_DIR
 
 			// Copy client css build files into the exploded war
@@ -227,7 +229,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_DIR
 			}
 			copyClientCssToExploded.inputs.dir TILE_CLIENT_BUILD
-			copyClientCssToExploded.inputs.dir EXPLODED_DIR
 			copyClientCssToExploded.outputs.dir EXPLODED_DIR
 
 			// Copy tile-service jar files into the exploded war
@@ -236,7 +237,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
-			copyTileServiceToExploded.inputs.dir EXPLODED_DIR
 			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy factory-utilities jar into the exploded war
@@ -248,13 +248,21 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			copyFactoryUtilToExploded.inputs.dir EXPLODED_DIR
 			copyFactoryUtilToExploded.outputs.dir EXPLODED_LIBS
 
+			// Copy tile-rendering jar into the exploded war
+			task copyTileRenderingToExploded(type: Copy) {
+				from fileTree(TILE_RENDERING_BUILD).include("*.jar")
+				into EXPLODED_LIBS
+			}
+			copyTileRenderingToExploded.inputs.dir TILE_RENDERING_BUILD
+			copyTileRenderingToExploded.outputs.dir EXPLODED_LIBS
+
+
 			// Copy binning-utilities jar into the exploded war
 			task copyBinningUtilToExploded(type: Copy) {
 				from fileTree(BINNING_UTIL_BUILD).include("*.jar")
 			    into EXPLODED_LIBS
 			}
 			copyBinningUtilToExploded.inputs.dir BINNING_UTIL_BUILD
-			copyBinningUtilToExploded.inputs.dir EXPLODED_DIR
 			copyBinningUtilToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy math-utilities jar into the exploded war
@@ -263,7 +271,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyMathUtilToExploded.inputs.dir MATH_UTIL_BUILD
-			copyMathUtilToExploded.inputs.dir EXPLODED_DIR
 			copyMathUtilToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy annotation-service jar into the exploded war
@@ -272,7 +279,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_LIBS
 			}
 			copyAnnotationServiceToExploded.inputs.dir ANNOTATION_SERVICE_BUILD
-			copyAnnotationServiceToExploded.inputs.dir EXPLODED_DIR
 			copyAnnotationServiceToExploded.outputs.dir EXPLODED_LIBS
 
 			// Copy the application files into the exploded war
@@ -281,7 +287,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    into EXPLODED_DIR
 			}
 			copyAppToExploded.inputs.dir APPLICATION_DIR
-			copyAppToExploded.inputs.dir EXPLODED_DIR
 			copyAppToExploded.outputs.dir EXPLODED_DIR
 
 			// Configure the watch task
@@ -298,6 +303,10 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 					files fileTree(FACTORY_UTIL_SRC).include('**/*.java')
 					tasks ':factory-utilities:jar', 'copyFactoryUtilToExploded'
 				}
+				renderingWatch {
+					files fileTree(TILE_RENDERING_SRC).include('**/*.java')
+					tasks ':tile-rendering:jar', 'copyTileRenderingToExploded'
+				}
 			    binningWatch {
 			        files fileTree(BINNING_UTIL_SRC).include('**/*.java')
 			        tasks ':binning-utilities:jar', 'copyBinningUtilToExploded'
@@ -308,11 +317,11 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			    }
 			    clientJsWatch {
 			        files fileTree(TILE_CLIENT_SRC).include('**/*.js')
-			        tasks ':tile-client:build_debug_js', 'copyClientJsToExploded'
+			        tasks ':tile-client:build_js', 'copyClientJsToExploded'
 			    }
 			    clientCssWatch {
 			        files fileTree(TILE_CLIENT_SRC).include('**/*.css')
-			        tasks ':tile-client:build_debug_css', 'copyClientCssToExploded'
+			        tasks ':tile-client:build_css', 'copyClientCssToExploded'
 			    }
 			    appWatch {
 			    	files fileTree(APPLICATION_DIR)
@@ -324,8 +333,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			dependencies {
 				compile project(path: ":tile-service")
 				compile project(path: ":annotation-service")
-			}
-		
+			}		
 		
 			// configure the war task to pick up the tile client build files
 			war {

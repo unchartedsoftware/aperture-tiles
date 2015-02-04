@@ -27,25 +27,16 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.lang.{Integer => JavaInt}
-import java.lang.{Double => JavaDouble}
+import java.util.{ArrayList, Properties}
 
-import java.util.{Properties, ArrayList}
-
-import com.oculusinfo.binning.impl.{AOITilePyramid, WebMercatorTilePyramid}
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.binning.{TileIndex, TileData, TilePyramid}
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.tilegen.spark.{DoubleMaxAccumulatorParam, DoubleMinAccumulatorParam}
-import com.oculusinfo.tilegen.tiling.{CartesianSchemaIndexScheme, IndexScheme}
-import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescription, BinningAnalytic}
-import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-import org.apache.avro.file.CodecFactory
-import org.apache.spark.SparkContext
+import com.oculusinfo.binning.{TileData, TileIndex}
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SQLContext, SchemaRDD}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.streaming.dstream.DStream
 
 import scala.reflect.ClassTag
@@ -140,9 +131,9 @@ object TilingTask {
  * @param config An object specifying the configuration details of this task.
  * @param indexer An object to extract the index value(s) from the raw data
  * @param valuer An object to extract the binnable value(s) from the raw data
- * @param deferredPyramid
- * @param tileAnalytics
- * @param dataAnalytics
+ * @param deferredPyramid The pyramid type used to store tile data
+ * @param tileAnalytics An object that runs analytics locally on each tile
+ * @param dataAnalytics An object that run analytics across tiles in each level
  *
  * @tparam PT The processing value type used by this tiling task when calculating bin values.
  * @tparam DT The type of data analytic used by this tiling task.
@@ -205,6 +196,9 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the number of partitions to use when reducing data to tiles */
 	def getConsolidationPartitions = config.consolidationPartitions
 
+	/** Get the type of tile storage to create when this task creates tiles */
+	def getTileType = config.tileType
+
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
 
@@ -239,7 +233,35 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		                    new ArrayList[Pair[JavaInt, String]]())
 	}
 
+	/**
+	 * Actually perform tiling, and save tiles.
+	 * @param tileIO An object that knows how to save tiles.
+	 */
+	def doTiling (tileIO: TileIO): Unit = {
+		val binner = new RDDBinner
+		binner.debug = true
+		val sc = sqlc.sparkContext
 
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+		getLevels.map(levels => {
+			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+
+			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
+				rdd => {
+					val tiles = binner.processDataByLevel(rdd, getIndexScheme,
+						getBinningAnalytic, tileAnalytics, dataAnalytics,
+						getTilePyramid, levels, getNumXBins, getNumYBins,
+						getConsolidationPartitions)
+
+					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
+						tileAnalytics, dataAnalytics, getName, getDescription)
+				}
+
+			process(procFcn, None)
+		})
+	}
 
 	// Axis-related methods and fields
 	private lazy val axisBounds = getAxisBounds()

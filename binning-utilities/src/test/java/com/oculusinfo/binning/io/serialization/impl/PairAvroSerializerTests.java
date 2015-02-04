@@ -38,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oculusinfo.binning.DenseTileData;
 public class PairAvroSerializerTests {
     @SafeVarargs
     final <S, T> void testRoundTrip(Class<? extends S> keyType, Class<? extends T> valueType,
@@ -47,7 +48,7 @@ public class PairAvroSerializerTests {
         // Create our tile
         int n = data.length;
         int size = (int) Math.ceil(Math.sqrt(n));
-        TileData<Pair<S, T>> input = new TileData<>(new TileIndex(0, 0, 0, size, size));
+        TileData<Pair<S, T>> input = new DenseTileData<>(new TileIndex(0, 0, 0, size, size));
         for (int y=0; y<size; ++y) {
             for (int x=0; x<size; ++x) {
                 int i = ((x+size*y));

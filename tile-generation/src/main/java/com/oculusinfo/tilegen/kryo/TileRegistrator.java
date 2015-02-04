@@ -109,6 +109,10 @@ public class TileRegistrator implements KryoRegistrator {
 		kryo.register(PyramidComparator.class);
 		kryo.register(TileData.class);
 		kryo.register(TileData[].class);
+		kryo.register(DenseTileData.class);
+		kryo.register(DenseTileData[].class);
+		kryo.register(SparseTileData.class);
+		kryo.register(SparseTileData[].class);
 		kryo.register(java.util.ArrayList.class);
 		kryo.register(TileIndex.class);
 

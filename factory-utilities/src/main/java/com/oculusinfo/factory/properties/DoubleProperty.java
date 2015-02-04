@@ -28,17 +28,20 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.JSONNode;
 import org.json.JSONException;
 
+import java.util.UUID;
+
 public class DoubleProperty implements ConfigurationProperty<Double> {
-	private String _name;
+
+    private String _name;
 	private String _description;
-	private double    _defaultValue;
-
-
+	private double _defaultValue;
+	private String _uuid;
 
 	public DoubleProperty (String name, String description, double defaultValue) {
 		_name = name;
 		_description = description;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 	}
 
 	@Override
@@ -90,11 +93,9 @@ public class DoubleProperty implements ConfigurationProperty<Double> {
 		return propertyNode.getAsDouble();
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -104,7 +105,7 @@ public class DoubleProperty implements ConfigurationProperty<Double> {
 		if (!(that instanceof DoubleProperty)) return false;
         
 		DoubleProperty thatP = (DoubleProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

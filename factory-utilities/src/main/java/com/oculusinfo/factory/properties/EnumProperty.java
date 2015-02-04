@@ -9,25 +9,24 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(EnumProperty.class);
 
-
-
-	private String   _name;
-	private String   _description;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnumProperty.class);
+	private String _name;
+	private String _description;
 	private Class<T> _type;
 	private T _defaultValue;
 	private Method _valueOf;
-
-
+	private String _uuid;
 
 	public EnumProperty (String name, String description, Class<T> type, T defaultValue) {
 		_name = name;
 		_description = description;
 		_type = type;
 		_defaultValue = defaultValue;
+		_uuid = UUID.randomUUID().toString();
 		try {
 			_valueOf = type.getDeclaredMethod("valueOf", String.class);
 		} catch (NoSuchMethodException e) {
@@ -90,11 +89,9 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 		return unencode(propertyNode.getAsString());
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode() + _type.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -104,7 +101,7 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 		if (!(that instanceof EnumProperty)) return false;
         
 		EnumProperty<?> thatP = (EnumProperty<?>) that;
-		return thatP._name.equals(this._name) && thatP._type.equals(this._type);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

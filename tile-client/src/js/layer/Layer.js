@@ -42,9 +42,8 @@
         this.name = spec.name || "Unnamed Layer";
         this.domain = spec.domain;
         this.map = spec.map;
-        spec.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
-        spec.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-        this.spec = spec;
+        this.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+        this.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
     }
 
     Layer.prototype = {
@@ -56,7 +55,7 @@
          * @param {float} opacity - opacity value from 0 to 1.
          */
         setOpacity: function( opacity ) {
-            this.spec.opacity = opacity;
+            this.opacity = opacity;
             if ( this.olLayer ) {
                 this.olLayer.setOpacity ( opacity );
                 PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
@@ -70,31 +69,31 @@
          * @returns {float} The opacity of the layer.
          */
         getOpacity: function() {
-            return this.spec.opacity;
+            return this.opacity;
         },
 
         /**
-         * Set the visibility of the layer.
+         * Set whether or not the layer is enabled.
          * @memberof Layer.prototype
          *
-         * @param visibility {boolean} whether the layer is visible or not
+         * @param enabled {boolean} whether the layer is visible or not
          */
-        setVisibility: function( visibility ) {
-            this.spec.enabled = visibility;
+        setEnabled: function( enabled ) {
+            this.enabled = enabled;
             if ( this.olLayer ) {
-                this.olLayer.setVisibility(visibility);
-                PubSub.publish( this.getChannel(), { field: 'enabled', value: visibility } );
+                this.olLayer.setVisibility( enabled );
+                PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
             }
         },
 
         /**
-         * Returns the visibility of the layer.
+         * Get whether or not the layer is enabled.
          * @memberof Layer.prototype
          *
          * @returns {boolean} If the layer is visible or not.
          */
-        getVisibility: function() {
-            return this.spec.enabled;
+        isEnabled: function() {
+            return this.enabled;
         },
 
         /**

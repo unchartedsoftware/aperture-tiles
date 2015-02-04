@@ -73,10 +73,8 @@
          * @param [events] {Array}                 Array of events to propagate through (optional).
          */
         enableEventPropagation: function( elem, events ) {
-
             var domElement = ( elem instanceof $ ) ? elem[0] : elem,
                 i;
-
             if ( !events ) {
                 domElement.addEventListener( 'mousedown', propagateEvent );
                 domElement.addEventListener( 'mouseup', propagateEvent );
@@ -86,7 +84,7 @@
                 domElement.addEventListener( 'click', propagateEvent );
                 domElement.addEventListener( 'dblclick', propagateEvent );
             } else {
-                events = ( events instanceof Array ) ? events : [events];
+                events = ( events instanceof Array ) ? events : [ events ];
                 for ( i=0; i<events.length; i++ ) {
                     domElement.addEventListener( events[i], propagateEvent );
                 }
@@ -100,7 +98,6 @@
          * @param [events] {Array}               Array of events to remove (optional).
          */
         disableEventPropagation: function( elem, events ) {
-
             var domElement = ( elem instanceof $ ) ? elem[0] : elem,
                 i;
             if ( !events ) {
@@ -112,7 +109,7 @@
                 domElement.removeEventListener( 'click', propagateEvent );
                 domElement.removeEventListener( 'dblclick', propagateEvent );
             } else {
-                events = ( events instanceof Array ) ? events : [events];
+                events = ( events instanceof Array ) ? events : [ events ];
                 for ( i=0; i<events.length; i++ ) {
                     domElement.removeEventListener( events[i], propagateEvent );
                 }
@@ -140,6 +137,62 @@
             var numDec = decimals || 2,
                 pow10 = Math.pow( 10, numDec );
             return parseFloat( Math.round( value * pow10 ) / pow10 ).toFixed( decimals );
+        },
+
+        /**
+         * Converts a value from the range [0, 1] to a value from the
+         * range [minMax.min, minMax.max] based on a value transform function.
+         *
+         * @param {number} percentage - The range percentage in range [0, 1].
+         * @param {Object} minMax - The min and max values of the range.
+         * @param {String} transform - The transform type, either 'log10' or 'linear'.
+         *
+         * @returns {number} The value from [minMax.min, minMax.max].
+         */
+        denormalizeValue: function( percentage, minMax, transform ) {
+            var range = minMax.max- minMax.min,
+                val;
+            function log10(val) {
+                return Math.log(val) / Math.LN10;
+            }
+            function checkLogInput( value ) {
+                return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) * percentage );
+            }
+            //iterate over the inner labels
+            if ( transform === "log10" ) {
+                val = checkLogInput( minMax.max );
+            } else {
+                val = percentage * range + minMax.min;
+            }
+            return val;
+        },
+
+        /**
+         * Converts a value from the range [minMax.min, minMax.max] to a value in
+         * the range [0, 1] based on a value transform function.
+         *
+         * @param {number} value - The range percentage in range [minMax.min, minMax.max].
+         * @param {Object} minMax - The min and max values of the range.
+         * @param {String} transform - The transform type, either 'log10' or 'linear'.
+         *
+         * @returns {number} The value percentage from [0, 1].
+         */
+        normalizeValue: function( value, minMax, transform ) {
+            var range = minMax.max - minMax.min,
+                val;
+            function log10(val) {
+                return Math.log(val) / Math.LN10;
+            }
+            function checkLogInput( value ) {
+                return ( value === 0 || value === 1 ) ? 0 : log10( value ) / log10( value );
+            }
+            //iterate over the inner labels
+            if ( transform === "log10" ) {
+                val = checkLogInput( minMax.ax );
+            } else {
+                val = ( ( value - minMax.min ) / range );
+            }
+            return val;
         },
 
         /**
@@ -249,7 +302,26 @@
                 }
             }
             return true;
-        }
+        },
+
+        /**
+         * Extend class a by class b. Does not recurse, simply overlays top attributes.
+         *
+         * @param {Object} a - Object a which is extended.
+         * @param {Object} b - Object b which extends a.
+         *
+         * @returns {Object} The extended object.
+         */
+        extend: function( a, b ) {
+            var key;
+            for( key in b ) {
+                if( b.hasOwnProperty( key ) ) {
+                    a[ key ] = b[ key ];
+                }
+            }
+            return a;
+        },
+
 
     };
 }());
