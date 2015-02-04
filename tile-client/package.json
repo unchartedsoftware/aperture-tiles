@@ -10,7 +10,6 @@
       "email": "kbirk@oculusinfo.com"
     }
   ],
-  "main": "app.js",
   "dependencies": {},
   "devDependencies": {
     "browserify": "^6.0.2",
@@ -29,5 +28,13 @@
     "lodash": "^2.4.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.0.0"
+  },
+  "scripts": {
+    "bower": "./node_modules/.bin/bower install",
+    "buildjs": "./node_modules/.bin/gulp build-js",
+    "buildcss": "./node_modules/.bin/gulp build-css",
+    "build": "./node_modules/.bin/gulp build",
+    "test": "./node_modules/.bin/gulp test",
+    "lint": "./node_modules/.bin/gulp lint"
   }
 }

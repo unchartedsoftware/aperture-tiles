@@ -1,5 +1,5 @@
 plugins {
-	id "com.moowork.gulp" version "0.1"
+	id "com.moowork.node" version "0.8"
 }
 
 // pull in maven publish plugin to let us upload the .zip file
@@ -8,45 +8,42 @@ apply plugin: 'maven-publish'
 // module description
 description = "A basic map client that allows for client-side user interaction with"
 
-// The 'test' task is typically provided by the 'java' plugin, an empty task is added here to 
-// provide a similar interface.
-task test {}
+// The 'test' task runs 'npm run test', which in turn executes 'gulp test'
+task test( type: NpmTask ) {
+  args = ['run', 'test']
+}
 test.dependsOn assemble
-test.dependsOn gulp_test
 
-/**
- *	DEBUG BUILD (builds non-minified files with source maps, assumes dependencies are installed)
- */
-// empty tasks for debug build, these are called by the 'watch' plugin in an external build file
-task build_js {}
-task build_css {}
-// build js
-gulp_build_js.inputs.dir "$projectDir/src"
-gulp_build_js.outputs.dir "$buildDir"
-build_js.dependsOn gulp_build_js
-// build css
-gulp_build_css.inputs.dir "$projectDir/src"
-gulp_build_css.outputs.dir "$buildDir"
-build_css.dependsOn gulp_build_css
+// Partial Builds, these builds non-minified files with source maps, assumes dependencies are installed
+// These should only ever be called by the gradle wtch plugin.
+task build_js( type: NpmTask ) {
+  args = ['run', 'buildjs']
+}
+build_js.inputs.dir "$projectDir/src"
+build_js.outputs.dir "$buildDir"
 
-/**
- *	FULL BUILD (builds everything, will check for dependencies)
- */
+task build_css( type: NpmTask ) {
+  args = ['run', 'buildcss']
+}
+build_css.inputs.dir "$projectDir/src"
+build_css.outputs.dir "$buildDir"
 
-// gulp_build task calls 'gulp build'
-gulp_build.inputs.dir "$projectDir/src"
-gulp_build.outputs.dir "$buildDir"
-gulp_build.dependsOn 'npmInstall'
-
+// Full build, builds everything, will check for dependencies
+task build_full( type: NpmTask ) {
+  args = ['run', 'build']
+}
+build_full.inputs.dir "$projectDir/src"
+build_full.outputs.dir "$buildDir"
+build_full.dependsOn 'npmInstall'
 npmInstall.outputs.dir "$projectDir/node_install"
 
-// take the files from the build directory and zip them
+// Zip all the relevant files from the build directory
 task zipMinifiedFiles(type: Zip) {
  	from buildDir
  	include "*.js", "*.css"
  	destinationDir file( buildDir.getPath() + "/distribution" ) 
 }
-zipMinifiedFiles.dependsOn gulp_build
+zipMinifiedFiles.dependsOn build_full
 assemble.dependsOn zipMinifiedFiles
 
 // The 'build' task is typically provided by the 'java' plugin, an empty task is added here to 
@@ -61,6 +58,7 @@ task install {}
 install.dependsOn assemble
 install.dependsOn publishToMavenLocal
 
+// Publish our zipped files to maven
 publishing {
     publications {
         uploadMaven(MavenPublication) {
