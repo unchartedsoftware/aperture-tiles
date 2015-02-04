@@ -36,7 +36,8 @@ import java.util.UUID;
  * Created by nkronenfeld on 1/7/2015.
  */
 public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
-	private String _name;
+
+    private String _name;
 	private String _description;
 	private ConfigurationProperty<K> _keyDescriptor;
 	private ConfigurationProperty<V> _valueDescriptor;
@@ -53,9 +54,6 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		_defaultValue = defaultValue;
 		_uuid = UUID.randomUUID().toString();
 	}
-
-
-
 
 	@Override
 	public String getName () {
@@ -81,11 +79,6 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 	@Override
 	public Pair<K, V> getDefaultValue () {
 		return _defaultValue;
-	}
-
-	@Override
-	public String getUUID () {
-		return _uuid;
 	}
 
 	private String escape (String value) {
@@ -139,11 +132,9 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		return new Pair<K, V>(key, value);
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -153,9 +144,7 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		if (!(that instanceof PairProperty)) return false;
 
 		PairProperty<?, ?> thatP = (PairProperty<?, ?>) that;
-		return (thatP._name.equals(this._name) &&
-		        thatP._keyDescriptor.equals(this._keyDescriptor) &&
-		        thatP._valueDescriptor.equals(this._valueDescriptor));
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

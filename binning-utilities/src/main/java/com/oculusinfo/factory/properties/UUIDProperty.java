@@ -31,11 +31,10 @@ import org.json.JSONException;
 import java.util.UUID;
 
 public class UUIDProperty implements ConfigurationProperty<UUID> {
-	private String   _name;
-	private String   _description;
+
+    private String _name;
+	private String _description;
 	private String _uuid;
-
-
 
 	public UUIDProperty (String name, String description) {
 		_name = name;
@@ -71,11 +70,6 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (UUID value) {
 		long msb = value.getMostSignificantBits();
 		long lsb = value.getLeastSignificantBits();
@@ -106,11 +100,9 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
 		return unencode(propertyNode.getAsString());
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -120,7 +112,7 @@ public class UUIDProperty implements ConfigurationProperty<UUID> {
 		if (!(that instanceof UUIDProperty)) return false;
 
 		UUIDProperty thatP = (UUIDProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

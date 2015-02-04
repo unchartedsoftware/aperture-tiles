@@ -31,12 +31,11 @@ import org.json.JSONException;
 import java.util.UUID;
 
 public class IntegerProperty implements ConfigurationProperty<Integer> {
-	private String _name;
+
+    private String _name;
 	private String _description;
-	private int    _defaultValue;
+	private int _defaultValue;
 	private String _uuid;
-
-
 
 	public IntegerProperty (String name, String description, int defaultValue) {
 		_name = name;
@@ -71,11 +70,6 @@ public class IntegerProperty implements ConfigurationProperty<Integer> {
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (Integer value) {
 		return value.toString();
 	}
@@ -99,11 +93,9 @@ public class IntegerProperty implements ConfigurationProperty<Integer> {
 		return propertyNode.getAsInt();
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -113,7 +105,7 @@ public class IntegerProperty implements ConfigurationProperty<Integer> {
 		if (!(that instanceof IntegerProperty)) return false;
         
 		IntegerProperty thatP = (IntegerProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

@@ -61,7 +61,7 @@ public class FileSystemPyramidSourceTest {
 		ArrayList<TileData<Integer>> writeTiles = new ArrayList<>();
 
 		TileIndex index = new TileIndex( LEVEL, X_INDEX, Y_INDEX );
-		TileData<Integer> tile = new TileData<>(index);
+		TileData<Integer> tile = new DenseTileData<>(index);
 		for (int x=0; x<256; ++x) {
 			for (int y=0; y<256; ++y) {
 				tile.setBin(x, y, x+256*y);

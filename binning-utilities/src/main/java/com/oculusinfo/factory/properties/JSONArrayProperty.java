@@ -40,13 +40,12 @@ import java.util.UUID;
  *
  */
 public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(JSONArrayProperty.class);
-	private String     _name;
-	private String     _description;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JSONArrayProperty.class);
+	private String _name;
+	private String _description;
 	private JSONArray _defaultValue;
 	private String _uuid;
-
-
 
 	public JSONArrayProperty (String name, String description, String defaultValue) {
 		_name = name;
@@ -92,11 +91,6 @@ public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (JSONArray value) {
 		return value.toString();
 	}
@@ -123,11 +117,9 @@ public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
 		return propertyNode.getAsJSONArray();
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -137,7 +129,7 @@ public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
 		if (!(that instanceof JSONArrayProperty)) return false;
         
 		JSONArrayProperty thatP = (JSONArrayProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

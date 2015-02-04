@@ -31,11 +31,11 @@ import org.json.JSONException;
 import java.util.UUID;
 
 public class BooleanProperty implements ConfigurationProperty<Boolean> {
-	private String  _name;
-	private String  _description;
+
+    private String _name;
+	private String _description;
 	private boolean _defaultValue;
 	private String _uuid;
-
 
 	public BooleanProperty (String name, String description, boolean defaultValue) {
 		_name = name;
@@ -70,11 +70,6 @@ public class BooleanProperty implements ConfigurationProperty<Boolean> {
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (Boolean value) {
 		return value.toString();
 	}
@@ -98,11 +93,9 @@ public class BooleanProperty implements ConfigurationProperty<Boolean> {
 		return propertyNode.getAsBoolean();
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -112,7 +105,7 @@ public class BooleanProperty implements ConfigurationProperty<Boolean> {
 		if (!(that instanceof BooleanProperty)) return false;
         
 		BooleanProperty thatP = (BooleanProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

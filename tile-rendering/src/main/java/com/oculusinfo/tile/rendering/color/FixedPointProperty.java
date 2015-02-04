@@ -71,11 +71,6 @@ public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (FixedPoint value) {
 		return String.format("%fby%f", value.getScale(), value.getValue());
 	}
@@ -100,12 +95,9 @@ public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
 		return new FixedPoint(node.getDouble("scale"), node.getDouble("value"));
 	}
 
-
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -115,7 +107,7 @@ public class FixedPointProperty implements ConfigurationProperty<FixedPoint> {
 		if (!(that instanceof FixedPointProperty)) return false;
         
 		FixedPointProperty thatP = (FixedPointProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

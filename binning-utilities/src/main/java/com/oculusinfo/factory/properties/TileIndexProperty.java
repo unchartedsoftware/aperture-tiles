@@ -33,12 +33,11 @@ import org.json.JSONObject;
 import java.util.UUID;
 
 public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
-	private String    _name;
-	private String    _description;
+
+    private String _name;
+	private String _description;
 	private TileIndex _defaultValue;
 	private String _uuid;
-
-
 
 	public TileIndexProperty (String name, String description, TileIndex defaultValue) {
 		_name = name;
@@ -70,11 +69,6 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 	@Override
 	public TileIndex getDefaultValue () {
 		return _defaultValue;
-	}
-
-	@Override
-	public String getUUID () {
-		return _uuid;
 	}
 
 	@Override
@@ -111,11 +105,9 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 		return new TileIndex(level, xIndex, yIndex, numXBins, numYBins);
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -125,7 +117,7 @@ public class TileIndexProperty implements ConfigurationProperty<TileIndex> {
 		if (!(that instanceof TileIndexProperty)) return false;
         
 		TileIndexProperty thatP = (TileIndexProperty) that;
-		return thatP._name.toLowerCase().equals(this._name.toLowerCase());
+		return thatP._uuid.toLowerCase().equals(this._uuid.toLowerCase());
 	}
 
 	@Override

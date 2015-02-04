@@ -54,11 +54,12 @@ abstract public class ConfigurableFactory<T> {
     private ConfigurableFactory<?>        _parent;
 	private List<ConfigurableFactory<?>>  _children;
     private Set<ConfigurationProperty<?>> _properties;
-    private HashMap<String, List<String>> _pathsByPropertyUUID;
 	private boolean                       _configured;
 	private JSONObject                    _configurationNode;
     private boolean                       _isSingleton;
     private T                             _singletonProduct;
+    private HashMap<ConfigurationProperty<?>,
+                List<String>> _pathsByProperty;
 
     /**
      * Create a factory
@@ -142,7 +143,7 @@ abstract public class ConfigurableFactory<T> {
         _children = new ArrayList<>();
         _configured = false;
         _properties = new HashSet<>();
-        _pathsByPropertyUUID = new HashMap<>();
+        _pathsByProperty = new HashMap<>();
         _isSingleton = isSingleton;
         _singletonProduct = null;
         
@@ -192,7 +193,7 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	public <PT> void addProperty (ConfigurationProperty<PT> property, List<String> path) {
 		_properties.add(property);
-        _pathsByPropertyUUID.put( property.getUUID(), path );
+        _pathsByProperty.put( property, path );
 	}
 
     /**
@@ -404,11 +405,11 @@ abstract public class ConfigurableFactory<T> {
 	}
 
     private JSONObject getPropertyNode( ConfigurationProperty<?> property ) {
-        if ( _pathsByPropertyUUID.get( property.getUUID() ) == null ) {
+        if ( _pathsByProperty.get( property ) == null ) {
             return new JSONObject();
         }
         JSONObject node;
-        List<String> path = new ArrayList<>( _pathsByPropertyUUID.get( property.getUUID() ) );
+        List<String> path = new ArrayList<>( _pathsByProperty.get( property ) );
         if ( path.isEmpty() ) {
             return _configurationNode;
         } else {
@@ -493,14 +494,14 @@ abstract public class ConfigurableFactory<T> {
 		return result;
 	}
 
-    private String getFullPropertyString( String uuid, String name ) {
+    private String getFullPropertyString( ConfigurationProperty<?> property, String name ) {
         StringBuilder sb = new StringBuilder();
         for ( String subPath : _rootPath ) {
             sb.append( subPath );
             sb.append(".");
         }
-        if ( _pathsByPropertyUUID.get( uuid ) != null ) {
-            List<String> attributePath = new ArrayList<>( _pathsByPropertyUUID.get( uuid ) );
+        if ( _pathsByProperty.get( property ) != null ) {
+            List<String> attributePath = new ArrayList<>( _pathsByProperty.get( property ) );
             for ( String subPath : attributePath ) {
                 sb.append( subPath );
                 sb.append( "." );
@@ -513,7 +514,7 @@ abstract public class ConfigurableFactory<T> {
     private String getFactoryString() {
         StringBuilder sb = new StringBuilder();
         for ( ConfigurationProperty<?> prop : _properties ) {
-            sb.append( getFullPropertyString( prop.getUUID(), prop.getName() ) );
+            sb.append( getFullPropertyString( prop, prop.getName() ) );
             sb.append( ":" );
             sb.append( getPropertyValue( prop ) );
         }
@@ -539,7 +540,7 @@ abstract public class ConfigurableFactory<T> {
     private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
         // get the properties path
         List<String> fullPath = getRootPath();
-        fullPath.addAll(_pathsByPropertyUUID.get( property.getUUID() ) );
+        fullPath.addAll(_pathsByProperty.get( property ) );
         // ensure the path exists by adding it if it doesn't
         // append root path to start of property path since they are relative to the
         // current factories path

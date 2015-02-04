@@ -23,13 +23,9 @@
  */
 package com.oculusinfo.factory;
 
-
-
 import org.json.JSONException;
 
-
-
-/*
+/**
  * This class provides a description of a property to be read from JSON files or
  * java property files, and used in configuring manufacture of a needed object
  * by some factory.
@@ -48,8 +44,6 @@ public interface ConfigurationProperty<T> {
 	public T[] getPossibleValues ();
 
 	public T getDefaultValue ();
-
-	public String getUUID ();
 
 	/**
 	 * Give a string version of a value for this property.

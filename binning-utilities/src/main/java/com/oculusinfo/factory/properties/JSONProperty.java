@@ -34,13 +34,12 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
 public class JSONProperty implements ConfigurationProperty<JSONObject> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(JSONProperty.class);
-	private String     _name;
-	private String     _description;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JSONProperty.class);
+	private String _name;
+	private String _description;
 	private JSONObject _defaultValue;
 	private String _uuid;
-
-
 
 	public JSONProperty (String name, String description, String defaultValue) {
 		_name = name;
@@ -86,11 +85,6 @@ public class JSONProperty implements ConfigurationProperty<JSONObject> {
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (JSONObject value) {
 		return value.toString();
 	}
@@ -117,11 +111,9 @@ public class JSONProperty implements ConfigurationProperty<JSONObject> {
 		return propertyNode.getAsJSONObject();
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -131,7 +123,7 @@ public class JSONProperty implements ConfigurationProperty<JSONObject> {
 		if (!(that instanceof JSONProperty)) return false;
         
 		JSONProperty thatP = (JSONProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

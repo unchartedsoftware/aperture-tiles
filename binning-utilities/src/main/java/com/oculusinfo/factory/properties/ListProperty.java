@@ -34,9 +34,10 @@ import java.util.List;
 import java.util.UUID;
 
 public class ListProperty<T> implements ConfigurationProperty<List<T>> {
-	private ConfigurationProperty<T> _baseProperty;
-	private String                   _name;
-	private String                   _description;
+
+    private ConfigurationProperty<T> _baseProperty;
+	private String _name;
+	private String _description;
 	private String _uuid;
 
 	/**
@@ -84,10 +85,6 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 	private String escape (String value) {
 		return value.replace("\\", "\\\\").replace(",", "\\,");
 	}
-	@Override
-	public String getUUID () {
-		return _uuid;
-	}
 
 	@Override
 	public String encode (List<T> value) {
@@ -103,6 +100,7 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 	private String unescape (String value) {
 		return value.replace("\\,", ",").replace("\\\\", "\\");
 	}
+
 	@Override
 	public List<T> unencode (String value) throws ConfigurationException {
 		List<T> res = new ArrayList<>();
@@ -163,8 +161,6 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 		return result;
 	}
 
-
-
 	@Override
 	public int hashCode () {
 		return _name.hashCode() + _baseProperty.hashCode();
@@ -177,7 +173,7 @@ public class ListProperty<T> implements ConfigurationProperty<List<T>> {
 		if (!(that instanceof ListProperty)) return false;
 
 		ListProperty<?> thatP = (ListProperty<?>) that;
-		return thatP._name.equals(this._name) && thatP._baseProperty.equals(this._baseProperty);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

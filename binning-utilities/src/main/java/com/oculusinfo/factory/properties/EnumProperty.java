@@ -12,18 +12,14 @@ import java.lang.reflect.Method;
 import java.util.UUID;
 
 public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(EnumProperty.class);
 
-
-
-	private String   _name;
-	private String   _description;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnumProperty.class);
+	private String _name;
+	private String _description;
 	private Class<T> _type;
 	private T _defaultValue;
 	private Method _valueOf;
 	private String _uuid;
-
-
 
 	public EnumProperty (String name, String description, Class<T> type, T defaultValue) {
 		_name = name;
@@ -66,11 +62,6 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 	}
 
 	@Override
-	public String getUUID () {
-		return _uuid;
-	}
-
-	@Override
 	public String encode (T value) {
 		return value.toString();
 	}
@@ -98,11 +89,9 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 		return unencode(propertyNode.getAsString());
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode() + _type.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -112,7 +101,7 @@ public class EnumProperty<T extends Enum<T>> implements ConfigurationProperty<T>
 		if (!(that instanceof EnumProperty)) return false;
         
 		EnumProperty<?> thatP = (EnumProperty<?>) that;
-		return thatP._name.equals(this._name) && thatP._type.equals(this._type);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override
