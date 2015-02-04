@@ -14,3 +14,4 @@ Available Aperture Tiles Service REST APIs include:
 - [Layer Service](layer/): Services for configuring and requesting layers and layer states.
 - [Legend Service](legend/): Service for getting an encoded image key that describes the values represented on tiles.
 - [Tile Service](tile/): Service for retrieving a specific tile.
+- [Tile Client Services](jsdocs/): Services for displaying Aperture Tiles in the Tile Client.
