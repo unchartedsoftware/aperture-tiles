@@ -1,0 +1,187 @@
+/*
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ * 
+ * Released under the MIT License.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.oculusinfo.binning.io.serialization;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.oculusinfo.binning.DenseTileData;
+import com.oculusinfo.binning.SparseTileData;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.TypeDescriptor;
+
+public class KryoSerializationTests {
+	@Test
+	public void testMetaDataSerialization () throws Exception {
+		TileIndex index = new TileIndex(0, 0, 0, 2, 2);
+		TileData<Double> tile = new DenseTileData<>(index);
+		tile.setBin(0, 0, 1.0);
+		tile.setBin(0, 1, 2.0);
+		tile.setBin(1, 0, 3.0);
+		tile.setBin(1, 1, 4.0);
+		tile.setMetaData("a", "abc");
+		tile.setMetaData("b", "bcd");
+
+		TileSerializer<Double> serializer = new GenericKryoSerializer<Double>(new TypeDescriptor(Double.class));
+
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		serializer.serialize(tile, output);
+		output.flush();
+		output.close();
+
+		ByteArrayInputStream input = new ByteArrayInputStream(output.toByteArray());
+		TileData<Double> received = serializer.deserialize(index, input);
+
+		Assert.assertEquals(2, received.getMetaDataProperties().size());
+		Assert.assertTrue(received.getMetaDataProperties().contains("a"));
+		Assert.assertTrue(received.getMetaDataProperties().contains("b"));
+		Assert.assertEquals("abc", received.getMetaData("a"));
+		Assert.assertEquals("bcd", received.getMetaData("b"));
+	}
+
+
+	@SafeVarargs
+	final <T> void testRoundTripDense(TypeDescriptor type, T... data) throws Exception {
+		TileSerializer<T> serializer = new GenericKryoSerializer<T>(type);
+
+		// Create our tile
+		int size = (int) Math.ceil(Math.sqrt(data.length));
+		TileData<T> input = new DenseTileData<T>(new TileIndex(0, 0, 0, size, size));
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				int i = (x+size*y) % data.length;
+				input.setBin(x, y, data[i]);
+			}
+		}
+
+		// Send it round-trip through serialization
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serializer.serialize(input, baos);
+		baos.flush();
+		baos.close();
+
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		TileData<T> output = serializer.deserialize(new TileIndex(1, 1, 1, size, size), bais);
+
+		// Test to make sure output matches input.
+		Assert.assertEquals(input.getDefinition(), output.getDefinition());
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				Assert.assertEquals(input.getBin(x, y), output.getBin(x, y));
+			}
+		}
+	}
+
+
+	@SafeVarargs
+	final <T> void testRoundTripSparse(TypeDescriptor type, T defaultValue, T... data) throws Exception {
+		TileSerializer<T> serializer = new GenericKryoSerializer<T>(type);
+
+		// Create our tile
+		int size = (int) Math.ceil(Math.sqrt(data.length*2));
+		TileData<T> input = new SparseTileData<T>(new TileIndex(0, 0, 0, size, size), defaultValue);
+		int i = 0;
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				if (0 == ((x+y)%2) && i < data.length) {
+					input.setBin(x, y, data[i]);
+					++i;
+				}
+			}
+		}
+
+		// Send it round-trip through serialization
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serializer.serialize(input, baos);
+		baos.flush();
+		baos.close();
+
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		TileData<T> output = serializer.deserialize(new TileIndex(1, 1, 1, size, size), bais);
+
+		// Test to make sure output matches input.
+		Assert.assertEquals(input.getDefinition(), output.getDefinition());
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				Assert.assertEquals(input.getBin(x, y), output.getBin(x, y));
+			}
+		}
+	}
+
+
+	@Test
+	public void testBoolean () throws Exception {
+		testRoundTripDense(new TypeDescriptor(Boolean.class), true, false, true, true, false, true, false, false, true);
+		testRoundTripSparse(new TypeDescriptor(Boolean.class), true, true, false);
+	}
+
+	@Test
+	public void testInteger () throws Exception {
+		testRoundTripDense(new TypeDescriptor(Integer.class), 0, 1, 4, 9, 16, 25, 36, 49, 64);
+		testRoundTripSparse(new TypeDescriptor(Integer.class), -1, 0, 1, 4, 9);
+	}
+
+	@Test
+	public void testLong () throws Exception {
+		testRoundTripDense(new TypeDescriptor(Long.class), 0L, 1L, 8L, 27L, 64L, 125L, 216L, 343L, 512L);
+		testRoundTripSparse(new TypeDescriptor(Long.class), -3L, 1L, 8L, 27L, 64L);
+	}
+
+	@Test
+	public void testFloat () throws Exception {
+		testRoundTripDense(new TypeDescriptor(Float.class), 0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
+		testRoundTripSparse(new TypeDescriptor(Float.class), -3.5f, 0.0f, 0.5f, 0.333f, 0.25f);
+	}
+
+	@Test
+	public void testDouble () throws Exception {
+		testRoundTripDense(new TypeDescriptor(Double.class), 0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
+		testRoundTripSparse(new TypeDescriptor(Double.class), -3.5, 1.1, 2.4, 3.9, 4.16);
+	}
+
+	@Test
+	public void testBytes () throws Exception {
+		testRoundTripDense(new TypeDescriptor(ByteBuffer.class),
+		                   ByteBuffer.wrap(new byte[] {}),
+		                   ByteBuffer.wrap(new byte[] {(byte) 1}),
+		                   ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
+		                   ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
+		testRoundTripSparse(new TypeDescriptor(ByteBuffer.class),
+		                    ByteBuffer.wrap(new byte[] {}),
+		                    ByteBuffer.wrap(new byte[] {(byte) 1}),
+		                    ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
+		                    ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
+	}
+
+	@Test
+	public void testString () throws Exception {
+		testRoundTripDense(new TypeDescriptor(String.class), "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
+		testRoundTripSparse(new TypeDescriptor(String.class), "invalid", "a", "bb", "ccc", "dddd");
+	}
+}

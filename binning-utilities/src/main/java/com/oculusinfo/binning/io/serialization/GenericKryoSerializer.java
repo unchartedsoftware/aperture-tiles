@@ -3,8 +3,6 @@ package com.oculusinfo.binning.io.serialization;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -15,29 +13,59 @@ import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class GenericKryoSerializer<T> implements TileSerializer<T> {
-	private static final long serialVersionUID = -8858900185834667720L;
+    // Per-thread info: a Kryo instance for registration, and the last update of classes to register 
+    // that was used.
+	private static class ThreadInfo {
+	    Kryo _kryo;
+	    int _lastUpdate;
+	    ThreadInfo () {
+	        _kryo = new Kryo();
+	        _lastUpdate = -1;
+	    }
+	}
 
-
-
-	private static ThreadLocal<Kryo> __kryo = new ThreadLocal<Kryo>(){
-		protected Kryo initialValue () {
-			Kryo kryo = new Kryo();
-			register(kryo);
-			return kryo;
+	private static ThreadLocal<ThreadInfo> __threadInfo = new ThreadLocal<ThreadInfo>(){
+		protected ThreadInfo initialValue () {
+		    ThreadInfo info = new ThreadInfo();
+		    register(info._kryo);
+			return info;
 		}
 	};
+
 	private static Kryo kryo () {
-		return __kryo.get();
+	    return __threadInfo.get()._kryo;
 	}
+
+	// ToDo: Registry of classes to register
 	public static void register (Kryo kryo) {
 		kryo.register(TileData.class);
+		// Standard primitives
+		kryo.register(Boolean.class);
+		kryo.register(Byte.class);
+		kryo.register(Short.class);
 		kryo.register(Integer.class);
 		kryo.register(Long.class);
 		kryo.register(Float.class);
 		kryo.register(Double.class);
 		kryo.register(String.class);
-		kryo.register(HashMap.class);
-		kryo.register(ArrayList.class);
+		kryo.register(java.util.UUID.class);
+
+		// Standard collection types
+		kryo.register(java.util.ArrayDeque.class);
+		kryo.register(java.util.ArrayList.class);
+		kryo.register(java.util.BitSet.class);
+		kryo.register(java.util.HashMap.class);
+		kryo.register(java.util.HashSet.class);
+		kryo.register(java.util.Hashtable.class);
+		kryo.register(java.util.IdentityHashMap.class);
+		kryo.register(java.util.LinkedHashMap.class);
+		kryo.register(java.util.LinkedHashSet.class);
+		kryo.register(java.util.PriorityQueue.class);
+		kryo.register(java.util.TreeMap.class);
+		kryo.register(java.util.TreeSet.class);
+		kryo.register(java.util.Vector.class);
+
+		// Our own standard types
 		kryo.register(Pair.class);
 	}
 
