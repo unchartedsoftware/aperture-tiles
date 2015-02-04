@@ -166,22 +166,46 @@ public class KryoSerializationTests {
 	}
 
 	@Test
-	public void testBytes () throws Exception {
-		testRoundTripDense(new TypeDescriptor(ByteBuffer.class),
-		                   ByteBuffer.wrap(new byte[] {}),
-		                   ByteBuffer.wrap(new byte[] {(byte) 1}),
-		                   ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
-		                   ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
-		testRoundTripSparse(new TypeDescriptor(ByteBuffer.class),
-		                    ByteBuffer.wrap(new byte[] {}),
-		                    ByteBuffer.wrap(new byte[] {(byte) 1}),
-		                    ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
-		                    ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
-	}
-
-	@Test
 	public void testString () throws Exception {
 		testRoundTripDense(new TypeDescriptor(String.class), "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
 		testRoundTripSparse(new TypeDescriptor(String.class), "invalid", "a", "bb", "ccc", "dddd");
+	}
+
+	@Test
+	public void testCustom () throws Exception {
+	    GenericKryoSerializer.registerClasses(CustomTestData.class);
+        testRoundTripDense(new TypeDescriptor(CustomTestData.class),
+                           new CustomTestData(1, 1.1, "one"),
+                           new CustomTestData(2, 2.2, "two"),
+                           new CustomTestData(3, 3.3, "three"),
+                           new CustomTestData(4, 4.4, "four"));
+        testRoundTripSparse(new TypeDescriptor(CustomTestData.class),
+                            new CustomTestData(-1, -1.1, "empty"),
+                            new CustomTestData(1, 1.1, "one"),
+                            new CustomTestData(2, 2.2, "two"),
+                            new CustomTestData(3, 3.3, "three"),
+                            new CustomTestData(4, 4.4, "four"));
+	}
+
+
+	static class CustomTestData {
+	    int _i;
+	    double _d;
+	    String _s;
+
+	    CustomTestData () {
+	    }
+	    CustomTestData (int i, double d, String s) {
+	        _i = i;
+	        _d = d;
+	        _s = s;
+	    }
+	    @Override
+	    public boolean equals (Object obj) {
+	        if (this == obj) return true;
+	        if (!(obj instanceof CustomTestData)) return false;
+	        CustomTestData that = (CustomTestData) obj;
+	        return (this._i == that._i && this._d == that._d && this._s.equals(that._s));
+	    }
 	}
 }
