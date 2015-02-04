@@ -1,0 +1,17 @@
+description = "Library that handles turning tile data into useful output formats, generally graphical"
+
+// Pulls in the Java plugin
+apply plugin: "java"
+
+
+// Jars / projects this project depends on.
+dependencies {
+	compile "org.slf4j:slf4j-api:1.7.7"
+	compile "log4j:log4j:1.2.17"
+	
+	compile project(":math-utilities")
+	compile project(":binning-utilities")
+	
+	testCompile "junit:junit:4.8.1"
+	testCompile "org.mockito:mockito-all:1.9.5"
+}

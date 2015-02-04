@@ -33,7 +33,7 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
-import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.DenseTileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.ipArrayToString
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.longToIPArray
@@ -79,7 +79,7 @@ class IPv4AnalyticsTestSuite extends FunSuite {
 			//	Address: longToIp((ffffffff00000000 >> (2*i)) & 3fffffff)
 			val center = (1 << (i-1)) - 1
 			val index = new TileIndex(i, center, center)
-			val tile = new TileData[Int](index)
+			val tile = new DenseTileData[Int](index)
 			val cidrBlock = converter(tile)
 
 			val expected = ipArrayToString(longToIPArray((0xffffffff00000000L >> (2*i)) & 0x3fffffffL))+"/"+(2*i)
@@ -106,28 +106,28 @@ class IPv4AnalyticsTestSuite extends FunSuite {
 
 			val cartesian1 = indexScheme.toCartesian(fullAddress1)
 			val index1 = pyramid.rootToTile(cartesian1._1, cartesian1._2, i)
-			val tile1 = new TileData[Int](index1)
+			val tile1 = new DenseTileData[Int](index1)
 			val value1 = converter(tile1)
 			val expected1 = ipArrayToString(longToIPArray((0xffffffff00000000L >> (2*i)) & 0xffffffff))+"/"+(2*i)
 			assert(expected1 === value1)
 
 			val cartesian2 = indexScheme.toCartesian(fullAddress2)
 			val index2 = pyramid.rootToTile(cartesian2._1, cartesian2._2, i)
-			val tile2 = new TileData[Int](index2)
+			val tile2 = new DenseTileData[Int](index2)
 			val value2 = converter(tile2)
 			val expected2 = ipArrayToString(longToIPArray((0xffffffff00000000L >> i) & 0xffffffff))+"/"+(2*i)
 			assert(expected2 === value2)
 
 			val cartesian3 = indexScheme.toCartesian(fullAddress3)
 			val index3 = pyramid.rootToTile(cartesian3._1, cartesian3._2, i)
-			val tile3 = new TileData[Int](index3)
+			val tile3 = new DenseTileData[Int](index3)
 			val value3 = converter(tile3)
 			val expected3 = "0.0.0.0/"+(2*i)
 			assert(expected3 === value3)
 
 			val cartesian4 = indexScheme.toCartesian(fullAddress4)
 			val index4 = pyramid.rootToTile(cartesian4._1, cartesian4._2, i)
-			val tile4 = new TileData[Int](index4)
+			val tile4 = new DenseTileData[Int](index4)
 			val value4 = converter(tile4)
 			val expected4 = expectedOne+"/"+(2*i)
 			assert(expected4 === value4)
@@ -164,7 +164,7 @@ class IPv4AnalyticsTestSuite extends FunSuite {
 		for (x <- 0 to 7) {
 			for (y <- 0 to 7) {
 				val index = new TileIndex(3, x, y)
-				val tile = new TileData[Int](index)
+				val tile = new DenseTileData[Int](index)
 
 				val minIP = longToIPArray(minConverter(tile))
 				assert(mins(x+8*y) === "%02x.%02x.%02x.%02x".format(minIP(0), minIP(1), minIP(2), minIP(3)))
@@ -177,7 +177,7 @@ class IPv4AnalyticsTestSuite extends FunSuite {
 		for (x <- 0 to 3) {
 			for (y <- 0 to 3) {
 				val index = new TileIndex(2, x, y)
-				val tile = new TileData[Int](index)
+				val tile = new DenseTileData[Int](index)
 
 				val minIP = longToIPArray(minConverter(tile))
 				assert(mins(2*x+16*y) === "%02x.%02x.%02x.%02x".format(minIP(0), minIP(1), minIP(2), minIP(3)))
@@ -190,7 +190,7 @@ class IPv4AnalyticsTestSuite extends FunSuite {
 		for (x <- 0 to 1) {
 			for (y <- 0 to 1) {
 				val index = new TileIndex(1, x, y)
-				val tile = new TileData[Int](index)
+				val tile = new DenseTileData[Int](index)
 
 				val minIP = longToIPArray(minConverter(tile))
 				assert(mins(4*x+32*y) === "%02x.%02x.%02x.%02x".format(minIP(0), minIP(1), minIP(2), minIP(3)))

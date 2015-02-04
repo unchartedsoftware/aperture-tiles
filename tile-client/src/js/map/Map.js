@@ -326,6 +326,9 @@
                 new OpenLayers.Control.Zoom()
             ]
         });
+
+        // set theme default to 'dark' theme
+        this.setTheme( 'dark' );
     }
 
     Map.prototype = {
@@ -433,10 +436,10 @@
         setTheme: function( theme ) {
             var key;
             // toggle theme in html
-            if ( theme === 'dark' ) {
-                $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
-            } else if ( theme === 'light' ) {
+            if ( theme === 'light' ) {
                 $( 'body' ).removeClass( "dark-theme" ).addClass( "light-theme" );
+            } else {
+                $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
             }
             // update theme for all attached layers
             for ( key in this.layers ) {

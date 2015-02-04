@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.color.impl.FlatColorRamp;
+import com.oculusinfo.tile.rendering.color.impl.HueColorRamp;
+import com.oculusinfo.tile.rendering.color.impl.SingleGradientColorRamp;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,10 +43,7 @@ import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.JSONArrayProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.impl.BRColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.FlatColorRamp;
 import com.oculusinfo.tile.rendering.color.impl.GreyColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.HueColorRamp;
-import com.oculusinfo.tile.rendering.color.impl.SingleGradientColorRamp;
 import com.oculusinfo.tile.rendering.color.impl.SteppedGradientColorRamp;
 import com.oculusinfo.tile.rendering.color.impl.WareColorRamp;
 

@@ -29,8 +29,8 @@ import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.impl.*;
+import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 
 import java.util.ArrayList;
 import java.util.List;

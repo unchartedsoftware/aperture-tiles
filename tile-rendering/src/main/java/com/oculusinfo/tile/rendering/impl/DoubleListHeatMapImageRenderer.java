@@ -28,6 +28,9 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.slf4j.Logger;
@@ -40,9 +43,6 @@ import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
-import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.rendering.color.ColorRamp;
 
 /**
  * A server side to render List<Pair<String, Int>> tiles.
