@@ -47,6 +47,7 @@ import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -59,12 +60,13 @@ public class AnnotationServiceTests {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationServiceTests.class );
 	static final int NUM_THREADS = 8;
-    static final double [] BOUNDS = { 180, 85.05, -180, -85.05};
-    static final String [] GROUPS = {"Urgent", "High", "Medium", "Low"};
+    static final double [] BOUNDS = { 180, 85.05, -180, -85.05 };
     static final int NUM_ENTRIES = 50;
+
 	protected AnnotationService _service;
-    protected String _layerId = "annotations-unit-test";
-    protected String _dataId = "annotations-unit-test";
+    protected String _layerId = "test-layer0";
+    protected String _dataId;
+	protected String [] _groups;
     protected LayerService _layerService;
 
 	List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
@@ -77,7 +79,7 @@ public class AnnotationServiceTests {
     	
 		try {
 
-			String configFile = ("res:///filesystem-io-test-config.json").toString();
+			String configFile = "res:///unit-test-config.json";
 
             Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
@@ -98,6 +100,15 @@ public class AnnotationServiceTests {
 
             _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
 
+			_dataId = _layerService.getLayerConfiguration( _layerId, null ).getPropertyValue( LayerConfiguration.DATA_ID );
+
+			JSONArray groupsJson  = _layerService.getLayerConfiguration( _layerId, null ).getPropertyValue( AnnotationServiceImpl.GROUPS );
+
+			_groups = new String[ groupsJson.length() ];
+			for (int i=0;i<groupsJson.length();i++){
+				_groups[i] = groupsJson.getString( i );
+			}
+
             AnnotationIndexer annotationIndexer = new AnnotationIndexerImpl();
 			AnnotationSerializer annotationSerializer = new JSONAnnotationDataSerializer();
 
@@ -108,7 +119,7 @@ public class AnnotationServiceTests {
               new StandardAnnotationFilterFactoryProvider( filterIoSet ) );
 
 		} catch (Exception e) {
-			throw e;
+			LOGGER.error( "Error setting up test", e );
 		}
 	}
 
@@ -167,7 +178,7 @@ public class AnnotationServiceTests {
 			// set thread name
 			_name = name;
 
-            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, _groups );
 
 			// generate private local annotations
 			for ( int i=0; i<NUM_ENTRIES; i++ ) {
@@ -317,7 +328,7 @@ public class AnnotationServiceTests {
 		private AnnotationData<?> editAnnotation( AnnotationData<?> annotation ) {
 
 			JSONObject json = annotation.toJSON();
-            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, GROUPS );
+            AnnotationGenerator generator = new AnnotationGenerator( BOUNDS, _groups );
 
 			try {
 				int type = (int)(Math.random() * 2);

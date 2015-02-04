@@ -31,6 +31,8 @@ import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 /**
  * A {@link ConfigurationProperty} that can handle {@link JSONArray}s.
  * 
@@ -38,16 +40,17 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(JSONArrayProperty.class);
-	private String     _name;
-	private String     _description;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JSONArrayProperty.class);
+	private String _name;
+	private String _description;
 	private JSONArray _defaultValue;
-
-
+	private String _uuid;
 
 	public JSONArrayProperty (String name, String description, String defaultValue) {
 		_name = name;
 		_description = description;
+		_uuid = UUID.randomUUID().toString();
 		if (null == defaultValue) {
 			_defaultValue = null;
 		} else {
@@ -114,11 +117,9 @@ public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
 		return propertyNode.getAsJSONArray();
 	}
 
-
-
 	@Override
 	public int hashCode () {
-		return _name.hashCode();
+		return _uuid.hashCode();
 	}
 
 	@Override
@@ -128,7 +129,7 @@ public class JSONArrayProperty implements ConfigurationProperty<JSONArray> {
 		if (!(that instanceof JSONArrayProperty)) return false;
         
 		JSONArrayProperty thatP = (JSONArrayProperty) that;
-		return thatP._name.equals(this._name);
+		return thatP._uuid.equals(this._uuid);
 	}
 
 	@Override

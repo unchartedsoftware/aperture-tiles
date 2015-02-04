@@ -1,0 +1,47 @@
+[
+    {
+        "id":"test-layer0",
+        "public": {
+            "pyramid": {
+                "type": "WebMercator"
+            },
+            "renderer": {
+            	"ramp": "hot"
+            },
+            "valueTransform": {
+                "type": "log10"
+            }
+        },
+        "private": {
+           "data" : {
+                "id": "test-layer0-data",
+                "pyramidio" : {
+                    "type" : "file",
+                    "root.path" : "file://./",
+                    "extension" : "avro"
+                }
+            }
+        }
+    },
+    {
+        "id": "test-layer1",
+        "public": {
+            "pyramid": {
+                "type": "WebMercator"
+            },
+            "renderer": {
+            	"ramp": "cool"
+            }
+        },
+        "private": {
+           "data" : {
+                "id": "test-layer1-data",
+                "pyramidio" : {
+                    "type" : "file",
+                    "root.path" :  "file://./",
+                    "extension" : "avro"
+                }
+            }
+        }
+    }
+]
