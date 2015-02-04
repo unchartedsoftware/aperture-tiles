@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.oculusinfo.binning.DenseTileData;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveDenseFlatArrayAvroSerializer;
+
 import org.apache.avro.file.CodecFactory;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -47,14 +47,13 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 /*
  * Some tests to help compare serialization speeds between various schemes
  */
-@SuppressWarnings("deprecation")
-//@Ignore
+@Ignore
 public class SerializationSpeedTests {
+	private static final String LEGACY = "Legacy";
 	private static final String AVRO = "Avro";
 	private static final String JAVA = "Java";
 	private static final String KRYO = "Kryo";
 	private static final String VECTOR_DATA = "vector";
-	private static final String FLAT_VECTOR_DATA = "flat vector";
 	private static final String SCALAR_DATA = "scalar";
 	private static final int BIN_SIZE = 256;
 	private static final int VECTOR_SIZE = 48;
@@ -89,48 +88,38 @@ public class SerializationSpeedTests {
 
 
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testLegacyTileSerialization () throws Exception {
-		serializeLegacy(SCALAR_DATA, _scalarData);
+		serialize(LEGACY, SCALAR_DATA, _scalarData, new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer());
 	}
 
-
-
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testLegacyTileDeSerialization () throws Exception {
-		deserializeLegacy(SCALAR_DATA, _scalarData);
+		deserialize(LEGACY, SCALAR_DATA, _scalarData, new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer());
 	}
 
 
 
 	@Test
 	public void testJavaTileSerialization () throws Exception {
-		serialize(JAVA, SCALAR_DATA, _scalarData, 
-				new GenericJavaSerializer<Double>(new TypeDescriptor(Double.class)));
+		serialize(JAVA, SCALAR_DATA, _scalarData,  new GenericJavaSerializer<Double>(new TypeDescriptor(Double.class)));
 	}
-
-
 
 	@Test
 	public void testJavaTileDeSerialization () throws Exception {
-		deserialize(JAVA, SCALAR_DATA, _scalarData, 
-				new GenericJavaSerializer<Double>(new TypeDescriptor(Double.class)));
+		deserialize(JAVA, SCALAR_DATA, _scalarData, new GenericJavaSerializer<Double>(new TypeDescriptor(Double.class)));
 	}
-
-
 
 	@Test
 	public void testJavaVectorTileSerialization () throws Exception {
-		serialize(JAVA, VECTOR_DATA, _vectorData, 
-				new GenericJavaSerializer<List<Double>>(new TypeDescriptor(Double.class)));
+		serialize(JAVA, VECTOR_DATA, _vectorData, new GenericJavaSerializer<List<Double>>(new TypeDescriptor(Double.class)));
 	}
-
-
 
 	@Test
 	public void testJavaVectorTileDeSerialization () throws Exception {
-		deserialize(JAVA, VECTOR_DATA, _vectorData, 
-				new GenericJavaSerializer<List<Double>>(new TypeDescriptor(Double.class)));
+		deserialize(JAVA, VECTOR_DATA, _vectorData, new GenericJavaSerializer<List<Double>>(new TypeDescriptor(Double.class)));
 	}
 
 
@@ -140,39 +129,19 @@ public class SerializationSpeedTests {
 		serialize(AVRO, SCALAR_DATA, _scalarData, new PrimitiveAvroSerializer<>(Double.class, CodecFactory.bzip2Codec()));
 	}
 
-
-
 	@Test
 	public void testAvroTileDeSerialization () throws Exception {
 		deserialize(AVRO, SCALAR_DATA, _scalarData, new PrimitiveAvroSerializer<>(Double.class, CodecFactory.bzip2Codec()));
 	}
-
-
 
 	@Test
 	public void testAvroVectorTileSerialization () throws Exception {
 		serialize(AVRO, VECTOR_DATA, _vectorData, new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec()));
 	}
 
-
-
 	@Test
 	public void testAvroVectorTileDeSerialization () throws Exception {
 		deserialize(AVRO, VECTOR_DATA, _vectorData, new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec()));
-	}
-
-
-
-	@Test
-	public void testAvroVectorTileFlattenedSerialziation () throws Exception {
-		serialize(AVRO, FLAT_VECTOR_DATA, _vectorData, new PrimitiveDenseFlatArrayAvroSerializer<Double>(Double.class, CodecFactory.bzip2Codec()));
-	}
-
-
-
-	@Test
-	public void testAvroVectorTileFlattenedDeSerialization () throws Exception {
-		deserialize(AVRO, FLAT_VECTOR_DATA, _vectorData, new PrimitiveDenseFlatArrayAvroSerializer<Double>(Double.class, CodecFactory.bzip2Codec()));
 	}
 
 
@@ -228,58 +197,11 @@ public class SerializationSpeedTests {
 		long startTime = System.currentTimeMillis();
 		for (int n=0; n<ITERATIONS; ++n) {
 			ByteArrayInputStream bais = new ByteArrayInputStream(data);
-			serializer.deserialize(null, bais);
+			serializer.deserialize(tileData.getDefinition(), bais);
 			bais.close();
 		}
 		long endTime = System.currentTimeMillis();
 		System.out.println(serializerType + " Deserialization - " + dataType);
-		System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-		System.out.println("Average time: "+(((endTime-startTime)/1000.0)/ITERATIONS)+" seconds");
-	}
-	
-	
-	
-	private <T> void serializeLegacy(String type, TileData<Double> tileData) throws IOException {
-		com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer serializer
-                = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
-		
-		// Get something to deserialize
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(tileData, baos);
-		baos.close();
-		baos.flush();
-		byte[] data = baos.toByteArray();
-		TileIndex index = tileData.getDefinition();
-
-		// test deserialization time
-		long startTime = System.currentTimeMillis();
-		for (int n=0; n<ITERATIONS; ++n) {
-			ByteArrayInputStream bais = new ByteArrayInputStream(data);
-			serializer.deserialize(index, bais);
-			bais.close();
-		}
-		long endTime = System.currentTimeMillis();
-		System.out.println("Legacy Deserialization - " + type);
-		System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
-		System.out.println("Average time: "+(((endTime-startTime)/1000.0)/ITERATIONS)+" seconds");
-	}
-	
-	
-	
-	private void deserializeLegacy(String type, TileData<Double> tileData) throws IOException {
-		com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer serializer
-                = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
-
-		long startTime = System.currentTimeMillis();
-		for (int n=0; n<ITERATIONS; ++n) {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			serializer.serialize(tileData, baos);
-			baos.close();
-			baos.flush();
-
-		}
-		long endTime = System.currentTimeMillis();
-		System.out.println("Legacy Serialization - " + type);
 		System.out.println("Total time: "+((endTime-startTime)/1000.0)+" seconds");
 		System.out.println("Average time: "+(((endTime-startTime)/1000.0)/ITERATIONS)+" seconds");
 	}
