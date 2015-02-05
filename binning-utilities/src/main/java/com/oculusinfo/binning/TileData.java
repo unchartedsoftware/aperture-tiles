@@ -35,17 +35,9 @@ public interface TileData<T> extends Serializable {
 	 */
 	public static enum StorageType {
 		/** Tiles stored as dense arrays */
-		Dense(DenseTileData.class),
+		Dense,
 		/** Tiles stored as sparse maps, indexed by bin */
-		Sparse(SparseTileData.class);
-
-		private Class<? extends TileData> _tileClass;
-		private StorageType (Class<? extends TileData> tileClass) {
-			_tileClass = tileClass;
-		}
-		public Class<? extends TileData> tileClass () {
-			return _tileClass;
-		}
+		Sparse;
 	}
 
 
