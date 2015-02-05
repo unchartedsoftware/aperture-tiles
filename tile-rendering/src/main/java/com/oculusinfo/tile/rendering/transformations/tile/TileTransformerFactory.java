@@ -38,7 +38,7 @@ import com.oculusinfo.factory.properties.StringProperty;
  * @author tlachapelle
  */
 
-public class TileTransformerFactory extends ConfigurableFactory<TileTransformer> {
+public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<?>> {
 	
 
 	public static StringProperty TILE_TRANSFORMER_TYPE 	= new StringProperty("type",
@@ -49,6 +49,16 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer>
 		"Data to be passed to the tile transformer for read initialization",
 		null);
 
+
+
+	// There is no way to produce a Class<TileTransformer<?>> directly; the best one can do is fake it through erasure.
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static Class<TileTransformer<?>> getFactoryClass () {
+		return (Class) TileTransformer.class;
+	}
+
+
+
 	public TileTransformerFactory( ConfigurableFactory<?> parent,
                                    List<String> path ) {
 		this(null, parent, path);
@@ -57,22 +67,22 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer>
 	public TileTransformerFactory( String name,
                                    ConfigurableFactory<?> parent,
 	                               List<String> path) {
-		super(name, TileTransformer.class, parent, path);
+		super(name, getFactoryClass(), parent, path);
         addProperty(TILE_TRANSFORMER_TYPE);
 		addProperty(INITIALIZATION_DATA);
 	}
 
 	@Override
-	protected TileTransformer create () {
+	protected TileTransformer<?> create () {
 	    
 	    String transformerTypes = getPropertyValue(TILE_TRANSFORMER_TYPE);
 
 		if ("filtervars".equals(transformerTypes)) {
 			JSONObject variables = getPropertyValue(INITIALIZATION_DATA);
-			return new FilterVarsDoubleArrayTileTransformer(variables);
+			return new FilterVarsDoubleArrayTileTransformer<Object>(variables);
 		}
 		else {  // 'identity' or none passed in will give the default transformer
-			return new IdentityTileTransformer();
+			return new IdentityTileTransformer<Object>();
 		}
 	}
 }

@@ -31,15 +31,15 @@ import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformerFactory;
 
 
-public class StandardTileTransformerFactoryProvider implements FactoryProvider<TileTransformer> {
+public class StandardTileTransformerFactoryProvider implements FactoryProvider<TileTransformer<?>> {
 	@Override
-	public ConfigurableFactory<TileTransformer> createFactory (List<String> path) {
+	public ConfigurableFactory<TileTransformer<?>> createFactory (List<String> path) {
 		return new TileTransformerFactory(null, path);
 	}
 
 	@Override
-	public ConfigurableFactory<TileTransformer> createFactory (ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
+	public ConfigurableFactory<TileTransformer<?>> createFactory (ConfigurableFactory<?> parent,
+	                                                              List<String> path) {
 		return new TileTransformerFactory(parent, path);
 	}
 }

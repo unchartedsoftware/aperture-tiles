@@ -53,8 +53,8 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-    private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-    private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
+    private FactoryProvider<TileDataImageRenderer<?>> _rendererFactoryProvider;
+    private FactoryProvider<TileTransformer<?>> _tileTransformerFactoryProvider;
     private FactoryProvider<PyramidIO> _cachingProvider;
 	private CachingPyramidIO _pyramidIO;
 
@@ -62,8 +62,8 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
     public CachingLayerConfigurationProvider( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
                                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-                                              FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-                                              FactoryProvider<TileTransformer> tileTransformerFactoryProvider ) {
+                                              FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
+                                              FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider ) {
 
         _pyramidIOFactoryProvider = pyramidIOFactoryProvider;
         _tilePyramidFactoryProvider = tilePyramidFactoryProvider;
