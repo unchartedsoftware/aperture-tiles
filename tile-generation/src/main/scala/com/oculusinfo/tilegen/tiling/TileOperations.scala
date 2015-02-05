@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
+import java.util.concurrent.atomic.AtomicInteger
 
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.util.JsonUtilities
@@ -47,6 +48,7 @@ object TileOperations {
 	import scala.collection.JavaConversions._
 
 	protected val logger = Logger[this.type]
+	protected var cacheTableCount = new AtomicInteger(0)
 
 	/**
 	 * KeyValueArgumentSource implementation that passes the supplied map through.
@@ -192,9 +194,13 @@ object TileOperations {
 	 * results, rather than the input data set.
 	 */
 	def cacheDataOp()(input: PipelineData) = {
-		input.srdd.registerTempTable("cached_table")
-		input.sqlContext.cacheTable("cached_table")
-		PipelineData(input.sqlContext, input.srdd, Some("cached_table"))
+		val tableName = input.tableName.getOrElse({
+			val name = s"cached_table_${cacheTableCount.getAndIncrement()}"
+			input.srdd.registerTempTable(name)
+			name
+		})
+		input.sqlContext.cacheTable(tableName)
+		PipelineData(input.sqlContext, input.srdd, Some(tableName))
 	}
 
 	/**

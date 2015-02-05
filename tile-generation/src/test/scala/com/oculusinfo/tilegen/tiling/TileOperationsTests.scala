@@ -93,6 +93,23 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			"three", "2015-01-03 10:15:30"))(resultList.toList)
 	}
 
+	test("Test cache operation") {
+		def checkTableName(count: Int, clearTableName: Boolean)(input: PipelineData) = {
+			assertResult(Some(s"cached_table_$count"))(input.tableName)
+			if (clearTableName) PipelineData(input.sqlContext, input.srdd) else input
+		}
+
+		val argMap = Map("ops.path" -> getClass.getResource("/json_test.data").toURI.getPath)
+		val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
+			rootStage.addChild(PipelineStage("cache_op_1", parseCacheDataOp(Map.empty)(_)))
+				.addChild(PipelineStage("check_cache_op_1", checkTableName(0, true)(_)))
+				.addChild(PipelineStage("cache_op_2", parseCacheDataOp(Map.empty)(_)))
+				.addChild(PipelineStage("check_cache_op_2", checkTableName(1, false)(_)))
+				.addChild(PipelineStage("cache_op_3", parseCacheDataOp(Map.empty)(_)))
+				.addChild(PipelineStage("check_cache_op_3", checkTableName(1, false)(_)))
+		TilePipelines.execute(rootStage, sqlc)
+	}
+
 	test("Test date filter parse and operation") {
 		val resultList = ListBuffer[Any]()
 		val argMap = Map(
