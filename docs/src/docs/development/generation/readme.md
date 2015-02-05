@@ -440,7 +440,7 @@ The tiling properties files define the tiling job parameters for each layer in y
 				</dd>
 				
 				<dt>
-					oculus.binning.valueField
+					oculus.binning.value.field
 				</dt>
 				<dd>Field to use as the bin value. Default counts entries only.</dd>
 				
