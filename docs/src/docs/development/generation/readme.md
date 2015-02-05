@@ -269,6 +269,21 @@ The Source Data properties describe the raw data from which you want to create t
 					<dt>date</dt>
 					<dd>Contains dates. Dates are parsed and transformed into milliseconds since the standard Java start date (using SimpleDateFormatter). The default format is <em>yyMMddHHmm</em>, but this can be overridden using the <strong>oculus.binning.parsing.&lt;field&gt;.dateFormat</strong> property.</dd>
 			
+					<dt>boolean</dt>
+					<dd>Contains boolean values (e.g., <em>true/false</em>, <em>yes/no</em>)</dd>
+					
+					<dt>byte</dt>
+					<dd>Contains bytes</dd>
+					
+					<dt>short</dt>
+					<dd>Contains short integers</dd>
+					
+					<dt>float</dt>
+					<dd>Contains floating-point numbers</dd>
+					
+					<dt>ipv4</dt>
+					<dd>Contains an IP address treated as a four-digit base 256 number turned into a double</dd>
+			
 					<dt>propertyMap</dt>
 					<dd>Contains property maps. All of the following properties must be	present	to read the property:
 			
