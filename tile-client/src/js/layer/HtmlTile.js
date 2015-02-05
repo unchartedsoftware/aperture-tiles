@@ -181,7 +181,7 @@
 
         if ( renderer ) {
             // if renderer is attached, call hook function
-            renderer.hook( div.children, entries, data );
+            renderer.executeHooks( div.children, entries, data );
         }
     };
 

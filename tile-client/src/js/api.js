@@ -41,7 +41,8 @@
         ClientLayer: require('./layer/ClientLayer'),
         LayerUtil: require('./layer/LayerUtil'),
 
-        // Renderers
+        // Renderer
+        Renderer: require('./layer/renderer/Renderer'),
         GraphLabelRenderer: require('./layer/renderer/GraphLabelRenderer'),
         GraphNodeRenderer: require('./layer/renderer/GraphNodeRenderer'),
         PointAggregateRenderer: require('./layer/renderer/PointAggregateRenderer'),
