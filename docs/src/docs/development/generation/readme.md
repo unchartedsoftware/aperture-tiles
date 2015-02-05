@@ -286,20 +286,19 @@ The Source Data properties describe the raw data from which you want to create t
 			
 					<dt>propertyMap</dt>
 					<dd>Contains property maps. All of the following properties must be	present	to read the property:
-			
-					<dl>
-						<dt>oculus.binning.parsing.&lt;field&gt;.property</dt>
-						<dd>Name of the property</dd>
-						
-						<dt>oculus.binning.parsing.&lt;field&gt;.propertyType</dt>
-						<dd>Equivalent to fieldType</dd>
-						
-						<dt>oculus.binning.parsing.&lt;field&gt;.propertySeparator</dt>
-						<dd>Character or string used to separate properties</dd>
-						
-						<dt>oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator</dt>
-						<dd>Character or string used to separate property keys from their values</dd>
-					</dl>
+						<dl>
+							<dt>oculus.binning.parsing.&lt;field&gt;.property</dt>
+							<dd>Name of the property</dd>
+							
+							<dt>oculus.binning.parsing.&lt;field&gt;.propertyType</dt>
+							<dd>Equivalent to fieldType</dd>
+							
+							<dt>oculus.binning.parsing.&lt;field&gt;.propertySeparator</dt>
+							<dd>Character or string used to separate properties</dd>
+							
+							<dt>oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator</dt>
+							<dd>Character or string used to separate property keys from their values</dd>
+						</dl>
 					</dd>
 				</dl>
 				</dd>
