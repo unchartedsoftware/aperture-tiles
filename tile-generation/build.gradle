@@ -118,7 +118,8 @@ dependencies {
 	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
 	compile "org.scala-lang:scala-library:$scalaVersion"
-	compile project(":binning-utilities")
+    compile "org.clapper:grizzled-slf4j_2.10:1.0.2"
+    compile project(":binning-utilities")
 	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
 

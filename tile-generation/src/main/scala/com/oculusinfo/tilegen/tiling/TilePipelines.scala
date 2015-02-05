@@ -25,6 +25,7 @@
 package com.oculusinfo.tilegen.tiling
 
 import com.oculusinfo.tilegen.tiling.TilePipelines.PipelineOpBinding
+import grizzled.slf4j.Logger
 import org.apache.spark.sql.{SQLContext, SchemaRDD, StructType}
 
 /**
@@ -74,6 +75,8 @@ case class PipelineStage(name: String, op: PipelineData => PipelineData, var chi
  */
 object TilePipelines {
 
+  protected val logger = Logger[this.type]
+
   /**
    * Function type that takes a map of arguments and binds them to a pipeline
    * operation.
@@ -93,6 +96,7 @@ object TilePipelines {
   def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
     // TODO: Should run a check for cycles here (tsort?)
     def ex(stage: PipelineStage, result: PipelineData): Unit = {
+      logger.info(s"Executing pipeline stage [${stage.name}]")
       val stageResult = stage.op(result)
       stage.children.foreach(ex(_, stageResult))
     }

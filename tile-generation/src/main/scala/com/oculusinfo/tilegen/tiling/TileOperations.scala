@@ -26,7 +26,7 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
-
+import grizzled.slf4j.Logger
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
@@ -39,12 +39,13 @@ import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
  * tree.
  *
  */
-// TODO: Provide example of usage in object docs above
 // TODO: Add error checking to all operations and parsers
 object TileOperations {
   import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 
   import scala.collection.JavaConversions._
+
+  protected val logger = Logger[this.type]
 
   /**
    * KeyValueArgumentSource implementation that passes the supplied map through.
@@ -72,6 +73,8 @@ object TileOperations {
     tilePipeline.registerPipelineOp("regex_filter", parseRegexFilterOp)
     tilePipeline.registerPipelineOp("file_heatmap_tiling", parseFileHeatmapOp)
     tilePipeline.registerPipelineOp("hbase_heatmap_tiling", parseHbaseHeatmapOp)
+
+    logger.debug(s"Registered tile operations: ${tilePipeline.pipelineOps.keys}")
   }
 
   /**
@@ -82,6 +85,7 @@ object TileOperations {
    *    ops.path - Valid HDFS path to data.
    */
   def parseLoadJsonDataOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing loadJsonDataOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val path = argParser.getString("ops.path", "HDFS path to data")
     loadJsonDataOp(path)(_)
@@ -109,6 +113,7 @@ object TileOperations {
    *
    */
   def parseLoadCsvDataOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing loadCSVDataOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val path = argParser.getString("ops.path", "HDFS path to data")
     loadCsvDataOp(path, argParser)(_)
@@ -140,6 +145,7 @@ object TileOperations {
    *    ops.format - Date format string (based on [[java.text.SimpleDateFormat]])
    */
   def parseDateFilterOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing dateFilterOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val timeCol = argParser.getString("ops.column", "Col spec denoting the time field in input data")
     val start = argParser.getString("ops.start", "Start date")
@@ -174,6 +180,7 @@ object TileOperations {
    * Parses args for cache data operation.  No arguments required.
    */
   def parseCacheDataOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing cacheDataOp with args ${args}")
     cacheDataOp()(_)
   }
 
@@ -199,6 +206,7 @@ object TileOperations {
    *  ops.columns - sequence of column specs, 1 for each dimension of the data
    */
   def parseIntegralRangeFilterOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing integralRangeFilterOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val min = argParser.getLongSeq("ops.min", "min value")
     val max = argParser.getLongSeq("ops.max", "max value")
@@ -239,6 +247,7 @@ object TileOperations {
    *  ops.columns - sequence of column specs, 1 for each dimension of the data
    */
   def parseFractionalRangeFilterOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing fractionalRangeFilterOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val min = argParser.getDoubleSeq("ops.min", "min value")
     val max = argParser.getDoubleSeq("ops.max", "max value")
@@ -277,6 +286,7 @@ object TileOperations {
    *  ops.exclude - Boolean indicating whether to exclude or include values that match
    */
   def parseRegexFilterOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing regexFilterOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val regex = argParser.getString("ops.regex", "regex to use as filter")
     val colSpec = argParser.getString("ops.column", "numeric column id")
@@ -313,6 +323,7 @@ object TileOperations {
    *  ops.columns - Sequence of column specs denoting the columns to select.
    */
   def parseColumnSelectOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing columnSelectOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val colSpecs = argParser.getStringSeq("ops.columns", "Col specs denoting columns to select")
     columnSelectOp(colSpecs)(_)
@@ -347,6 +358,7 @@ object TileOperations {
    *    purpose, so all arguments required by that object should be set.
    */
   def parseHbaseHeatmapOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing hbaseHeatmapOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val zookeeperQuorum = argParser.getString("hbase.zookeeper.quorum", "Zookeeper quorum addresses")
     val zookeeperPort = argParser.getString("hbase.zookeeper.port", "Zookeeper port")
@@ -369,6 +381,7 @@ object TileOperations {
    *    purpose, so all arguments required by that object should be set.
    */
   def parseFileHeatmapOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing fileHeatmapOp with args ${args}")
     val argParser = KeyValuePassthrough(args)
     val heatmapParams = parseHeatMapOpImpl(args, argParser)
     fileHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3)(_)
