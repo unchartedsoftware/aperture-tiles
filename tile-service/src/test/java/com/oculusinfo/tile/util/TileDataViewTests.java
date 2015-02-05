@@ -69,13 +69,13 @@ public class TileDataViewTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadRelativeLevel() {
 		TileData<Integer> source = new DenseTileData<>(new TileIndex(3, 0, 0));
-		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source, new TileIndex(2, 1, 1));
+		TileDataView.fromSourceAbsolute(source, new TileIndex(2, 1, 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadRelativeIndex () {
 		TileData<Integer> source = new DenseTileData<>(new TileIndex(1, 0, 0));
-		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source, new TileIndex(2, 2, 1));
+		TileDataView.fromSourceAbsolute(source, new TileIndex(2, 2, 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class)

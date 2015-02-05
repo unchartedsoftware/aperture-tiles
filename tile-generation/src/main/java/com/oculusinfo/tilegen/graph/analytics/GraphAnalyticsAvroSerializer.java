@@ -95,7 +95,6 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
 		return results;
 	}
 
-    @SuppressWarnings("unchecked")
     @Override
     protected GraphAnalyticsRecord getEntryValue (GenericRecord entry) {
     	  return new GraphAnalyticsRecord((Integer)entry.get("numCommunities"),

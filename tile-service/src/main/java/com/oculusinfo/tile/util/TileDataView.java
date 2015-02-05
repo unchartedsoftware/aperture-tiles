@@ -23,11 +23,10 @@
  */
 package com.oculusinfo.tile.util;
 
+import java.util.Collection;
+
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-
-import java.util.Collection;
-import java.util.List;
 
 
 /**
@@ -38,8 +37,11 @@ import java.util.List;
  * @author robharper
  */
 public class TileDataView<T> implements TileData<T> {
+	private static final long serialVersionUID = -4853326888627107022L;
 
-    /**
+
+
+	/**
      * Factory method that creates a TileDataView given a source tile and a target tile index which must be contained
      * within the source tile. The returned view will appear to users as a tile at the target index but with data sourced
      * from the given source parent tile.

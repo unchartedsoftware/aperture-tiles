@@ -39,17 +39,17 @@ public class PairPropertyTests {
 	private static IntegerProperty INT = new IntegerProperty("", "", 0);
 	private static StringProperty STRING = new StringProperty("", "", "");
 	private static PairProperty<Integer, String> PAIR1 =
-		new PairProperty(INT, STRING, "", "", new Pair<Integer, String>(0, ""));
+		new PairProperty<>(INT, STRING, "", "", new Pair<Integer, String>(0, ""));
 
 	private static PairProperty<String, Integer> PAIR2 =
-		new PairProperty(STRING, INT, "", "", new Pair<String, Integer>("", 0));
+		new PairProperty<>(STRING, INT, "", "", new Pair<String, Integer>("", 0));
 
 	private static PairProperty<String, String> PAIR3 =
-		new PairProperty(STRING, STRING, "", "", new Pair<String, String>("", ""));
+		new PairProperty<>(STRING, STRING, "", "", new Pair<String, String>("", ""));
 
 	private static PairProperty<List<String>, List<Integer>> PAIR4 =
-		new PairProperty(new ListProperty(STRING, "", ""), new ListProperty(INT, "", ""),
-		                 "", "", new Pair<List<String>, List<Integer>>(new ArrayList<String>(), new ArrayList<Integer>()));
+		new PairProperty<>(new ListProperty<String>(STRING, "", ""), new ListProperty<Integer>(INT, "", ""),
+		                   "", "", new Pair<List<String>, List<Integer>>(new ArrayList<String>(), new ArrayList<Integer>()));
 
 	@Test
 	public void testStringEncoding () throws ConfigurationException {
