@@ -30,7 +30,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord;
 import com.oculusinfo.tilegen.graph.analytics.GraphCommunity;
 

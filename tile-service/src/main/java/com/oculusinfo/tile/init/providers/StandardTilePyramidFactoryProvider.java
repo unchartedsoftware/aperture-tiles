@@ -41,11 +41,4 @@ public class StandardTilePyramidFactoryProvider implements FactoryProvider<TileP
 	                                                       List<String> path) {
 		return new TilePyramidFactory(parent, path);
 	}
-
-	@Override
-	public ConfigurableFactory<TilePyramid> createFactory (String factoryName,
-	                                                       ConfigurableFactory<?> parent,
-	                                                       List<String> path) {
-		return new TilePyramidFactory(factoryName, parent, path);
-	}
 }

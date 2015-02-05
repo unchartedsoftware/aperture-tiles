@@ -24,7 +24,7 @@
 package com.oculusinfo.annotation.impl;
 
 import com.oculusinfo.annotation.AnnotationData;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

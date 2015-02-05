@@ -32,7 +32,7 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 
 
@@ -40,7 +40,7 @@ import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 @Singleton
 public class StandardTileSerializerFactoryProvider extends StandardUberFactoryProvider<TileSerializer<?>> {
 	@Inject
-	public StandardTileSerializerFactoryProvider (Set<DelegateFactoryProviderTarget<TileSerializer<?>>> providers) {
+	public StandardTileSerializerFactoryProvider (Set<FactoryProvider<TileSerializer<?>>> providers) {
 		super(providers);
 	}
 
@@ -52,13 +52,6 @@ public class StandardTileSerializerFactoryProvider extends StandardUberFactoryPr
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
 	                                                             List<String> path) {
-		return new TileSerializerFactory(parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
-	}
-
-	@Override
-	public ConfigurableFactory<TileSerializer<?>> createFactory (String factoryName,
-	                                                             ConfigurableFactory<?> parent,
-	                                                             List<String> path) {
-		return new TileSerializerFactory(factoryName, parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
+		return new TileSerializerFactory(parent, path, createChildren(parent, path));
 	}
 }

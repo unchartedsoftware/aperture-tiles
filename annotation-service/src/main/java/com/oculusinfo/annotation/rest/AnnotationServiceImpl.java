@@ -40,8 +40,9 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.JsonUtilities;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.properties.JSONArrayProperty;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
@@ -59,6 +60,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class AnnotationServiceImpl implements AnnotationService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationServiceImpl.class);
 
+	public static final List<String> GROUPS_PATH = Collections.unmodifiableList( Arrays.asList( "public" ) );
+	public static final JSONArrayProperty GROUPS = new JSONArrayProperty("groups",
+        "The identifiers that annotations are grouped by",
+        "[\"Urgent\",\"High\",\"Medium\",\"Low\"]");
 	// These two functions are used to check and cast the type of the tile serializer we use.
 
 	// Just wrapping the Map.class, which is the same as the complex class listed due to 
@@ -122,7 +127,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 
     public LayerConfiguration getLayerConfiguration( String layer, JSONObject query ) {
         LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
-        config.addChildFactory( _annotationIOFactoryProvider.createFactory(config, LayerConfiguration.PYRAMID_IO_PATH) );
+        config.addProperty( GROUPS, GROUPS_PATH );
+		config.addChildFactory( _annotationIOFactoryProvider.createFactory(config, LayerConfiguration.PYRAMID_IO_PATH) );
         config.addChildFactory( _annotationFilterFactoryProvider.createFactory(config, LayerConfiguration.FILTER_PATH) );
         JSONObject layerConfig = _layerService.getLayerJSON( layer );
         try {
@@ -570,7 +576,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 
-			for (AnnotationTile tile : AnnotationTile.convertFromRaw(io.readTiles(dataId, serializer, indices))) {
+			for ( AnnotationTile tile : AnnotationTile.convertFromRaw( io.readTiles(dataId, serializer, indices) ) ) {
 				if (!readTiles.contains(tile.getDefinition())) {
 					readTiles.add(tile.getDefinition());
 					tiles.add(tile);

@@ -34,12 +34,12 @@ import com.oculusinfo.binning.io.impl.JDBCPyramidIOFactory;
 import com.oculusinfo.binning.io.impl.SQLitePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.FileBasedPyramidIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 
 
 
 /**
- * Basic enum of all the default {@link DelegateFactoryProviderTarget} types
+ * Basic enum of all the default {@link FactoryProvider} types
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
@@ -52,7 +52,7 @@ import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
  * 
  * @author cregnier
  */
-public enum DefaultPyramidIOFactoryProvider implements DelegateFactoryProviderTarget<PyramidIO> {
+public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
 	HBASE(new Constructor() {
 			@Override
 			public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {

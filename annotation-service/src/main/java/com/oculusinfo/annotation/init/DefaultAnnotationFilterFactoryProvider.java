@@ -29,14 +29,14 @@ import com.oculusinfo.annotation.filter.impl.EmptyFilterFactory;
 import com.oculusinfo.annotation.filter.impl.NMostRecentByGroupFactory;
 import com.oculusinfo.annotation.filter.impl.ScriptableFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 
 import java.util.List;
 
 
 
 /**
- * Basic enum of all the default {@link DelegateFactoryProviderTarget} types
+ * Basic enum of all the default {@link FactoryProvider} types
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
@@ -50,7 +50,7 @@ import java.util.List;
  * @author cregnier
  * 
  */
-public enum DefaultAnnotationFilterFactoryProvider implements DelegateFactoryProviderTarget<AnnotationFilter> {
+public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<AnnotationFilter> {
 	EMPTY(new Constructor() {
 		@Override
 		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,

@@ -28,7 +28,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.factory.providers.FactoryProvider;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryProvider;
 
@@ -36,8 +35,8 @@ public class StandardTileSerializerFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<TileSerializer<?>>> factoryProviderBinder =
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<TileSerializer<?>>>(){});
+		Multibinder<FactoryProvider<TileSerializer<?>>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<FactoryProvider<TileSerializer<?>>>(){});
 
 		for (DefaultTileSerializerFactoryProvider provider: DefaultTileSerializerFactoryProvider.values()) {
 			factoryProviderBinder.addBinding().toInstance(provider);

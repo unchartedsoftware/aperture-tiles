@@ -42,12 +42,4 @@ public class StandardTileTransformerFactoryProvider implements FactoryProvider<T
 	                                                     List<String> path) {
 		return new TileTransformerFactory(parent, path);
 	}
-
-	@Override
-	public ConfigurableFactory<TileTransformer> createFactory (String factoryName,
-	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return new TileTransformerFactory(factoryName, parent, path);
-	}
-	
 }

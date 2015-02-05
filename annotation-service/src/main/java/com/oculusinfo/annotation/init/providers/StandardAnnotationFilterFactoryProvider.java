@@ -29,7 +29,7 @@ import com.google.inject.Singleton;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.AnnotationFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 
 import java.util.List;
@@ -39,7 +39,7 @@ import java.util.Set;
 @Singleton
 public class StandardAnnotationFilterFactoryProvider extends StandardUberFactoryProvider<AnnotationFilter> {
 	@Inject
-	public StandardAnnotationFilterFactoryProvider (Set<DelegateFactoryProviderTarget<AnnotationFilter>> providers) {
+	public StandardAnnotationFilterFactoryProvider (Set<FactoryProvider<AnnotationFilter>> providers) {
 		super(providers);
 	}
 
@@ -51,13 +51,6 @@ public class StandardAnnotationFilterFactoryProvider extends StandardUberFactory
 	@Override
 	public ConfigurableFactory<AnnotationFilter> createFactory (ConfigurableFactory<?> parent,
 	                                                            List<String> path) {
-		return new AnnotationFilterFactory(parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
-	}
-
-	@Override
-	public ConfigurableFactory<AnnotationFilter> createFactory (String factoryName,
-	                                                            ConfigurableFactory<?> parent,
-	                                                            List<String> path) {
-		return new AnnotationFilterFactory(factoryName, parent, path, createChildren(getMergedPath(parent.getRootPath(), path)));
+		return new AnnotationFilterFactory(parent, path, createChildren(parent, path));
 	}
 }

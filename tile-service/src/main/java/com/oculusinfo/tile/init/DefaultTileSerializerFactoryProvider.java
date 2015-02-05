@@ -40,14 +40,14 @@ import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
-import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.util.Pair;
 
 
 /**
- * Basic enum of all the default {@link DelegateFactoryProviderTarget} types
+ * Basic enum of all the default {@link FactoryProvider} types
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
@@ -63,7 +63,7 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * </pre>
  */
 public final class DefaultTileSerializerFactoryProvider
-	implements DelegateFactoryProviderTarget<TileSerializer<?>>,
+	implements FactoryProvider<TileSerializer<?>>,
 	           Comparable<DefaultTileSerializerFactoryProvider>
 {
 	private static int __currentOrdinal                                        = 0;

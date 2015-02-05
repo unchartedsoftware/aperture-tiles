@@ -23,11 +23,10 @@ artifacts {
 
 // Jars / projects this project depends on.
 dependencies {
-	compile "com.google.guava:guava:14.0.1"
+	compile project(":factory-utilities")
 	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"
 	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"
 	compile "org.apache.avro:avro:1.7.4"
-	compile "org.json:json:20090211"
 	compile "org.xerial:sqlite-jdbc:3.7.2"
 	compile "com.esotericsoftware.kryo:kryo:2.21"
 	compile "org.slf4j:slf4j-api:1.7.5"

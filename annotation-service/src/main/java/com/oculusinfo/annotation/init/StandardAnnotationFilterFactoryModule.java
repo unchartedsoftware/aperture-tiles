@@ -29,14 +29,13 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.init.providers.StandardAnnotationFilterFactoryProvider;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.providers.FactoryProvider;
 
 public class StandardAnnotationFilterFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationFilter>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationFilter>>(){});
+		Multibinder<FactoryProvider<AnnotationFilter>> factoryProviderBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<FactoryProvider<AnnotationFilter>>(){});
 
 		for (DefaultAnnotationFilterFactoryProvider provider: DefaultAnnotationFilterFactoryProvider.values())
 			factoryProviderBinder.addBinding().toInstance(provider);

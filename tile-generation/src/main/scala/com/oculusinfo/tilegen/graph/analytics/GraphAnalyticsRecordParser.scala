@@ -33,7 +33,7 @@ import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 
 import scala.collection.JavaConverters._
 import scala.util.parsing.json.JSON
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.factory.util.Pair
 import org.apache.spark.graphx._
 
 /**

@@ -296,34 +296,42 @@ class RDDLineBinner(minBins: Int = 2,
 				val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
 				levels.map(level =>
 					{
-						// find 'universal' bins for both endpoints
-						val tile1 = tileScheme.rootToTile(x1, y1, level, xBins, yBins)
-						val tileBin1 = tileScheme.rootToBin(x1, y1, tile1)
-						val unvBin1 = tileBinToUniBin(tile1, tileBin1)
-
-						val tile2 = tileScheme.rootToTile(x2, y2, level, xBins, yBins)
-						val tileBin2 = tileScheme.rootToBin(x2, y2, tile2)
-						val unvBin2 = tileBinToUniBin(tile2, tileBin2)
-
-						// check if line length is within valid range
-						val points =
-							(math.abs(unvBin1.getX()-unvBin2.getX()) max
-								 math.abs(unvBin1.getY()-unvBin2.getY()))
-						if (points < localMinBins || (!localDrawLineEnds && points > localMaxBins)) {
-							// line segment either too short or too long (so
-							// disregard)
+						if (tileScheme.getProjection.equals("EPSG:900913") &&
+							(y1 > 85.05115 || y1 < -85.05115 || y2 > 85.05115 || y2 < -85.05115)) {
+							// If using mercator projection then exclude line segments if
+							// either endpoint is near the poles (latitude > 85.05115 or < -85.05115 degrees)
 							(null, null, null)
-						} else {
-							// return endpoints as pair of universal bins per
-							// level
-							if (unvBin1.getX() < unvBin2.getX())
+						}
+						else {
+							// find 'universal' bins for both endpoints
+							val tile1 = tileScheme.rootToTile(x1, y1, level, xBins, yBins)
+							val tileBin1 = tileScheme.rootToBin(x1, y1, tile1)
+							val unvBin1 = tileBinToUniBin(tile1, tileBin1)
+
+							val tile2 = tileScheme.rootToTile(x2, y2, level, xBins, yBins)
+							val tileBin2 = tileScheme.rootToBin(x2, y2, tile2)
+							val unvBin2 = tileBinToUniBin(tile2, tileBin2)
+
+							// check if line length is within valid range
+							val points =
+								(math.abs(unvBin1.getX() - unvBin2.getX()) max
+									math.abs(unvBin1.getY() - unvBin2.getY()))
+							if (points < localMinBins || (!localDrawLineEnds && points > localMaxBins)) {
+								// line segment either too short or too long (so
+								// disregard)
+								(null, null, null)
+							} else {
+								// return endpoints as pair of universal bins per
+								// level
+								if (unvBin1.getX() < unvBin2.getX())
 								// use convention of endpoint with min X value
 								// is listed first
-								(unvBin1, unvBin2, tile1)
-							else
+									(unvBin1, unvBin2, tile1)
+								else
 								// note, we need one of the tile indices here
 								// to keep level info for this line segment
-								(unvBin2, unvBin1, tile2)
+									(unvBin2, unvBin1, tile2)
+							}
 						}
 					}
 				)
