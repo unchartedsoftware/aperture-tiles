@@ -218,7 +218,6 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void serialize (TileData<T> tile, OutputStream stream) throws IOException {
 		if (tile instanceof SparseTileData<?>) {
