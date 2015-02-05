@@ -126,22 +126,8 @@ public class TileServiceImpl implements TileService {
             config.setLevelProperties( index, minimum, maximum );
 
             // produce the tile renderer from the configuration
-			TileDataImageRenderer tileRenderer = config.produce(TileDataImageRenderer.class);
-            // prepare for rendering
-			config.prepareForRendering(layer, index, tileSet);
-
-			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
-			PyramidIO pyramidIO = config.produce(PyramidIO.class);
-			TileSerializer<?> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
-					tileRenderer.getAcceptedBinClass(),
-					tileRenderer.getAcceptedTypeDescriptor());
-
-			int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
-			TileData<?> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
-
-			if (data != null) {
-				bi = tileRenderer.render(data, config);
-			}
+			TileDataImageRenderer<?> tileRenderer = config.produce(TileDataImageRenderer.class);
+			bi = renderTileImage(config, layer, index, tileSet, tileRenderer);
 
 		} catch (ConfigurationException e) {
 			LOGGER.warn("No renderer specified for tile request. "+ e.getMessage());
@@ -163,6 +149,28 @@ public class TileServiceImpl implements TileService {
 		return bi;
 	}
 
+	private <T> BufferedImage renderTileImage (LayerConfiguration config, String layer,
+	                                           TileIndex index, Iterable<TileIndex> tileSet,
+	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException {
+        // prepare for rendering
+		config.prepareForRendering(layer, index, tileSet);
+
+		String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+		PyramidIO pyramidIO = config.produce(PyramidIO.class);
+		TileSerializer<T> serializer = SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
+		                                                                      renderer.getAcceptedBinClass(),
+		                                                                      renderer.getAcceptedTypeDescriptor());
+
+		int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
+		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
+
+		if (data != null) {
+			return renderer.render(data, config);
+		} else {
+			return null;
+		}
+	}
+
 	@Override
 	public JSONObject getTileObject( String layer, TileIndex index, Iterable<TileIndex> tileSet, JSONObject query) {
 		try {
@@ -180,7 +188,7 @@ public class TileServiceImpl implements TileService {
                 return null;
             }
             // produce transformer, return transformed de-serialized data
-			TileTransformer transformer = config.produce(TileTransformer.class);
+			TileTransformer<?> transformer = config.produce(TileTransformer.class);
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
             return transformer.transform(deserializedJSON);
 		} catch (IOException | JSONException | ConfigurationException e) {
