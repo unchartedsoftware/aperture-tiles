@@ -45,46 +45,46 @@ import com.oculusinfo.factory.properties.StringProperty;
  * {@link com.oculusinfo.binning.io.serialization.impl.KryoSerializer}
  */
 public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer<T>> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(KryoSerializerFactory.class);
-    private static final ListProperty<String> NEEDED_CLASSES = new ListProperty<>(
-        new StringProperty("class",
-                           "A class that needs to be registered with Kryo for this serializer to work",
-                           null),
-        "classes",
-        "A list of fully-specified classes (as read by Class.forName()) that will need to be registered with Kryo for this serializer to work properly.");
+	private static final Logger LOGGER = LoggerFactory.getLogger(KryoSerializerFactory.class);
+	private static final ListProperty<String> NEEDED_CLASSES = new ListProperty<>(
+		        new StringProperty("class",
+		                           "A class that needs to be registered with Kryo for this serializer to work",
+		                           null),
+		        "classes",
+		        "A list of fully-specified classes (as read by Class.forName()) that will need to be registered with Kryo for this serializer to work properly.");
 
 
 
-    // This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static <ST> Class<TileSerializer<ST>> getGenericSerializerClass () {
-        return (Class) TileSerializer.class;
-    }
+	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static <ST> Class<TileSerializer<ST>> getGenericSerializerClass () {
+		return (Class) TileSerializer.class;
+	}
 
 
 
-    private TypeDescriptor _type;
+	private TypeDescriptor _type;
 
-    public KryoSerializerFactory (ConfigurableFactory<?> parent, List<String> path, TypeDescriptor type) {
-        super("kryo", KryoSerializerFactory.<T>getGenericSerializerClass(), parent, path, true);
-        _type = type;
-    }
+	public KryoSerializerFactory (ConfigurableFactory<?> parent, List<String> path, TypeDescriptor type) {
+		super("kryo", KryoSerializerFactory.<T>getGenericSerializerClass(), parent, path, true);
+		_type = type;
+	}
 
-    @Override
-    protected TileSerializer<T> create () {
-        // Check class registrations
-        List<String> classNames = getPropertyValue(NEEDED_CLASSES);
-        if (!classNames.isEmpty()) {
-            List<Class<?>> neededClasses = new ArrayList<>();
-            for (String name: classNames) {
-                try {
-                    neededClasses.add(Class.forName(name));
-                } catch (ClassNotFoundException e) {
-                    LOGGER.warn("Class {} not found", name);
-                }
-            }
-            KryoSerializer.registerClasses(neededClasses.toArray(new Class<?>[neededClasses.size()]));
-        }
-        return new KryoSerializer<>(_type);
-    }
+	@Override
+	protected TileSerializer<T> create () {
+		// Check class registrations
+		List<String> classNames = getPropertyValue(NEEDED_CLASSES);
+		if (!classNames.isEmpty()) {
+			List<Class<?>> neededClasses = new ArrayList<>();
+			for (String name: classNames) {
+				try {
+					neededClasses.add(Class.forName(name));
+				} catch (ClassNotFoundException e) {
+					LOGGER.warn("Class {} not found", name);
+				}
+			}
+			KryoSerializer.registerClasses(neededClasses.toArray(new Class<?>[neededClasses.size()]));
+		}
+		return new KryoSerializer<>(_type);
+	}
 }

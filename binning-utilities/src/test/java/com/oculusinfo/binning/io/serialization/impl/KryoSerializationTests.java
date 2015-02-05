@@ -174,39 +174,39 @@ public class KryoSerializationTests {
 
 	@Test
 	public void testCustom () throws Exception {
-	    KryoSerializer.registerClasses(CustomTestData.class);
-        testRoundTripDense(new TypeDescriptor(CustomTestData.class),
-                           new CustomTestData(1, 1.1, "one"),
-                           new CustomTestData(2, 2.2, "two"),
-                           new CustomTestData(3, 3.3, "three"),
-                           new CustomTestData(4, 4.4, "four"));
-        testRoundTripSparse(new TypeDescriptor(CustomTestData.class),
-                            new CustomTestData(-1, -1.1, "empty"),
-                            new CustomTestData(1, 1.1, "one"),
-                            new CustomTestData(2, 2.2, "two"),
-                            new CustomTestData(3, 3.3, "three"),
-                            new CustomTestData(4, 4.4, "four"));
+		KryoSerializer.registerClasses(CustomTestData.class);
+		testRoundTripDense(new TypeDescriptor(CustomTestData.class),
+		                   new CustomTestData(1, 1.1, "one"),
+		                   new CustomTestData(2, 2.2, "two"),
+		                   new CustomTestData(3, 3.3, "three"),
+		                   new CustomTestData(4, 4.4, "four"));
+		testRoundTripSparse(new TypeDescriptor(CustomTestData.class),
+		                    new CustomTestData(-1, -1.1, "empty"),
+		                    new CustomTestData(1, 1.1, "one"),
+		                    new CustomTestData(2, 2.2, "two"),
+		                    new CustomTestData(3, 3.3, "three"),
+		                    new CustomTestData(4, 4.4, "four"));
 	}
 
 
 	static class CustomTestData {
-	    int _i;
-	    double _d;
-	    String _s;
+		int _i;
+		double _d;
+		String _s;
 
-	    CustomTestData () {
-	    }
-	    CustomTestData (int i, double d, String s) {
-	        _i = i;
-	        _d = d;
-	        _s = s;
-	    }
-	    @Override
-	    public boolean equals (Object obj) {
-	        if (this == obj) return true;
-	        if (!(obj instanceof CustomTestData)) return false;
-	        CustomTestData that = (CustomTestData) obj;
-	        return (this._i == that._i && this._d == that._d && this._s.equals(that._s));
-	    }
+		CustomTestData () {
+		}
+		CustomTestData (int i, double d, String s) {
+			_i = i;
+			_d = d;
+			_s = s;
+		}
+		@Override
+		public boolean equals (Object obj) {
+			if (this == obj) return true;
+			if (!(obj instanceof CustomTestData)) return false;
+			CustomTestData that = (CustomTestData) obj;
+			return (this._i == that._i && this._d == that._d && this._s.equals(that._s));
+		}
 	}
 }

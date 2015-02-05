@@ -28,68 +28,68 @@ import java.util.*;
 
 /** A map that maps every integer to a constant value */
 public class ConstantMap<CT> implements Map<Integer, CT> {
-    private CT _value;
+	private CT _value;
 
-    public ConstantMap(CT value) {
-        _value = value;
-    }
-    @Override
-    public int size() {
-        return 1;
-    }
+	public ConstantMap(CT value) {
+		_value = value;
+	}
+	@Override
+	public int size() {
+		return 1;
+	}
 
-    @Override
-    public boolean isEmpty() {
-        return false;
-    }
+	@Override
+	public boolean isEmpty() {
+		return false;
+	}
 
-    @Override
-    public boolean containsKey(Object key) {
-        return (key instanceof Integer);
-    }
+	@Override
+	public boolean containsKey(Object key) {
+		return (key instanceof Integer);
+	}
 
-    @Override
-    public boolean containsValue(Object value) {
-        return _value.equals(value);
-    }
+	@Override
+	public boolean containsValue(Object value) {
+		return _value.equals(value);
+	}
 
-    @Override
-    public CT get(Object key) {
-        return _value;
-    }
+	@Override
+	public CT get(Object key) {
+		return _value;
+	}
 
-    @Override
-    public CT put(Integer key, CT value) {
-        throw new UnsupportedOperationException("Can set values in a constant map");
-    }
+	@Override
+	public CT put(Integer key, CT value) {
+		throw new UnsupportedOperationException("Can set values in a constant map");
+	}
 
-    @Override
-    public CT remove(Object key) {
-        throw new UnsupportedOperationException("Can remove values from a constant map");
-    }
+	@Override
+	public CT remove(Object key) {
+		throw new UnsupportedOperationException("Can remove values from a constant map");
+	}
 
-    @Override
-    public void putAll(Map<? extends Integer, ? extends CT> m) {
-        throw new UnsupportedOperationException("Can set values in a constant map");
-    }
+	@Override
+	public void putAll(Map<? extends Integer, ? extends CT> m) {
+		throw new UnsupportedOperationException("Can set values in a constant map");
+	}
 
-    @Override
-    public void clear() {
-        throw new UnsupportedOperationException("Can clear a constant map");
-    }
+	@Override
+	public void clear() {
+		throw new UnsupportedOperationException("Can clear a constant map");
+	}
 
-    @Override
-    public Set<Integer> keySet() {
-        throw new UnsupportedOperationException("It is impossible to return the set of all integers");
-    }
+	@Override
+	public Set<Integer> keySet() {
+		throw new UnsupportedOperationException("It is impossible to return the set of all integers");
+	}
 
-    @Override
-    public Collection<CT> values() {
-        return Collections.unmodifiableSet(new HashSet<CT>(Arrays.asList(_value)));
-    }
+	@Override
+	public Collection<CT> values() {
+		return Collections.unmodifiableSet(new HashSet<CT>(Arrays.asList(_value)));
+	}
 
-    @Override
-    public Set<Entry<Integer, CT>> entrySet() {
-        throw new UnsupportedOperationException("It is impossible to return the set of all integers");
-    }
+	@Override
+	public Set<Entry<Integer, CT>> entrySet() {
+		throw new UnsupportedOperationException("It is impossible to return the set of all integers");
+	}
 }

@@ -41,90 +41,90 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 // Test that primitive avro serialization works with sparse tile datas
 public class SparseAvroSerializationTests {
-    @SafeVarargs
-    final <T> void testRoundTrip(Class<? extends T> type, T defaultBin, T... data) throws Exception {
-        TileSerializer<T> serializer = new PrimitiveAvroSerializer<T>(type, CodecFactory.nullCodec());
+	@SafeVarargs
+	final <T> void testRoundTrip(Class<? extends T> type, T defaultBin, T... data) throws Exception {
+		TileSerializer<T> serializer = new PrimitiveAvroSerializer<T>(type, CodecFactory.nullCodec());
 
-        // Create our tile
-        int size = data.length;
-        TileData<T> input = new SparseTileData<>(new TileIndex(0, 0, 0, size, size), defaultBin);
-        for (int i=0; i<size; ++i) {
-            input.setBin(i, i, data[i]);
-        }
+		// Create our tile
+		int size = data.length;
+		TileData<T> input = new SparseTileData<>(new TileIndex(0, 0, 0, size, size), defaultBin);
+		for (int i=0; i<size; ++i) {
+			input.setBin(i, i, data[i]);
+		}
 
-        // Send it round-trip through serialization
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        serializer.serialize(input, baos);
-        baos.flush();
-        baos.close();
+		// Send it round-trip through serialization
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serializer.serialize(input, baos);
+		baos.flush();
+		baos.close();
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        TileData<T> output = serializer.deserialize(new TileIndex(1, 1, 1, size, size), bais);
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		TileData<T> output = serializer.deserialize(new TileIndex(1, 1, 1, size, size), bais);
 
-        // Test to make sure output matches input.
-        Assert.assertEquals(input.getDefinition(), output.getDefinition());
-        for (int y=0; y<size; ++y) {
-            for (int x=0; x<size; ++x) {
-                Assert.assertEquals(input.getBin(x, y), output.getBin(x, y));
-                if (x == y) Assert.assertEquals(output.getBin(x, y), data[x]);
-                else Assert.assertEquals(output.getBin(x, y), defaultBin);
-            }
-        }
-    }
+		// Test to make sure output matches input.
+		Assert.assertEquals(input.getDefinition(), output.getDefinition());
+		for (int y=0; y<size; ++y) {
+			for (int x=0; x<size; ++x) {
+				Assert.assertEquals(input.getBin(x, y), output.getBin(x, y));
+				if (x == y) Assert.assertEquals(output.getBin(x, y), data[x]);
+				else Assert.assertEquals(output.getBin(x, y), defaultBin);
+			}
+		}
+	}
 
 
-    @Test
-    public void testBoolean () throws Exception {
-        testRoundTrip(Boolean.class, true, false, false, true, false, false);
-    }
+	@Test
+	public void testBoolean () throws Exception {
+		testRoundTrip(Boolean.class, true, false, false, true, false, false);
+	}
 
-    @Test
-    public void testInteger () throws Exception {
-        testRoundTrip(Integer.class, -4, 0, 1, 4, 9, 16, 25, 36, 49, 64);
-    }
+	@Test
+	public void testInteger () throws Exception {
+		testRoundTrip(Integer.class, -4, 0, 1, 4, 9, 16, 25, 36, 49, 64);
+	}
 
-    @Test
-    public void testLong () throws Exception {
-        testRoundTrip(Long.class, -4L, 0L, 1L, 8L, 27L, 64L, 125L, 216L, 343L, 512L);
-    }
+	@Test
+	public void testLong () throws Exception {
+		testRoundTrip(Long.class, -4L, 0L, 1L, 8L, 27L, 64L, 125L, 216L, 343L, 512L);
+	}
 
-    @Test
-    public void testFloat () throws Exception {
-        testRoundTrip(Float.class, -4.4f, 0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
-    }
+	@Test
+	public void testFloat () throws Exception {
+		testRoundTrip(Float.class, -4.4f, 0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
+	}
 
-    @Test
-    public void testDouble () throws Exception {
-        testRoundTrip(Double.class, -4.4, 0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
-    }
+	@Test
+	public void testDouble () throws Exception {
+		testRoundTrip(Double.class, -4.4, 0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
+	}
 
-    @Test
-    public void testBytes () throws Exception {
-        testRoundTrip(ByteBuffer.class,
-                ByteBuffer.wrap(new byte[] {}),
-                ByteBuffer.wrap(new byte[] {(byte) 1}),
-                ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
-                ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
-    }
+	@Test
+	public void testBytes () throws Exception {
+		testRoundTrip(ByteBuffer.class,
+		              ByteBuffer.wrap(new byte[] {}),
+		              ByteBuffer.wrap(new byte[] {(byte) 1}),
+		              ByteBuffer.wrap(new byte[] {(byte) 2, (byte) 4}),
+		              ByteBuffer.wrap(new byte[] {(byte) 3, (byte) 9, (byte) 27}));
+	}
 
-    @Test
-    public void testString () throws Exception {
-        testRoundTrip(String.class, "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
-    }
+	@Test
+	public void testString () throws Exception {
+		testRoundTrip(String.class, "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
+	}
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testShort () throws Exception {
-        testRoundTrip(Short.class, (short)0, (short)0);
-    }
+	@Test(expected=IllegalArgumentException.class)
+	public void testShort () throws Exception {
+		testRoundTrip(Short.class, (short)0, (short)0);
+	}
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testByte () throws Exception {
-        testRoundTrip(Byte.class, (byte)0, (byte)0);
-    }
+	@Test(expected=IllegalArgumentException.class)
+	public void testByte () throws Exception {
+		testRoundTrip(Byte.class, (byte)0, (byte)0);
+	}
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testReferenceType () throws Exception {
-        List<Integer> sample = new ArrayList<>();
-        testRoundTrip(sample.getClass(), sample, sample);
-    }
+	@Test(expected=IllegalArgumentException.class)
+	public void testReferenceType () throws Exception {
+		List<Integer> sample = new ArrayList<>();
+		testRoundTrip(sample.getClass(), sample, sample);
+	}
 }
