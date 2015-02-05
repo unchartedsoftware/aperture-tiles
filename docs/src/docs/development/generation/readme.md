@@ -365,35 +365,40 @@ The tiling properties files define the tiling job parameters for each layer in y
    					oculus.binning.projection.autobounds
    				</dt>
 				<dd>
-					Indicates whether the tiling job should set the minimum and maximum	bounds automatically (true) or whether you will specify them manually (false). Default is true.
-				</dd>
-	
+					Indicates whether the tiling job should set the minimum and maximum	bounds automatically (<em>true</em>, which is the default value) or whether you will specify them manually (<em>false</em>). If set to <em>false</em>, you must also specify:
+					<dl>
+						<dt>
+							oculus.binning.projection.minx
+						</dt>
+						<dd>
+							Indicates the lowest value that will be displayed on the x-axis.
+						</dd>
+			
+						<dt>
+							oculus.binning.projection.maxx
+						</dt>
+						<dd>
+							Indicates the highest value that will be displayed on the x-axis.
+						</dd>
+			
+						<dt>
+							oculus.binning.projection.miny
+						</dt>
+						<dd>
+							Indicates the lowest value that will be displayed on the y-axis.
+						</dd>
+			
+						<dt>
+							oculus.binning.projection.maxy
+						</dt>
+						<dd>
+							Indicates the highest value that will be displayed on the y-axis.
+						</dd>
+					</dl>
+   				</dd>
+				
 				<dt>
-					oculus.binning.projection.minx
 				</dt>
-				<dd>
-					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the lowest value that will be displayed on the x-axis.
-				</dd>
-	
-				<dt>
-					oculus.binning.projection.maxx
-				</dt>
-				<dd>
-					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the highest value that will be displayed on the x-axis.
-				</dd>
-	
-				<dt>
-					oculus.binning.projection.miny
-				</dt>
-				<dd>
-					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the lowest value that will be displayed on the y-axis.
-				</dd>
-	
-				<dt>
-					oculus.binning.projection.maxy
-				</dt>
-				<dd>
-					If the <strong>oculus.binning.projection.autobounds</strong> value is set to false, this field indicates the highest value that will be displayed on the y-axis.
 				</dd>
    				
 				<dt>
