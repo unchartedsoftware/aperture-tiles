@@ -28,6 +28,8 @@ import org.junit.Test;
 
 import java.util.List;
 
+import com.oculusinfo.factory.util.Pair;
+
 public class TypeDescriptorTests {
 	@Test
 	public void testToString () {

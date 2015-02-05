@@ -28,12 +28,12 @@ import com.oculusinfo.annotation.io.AnnotationIO;
 import com.oculusinfo.annotation.io.impl.FileSystemAnnotationIOFactory;
 import com.oculusinfo.annotation.io.impl.HBaseAnnotationIOFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 
 import java.util.List;
 
 /**
- * Basic enum of all the default {@link DelegateFactoryProviderTarget} types availables in the system.<br>
+ * Basic enum of all the default {@link FactoryProvider} types availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
  * <pre><code>
@@ -43,7 +43,7 @@ import java.util.List;
  * @author cregnier
  *
  */
-public enum DefaultAnnotationIOFactoryProvider implements DelegateFactoryProviderTarget<AnnotationIO> {
+public enum DefaultAnnotationIOFactoryProvider implements FactoryProvider<AnnotationIO> {
 	HBASE(new Constructor() {
 			@Override
 			public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {

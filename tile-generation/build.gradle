@@ -135,6 +135,7 @@ dependencies {
 	// at runtime.
 	assemblyJarReq project (":geometric-utilities")
 	assemblyJarReq project (":binning-utilities")
+	assemblyJarReq project (":factory-utilities")
 	assemblyJarReq "org.json:json:20090211"
 	addHBaseDependencies("assemblyJarReq")
 }

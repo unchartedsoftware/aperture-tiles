@@ -27,7 +27,7 @@ import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

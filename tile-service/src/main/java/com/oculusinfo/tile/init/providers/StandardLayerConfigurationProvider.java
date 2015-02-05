@@ -77,16 +77,4 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
                                       _tileTransformerFactoryProvider,
                                       parent, path);
     }
-
-    @Override
-    public ConfigurableFactory<LayerConfiguration> createFactory (String factoryName,
-                                                                  ConfigurableFactory<?> parent,
-                                                                  List<String> path) {
-        return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                      _tilePyramidFactoryProvider,
-                                      _serializationFactoryProvider,
-                                      _rendererFactoryProvider,
-                                      _tileTransformerFactoryProvider,
-                                      factoryName, parent, path);
-    }
 }

@@ -25,7 +25,7 @@ package com.oculusinfo.binning;
 
 
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 import java.util.*;
 

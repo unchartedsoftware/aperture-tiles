@@ -35,7 +35,7 @@ import org.apache.avro.util.Utf8
 
 import scala.collection.JavaConverters._
 
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.factory.util.Pair
 
 
 

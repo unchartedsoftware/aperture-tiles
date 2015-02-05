@@ -41,7 +41,6 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.tile.init.DefaultTileSerializerFactoryProvider;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
@@ -81,13 +80,13 @@ public class AnnotationServiceTests {
 
 			String configFile = "res:///unit-test-config.json";
 
-            Set<DelegateFactoryProviderTarget<PyramidIO>> tileIoSet = new HashSet<>();
+            Set<FactoryProvider<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
-            Set<DelegateFactoryProviderTarget<AnnotationIO>> annotationIoSet = new HashSet<>();
+            Set<FactoryProvider<AnnotationIO>> annotationIoSet = new HashSet<>();
             annotationIoSet.addAll( Arrays.asList( DefaultAnnotationIOFactoryProvider.values() ) );
-            Set<DelegateFactoryProviderTarget<TileSerializer<?>>> serializerSet = new HashSet<>();
+            Set<FactoryProvider<TileSerializer<?>>> serializerSet = new HashSet<>();
             serializerSet.addAll( Arrays.asList( DefaultTileSerializerFactoryProvider.values() ) );
-            Set<DelegateFactoryProviderTarget<AnnotationFilter>> filterIoSet = new HashSet<>();
+            Set<FactoryProvider<AnnotationFilter>> filterIoSet = new HashSet<>();
             filterIoSet.addAll( Arrays.asList( DefaultAnnotationFilterFactoryProvider.values() ) );
 
             FactoryProvider<LayerConfiguration> layerConfigurationProvider = new StandardLayerConfigurationProvider(

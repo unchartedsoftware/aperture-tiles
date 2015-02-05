@@ -35,7 +35,7 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData.StorageType;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;

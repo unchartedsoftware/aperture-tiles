@@ -44,11 +44,4 @@ public class StandardImageRendererFactoryProvider implements FactoryProvider<Til
 	                                                                 List<String> path) {
 		return new ImageRendererFactory(parent, path);
 	}
-
-	@Override
-	public ConfigurableFactory<TileDataImageRenderer> createFactory (String factoryName,
-	                                                                 ConfigurableFactory<?> parent,
-	                                                                 List<String> path) {
-		return new ImageRendererFactory(factoryName, parent, path);
-	}
 }

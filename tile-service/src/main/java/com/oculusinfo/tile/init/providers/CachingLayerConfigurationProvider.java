@@ -93,14 +93,6 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 		return new CachingLayerConfiguration(parent, path);
 	}
 
-	@Override
-	public ConfigurableFactory<LayerConfiguration> createFactory (String factoryName,
-	                                                              ConfigurableFactory<?> parent,
-	                                                              List<String> path) {
-		return new CachingLayerConfiguration(factoryName, parent, path);
-	}
-
-
 	private class CachingLayerConfiguration extends LayerConfiguration {
 		public CachingLayerConfiguration (ConfigurableFactory<?> parent,
 		                                  List<String> path) {
@@ -140,22 +132,22 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	}
 
 	private class CachingPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
-		private ConfigurableFactory<?>         _parent;
-		private ConfigurableFactory<PyramidIO> _baseFactory;
-		private boolean                        _baseInitialized;
+		private ConfigurableFactory<?>                   _parent;
+		private ConfigurableFactory<? extends PyramidIO> _baseFactory;
+		private boolean                                  _baseInitialized;
 
 
 
 		CachingPyramidIOFactory (ConfigurableFactory<?> parent,
 		                         List<String> path,
-		                         ConfigurableFactory<PyramidIO> base) {
+		                         ConfigurableFactory<? extends PyramidIO> base) {
 			this(null, parent, path, base);
 		}
 
 		CachingPyramidIOFactory (String name,
 		                         ConfigurableFactory<?> parent,
 		                         List<String> path,
-		                         ConfigurableFactory<PyramidIO> base) {
+		                         ConfigurableFactory<? extends PyramidIO> base) {
 			super(name, PyramidIO.class, parent, path);
 			_parent = parent;
 			_baseFactory = base;
@@ -187,21 +179,14 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	}
 	private class CachingPyramidIOProvider implements FactoryProvider<PyramidIO> {
 		@Override
-		public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
+		public ConfigurableFactory<? extends PyramidIO> createFactory (List<String> path) {
 			return new CachingPyramidIOFactory(null, path, _pyramidIOFactoryProvider.createFactory(path));
 		}
 
 		@Override
-		public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
+		public ConfigurableFactory<? extends PyramidIO> createFactory (ConfigurableFactory<?> parent,
 		                                                     List<String> path) {
 			return new CachingPyramidIOFactory(parent, path, _pyramidIOFactoryProvider.createFactory(parent, path));
-		}
-
-		@Override
-		public ConfigurableFactory<PyramidIO> createFactory (String factoryName,
-		                                                     ConfigurableFactory<?> parent,
-		                                                     List<String> path) {
-			return new CachingPyramidIOFactory(parent, path, _pyramidIOFactoryProvider.createFactory(factoryName, parent, path));
 		}
 	}
 }

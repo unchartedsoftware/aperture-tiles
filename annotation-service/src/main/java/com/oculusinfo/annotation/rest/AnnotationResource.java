@@ -30,7 +30,7 @@ import com.oculusinfo.annotation.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;

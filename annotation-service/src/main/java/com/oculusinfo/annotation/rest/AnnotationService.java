@@ -26,7 +26,7 @@ package com.oculusinfo.annotation.rest;
 import com.oculusinfo.annotation.AnnotationData;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import org.json.JSONObject;
 
 import java.util.List;

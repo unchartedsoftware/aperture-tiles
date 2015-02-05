@@ -34,7 +34,7 @@ import java.util.ListIterator;
 
 
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 /**
  * Class for a record for graph analytics. Used for custom tile generation for

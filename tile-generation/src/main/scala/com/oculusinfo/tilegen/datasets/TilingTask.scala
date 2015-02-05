@@ -30,7 +30,8 @@ import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.binning.util.{JsonUtilities, Pair}
+import com.oculusinfo.factory.util.Pair
+import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.binning.{TileData, TileIndex}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}

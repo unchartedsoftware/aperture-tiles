@@ -27,7 +27,7 @@ package com.oculusinfo.binning.io.serialization.impl;
 import java.util.List;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 
 public class StringIntPairArrayJsonSerializerFactory extends ConfigurableFactory<TileSerializer<List<Pair<String, Integer>>>> {

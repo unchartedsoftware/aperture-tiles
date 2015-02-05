@@ -26,7 +26,7 @@ package com.oculusinfo.binning;
 
 
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 

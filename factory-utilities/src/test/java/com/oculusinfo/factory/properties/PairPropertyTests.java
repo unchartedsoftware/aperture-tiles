@@ -23,7 +23,7 @@
  */
 package com.oculusinfo.factory.properties;
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.factory.ConfigurationException;
 import org.junit.Assert;
 import org.junit.Test;

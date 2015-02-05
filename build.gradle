@@ -200,6 +200,8 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			def TILE_RENDERING_BUILD = "${rootDir}/tile-rendering/build/libs"
 			def BINNING_UTIL_SRC = "${rootDir}/binning-utilities/src"
 			def BINNING_UTIL_BUILD = "${rootDir}/binning-utilities/build/libs"
+			def FACTORY_UTIL_SRC = "${rootDir}/factory-utilities/src"
+			def FACTORY_UTIL_BUILD = "${rootDir}/factory-utilities/build/libs"
 			def MATH_UTIL_SRC = "${rootDir}/math-utilities/src"
 			def MATH_UTIL_BUILD = "${rootDir}/math-utilities/build/libs"
 			def EXPLODED_DIR = "$buildDir/exploded"
@@ -237,6 +239,15 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
 			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
 
+			// Copy factory-utilities jar into the exploded war
+			task copyFactoryUtilToExploded(type: Copy) {
+				from fileTree(FACTORY_UTIL_BUILD).include("*.jar")
+				into EXPLODED_LIBS
+			}
+			copyFactoryUtilToExploded.inputs.dir FACTORY_UTIL_BUILD
+			copyFactoryUtilToExploded.inputs.dir EXPLODED_DIR
+			copyFactoryUtilToExploded.outputs.dir EXPLODED_LIBS
+
 			// Copy tile-rendering jar into the exploded war
 			task copyTileRenderingToExploded(type: Copy) {
 				from fileTree(TILE_RENDERING_BUILD).include("*.jar")
@@ -244,6 +255,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			}
 			copyTileRenderingToExploded.inputs.dir TILE_RENDERING_BUILD
 			copyTileRenderingToExploded.outputs.dir EXPLODED_LIBS
+
 
 			// Copy binning-utilities jar into the exploded war
 			task copyBinningUtilToExploded(type: Copy) {
@@ -287,6 +299,10 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			        files fileTree(ANNOTATION_SERVICE_SRC).include('**/*.java')
 			        tasks ':annotation-service:jar', 'copyAnnotationServiceToExploded'
 			    }
+				factoryWatch {
+					files fileTree(FACTORY_UTIL_SRC).include('**/*.java')
+					tasks ':factory-utilities:jar', 'copyFactoryUtilToExploded'
+				}
 				renderingWatch {
 					files fileTree(TILE_RENDERING_SRC).include('**/*.java')
 					tasks ':tile-rendering:jar', 'copyTileRenderingToExploded'
