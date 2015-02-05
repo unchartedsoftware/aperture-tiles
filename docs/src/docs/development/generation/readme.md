@@ -398,18 +398,46 @@ The tiling properties files define the tiling job parameters for each layer in y
    				</dd>
 				
 				<dt>
+					oculus.binning.index.field.&lt;order&gt;
 				</dt>
+				<dd>Field(s) to use as the index that locates the value on the base layer and map them to the corresponding tile bins. You index scheme will determine how many index fields you must provide:
+					<dl>
+						<dt>IPv4</dt>
+						<dd>
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
+							</ul>
+						</dd>
+						
+						<dt>Cartesian</dt>
+						<dd>
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
+								<li>oculus.binning.index.field.1=&lt;y_Field&gt;</li>
+							</ul>
+						</dd>
+						
+						<dt>Time Range</dt>
+						<dd>
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
+								<li>oculus.binning.index.field.1=&lt;x_Field&gt;</li>
+								<li>oculus.binning.index.field.2=&lt;y_Field&gt;</li>
+							</ul>
+						</dd>
+						
+						<dt>Line Segment</dt>
+						<dd>
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
+								<li>oculus.binning.index.field.1=&lt;y1_Field&gt;</li>
+								<li>oculus.binning.index.field.2=&lt;x2_Field&gt;</li>
+								<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
+							</ul>
+						</dd>						
+						
+					</dl>
 				</dd>
-   				
-				<dt>
-					oculus.binning.xField
-				</dt>
-				<dd>Field to use as the X axis value.</dd>
-
-				<dt>
-					oculus.binning.yField
-				</dt>
-				<dd>Field to use as the Y axis value. Defaults to none.</dd>
 				
 				<dt>
 					oculus.binning.valueField
