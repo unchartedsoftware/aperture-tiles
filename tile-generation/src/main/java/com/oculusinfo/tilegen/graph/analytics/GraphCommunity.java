@@ -257,11 +257,11 @@ public class GraphCommunity implements Serializable {
 		}
 	}
 
-	private static void addEdgesInPlace(LinkedList<GraphEdge> accumulatedEdges, List<GraphEdge> newEdges) {
-		for (GraphEdge newEdge : newEdges) {
-			addEdgeInPlace(accumulatedEdges, newEdge);
-		}
-	}
+//	private static void addEdgesInPlace(LinkedList<GraphEdge> accumulatedEdges, List<GraphEdge> newEdges) {
+//		for (GraphEdge newEdge : newEdges) {
+//			addEdgeInPlace(accumulatedEdges, newEdge);
+//		}
+//	}
 
 	/**
 	 * Add an inter-community edge to an existing community, summing counts as needed, and keeping

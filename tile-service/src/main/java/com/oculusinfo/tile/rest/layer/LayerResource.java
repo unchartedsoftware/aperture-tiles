@@ -81,7 +81,7 @@ public class LayerResource extends ApertureServerResource {
             JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
             // try to add images per tile to meta
             try {
-                TileDataImageRenderer renderer = config.produce( TileDataImageRenderer.class );
+                TileDataImageRenderer<?> renderer = config.produce( TileDataImageRenderer.class );
                 if ( null != renderer ) {
                     metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
                 }

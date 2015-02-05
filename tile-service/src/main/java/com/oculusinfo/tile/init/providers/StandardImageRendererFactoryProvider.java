@@ -33,15 +33,15 @@ import java.util.List;
 
 
 
-public class StandardImageRendererFactoryProvider implements FactoryProvider<TileDataImageRenderer> {
+public class StandardImageRendererFactoryProvider implements FactoryProvider<TileDataImageRenderer<?>> {
 	@Override
-	public ConfigurableFactory<TileDataImageRenderer> createFactory (List<String> path) {
+	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (List<String> path) {
 		return new ImageRendererFactory(null, path);
 	}
 
 	@Override
-	public ConfigurableFactory<TileDataImageRenderer> createFactory (ConfigurableFactory<?> parent,
-	                                                                 List<String> path) {
+	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (ConfigurableFactory<?> parent,
+	                                                                    List<String> path) {
 		return new ImageRendererFactory(parent, path);
 	}
 }

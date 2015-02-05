@@ -32,7 +32,11 @@ import java.util.Map;
  * @param <T>
  */
 abstract public class TileDataMetadataImpl<T> implements TileData<T> {
-    private Map<String, String> _metaData;
+	private static final long serialVersionUID = 97881051858565002L;
+
+
+
+	private Map<String, String> _metaData;
 
     protected TileDataMetadataImpl () {
         _metaData = null;

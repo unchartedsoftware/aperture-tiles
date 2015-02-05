@@ -24,15 +24,14 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.io.serialization.AvroSchemaComposer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.avro.Schema;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.oculusinfo.binning.io.serialization.AvroSchemaComposer;
 
 /**
  * This class stores, retrieves, and constructs standardized, patterned schema

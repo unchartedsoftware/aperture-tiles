@@ -126,8 +126,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+	                           FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
+	                           FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
 	                           ConfigurableFactory<?> parent,
 	                           List<String> path) {
 		this( pyramidIOFactoryProvider, tilePyramidFactoryProvider, serializationFactoryProvider,
@@ -139,8 +139,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+	                           FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
+	                           FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
 	                           String name,
                                ConfigurableFactory<?> parent,
 	                           List<String> path) {
@@ -200,7 +200,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		_levelMaximum = levelMaximum;
 		_levelMinimum = levelMinimum;
 		try {
-			TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
+			TileDataImageRenderer<?> renderer = produce(TileDataImageRenderer.class);
 			if (null != renderer) {
 				Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());

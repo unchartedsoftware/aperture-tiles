@@ -25,17 +25,19 @@
 
 package com.oculusinfo.tile.rendering;
 
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.properties.DoubleProperty;
-import com.oculusinfo.factory.properties.ListProperty;
-import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.tile.rendering.impl.*;
-import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer> {
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.tile.rendering.color.ColorRampFactory;
+import com.oculusinfo.tile.rendering.impl.DoubleListHeatMapImageRenderer;
+import com.oculusinfo.tile.rendering.impl.DoublesImageRenderer;
+import com.oculusinfo.tile.rendering.impl.DoublesStatisticImageRenderer;
+import com.oculusinfo.tile.rendering.impl.TopAndBottomTextScoresImageRenderer;
+import com.oculusinfo.tile.rendering.impl.TopTextScoresImageRenderer;
+
+public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRenderer<?>> {
 
     public static StringProperty RENDERER_TYPE = new StringProperty("type",
         "The type of renderer that will be used to render the data on the server",
@@ -43,14 +45,20 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
         new String[] {"heatmap", "listheatmap", "toptextscores", "textscores", "doublestatistics", "metadata"});
 
 
-	public ImageRendererFactory (ConfigurableFactory<?> parent,
+    // One can't produce a Class<TileDataImageRenderer<?>> directly, one can only use erasure to fake it.
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	private static Class<TileDataImageRenderer<?>> getFactoryClass () {
+    	return (Class) TileDataImageRenderer.class;
+    }
+
+    public ImageRendererFactory (ConfigurableFactory<?> parent,
 	                             List<String> path) {
 		this(null, parent, path);
 	}
 
 	public ImageRendererFactory (String name, ConfigurableFactory<?> parent,
 	                             List<String> path) {
-		super(name, TileDataImageRenderer.class, parent, path);
+		super(name, getFactoryClass(), parent, path);
 
 		addProperty(RENDERER_TYPE);
 
@@ -59,7 +67,7 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 
 
 	@Override
-	protected TileDataImageRenderer create () {
+	protected TileDataImageRenderer<?> create () {
 		String rendererType = getPropertyValue(RENDERER_TYPE);
 
 		rendererType = rendererType.toLowerCase();

@@ -65,7 +65,7 @@ public class PairProperty<K, V> implements ConfigurationProperty<Pair<K, V>> {
 		return _description;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Class<Pair<K, V>> getType () {
 		return (Class) Pair.class;

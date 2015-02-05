@@ -24,21 +24,19 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.factory.util.Pair;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+
 import org.apache.avro.file.CodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.oculusinfo.binning.DenseTileData;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.factory.util.Pair;
 public class PairAvroSerializerTests {
     @SafeVarargs
     final <S, T> void testRoundTrip(Class<? extends S> keyType, Class<? extends T> valueType,
