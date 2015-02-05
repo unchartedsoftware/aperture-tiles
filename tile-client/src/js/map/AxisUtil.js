@@ -193,7 +193,7 @@
     function formatThousand( value, decimals, allowStepDown ) {
         var truncValue = value / 1e3;
         if ( allowStepDown && Math.abs( truncValue ) < 1 ) {
-            return formatNumber( value, decimals, true );
+            return formatNumber( value, decimals );
         }
         return Util.roundToDecimals( truncValue, decimals ) + 'K';
     }
@@ -348,6 +348,8 @@
                 case "#":
                     // use fixed interval
                     increment = axis.intervals.increment;
+                    // set pivot by value
+                    intervals.pivot = axis.intervals.pivot;
                     break;
 
                 default:
@@ -355,11 +357,14 @@
                     increment = axis.intervals.increment;
                     increment = ( increment > 1 ) ? increment * 0.01 : increment;
                     increment = ( axis.max - axis.min ) * increment;
+                    // normalize percentages to [0-1] not [0-100]
+                    if ( axis.intervals.pivot > 1 ) {
+                        axis.intervals.pivot = axis.intervals.pivot / 100;
+                    }
+                    // calc pivot value by percentage
+                    intervals.pivot = axis.min + ( axis.intervals.pivot * ( axis.max - axis.min ) );
                     break;
             }
-
-            // set pivot
-            intervals.pivot = axis.intervals.pivot;
 
             // scale increment if specified
             if ( axis.intervals.scaleByZoom ) {
