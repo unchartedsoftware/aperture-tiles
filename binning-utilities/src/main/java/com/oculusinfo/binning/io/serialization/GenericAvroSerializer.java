@@ -293,7 +293,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		writeRecord(tileRecord, tileSchema, stream);
 	}
 
-	protected void writeRecord (GenericRecord record, Schema schema, OutputStream stream) throws IOException {
+	private void writeRecord (GenericRecord record, Schema schema, OutputStream stream) throws IOException {
 		DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
 		try {
