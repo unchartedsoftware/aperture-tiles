@@ -45,10 +45,10 @@ case class PipelineData(sqlContext: SQLContext, srdd: SchemaRDD, tableName: Opti
  * @param children The children of this stage
  */
 case class PipelineStage(name: String, op: PipelineData => PipelineData, var children: List[PipelineStage] = List()) {
-  def addChild(child: PipelineStage): PipelineStage = {
-    children = children :+ child
-    child
-  }
+	def addChild(child: PipelineStage): PipelineStage = {
+		children = children :+ child
+		child
+	}
 }
 
 /**
@@ -75,40 +75,40 @@ case class PipelineStage(name: String, op: PipelineData => PipelineData, var chi
  */
 object TilePipelines {
 
-  protected val logger = Logger[this.type]
+	protected val logger = Logger[this.type]
 
-  /**
-   * Function type that takes a map of arguments and binds them to a pipeline
-   * operation.
-   */
-  type PipelineOpBinding = Map[String, String] => (PipelineData => PipelineData)
+	/**
+	 * Function type that takes a map of arguments and binds them to a pipeline
+	 * operation.
+	 */
+	type PipelineOpBinding = Map[String, String] => (PipelineData => PipelineData)
 
-  def apply(pipelineRoots: Map[String, PipelineStage] = Map.empty,
-            pipelineOps: Map[String, PipelineOpBinding] = Map.empty) = new TilePipelines(pipelineRoots, pipelineOps)
+	def apply(pipelineRoots: Map[String, PipelineStage] = Map.empty,
+	          pipelineOps: Map[String, PipelineOpBinding] = Map.empty) = new TilePipelines(pipelineRoots, pipelineOps)
 
-  /**
-   * Executes the pipeline via depth first tree traversal.
-   *
-   * @param start PipelineStage to start the traversal from
-   * @param sqlContext Spark SQL context to run the jobs under
-   * @param input Optional start data.  Data based on an empty SchemaRDD will be used if not set.
-   */
-  def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
-    // TODO: Should run a check for cycles here (tsort?)
-    def ex(stage: PipelineStage, result: PipelineData): Unit = {
-      logger.info(s"Executing pipeline stage [${stage.name}]")
-      val stageResult = stage.op(result)
-      stage.children.foreach(ex(_, stageResult))
-    }
+	/**
+	 * Executes the pipeline via depth first tree traversal.
+	 *
+	 * @param start PipelineStage to start the traversal from
+	 * @param sqlContext Spark SQL context to run the jobs under
+	 * @param input Optional start data.  Data based on an empty SchemaRDD will be used if not set.
+	 */
+	def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
+		// TODO: Should run a check for cycles here (tsort?)
+		def ex(stage: PipelineStage, result: PipelineData): Unit = {
+			logger.info(s"Executing pipeline stage [${stage.name}]")
+			val stageResult = stage.op(result)
+			stage.children.foreach(ex(_, stageResult))
+		}
 
-    input match {
-      case Some(i) => ex(start, i)
-      case None =>
-        val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
-        ex(start, PipelineData(sqlContext, emptySchema))
-    }
+		input match {
+			case Some(i) => ex(start, i)
+			case None =>
+				val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
+				ex(start, PipelineData(sqlContext, emptySchema))
+		}
 
-  }
+	}
 }
 
 /**
@@ -137,76 +137,76 @@ object TilePipelines {
 class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
                     val pipelineOps: Map[String, PipelineOpBinding] = Map.empty) {
 
-  /**
-   * Adds a new pipeline operation with an assigned ID.
-   *
-   * @param pipelineOpId Unique identifier for the operation binding.
-   * @param pipelineOpBinding Function to bind [string,string] arguments to a pipeline data tranform
-   *                          function.
-   * @return Updated instance of this object.
-   */
-  def registerPipelineOp(pipelineOpId: String, pipelineOpBinding: PipelineOpBinding) = {
-      TilePipelines(pipelineRoots, pipelineOps + (pipelineOpId -> pipelineOpBinding))
-  }
+	/**
+	 * Adds a new pipeline operation with an assigned ID.
+	 *
+	 * @param pipelineOpId Unique identifier for the operation binding.
+	 * @param pipelineOpBinding Function to bind [string,string] arguments to a pipeline data tranform
+	 *                          function.
+	 * @return Updated instance of this object.
+	 */
+	def registerPipelineOp(pipelineOpId: String, pipelineOpBinding: PipelineOpBinding) = {
+		TilePipelines(pipelineRoots, pipelineOps + (pipelineOpId -> pipelineOpBinding))
+	}
 
-  /**
-   * Creates a new pipeline with an assigned ID.
-   *
-   * @param pipelineId Unique identifer for the pipeline.
-   * @return Updated instance of this object.
-   */
-  def createPipeline(pipelineId: String) = {
-    TilePipelines(pipelineRoots + (pipelineId -> PipelineStage("root", input => input)), pipelineOps)
-  }
+	/**
+	 * Creates a new pipeline with an assigned ID.
+	 *
+	 * @param pipelineId Unique identifer for the pipeline.
+	 * @return Updated instance of this object.
+	 */
+	def createPipeline(pipelineId: String) = {
+		TilePipelines(pipelineRoots + (pipelineId -> PipelineStage("root", input => input)), pipelineOps)
+	}
 
-  /**
-   * Adds a new stage to an existing pipeline.
-   *
-   * @param stageId Unique ID for this stage.
-   * @param stageType Type of stage, selected from those added by calls to registerPipelineOp.
-   * @param stageArgs Arguments to bind to the stage
-   * @param pipelineId ID of the pipeline this stage will be part of
-   * @param parentStageId ID of the this stage's parent
-   * @param sqlContext Spark SQL context to operate under
-   * @return Updated instance of this object.
-   */
-  def addPipelineStage(stageId: String,
-                       stageType: String,
-                       stageArgs: Map[String, String],
-                       pipelineId: String,
-                       parentStageId: String,
-                       sqlContext: SQLContext) = {
-    val pipelineFunc = pipelineOps(stageType)(stageArgs)
-    findNode(parentStageId, List(pipelineRoots(pipelineId)))
-      .map(_.addChild(PipelineStage(stageId, pipelineFunc)))
-    this
-  }
+	/**
+	 * Adds a new stage to an existing pipeline.
+	 *
+	 * @param stageId Unique ID for this stage.
+	 * @param stageType Type of stage, selected from those added by calls to registerPipelineOp.
+	 * @param stageArgs Arguments to bind to the stage
+	 * @param pipelineId ID of the pipeline this stage will be part of
+	 * @param parentStageId ID of the this stage's parent
+	 * @param sqlContext Spark SQL context to operate under
+	 * @return Updated instance of this object.
+	 */
+	def addPipelineStage(stageId: String,
+	                     stageType: String,
+	                     stageArgs: Map[String, String],
+	                     pipelineId: String,
+	                     parentStageId: String,
+	                     sqlContext: SQLContext) = {
+		val pipelineFunc = pipelineOps(stageType)(stageArgs)
+		findNode(parentStageId, List(pipelineRoots(pipelineId)))
+			.map(_.addChild(PipelineStage(stageId, pipelineFunc)))
+		this
+	}
 
-  /**
-   * Gets a stage from a pipeline.
-   *
-   * @param pipelineId Unique ID of the pipeline containing the stage.
-   * @param stageId Unique ID of the stage to fetch.
-   */
-  def getPipelineStage(pipelineId: String, stageId: String) = {
-    findNode(stageId, List(pipelineRoots(pipelineId)))
-  }
+	/**
+	 * Gets a stage from a pipeline.
+	 *
+	 * @param pipelineId Unique ID of the pipeline containing the stage.
+	 * @param stageId Unique ID of the stage to fetch.
+	 */
+	def getPipelineStage(pipelineId: String, stageId: String) = {
+		findNode(stageId, List(pipelineRoots(pipelineId)))
+	}
 
-  /**
-   * Executes a pipeline.
-   *
-   * @param pipelineId Unique ID of the pipeline.
-   * @param sqlContext Spark SQL context to run the job under.
-   */
-  def runPipeline(pipelineId: String, sqlContext: SQLContext) = {
-    TilePipelines.execute(pipelineRoots(pipelineId), sqlContext)
-  }
+	/**
+	 * Executes a pipeline.
+	 *
+	 * @param pipelineId Unique ID of the pipeline.
+	 * @param sqlContext Spark SQL context to run the job under.
+	 */
+	def runPipeline(pipelineId: String, sqlContext: SQLContext) = {
+		TilePipelines.execute(pipelineRoots(pipelineId), sqlContext)
+	}
 
-  private def findNode(nodeId: String, toVisit: List[PipelineStage]): Option[PipelineStage] = {
-    toVisit match {
-      case x :: xs if x.name != nodeId => findNode(nodeId, xs ++ x.children)
-      case x :: xs if x.name == nodeId => Some(x)
-      case Nil => None
-    }
-  }
+	private def findNode(nodeId: String, toVisit: List[PipelineStage]): Option[PipelineStage] = {
+		toVisit match {
+			case x :: xs if x.name != nodeId => findNode(nodeId, xs ++ x.children)
+			case x :: xs if x.name == nodeId => Some(x)
+			case Nil => None
+		}
+	}
 }

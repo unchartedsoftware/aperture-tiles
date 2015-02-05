@@ -29,95 +29,95 @@ import org.scalatest.FunSuite
 
 class TilePipelineTests extends FunSuite with SharedSparkContext {
 
-  case class TestData(x: Int, y: String)
+	case class TestData(x: Int, y: String)
 
-  def testOp(name: String)(input: PipelineData) = {
-    input
-  }
+	def testOp(name: String)(input: PipelineData) = {
+		input
+	}
 
-  def parseTestOp(args: Map[String, String]) = {
-    testOp(args("name"))_
-  }
+	def parseTestOp(args: Map[String, String]) = {
+		testOp(args("name"))_
+	}
 
-  test("Test functional pipeline tree traversal") {
-    var data = List[String]()
+	test("Test functional pipeline tree traversal") {
+		var data = List[String]()
 
-    def testOp(opName: String)(input: PipelineData) = {
-      data = data :+ opName
-      input
-    }
+		def testOp(opName: String)(input: PipelineData) = {
+			data = data :+ opName
+			input
+		}
 
-    val parent = PipelineStage("parent", testOp("p")(_))
-    val child0 = PipelineStage("child0", testOp("c0")(_))
-    val child1 = PipelineStage("child1", testOp("c1")(_))
-    val grandchild0 = PipelineStage("grandchild0", testOp("g0")(_))
-    val grandchild1 = PipelineStage("grandchild1", testOp("g1")(_))
+		val parent = PipelineStage("parent", testOp("p")(_))
+		val child0 = PipelineStage("child0", testOp("c0")(_))
+		val child1 = PipelineStage("child1", testOp("c1")(_))
+		val grandchild0 = PipelineStage("grandchild0", testOp("g0")(_))
+		val grandchild1 = PipelineStage("grandchild1", testOp("g1")(_))
 
-    parent.addChild(child0)
-    parent.addChild(child1)
-    child0.addChild(grandchild0)
-    child1.addChild(grandchild1)
+		parent.addChild(child0)
+		parent.addChild(child1)
+		child0.addChild(grandchild0)
+		child1.addChild(grandchild1)
 
-    TilePipelines.execute(parent, sqlc)
+		TilePipelines.execute(parent, sqlc)
 
-    assertResult(List("p", "c0", "g0", "c1", "g1"))(data)
-  }
+		assertResult(List("p", "c0", "g0", "c1", "g1"))(data)
+	}
 
-  test("Test symbolic pipeline creation") {
-    val pipelines = TilePipelines()
-      .createPipeline("pipeline")
+	test("Test symbolic pipeline creation") {
+		val pipelines = TilePipelines()
+			.createPipeline("pipeline")
 
-    assert(pipelines.pipelineRoots.contains("pipeline"))
-  }
+		assert(pipelines.pipelineRoots.contains("pipeline"))
+	}
 
-  test("Test symbolic pipeline op registration") {
-    val pipelines = TilePipelines()
-      .registerPipelineOp("some_op_one", parseTestOp)
-      .registerPipelineOp("some_op_two", parseTestOp)
-      .registerPipelineOp("some_op_three", parseTestOp)
+	test("Test symbolic pipeline op registration") {
+		val pipelines = TilePipelines()
+			.registerPipelineOp("some_op_one", parseTestOp)
+			.registerPipelineOp("some_op_two", parseTestOp)
+			.registerPipelineOp("some_op_three", parseTestOp)
 
-    assert(pipelines.pipelineOps.contains("some_op_one"))
-    assert(pipelines.pipelineOps.contains("some_op_two"))
-    assert(pipelines.pipelineOps.contains("some_op_three"))
-  }
+		assert(pipelines.pipelineOps.contains("some_op_one"))
+		assert(pipelines.pipelineOps.contains("some_op_two"))
+		assert(pipelines.pipelineOps.contains("some_op_three"))
+	}
 
-  test("Test symbolic pipeline stage add") {
-    val pipelines = TilePipelines()
-      .registerPipelineOp("operation", parseTestOp)
-      .createPipeline("pipeline")
-      .addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
-      .addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", sqlc)
+	test("Test symbolic pipeline stage add") {
+		val pipelines = TilePipelines()
+			.registerPipelineOp("operation", parseTestOp)
+			.createPipeline("pipeline")
+			.addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
+			.addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", sqlc)
 
-    val stage0 = pipelines.getPipelineStage("pipeline", "stage-0")
-    val stage1 = pipelines.getPipelineStage("pipeline", "stage-1")
-    val stage2 = pipelines.getPipelineStage("pipeline", "stage-2")
+		val stage0 = pipelines.getPipelineStage("pipeline", "stage-0")
+		val stage1 = pipelines.getPipelineStage("pipeline", "stage-1")
+		val stage2 = pipelines.getPipelineStage("pipeline", "stage-2")
 
-    assert(stage0.isDefined)
-    assert(stage1.isDefined)
-    assert(stage2.isEmpty)
-    assertResult("stage-0")(stage0.get.name)
-    assertResult("stage-1")(stage1.get.name)
-  }
+		assert(stage0.isDefined)
+		assert(stage1.isDefined)
+		assert(stage2.isEmpty)
+		assertResult("stage-0")(stage0.get.name)
+		assertResult("stage-1")(stage1.get.name)
+	}
 
-  test("Test symbolic pipeline execute") {
-    var data = List[String]()
+	test("Test symbolic pipeline execute") {
+		var data = List[String]()
 
-    def parseTestOp(args: Map[String, String]) = {
-      testOp(args("name"))_
-    }
+		def parseTestOp(args: Map[String, String]) = {
+			testOp(args("name"))_
+		}
 
-    def testOp(opName: String)(input: PipelineData) = {
-      data = data :+ opName
-      input
-    }
+		def testOp(opName: String)(input: PipelineData) = {
+			data = data :+ opName
+			input
+		}
 
-    TilePipelines()
-      .registerPipelineOp("operation", parseTestOp)
-      .createPipeline("pipeline")
-      .addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
-      .addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", sqlc)
-      .runPipeline("pipeline", sqlc)
+		TilePipelines()
+			.registerPipelineOp("operation", parseTestOp)
+			.createPipeline("pipeline")
+			.addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
+			.addPipelineStage("stage-1", "operation", Map("name" -> "foo-1"), "pipeline", "stage-0", sqlc)
+			.runPipeline("pipeline", sqlc)
 
-    assertResult(List("foo-0", "foo-1"))(data)
-  }
+		assertResult(List("foo-0", "foo-1"))(data)
+	}
 }
