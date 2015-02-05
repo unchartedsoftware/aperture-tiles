@@ -177,7 +177,7 @@ public final class DefaultTileSerializerFactoryProvider
 	// Kryo serializers
 	public static final List<DefaultTileSerializerFactoryProvider> KRYO =
 	    Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
-	        private static final long serialVersionUid = 1L;
+	        private static final long serialVersionUID = 1L;
 
 	        {
 	            List<Pair<String, TypeDescriptor>> primitives = new ArrayList<>();
