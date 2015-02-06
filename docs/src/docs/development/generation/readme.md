@@ -863,7 +863,7 @@ It accepts the following properties:
 				<dt>
 					serializer
 				</dt>
-				<dd>The bin descriptor describing the dataset. This must match the bin descriptor used when creating the tiles.</dd>
+				<dd>The serializer that determines how to read and write to the tile set.</dd>
 	
 				<dt>
 					tileAnalytics (Optional)
