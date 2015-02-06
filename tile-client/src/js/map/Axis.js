@@ -438,7 +438,7 @@
      * @classdesc A map axis object that will attach to a map edge and display coordinates based on
      *            supplied interval and unit specification.
      *
-     * @param spec {Object} The specfication object:
+     * @param spec {Object} The specification object:
      * {
      *     position {String}  Set the position to the bottom of the map. Default = "bottom"
      *     title    {String}  Set the title of the axis label. Default = "Axis"
