@@ -28,7 +28,6 @@ package com.oculusinfo.tilegen.datasets
 import java.sql.Timestamp
 import java.util
 import java.util.Properties
-
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.tiling.analytics.{NumericMaxBinningAnalytic, NumericSumBinningAnalytic, NumericMinBinningAnalytic}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
@@ -38,6 +37,7 @@ import org.apache.spark.sql.LongType
 import org.apache.spark.sql.DoubleType
 import org.apache.spark.sql.TimestampType
 import org.scalatest.FunSuite
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer
 
 
 
@@ -152,5 +152,31 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		val valext5 = factory5.produce(classOf[ValueExtractor[_, _]])
 		assert(valext5.isInstanceOf[MeanValueExtractor[_]])
 	}
-}
 
+  test("Test kryo value extractors") {
+    val props = new Properties()
+    props.setProperty("oculus.binning.source.location", "hdfs://localhost/data-location")
+    props.setProperty("oculus.binning.source.partitions", "13")
+    props.setProperty("oculus.binning.name", "sample name")
+    props.setProperty("oculus.binning.parsing.a.index", "0")
+    props.setProperty("oculus.binning.parsing.a.fieldType", "double")
+    props.setProperty("oculus.binning.parsing.a.fieldAggregation", "meAn")
+    props.setProperty("oculus.binning.parsing.separator", "\t")
+    props.setProperty("oculus.binning.parsing.b.index", "1")
+    props.setProperty("oculus.binning.parsing.b.fieldType", "float")
+    props.setProperty("oculus.binning.parsing.c.index", "2")
+    props.setProperty("oculus.binning.parsing.c.fieldType", "Median")
+    props.setProperty("oculus.binning.value.type", "field")
+    props.setProperty("oculus.binning.value.field", "a")
+    props.setProperty("oculus.binning.value.valueType", "double")
+    props.setProperty("oculus.binning.value.serializer.type", "double-k")
+
+    val factory = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+    factory.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
+    val valext = factory.produce(classOf[ValueExtractor[_, _]])
+
+    assert(valext.isInstanceOf[FieldValueExtractor[_, _]])
+    assert(valext.binningAnalytic.isInstanceOf[NumericSumBinningAnalytic[_, _]])
+    assert(valext.serializer.isInstanceOf[KryoSerializer[_]])
+  }
+}

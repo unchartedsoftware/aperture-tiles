@@ -27,6 +27,7 @@ package com.oculusinfo.binning.util;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -53,6 +54,12 @@ public class TypeDescriptor implements Serializable {
 	                       TypeDescriptor... genericTypes) {
 		_mainType = mainType;
 		_genericTypes = Arrays.asList(genericTypes);
+	}
+
+	public Class<?> getMainType () {return _mainType;}
+	public List<TypeDescriptor> getGenericTypes () {
+	    if (null == _genericTypes) return null;
+	    else return Collections.unmodifiableList(_genericTypes);
 	}
 
 	@Override
