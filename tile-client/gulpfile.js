@@ -95,8 +95,8 @@ gulp.task('build-js', function() {
 });
 
 gulp.task('generate-docs', function () {
-  run('jsdoc src/js/ src/js/README.md --destination docs --recurse --template node_modules/jaguarjs-jsdoc ').exec()  // prints "Hello World\n".
-    run('jsdoc src/js/ --destination docs --recurse --template node_modules/jaguarjs-jsdoc').exec();
+    var run = require('gulp-run');
+    run('jsdoc src/js/ src/js/README.md --destination docs --recurse --template node_modules/jaguarjs-jsdoc ').exec()
 })
 
 gulp.task('build', [ 'clean' ], function() {
