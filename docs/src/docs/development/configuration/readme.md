@@ -23,7 +23,7 @@ To begin configuring your Tile Server and Tile Client:
 
 1. Choose the Julia demo (*tile-examples/julia-demo/*) or Twitter Topics demo (*tile-examples/twitter-topics/*) to use as a template. The Julia demo displays a server-rendered heatmap on a blank crossplot baselayer, while the Twitter Topics demo displays a server-rendered heatmap and client-rendered word clouds on a geographic Google Maps baselayer.
 2. Copy the appropriate demo and give it a unique name (e.g., *new-project*).
-3. Update the Gradle build file (*new-project/build.gradle*) to change the following fields:
+3. Update the Gradle build file (*new-project/build.gradle*) to add or change the following fields:
 	- `description`: Enter an appropriate project description. 
 	- `group`: Enter an appropriate group ID.
 	- `version`: Enter an appropriate project version number.
