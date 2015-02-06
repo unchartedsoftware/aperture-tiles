@@ -398,18 +398,64 @@ The tiling properties files define the tiling job parameters for each layer in y
    				</dd>
 				
 				<dt>
+					oculus.binning.index.type
+				</dt>
+				<dd>Defines the index scheme used to locate the binning value on the base layer and map them to the corresponding tile bins. The value you select determines the number of index fields you must specify:
+					<dl>
+						<dt>cartesian (default)</dt>
+						<dd>
+							Use cartesian (x/y) coordinates:
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
+								<li>oculus.binning.index.field.1=&lt;y_Field&gt;</li>
+							</ul>
+
+						</dd>
+						
+						<dt>ipv4</dt>
+						<dd>
+							Use an IP address (v4):
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
+							</ul>
+						</dd>
+						
+						<dt>timerange</dt>
+						<dd>
+							Use a standard time range and cartesian point index:
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
+								<li>oculus.binning.index.field.1=&lt;x_Field&gt;</li>
+								<li>oculus.binning.index.field.2=&lt;y_Field&gt;</li>
+							</ul>
+						</dd>
+						
+						<dt>segment</dt>
+						<dd>
+							Use a line segment with two cartesian end points:
+							<ul>
+								<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
+								<li>oculus.binning.index.field.1=&lt;y1_Field&gt;</li>
+								<li>oculus.binning.index.field.2=&lt;x2_Field&gt;</li>
+								<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
+							</ul>
+						</dd>						
+					</dl>
+				</dd>
+
+				<dt>
 					oculus.binning.index.field.&lt;order&gt;
 				</dt>
-				<dd>Field(s) to use as the index that locates the value on the base layer and map them to the corresponding tile bins. You index scheme will determine how many index fields you must provide:
+				<dd>Field(s) to use as the index that locates the binning value on the base layer and map them to the corresponding tile bins. Your index scheme will determine how many index fields you must provide:
 					<dl>
-						<dt>IPv4</dt>
+						<dt>ipv4</dt>
 						<dd>
 							<ul>
 								<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
 							</ul>
 						</dd>
 						
-						<dt>Cartesian</dt>
+						<dt>cartesian</dt>
 						<dd>
 							<ul>
 								<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
@@ -417,7 +463,7 @@ The tiling properties files define the tiling job parameters for each layer in y
 							</ul>
 						</dd>
 						
-						<dt>Time Range</dt>
+						<dt>timerange</dt>
 						<dd>
 							<ul>
 								<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
@@ -426,7 +472,7 @@ The tiling properties files define the tiling job parameters for each layer in y
 							</ul>
 						</dd>
 						
-						<dt>Line Segment</dt>
+						<dt>segment</dt>
 						<dd>
 							<ul>
 								<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
@@ -435,7 +481,6 @@ The tiling properties files define the tiling job parameters for each layer in y
 								<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
 							</ul>
 						</dd>						
-						
 					</dl>
 				</dd>
 				
