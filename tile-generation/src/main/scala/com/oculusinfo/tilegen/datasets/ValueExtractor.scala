@@ -143,11 +143,12 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 		extends NumericallyConfigurableFactory[ValueExtractor[_,_]](name, classOf[ValueExtractor[_,_]], parent, path)
 		with OptionsFactoryMixin[ValueExtractor[_, _]]
 {
+  addChildFactory(serializerFactory)
 	/**
 	 * Create a default serializer factory
 	 */
 	def serializerFactory: ConfigurableFactory[TileSerializer[_]] = {
-		val path = List[String]().asJava
+		val path = List("serializer").asJava
 		new TileSerializerFactory(this, path, DefaultTileSerializerFactoryProvider.values.map(_.createFactory(this, path)).toList.asJava)
 	}
 
@@ -183,7 +184,6 @@ object CountValueExtractorFactory {
 class CountValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ValueExtractorFactory("count", parent, path)
 {
-	addChildFactory(serializerFactory)
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
@@ -341,7 +341,6 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 {
 	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
 	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
-	addChildFactory(serializerFactory)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
@@ -409,7 +408,6 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
 	addProperty(IndirectSeriesValueExtractorFactory.VALUE_PROPERTY)
 	addProperty(IndirectSeriesValueExtractorFactory.VALID_KEYS_PROPERTY)
 	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
-	addChildFactory(serializerFactory)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
@@ -477,7 +475,6 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
 {
 	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
 	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
-	addChildFactory(serializerFactory)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
@@ -585,7 +582,6 @@ class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 {
 	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
 	StringScoreBinningAnalyticFactory.addProperties(this)
-	addChildFactory(serializerFactory)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
@@ -658,7 +654,6 @@ class SubstringValueExtractorFactory (parent: ConfigurableFactory[_], path: Java
 	addProperty(SubstringValueExtractorFactory.AGGREGATION_DELIMITER_PROPERTY)
 	addProperty(SubstringValueExtractorFactory.INDICES_PROPERTY)
 	StringScoreBinningAnalyticFactory.addProperties(this)
-	addChildFactory(serializerFactory)
 
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
