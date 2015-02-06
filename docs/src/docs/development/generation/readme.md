@@ -698,12 +698,11 @@ The Binner expects your data as pairs of **(index, record)**, where:
 - **index** is an object indicating where in space the record lies
 - **record** is a data record of the processing type your Binning Analytic defines
 
-There are two predefined index types defined by **com.<wbr>oculusinfo.<wbr>tilegen.<wbr>tiling.<wbr>CartesianIndexScheme** and **com.<wbr>oculusinfo.<wbr>tilegen.<wbr>tiling.<wbr>IPv4ZCurveIndexScheme** found in: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>RDDBinner.scala</strong></em>
+There are several predefined index types defined in: <em>/tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr><strong>IndexingScheme.scala</strong></em>
 
-Unless you are tiling against computer addresses, the Cartesian type is preferable.
-
-- With a Cartesian index, the index type is a pair of doubles. 
-- With the IPv4 index, the index type is an array of 4 bytes: the 4 values in an IPv4 address. 
+- Cartesian: the index type is a pair of doubles.
+- IPv4: the index type is an array of 4 bytes: the 4 values in an IPv4 address.
+- Time Range: the index type is three doubles, one that represents the time and two that represent cartesian coordinates
 
 The end result of your parsing will therefore be:
 
