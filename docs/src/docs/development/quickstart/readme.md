@@ -253,8 +253,8 @@ To configure the tile client application to display the Avro files containing yo
 
 To edit the map properties for your project:
 
-1. Open the app.js file in the root directory of the extracted Tile Quick Start template.
-2. Edit the serverLayer to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
+1. Open the **app.js** file in the the extracted Tile Quick Start template.
+2. Edit the *serverLayer* to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
 3. Save the file.
 
 For information on additional map properties you can specify, see the Maps section of the [Configuration](../configuration/#maps) topic, which describes how to configure settings such as boundaries and axes. 
