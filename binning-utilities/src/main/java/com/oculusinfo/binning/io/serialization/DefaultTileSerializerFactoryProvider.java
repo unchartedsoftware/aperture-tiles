@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.binning.io.serialization;
 
 
 
@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;

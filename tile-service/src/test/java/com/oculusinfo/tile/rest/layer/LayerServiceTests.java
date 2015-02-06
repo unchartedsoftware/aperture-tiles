@@ -23,14 +23,15 @@
  */
 package com.oculusinfo.tile.rest.layer;
 
+import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
-import com.oculusinfo.tile.init.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.QueryParamDecoder;
+
 import org.json.JSONObject;
 import org.junit.*;
 import org.slf4j.Logger;

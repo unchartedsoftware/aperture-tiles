@@ -27,7 +27,6 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
@@ -35,6 +34,8 @@ import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescriptionTileWrapper, 
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
+import org.apache.avro.file.CodecFactory
 
 /**
  * Provides operations and companion argument parsers that can be bound into a TilePipeline
@@ -458,7 +459,7 @@ object TileOperations {
 	                          tileIO: TileIO)
 	                         (input: PipelineData) = {
 		// TODO: Switch to the factory based invocation
-		val valuer = new CountValueExtractor[Long, java.lang.Long]()
+		val valuer = new CountValueExtractor[Long, JavaLong](new PrimitiveAvroSerializer[JavaLong](classOf[JavaLong], CodecFactory.bzip2Codec))
 		val indexer = new CartesianIndexExtractor(xColSpec, yColSpec)
 		val deferredPyramid = new DeferredTilePyramid(new AOITilePyramid(0.0, 0.0, 1.0, 1.0), true)
 
