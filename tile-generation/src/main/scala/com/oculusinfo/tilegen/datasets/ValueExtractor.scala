@@ -143,14 +143,11 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 		extends NumericallyConfigurableFactory[ValueExtractor[_,_]](name, classOf[ValueExtractor[_,_]], parent, path)
 		with OptionsFactoryMixin[ValueExtractor[_, _]]
 {
-  addChildFactory(serializerFactory)
-	/**
-	 * Create a default serializer factory
-	 */
-	def serializerFactory: ConfigurableFactory[TileSerializer[_]] = {
+	protected val serializerFactory: ConfigurableFactory[TileSerializer[_]] = {
 		val path = List("serializer").asJava
 		new TileSerializerFactory(this, path, DefaultTileSerializerFactoryProvider.values.map(_.createFactory(this, path)).toList.asJava)
 	}
+  addChildFactory(serializerFactory)
 
 	/**
 	 * All this method does is check the return type of a serializer
@@ -171,6 +168,9 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 		serializer.asInstanceOf[TileSerializer[T]]
 	}
 
+  def getDefaultSerializerType (baseType: String, expectedPrimitiveCLass: Class[_]*): String = {
+    baseType.format(expectedPrimitiveCLass.map(PrimitiveAvroSerializer.getAvroType(_)):_*)
+  }
 }
 
 object CountValueExtractorFactory {
@@ -187,6 +187,7 @@ class CountValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
+    serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("%s-a", conversion.toClass))
 		val serializer: TileSerializer[JT] = checkBinClass(produce(classOf[TileSerializer[_]]), conversion.toClass, new TypeDescriptor(conversion.toClass))
 		new CountValueExtractor[T, JT](serializer)(tag, numeric, conversion)
 	}
@@ -238,15 +239,18 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
 		val analytic = produce(classOf[BinningAnalytic[T, JT]])
 
 		if (analytic.isInstanceOf[NumericMeanBinningAnalytic[_]]) {
+      serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("%s-a", classOf[JavaDouble]))
 			val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), classOf[JavaDouble], new TypeDescriptor(classOf[JavaDouble]))
 			new MeanValueExtractor[T](field, analytic.asInstanceOf[NumericMeanBinningAnalytic[T]], serializer)(tag, numeric)
 		} else if (analytic.isInstanceOf[NumericStatsBinningAnalytic[_]]) {
+      serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("(%s, %s)-a", classOf[JavaDouble], classOf[JavaDouble]))
 			val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
 			                               classOf[Pair[JavaDouble, JavaDouble]], new TypeDescriptor(classOf[Pair[JavaDouble, JavaDouble]],
 			                                                                                         new TypeDescriptor(classOf[JavaDouble]),
 			                                                                                         new TypeDescriptor(classOf[JavaDouble])))
 			new StatsValueExtractor[T](field, analytic.asInstanceOf[NumericStatsBinningAnalytic[T]], serializer)(tag, numeric)
 		} else {
+      serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("%s-a", conversion.toClass))
 			val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), conversion.toClass, new TypeDescriptor(conversion.toClass))
 			new FieldValueExtractor[T, JT](field, analytic, serializer)(tag, numeric, conversion)
 		}
@@ -347,6 +351,7 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
 		val elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
+    serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[%s]-a", conversion.toClass))
 		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), classOf[JavaList[JT]],
 		                               new TypeDescriptor(classOf[JavaList[JT]], new TypeDescriptor(conversion.toClass)))
 		new SeriesValueExtractor[T, JT](fields, elementAnalytic, serializer)(tag, numeric, conversion)
@@ -417,6 +422,7 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
 		val valueField = getPropertyValue(VALUE_PROPERTY)
 		val validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
 		val elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
+    serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[%s]-a", conversion.toClass))
 		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), classOf[JavaList[JT]],
 		                               new TypeDescriptor(classOf[JavaList[JT]], new TypeDescriptor(conversion.toClass)))
 
@@ -481,6 +487,7 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
 		val analytic = produce(classOf[BinningAnalytic[T, JT]])
+    serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[(%s, %s)]-a", classOf[String], conversion.toClass))
 		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
 		                               classOf[JavaList[Pair[String, JT]]],
 		                               new TypeDescriptor(classOf[JavaList[Pair[String, JT]]],
@@ -588,6 +595,7 @@ class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory.FIELD_PROPERTY)
 		val binningAnalytic = StringScoreBinningAnalyticFactory.getBinningAnalytic[T, JT](this)(numeric, conversion)
+    serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[(%s, %s)]-a", classOf[String], conversion.toClass))
 		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
 		                               classOf[JavaList[Pair[String, JT]]],
 		                               new TypeDescriptor(classOf[JavaList[Pair[String, JT]]],
@@ -666,6 +674,7 @@ class SubstringValueExtractorFactory (parent: ConfigurableFactory[_], path: Java
 			(p.getFirst.intValue, p.getSecond.intValue)
 		)
 		val binningAnalytic = StringScoreBinningAnalyticFactory.getBinningAnalytic[T, JT](this)(numeric, conversion)
+    serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[(%s, %s)]-a", classOf[String], conversion.toClass))
 		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
 		                               classOf[JavaList[Pair[String, JT]]],
 		                               new TypeDescriptor(classOf[JavaList[Pair[String, JT]]],

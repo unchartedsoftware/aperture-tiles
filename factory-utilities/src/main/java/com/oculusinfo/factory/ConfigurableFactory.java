@@ -62,18 +62,18 @@ abstract public class ConfigurableFactory<T> {
 
 
 
-	private String                        _name;
-	private Class<T>                      _factoryType;
-	private List<String>                  _rootPath;
-    private ConfigurableFactory<?>        _parent;
-	private List<ConfigurableFactory<?>>  _children;
-    private Set<ConfigurationProperty<?>> _properties;
-	private boolean                       _configured;
-	private JSONObject                    _configurationNode;
-    private boolean                       _isSingleton;
-    private T                             _singletonProduct;
-    private HashMap<ConfigurationProperty<?>,
-                List<String>> _pathsByProperty;
+    private String                                          _name;
+    private Class<T>                                        _factoryType;
+    private List<String>                                    _rootPath;
+    private ConfigurableFactory<?>                          _parent;
+    private List<ConfigurableFactory<?>>                    _children;
+    private Set<ConfigurationProperty<?>>                   _properties;
+    private boolean                                         _configured;
+    private JSONObject                                      _configurationNode;
+    private Map<ConfigurationProperty<?>, Object>           _defaultValues;
+    private boolean                                         _isSingleton;
+    private T                                               _singletonProduct;
+    private Map<ConfigurationProperty<?>, List<String>> _pathsByProperty;
 
     /**
      * Create a factory
@@ -151,6 +151,7 @@ abstract public class ConfigurableFactory<T> {
         _configured = false;
         _properties = new HashSet<>();
         _pathsByProperty = new HashMap<>();
+        _defaultValues = new HashMap<>();
         _isSingleton = isSingleton;
         _singletonProduct = null;
         
@@ -212,7 +213,25 @@ abstract public class ConfigurableFactory<T> {
 		addProperty( property, new ArrayList<String>() );
 	}
 
-    /**
+	/**
+	 * Set the default value of a property for this factory, and this factory only.
+	 */
+	public <PT> void setDefaultValue (ConfigurationProperty<PT> property, PT defaultValue) {
+	    _defaultValues.put(property, defaultValue);
+	}
+
+	/**
+	 * gets the default value for a given property for this factory.
+	 */
+	protected <PT> PT getDefaultValue (ConfigurationProperty<PT> property) {
+	    if (_defaultValues.containsKey(property)) {
+	        return property.getType().cast(_defaultValues.get(property));
+	    } else {
+	        return property.getDefaultValue();
+	    }
+	}
+
+	/**
      * Return a SHA-256 hexcode representing the state of the configuration
      * @return String representing the hexcode SHA-256 hash of the configuration state
      */
@@ -250,7 +269,7 @@ abstract public class ConfigurableFactory<T> {
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
 		// if a value has not been configured for this property, return default
         if ( !hasPropertyValue( property ) ) {
-            return property.getDefaultValue();
+            return getDefaultValue(property);
         }
         try {
 			return property.unencodeJSON( new JSONNode( getPropertyNode( property ) , property.getName() ) );
@@ -262,7 +281,7 @@ abstract public class ConfigurableFactory<T> {
 			// Use default, but also warn about it.
 			LOGGER.warn("Error reading property {} from configuration {}", property, _configurationNode);
 		}
-		return property.getDefaultValue();
+		return getDefaultValue(property);
 	}
 
 	/**
@@ -476,14 +495,14 @@ abstract public class ConfigurableFactory<T> {
 
 	private <PT> void writePropertyValue (PrintStream stream, String prefix, ConfigurationProperty<PT> property) {
 		if (hasPropertyValue(property)) {
-			stream.println(prefix+property.getName()+": "+property.encode(property.getDefaultValue())+" (DEFAULT)");
+			stream.println(prefix+property.getName()+": "+property.encode(getDefaultValue(property))+" (DEFAULT)");
 		} else {
 			PT value;
 			try {
 				value = property.unencodeJSON(new JSONNode(_configurationNode, property.getName()));
 				stream.println(prefix+property.getName()+": "+property.encode(value));
 			} catch (JSONException|ConfigurationException e) {
-				stream.println(prefix+property.getName()+": "+property.encode(property.getDefaultValue())+" (DEFAULT - read error)");
+				stream.println(prefix+property.getName()+": "+property.encode(getDefaultValue(property))+" (DEFAULT - read error)");
 			}
 		}
 	}
