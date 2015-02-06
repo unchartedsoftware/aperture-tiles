@@ -6,7 +6,7 @@ permalink: docs/api/layer/
 layout: submenu
 ---
 
-# Layer Services #
+# Layer Service #
 
 ## <a name="configuration"></a> Configuration ##
 

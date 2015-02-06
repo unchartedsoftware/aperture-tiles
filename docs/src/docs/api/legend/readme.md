@@ -6,7 +6,7 @@ permalink: docs/api/legend/
 layout: submenu
 ---
 
-# Legend Services #
+# Legend Service #
 
 ## <a name="get-encoded-image-key"></a> Get Encoded Image Key ##
 
