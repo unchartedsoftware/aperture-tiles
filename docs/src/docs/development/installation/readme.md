@@ -137,6 +137,9 @@ Aperture Tiles is made up of the following sub-projects:
 				<dt>binning-utilities</dt>
 				<dd>Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</dd>
 				
+				<dt>factory-utilities</dt>
+				<dd>Factory system to allow construction and configuration of generic objects.</dd>
+
 				<dt>tile-generation</dt>
 				<dd>Spark-based tools to generate tile pyramids from raw data.</dd>
 				
