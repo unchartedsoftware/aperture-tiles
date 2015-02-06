@@ -1,0 +1,30 @@
+description = "A factory system for Aperture Tiles, to allow relatively easy construction and configuration of generic objects"
+
+// Pulls in the Java plugin
+apply plugin: "java"
+
+// Task to create a JAR from the all source set
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+ 
+// Artifacts that will be produced when this project is built
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+
+// Jars / projects this project depends on.
+dependencies {
+	compile "org.json:json:20090211"
+	compile "commons-codec:commons-codec:1.5"
+	compile "org.slf4j:slf4j-api:1.6.4"
+	testCompile "junit:junit:4.8.1"
+}

@@ -28,7 +28,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.factory.providers.FactoryProvider;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
 
@@ -36,8 +35,8 @@ public class StandardPyramidIOFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<PyramidIO>> factoryProviderBinder =
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<PyramidIO>>(){});
+		Multibinder<FactoryProvider<PyramidIO>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<FactoryProvider<PyramidIO>>(){});
 
 		for (DefaultPyramidIOFactoryProvider provider: DefaultPyramidIOFactoryProvider.values()) {
 			factoryProviderBinder.addBinding().toInstance(provider);

@@ -33,18 +33,21 @@ import java.util.Map;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.util.Pair;
 
 
 /**
- * Basic enum of all the default {@link DelegateFactoryProviderTarget} types
+ * Basic enum of all the default {@link FactoryProvider} types
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
@@ -60,7 +63,7 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * </pre>
  */
 public final class DefaultTileSerializerFactoryProvider
-	implements DelegateFactoryProviderTarget<TileSerializer<?>>,
+	implements FactoryProvider<TileSerializer<?>>,
 	           Comparable<DefaultTileSerializerFactoryProvider>
 {
 	private static int __currentOrdinal                                        = 0;
@@ -171,6 +174,61 @@ public final class DefaultTileSerializerFactoryProvider
 				}
 			});
 
+	// Kryo serializers
+	public static final List<DefaultTileSerializerFactoryProvider> KRYO =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
+
+				{
+					List<Pair<String, TypeDescriptor>> primitives = new ArrayList<>();
+					primitives.add(new Pair<String, TypeDescriptor>("boolean", new TypeDescriptor(Boolean.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("byte",    new TypeDescriptor(Byte.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("short",   new TypeDescriptor(Short.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("int",     new TypeDescriptor(Integer.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("long",    new TypeDescriptor(Long.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("float",   new TypeDescriptor(Float.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("double",  new TypeDescriptor(Double.class)));
+					primitives.add(new Pair<String, TypeDescriptor>("string",  new TypeDescriptor(String.class)));
+
+					// Simple types
+					for (final Pair<String, TypeDescriptor> primitive: primitives) {
+						String name = primitive.getFirst()+"_kryo";
+						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+								@Override
+								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+								                                                                List<String> path) {
+									return new KryoSerializerFactory<>(parent, path, primitive.getSecond());
+								}
+							}));
+					}
+
+					// Array types
+					for (final Pair<String, TypeDescriptor> primitive: primitives) {
+						String name = primitive.getFirst()+"_array_kryo";
+						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+								@Override
+								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+								                                                                List<String> path) {
+									return new KryoSerializerFactory<>(parent, path, new TypeDescriptor(List.class, primitive.getSecond()));
+								}
+							}));
+					}
+
+					// Map types
+					for (final Pair<String, TypeDescriptor> kPrimitive: primitives) {
+						for (final Pair<String, TypeDescriptor> vPrimitive: primitives) {
+							String name = kPrimitive.getFirst()+"_"+vPrimitive.getFirst()+"_pair_array_kryo";
+							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+									@Override
+									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+									                                                                List<String> path) {
+										return new KryoSerializerFactory<>(parent, path, new TypeDescriptor(List.class, new TypeDescriptor(Pair.class, kPrimitive.getSecond(), vPrimitive.getSecond())));
+									}
+								}));
+						}
+					}
+				}
+			});
 
 	
 	// -------------------------------------

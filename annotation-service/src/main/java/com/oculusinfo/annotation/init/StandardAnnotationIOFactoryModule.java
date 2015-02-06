@@ -29,15 +29,14 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.oculusinfo.annotation.init.providers.StandardAnnotationIOFactoryProvider;
 import com.oculusinfo.annotation.io.AnnotationIO;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
 import com.oculusinfo.factory.providers.FactoryProvider;
 
 public class StandardAnnotationIOFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		Multibinder<DelegateFactoryProviderTarget<AnnotationIO>> factoryProviderBinder =
-			Multibinder.newSetBinder(binder(), new TypeLiteral<DelegateFactoryProviderTarget<AnnotationIO>>(){});
+		Multibinder<FactoryProvider<AnnotationIO>> factoryProviderBinder =
+			Multibinder.newSetBinder(binder(), new TypeLiteral<FactoryProvider<AnnotationIO>>(){});
 		for (DefaultAnnotationIOFactoryProvider provider: DefaultAnnotationIOFactoryProvider.values())
 			factoryProviderBinder.addBinding().toInstance(provider);
 		

@@ -37,7 +37,7 @@ import java.util.List;
  * @author cregnier
  *
  */
-public class ValueTransformerFactory extends ConfigurableFactory<ValueTransformer> {
+public class ValueTransformerFactory extends ConfigurableFactory<ValueTransformer<?>> {
 
 	public static final StringProperty TRANSFORM_NAME = new StringProperty("type",
 	    "The type of transformation to apply to the data.",
@@ -61,12 +61,20 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 			1);
 
 
+
+	// One cannot produce a Class<ValueTransformer<?>> directly, one can only use erasure to fake it.
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static Class<ValueTransformer<?>> getFactoryClass () {
+		return (Class) ValueTransformer.class;
+	}
+
+
 	public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {
 		this(null, parent, path);
 	}
 
 	public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, ValueTransformer.class, parent, path);
+		super(name, getFactoryClass(), parent, path);
 
 		addProperty(TRANSFORM_NAME);
 		addProperty(TRANSFORM_MAXIMUM);
@@ -95,7 +103,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 	}
 
 	@Override
-	protected ValueTransformer create () {
+	protected ValueTransformer<?> create () {
 		String name = getPropertyValue(TRANSFORM_NAME);
 		double layerMin = getPropertyValue(LAYER_MINIMUM);
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);

@@ -27,7 +27,7 @@ package com.oculusinfo.sparktile.init.providers;
 import com.google.inject.Inject;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.DelegateFactoryProviderTarget;
+import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.sparktile.rest.tile.caching.OnDemandTilePyramidIOFactory;
 import com.oculusinfo.sparktile.spark.SparkContextProvider;
 
@@ -35,7 +35,7 @@ import java.util.List;
 
 
 
-public class SparkAwarePyramidIOFactoryProvider implements DelegateFactoryProviderTarget<PyramidIO> {
+public class SparkAwarePyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
 	@Inject
 	private SparkContextProvider _contextProvider;
 

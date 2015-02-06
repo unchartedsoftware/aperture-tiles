@@ -26,14 +26,15 @@ package com.oculusinfo.tile.rendering.impl;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
-import com.oculusinfo.binning.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +95,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
 			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 
+			// This is the best we can do; supress the warning and move on.
+			@SuppressWarnings("unchecked")
 			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
 			double scaledMax = (double)rangeMax/100;
 			double scaledMin = (double)rangeMin/100;

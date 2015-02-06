@@ -9,7 +9,7 @@ apply plugin: "scala"
 test << {
 	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
 	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
-			reporter(type: 'stdout')
+		reporter(type: 'stdout')
 	}
 }
 
@@ -39,13 +39,13 @@ task testJar(type: Jar) {
 
 // Copy and filter resources files.  This uses a baseline copy task, and applies
 // Ant's token functionality to filter values.
-task copyFilteredResources(type: Copy) {	
+task copyFilteredResources(type: Copy) {
 	from "src/main/filtered-resources-gradle"
 	into "src/main/resources"
 	filter ReplaceTokens, tokens:[
-		"project-version": version.toString(),
-		"hadoop-core-version": hadoopCoreVersion.toString(),
-		"hbase-version": hbaseVersion.toString()		
+			"project-version": version.toString(),
+			"hadoop-core-version": hadoopCoreVersion.toString(),
+			"hbase-version": hbaseVersion.toString()
 	]
 }
 // Make sure the above tasks run before resource processing.
@@ -99,14 +99,14 @@ configurations {
 // issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
 // scala and java in the same project.
 sourceSets {
-    main {
-        scala {
-            srcDirs = ["src/main/scala", "src/main/java"]
-        }
-        java {
-            srcDirs = []
-        }
-    }
+	main {
+		scala {
+			srcDirs = ["src/main/scala", "src/main/java"]
+		}
+		java {
+			srcDirs = []
+		}
+	}
 }
 
 // Jars / projects this project depends on.
@@ -118,6 +118,7 @@ dependencies {
 	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
 	compile "org.scala-lang:scala-library:$scalaVersion"
+	compile "org.clapper:grizzled-slf4j_2.10:1.0.2"
 	compile project(":binning-utilities")
 	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
@@ -135,6 +136,7 @@ dependencies {
 	// at runtime.
 	assemblyJarReq project (":geometric-utilities")
 	assemblyJarReq project (":binning-utilities")
+	assemblyJarReq project (":factory-utilities")
 	assemblyJarReq "org.json:json:20090211"
 	addHBaseDependencies("assemblyJarReq")
 }

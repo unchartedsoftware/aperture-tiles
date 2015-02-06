@@ -40,15 +40,15 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
-    private FactoryProvider<TileDataImageRenderer> _rendererFactoryProvider;
-    private FactoryProvider<TileTransformer> _tileTransformerFactoryProvider;
+    private FactoryProvider<TileDataImageRenderer<?>> _rendererFactoryProvider;
+    private FactoryProvider<TileTransformer<?>> _tileTransformerFactoryProvider;
 
     @Inject
     public StandardLayerConfigurationProvider( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                                FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
                                                FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-                                               FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-                                               FactoryProvider<TileTransformer> tileTransformerFactoryProvider ) {
+                                               FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
+                                               FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider ) {
 
         _pyramidIOFactoryProvider = pyramidIOFactoryProvider;
         _tilePyramidFactoryProvider = tilePyramidFactoryProvider;
@@ -76,17 +76,5 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
                                       _rendererFactoryProvider,
                                       _tileTransformerFactoryProvider,
                                       parent, path);
-    }
-
-    @Override
-    public ConfigurableFactory<LayerConfiguration> createFactory (String factoryName,
-                                                                  ConfigurableFactory<?> parent,
-                                                                  List<String> path) {
-        return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                      _tilePyramidFactoryProvider,
-                                      _serializationFactoryProvider,
-                                      _rendererFactoryProvider,
-                                      _tileTransformerFactoryProvider,
-                                      factoryName, parent, path);
     }
 }

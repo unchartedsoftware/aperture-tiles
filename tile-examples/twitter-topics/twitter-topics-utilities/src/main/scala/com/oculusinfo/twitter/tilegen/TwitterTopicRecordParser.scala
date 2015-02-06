@@ -36,7 +36,7 @@ import java.util.{List => JavaList}
 import scala.collection.JavaConverters._
 import scala.util.parsing.json.JSON
 
-import com.oculusinfo.binning.util.Pair
+import com.oculusinfo.factory.util.Pair
 
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
 

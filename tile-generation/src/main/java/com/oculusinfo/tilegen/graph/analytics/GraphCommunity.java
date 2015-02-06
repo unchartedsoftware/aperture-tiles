@@ -31,7 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 
 /**
@@ -257,11 +257,11 @@ public class GraphCommunity implements Serializable {
 		}
 	}
 
-	private static void addEdgesInPlace(LinkedList<GraphEdge> accumulatedEdges, List<GraphEdge> newEdges) {
-		for (GraphEdge newEdge : newEdges) {
-			addEdgeInPlace(accumulatedEdges, newEdge);
-		}
-	}
+//	private static void addEdgesInPlace(LinkedList<GraphEdge> accumulatedEdges, List<GraphEdge> newEdges) {
+//		for (GraphEdge newEdge : newEdges) {
+//			addEdgeInPlace(accumulatedEdges, newEdge);
+//		}
+//	}
 
 	/**
 	 * Add an inter-community edge to an existing community, summing counts as needed, and keeping

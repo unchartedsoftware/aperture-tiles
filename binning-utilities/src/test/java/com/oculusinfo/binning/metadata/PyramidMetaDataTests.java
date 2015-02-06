@@ -31,7 +31,7 @@ import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 public class PyramidMetaDataTests {
 	private static final double EPSILON = 1E-10;

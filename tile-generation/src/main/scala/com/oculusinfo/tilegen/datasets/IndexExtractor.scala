@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.{List => JavaList}
 
 import com.oculusinfo.factory.properties.{DoubleProperty, StringProperty, ListProperty}
+import com.oculusinfo.factory.providers.{StandardUberFactoryProvider, FactoryProvider}
 import org.json.JSONObject
 
 import scala.collection.JavaConverters._
@@ -80,38 +81,48 @@ object IndexExtractorFactory {
 		                 "The fields that the index extractor will pull from a data record to construct that record's index")
 
 	val defaultFactory = "cartesian"
-
-	/** Default function to use when creating child factories */
-	def createChildren (parent: ConfigurableFactory[_], path: JavaList[String]):
-			JavaList[ConfigurableFactory[_ <: IndexExtractor]] =
-		Seq[ConfigurableFactory[_ <: IndexExtractor]](
-			new CartesianIndexExtractorFactory(parent, path),
-			new LineSegmentIndexExtractorFactory(parent, path),
-			new IP4VIndexExtractorFactory(parent, path),
-			new TimeRangeIndexExtractorFactory(parent, path)).asJava
+	val defaultSubFactories = Set[FactoryProvider[IndexExtractor]](CartesianIndexExtractorFactory.provider,
+	                                                               LineSegmentIndexExtractorFactory.provider,
+	                                                               IPv4IndexExtractorFactory.provider,
+	                                                               TimeRangeIndexExtractorFactory.provider)
 
 
-	/** Create an un-named uber-factory for index extractors */
-	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
-	           defaultType: String = defaultFactory,
-	           childProviders: (ConfigurableFactory[_],
-	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
-			ConfigurableFactory[IndexExtractor] =
-		new UberFactory[IndexExtractor](classOf[IndexExtractor], parent, path, true,
-		                                createChildren(parent, path), defaultType)
+	/** Create a standard index extractor uber-factory provider */
+	def provider (defaultProvider: String = defaultFactory,
+	              subFactoryProviders: Set[FactoryProvider[IndexExtractor]] = defaultSubFactories) =
+		new StandardUberFactoryProvider[IndexExtractor](subFactoryProviders.asJava) {
+			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+				new UberFactory[IndexExtractor](classOf[IndexExtractor], null, path, createChildren(path), defaultProvider)
+			override def createFactory(parent: ConfigurableFactory[_],
+			                           path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+				new UberFactory[IndexExtractor](classOf[IndexExtractor], parent, path, createChildren(path), defaultProvider)
+		}
 
-	/** Create a named uber-factory for index extractors */
-	def named (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
-	           defaultType: String = defaultFactory,
-	           childProviders: (ConfigurableFactory[_],
-	                            JavaList[String]) => JavaList[ConfigurableFactory[_ <: IndexExtractor]] = createChildren):
-			ConfigurableFactory[IndexExtractor] =
-		new UberFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path, true,
-		                                createChildren(parent, path), defaultType)
+	/** Short-hand for accessing the standard index extractor uber-factory easily. */
+	def apply (parent: ConfigurableFactory[_],
+	           path: JavaList[String],
+	           defaultProvider: String = defaultFactory,
+	           subFactoryProviders: Set[FactoryProvider[IndexExtractor]] = defaultSubFactories) =
+		provider(defaultProvider, subFactoryProviders).createFactory(parent, path)
+
+	/** Helper method for quick and easy construction of factory providers for sub-factories. */
+	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => IndexExtractorFactory) =
+		new FactoryProvider[IndexExtractor] {
+			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+				ctor(null, path)
+
+			override def createFactory(parent: ConfigurableFactory[_],
+			                           path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+				ctor(parent, path)
+		}
 }
 
 /**
- * A superclass for all index extractor factories; all it really does is add in the pyramid factory.
+ * A superclass for all index extractor factories.
+ *
+ * First of all, this guarantees types of all index extractor factories.
+ *
+ * Secondly, it makes sure factories have a factory provider - in
  *
  * All parameters are pass-throughs to {@link ConfigurableFactory}.
  */
@@ -120,6 +131,10 @@ abstract class IndexExtractorFactory (name: String, parent: ConfigurableFactory[
 {
 }
 
+object CartesianIndexExtractorFactory {
+	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
+		new CartesianIndexExtractorFactory(parent, path))
+}
 /** A constructor for a standard cartesian index extractor */
 class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("cartesian", parent, path)
@@ -147,6 +162,10 @@ class CartesianIndexExtractor (xField: String, yField: String) extends IndexExtr
 	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
 }
 
+object LineSegmentIndexExtractorFactory {
+	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
+		new LineSegmentIndexExtractorFactory(parent, path))
+}
 /** A constructor for a standard line segment index extractor */
 class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("segment", parent, path)
@@ -179,8 +198,12 @@ class LineSegmentIndexExtractor (x1Var: String, y1Var: String, x2Var: String, y2
 	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
 }
 
+object IPv4IndexExtractorFactory {
+	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
+		new IPv4IndexExtractorFactory(parent, path))
+}
 /** A constructor for a standard ip address index extractor */
-class IP4VIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class IPv4IndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends IndexExtractorFactory("ipv4", parent, path)
 {
 	// Initialize needed properties
@@ -212,6 +235,9 @@ object TimeRangeIndexExtractorFactory {
 		new DoubleProperty("start-date", "The start of the first time period, for binned times", 0.0)
 	private[datasets] val SECONDS_PER_PERIOD_PROPERTY =
 		new DoubleProperty("period-length", "The length of each time period, in seconds", 60.0*60.0*24.0)
+
+	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
+		new TimeRangeIndexExtractorFactory(parent, path))
 }
 
 /** A constructor for a standard time range/cartesian point index extractor */

@@ -34,6 +34,6 @@ public class TileTransformerFactoryModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(new TypeLiteral<FactoryProvider<TileTransformer>>() {}).toInstance(new StandardTileTransformerFactoryProvider());
+		bind(new TypeLiteral<FactoryProvider<TileTransformer<?>>>() {}).toInstance(new StandardTileTransformerFactoryProvider());
 	}
 }

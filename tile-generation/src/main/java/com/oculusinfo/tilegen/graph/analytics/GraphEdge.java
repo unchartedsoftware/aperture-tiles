@@ -25,7 +25,7 @@
 package com.oculusinfo.tilegen.graph.analytics;
 
 import java.io.Serializable;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 /**
  * Class for a storing a graph edge object.  Used by GraphCommunity for graph 

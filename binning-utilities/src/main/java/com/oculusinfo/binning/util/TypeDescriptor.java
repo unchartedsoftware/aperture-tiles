@@ -37,7 +37,11 @@ import java.util.List;
  * @author nkronenfeld
  */
 public class TypeDescriptor implements Serializable {
-	private Class<?>                     _mainType;
+	private static final long serialVersionUID = -8442365125923967447L;
+
+
+
+	private Class<?>             _mainType;
 	private List<TypeDescriptor> _genericTypes;
 
 	public TypeDescriptor (Class<?> mainType) {

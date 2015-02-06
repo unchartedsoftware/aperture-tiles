@@ -55,13 +55,31 @@
     width: 100%;
 }
 
-.light-theme .axis-header-back { 
-    border: 1px solid #999;
+.light-theme .vertical-header-back {
+    border-left: 1px solid #999;
+    border-right: 1px solid #999;
+}
+
+.dark-theme .vertical-header-back {
+    border-left: 1px solid #111;
+    border-right: 1px solid #111;
+}
+
+.light-theme .horizontal-header-back {
+    border-top: 1px solid #999;
+    border-bottom: 1px solid #999;
+}
+
+.dark-theme .horizontal-header-back {
+    border-top: 1px solid #111;
+    border-bottom: 1px solid #111;
+}
+
+.light-theme .axis-header-back {
     background-color: #ebebeb;
 }
 
-.dark-theme .axis-header-back { 
-    border: 1px solid #111;
+.dark-theme .axis-header-back {
     background-color: #333;
 }
 

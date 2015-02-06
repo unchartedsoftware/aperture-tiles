@@ -2,6 +2,7 @@
 ext.tileGenProjects = [
 		'math-utilities',
 		'geometric-utilities',
+		'factory-utilities',
 		'binning-utilities',
 		'tile-generation',
 		'tile-packaging'
@@ -11,6 +12,7 @@ ext.tileGenProjects = [
 ext.clientServerProjects = [
 		'math-utilities',
 		'geometric-utilities',
+		'factory-utilities',
 		'binning-utilities',
 		'tile-generation',
 		'spark-tile-utilities',

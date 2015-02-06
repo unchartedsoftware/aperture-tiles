@@ -34,7 +34,7 @@ import java.util.ListIterator;
 
 
 
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 
 /**
  * Class for a record for graph analytics. Used for custom tile generation for
@@ -215,9 +215,9 @@ public class GraphAnalyticsRecord implements Serializable {
 				+ "\"communities\": [");
 		for (int i = 0; i < _communities.size(); ++i) {
 			GraphCommunity node = _communities.get(i);
-			List<GraphEdge> interEdges = node.getInterEdges();
-			List<GraphEdge> intraEdges = node.getIntraEdges();
-					
+			// List<GraphEdge> interEdges = node.getInterEdges();
+			// List<GraphEdge> intraEdges = node.getIntraEdges();
+
 			if (i > 0)
 				result += ", ";
 			result += "{\"hierLevel\": " + node.getHierLevel() + ", "

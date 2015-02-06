@@ -33,7 +33,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class GraphAnalyticsAvroSerializer
@@ -95,7 +95,6 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
 		return results;
 	}
 
-    @SuppressWarnings("unchecked")
     @Override
     protected GraphAnalyticsRecord getEntryValue (GenericRecord entry) {
     	  return new GraphAnalyticsRecord((Integer)entry.get("numCommunities"),

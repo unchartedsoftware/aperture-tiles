@@ -61,6 +61,41 @@
     }
 
     /**
+     * Add a hook function to the renderer.
+     *
+     * @param {Function} hook - the callback function.
+     */
+    Renderer.prototype.addHook = function( hook ) {
+        if ( this.spec.hook ) {
+            this.spec.hooks = [ this.spec.hook ];
+            delete this.spec.hook;
+        }
+        this.spec.hooks = this.spec.hooks || [];
+        if ( hook && typeof hook === "function" ) {
+            this.spec.hooks.push( hook );
+        }
+    };
+
+    /**
+     * Remove a hook function from the renderer.
+     *
+     * @param {Function} hook - the callback function.
+     */
+    Renderer.prototype.removeHook = function( hook ) {
+        var index;
+        if ( this.spec.hook && this.spec.hook === hook ) {
+            delete this.spec.hook;
+            this.spec.hooks = [ this.spec.hook ];
+        }
+        if ( this.spec.hooks ) {
+            index = this.spec.hooks.indexOf( hook );
+            if ( index !== -1 ) {
+                this.spec.hooks.splice( index, 1 );
+            }
+        }
+    };
+
+    /**
      * When rendering a tile, the renderer will by default assume each immediate sibling
      * corresponds to a data entry. This function allows a renderer implementation to
      * provide a selector in situations where this is not the case. This is only relevant
@@ -101,20 +136,30 @@
      * @param {Array} entries - The array of all data entries.
      * @param {Object} data - The raw tile data object.
      */
-    Renderer.prototype.hook = function( elements, entries, data ) {
-        var hook = this.spec.hook,
-            $elements;
-        if ( hook && typeof hook === "function" ) {
-            // get the entries
-            $elements = $( elements );
-            // if entry selector is set, use it to select entries
-            if ( this.getEntrySelector() ) {
-                $elements = $elements.find( this.getEntrySelector() );
+    Renderer.prototype.executeHooks = function( elements, entries, data ) {
+
+        function exec( index, elem ) {
+            hook( elem, entries[index], entries, data );
+        }
+
+        var hooks = this.spec.hook ? [ this.spec.hook ] : this.spec.hooks,
+            hook,
+            $elements,
+            i;
+        if ( hooks ) {
+            for ( i=0; i<hooks.length; i++ ) {
+                hook = hooks[i];
+                if ( typeof hook === "function" ) {
+                    // get the entries
+                    $elements = $( elements );
+                    // if entry selector is set, use it to select entries
+                    if ( this.getEntrySelector() ) {
+                        $elements = $elements.find( this.getEntrySelector() );
+                    }
+                    // call entry function on each entry
+                    $elements.each( exec );
+                }
             }
-            // call entry function on each entry
-            $elements.each( function( index, elem ) {
-                hook( elem, entries[ index ], entries, data );
-            });
         }
     };
 

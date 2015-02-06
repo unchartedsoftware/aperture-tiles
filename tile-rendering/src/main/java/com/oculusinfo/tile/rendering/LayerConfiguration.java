@@ -28,7 +28,7 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.util.Pair;
+import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -36,7 +36,7 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.factory.properties.TileIndexProperty;
+import com.oculusinfo.binning.properties.TileIndexProperty;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,8 +126,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+	                           FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
+	                           FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
 	                           ConfigurableFactory<?> parent,
 	                           List<String> path) {
 		this( pyramidIOFactoryProvider, tilePyramidFactoryProvider, serializationFactoryProvider,
@@ -139,8 +139,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
                                FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-	                           FactoryProvider<TileDataImageRenderer> rendererFactoryProvider,
-	                           FactoryProvider<TileTransformer> tileTransformerFactoryProvider,
+	                           FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
+	                           FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
 	                           String name,
                                ConfigurableFactory<?> parent,
 	                           List<String> path) {
@@ -200,7 +200,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		_levelMaximum = levelMaximum;
 		_levelMinimum = levelMinimum;
 		try {
-			TileDataImageRenderer renderer = produce(TileDataImageRenderer.class);
+			TileDataImageRenderer<?> renderer = produce(TileDataImageRenderer.class);
 			if (null != renderer) {
 				Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
