@@ -62,7 +62,7 @@
     setLevelMinMax = function( layer ) {
         var zoomLevel = layer.map.getZoom(),
             coarseness = layer.renderer.coarseness,
-            adjustedZoom = zoomLevel - ( coarseness-1 ),
+            adjustedZoom = Math.max( zoomLevel - ( coarseness-1 ), 0 ),
             meta =  layer.source.meta,
             levelMinMax = meta.minMax[ adjustedZoom ],
             minMax = levelMinMax ? levelMinMax.minMax : {
