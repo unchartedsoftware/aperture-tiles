@@ -306,11 +306,11 @@
         enableSlide = function() {
             // set enable / disable callbacks
             if (axis.isXAxis) {
-                axis.$header.click(verticalSlide);
-                axis.$content.click(verticalSlide);
+                axis.$header.click( verticalSlide );
+                axis.$content.click( verticalSlide );
             } else {
-                axis.$header.click(horizontalSlide);
-                axis.$content.click(horizontalSlide);
+                axis.$header.click( horizontalSlide );
+                axis.$content.click( horizontalSlide );
             }
         };
         disableSlide = function() {
@@ -442,7 +442,7 @@
      * {
      *     position {String}  Set the position to the bottom of the map. Default = "bottom"
      *     title    {String}  Set the title of the axis label. Default = "Axis"
-     *     isOpen   {boolean} Have the axis initialize to an open or closed state. Default = true
+     *     enabled  {boolean} Have the axis initialize to an open or closed state. Default = true
      *     repeat   {boolean} Whether or not the axis repeats. Default = false
      *     intervals: {
      *         type        {String}  Whether the intervals are by "percentage" or by "value". Default = "percentage"
@@ -462,7 +462,7 @@
         this.position = ( spec.position !== undefined ) ? spec.position.toLowerCase() : 'bottom';
         this.repeat = ( spec.repeat !== undefined ) ? spec.repeat : false;
         this.title = spec.title || 'Axis';
-        this.isOpen = ( spec.isOpen !== undefined ) ? spec.isOpen : true;
+        this.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
 
         spec.intervals = spec.intervals || {};
         this.intervals = {};
@@ -504,12 +504,14 @@
         this.$map = $( this.map.getElement() );
         this.$axis = createAxis( this );
         this.$map.append( this.$axis );
-        // always set enabled to true, as isOpen attr will trigger a click, which toggles the enabled flag
-        this.enabled = true;
         // calculate the dimensions of the individual elements once
         calcElementDimensions( this );
         // check if axis starts open or closed
-        if ( !this.isOpen ) {
+        if ( !this.enabled ) {
+            // set enabled to true, as the triggered
+            // click event will toggle the enabled flag
+            // back to false
+            this.enabled = true;
             // trigger close and skip animation;
             this.$header.click();
             this.$content.finish();
