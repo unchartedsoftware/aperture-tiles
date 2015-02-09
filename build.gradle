@@ -54,7 +54,7 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.0.0-cdh4.6.0"
 				hadoopCoreVersion = "2.0.0-mr1-cdh4.6.0"
 				hbaseVersion = "0.94.15-cdh4.6.0"
-				sparkVersion = "1.1.1" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
+				sparkVersion = "1.2.0" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
