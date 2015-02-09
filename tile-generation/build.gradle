@@ -9,7 +9,7 @@ apply plugin: "scala"
 test << {
 	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
 	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
-		reporter(type: 'stdout')
+		reporter(type: 'file', filename: 'test.output')
 	}
 }
 
