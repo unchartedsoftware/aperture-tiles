@@ -58,8 +58,12 @@
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
         this.domain = "client";
         this.source = spec.source;
-        this.renderer = spec.renderer || null;
-        this.html = spec.html || null;
+        if ( spec.renderer ) {
+            this.renderer = spec.renderer;
+        }
+        if ( spec.html ) {
+            this.html = spec.html;
+        }
     }
 
     ClientLayer.prototype = Object.create( Layer.prototype );

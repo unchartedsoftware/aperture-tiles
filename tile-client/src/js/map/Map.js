@@ -179,9 +179,12 @@
         layer.map = map;
         // activate the layer
         layer.activate();
+        // add to layer array
+        map.layers = map.layers || [];
+        map.layers.push( layer );
         // add it to layer map
-        map.layers = map.layers || {};
-        map.layers[ layer.getUUID() ] = layer;
+        map.layersById = map.layersById || {};
+        map.layersById[ layer.getUUID() ] = layer;
     };
 
     /**
@@ -235,12 +238,20 @@
         }
         // get index of baselayer
         index = map.baselayers.indexOf( baselayer );
-        // remove baselayer from array
+         // remove baselayer from array
         map.baselayers.splice( index, 1 );
-        // get replacement index
-        index = ( map.baselayers[ index ] ) ? index : index-1;
-        // replace baselayer
-        map.setBaseLayerIndex( index );
+        // if we are removing an active base layer, change to
+        // next index
+        if ( index === map.baseLayerIndex ) {
+            // get replacement index
+            index = ( map.baselayers[ index ] ) ? index : index-1;
+            // replace baselayer
+            map.setBaseLayerIndex( index );
+        } else {
+            if ( index < map.baseLayerIndex ) {
+                map.baseLayerIndex--;
+            }
+        }
         baselayer.map = null;
     };
 
@@ -252,11 +263,16 @@
      * @param layer {Layer} The layer object.
      */
     removeLayer = function( map, layer ) {
-        // remove it from layer map
-        delete map.layers[ layer.getUUID() ];
-        // deactivate it
-        layer.deactivate();
-        layer.map = null;
+        var index = map.layers.indexOf( layer );
+        if ( index !== -1 ) {
+             // remove it from layer map
+            delete map.layersById[ layer.getUUID() ];
+            // remove it from layer array
+            map.layers.splice( index, 1 );
+            // deactivate it
+            layer.deactivate();
+            layer.map = null;
+        }
     };
 
     /**
@@ -295,16 +311,11 @@
 
         spec = spec || {};
         spec.options = spec.options || {};
-        spec.pyramid = spec.pyramid || {};
 
         // element id
         this.id = id;
         // set map tile pyramid
-        if ( spec.pyramid.type && spec.pyramid.type.toLowerCase() === "areaofinterest" ) {
-            this.pyramid = new AreaOfInterestTilePyramid( spec.pyramid );
-        } else {
-            this.pyramid = new WebMercatorTilePyramid();
-        }
+        this.setPyramid( spec.pyramid );
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
 
@@ -394,9 +405,13 @@
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
                 newBaseLayer = this.baselayers[ index],
-                key;
+                i;
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
+                return;
+            }
+            if ( oldBaseLayer === newBaseLayer ) {
+                // same layer, don't switch
                 return;
             }
             if ( oldBaseLayer ) {
@@ -408,10 +423,8 @@
 
             // update z index, since changing baselayer resets them
             if ( this.layers ) {
-                for ( key in this.layers ) {
-                     if ( this.layers.hasOwnProperty( key ) ) {
-                        this.layers[key].setZIndex( this.layers[key].getZIndex() );
-                    }
+                for ( i=0; i<this.layers.length; i++ ) {
+                    this.layers[i].setZIndex( this.layers[i].getZIndex() );
                 }
             }
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
@@ -434,7 +447,7 @@
          * @param {String} theme - The theme identification string of the map.
          */
         setTheme: function( theme ) {
-            var key;
+            var i;
             // toggle theme in html
             if ( theme === 'light' ) {
                 $( 'body' ).removeClass( "dark-theme" ).addClass( "light-theme" );
@@ -442,9 +455,9 @@
                 $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
             }
             // update theme for all attached layers
-            for ( key in this.layers ) {
-                if ( this.layers.hasOwnProperty( key ) ) {
-                    this.layers[ key ].setTheme( theme );
+            if ( this.layers ) {
+                for ( i=0; i<this.layers.length; i++ ) {
+                    this.layers[ i ].setTheme( theme );
                 }
             }
         },
@@ -491,6 +504,26 @@
          */
         getContainerElement:  function() {
             return this.olMap.layerContainerDiv;
+        },
+
+        /**
+         * Add a pyramid to the map. All Tile iterators returned prior to this
+         * will be invalidated.
+         * @memberof Map.prototype
+         *
+         * @param {AreaOfInterestTilePyramid|WebMercatorTilePyramid|Object} pyramid - The pyramid.
+         */
+        setPyramid: function( pyramid ) {
+            if ( !pyramid ) {
+                this.pyramid = new WebMercatorTilePyramid();
+            } else if ( pyramid instanceof AreaOfInterestTilePyramid ||
+                pyramid instanceof WebMercatorTilePyramid ) {
+                this.pyramid = pyramid;
+            } else if ( pyramid.type && pyramid.type.toLowerCase() === "areaofinterest" ) {
+                this.pyramid = new AreaOfInterestTilePyramid( pyramid );
+            } else {
+                this.pyramid = new WebMercatorTilePyramid();
+            }
         },
 
         /**
