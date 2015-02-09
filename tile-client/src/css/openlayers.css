@@ -511,18 +511,10 @@ a.olControlZoomOut {
  * Animations
  */
  
-/*
-.olTileImage { 
+.olTileImage,
+.olTileHtml { 
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;
     transition: opacity 0.2s linear;
 }
-
-.olTileHtml {   
-    -webkit-transition: opacity 0.2s linear;
-    -moz-transition: opacity 0.2s linear;
-    -o-transition: opacity 0.2s linear;
-    transition: opacity 0.2s linear;   
-}
-*/
