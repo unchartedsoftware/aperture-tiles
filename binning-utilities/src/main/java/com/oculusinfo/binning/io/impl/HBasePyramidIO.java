@@ -89,6 +89,7 @@ public class HBasePyramidIO implements PyramidIO {
 		_config.set("hbase.zookeeper.quorum", zookeeperQuorum);
 		_config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
 		_config.set("hbase.master", hbaseMaster);
+		_config.set("hbase.client.keyvalue.maxsize", "0");
 		_admin = new HBaseAdmin(_config);
         _connection = HConnectionManager.createConnection(_config);
 	}
