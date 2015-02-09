@@ -25,7 +25,11 @@ artifacts {
 dependencies {
 	compile project(":factory-utilities")
 	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"
-	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"
+	getDependencies().add("compile", "org.apache.hadoop:hadoop-core:$hadoopCoreVersion", {
+		exclude group: "asm", module: "asm"
+		exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+		exclude group: "org.jboss.netty", module: "netty"
+	})
 	compile "org.apache.avro:avro:1.7.4"
 	compile "org.xerial:sqlite-jdbc:3.7.2"
 	compile "com.esotericsoftware.kryo:kryo:2.21"
