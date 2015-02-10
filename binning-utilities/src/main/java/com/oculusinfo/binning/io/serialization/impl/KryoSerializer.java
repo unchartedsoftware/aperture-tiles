@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -24,8 +26,8 @@ import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.util.Pair;
 
 
 
@@ -215,7 +217,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public TileData<T> deserialize(TileIndex index, InputStream stream)
 		throws IOException {
-		Input input = new Input(stream);
+        Input input = new Input(new InflaterInputStream(stream));
 		try {
 	
 			Object data = kryo().readClassAndObject(input);
@@ -229,7 +231,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public void serialize(TileData<T> data, OutputStream stream)
 		throws IOException {
-		Output output = new Output(stream);
+        Output output = new Output(new DeflaterOutputStream(stream));
 
 		kryo().writeClassAndObject(output, data);
 

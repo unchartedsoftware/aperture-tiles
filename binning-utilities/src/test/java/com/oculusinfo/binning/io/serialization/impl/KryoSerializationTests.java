@@ -25,6 +25,7 @@ package com.oculusinfo.binning.io.serialization.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -209,4 +210,20 @@ public class KryoSerializationTests {
 			return (this._i == that._i && this._d == that._d && this._s.equals(that._s));
 		}
 	}
+
+
+
+	@Test
+	public void testCompression () throws IOException {
+		TileData<Double> data = new DenseTileData<Double>(new TileIndex(0, 0, 0), 1.1);
+		TileSerializer<Double> serializer = new KryoSerializer<Double>(new TypeDescriptor(Double.class));
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		serializer.serialize(data, output);
+		output.flush();
+		output.close();
+
+		byte[] buffer = output.toByteArray();
+		Assert.assertTrue(buffer.length < 256*256);
+	}
+
 }
