@@ -4,7 +4,7 @@
 /*             Layers Controls              */
 /********************************************/
 
-.layer-controls {
+.tiles-layer-controls {
 	position: absolute;
 	width: 350px;
 	right: 10px;
@@ -18,7 +18,7 @@
 
 /*************** Layer Entry ****************/
 
-.layer-entry {
+.tiles-layer-controls .layer-entry {
 	list-style-type: none;
 	margin-bottom: 9px;
 	background-color: #222;
@@ -27,18 +27,18 @@
 
 /************* Layer Entry Head *************/
 
-.layer-entry-head {
+.tiles-layer-controls .layer-entry-head {
 	padding: 4px;
 	cursor:pointer;
 	height: 24px;
 	color: #ccc;
 }
 
-.layer-entry-head:hover {
+.tiles-layer-controls .layer-entry-head:hover {
 	color: #fff;
 }
 
-.layer-toggle {
+.tiles-layer-controls .layer-toggle {
 	float:left;
 	width: 18px;
     height: 14px;  
@@ -48,7 +48,7 @@
     margin: 4px 0 0 4px;
 }
 
-.layer-title {
+.tiles-layer-controls .layer-title {
 	float:left;
     margin: 4px 0 0 5px;
 	font-size: 14px;
@@ -60,11 +60,11 @@
 
 /************* Layer Entry Body *************/
 
-.layer-entry-body {
+.tiles-layer-controls .layer-entry-body {
 	padding: 4px 4px 8px 4px;
 }
 
-.controls-label {
+.tiles-layer-controls .controls-label {
     font-size: 12px;
     text-align: center;
     padding-bottom: 3px;
@@ -73,20 +73,20 @@
 
 /************* Opacity Controls *************/
 
-.opacity-controls {
+.tiles-layer-controls .opacity-controls {
 	float:left;
 	margin-left: 5px;
 }
 
-.opacity-controls-client {
+.tiles-layer-controls .opacity-controls-client {
     width: 98%;
 }
 
-.opacity-controls-server {
+.tiles-layer-controls .opacity-controls-server {
     width: 20%;
 }
 
-.opacity-slider {
+.tiles-layer-controls .opacity-slider {
     width: calc(100% - 24px);
     top: 6px;
     left: 12px;
@@ -94,20 +94,20 @@
     border-radius: 4px;
 }
 
-.opacity-slider .ui-slider-range-min {
+.tiles-layer-controls .opacity-slider .ui-slider-range-min {
     background: #666666;
 }
 
 /************** Filter Controls *************/
 
-.filter-controls {
+.tiles-layer-controls .filter-controls {
 	float:left;
 	width: 55%;
 	margin-left: 5px;
 	margin-bottom: 15px;
 }
 
-.filter-slider {
+.tiles-layer-controls .filter-slider {
     width: calc(100% - 24px);
     top: 6px;
     left: 12px;
@@ -115,42 +115,42 @@
     border-radius: 4px;
 }
 
-.layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:hover, 
-.layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:active {
+.tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:hover, 
+.tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:active {
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFNJREFUeNpiYMAEXEDsA+OwoEnKALETEHOgK2AEYhMgNkQ3DqSAB6pLAot1DExIJmAFzED8C4hvQdnIppyFKYCBp0D8CohloVafxWUqN7I3AQIMAKw6B24pOi8lAAAAAElFTkSuQmCC);
 	background-repeat: no-repeat;
 	background-position: 50% 50%;
 }
 
-.filter-axis {
+.tiles-layer-controls .filter-axis {
     position: relative;
     width: 100%;
     left: 0;
     pointer-events:none;
 }
 
-.filter-axis-marker {
+.tiles-layer-controls .filter-axis-marker {
     float: left;
     width: 1px;
     background-color: #d3d3d3;
 }
 
-.filter-major-marker {
+.tiles-layer-controls .filter-major-marker {
     height: 6px;
 }
 
-.filter-minor-marker {
+.tiles-layer-controls .filter-minor-marker {
     height: 4px; 
 }
 
-.filter-axis-label-container, 
-.filter-axis-ticks-container {
+.tiles-layer-controls .filter-axis-label-container, 
+.tiles-layer-controls .filter-axis-ticks-container {
 	position: relative;
 	top: 14px;
 	clear: both;
 }
 
-.filter-axis-label {
+.tiles-layer-controls .filter-axis-label {
     float: left;
     font-size: 10px;
 	text-align: center;
@@ -159,19 +159,19 @@
 
 /************ Coarseness Controls ***********/
 
-.coarseness-controls {
+.tiles-layer-controls .coarseness-controls {
 	float:left;
 	width: 20%;
 	margin-left: 5px;
 }
 
-.control-menu {
+.tiles-layer-controls .control-menu {
 	position:relative;
 }
 
 /************** Slider Controls *************/
 
-.slider-border {
+.tiles-layer-controls .slider-border {
 	position:relative;
 	border-radius:4px;
 	height: 20px;
@@ -179,19 +179,19 @@
     background-color: #333;
 }
 
-.layer-entry-body .ui-slider-horizontal, 
-.layer-entry-body .ui-slider-vertical {
+.tiles-layer-controls .layer-entry-body .ui-slider-horizontal, 
+.tiles-layer-controls .layer-entry-body .ui-slider-vertical {
     border: none;
     border-radius:4px;
     background: #222;
 }
 
-.layer-entry-body .ui-widget-content {
+.tiles-layer-controls .layer-entry-body .ui-widget-content {
     border: none;
     border-radius: 4px;
 }
 
-.layer-entry-body .ui-slider-handle {
+.tiles-layer-controls .layer-entry-body .ui-slider-handle {
     border-radius: 4px;
     border: none;
     cursor:pointer;
@@ -202,18 +202,18 @@
     background: #cccccc;
 }  
 
-.layer-entry-body .ui-slider-handle:hover, 
-.layer-entry-body .ui-slider-handle:active {
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:hover, 
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:active {
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFdJREFUeNpiYEAAHyDmYkADzEhsByBWA+K3QPwJmwJjIGYBYlUgZgLi59gUwIAkEEsD8VMmBtyAkQFqJDZwAYjPAPE/dAU/gHg/ED/GpgvkTW50QYAAAwADfwrM5sqplgAAAABJRU5ErkJggg==);
 	background-repeat: no-repeat;
 	background-position: 50% 50%;
 }
 
-.layer-entry-body .ui-slider-handle:focus {
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:focus {
     outline:none;
 }
 
-.slider-value-hover {
+.tiles-layer-controls .slider-value-hover {
     position:absolute;
     padding: 2px 5px 2px 5px;
     border-radius:4px;
@@ -224,7 +224,7 @@
     border: 1px solid #333;
 }
 
-.slider-value-hover-label {
+.tiles-layer-controls .slider-value-hover-label {
     position: relative;
     white-space: pre;
     font-size: 12px;
@@ -236,7 +236,7 @@
 /*              Drop Down Menu              */
 /********************************************/
 
-.dropdown-menu {
+.tiles-layer-controls .dropdown-menu {
     padding: 0;
     margin-top: -1px;
     width: 100%;
@@ -247,13 +247,13 @@
 	border: 1px solid transparent;
 }
 
-.dropdown-menu-open {
+.tiles-layer-controls .dropdown-menu-open {
     border-radius: 4px;
     background-color: #333;  
 	border: 1px solid #111;
 }
 
-.dropdown-menu .menu-item-link {
+.tiles-layer-controls .dropdown-menu .menu-item-link {
     display: block;
     height: 18px;
 	line-height: 18px; 
@@ -266,41 +266,41 @@
     color: #ccc;
 }
 
-.dropdown-menu .menu-item-link:hover {
+.tiles-layer-controls .dropdown-menu .menu-item-link:hover {
 	color: #fff;
     background-color: #666;
 }
 
 /**************** Positioning ***************/
 
-.dropdown-menu .menu-item {
+.tiles-layer-controls .dropdown-menu .menu-item {
     display: none;
 }
 
-.dropdown-menu-open .menu-item {
+.tiles-layer-controls .dropdown-menu-open .menu-item {
     display: table-row;
 }
 
-.dropdown-menu .menu-item.active {
+.tiles-layer-controls .dropdown-menu .menu-item.active {
     display: table-header-group;
 }
 
 /********** Title or Selected Item **********/
 
-.dropdown-menu .active .menu-item-link {
+.tiles-layer-controls .dropdown-menu .active .menu-item-link {
 	background-color: #333;
 	color: #fff;
 }
 
 /*** Title or Selected Item For Open Menu ***/
 
-.dropdown-menu .active .menu-item-link:hover {
+.tiles-layer-controls .dropdown-menu .active .menu-item-link:hover {
 	background-color: #222;
 	border: 1px solid #111;
 }
 
-.dropdown-menu-open .active .menu-item-link,
-.dropdown-menu.dropdown-menu-open .active .menu-item-link:hover {
+.tiles-layer-controls .dropdown-menu-open .active .menu-item-link,
+.tiles-layer-controls .dropdown-menu.dropdown-menu-open .active .menu-item-link:hover {
 	background-color: #222;
 	border-top: 1px solid transparent;
 	border-left: 1px solid transparent;
@@ -310,7 +310,7 @@
 
 /****** Carot After Title or Selected *******/
 
-.dropdown-menu .menu-item.active .menu-item-link:after {
+.tiles-layer-controls .dropdown-menu .menu-item.active .menu-item-link:after {
 	width: 0; 
 	height: 0; 
 	content: "";

@@ -39,7 +39,7 @@
          */
 
         create: function( layers ) {
-            var $controls = $( '<div class="layer-controls"></div>' );
+            var $controls = $( '<div class="tiles-layer-controls"></div>' );
             _.forEach( layers, function( layer ) {
                 $controls.append( LayerEntry.create( layer ) );
             });
