@@ -34,6 +34,8 @@ var appStart = function() {
         layers = tiles.LayerUtil.parse( layers.layers );
 
         var map,
+            axis0,
+            axis1,
             baseLayer,
             serverLayer;
 
@@ -47,6 +49,32 @@ var appStart = function() {
             source: layers["julia-set"]
         });
 
+        axis0 = new tiles.Axis({
+            title: 'X',
+            position: 'bottom',
+            enabled: false,
+            intervals: {
+                increment: 20,
+                pivot: 0
+            },
+            units: {
+                type: 'decimal'
+            }
+        });
+
+        axis1 = new tiles.Axis({
+            title: 'Y',
+            position: 'left',
+            enabled: false,
+            intervals: {
+                increment: 20,
+                pivot: 0
+            },
+            units: {
+                type: 'decimal'
+            }
+        });
+
         map = new tiles.Map( "map", {
             pyramid : {
                 type : "AreaOfInterest",
@@ -56,8 +84,11 @@ var appStart = function() {
                 maxY : 2
             }
         });
+        map.add( axis0 );
+        map.add( axis1 );
         map.add( serverLayer );
         map.add( baseLayer );
 
+        $( '.controls' ).append( tiles.LayerControls.create( [ serverLayer ] ) );
     });
 }

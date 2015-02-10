@@ -60,81 +60,33 @@ var appStart = function() {
          *
          */
         baseLayer = new tiles.BaseLayer({
-            "type": "Google",
-            "options" : {
-                "styles" : [
-                    {
-                        'featureType': 'all',
-                        'stylers': [
-                            { 'saturation': -100 },
-                            { 'invert_lightness' : true },
-                            { 'visibility' : 'simplified' }
-                        ]
-                    },
-                    {
-                        'featureType': 'landscape.natural',
-                        'stylers': [
-                            { 'lightness': -50 }
-                        ]
-                    },
-                    {
-                        'featureType': 'poi',
-                        'stylers': [
-                            { 'visibility': 'off' }
-                        ]
-                    },
-                    {
-                        'featureType': 'road',
-                        'stylers': [
-                            { 'lightness': -50 }
-                        ]
-                    },
-                    {
-                        'featureType': 'road',
-                        'elementType': 'labels',
-                        'stylers': [
-                            { 'visibility': 'off' }
-                        ]
-                    },
-                    {
-                        'featureType': 'road.highway',
-                        'stylers': [
-                            { 'lightness': -60 }
-                        ]
-                    },
-                    {
-                        'featureType': 'road.arterial',
-                        'stylers': [
-                            { 'visibility': 'off' }
-                        ]
-                    },
-                    {
-                        'featureType': 'administrative',
-                        'stylers': [
-                            { 'lightness': 10 }
-                        ]
-                    },
-                    {
-                        'featureType': 'administrative.province',
-                        'elementType': 'geometry',
-                        'stylers': [
-                            { 'lightness': 15 }
-                        ]
-                    },
-                    {
-                        'featureType' : 'administrative.country',
-                        'elementType' : 'geometry',
-                        'stylers' : [
-                            { 'visibility' : 'on' },
-                            { 'lightness' : -56 }
-                        ]
-                    },
-                    {
-                        'elementType' : 'labels',
-                        'stylers' : [
-                            { 'lightness' : -46 },
-                            { 'visibility' : 'on' }
-                        ] }
+            type: "Google",
+            options : {
+               styles : [
+                    { featureType: "all",
+                      stylers : [ { invert_lightness : true },
+                                    { saturation : -100 },
+                                    { visibility : "simplified" } ] },
+                    { featureType: "administrative",
+                      elementType: "geometry",
+                        stylers: [ { visibility: "off" } ] },
+                    { featureType : "landscape.natural.landcover",
+                      stylers : [ { visibility : "off" } ] },
+                    { featureType : "road",
+                      stylers : [ { visibility : "on" } ] },
+                    { featureType : "landscape.man_made",
+                      stylers : [ { visibility : "off" } ] },
+                    { featureType : "landscape",
+                      stylers : [ { lightness : "-100" } ] },
+                    { featureType : "poi",
+                      stylers : [ { visibility : "off" } ] },
+                    { featureType : "administrative.country",
+                      elementType : "geometry",
+                      stylers : [ { visibility : "on" },
+                                    { lightness : -56 } ] },
+                    { elementType : "labels",
+                      stylers : [ { lightness : -46 },
+                                    { visibility : "on" } ] }
                 ]
             }
         });
@@ -258,7 +210,7 @@ var appStart = function() {
         axis0 = new tiles.Axis({
             position: 'bottom',
             title: 'Longitude',
-            isOpen: false,
+            enabled: false,
             repeat: true,
             intervals: {
                 type: 'fixed',
@@ -273,7 +225,7 @@ var appStart = function() {
         axis1 =  new tiles.Axis({
             position: 'left',
             title: 'Latitude',
-            isOpen: false,
+            enabled: false,
             repeat: true,
             intervals: {
                 type: 'fixed',
@@ -296,6 +248,11 @@ var appStart = function() {
         map.add( axis0 );
         map.add( axis1 );
         map.add( baseLayer );
+        map.zoomTo( -60, -15, 4 );
 
+        /*
+         * Create the layer controls and append them to the controls element.
+         */
+        $( '.controls' ).append( tiles.LayerControls.create( [ clientLayer, serverLayer ] ) );
     });
 }

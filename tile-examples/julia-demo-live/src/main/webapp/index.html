@@ -2,10 +2,13 @@
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8">    
-    <title>Interactive Map Demo</title>
+    <title>Julia Set Aperture-Tiles Interactive Demo</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="vendor/jquery-ui-1.11.2.min.css" />
     <link rel="stylesheet" href="tiles.css" />
     <script src="vendor/jquery-2.1.1.min.js"></script>
+    <script src="vendor/jquery-ui-1.11.2.min.js"></script>
     <script src="vendor/lodash.2.4.1min.js"></script>
     <script src="vendor/OpenLayers.2.12.min.js"></script>
     <script src="tiles.js"></script>
@@ -14,7 +17,8 @@
       window.onload = appStart;
     </script>
   </head>
-  <body class="dark-theme">
+  <body>
     <div id="map" class="olMap"></div>
+    <div class="controls"></div>
   </body>
 </html>
