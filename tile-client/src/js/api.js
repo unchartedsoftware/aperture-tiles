@@ -65,7 +65,7 @@
         TileService: require('./rest/TileService'),
 
         // UI
-        OverlayButton: require('./ui/OverlayButton'),
+        LayerControls: require('./ui/LayerControls'),
 
         // Util
         PubSub: require('./util/PubSub'),
