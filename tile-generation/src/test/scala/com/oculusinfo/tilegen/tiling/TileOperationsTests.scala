@@ -89,8 +89,7 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 
 		assertResult(List(
 			"one", "2015-01-01 10:15:30",
-			"two", "2015-01-02 8:15:30" +
-				"",
+			"two", "2015-01-02 8:15:30",
 			"three", "2015-01-03 10:15:30"))(resultList.toList)
 	}
 
