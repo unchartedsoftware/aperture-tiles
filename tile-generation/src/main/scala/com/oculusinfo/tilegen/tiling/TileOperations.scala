@@ -48,7 +48,7 @@ object TileOperations {
 	import scala.collection.JavaConversions._
 
 	protected val logger = Logger[this.type]
-	protected var cacheTableCount = new AtomicInteger(0)
+	protected var tableIdCount = new AtomicInteger(0)
 
 	/**
 	 * KeyValueArgumentSource implementation that passes the supplied map through.
@@ -194,11 +194,7 @@ object TileOperations {
 	 * results, rather than the input data set.
 	 */
 	def cacheDataOp()(input: PipelineData) = {
-		val tableName = input.tableName.getOrElse({
-			val name = s"cached_table_${cacheTableCount.getAndIncrement()}"
-			input.srdd.registerTempTable(name)
-			name
-		})
+		val tableName = getOrGenTableName(input, "cached_table_")
 		input.sqlContext.cacheTable(tableName)
 		PipelineData(input.sqlContext, input.srdd, Some(tableName))
 	}
@@ -465,11 +461,9 @@ object TileOperations {
 		// TODO: Replace with analytics from valuer after move to factory invocation
 		val tileAnalytics = new ExtremaTileAnalytic
 
-		input.srdd.registerTempTable("heatmap_op")
-
 		val tilingTask = new StaticTilingTask(
 			input.sqlContext,
-			input.tableName.getOrElse("heatmap_op"),
+			getOrGenTableName(input, "heatmap_op"),
 			tilingParms,
 			indexer,
 			valuer,
@@ -507,4 +501,18 @@ object TileOperations {
 		_.longValue,
 		new NumericMaxTileAnalytic[Long]()) {}
 
+	/**
+	 * Gets a table name out of the input if one exists, otherwise creates a new name
+	 * using a base and an internally incremented counter.
+	 *
+	 * @param input PipelineData object with an optional table data name
+	 * @param baseName Name to append counter to if no table name is found
+	 */
+	def getOrGenTableName(input: PipelineData, baseName: String) = {
+		input.tableName.getOrElse {
+			val name = baseName + tableIdCount.getAndIncrement
+			input.srdd.registerTempTable(name)
+			name
+		}
+	}
 }
