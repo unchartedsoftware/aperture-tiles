@@ -193,7 +193,7 @@ var appStart = function() {
          *
          *  position {String}  - Set the position to the bottom of the map. Default = "bottom"
          *  title    {String}  - Set the title of the axis label. Default = "Axis"
-         *  isOpen   {boolean} - Have the axis initialize to an open or closed state. Default = true
+         *  enabled  {boolean} - Have the axis initialize to an open or closed state. Default = true
          *  repeat   {boolean} - Whether or not the axis repeats. Default = false
          *  intervals: {
          *      type        {String}  - Whether the intervals are by "percentage" or by "value". Default = "percentage"
