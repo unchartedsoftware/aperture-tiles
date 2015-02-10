@@ -57,7 +57,7 @@
         setOpacity: function( opacity ) {
             this.opacity = opacity;
             if ( this.olLayer ) {
-                this.olLayer.setOpacity ( opacity );
+                this.olLayer.setOpacity( opacity );
                 PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
             }
         },
@@ -79,12 +79,10 @@
          * @param enabled {boolean} whether the layer is visible or not
          */
         setEnabled: function( enabled ) {
-            if ( this.enabled !== enabled ) {
-                this.enabled = enabled;
-                if ( this.olLayer ) {
-                    this.olLayer.setVisibility( enabled );
-                    PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
-                }
+            this.enabled = enabled;
+            if ( this.olLayer ) {
+                this.olLayer.setVisibility( enabled );
+                PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
             }
         },
 
