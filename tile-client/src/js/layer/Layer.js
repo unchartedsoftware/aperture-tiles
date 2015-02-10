@@ -79,10 +79,12 @@
          * @param enabled {boolean} whether the layer is visible or not
          */
         setEnabled: function( enabled ) {
-            this.enabled = enabled;
-            if ( this.olLayer ) {
-                this.olLayer.setVisibility( enabled );
-                PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
+            if ( this.enabled !== enabled ) {
+                this.enabled = enabled;
+                if ( this.olLayer ) {
+                    this.olLayer.setVisibility( enabled );
+                    PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
+                }
             }
         },
 

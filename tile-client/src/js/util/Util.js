@@ -56,6 +56,7 @@
 
         /**
          * Generates an RFC4122 version 4 compliant UUID string.
+         *
          * @returns {string}
          */
         generateUuid: function() {
