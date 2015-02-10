@@ -283,6 +283,9 @@ The Source Data properties describe the raw data from which you want to create t
 					
 					<dt>ipv4</dt>
 					<dd>Contains an IP address treated as a four-digit base 256 number turned into a double</dd>
+
+					<dt>string</dt>
+					<dd>Contains a string value</dd>
 			
 					<dt>propertyMap</dt>
 					<dd>Contains property maps. All of the following properties must be	present	to read the property:
