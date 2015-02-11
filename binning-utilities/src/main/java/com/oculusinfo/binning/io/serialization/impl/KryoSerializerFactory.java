@@ -27,7 +27,6 @@ package com.oculusinfo.binning.io.serialization.impl;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -131,17 +130,15 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 	protected TileSerializer<T> create () {
 		// Check class registrations
 		List<String> classNames = getPropertyValue(NEEDED_CLASSES);
-		if (!classNames.isEmpty()) {
-			List<Class<?>> neededClasses = new ArrayList<>();
-			for (String name: classNames) {
-				try {
-					neededClasses.add(Class.forName(name));
-				} catch (ClassNotFoundException e) {
-					LOGGER.warn("Class {} not found", name);
-				}
-			}
-			KryoSerializer.registerClasses(neededClasses.toArray(new Class<?>[neededClasses.size()]));
+		int nc = classNames.size();
+		Class<?>[] classes = new Class<?>[nc];
+		for (int n=0; n<nc; ++n) {
+            try {
+                classes[n] = Class.forName(classNames.get(n));
+            } catch (ClassNotFoundException e) {
+                LOGGER.warn("Class {} not found", classNames.get(n));
+            }
 		}
-		return new KryoSerializer<>(_type);
+		return new KryoSerializer<>(_type, classes);
 	}
 }

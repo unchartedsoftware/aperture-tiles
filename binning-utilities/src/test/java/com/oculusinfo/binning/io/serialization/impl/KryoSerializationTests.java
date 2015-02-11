@@ -39,7 +39,9 @@ import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class KryoSerializationTests {
-	@Test
+    private static final Class<?>[] EMPTY = new Class<?>[0];
+
+    @Test
 	public void testMetaDataSerialization () throws Exception {
 		TileIndex index = new TileIndex(0, 0, 0, 2, 2);
 		TileData<Double> tile = new DenseTileData<>(index);
@@ -69,8 +71,8 @@ public class KryoSerializationTests {
 
 
 	@SafeVarargs
-	final <T> void testRoundTripDense(TypeDescriptor type, T... data) throws Exception {
-		TileSerializer<T> serializer = new KryoSerializer<T>(type);
+	final <T> void testRoundTripDense(TypeDescriptor type, Class<?>[] classesToRegister, T... data) throws Exception {
+		TileSerializer<T> serializer = new KryoSerializer<T>(type, classesToRegister);
 
 		// Create our tile
 		int size = (int) Math.ceil(Math.sqrt(data.length));
@@ -102,8 +104,8 @@ public class KryoSerializationTests {
 
 
 	@SafeVarargs
-	final <T> void testRoundTripSparse(TypeDescriptor type, T defaultValue, T... data) throws Exception {
-		TileSerializer<T> serializer = new KryoSerializer<T>(type);
+	final <T> void testRoundTripSparse(TypeDescriptor type, Class<?>[] classesToRegister, T defaultValue, T... data) throws Exception {
+		TileSerializer<T> serializer = new KryoSerializer<T>(type, classesToRegister);
 
 		// Create our tile
 		int size = (int) Math.ceil(Math.sqrt(data.length*2));
@@ -139,49 +141,50 @@ public class KryoSerializationTests {
 
 	@Test
 	public void testBoolean () throws Exception {
-		testRoundTripDense(new TypeDescriptor(Boolean.class), true, false, true, true, false, true, false, false, true);
-		testRoundTripSparse(new TypeDescriptor(Boolean.class), true, true, false);
+		testRoundTripDense(new TypeDescriptor(Boolean.class), EMPTY, true, false, true, true, false, true, false, false, true);
+		testRoundTripSparse(new TypeDescriptor(Boolean.class), EMPTY, true, true, false);
 	}
 
 	@Test
 	public void testInteger () throws Exception {
-		testRoundTripDense(new TypeDescriptor(Integer.class), 0, 1, 4, 9, 16, 25, 36, 49, 64);
-		testRoundTripSparse(new TypeDescriptor(Integer.class), -1, 0, 1, 4, 9);
+		testRoundTripDense(new TypeDescriptor(Integer.class), EMPTY, 0, 1, 4, 9, 16, 25, 36, 49, 64);
+		testRoundTripSparse(new TypeDescriptor(Integer.class), EMPTY, -1, 0, 1, 4, 9);
 	}
 
 	@Test
 	public void testLong () throws Exception {
-		testRoundTripDense(new TypeDescriptor(Long.class), 0L, 1L, 8L, 27L, 64L, 125L, 216L, 343L, 512L);
-		testRoundTripSparse(new TypeDescriptor(Long.class), -3L, 1L, 8L, 27L, 64L);
+		testRoundTripDense(new TypeDescriptor(Long.class), EMPTY, 0L, 1L, 8L, 27L, 64L, 125L, 216L, 343L, 512L);
+		testRoundTripSparse(new TypeDescriptor(Long.class), EMPTY, -3L, 1L, 8L, 27L, 64L);
 	}
 
 	@Test
 	public void testFloat () throws Exception {
-		testRoundTripDense(new TypeDescriptor(Float.class), 0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
-		testRoundTripSparse(new TypeDescriptor(Float.class), -3.5f, 0.0f, 0.5f, 0.333f, 0.25f);
+		testRoundTripDense(new TypeDescriptor(Float.class), EMPTY, 0.0f, 0.5f, 0.333f, 0.25f, 0.2f, 0.166f, 0.142857f, 0.125f);
+		testRoundTripSparse(new TypeDescriptor(Float.class), EMPTY, -3.5f, 0.0f, 0.5f, 0.333f, 0.25f);
 	}
 
 	@Test
 	public void testDouble () throws Exception {
-		testRoundTripDense(new TypeDescriptor(Double.class), 0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
-		testRoundTripSparse(new TypeDescriptor(Double.class), -3.5, 1.1, 2.4, 3.9, 4.16);
+		testRoundTripDense(new TypeDescriptor(Double.class), EMPTY, 0.0, 1.1, 2.4, 3.9, 4.16, 5.25, 6.36, 7.49, 8.64);
+		testRoundTripSparse(new TypeDescriptor(Double.class), EMPTY, -3.5, 1.1, 2.4, 3.9, 4.16);
 	}
 
 	@Test
 	public void testString () throws Exception {
-		testRoundTripDense(new TypeDescriptor(String.class), "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
-		testRoundTripSparse(new TypeDescriptor(String.class), "invalid", "a", "bb", "ccc", "dddd");
+		testRoundTripDense(new TypeDescriptor(String.class), EMPTY, "a", "bb", "ccc", "dddd", "eeeee", "ffffff", "ggggggg", "hhhhhhhh");
+		testRoundTripSparse(new TypeDescriptor(String.class), EMPTY, "invalid", "a", "bb", "ccc", "dddd");
 	}
 
 	@Test
 	public void testCustom () throws Exception {
-		KryoSerializer.registerClasses(CustomTestData.class);
 		testRoundTripDense(new TypeDescriptor(CustomTestData.class),
+		                   new Class<?>[] {CustomTestData.class},
 		                   new CustomTestData(1, 1.1, "one"),
 		                   new CustomTestData(2, 2.2, "two"),
 		                   new CustomTestData(3, 3.3, "three"),
 		                   new CustomTestData(4, 4.4, "four"));
 		testRoundTripSparse(new TypeDescriptor(CustomTestData.class),
+		                    new Class<?>[] {CustomTestData.class},
 		                    new CustomTestData(-1, -1.1, "empty"),
 		                    new CustomTestData(1, 1.1, "one"),
 		                    new CustomTestData(2, 2.2, "two"),
