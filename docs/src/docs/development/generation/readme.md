@@ -803,12 +803,12 @@ It accepts the following properties:
 				<dt>
 					xBins (Optional)
 				</dt>
-				<dd>Number of bins on the X axis.  Defaults to 256</dd>
+				<dd>Number of bins on the x-axis.  Defaults to 256</dd>
 				
 				<dt>
 					yBins (Optional)
 				</dt>
-				<dd>Number of bins on the Y axis.  Defaults to 256</dd>
+				<dd>Number of bins on the y-axis.  Defaults to 256</dd>
 				
 				<dt>
 					consolidationPartitions (Optional)

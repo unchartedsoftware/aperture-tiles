@@ -353,7 +353,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>position</dt>
-				<dd>Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.</dd>
+				<dd>Axis type, where <em>bottom</em> denotes the x-axis and <em>left</em> denotes the y-axis.</dd>
 				
 				<dt>title</dt>
 				<dd>Axis name (e.g., <em>Longitude</em> or <em>Latitude</em>).</dd>
