@@ -1,7 +1,14 @@
 package com.oculusinfo.tilegen.datasets
 
-import com.oculusinfo.binning.TileData
+
+
+import java.util.{List => JavaList}
+
 import org.scalatest.Assertions
+
+import com.oculusinfo.binning.TileData
+
+
 
 /**
  * Simple common tile test used by several tests.
@@ -22,4 +29,19 @@ trait TileAssertions extends Assertions {
 			assert(expected(i) === tile.getBin(x, y))
 		}
 	}
+
+  protected def assertListTileContents[T] (expected: List[List[T]], tile: TileData[_]): Unit = {
+    val index = tile.getDefinition
+    val xBins = index.getXBins
+    val yBins = index.getYBins
+    for (x <- 0 until xBins; y <- 0 until yBins) {
+      val i = x+xBins*y
+      val bin = tile.getBin(x, y).asInstanceOf[JavaList[_]]
+      val expectedBin = expected(i)
+      assert(expectedBin.size === bin.size)
+      for (n <- 0 until bin.size) {
+        assert(expectedBin(n) === bin.get(n))
+      }
+    }
+  }
 }
