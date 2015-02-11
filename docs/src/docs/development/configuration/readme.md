@@ -369,16 +369,16 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				
 					<dl>
 						<dt>type</dt>
-						<dd>How the following increment value is calculated based on the axis range. Accepted values include "percentage", "%", "value" or "#".</dd>
+						<dd>How the following increment value is calculated based on the axis range. Accepted values include <em>percentage</em>, <em>%</em>, <em>value</em> or <em>#</em>.</dd>
 		
 						<dt>increment</dt>
 						<dd>Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.</dd>
 						
 						<dt>pivot</dt>
-						<dd>Value or percentage from which all other values are incremented. Typically 0.</dd>
+						<dd>Value or percentage from which all other values are incremented. Typically <em>0</em>.</dd>
 		
 						<dt>scaleByZoom</dt>
-						<dd>Indicates whether the axis should be scaled by the zoom factor.</dd>
+						<dd>Indicates whether the axis should be scaled by the zoom factor (<em>true</em>/<em>false</em>).</dd>
 					</dl>
 				</dd>
 				
@@ -400,11 +400,12 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 						</dd>
 						
 						<dt>decimals</dt>
-						<dd>Number of decimals to display for each unit. Applicable to "billions", "millions", "thousands" and "decimal" types.</dd>
+						<dd>Number of decimals to display for each unit. Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> and <em>decimal</em> types.</dd>
 		
 						<dt>stepDown</dt>
-						<dd>Indicates whether the units can step down if they are below range. Applicable to "billions", "millions", "thousands" types.</dd>
+						<dd>Indicates whether the units can step down if they are below range (<em>true</em>/<em>false</em>). Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> types.</dd>
 					</dl>
+				</dd>
 			</dl>
 		</ul>
 	</div>
