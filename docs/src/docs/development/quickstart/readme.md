@@ -230,7 +230,11 @@ For typical Aperture Tiles projects, you will also need to edit the *src/main/we
 
 ### Layer Properties ###
 
-Layer properties (within the **tile-quickstart.zip** at *src/main/resources/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. For this example, you only need to edit the layer properties file if you saved your Avro tiles to HBase. Otherwise, you can skip ahead to the configuration of the [Tile Client Application](#tile-client-application). To edit the layer properties for your project:
+Layer properties (within the **tile-quickstart.zip** at *src/main/resources/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. 
+
+For this example, you only need to edit the layer properties file if you saved your Avro tiles to HBase. Otherwise, you can skip ahead to the configuration of the [Tile Client Application](#tile-client-application). 
+
+<h6 class="procedure">To edit the layer properties for your project</h6>
 
 1. Access the *src/main/resources/layers/***julia-layer.json** file.
 2. Make sure the **id** property under the `private` node matches the name given to the HBase table name to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
@@ -251,7 +255,7 @@ To configure the tile client application to display the Avro files containing yo
 
 ### Map Properties ###
 
-To edit the map properties for your project:
+<h6 class="procedure">To edit the map properties for your project</h6>
 
 1. Open the **app.js** file in the the extracted Tile Quick Start template.
 2. Edit the *serverLayer* to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
