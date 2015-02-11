@@ -10,7 +10,7 @@ layout: submenu
 
 Once you have generated a tile set from your source data, you should configure and deploy a Tile Server and a Tile Client to make your visual analytic viewable in a web browser. The Tile Server serves tiles from your pyramid, while the Tile Client is a simple web client to view those tiles on a map or plot. 
 
-Note that Aperture Tiles supports two types of tile rendering:
+Aperture Tiles supports two types of tile rendering:
 
 - **Server-side rendering**, in which the Server renders the tiles as image files and passes them on to the Client.
 - **Client-side rendering**, in which the Server passes the tiles as JSON data to the Client, which then renders them directly.
@@ -103,7 +103,7 @@ pyramid: {
 },
 ```
 
-Note also that the layer and map pyramid configurations much match each other.
+**NOTE**: Your layer and map pyramid configurations much match each other.
 
 ##### <a name="layer-renderers"></a> Renderers #####
 
@@ -287,7 +287,7 @@ pyramid: {
 	},
 ```
 
-Note also that the layer and map pyramid configurations ***must*** match each other.
+**NOTE**: Your layer and map pyramid configurations must match each other.
 
 ### <a name="geo-baselayer"></a> BaseLayer ###
 

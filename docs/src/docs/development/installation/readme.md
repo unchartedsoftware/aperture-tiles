@@ -178,7 +178,7 @@ Aperture Tiles is made up of the following sub-projects:
 
 #### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
 
-NOTE: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
+**NOTE**: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
 
 Prior to building the project, you must specify which version of Hadoop and/or HBase you have installed (if applicable): 
 
@@ -187,11 +187,13 @@ Prior to building the project, you must specify which version of Hadoop and/or H
 
 #### Installing Dependencies ####
 
-Install the [Aperture JS](https://github.com/oculusinfo/aperturejs/tree/master) project by running the following command in your root Aperture JS directory. Note that this step requires [Apache Maven](http://maven.apache.org/).
+Install the [Aperture JS](https://github.com/oculusinfo/aperturejs/tree/master) project by running the following command in your root Aperture JS directory:
 	
 ```bash
 mvn build
 ```
+
+**NOTE**: This step requires [Apache Maven](http://maven.apache.org/).
 
 #### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
 

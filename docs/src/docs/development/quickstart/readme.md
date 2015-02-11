@@ -136,7 +136,7 @@ For delimited numeric data sources like the Julia set, the included CSVBinner to
 
 A pre-configured properties file (**julia-base.bd**) can be found in the Tile Generator *examples/* folder. For this example, you only need to edit the base property file if you intend to save your Avro tiles to HBase. Otherwise, you can skip ahead to the [execution](#execution) of the tile generation job.
 
-Note that for a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Tile Generation](../generation/) topic on this website.
+**NOTE**: For a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Tile Generation](../generation/) topic on this website.
 
 #### General Input Properties ####
 
@@ -174,7 +174,7 @@ These properties specify where to save the generated tiles.
 
 #### HBase Connection Details (Optional) ####
 
-These properties should only be included if you are using Hadoop/HDFS and HBase. Note that these optional components must be used if you want to run the tile generation job on a multi-computer cluster.
+These properties should only be included if you are using Hadoop/HDFS and HBase, and are required if you want to run a tile generation job on a multi-computer cluster.
 
 <div class="details props">
     <div class="innerProps">
@@ -197,7 +197,7 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 
 The **julia-tiling.bd** file in your Tile Generator *examples/* folder should not need to be edited. 
 
-Note that for a typical Aperture Tiles project, you will need to edit properties in this file to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
+**NOTE**: For a typical Aperture Tiles project, you will need to edit properties in this file to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
 ### <a name="execution"></a> Execution ###
 
@@ -263,7 +263,7 @@ For information on additional map properties you can specify, see the Maps secti
 
 Once you have finished configuring the map and layer properties, copy the *tile-quickstart/* folder to your web server's (e.g., Apache Tomcat or Jetty) *webapps/* directory.
 
-Note that if you have the Aperture Tiles source code, you can alternatively use Gradle to deploy a Jetty server:
+**NOTE**: If you have the Aperture Tiles source code, you can also use Gradle to deploy a Jetty server:
 
 1. Copy the *tile-quickstart/* folder to the root `aperture-tiles` directory.
 2. Run the following command:

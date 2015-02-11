@@ -58,7 +58,7 @@ As shown in the following diagram, the tile generation process has five main sta
 
 - [**Standard tiling jobs**](#csvbinner) use the CSVBinner, a built-in tool that can produce tiles that aggregate numeric data by summation or take the minimum or maximum value. The CSVBinner automates the steps in the tile generation process; all you need to provide is a set of properties files that describe the source data to analyze and the job options to pass in.
 - [**Custom tiling jobs**](#custom-tiling) use a set of RDDBinner APIs for creating custom tile-based analytics on non-numeric or non-delimited data. Depending on your implementation, you will need to create custom code for some or all of the tile generation stages. See the Twitter Topics demo (<em>tile-examples/<wbr>twitter-topics</em>) for an example implementation of a data set requiring custom tiling.
-- **Third-party tiling jobs** use other tools, provided they adhere to the Aperture Tiles Avro schema. Basic schema files are in the Aperture Tiles source code (<em>binning-utilities/<wbr>src/<wbr>main/<wbr>resources</em>). Note that this approach is not discussed below.
+- **Third-party tiling jobs** use other tools, provided they adhere to the Aperture Tiles Avro schema. Basic schema files are in the Aperture Tiles source code (<em>binning-utilities/<wbr>src/<wbr>main/<wbr>resources</em>). <p class="list-paragraph"><strong>NOTE</strong>: This approach is not discussed below.</h6>
 
 Before you run a tiling job, make sure you meet all of the prerequisites listed in the following section.
 
