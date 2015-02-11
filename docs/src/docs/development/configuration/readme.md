@@ -280,10 +280,10 @@ The map describes the base map upon which your source data is projected:
 ```json
 pyramid: {
 	type : "AreaOfInterest",
-	minX : -2.0,
-	maxX : 2.0,
-	minY : -2.0,
-	maxY : 2.0
+	minX : -2,
+	maxX : 2,
+	minY : -2,
+	maxY : 2
 	},
 ```
 
@@ -295,81 +295,33 @@ The BaseLayer parameters use map provider APIs to determine what features to inc
 
 ```json
 baseLayer = new tiles.BaseLayer({
-    "type": "Google",
-    "options" : {
-        "styles" : [
-            {
-                'featureType': 'all',
-                'stylers': [
-                    { 'saturation': -100 },
-                    { 'invert_lightness' : true },
-                    { 'visibility' : 'simplified' }
-                ]
-            },
-            {
-                'featureType': 'landscape.natural',
-                'stylers': [
-                    { 'lightness': -50 }
-                ]
-            },
-            {
-                'featureType': 'poi',
-                'stylers': [
-                    { 'visibility': 'off' }
-                ]
-            },
-            {
-                'featureType': 'road',
-                'stylers': [
-                    { 'lightness': -50 }
-                ]
-            },
-            {
-                'featureType': 'road',
-                'elementType': 'labels',
-                'stylers': [
-                    { 'visibility': 'off' }
-                ]
-            },
-            {
-                'featureType': 'road.highway',
-                'stylers': [
-                    { 'lightness': -60 }
-                ]
-            },
-            {
-                'featureType': 'road.arterial',
-                'stylers': [
-                    { 'visibility': 'off' }
-                ]
-            },
-            {
-                'featureType': 'administrative',
-                'stylers': [
-                    { 'lightness': 10 }
-                ]
-            },
-            {
-                'featureType': 'administrative.province',
-                'elementType': 'geometry',
-                'stylers': [
-                    { 'lightness': 15 }
-                ]
-            },
-            {
-                'featureType' : 'administrative.country',
-                'elementType' : 'geometry',
-                'stylers' : [
-                    { 'visibility' : 'on' },
-                    { 'lightness' : -56 }
-                ]
-            },
-            {
-                'elementType' : 'labels',
-                'stylers' : [
-                    { 'lightness' : -46 },
-                    { 'visibility' : 'on' }
-                ] }
+    type: "Google",
+    options : {
+       styles : [
+            { featureType: "all",
+              stylers : [ { invert_lightness : true },
+                            { saturation : -100 },
+                            { visibility : "simplified" } ] },
+            { featureType: "administrative",
+              elementType: "geometry",
+                stylers: [ { visibility: "off" } ] },
+            { featureType : "landscape.natural.landcover",
+              stylers : [ { visibility : "off" } ] },
+            { featureType : "road",
+              stylers : [ { visibility : "on" } ] },
+            { featureType : "landscape.man_made",
+              stylers : [ { visibility : "off" } ] },
+            { featureType : "landscape",
+              stylers : [ { lightness : "-100" } ] },
+            { featureType : "poi",
+              stylers : [ { visibility : "off" } ] },
+            { featureType : "administrative.country",
+              elementType : "geometry",
+              stylers : [ { visibility : "on" },
+                            { lightness : -56 } ] },
+            { elementType : "labels",
+              stylers : [ { lightness : -46 },
+                            { visibility : "on" } ] }
         ]
     }
 });
@@ -406,8 +358,8 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				<dt>title</dt>
 				<dd>Axis name (e.g., <em>Longitude</em> or <em>Latitude</em>).</dd>
 				
-				<dt>isOpen</dt>
-				<dd>Indicates whether the axes are displayed (true) or hidden (false) when a new session begins.</dd>
+				<dt>enabled</dt>
+				<dd>Indicates whether the axes are displayed (<em>true</em>) or hidden (<em>false</em>) when a new session begins.</dd>
 
 				<dt>repeat</dt>
 				<dd>Indicates whether the map will repeat when the user scrolls off one end. Most useful for geographic maps.</dd>
@@ -481,7 +433,7 @@ layers = tiles.LayerUtil.parse( layers.layers );
             serverLayer;
 ```
 
-Lines 204-216 instantiate a word cloud renderer, attaching a theme and hooking the function to give access to the renderer DOM element and respective data entry.
+Lines 156-168 instantiate a word cloud renderer, attaching a theme and hooking the function to give access to the renderer DOM element and respective data entry.
 
 ```javascript
 wordCloudRenderer = new tiles.WordCloudRenderer({
@@ -499,7 +451,7 @@ wordCloudRenderer = new tiles.WordCloudRenderer({
 });
 ```
 
-The client renderer layer itself is instantiated on lines 234-237, passing the "top-tweets" layer as its source.
+The client renderer layer itself is instantiated on lines 186-189, passing the "top-tweets" layer as its source.
 
 ```javascript
 clientLayer = new tiles.ClientLayer({
