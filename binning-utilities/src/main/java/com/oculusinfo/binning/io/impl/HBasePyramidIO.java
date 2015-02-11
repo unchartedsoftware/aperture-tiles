@@ -116,6 +116,15 @@ public class HBasePyramidIO implements PyramidIO {
 		                     Integer.parseInt(fields[2]));
 	}
 
+
+	/**
+	 * Close down this pyramid IO
+	 */
+    public void close () throws IOException {
+        _admin.close();
+    }
+
+
 	/**
 	 * Get the configuration used to connect to HBase.
 	 */
