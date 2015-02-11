@@ -30,10 +30,11 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 5,
+        WEIGHT_BARS_WIDTH = 125,
         injectCss;
 
     injectCss = function( spec ) {
-        var i;
+        var i, j;
         if ( spec.text.themes ) {
             for ( i=0; i<spec.text.themes.length; i++ ) {
                 spec.text.themes[i].injectTheme({
@@ -41,6 +42,16 @@
                     parentSelector: ".text-score-entry"
                 });
             }
+
+            for ( i=0; i<spec.weights.length; i++ ) {
+                for ( j=0; j<spec.weights[i].themes.length; j++ ) {
+                    spec.weights[i].themes[j].injectTheme( {
+                        selector: ".text-score-weight-" + i,
+                        parentSelector: ".text-score-entry"
+                    });
+                }
+            }
+
         }
     };
 
@@ -58,17 +69,21 @@
      *         textKey  {String} - The attribute for the text in the data entry.
      *         countKey {String} - The attribute for the count in the data entry.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
-     *     }
+     *     },
+     *     weights: [{
+     *         weightKey {Array} - The attributes for the weights in the data entry
+     *         themes    {Array}  - The array of RenderThemes to be attached to this component.
+     *     }]
      * }
      * </pre>
      */
-    function TextScoreRenderer( spec ) {
+    function TextScoreWeightedRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
 
-    TextScoreRenderer.prototype = Object.create( Renderer.prototype );
+    TextScoreWeightedRenderer.prototype = Object.create( Renderer.prototype );
 
     /**
      * Returns the entry selector unique to this Renderer Implementation.
@@ -77,7 +92,7 @@
      *
      * @returns {String} The entry DOM selector.
      */
-    TextScoreRenderer.prototype.getEntrySelector = function() {
+    TextScoreWeightedRenderer.prototype.getEntrySelector = function() {
         return ".text-score-entry";
     };
 
@@ -90,9 +105,10 @@
      *
      * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
      */
-    TextScoreRenderer.prototype.render = function( data ) {
+    TextScoreWeightedRenderer.prototype.render = function( data ) {
 
         var text = this.spec.text,
+            weights = this.spec.weights,
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
@@ -103,13 +119,19 @@
             entries = [],
             html = '',
             percentLabel,
+            middleWeightIndex,
+            middleWeight,
+            weightCounts,
+            weightTotal,
+            weight,
             totalCount,
             yOffset,
             value,
             textEntry,
             fontSize,
             textCount,
-            i;
+            i,
+            j;
 
         // get maximum count for layer if it exists in meta data
         totalCount = meta.minMax.max[ countKey ];
@@ -136,10 +158,38 @@
             percentLabel = Math.round( percentLabel / 10 ) * 10;
             html += '<div class="text-score-label text-score-label-'+percentLabel+'" style="'
                   + 'font-size:'+ fontSize +'px;'
-                  + 'line-height:'+ fontSize +'px;">'+textEntry+'</div>';
+                  + 'line-height:'+ fontSize +'px;'
+                  + 'bottom:'+-(maxFontSize-fontSize)+'px;">'+textEntry+'</div>';
+            // create weights
+            weightCounts = [];
+            weightTotal = 0;
+            for ( j=0; j<weights.length; j++ ) {
+                weight = RendererUtil.getAttributeValue( value, weights[j].weightKey );
+                weightTotal += weight;
+                weightCounts.push( weight );
+            }
+            // get the index of the middle weight
+            middleWeightIndex = Math.floor( (weights.length-1) / 2 );
+            // sum the amount of weight to centre the bar on the middle weight
+            if ( weights.length % 2 === 0 ) {
+                middleWeight = weightCounts[ middleWeightIndex ];
+            } else {
+                middleWeight = weightCounts[ middleWeightIndex ] / 2;
+            }
+            for ( j=middleWeightIndex-1; j>=0; j-- ) {
+                middleWeight += weightCounts[j];
+            }
+            // create bar container
+            html += '<div class="text-score-weight-bar" style="'
+                  + 'left:'+ (-WEIGHT_BARS_WIDTH*(middleWeight/weightTotal)) + 'px;">';
+            for ( j=0; j<weights.length; j++ ) {
+                // create bar
+                html += '<div class="text-score-weight text-score-weight-'+ j +'" style="'
+                      + 'width:'+((weightCounts[j]/weightTotal)*100)+'%;"></div>';
+            }
             html += '</div>';
             html += '</div>';
-
+            html += '</div>';
             html += '<div class="clear"></div>';
         }
 
@@ -149,5 +199,5 @@
         };
     };
 
-    module.exports = TextScoreRenderer;
+    module.exports = TextScoreWeightedRenderer;
 }());

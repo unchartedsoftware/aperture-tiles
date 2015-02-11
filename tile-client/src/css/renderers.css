@@ -32,19 +32,21 @@
 	position: relative;
     float: right;
     right: 50%;
-    height: 34px;
 }
 
 .text-score-entry {
     cursor: pointer;
 	float: right;
     right: -50%;
+    height: 30px;
     position: relative;
     z-index: 1;
 }
 
 .text-score-label {
     position: relative;
+    font-weight: bold;
+    padding: 2px;
 	white-space: nowrap;
 	max-width: 200px;
 	overflow:hidden;
@@ -52,9 +54,9 @@
 	z-index: 1;
 }
 
-.text-score-count-bar {
+.text-score-weight-bar {
 	position:absolute;
-	height: 9px;
+	height: 6px;
 	width: 120px;
 	margin-left: 50%;
 	bottom: 0px;
@@ -62,7 +64,7 @@
 	z-index: 0;
 }
 
-.text-score-count-sub-bar {
+.text-score-weight {
 	height:100%;
 	float:left;
 }
@@ -137,18 +139,20 @@
 
 .word-cloud-label {
 	cursor: pointer;
+    font-weight: bold;
 	position:absolute;
 	white-space: nowrap;
 	overflow: hidden;
-	padding-left: 5px;
+	padding: 2px 5px 2px 5px;
 	text-overflow: ellipsis;
 }
 
 .word-cloud-label-temp {
 	position:relative;
+    font-weight: bold;
 	visibility:hidden;
 	display: inline-block;
-	padding: 0 5px 0 5px;
+	padding: 2px 5px 2px 5px;
 	max-width: 180px;
 	white-space: nowrap;
 	overflow: hidden;
