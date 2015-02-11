@@ -42,7 +42,12 @@ public class Pair<S, T> implements Serializable {
 
 	private S _s;
 	private T _t;
+	private Pair () {
+	    _s = null;
+	    _t = null;
+	}
 	public Pair (S s, T t) {
+	    this();
 		_s = s;
 		_t = t;
 	}
