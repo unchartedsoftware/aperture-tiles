@@ -7,7 +7,6 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.oculusinfo.binning.DenseTileData;
@@ -69,7 +68,6 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public TileData<T> deserialize(TileIndex index, InputStream stream)
 		throws IOException {
-	    debugSerializer();
         Input input = new Input(new InflaterInputStream(stream));
 		try {
 	
@@ -81,21 +79,9 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 		}
 	}
 
-	private void debugSerializer () {
-	    Kryo kryo = kryo();
-	    int topId = kryo.getNextRegistrationId();
-	    for (int i=0; i<topId; ++i) {
-	        Registration r = kryo.getRegistration(i);
-	        if (null != r) {
-	            System.out.println(i + " ====> " + r.getType().getSimpleName());
-	        }
-	    }
-	}
-
 	@Override
 	public void serialize(TileData<T> data, OutputStream stream)
 		throws IOException {
-	    debugSerializer();
         Output output = new Output(new DeflaterOutputStream(stream));
 
 		kryo().writeClassAndObject(output, data);

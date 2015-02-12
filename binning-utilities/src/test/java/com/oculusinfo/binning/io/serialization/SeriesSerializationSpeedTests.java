@@ -46,7 +46,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class SeriesSerializationSpeedTests {
     static enum TYPE {kryo, avro};
-    private static final int ITERATIONS = 1;
+    private static final int ITERATIONS = 100;
     private static final int TILES_PER_REQUEST = 1;
 
     private HBasePyramidIO                          _io;
@@ -78,8 +78,7 @@ public class SeriesSerializationSpeedTests {
             for (int n=0; n<TILES_PER_REQUEST; ++n) {
                 int y = (int) Math.floor(n/sqs);
                 int x = n - (y * sqs);
-                // request.add(new TileIndex(3, 4+sqs/2-x, 4+sqs/2-y));
-                request.add(new TileIndex(0, 0, 0));
+                request.add(new TileIndex(3, 4+sqs/2-x, 4+sqs/2-y));
             }
             requests.add(request);
         }
@@ -130,10 +129,20 @@ public class SeriesSerializationSpeedTests {
     @Test
     public void testKryo () throws IOException {
         testTableSpeed(TYPE.kryo, "002");
+        testTableSpeed(TYPE.kryo, "005");
+        testTableSpeed(TYPE.kryo, "010");
+        testTableSpeed(TYPE.kryo, "020");
+        testTableSpeed(TYPE.kryo, "050");
+        testTableSpeed(TYPE.kryo, "100");
     }
 
     @Test
     public void testAvro () throws IOException {
         testTableSpeed(TYPE.avro, "002");
+        testTableSpeed(TYPE.avro, "005");
+        testTableSpeed(TYPE.avro, "010");
+        testTableSpeed(TYPE.avro, "020");
+        testTableSpeed(TYPE.avro, "050");
+        testTableSpeed(TYPE.avro, "100");
     }
 }
