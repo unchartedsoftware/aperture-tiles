@@ -121,6 +121,9 @@
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
         this.renderer = spec.renderer || {};
+        this.renderer.coarseness = ( this.renderer.coarseness !== undefined ) ? this.renderer.coarseness : 1;
+        this.renderer.rangeMin = ( this.renderer.rangeMin !== undefined ) ? this.renderer.rangeMin : 0;
+        this.renderer.rangeMax = ( this.renderer.rangeMax !== undefined ) ? this.renderer.rangeMax : 100;
         this.valueTransform = spec.valueTransform || {};
         this.tileTransform = spec.tileTransform || {};
         this.domain = "server";

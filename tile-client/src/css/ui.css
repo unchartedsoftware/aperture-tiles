@@ -1,0 +1,339 @@
+@charset "UTF-8";
+
+/********************************************/
+/*             Layers Controls              */
+/********************************************/
+
+.tiles-layer-controls {
+	position: absolute;
+	width: 350px;
+	right: 10px;
+	bottom: 42px;
+	pointer-events:all;
+	border-radius: 4px;
+	padding: 10px 10px 0 10px;
+	background-color: #333;
+    border: 1px solid #111;
+}
+
+/*************** Layer Entry ****************/
+
+.tiles-layer-controls .layer-entry {
+	list-style-type: none;
+	margin-bottom: 9px;
+	background-color: #222;
+    border-radius: 4px;
+}
+
+/************* Layer Entry Head *************/
+
+.tiles-layer-controls .layer-entry-head {
+	padding: 4px;
+	cursor:pointer;
+	height: 24px;
+	color: #ccc;
+}
+
+.tiles-layer-controls .layer-entry-head:hover {
+	color: #fff;
+}
+
+.tiles-layer-controls .layer-toggle {
+	float:left;
+	width: 18px;
+    height: 14px;  
+	font-size: 18px;
+	line-height: 14px;
+	vertical-align: middle;
+    margin: 4px 0 0 4px;
+}
+
+.tiles-layer-controls .layer-title {
+	float:left;
+    margin: 4px 0 0 5px;
+	font-size: 14px;
+	width: calc(100% - 34px);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/************* Layer Entry Body *************/
+
+.tiles-layer-controls .layer-entry-body {
+	padding: 4px 4px 8px 4px;
+}
+
+.tiles-layer-controls .controls-label {
+    font-size: 12px;
+    text-align: center;
+    padding-bottom: 3px;
+    color: #999;
+}
+
+/************* Opacity Controls *************/
+
+.tiles-layer-controls .opacity-controls {
+	float:left;
+	margin-left: 5px;
+}
+
+.tiles-layer-controls .opacity-controls-client {
+    width: 98%;
+}
+
+.tiles-layer-controls .opacity-controls-server {
+    width: 20%;
+}
+
+.tiles-layer-controls .opacity-slider {
+    width: calc(100% - 24px);
+    top: 6px;
+    left: 12px;
+    height: 8px;
+    border-radius: 4px;
+}
+
+.tiles-layer-controls .opacity-slider .ui-slider-range-min {
+    background: #666666;
+}
+
+/************** Filter Controls *************/
+
+.tiles-layer-controls .filter-controls {
+	float:left;
+	width: 55%;
+	margin-left: 5px;
+	margin-bottom: 15px;
+}
+
+.tiles-layer-controls .filter-slider {
+    width: calc(100% - 24px);
+    top: 6px;
+    left: 12px;
+    height: 8px;
+    border-radius: 4px;
+}
+
+.tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:hover, 
+.tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:active {
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFNJREFUeNpiYMAEXEDsA+OwoEnKALETEHOgK2AEYhMgNkQ3DqSAB6pLAot1DExIJmAFzED8C4hvQdnIppyFKYCBp0D8CohloVafxWUqN7I3AQIMAKw6B24pOi8lAAAAAElFTkSuQmCC);
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+}
+
+.tiles-layer-controls .filter-axis {
+    position: relative;
+    width: 100%;
+    left: 0;
+    pointer-events:none;
+}
+
+.tiles-layer-controls .filter-axis-marker {
+    float: left;
+    width: 1px;
+    background-color: #d3d3d3;
+}
+
+.tiles-layer-controls .filter-major-marker {
+    height: 6px;
+}
+
+.tiles-layer-controls .filter-minor-marker {
+    height: 4px; 
+}
+
+.tiles-layer-controls .filter-axis-label-container, 
+.tiles-layer-controls .filter-axis-ticks-container {
+	position: relative;
+	top: 14px;
+	clear: both;
+}
+
+.tiles-layer-controls .filter-axis-label {
+    float: left;
+    font-size: 10px;
+	text-align: center;
+	color: rgb( 128, 128, 128 );
+}
+
+/************ Coarseness Controls ***********/
+
+.tiles-layer-controls .coarseness-controls {
+	float:left;
+	width: 20%;
+	margin-left: 5px;
+}
+
+.tiles-layer-controls .control-menu {
+	position:relative;
+}
+
+/************** Slider Controls *************/
+
+.tiles-layer-controls .slider-border {
+	position:relative;
+	border-radius:4px;
+	height: 20px;
+    width: 100%;
+    background-color: #333;
+}
+
+.tiles-layer-controls .layer-entry-body .ui-slider-horizontal, 
+.tiles-layer-controls .layer-entry-body .ui-slider-vertical {
+    border: none;
+    border-radius:4px;
+    background: #222;
+}
+
+.tiles-layer-controls .layer-entry-body .ui-widget-content {
+    border: none;
+    border-radius: 4px;
+}
+
+.tiles-layer-controls .layer-entry-body .ui-slider-handle {
+    border-radius: 4px;
+    border: none;
+    cursor:pointer;
+    height: 16px;
+    width: 16px;
+    margin-left: -8px;
+    margin-top: 1px; 
+    background: #cccccc;
+}  
+
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:hover, 
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:active {
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFdJREFUeNpiYEAAHyDmYkADzEhsByBWA+K3QPwJmwJjIGYBYlUgZgLi59gUwIAkEEsD8VMmBtyAkQFqJDZwAYjPAPE/dAU/gHg/ED/GpgvkTW50QYAAAwADfwrM5sqplgAAAABJRU5ErkJggg==);
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+}
+
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:focus {
+    outline:none;
+}
+
+.tiles-layer-controls .slider-value-hover {
+    position:absolute;
+    padding: 2px 5px 2px 5px;
+    border-radius:4px;
+    pointer-events:none;
+    z-index: 100;
+    font-weight:normal;
+    background-color: #222;
+    border: 1px solid #333;
+}
+
+.tiles-layer-controls .slider-value-hover-label {
+    position: relative;
+    white-space: pre;
+    font-size: 12px;
+    padding: 2px;
+    color: #d3d3d3;
+}
+
+/********************************************/
+/*              Drop Down Menu              */
+/********************************************/
+
+.tiles-layer-controls .dropdown-menu {
+    padding: 0;
+    margin-top: -1px;
+    width: 100%;
+    font-size: 12px;
+    display: inline-table;
+    position: absolute;
+    z-index: 1;
+	border: 1px solid transparent;
+}
+
+.tiles-layer-controls .dropdown-menu-open {
+    border-radius: 4px;
+    background-color: #333;  
+	border: 1px solid #111;
+}
+
+.tiles-layer-controls .dropdown-menu .menu-item-link {
+    display: block;
+    height: 18px;
+	line-height: 18px; 
+    text-align: center;
+	vertical-align: middle;
+    text-decoration: none;
+	border: 1px solid transparent;	
+	border-radius: 4px;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.tiles-layer-controls .dropdown-menu .menu-item-link:hover {
+	color: #fff;
+    background-color: #666;
+}
+
+/**************** Positioning ***************/
+
+.tiles-layer-controls .dropdown-menu .menu-item {
+    display: none;
+}
+
+.tiles-layer-controls .dropdown-menu-open .menu-item {
+    display: table-row;
+}
+
+.tiles-layer-controls .dropdown-menu .menu-item.active {
+    display: table-header-group;
+}
+
+/********** Title or Selected Item **********/
+
+.tiles-layer-controls .dropdown-menu .active .menu-item-link {
+	background-color: #333;
+	color: #fff;
+}
+
+/*** Title or Selected Item For Open Menu ***/
+
+.tiles-layer-controls .dropdown-menu .active .menu-item-link:hover {
+	background-color: #222;
+	border: 1px solid #111;
+}
+
+.tiles-layer-controls .dropdown-menu-open .active .menu-item-link,
+.tiles-layer-controls .dropdown-menu.dropdown-menu-open .active .menu-item-link:hover {
+	background-color: #222;
+	border-top: 1px solid transparent;
+	border-left: 1px solid transparent;
+	border-right: 1px solid transparent;
+	border-bottom: 1px solid #111;
+}
+
+/****** Carot After Title or Selected *******/
+
+.tiles-layer-controls .dropdown-menu .menu-item.active .menu-item-link:after {
+	width: 0; 
+	height: 0; 
+	content: "";
+	position: relative;
+	top: -2px;
+	display: inline-block;
+	margin-left: 8px;  	
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-top: 4px solid  #fff;  
+}
+
+/******************* Misc *******************/
+
+.no-transition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  -ms-transition: none !important;
+  transition: none !important;
+}
+
+.ui-widget-content,
+.ui-widget-header {
+    background: none;
+}

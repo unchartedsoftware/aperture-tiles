@@ -57,7 +57,7 @@
         setOpacity: function( opacity ) {
             this.opacity = opacity;
             if ( this.olLayer ) {
-                this.olLayer.setOpacity ( opacity );
+                this.olLayer.setOpacity( opacity );
                 PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
             }
         },
