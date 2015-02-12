@@ -33,7 +33,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 
 
     // Store a kryo instance per thread
-    private LocalizedKryo  _localKryo;
+    transient private LocalizedKryo  _localKryo;
     // A list of classes each kryo instance must register
     private Class<?>[]     _classesToRegister;
     // Our type description
@@ -51,11 +51,12 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	public KryoSerializer (TypeDescriptor typeDesc, Class<?>... classesToRegister) {
 		_typeDesc = typeDesc;
 		_classesToRegister = classesToRegister;
-		_localKryo = new LocalizedKryo();
 	}
 
     // Get the kryo instance for this thread.
     private Kryo kryo () {
+        if (null == _localKryo)
+            _localKryo = new LocalizedKryo();
         return _localKryo.get();
     }
 

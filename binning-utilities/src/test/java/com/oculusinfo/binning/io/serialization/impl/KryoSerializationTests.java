@@ -26,6 +26,8 @@ package com.oculusinfo.binning.io.serialization.impl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,9 +36,11 @@ import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.serialization.SerializationTypeChecker;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.ConfigurationException;
 
 public class KryoSerializationTests {
     private static final Class<?>[] EMPTY = new Class<?>[0];
@@ -229,4 +233,54 @@ public class KryoSerializationTests {
 		Assert.assertTrue(buffer.length < 256*256);
 	}
 
+	// Make sure the serializer itself is serializable.
+	@Test
+	public void testSerializerSerializability () throws IOException, ClassNotFoundException, ConfigurationException {
+	    KryoSerializer<CustomTestData> input = new KryoSerializer<>(new TypeDescriptor(CustomTestData.class), CustomTestData.class);
+
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+	    oos.writeObject(input);
+	    oos.flush();
+	    oos.close();
+
+	    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+	    ObjectInputStream ois = new ObjectInputStream(bais);
+	    Object rawOutput = ois.readObject();
+
+	    // Make sure our output is as correct as we can.
+	    Assert.assertTrue(rawOutput instanceof KryoSerializer<?>);
+	    KryoSerializer<?> genericOutput = (KryoSerializer<?>) rawOutput;
+	    Assert.assertEquals(new TypeDescriptor(CustomTestData.class), genericOutput.getBinTypeDescription());
+	    TileSerializer<CustomTestData> output = SerializationTypeChecker.checkBinClass(genericOutput,
+	                                                                                   CustomTestData.class,
+	                                                                                   new TypeDescriptor(CustomTestData.class));
+
+	    // Make sure the two versions serialize something identically
+	    TileData<CustomTestData> inputData = new DenseTileData<CustomTestData>(new TileIndex(0, 0, 0, 1, 1));
+	    inputData.setBin(0, 0, new CustomTestData(1, 2.0, "3"));
+
+        baos = new ByteArrayOutputStream();
+        input.serialize(inputData, baos);
+        baos.flush();
+        baos.close();
+        bais = new ByteArrayInputStream(baos.toByteArray());
+        TileData<CustomTestData> outputData1 = output.deserialize(new TileIndex(0, 0, 0, 1, 1), bais);
+
+        baos = new ByteArrayOutputStream();
+        output.serialize(inputData, baos);
+        baos.flush();
+        baos.close();
+        bais = new ByteArrayInputStream(baos.toByteArray());
+        TileData<CustomTestData> outputData2 = input.deserialize(new TileIndex(0, 0, 0, 1, 1), bais);
+
+        Assert.assertEquals(1,   outputData1.getBin(0, 0)._i);
+        Assert.assertEquals(2.0, outputData1.getBin(0, 0)._d, 1E-12);
+        Assert.assertEquals("3", outputData1.getBin(0, 0)._s);
+
+        Assert.assertEquals(1,   outputData2.getBin(0, 0)._i);
+        Assert.assertEquals(2.0, outputData2.getBin(0, 0)._d, 1E-12);
+        Assert.assertEquals("3", outputData2.getBin(0, 0)._s);
+	}
 }
