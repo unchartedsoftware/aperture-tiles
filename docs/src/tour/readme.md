@@ -1,7 +1,7 @@
 ---
 section: Tour
 subtitle: Overview
-permalink: tour/index.html
+permalink: tour/
 layout: submenu
 ---
 

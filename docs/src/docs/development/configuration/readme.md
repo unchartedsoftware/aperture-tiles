@@ -2,7 +2,7 @@
 section: Docs
 subtitle: Development
 chapter: Configuration
-permalink: docs/development/configuration/index.html
+permalink: docs/development/configuration/
 layout: submenu
 ---
 
@@ -10,7 +10,7 @@ layout: submenu
 
 Once you have generated a tile set from your source data, you should configure and deploy a Tile Server and a Tile Client to make your visual analytic viewable in a web browser. The Tile Server serves tiles from your pyramid, while the Tile Client is a simple web client to view those tiles on a map or plot. 
 
-Note that Aperture Tiles supports two types of tile rendering:
+Aperture Tiles supports two types of tile rendering:
 
 - **Server-side rendering**, in which the Server renders the tiles as image files and passes them on to the Client.
 - **Client-side rendering**, in which the Server passes the tiles as JSON data to the Client, which then renders them directly.
@@ -23,7 +23,7 @@ To begin configuring your Tile Server and Tile Client:
 
 1. Choose the Julia demo (*tile-examples/julia-demo/*) or Twitter Topics demo (*tile-examples/twitter-topics/*) to use as a template. The Julia demo displays a server-rendered heatmap on a blank crossplot baselayer, while the Twitter Topics demo displays a server-rendered heatmap and client-rendered word clouds on a geographic Google Maps baselayer.
 2. Copy the appropriate demo and give it a unique name (e.g., *new-project*).
-3. Update the Gradle build file (*new-project/build.gradle*) to change the following fields:
+3. Update the Gradle build file (*new-project/build.gradle*) to add or change the following fields:
 	- `description`: Enter an appropriate project description. 
 	- `group`: Enter an appropriate group ID.
 	- `version`: Enter an appropriate project version number.
@@ -40,14 +40,14 @@ The remainder of the tile server configuration, which includes instantiation of 
 
 ### <a name="webxml"></a> Web XML ###
 
-Edit the **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
+Edit the client **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 
 1. If you performed a custom tile generation, edit the guice-modules parameter to pass in any custom modules you created (e.g., your custom Tile Serialization Factory).
 2. If required, uncomment the relevant Spark lines in the guice-modules to enable live tiling or drill-through to raw data.
 		
 ### <a name="tileproperties"></a> Tile Properties ###
 
-Edit the **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as the location of your layer and annotation directories. Additional Spark parameters are available for on-demand tile generation and data drill down:
+Edit the client **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as the location of your layer and annotation directories. Additional Spark parameters are available for on-demand tile generation and data drill down:
 
 - The location of your Spark master
 - The name under which the Aperture Tiles web service should appear in the Spark web interface.
@@ -103,7 +103,7 @@ pyramid: {
 },
 ```
 
-Note also that the layer and map pyramid configurations much match each other.
+**NOTE**: Your layer and map pyramid configurations much match each other.
 
 ##### <a name="layer-renderers"></a> Renderers #####
 
@@ -280,14 +280,14 @@ The map describes the base map upon which your source data is projected:
 ```json
 pyramid: {
 	type : "AreaOfInterest",
-	minX : -2.0,
-	maxX : 2.0,
-	minY : -2.0,
-	maxY : 2.0
+	minX : -2,
+	maxX : 2,
+	minY : -2,
+	maxY : 2
 	},
 ```
 
-Note also that the layer and map pyramid configurations ***must*** match each other.
+**NOTE**: Your layer and map pyramid configurations must match each other.
 
 ### <a name="geo-baselayer"></a> BaseLayer ###
 
@@ -295,81 +295,33 @@ The BaseLayer parameters use map provider APIs to determine what features to inc
 
 ```json
 baseLayer = new tiles.BaseLayer({
-    "type": "Google",
-    "options" : {
-        "styles" : [
-            {
-                'featureType': 'all',
-                'stylers': [
-                    { 'saturation': -100 },
-                    { 'invert_lightness' : true },
-                    { 'visibility' : 'simplified' }
-                ]
-            },
-            {
-                'featureType': 'landscape.natural',
-                'stylers': [
-                    { 'lightness': -50 }
-                ]
-            },
-            {
-                'featureType': 'poi',
-                'stylers': [
-                    { 'visibility': 'off' }
-                ]
-            },
-            {
-                'featureType': 'road',
-                'stylers': [
-                    { 'lightness': -50 }
-                ]
-            },
-            {
-                'featureType': 'road',
-                'elementType': 'labels',
-                'stylers': [
-                    { 'visibility': 'off' }
-                ]
-            },
-            {
-                'featureType': 'road.highway',
-                'stylers': [
-                    { 'lightness': -60 }
-                ]
-            },
-            {
-                'featureType': 'road.arterial',
-                'stylers': [
-                    { 'visibility': 'off' }
-                ]
-            },
-            {
-                'featureType': 'administrative',
-                'stylers': [
-                    { 'lightness': 10 }
-                ]
-            },
-            {
-                'featureType': 'administrative.province',
-                'elementType': 'geometry',
-                'stylers': [
-                    { 'lightness': 15 }
-                ]
-            },
-            {
-                'featureType' : 'administrative.country',
-                'elementType' : 'geometry',
-                'stylers' : [
-                    { 'visibility' : 'on' },
-                    { 'lightness' : -56 }
-                ]
-            },
-            {
-                'elementType' : 'labels',
-                'stylers' : [
-                    { 'lightness' : -46 },
-                    { 'visibility' : 'on' }
-                ] }
+    type: "Google",
+    options : {
+       styles : [
+            { featureType: "all",
+              stylers : [ { invert_lightness : true },
+                            { saturation : -100 },
+                            { visibility : "simplified" } ] },
+            { featureType: "administrative",
+              elementType: "geometry",
+                stylers: [ { visibility: "off" } ] },
+            { featureType : "landscape.natural.landcover",
+              stylers : [ { visibility : "off" } ] },
+            { featureType : "road",
+              stylers : [ { visibility : "on" } ] },
+            { featureType : "landscape.man_made",
+              stylers : [ { visibility : "off" } ] },
+            { featureType : "landscape",
+              stylers : [ { lightness : "-100" } ] },
+            { featureType : "poi",
+              stylers : [ { visibility : "off" } ] },
+            { featureType : "administrative.country",
+              elementType : "geometry",
+              stylers : [ { visibility : "on" },
+                            { lightness : -56 } ] },
+            { elementType : "labels",
+              stylers : [ { lightness : -46 },
+                            { visibility : "on" } ] }
         ]
     }
 });
@@ -401,13 +353,13 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 		<ul class="methodDetail" id="MethodDetail">
 			<dl class="detailList params">
 				<dt>position</dt>
-				<dd>Axis type, where "bottom' denotes the X axis and "left" denotes the Y axis.</dd>
+				<dd>Axis type, where <em>bottom</em> denotes the x-axis and <em>left</em> denotes the y-axis.</dd>
 				
 				<dt>title</dt>
 				<dd>Axis name (e.g., <em>Longitude</em> or <em>Latitude</em>).</dd>
 				
-				<dt>isOpen</dt>
-				<dd>Indicates whether the axes are displayed (true) or hidden (false) when a new session begins.</dd>
+				<dt>enabled</dt>
+				<dd>Indicates whether the axes are displayed (<em>true</em>) or hidden (<em>false</em>) when a new session begins.</dd>
 
 				<dt>repeat</dt>
 				<dd>Indicates whether the map will repeat when the user scrolls off one end. Most useful for geographic maps.</dd>
@@ -417,16 +369,16 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 				
 					<dl>
 						<dt>type</dt>
-						<dd>How the following increment value is calculated based on the axis range. Accepted values include "percentage", "%", "value" or "#".</dd>
+						<dd>How the following increment value is calculated based on the axis range. Accepted values include <em>percentage</em>, <em>%</em>, <em>value</em> or <em>#</em>.</dd>
 		
 						<dt>increment</dt>
 						<dd>Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.</dd>
 						
 						<dt>pivot</dt>
-						<dd>Value or percentage from which all other values are incremented. Typically 0.</dd>
+						<dd>Value or percentage from which all other values are incremented. Typically <em>0</em>.</dd>
 		
 						<dt>scaleByZoom</dt>
-						<dd>Indicates whether the axis should be scaled by the zoom factor.</dd>
+						<dd>Indicates whether the axis should be scaled by the zoom factor (<em>true</em>/<em>false</em>).</dd>
 					</dl>
 				</dd>
 				
@@ -448,11 +400,12 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 						</dd>
 						
 						<dt>decimals</dt>
-						<dd>Number of decimals to display for each unit. Applicable to "billions", "millions", "thousands" and "decimal" types.</dd>
+						<dd>Number of decimals to display for each unit. Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> and <em>decimal</em> types.</dd>
 		
 						<dt>stepDown</dt>
-						<dd>Indicates whether the units can step down if they are below range. Applicable to "billions", "millions", "thousands" types.</dd>
+						<dd>Indicates whether the units can step down if they are below range (<em>true</em>/<em>false</em>). Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> types.</dd>
 					</dl>
+				</dd>
 			</dl>
 		</ul>
 	</div>
@@ -460,28 +413,39 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 
 ## <a name="clientconfig"></a> Tile Client Configuration ##
 
-## <a name="clientside"></a> Client-Side Rendering ##
+### <a name="clientside"></a> Client-Side Rendering ###
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
 A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
 
-For example, lines 39-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
+Line 33 requests the layer configuration objects from the server, passing them to the supplied callback function as arguments.
+
+```javascript
+tiles.LayerService.getLayers( function( layers ) { 
+	... 
+});
+```
+
+Line 39 organizes the layer configuration object array into a map keyed by layer ID. It also parses the metadata JSON strings into their respective runtime objects. This ensures support for legacy layer metadata.
 
 ```javascript
 layers = tiles.LayerUtil.parse( layers.layers );
-
-        var map,
-            axis0,
-            axis1,
-            baseLayer,
-            darkRenderTheme,
-            wordCloudRenderer,
-            clientLayer,
-            serverLayer;
 ```
 
-Lines 204-216 instantiate a word cloud renderer, attaching a theme and hooking the function to give access to the renderer DOM element and respective data entry.
+Lines 180-184 instantiate a render theme object that styles the rendered components.
+
+```javascript
+darkRenderTheme = new tiles.RenderTheme( "dark", {
+    'color': "#FFFFFF",
+    'color:hover': "#09CFFF",
+    'text-shadow': "#000"
+});
+```
+
+Lines 204-216 instantiate a word cloud renderer, attaching the theme to the 'text' render target and appending a 'hook' function to give access to the rendered DOM elements and respective data entry.
+
+Note the 'textKey' and 'countKey' attributes under the 'text' render target. They specify that the renderer will find the 'text' and 'count' values required to build the word cloud under the attributes 'topic' and 'countMonthly' in the data entry.
 
 ```javascript
 wordCloudRenderer = new tiles.WordCloudRenderer({
@@ -499,7 +463,7 @@ wordCloudRenderer = new tiles.WordCloudRenderer({
 });
 ```
 
-The client renderer layer itself is instantiated on lines 234-237, passing the "top-tweets" layer as its source.
+The client-rendered layer is instantiated on lines 234-237, passing the "top-tweets" layer as its source and the word cloud renderer as its renderer.
 
 ```javascript
 clientLayer = new tiles.ClientLayer({

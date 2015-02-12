@@ -1,6 +1,6 @@
 ---
 section: Demos
-permalink: demos/index.html
+permalink: demos/
 layout: section
 ---
 

@@ -12,7 +12,7 @@ Note that the latest versions of the pre-built Aperture website are available fo
 
 - Aperture JS: [http://aperturejs.com/](http://aperturejs.com/)
 - Aperture Tiles: [https://aperturetiles.com/](https://aperturetiles.com/)
-- Influent: [http://influent.org/](http://influent.org/))
+- Influent: [http://influent.org/](http://influent.org/)
 
 ## Prerequisites
 
@@ -88,10 +88,9 @@ chapter		(Required for pages in a submenu that represent a chapter)
 
 permalink	 (Required)
 
-	The relative path and filename to which the converted HTML should be written.
-	Upon conversion, all Markdown files should be renamed to index.html using
-	this variable so they are displayed automatically in a web browser when using
-	relative paths.
+	The relative path to which the converted HTML should be written. Upon 
+	conversion, all Markdown files will be renamed to index.html so they are 
+	displayed automatically in a web browser when using	relative paths.
 	
 layout		(Required)
 

@@ -1,7 +1,7 @@
 ---
 section: Docs
 subtitle: User Guide
-permalink: docs/userguide/index.html
+permalink: docs/userguide/
 layout: submenu
 ---
 
@@ -11,7 +11,7 @@ This page is designed for analysts who want to understand how to navigate the Ap
 
 The look and feel of each Aperture Tiles application is highly dependent on the source data to which it is configured. While the topics in this help system refer to the interface for one specific data set (66,996,907 Twitter messages in South America from February to April, 2014), many different configurations are available for the display of maps, layers and aggregated data points. Such customization options are noted where applicable.
 
-Please note that fully functional example Aperture Tiles applications are available on the the [Demos](../../demos/) page. Copies of these demos are also available for your use in the Aperture Tiles source code.
+**NOTE**: Fully functional example Aperture Tiles applications are available on the the [Demos](../../demos/) page. Copies of some of these demos are also available for your use in the Aperture Tiles source code (in *tile-examples/*).
 
 ## <a name="twitter-data"></a> Twitter Latin American Topic Summarization Data ##
 
@@ -122,11 +122,11 @@ To quickly zoom to a major city in South America:
 
 The map is redrawn to show the selected city with a zoom factor of five.
 
-Note that this is customized control that requires specialized code not available in the standard Aperture Tiles template or base libraries.
+**NOTE**: This is customized control that requires specialized code not available in the standard Aperture Tiles template or base libraries.
 
 ### <a name="explore"></a> Explore ###
 
-To view other areas of the map, click and drag in the direction you want to see. Note that you can overscroll from the left side of the map to the right and vice versa.
+To view other areas of the map, click and drag in the direction you want to see. You can overscroll from the left side of the map to the right and vice versa.
 
 <div class="git">
 	<h2>Interested in Learning More?</h2>

@@ -2,7 +2,7 @@
 section: Docs
 subtitle: API
 chapter: Annotation
-permalink: docs/api/annotation/index.html
+permalink: docs/api/annotation/
 layout: submenu
 ---
 
@@ -144,7 +144,8 @@ Example:
 				]
 			}
 		]
-	}
+	},
+	version: "v1.0"
 }
 ```
 
@@ -182,7 +183,6 @@ Example:
 {
     uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
     timestamp: "1401830862"
-}
 ```
 
 ## <a name="web-services"></a> Web Services ##
@@ -327,7 +327,8 @@ Example response:
 				]
 			}
 		]
-	}
+	},
+	version: "v1.0"
 }
 ```
 
@@ -480,7 +481,8 @@ Example response:
 ```json
 {
     uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    timestamp: "1401830862"
+    timestamp: "1401830862",
+	version: "v1.0"
 }
 ```
 
@@ -637,7 +639,8 @@ Example response:
 ```json
 {
     uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    timestamp: "1401830862"
+    timestamp: "1401830862",
+	version: "v1.0"
 }
 ```
 

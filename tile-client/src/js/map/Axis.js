@@ -439,7 +439,8 @@
      *            supplied interval and unit specification.
      *
      * @param spec {Object} The specification object:
-     * {
+     * <pre>
+	 * {
      *     position {String}  Set the position to the bottom of the map. Default = "bottom"
      *     title    {String}  Set the title of the axis label. Default = "Axis"
      *     enabled  {boolean} Have the axis initialize to an open or closed state. Default = true
@@ -456,6 +457,7 @@
      *         stepDown {boolean} Whether values should step down by unit type, if applicable. Default = true
      *     }
      * }
+	 * </pre>
      */
     function Axis( spec ) {
 

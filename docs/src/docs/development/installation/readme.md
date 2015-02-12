@@ -2,7 +2,7 @@
 section: Docs
 subtitle: Development
 chapter: Installation
-permalink: docs/development/installation/index.html
+permalink: docs/development/installation/
 layout: submenu
 ---
 
@@ -11,37 +11,114 @@ Installation and Compilation
 
 The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects.
 
-For quick examples of the capabilities of Aperture Tiles:
+For quick examples of the capabilities of Aperture Tiles, see the following topics:
 
-- See the [Demos](../../../demos/) page to access fully functional demonstrations of Aperture Tiles from your web browser.
-- See the [Download](../../../download) page to access a pre-built distribution designed to help you quickly get started using Aperture Tiles and to understand the high-level process of creating an Aperture Tiles application. Instructions for using the packages to project a Julia set fractal on an X/Y plot are available on the [Quick Start](../quickstart) page. 
+- [Demos](../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
+- [Download](../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
 This project has the following prerequisites:
 
-- **Operating System**: Linux or OS X. Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.
-- **Languages**: [Scala](http://www.scala-lang.org/) version 2.10.3 and [Java](http://www.java.com/) (JDK version 1.7+).
-- **Cluster Computing**: Facilitates large tiling jobs. If you only run small jobs (datasets that fit in a single machine's memory) or if wait times are not an issue, you can omit Hadoop/HDFS/HBase and run Spark on a single node on your local file system.
-	-   [Apache Spark](http://spark.incubator.apache.org/) version 1.0.0 or greater. You will need to configure the version of Hadoop with which Spark will be working (if applicable). <p class="list-paragraph">NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.</p>
-	-   [Hadoop/HDFS/HBase](http://hadoop.apache.org/) (*Optional*) - Choose your preferred flavor:
-		- [Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) (*Recommended*) version 4.6 
-		- [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
-		- [MapR](http://www.mapr.com/products/apache-hadoop)
-		- [HortonWorks](http://hortonworks.com/)<p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</p>
--  **Web Server**: The Tile Server and Tile Client, built using the [Restlet](http://restlet.org/) web framework, require a servlet-compatible web server. Choose your preferred implementation:
-	- [Apache Tomcat](http://tomcat.apache.org/)
-	- [Jetty](http://www.eclipse.org/jetty/)
--   **Build Automation**: Two tools are required to build Aperture Tiles and its dependency, [Aperture JS](http://aperturejs.com). Ensure that each is configured properly on your system. 
-	- *Aperture JS*: [Apache Maven](http://maven.apache.org/) version 3.1.0 (other 3.x versions may work)
-	- *Aperture Tiles*: [Gradle](http://www.gradle.org/), which also requires [Node.js](http://nodejs.org/)<p class="list-paragraph">NOTE: The Windows installer for Node.js v0.10.33 has a known issue in that fails to install the following directory, which in turn will cause your Aperture Tiles build to fail. To work around this issue, simply create the directory, then re-run the Aperture Tiles build</p>
-	<pre>C:\Users\\\<UserName>\AppData\Roaming\npm</pre>
+<div class="props">
+	<nav>
+		<table class="summaryTable" width="100%">
+			<thead >
+				<th scope="col" width="20%">Component</th>
+				<th scope="col" width="30%">Required</th>
+				<th scope="col" width="50%">Notes</th>
+			</thead>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes">Operating System</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						Linux or OS X
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes">Languages</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://www.scala-lang.org/">Scala</a> v2.10.3
+						<br><a href="http://www.java.com/">Java</a> (JDK v1.7+)
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description"></div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<p>You must configure the version of Hadoop with which Spark will be working (if applicable).</p>
+							<p>The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</p>
+					</div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
+						<ul>
+							<li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+							<li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
+							<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
+							<li><a href="http://hortonworks.com/">HortonWorks</a></li>
+						</ul>
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+					</div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes">Web Server</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://tomcat.apache.org/">Apache Tomcat</a> or <a href="http://www.eclipse.org/jetty/">Jetty</a>
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</div>
+				</td>
+			</tr>
+			<tr >
+				<td style="vertical-align: text-top" class="attributes">Build Automation</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">
+						<a href="http://www.eclipse.org/jetty/">Gradle</a><br>(requires <a href="http://nodejs.org/">Node.js</a>)
+					</div>
+				</td>
+				<td style="vertical-align: text-top" class="nameDescription">
+					<div class="description">The Node.js Windows installer has a known issue where it fails to install the following directory. To work around this issue, create the directory, then re-run the Aperture Tiles build
+					<p><code>C:\Users\&lt;UserName&gt;\AppData\Roaming\npm</code></div>
+				</td>
+			</tr>
+		</table>
+	</nav>
+</div>
 
 <img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
 ## <a name="source-code"></a> Source Code ##
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master). Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master).
+The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master).
+
+### Dependencies ###
+
+Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master).
 
 ### <a name="project-structure"></a> Project Structure ###
 
@@ -60,9 +137,15 @@ Aperture Tiles is made up of the following sub-projects:
 				<dt>binning-utilities</dt>
 				<dd>Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</dd>
 				
+				<dt>factory-utilities</dt>
+				<dd>Factory system to allow construction and configuration of generic objects.</dd>
+
 				<dt>tile-generation</dt>
 				<dd>Spark-based tools to generate tile pyramids from raw data.</dd>
 				
+				<dt>tile-rendering</dt>
+				<dd>Library that handles turning tile data into useful output formats, generally graphical.</dd>
+
 				<dt>tile-service</dt>
 				<dd>Web service to serve tiles from tile pyramids to web clients.</dd>
 				
@@ -95,21 +178,43 @@ Aperture Tiles is made up of the following sub-projects:
 
 #### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
 
-NOTE: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
+**NOTE**: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
 
-Prior to building the project, you need to specify the version of Hadoop and/or HBase installed (if applicable). Review the *Deployment Variants* section of the *aperture-tiles/***build.gradle** file to check for valid settings for your version.
+Prior to building the project, you must specify which version of Hadoop and/or HBase you have installed (if applicable): 
 
-If your version is not included, you must build a new case for it. See the comments in the file for more details.
+1. Review the *Deployment Variants* section of the *aperture-tiles/***build.gradle** file to check for valid settings for your version.
+2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
+
+#### Installing Dependencies ####
+
+Install the [Aperture JS](https://github.com/oculusinfo/aperturejs/tree/master) project by running the following command in your root Aperture JS directory:
+	
+```bash
+mvn build
+```
+
+**NOTE**: This step requires [Apache Maven](http://maven.apache.org/).
 
 #### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
 
-Before you compile the Aperture Tiles source code, you must install the Aperture JS project:
+To build Aperture Tiles, run the following command in your root Aperture Tiles directory:
 
-- Run the `mvn build` command in your root Aperture JS directory.
+```bash
+gradlew install -PbuildType=<buildType>
+``` 
 
-Once the Aperture JS installation is complete:
+Where:
 
-- Run the `gradlew install -PbuildType=<buildType>` command in your root Aperture Tiles directory, where `buildType` is a case in the **build.gradle** file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., *cdh5.1.2*).<p class=list-paragraph">NOTE: If you do not specify a buildType, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+<div class="details props">
+	<div class="innerProps">
+		<ul class="methodDetail" id="MethodDetail">
+			<dl class="detailList params">
+				<dt>buildType</dt>
+				<dd>A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).<p class="list-paragraph">If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p></dd>
+			</dl>
+		</ul>
+	</div>
+</div>
 
 This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
 

@@ -1,7 +1,7 @@
 ---
 section: Tour
 subtitle: System Description
-permalink: tour/components/index.html
+permalink: tour/components/
 layout: submenu
 ---
 

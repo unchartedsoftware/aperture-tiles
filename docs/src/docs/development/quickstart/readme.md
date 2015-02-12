@@ -2,19 +2,19 @@
 section: Docs
 subtitle: Development
 chapter: Quick Start
-permalink: docs/development/quickstart/index.html
+permalink: docs/development/quickstart/
 layout: submenu
 ---
 
 # Quick Start Guide #
 
-The following guide provides a short tutorial that walks you through the process of creating and configuring an Aperture Tiles project. This Quick Start Guide covers the following processes:
+This guide, which provides a short tutorial on the process of creating and configuring an Aperture Tiles project, covers the following topics:
 
 1. Generating a sample data set to analyze
 2. Tiling and storing the sample data set
 3. Configuring a client to serve and display the tiles in a web browser
 
-At the end of this guide you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
+At the end of this guide, you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
 
 <img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
@@ -30,15 +30,74 @@ To begin this Quick Start example, you must perform the following steps:
 
 Aperture Tiles requires the following third-party tools on your local system:
 
-- **Operating System**: The Tile Generation scripts used in this example require the use of a Linux or OS X operating system. <p class="list-paragraph">Windows support is available through [Cygwin](https://cygwin.com/) or the DOS command prompt, but precludes the use of Hadoop/HBase.</p>
-- **Cluster Computing**: To create the Aperture Tiles Julia set project, you first need to install [Apache Spark](http://spark.incubator.apache.org/) version 1.0.0 or greater. Spark is the distributed framework on which Aperture Tiles builds to enable fast data and tile generation at scale.  NOTE: In the latest version of Spark, class path issues may arise if you compile Spark from the source code. For this reason, we recommend using one of the pre-built Spark packages.
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Component</th>
+                <th scope="col" width="30%">Required</th>
+                <th scope="col" width="50%">Notes</th>
+            </thead>
+            <tr >
+                <td style="vertical-align: text-top" class="attributes">Operating System</td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        Linux or OS X
+                    </div>
+                </td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
+                </td>
+            </tr>
+            <tr >
+                <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        <a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+                    </div>
+                </td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </nav>
+</div>
 
-If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install each of the following tools:
+If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install the following tools. Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
-- Your preferred flavor of Hadoop/HDFS ([Cloudera](http://www.cloudera.com/content/cloudera/en/products/cdh.html) version 4.6 recommended, though other flavors such as [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html), [MapR](http://www.mapr.com/products/apache-hadoop) and [HortonWorks](http://hortonworks.com/) may work), which allows you to configure a cluster of machines across which you can distribute Aperture Tiles analytic jobs.<p class="list-paragraph">NOTE: Some cluster computing software may automatically install Apache Spark. If the automatically installed version is older than 1.0.0, you must upgrade to 1.0.0 or greater.</a>
-- [Apache HBase](http://hbase.apache.org/), which acts as a data store for your Hadoop/HDFS cluster
-
-Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Component</th>
+                <th scope="col" width="30%">Required</th>
+                <th scope="col" width="50%">Notes</th>
+            </thead>
+            <tr >
+                <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        <a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
+                        <ul>
+                            <li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+                            <li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
+                            <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
+                            <li><a href="http://hortonworks.com/">HortonWorks</a></li>
+                        </ul>
+                    </div>
+                </td>
+                <td style="vertical-align: text-top" class="nameDescription">
+                    <div class="description">
+                        Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </nav>
+</div>
 
 ### <a name="aperture-tiles-utilities"></a> Aperture Tiles Packaged Distribution ###
 
@@ -77,7 +136,7 @@ For delimited numeric data sources like the Julia set, the included CSVBinner to
 
 A pre-configured properties file (**julia-base.bd**) can be found in the Tile Generator *examples/* folder. For this example, you only need to edit the base property file if you intend to save your Avro tiles to HBase. Otherwise, you can skip ahead to the [execution](#execution) of the tile generation job.
 
-Note that for a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Tile Generation](../generation/) topic on this website.
+**NOTE**: For a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Tile Generation](../generation/) topic on this website.
 
 #### General Input Properties ####
 
@@ -88,7 +147,7 @@ These properties specify the location of your Julia set data.
         <ul class="methodDetail" id="MethodDetail">
             <dl class="detailList params">              
                 <dt>oculus.binning.source.location</dt>
-                <dd>Path of the source data files in your local file system (ex: /data/julia) or HDFS path (ex: hdfs://hadoop.example.com/data/julia).</dd>
+                <dd>Path of the source data files in your local file system (e.g., <em>/data/julia</em>) or HDFS path (e.g., <em>hdfs://hadoop.example.com/data/julia</em>).</dd>
             </dl>
         </ul>
     </div>
@@ -103,7 +162,7 @@ These properties specify where to save the generated tiles.
         <ul class="methodDetail" id="MethodDetail">
             <dl class="detailList params">
                 <dt>oculus.tileio.type</dt>
-                <dd>Specify whether the tiles should be saved locally (file) or to HBase (hbase). Local tile IO is supported only for standalone Spark installations.</dd>
+                <dd>Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</dd>
 
                 <dt>oculus.binning.name</dt>
                 <dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
@@ -115,7 +174,7 @@ These properties specify where to save the generated tiles.
 
 #### HBase Connection Details (Optional) ####
 
-These properties should only be included if you are using Hadoop/HDFS and HBase. Note that these optional components must be used if you want to run the tile generation job on a multi-computer cluster.
+These properties should only be included if you are using Hadoop/HDFS and HBase, and are required if you want to run a tile generation job on a multi-computer cluster.
 
 <div class="details props">
     <div class="innerProps">
@@ -125,7 +184,7 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
                 <dd>Zookeeper quorum location needed to connect to HBase.</dd>
                 
                 <dt>hbase.zookeeper.port</dt>
-                <dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
+                <dd>Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</dd>
                 
                 <dt>hbase.master</dt>
                 <dd>Location of the HBase master to which to save the tiles.</dd>
@@ -138,7 +197,7 @@ These properties should only be included if you are using Hadoop/HDFS and HBase.
 
 The **julia-tiling.bd** file in your Tile Generator *examples/* folder should not need to be edited. 
 
-Note that for a typical Aperture Tiles project, you will need to edit properties in this file to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
+**NOTE**: For a typical Aperture Tiles project, you will need to edit properties in this file to define the layout of the map/plot on which to project your data. For more information on these additional properties, see the [Tile Generation](../generation/) topic on this website.
 
 ### <a name="execution"></a> Execution ###
 
@@ -146,7 +205,8 @@ With the required properties files, execute the standard spark-submit script aga
 
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
-.CSVBinner --master local[2] --driver-memory 1G lib/tile-generation-assembly.jar -d examples/julia-base.bd examples/julia-tiling.bd
+.CSVBinner --master local[2] --driver-memory 1G lib/tile-generation-assembly.jar 
+-d examples/julia-base.bd examples/julia-tiling.bd
 ```
 
 When the tile generation is complete, you should have a folder containing six subfolders, each of which corresponds to a zoom level in your project (0, being the highest, through 5, being the lowest). Across all the folders, you should have a total of 1,365 Avro tile files.
@@ -170,7 +230,11 @@ For typical Aperture Tiles projects, you will also need to edit the *src/main/we
 
 ### Layer Properties ###
 
-Layer properties (within the **tile-quickstart.zip** at *src/main/resources/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. For this example, you only need to edit the layer properties file if you saved your Avro tiles to HBase. Otherwise, you can skip ahead to the configuration of the [Tile Client Application](#tile-client-application). To edit the layer properties for your project:
+Layer properties (within the **tile-quickstart.zip** at *src/main/resources/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. 
+
+For this example, you only need to edit the layer properties file if you saved your Avro tiles to HBase. Otherwise, you can skip ahead to the configuration of the [Tile Client Application](#tile-client-application). 
+
+<h6 class="procedure">To edit the layer properties for your project</h6>
 
 1. Access the *src/main/resources/layers/***julia-layer.json** file.
 2. Make sure the **id** property under the `private` node matches the name given to the HBase table name to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
@@ -191,10 +255,10 @@ To configure the tile client application to display the Avro files containing yo
 
 ### Map Properties ###
 
-To edit the map properties for your project:
+<h6 class="procedure">To edit the map properties for your project</h6>
 
-1. Open the app.js file in the root directory of the extracted Tile Quick Start template.
-2. Edit the serverLayer to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
+1. Open the **app.js** file in the the extracted Tile Quick Start template.
+2. Edit the *serverLayer* to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
 3. Save the file.
 
 For information on additional map properties you can specify, see the Maps section of the [Configuration](../configuration/#maps) topic, which describes how to configure settings such as boundaries and axes. 
@@ -203,7 +267,7 @@ For information on additional map properties you can specify, see the Maps secti
 
 Once you have finished configuring the map and layer properties, copy the *tile-quickstart/* folder to your web server's (e.g., Apache Tomcat or Jetty) *webapps/* directory.
 
-Note that if you have the Aperture Tiles source code, you can alternatively use Gradle to deploy a Jetty server:
+**NOTE**: If you have the Aperture Tiles source code, you can also use Gradle to deploy a Jetty server:
 
 1. Copy the *tile-quickstart/* folder to the root `aperture-tiles` directory.
 2. Run the following command:

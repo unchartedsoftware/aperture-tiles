@@ -96,7 +96,7 @@ gulp.task('build-js', function() {
 
 gulp.task('generate-docs', function () {
     var run = require('gulp-run');
-    run('jsdoc src/js/ --destination docs --recurse --template node_modules/jaguarjs-jsdoc').exec();
+    run('jsdoc src/js/ src/js/README.md --destination docs --recurse --template node_modules/jaguarjs-jsdoc ').exec()
 })
 
 gulp.task('build', [ 'clean' ], function() {
