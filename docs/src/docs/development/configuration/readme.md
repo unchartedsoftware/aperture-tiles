@@ -443,7 +443,7 @@ darkRenderTheme = new tiles.RenderTheme( "dark", {
 });
 ```
 
-Lines 204-216 instantiates a word cloud renderer, attaching the above theme and appending a 'hook' function to give access to the renderer DOM element and respective data entru.
+Lines 204-216 instantiates a word cloud renderer, attaching the above theme to the 'text' render target, and appending a 'hook' function to give access to the rendered DOM elements and respective data entry. Take note of the 'textKey' and 'countKey' attributes under the 'text' render target. They specify that the renderer will find the 'text' and 'count' values required to build the word cloud under the attributes 'topic' and 'countMonthly' in the data entry.
 
 ```javascript
 wordCloudRenderer = new tiles.WordCloudRenderer({
