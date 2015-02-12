@@ -109,7 +109,6 @@ Example response:
 	layers: [
 		{
 			id: "instagram-heatmap",
-			version: "v1.0",
         	pyramid: {
             	type: "WebMercator"
 			}
@@ -124,7 +123,6 @@ Example response:
 		},
 		{
 			id: "instagram-keyword-heatmap",
-			version: "v1.0",
         	pyramid: {
             	type: "WebMercator"
         	},
@@ -190,7 +188,6 @@ Example response:
 {
 	layer: {
 		id: "instagram-heatmap",
-		version: "v1.0",
 		pyramid: {
 			type: "WebMercator"
 		 }

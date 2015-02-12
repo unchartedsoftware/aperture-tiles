@@ -419,22 +419,31 @@ The previous sections focus largely on the process of implementing an Aperture T
 
 A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
 
-For example, lines 39-48 parse layers into an object keyed by layer ID and parse the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
+Line 33 requests the layer configuration objects from the server, passing them to the supplied callback function as arguments.
+
+```javascript
+tiles.LayerService.getLayers( function( layers ) { 
+	... 
+});
+```
+
+Line 39 organizes the layer configuration object array into an map keyed by layer ID. It also parses the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
 
 ```javascript
 layers = tiles.LayerUtil.parse( layers.layers );
-
-        var map,
-            axis0,
-            axis1,
-            baseLayer,
-            darkRenderTheme,
-            wordCloudRenderer,
-            clientLayer,
-            serverLayer;
 ```
 
-Lines 156-168 instantiate a word cloud renderer, attaching a theme and hooking the function to give access to the renderer DOM element and respective data entry.
+Lines 180-184 instantiates a render theme object which will style the rendered components.
+
+```javascript
+darkRenderTheme = new tiles.RenderTheme( "dark", {
+    'color': "#FFFFFF",
+    'color:hover': "#09CFFF",
+    'text-shadow': "#000"
+});
+```
+
+Lines 204-216 instantiates a word cloud renderer, attaching the above theme and appending a 'hook' function to give access to the renderer DOM element and respective data entru.
 
 ```javascript
 wordCloudRenderer = new tiles.WordCloudRenderer({
@@ -452,7 +461,7 @@ wordCloudRenderer = new tiles.WordCloudRenderer({
 });
 ```
 
-The client renderer layer itself is instantiated on lines 186-189, passing the "top-tweets" layer as its source.
+The client rendered layer itself is instantiated on lines 234-237, passing the "top-tweets" layer as its source, and the word cloud renderer as its renderer.
 
 ```javascript
 clientLayer = new tiles.ClientLayer({
