@@ -6,6 +6,9 @@ import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -68,7 +71,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public TileData<T> deserialize(TileIndex index, InputStream stream)
 		throws IOException {
-        Input input = new Input(new InflaterInputStream(stream));
+        Input input = new Input(new BZip2CompressorInputStream(stream));
 		try {
 	
 			Object data = kryo().readClassAndObject(input);
@@ -82,7 +85,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public void serialize(TileData<T> data, OutputStream stream)
 		throws IOException {
-        Output output = new Output(new DeflaterOutputStream(stream));
+        Output output = new Output(new BZip2CompressorOutputStream(stream));
 
 		kryo().writeClassAndObject(output, data);
 
