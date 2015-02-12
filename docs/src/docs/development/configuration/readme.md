@@ -413,7 +413,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 
 ## <a name="clientconfig"></a> Tile Client Configuration ##
 
-## <a name="clientside"></a> Client-Side Rendering ##
+### <a name="clientside"></a> Client-Side Rendering ###
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
@@ -427,13 +427,13 @@ tiles.LayerService.getLayers( function( layers ) {
 });
 ```
 
-Line 39 organizes the layer configuration object array into an map keyed by layer ID. It also parses the metadata JSON strings into their respective runtime objects. This is used to ensure support for legacy layer metadata.
+Line 39 organizes the layer configuration object array into a map keyed by layer ID. It also parses the metadata JSON strings into their respective runtime objects. This ensures support for legacy layer metadata.
 
 ```javascript
 layers = tiles.LayerUtil.parse( layers.layers );
 ```
 
-Lines 180-184 instantiates a render theme object which will style the rendered components.
+Lines 180-184 instantiate a render theme object that styles the rendered components.
 
 ```javascript
 darkRenderTheme = new tiles.RenderTheme( "dark", {
@@ -443,7 +443,9 @@ darkRenderTheme = new tiles.RenderTheme( "dark", {
 });
 ```
 
-Lines 204-216 instantiates a word cloud renderer, attaching the above theme to the 'text' render target, and appending a 'hook' function to give access to the rendered DOM elements and respective data entry. Take note of the 'textKey' and 'countKey' attributes under the 'text' render target. They specify that the renderer will find the 'text' and 'count' values required to build the word cloud under the attributes 'topic' and 'countMonthly' in the data entry.
+Lines 204-216 instantiate a word cloud renderer, attaching the theme to the 'text' render target and appending a 'hook' function to give access to the rendered DOM elements and respective data entry.
+
+Note the 'textKey' and 'countKey' attributes under the 'text' render target. They specify that the renderer will find the 'text' and 'count' values required to build the word cloud under the attributes 'topic' and 'countMonthly' in the data entry.
 
 ```javascript
 wordCloudRenderer = new tiles.WordCloudRenderer({
@@ -461,7 +463,7 @@ wordCloudRenderer = new tiles.WordCloudRenderer({
 });
 ```
 
-The client rendered layer itself is instantiated on lines 234-237, passing the "top-tweets" layer as its source, and the word cloud renderer as its renderer.
+The client-rendered layer is instantiated on lines 234-237, passing the "top-tweets" layer as its source and the word cloud renderer as its renderer.
 
 ```javascript
 clientLayer = new tiles.ClientLayer({
