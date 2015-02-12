@@ -24,155 +24,69 @@
  */
 package com.oculusinfo.binning.io.serialization;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.InflaterInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.avro.file.CodecFactory;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.xerial.snappy.SnappyOutputStream;
 
-import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.impl.HBasePyramidIO;
-import com.oculusinfo.binning.io.impl.HBasePyramidIO.HBaseColumn;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class SeriesSerializationSpeedTests {
     static enum TYPE {kryo, avro};
-    private static final int ITERATIONS = 10;
-    private static final int TILES_PER_REQUEST = 1;
-
-    private HBasePyramidIO                          _io;
-    private Map<TYPE, TileSerializer<List<Double>>> _serializers;
-
-    @Before
-    public void setup () throws Exception {
-        _io = new HBasePyramidIO("hadoop-s1.oculus.local", "2181", "hadoop-s1.oculus.local:60000");
-        _serializers = new HashMap<SeriesSerializationSpeedTests.TYPE, TileSerializer<List<Double>>>();
-        _serializers.put(TYPE.avro, new PrimitiveArrayAvroSerializer<>(Double.class,  CodecFactory.bzip2Codec()));
-        _serializers.put(TYPE.kryo, new KryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class))));
-    }
-
-    @After
-    public void teardown () throws Exception {
-        _io.close();
-        _io = null;
-    }
-    private void testTableSpeed (TYPE type, String size) throws IOException {
-        String tableName = type.toString()+"-"+size+".julia.x.y.series";
-        TileSerializer<List<Double>> serializer = _serializers.get(type);
-        int sqs = (int) Math.ceil(Math.sqrt(TILES_PER_REQUEST));
-        int expectedSize = Integer.parseInt(size);
-
-        // Formulate requests
-        List<List<TileIndex>> requests = new ArrayList<>();
-        for (int i=0; i<ITERATIONS; ++i) {
-            List<TileIndex> request = new ArrayList<>();
-            for (int n=0; n<TILES_PER_REQUEST; ++n) {
-                int y = (int) Math.floor(n/sqs);
-                int x = n - (y * sqs);
-                request.add(new TileIndex(3, 4+sqs/2-x, 4+sqs/2-y));
-            }
-            requests.add(request);
-        }
-
-        // Make and time requests
-        long checkTime = 0L;
-        long checkBins = 0L;
-        long allBins = 0L;
-
-        long startTime = System.currentTimeMillis();
-        for (int i=0; i<ITERATIONS; ++i) {
-            List<TileData<List<Double>>> tiles = _io.readTiles(tableName, serializer, requests.get(i));
-            long startCheckTime = System.currentTimeMillis();
-            for (TileData<List<Double>> tile: tiles) {
-                for (int x=0; x<256; ++x) {
-                    for (int y=0; y < 256; ++y) {
-                        allBins++;
-                        if (tile.getBin(x, y).size() > 0) {
-                            Assert.assertEquals(expectedSize, tile.getBin(x, y).size());
-                            checkBins++;
-                        }
-                    }
-                }
-            }
-            long endCheckTime = System.currentTimeMillis();
-            checkTime += (endCheckTime - startCheckTime);
-        }
-        long endTime = System.currentTimeMillis();
-
-        long time = endTime - startTime;
-        double avgTime = (time-checkTime) / ((double) (ITERATIONS * TILES_PER_REQUEST));
-        System.out.println("Done checking data set "+type+"-"+size+" with "+ITERATIONS+" requests of "+TILES_PER_REQUEST+" tiles");
-        System.out.println("Total elapsed read time:"+formatTime(time));
-        System.out.println("Total time to check results: "+formatTime(checkTime));
-        System.out.println(String.format("\tchecked bins: %d of %d (%.2f%%)", checkBins, allBins, ((double) checkBins)/allBins));
-        System.out.println("Average time per request: "+formatTime(avgTime));
-    }
-    private String formatTime (double elapsedTime) {
-        if (elapsedTime > 60000) {
-            int min = (int) Math.floor(elapsedTime/60000);
-            double sec = (elapsedTime - 60000*min) / 1000.0;
-            return String.format("%dm%.3fs", min, sec);
-        } else {
-            return String.format("%.3fs", elapsedTime/1000.0);
-        }
-    }
 
     @Test
-    public void testKryo () throws IOException {
-        testTableSpeed(TYPE.kryo, "002");
-        testTableSpeed(TYPE.kryo, "005");
-        testTableSpeed(TYPE.kryo, "010");
-        testTableSpeed(TYPE.kryo, "020");
-        testTableSpeed(TYPE.kryo, "050");
-        testTableSpeed(TYPE.kryo, "100");
+    public void tileSpeedTests () throws Exception {
+        runTests(8, new TimingTestRunner());
     }
 
+    @Ignore
     @Test
-    public void testAvro () throws IOException {
-        testTableSpeed(TYPE.avro, "002");
-        testTableSpeed(TYPE.avro, "005");
-        testTableSpeed(TYPE.avro, "010");
-        testTableSpeed(TYPE.avro, "020");
-        testTableSpeed(TYPE.avro, "050");
-        testTableSpeed(TYPE.avro, "100");
+    public void tileSizeTests () throws Exception {
+        runTests(1, new SizeTestRunner());
     }
 
-    @Test
-    public void testTileSize () throws Exception {
+
+
+    private void runTests (int n, TestRunner runner) throws Exception {
         Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", "hadoop-s1.oculus.local");
         config.set("hbase.zookeeper.property.clientPort", "2181");
         config.set("hbase.master", "hadoop-s1.oculus.local:60000");
         config.set("hbase.client.keyvalue.maxsize", "0");
-        HBaseAdmin admin = new HBaseAdmin(config);
         HConnection connection = HConnectionManager.createConnection(config);
 
         List<String> rows = new ArrayList<>();
-        for (int x=0; x<8; ++x) {
-            for (int y=0; y<8; ++y) {
+        for (int x=0; x<n; ++x) {
+            for (int y=0; y<n; ++y) {
                 int digits = (int) Math.floor(Math.log10(1 << 3))+1;
                 rows.add(String.format("%02d,%0"+digits+"d,%0"+digits+"d", 3, x, y));
             }
         }
 
+        TileSerializer<List<Double>> kryo = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)));
+        TileSerializer<List<Double>> avro = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
         List<String> tables = Arrays.asList("kryo-002.julia.x.y.series",
                                             "kryo-005.julia.x.y.series",
                                             "kryo-010.julia.x.y.series",
@@ -185,6 +99,8 @@ public class SeriesSerializationSpeedTests {
                                             "avro-020.julia.x.y.series",
                                             "avro-050.julia.x.y.series",
                                             "avro-100.julia.x.y.series");
+        List<TileSerializer<List<Double>>> serializers = Arrays.asList(kryo, kryo, kryo, kryo, kryo, kryo,
+                                                                       avro, avro, avro, avro, avro, avro);
         byte[]      EMPTY_BYTES          = new byte[0];
         byte[]      TILE_FAMILY_NAME     = "tileData".getBytes();
 
@@ -195,24 +111,175 @@ public class SeriesSerializationSpeedTests {
             gets.add(get);
         }
 
-        for (String tableName: tables) {
+        runner.initial();
+        for (int i=0; i<tables.size(); ++i) {
+            String tableName = tables.get(i);
+            TileSerializer<List<Double>> serializer = serializers.get(i);
             HTableInterface table = connection.getTable( tableName );
 
             int tiles = 0;
-            long size = 0L;
+            runner.preTest();
             long startTime = System.currentTimeMillis();
             Result[] results = table.get(gets);
             for (Result result: results) {
                 if (result.containsColumn(TILE_FAMILY_NAME, EMPTY_BYTES)) {
                     byte[] rowValue = result.getValue(TILE_FAMILY_NAME, EMPTY_BYTES);
-                    size += rowValue.length;
+                    runner.runTest(tableName, rowValue, serializer);
                     tiles++;
                 }
             }
             long endTime = System.currentTimeMillis();
             table.close();
 
-            System.out.println("Table "+tableName+" has "+tiles+" tiles on level 3, with an average size of "+(((double)size)/tiles)+" (fetched in "+(endTime-startTime)+" ms)");
+            runner.postTest(tableName, endTime-startTime,  tiles);
+        }
+    }
+
+    interface TestRunner {
+        void initial ();
+        void preTest ();
+        void runTest (String tableName, byte[] rowValue, TileSerializer<List<Double>> serializer) throws Exception;
+        void postTest (String tableName, long elapsedTime, int iterations);
+    }
+
+    class TimingTestRunner implements TestRunner {
+        long parseTime;
+        double totalSize;
+        TileIndex deserializationIndex = new TileIndex(3, 0, 0);
+
+        @Override
+        public void initial () {
+            System.out.println("Fetched all 64 tiles from level 3");
+            System.out.println("table\ttiles\taverage size\ttotal time\tparse time\tfetch time\tparse time/tile\tfetch time/tile");
+        }
+
+        @Override
+        public void preTest () {
+            parseTime = 0L;
+            totalSize = 0;
+        }
+
+        @Override
+        public void runTest (String tableName,
+                             byte[] rowValue,
+                             TileSerializer<List<Double>> serializer) throws Exception {
+
+            long st2 = System.currentTimeMillis();
+            ByteArrayInputStream bais = new ByteArrayInputStream(rowValue);
+            serializer.deserialize(deserializationIndex, bais);
+            long et2 = System.currentTimeMillis();
+            
+            totalSize += rowValue.length;
+            parseTime += (et2-st2);
+        }
+
+        @Override
+        public void postTest (String tableName, long elapsedTime, int iterations) {
+            double time = elapsedTime/1000.0;
+            double pTime = parseTime/1000.0;
+            double fTime = time-pTime;
+            System.out.println(String.format("%s\t%d\t%.4f\t%.4fs\t%.4fs\t%.4fs\t%.4fs\t%.4fs",
+                                             tableName, iterations, totalSize/iterations,
+                                             time, pTime, fTime, pTime/iterations, fTime/iterations));
+        }
+        
+    }
+
+    class SizeTestRunner implements TestRunner {
+        long rawSize;
+
+        long deflateSize;
+        long zipSize;
+        long gzipSize;
+        long gzip2Size;
+        long bzipSize;
+        long snappySize;
+
+        @Override
+        public void initial () {
+            System.out.println("set\tn\traw\tdeflate\tzip\tgzip\tgzip commons\tbzip\tsnappy");
+        }
+
+        @Override
+        public void preTest () {
+            rawSize = 0L;
+            deflateSize = 0L;
+            zipSize = 0L;
+            gzipSize = 0L;
+            gzip2Size = 0L;
+            bzipSize = 0L;
+            snappySize = 0L;
+        }
+
+        @Override
+        public void runTest (String tableName, byte[] rowValue,
+                             TileSerializer<List<Double>> serializer) throws Exception {
+            deflateSize += rowValue.length;
+
+            ByteArrayInputStream bais = new ByteArrayInputStream(rowValue);
+            InflaterInputStream iis = new InflaterInputStream(bais);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int input;
+            while ((input = iis.read()) >= 0) {
+                baos.write(input);
+            }
+            baos.flush();
+            baos.close();
+            byte[] raw = baos.toByteArray();
+            rawSize += raw.length;
+
+            baos = new ByteArrayOutputStream();
+            ZipOutputStream zos = new ZipOutputStream(baos);
+            zos.putNextEntry(new ZipEntry("abc"));
+            zos.write(raw);
+            baos.flush();
+            baos.close();
+            zipSize += baos.toByteArray().length;
+            bais = new ByteArrayInputStream(raw);
+
+            baos = new ByteArrayOutputStream();
+            GZIPOutputStream gos = new GZIPOutputStream(baos);
+            gos.write(raw);
+            baos.flush();
+            baos.close();
+            gzipSize += baos.toByteArray().length;
+
+            baos = new ByteArrayOutputStream();
+            GzipCompressorOutputStream gos2 = new GzipCompressorOutputStream(baos);
+            gos2.write(raw);
+            baos.flush();
+            baos.close();
+            gos2.close();
+            gzip2Size += baos.toByteArray().length;
+
+            baos = new ByteArrayOutputStream();
+            BZip2CompressorOutputStream bos = new BZip2CompressorOutputStream(baos);
+            bos.write(raw);
+            baos.flush();
+            baos.close();
+            bos.close();
+            bzipSize += baos.toByteArray().length;
+
+            baos = new ByteArrayOutputStream();
+            SnappyOutputStream sos = new SnappyOutputStream(baos);
+            sos.write(raw);
+            baos.flush();
+            baos.close();
+            sos.close();
+            snappySize += baos.toByteArray().length;
+        }
+
+        @Override
+        public void postTest (String tableName, long elapsedTime, int iterations) {
+            System.out.println(String.format("%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",
+                                             tableName, iterations,
+                                             (((double) rawSize)/iterations),
+                                             (((double) deflateSize)/iterations),
+                                             (((double) zipSize)/iterations),
+                                             (((double) gzipSize)/iterations),
+                                             (((double) gzip2Size)/iterations),
+                                             (((double) bzipSize)/iterations),
+                                             (((double) snappySize)/iterations)));
         }
     }
 }
