@@ -26,11 +26,20 @@ package com.oculusinfo.binning.io.serialization;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.file.CodecFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,14 +48,14 @@ import org.junit.Test;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.impl.HBasePyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.impl.HBasePyramidIO.HBaseColumn;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class SeriesSerializationSpeedTests {
     static enum TYPE {kryo, avro};
-    private static final int ITERATIONS = 100;
+    private static final int ITERATIONS = 10;
     private static final int TILES_PER_REQUEST = 1;
 
     private HBasePyramidIO                          _io;
@@ -144,5 +153,66 @@ public class SeriesSerializationSpeedTests {
         testTableSpeed(TYPE.avro, "020");
         testTableSpeed(TYPE.avro, "050");
         testTableSpeed(TYPE.avro, "100");
+    }
+
+    @Test
+    public void testTileSize () throws Exception {
+        Configuration config = HBaseConfiguration.create();
+        config.set("hbase.zookeeper.quorum", "hadoop-s1.oculus.local");
+        config.set("hbase.zookeeper.property.clientPort", "2181");
+        config.set("hbase.master", "hadoop-s1.oculus.local:60000");
+        config.set("hbase.client.keyvalue.maxsize", "0");
+        HBaseAdmin admin = new HBaseAdmin(config);
+        HConnection connection = HConnectionManager.createConnection(config);
+
+        List<String> rows = new ArrayList<>();
+        for (int x=0; x<8; ++x) {
+            for (int y=0; y<8; ++y) {
+                int digits = (int) Math.floor(Math.log10(1 << 3))+1;
+                rows.add(String.format("%02d,%0"+digits+"d,%0"+digits+"d", 3, x, y));
+            }
+        }
+
+        List<String> tables = Arrays.asList("kryo-002.julia.x.y.series",
+                                            "kryo-005.julia.x.y.series",
+                                            "kryo-010.julia.x.y.series",
+                                            "kryo-020.julia.x.y.series",
+                                            "kryo-050.julia.x.y.series",
+                                            "kryo-100.julia.x.y.series",
+                                            "avro-002.julia.x.y.series",
+                                            "avro-005.julia.x.y.series",
+                                            "avro-010.julia.x.y.series",
+                                            "avro-020.julia.x.y.series",
+                                            "avro-050.julia.x.y.series",
+                                            "avro-100.julia.x.y.series");
+        byte[]      EMPTY_BYTES          = new byte[0];
+        byte[]      TILE_FAMILY_NAME     = "tileData".getBytes();
+
+        List<Get> gets = new ArrayList<Get>(rows.size());
+        for (String rowId: rows) {
+            Get get = new Get(rowId.getBytes());
+            get.addColumn(TILE_FAMILY_NAME, EMPTY_BYTES);
+            gets.add(get);
+        }
+
+        for (String tableName: tables) {
+            HTableInterface table = connection.getTable( tableName );
+
+            int tiles = 0;
+            long size = 0L;
+            long startTime = System.currentTimeMillis();
+            Result[] results = table.get(gets);
+            for (Result result: results) {
+                if (result.containsColumn(TILE_FAMILY_NAME, EMPTY_BYTES)) {
+                    byte[] rowValue = result.getValue(TILE_FAMILY_NAME, EMPTY_BYTES);
+                    size += rowValue.length;
+                    tiles++;
+                }
+            }
+            long endTime = System.currentTimeMillis();
+            table.close();
+
+            System.out.println("Table "+tableName+" has "+tiles+" tiles on level 3, with an average size of "+(((double)size)/tiles)+" (fetched in "+(endTime-startTime)+" ms)");
+        }
     }
 }
