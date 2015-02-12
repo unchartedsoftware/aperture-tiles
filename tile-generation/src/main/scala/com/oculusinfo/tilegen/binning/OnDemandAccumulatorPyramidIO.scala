@@ -58,6 +58,7 @@ import com.oculusinfo.binning._
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
+import scala.util.Try
 
 
 
@@ -206,26 +207,31 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 		val tileType = task.getTileType
 		task.transformRDD(identity).foreach{case (index, value, analyticValue) =>
 			{
-				val (x, y) = indexScheme.toCartesian(index)
-
-				tileData.foreach{case (level, tileInfos) =>
-					{
-						val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
-						if (tileInfos.contains(tile)) {
-							val bin = pyramid.rootToBin(x, y, tile)
-							// update bin value
-							tileInfos(tile).accumulable += (bin, value)
-							// update data analytic value
-							dataAnalytics.foreach(da =>
-								{
-									analyticValue.foreach(dataAnalyticValue =>
-										{
-											val daAccumulable = dataAnalyticAccumulators.get.apply(tile).accumulable
-											daAccumulable += (unitBin, dataAnalyticValue)
-										}
-									)
-								}
-							)
+				Try(indexScheme.toCartesian(index)).foreach{case (x, y) =>
+					tileData.foreach{case (level, tileInfos) =>
+						{
+							val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+							if (tileInfos.contains(tile)) {
+								val bin = pyramid.rootToBin(x, y, tile)
+								// update bin value
+								// Can't recover from an accumulator aggregation exception (we 
+								// don't know what it has added in, and what it hasn't), so just 
+								// move on if we get one.
+								Try(tileInfos(tile).accumulable += (bin, value))
+								// update data analytic value
+								dataAnalytics.foreach(da =>
+									{
+										analyticValue.foreach(dataAnalyticValue =>
+											{
+												val daAccumulable = dataAnalyticAccumulators.get.apply(tile).accumulable
+												// Similarly to bin accumulators, data analytic accumulators really can't
+												// recover from an exception, so just wrap it and move on.
+												Try(daAccumulable += (unitBin, dataAnalyticValue))
+											}
+										)
+									}
+								)
+							}
 						}
 					}
 				}

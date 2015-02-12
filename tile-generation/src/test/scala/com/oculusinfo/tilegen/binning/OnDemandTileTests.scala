@@ -71,8 +71,14 @@ class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndA
 		dataFile1 = File.createTempFile("simple-live-tile-test", ".csv")
 		println("Creating temporary data file "+dataFile1.getAbsolutePath())
 		val writer = new FileWriter(dataFile1)
-		Range(0, 8).foreach(n =>
-			writer.write("%f,%f\n".format(n.toDouble, (7-n).toDouble))
+		Range(0, 12).foreach(n =>
+			if (n < 8) {
+				// Good data
+				writer.write("%f,%f\n".format(n.toDouble, (7-n).toDouble))
+			} else {
+				// Bad data
+				writer.write("a,b)\n")
+			}
 		)
 		writer.flush()
 		writer.close()
