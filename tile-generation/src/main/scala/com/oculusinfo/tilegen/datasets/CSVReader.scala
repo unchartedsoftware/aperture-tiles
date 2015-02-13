@@ -27,11 +27,11 @@ package com.oculusinfo.tilegen.datasets
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.TimeZone
-
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import scala.util.Try
 
 /**
  * A class that allows reading a schema file and a CSV file as a SchemaRDD.
@@ -131,12 +131,12 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 		val indices = _indices
 		val N = _fields
 		val rowRDD: RDD[Row] = data.map(record =>
-			{
+			Try{
 				val fields = record.split(separator)
 				val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
 				row(values:_*)
 			}
-		)
+		).filter(_.isSuccess).map(_.get)
 		sqlc.applySchema(rowRDD, _schema)
 	}
 
