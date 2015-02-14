@@ -317,8 +317,8 @@ public class TwitterDemoTopicRecord implements Serializable {
 			RecentTweet rt = _recentTweets.get(i);
 			if (i > 0)
 				result += ", ";
-			result += "(" + escapeString(rt.getText()) + ", " + rt.getTime()
-					+ ")";
+			result += "(" + escapeString(rt.getText()) + ", " + rt.getTime() + ", " + escapeString(rt.getUser()) + ", "
+					+ escapeString(rt.getSentiment()) + ")";
 		}
 		result += "], endTimeSecs: " + _endTimeSecs + "}";
 		return result;
@@ -371,10 +371,18 @@ public class TwitterDemoTopicRecord implements Serializable {
 			String tweet = unescapeString(value.substring(0, end));
 
 			value = eat(value.substring(end), ", ");
-			end = value.indexOf(")");
+			end = value.indexOf(",");
 			long tweetCount = Long.parseLong(value.substring(0, end));
 
-			recentTweets.add(new RecentTweet(tweet, tweetCount, "", ""));
+			value = eat(value.substring(end), ", ");
+			end = value.indexOf(",");
+			String user = unescapeString(value.substring(0, end));
+
+			value = eat(value.substring(end), ", ");
+			end = value.indexOf(")");
+			String sentiment = unescapeString(value.substring(0, end));
+
+			recentTweets.add(new RecentTweet(tweet, tweetCount, user, sentiment));
 
 			value = value.substring(end + 1);
 			if (value.startsWith(", "))

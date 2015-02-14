@@ -443,8 +443,8 @@ public class TwitterTopicTests {
 													Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new RecentTweet("abcdef", _endTimeSecs - 1000L, "", ""),
-															new RecentTweet("abc\"\"\\\"\\\\\"\\\\\\\"def", _endTimeSecs - 2000L, "", "")),
+													Arrays.asList(new RecentTweet("abcdef", _endTimeSecs - 1000L, "bob", "neg"),
+															new RecentTweet("abc\"\"\\\"\\\\\"\\\\\\\"def", _endTimeSecs - 2000L, "alice", "pos")),
 													_endTimeSecs);    	
 
         String as = a.toString();
