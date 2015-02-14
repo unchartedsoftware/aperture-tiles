@@ -32,7 +32,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
-import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 
@@ -85,7 +84,6 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
             elt.put("tweet", rawElt.getText());
             elt.put("time", rawElt.getTime());
 	        elt.put("user", rawElt.getUser());
-	        elt.put("sentiment", rawElt.getSentiment());
             result.add(elt);
         }
         return result;
