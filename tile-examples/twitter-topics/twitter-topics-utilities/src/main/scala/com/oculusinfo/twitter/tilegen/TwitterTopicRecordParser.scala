@@ -38,7 +38,7 @@ import scala.util.parsing.json.JSON
 
 import com.oculusinfo.factory.util.Pair
 
-import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
+import com.oculusinfo.twitter.binning.{RecentTweet, TwitterDemoTopicRecord}
 
 private[tilegen]
 class TwitterTopicRecordLine (val createdAt: Date,
@@ -108,14 +108,14 @@ class TwitterTopicRecordParser (endTimeSecs: Long) {
     
     if ((endTimeSecs - time > 0L) && (endTimeSecs - time <= 2678400L)) {
     	// tweet time is valid time interva (i.e., within 1 month prior to endTime)    
-	    val textTime = new Pair[String, JavaLong](recordLine.text, time)
+	    val textTime = new RecentTweet(recordLine.text, time, "", "")
 	
 	    val newRecordsMap =
 	    	recordLine.topics
 	    	          .zip(recordLine.topicsEng)		// Combine raw topic and translation
 	                  .map{case (raw: String, english: String) => {
 	                    	 							// Change topic/translation pair to a topic record
-	    	val textTimeList = List[Pair[String, JavaLong]](textTime).asJava
+	    	val textTimeList = List[RecentTweet](textTime).asJava
 	    	(raw -> new TwitterDemoTopicRecord(raw, english, textTimeList, endTimeSecs))
 	    }}.toMap
 	

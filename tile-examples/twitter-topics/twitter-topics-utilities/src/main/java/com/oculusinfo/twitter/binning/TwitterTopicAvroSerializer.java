@@ -52,13 +52,13 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
         return "twitterTopicEntry.avsc";
     }
 
-    private List<Pair<String, Long>> recentListTOJava (GenericRecord entry) {
+    private List<RecentTweet> recentListTOJava(GenericRecord entry) {
         @SuppressWarnings("unchecked")
         GenericData.Array<GenericRecord> values = (GenericData.Array<GenericRecord>) entry.get("recentTweets");
-        List<Pair<String, Long>> results = new ArrayList<>();
+        List<RecentTweet> results = new ArrayList<>();
         for (GenericRecord value: values) {
-            results.add(new Pair<String, Long>(value.get("tweet").toString(),
-                                               (Long) value.get("time")));
+            results.add(new RecentTweet(value.get("tweet").toString(),
+		            (Long) value.get("time"), "", ""));
         }
         return results;
     }
@@ -76,14 +76,14 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
         								(Long)entry.get("endTimeSecs"));
     }
     
-    private List<GenericRecord> recentListToAvro (Schema mainSchema, List<Pair<String, Long>> elts) {
+    private List<GenericRecord> recentListToAvro (Schema mainSchema, List<RecentTweet> elts) {
         Schema eltSchema = mainSchema.getField("recentTweets").schema().getElementType();
         List<GenericRecord> result = new ArrayList<>();
         for (int i=0; i < elts.size(); ++i) {
             GenericRecord elt = new GenericData.Record(eltSchema);
-            Pair<String, Long> rawElt = elts.get(i);
-            elt.put("tweet", rawElt.getFirst());
-            elt.put("time", rawElt.getSecond());
+            RecentTweet rawElt = elts.get(i);
+            elt.put("tweet", rawElt.getText());
+            elt.put("time", rawElt.getTime());
             result.add(elt);
         }
         return result;

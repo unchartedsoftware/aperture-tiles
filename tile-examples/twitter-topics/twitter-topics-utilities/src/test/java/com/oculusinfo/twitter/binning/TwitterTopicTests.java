@@ -49,7 +49,7 @@ public class TwitterTopicTests {
 													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 																  0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("", _endTimeSecs)),
+													Arrays.asList(new RecentTweet("", _endTimeSecs, "", "")),
 													_endTimeSecs);
 	
 	//---- Create a topic with no counts and an end time.
@@ -65,7 +65,7 @@ public class TwitterTopicTests {
 													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 																  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 																  0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("", _endTimeSecs)),
+													Arrays.asList(new RecentTweet("", _endTimeSecs, "", "")),
 													_endTimeSecs);
 			
 		Assert.assertEquals(_sampleRecord, a);
@@ -75,7 +75,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testAddTweetBeforeBeginning() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (2678400L+1)); // 1 month + 1 sec from end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - (2678400L+1), "", ""); // 1 month + 1 sec from end time
 		
 		TwitterDemoTopicRecord a = TwitterDemoTopicRecord.addTweetToRecord(_sampleRecord, tweet1);
 		Assert.assertEquals(_sampleRecord, a);
@@ -85,7 +85,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testAddTweetAfterEnd() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs + 1L); // 1 sec after end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs + 1L, "", ""); // 1 sec after end time
 
 		
 		TwitterDemoTopicRecord a = TwitterDemoTopicRecord.addTweetToRecord(_sampleRecord, tweet1);
@@ -96,7 +96,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testAddTweetMonthly() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (2678400L-1)); // 1 month - 1 sec from end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - (2678400L-1), "", ""); // 1 month - 1 sec from end time
 		
 		TwitterDemoTopicRecord a = TwitterDemoTopicRecord.addTweetToRecord(_sampleRecord, tweet1);
 		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
@@ -113,7 +113,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testAddTweetQuarterDaily() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (604800L-1)); // 7 days - 1 sec from end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - (604800L-1), "", ""); // 7 days - 1 sec from end time
 	
 		TwitterDemoTopicRecord a = TwitterDemoTopicRecord.addTweetToRecord(_sampleRecord, tweet1);
 		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
@@ -136,7 +136,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testAddTweetHourly() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L); // 1 sec prior to end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", ""); // 1 sec prior to end time
 	
 		TwitterDemoTopicRecord a = TwitterDemoTopicRecord.addTweetToRecord(_sampleRecord, tweet1);
 		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
@@ -165,7 +165,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testConstructRecordBeforeBeginning() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (2678400L+1)); // 1 month + 1 sec from end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - (2678400L+1), "", ""); // 1 month + 1 sec from end time
 		
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
 		Assert.assertEquals(a.getCountMonthly(), 0);
@@ -178,7 +178,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testConstructRecordAfterEnd() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs + 1L); // 1 sec after end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs + 1L, "", ""); // 1 sec after end time
 
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
 		Assert.assertEquals(a.getCountMonthly(), 0);
@@ -191,7 +191,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testConstructRecordMonthly() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (2678400L-1)); // 1 month - 1 sec from end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - (2678400L-1), "", ""); // 1 month - 1 sec from end time
 		
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
 		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
@@ -208,7 +208,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testConstructRecordQuarterDaily() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - (604800L-1)); // 7 days - 1 sec from end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - (604800L-1), "", ""); // 7 days - 1 sec from end time
 	
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
 		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
@@ -231,7 +231,7 @@ public class TwitterTopicTests {
 	@Test
 	public void testConstructRecordHourly() {	
 		
-		Pair<String, Long> tweet1 = new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L); // 1 sec prior to end time
+		RecentTweet tweet1 = new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", ""); // 1 sec prior to end time
 	
 		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopic, Arrays.asList(tweet1), _endTimeSecs);
 		Assert.assertEquals(a.getCountMonthly(), _sampleRecord.getCountMonthly()+1);
@@ -268,7 +268,7 @@ public class TwitterTopicTests {
 								Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0),
-								Arrays.asList(new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L)),	// 1 sec prior to end time
+								Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", "")),	// 1 sec prior to end time
 								_endTimeSecs);
 
 		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 1, 
@@ -281,7 +281,7 @@ public class TwitterTopicTests {
 								Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0),
-								Arrays.asList(new Pair<String, Long>("Nos todos amamos o futebol", _endTimeSecs - 3601L)),	// 1 hr + 1 sec prior to end time
+								Arrays.asList(new RecentTweet("Nos todos amamos o futebol", _endTimeSecs - 3601L, "", "")),	// 1 hr + 1 sec prior to end time
 								_endTimeSecs);
 
 		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 2, 
@@ -294,8 +294,8 @@ public class TwitterTopicTests {
 								Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0),
-								Arrays.asList(new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L),
-											  new Pair<String, Long>("Nos todos amamos o futebol", _endTimeSecs - 3601L)),
+								Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", ""),
+											  new RecentTweet("Nos todos amamos o futebol", _endTimeSecs - 3601L, "", "")),
 								_endTimeSecs);		
 
 		Assert.assertEquals(c, TwitterDemoTopicRecord.addRecords(a, b));
@@ -314,7 +314,7 @@ public class TwitterTopicTests {
 													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("Eu amo o futebol", _endTimeSecs - 1L)),	// 1 sec prior to end time
+													Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", "")),	// 1 sec prior to end time
 													_endTimeSecs);
 		
 		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord("hoquei", "hockey", 1, 
@@ -327,7 +327,7 @@ public class TwitterTopicTests {
 													Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("Todos nos gostamos de hoquei", _endTimeSecs - 3601L)),	// 1 hr + 1 sec prior to end time
+													Arrays.asList(new RecentTweet("Todos nos gostamos de hoquei", _endTimeSecs - 3601L, "", "")),	// 1 hr + 1 sec prior to end time
 													_endTimeSecs);
 		
         TwitterDemoTopicRecord.addRecords(a, b);
@@ -347,9 +347,9 @@ public class TwitterTopicTests {
 													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("blah1", _endTimeSecs - 1000L),
-																new Pair<String, Long>("blah2", _endTimeSecs - 2000L),
-																new Pair<String, Long>("blah3", _endTimeSecs - 3000L)),
+													Arrays.asList(new RecentTweet("blah1", _endTimeSecs - 1000L, "", ""),
+																new RecentTweet("blah2", _endTimeSecs - 2000L, "", ""),
+																new RecentTweet("blah3", _endTimeSecs - 3000L, "", "")),
 													_endTimeSecs);
 		
 		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 17, 
@@ -362,9 +362,9 @@ public class TwitterTopicTests {
 													Arrays.asList(0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("blah3", _endTimeSecs - 1500L),
-																new Pair<String, Long>("blah4", _endTimeSecs - 2500L),
-																new Pair<String, Long>("blah5", _endTimeSecs - 3500L)),
+													Arrays.asList(new RecentTweet("blah3", _endTimeSecs - 1500L, "", ""),
+																new RecentTweet("blah4", _endTimeSecs - 2500L, "", ""),
+																new RecentTweet("blah5", _endTimeSecs - 3500L, "", "")),
 													_endTimeSecs);
 
 		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 15, 
@@ -377,7 +377,7 @@ public class TwitterTopicTests {
 													Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													new ArrayList<Pair<String, Long>>(),
+													new ArrayList<RecentTweet>(),
 													_endTimeSecs);
 		
         Assert.assertEquals(c, TwitterDemoTopicRecord.minOfRecords(a, b));
@@ -397,9 +397,9 @@ public class TwitterTopicTests {
 													Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("blah1", _endTimeSecs - 1000L),
-																new Pair<String, Long>("blah2", _endTimeSecs - 2000L),
-																new Pair<String, Long>("blah3", _endTimeSecs - 3000L)),
+													Arrays.asList(new RecentTweet("blah1", _endTimeSecs - 1000L, "", ""),
+																new RecentTweet("blah2", _endTimeSecs - 2000L, "", ""),
+																new RecentTweet("blah3", _endTimeSecs - 3000L, "", "")),
 													_endTimeSecs);
 		
 		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 17, 
@@ -412,9 +412,9 @@ public class TwitterTopicTests {
 													Arrays.asList(0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("blah3", _endTimeSecs - 1500L),
-																new Pair<String, Long>("blah4", _endTimeSecs - 2500L),
-																new Pair<String, Long>("blah5", _endTimeSecs - 3500L)),
+													Arrays.asList(new RecentTweet("blah3", _endTimeSecs - 1500L, "", ""),
+																new RecentTweet("blah4", _endTimeSecs - 2500L, "", ""),
+																new RecentTweet("blah5", _endTimeSecs - 3500L, "", "")),
 													_endTimeSecs);
 
 		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(null, null, 17, 
@@ -427,7 +427,7 @@ public class TwitterTopicTests {
 													Arrays.asList(1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													new ArrayList<Pair<String, Long>>(),
+													new ArrayList<RecentTweet>(),
 													_endTimeSecs);
         Assert.assertEquals(c, TwitterDemoTopicRecord.maxOfRecords(a, b));
     }  
@@ -445,21 +445,21 @@ public class TwitterTopicTests {
 													Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 															0, 0, 0, 0),
-													Arrays.asList(new Pair<String, Long>("abcdef", _endTimeSecs - 1000L),
-															new Pair<String, Long>("abc\"\"\\\"\\\\\"\\\\\\\"def", _endTimeSecs - 2000L)),
+													Arrays.asList(new RecentTweet("abcdef", _endTimeSecs - 1000L, "", ""),
+															new RecentTweet("abc\"\"\\\"\\\\\"\\\\\\\"def", _endTimeSecs - 2000L, "", "")),
 													_endTimeSecs);    	
 
         String as = a.toString();
         TwitterDemoTopicRecord b = TwitterDemoTopicRecord.fromString(as);
-        Assert.assertEquals(a, b);
-//        Assert.assertEquals(a.getTopic(), b.getTopic());
-//        Assert.assertEquals(a.getTopicEnglish(), b.getTopicEnglish());
-//        Assert.assertEquals(a.getCountDaily(), b.getCountDaily());
-//        Assert.assertEquals(a.getCountPer6hrs(), b.getCountPer6hrs());
-//        Assert.assertEquals(a.getCountPerHour(), b.getCountPerHour());
-//        Assert.assertEquals(a.getRecentTweets(), b.getRecentTweets());
-//        Assert.assertTrue(a.getCountMonthly() == b.getCountMonthly());
-//        Assert.assertTrue(a.getEndTime() == b.getEndTime());
+//        Assert.assertEquals(a, b);
+        Assert.assertEquals(a.getTopic(), b.getTopic());
+        Assert.assertEquals(a.getTopicEnglish(), b.getTopicEnglish());
+        Assert.assertEquals(a.getCountDaily(), b.getCountDaily());
+        Assert.assertEquals(a.getCountPer6hrs(), b.getCountPer6hrs());
+        Assert.assertEquals(a.getCountPerHour(), b.getCountPerHour());
+        Assert.assertEquals(a.getRecentTweets(), b.getRecentTweets());
+        Assert.assertTrue(a.getCountMonthly() == b.getCountMonthly());
+        Assert.assertTrue(a.getEndTime() == b.getEndTime());
     }
 	
 }
