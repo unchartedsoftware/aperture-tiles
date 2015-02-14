@@ -31,6 +31,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.oculusinfo.binning.util.Pair;
+
 public class TwitterDemoTopicRecord implements Serializable {
 	private static final long serialVersionUID = 1L;	//NOTE:  using default serialVersion ID
 	

@@ -108,7 +108,7 @@ class TwitterTopicRecordParser (endTimeSecs: Long) {
 
     if ((endTimeSecs - time > 0L) && (endTimeSecs - time <= 2678400L)) {
     	// tweet time is valid time interva (i.e., within 1 month prior to endTime)    
-	    val textTime = new RecentTweet(recordLine.text, time, recordLine.userName)
+	    val textTime = new RecentTweet(recordLine.text, time, recordLine.userName, "")
 
 	    val newRecordsMap =
 	    	recordLine.topics
