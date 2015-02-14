@@ -24,13 +24,11 @@
  */
 package com.oculusinfo.twitter.binning;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.factory.util.Pair;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TwitterTopicTests {
 
@@ -268,7 +266,7 @@ public class TwitterTopicTests {
 								Arrays.asList(1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0),
-								Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", "")),	// 1 sec prior to end time
+								Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "barry", "")),	// 1 sec prior to end time
 								_endTimeSecs);
 
 		TwitterDemoTopicRecord b = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 1, 
@@ -281,7 +279,7 @@ public class TwitterTopicTests {
 								Arrays.asList(0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0),
-								Arrays.asList(new RecentTweet("Nos todos amamos o futebol", _endTimeSecs - 3601L, "", "")),	// 1 hr + 1 sec prior to end time
+								Arrays.asList(new RecentTweet("Nos todos amamos o futebol", _endTimeSecs - 3601L, "jorge", "")),	// 1 hr + 1 sec prior to end time
 								_endTimeSecs);
 
 		TwitterDemoTopicRecord c = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 2, 
@@ -294,8 +292,8 @@ public class TwitterTopicTests {
 								Arrays.asList(1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 										0, 0, 0, 0),
-								Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "", ""),
-											  new RecentTweet("Nos todos amamos o futebol", _endTimeSecs - 3601L, "", "")),
+								Arrays.asList(new RecentTweet("Eu amo o futebol", _endTimeSecs - 1L, "barry", ""),
+											  new RecentTweet("Nos todos amamos o futebol", _endTimeSecs - 3601L, "jorge", "")),
 								_endTimeSecs);		
 
 		Assert.assertEquals(c, TwitterDemoTopicRecord.addRecords(a, b));
@@ -387,7 +385,7 @@ public class TwitterTopicTests {
 	//---- Max of two records
     @Test
     public void testMax() {
-		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 15, 
+		TwitterDemoTopicRecord a = new TwitterDemoTopicRecord(_sampleTopic, _sampleTopicEnglish, 15,
 													Arrays.asList(1, 0, 0, 0, 0, 0, 5, 0, 0, 0,
 																0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 																0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9),
@@ -451,15 +449,15 @@ public class TwitterTopicTests {
 
         String as = a.toString();
         TwitterDemoTopicRecord b = TwitterDemoTopicRecord.fromString(as);
-//        Assert.assertEquals(a, b);
-        Assert.assertEquals(a.getTopic(), b.getTopic());
-        Assert.assertEquals(a.getTopicEnglish(), b.getTopicEnglish());
-        Assert.assertEquals(a.getCountDaily(), b.getCountDaily());
-        Assert.assertEquals(a.getCountPer6hrs(), b.getCountPer6hrs());
-        Assert.assertEquals(a.getCountPerHour(), b.getCountPerHour());
-        Assert.assertEquals(a.getRecentTweets(), b.getRecentTweets());
-        Assert.assertTrue(a.getCountMonthly() == b.getCountMonthly());
-        Assert.assertTrue(a.getEndTime() == b.getEndTime());
+        Assert.assertEquals(a, b);
+//        Assert.assertEquals(a.getTopic(), b.getTopic());
+//        Assert.assertEquals(a.getTopicEnglish(), b.getTopicEnglish());
+//        Assert.assertEquals(a.getCountDaily(), b.getCountDaily());
+//        Assert.assertEquals(a.getCountPer6hrs(), b.getCountPer6hrs());
+//        Assert.assertEquals(a.getCountPerHour(), b.getCountPerHour());
+//        Assert.assertEquals(a.getRecentTweets(), b.getRecentTweets());
+//        Assert.assertTrue(a.getCountMonthly() == b.getCountMonthly());
+//        Assert.assertTrue(a.getEndTime() == b.getEndTime());
     }
 	
 }

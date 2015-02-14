@@ -105,11 +105,11 @@ class TwitterTopicRecordParser (endTimeSecs: Long) {
     Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])] = {
     val recordLine = parseLine(line)
     val time = (recordLine.createdAt.getTime()*0.001).toLong	// convert from msec to sec
-    
+
     if ((endTimeSecs - time > 0L) && (endTimeSecs - time <= 2678400L)) {
     	// tweet time is valid time interva (i.e., within 1 month prior to endTime)    
-	    val textTime = new RecentTweet(recordLine.text, time, "", "")
-	
+	    val textTime = new RecentTweet(recordLine.text, time, recordLine.userName, "")
+
 	    val newRecordsMap =
 	    	recordLine.topics
 	    	          .zip(recordLine.topicsEng)		// Combine raw topic and translation

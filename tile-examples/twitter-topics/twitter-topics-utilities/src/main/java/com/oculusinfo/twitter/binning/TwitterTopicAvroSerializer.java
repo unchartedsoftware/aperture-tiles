@@ -58,7 +58,7 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
         List<RecentTweet> results = new ArrayList<>();
         for (GenericRecord value: values) {
             results.add(new RecentTweet(value.get("tweet").toString(),
-		            (Long) value.get("time"), "", ""));
+		            (Long) value.get("time"), (String) value.get("user"), (String) value.get("sentiment")));
         }
         return results;
     }
@@ -84,6 +84,8 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
             RecentTweet rawElt = elts.get(i);
             elt.put("tweet", rawElt.getText());
             elt.put("time", rawElt.getTime());
+	        elt.put("user", rawElt.getUser());
+	        elt.put("sentiment", rawElt.getSentiment());
             result.add(elt);
         }
         return result;
