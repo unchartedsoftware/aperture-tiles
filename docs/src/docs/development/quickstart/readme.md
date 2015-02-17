@@ -103,8 +103,8 @@ If you later intend to create Aperture Tiles projects using particularly large d
 
 Save and unzip the following Aperture Tiles distributions available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start template
-- [Tile Quick Start Application](../../../download/#tile-quick-start-template): An example Tile Client Application that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
+- [Tile Quick Start Application](../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
@@ -222,7 +222,7 @@ The `oculus.binning.prefix` value is only included if you set it in the property
 
 ## <a name="tile-server-configuration"></a> Tile Server Configuration ##
 
-For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-template)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
+For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
 
 If you stored your Avro tiles on your local filesystem, zip the *julia.x.y.v* directory produced during the Tile Generation stage and add it to the *WEB-INF/classes/* directory of the Tile Quick Start Application.
 
@@ -249,15 +249,15 @@ For information on additional layer properties you can specify, see the Layers s
 
 ## <a name="tile-client-application"></a> Tile Client Application ##
 
-For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-template)). The client displays the base map or plot and any layers passed in from the server.
+For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
 For information on additional map properties you can specify, see the Maps section of the [Configuration](../configuration/#maps) topic, which describes how to configure settings such as boundaries and axes. 
 
 ## <a name="deployment"></a> Deployment ##
 
-Once you have finished configuring the map and layer properties, copy *tile-quickstart.war* to your web server's (e.g., Apache Tomcat or Jetty) *webapps/* directory.
+Once you have finished configuring the map and layer properties, copy the *tile-quickstart.war* to the *webapps/* directory or your web server (e.g., Apache Tomcat or Jetty).
 
-Once your server is running, you can access the application at `http://localhost:8080/julia-demo` from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available.
+Once your server is running, use your web browser to access the application at `http://localhost:8080/julia-demo`. The Julia set application data is plotted on an X/Y chart with six layers of zoom available.
 
 ## Next Steps ##
 
