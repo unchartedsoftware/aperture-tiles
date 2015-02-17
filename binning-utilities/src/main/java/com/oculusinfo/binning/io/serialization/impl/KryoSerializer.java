@@ -8,6 +8,8 @@ import java.util.zip.InflaterInputStream;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -71,7 +73,9 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public TileData<T> deserialize(TileIndex index, InputStream stream)
 		throws IOException {
-        Input input = new Input(new BZip2CompressorInputStream(stream));
+	    // Input input = new Input(new InflaterInputStream(stream));
+        // Input input = new Input(new BZip2CompressorInputStream(stream));
+	    Input input = new Input(new GzipCompressorInputStream(stream));
 		try {
 	
 			Object data = kryo().readClassAndObject(input);
@@ -85,12 +89,17 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public void serialize(TileData<T> data, OutputStream stream)
 		throws IOException {
-        Output output = new Output(new BZip2CompressorOutputStream(stream));
+        // OutputStream compressionStream = new DeflaterOutputStream(stream);
+        // OutputStream compressionStream = new BZip2CompressorOutputStream(stream);
+        OutputStream compressionStream = new GzipCompressorOutputStream(stream);
+	    Output output = new Output(compressionStream);
 
 		kryo().writeClassAndObject(output, data);
 
 		output.flush();
 		output.close();
+		compressionStream.flush();
+		compressionStream.close();
 	}
 
     
