@@ -256,7 +256,6 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			copyTileRenderingToExploded.inputs.dir TILE_RENDERING_BUILD
 			copyTileRenderingToExploded.outputs.dir EXPLODED_LIBS
 
-
 			// Copy binning-utilities jar into the exploded war
 			task copyBinningUtilToExploded(type: Copy) {
 				from fileTree(BINNING_UTIL_BUILD).include("*.jar")
@@ -337,14 +336,17 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 		
 			// configure the war task to pick up the tile client build files
 			war {
-				doLast {
-					ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
-					copyClientJsToExploded.execute()
-					copyClientCssToExploded.execute()
-				}
+				from fileTree(TILE_CLIENT_BUILD).include(["*.js", "*.css"])
 			}
 			// install to ensure everything is ready for debug hotswap builds
 			war.dependsOn ":tile-client:install"
+
+			task explodeWar() {
+			    doLast { 
+			    	ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
+			    }
+			}
+			explodeWar.dependsOn war
 
 			// Jetty Exploded War
 			// Configure the jetty run task
@@ -356,7 +358,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
     			webAppSourceDirectory = file(EXPLODED_DIR)
 			}
 			jettyRun.dependsOn watchThread
-			jettyRun.dependsOn war
+			jettyRun.dependsOn explodeWar
 		}
 	}
 }

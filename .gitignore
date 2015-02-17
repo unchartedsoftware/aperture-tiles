@@ -15,5 +15,5 @@ test-output
 .gradle
 bin
 */**/coverage
-tile-quickstart.zip
+tile-quickstart.war
 out/*

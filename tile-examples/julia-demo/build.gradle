@@ -12,20 +12,26 @@ apply plugin: "jetty"
 // can inject client build setup 
 ext.clientProject = true
 
-// task to zip up this example as the quickstart app
-task zipProjectAsQuickstart(type: Zip) {
- 	from "${projectDir}"
- 	exclude "build", "*.iml", "README.md"
- 	destinationDir file( rootDir.getPath() )
- 	archiveName "tile-quickstart.zip"
+// Task to copy the .war file and rename to 'tile-quickstart.war'
+// This is hacky because gradle does not like it if you try to copy into 
+// the rootdir using a Copy task on Windows. See: 
+//     http://forums.gradle.org/gradle/topics/error-with-a-copy-task-on-windows
+task createQuickstart() { 
+	doLast { 
+		ant.copy( file: war.archivePath, todir: rootDir ) {
+		}
+		file( "${rootDir}/"+war.archiveName ).renameTo(file( "${rootDir}/tile-quickstart.war" ))
+	}
 }
 
+createQuickstart.dependsOn war
+
 // create tiles-quickstart.zip on intall
-install.dependsOn zipProjectAsQuickstart
+install.dependsOn createQuickstart
 
 // task to delete the quickstart zip
 task deleteQuickstart(type: Delete) {  
-    File quickstart = file( rootDir.getPath() + "/tile-quickstart.zip" );  
+    File quickstart = file( "${rootDir}/tile-quickstart.war" );  
     delete( quickstart ) 
 }
 
