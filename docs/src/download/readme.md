@@ -23,10 +23,10 @@ For information on full installations of Aperture Tiles (along with Aperture JS)
 
 The following pre-built distribution can be used to quickly generate and display tiles without having to build the software. See the [Quick Start](../docs/development/quickstart) documentation to help you quickly learn how to process a data set, transform it and create an Aperture Tiles project that allows you to visualize it in a web browser.
 
-- <a name="tile-generator"></a>**Tile Generator**: Enables you to generate a set of tiles that can be viewed using the template Tile Client available below. This version was built for Apache Spark 1.1.1 and CDH 4.6.
+- <a name="tile-generator"></a>**Tile Generator**: Enables you to generate a set of tiles that can be viewed using the Tile Client Application available below. This version was built for Apache Spark 1.1.1 and CDH 4.6.
 	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.5-cdh4.6.0.zip" class="download-link">Tile Generator</a><br/><br/>
-- <a name="tile-quick-start-template"></a>**Tile Quick Start Template**: An example Tile Client that you can quickly copy and deploy to your web server after minimal modification to display tiles in a browser.
-	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-quickstart-0.5.zip" class="download-link">Tile Quick Start Template</a>
+- <a name="tile-quick-start-application"></a>**Tile Quick Start Application**: An example Tile Client application to display tiles in a browser. You can quickly copy and deploy this application to your web server after minimal modification.
+	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-quickstart-0.5.war" class="download-link">Tile Quick Start Application</a>
 
 <div class="git">
 	<h2>Interested in Learning More?</h2>
