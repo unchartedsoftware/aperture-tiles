@@ -103,8 +103,8 @@ If you later intend to create Aperture Tiles projects using particularly large d
 
 Save and unzip the following Aperture Tiles distributions available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start template
-- [Tile Quick Start Template](../../../download/#tile-quick-start-template): An example Tile Client that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
+- [Tile Quick Start Application](../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
@@ -222,21 +222,21 @@ The `oculus.binning.prefix` value is only included if you set it in the property
 
 ## <a name="tile-server-configuration"></a> Tile Server Configuration ##
 
-For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Template ([tile-quickstart.zip](../../../download/#tile-quick-start-template)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
+For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
 
-If you stored your Avro tiles on your local filesystem, zip the *julia.x.y.v* directory produced during the Tile Generation stage and add it to the *src/main/resources/* directory of the Tile Quick Start Template.
+If you stored your Avro tiles on your local filesystem, zip the *julia.x.y.v* directory produced during the Tile Generation stage and add it to the *WEB-INF/classes/* directory of the Tile Quick Start Application.
 
-For typical Aperture Tiles projects, you will also need to edit the *src/main/webapp/WEB-INF/***web.xml** and *src/main/resources/***tile.properties** files in the Tile Quick Start Template. For more information on editing these files, see the [Configuration](../configuration/) topic on this website.
+For typical Aperture Tiles projects, you will also need to edit the */WEB-INF/***web.xml** and *WEB-INF/classes/***tile.properties** files in the Tile Quick Start Application. For more information on editing these files, see the [Configuration](../configuration/) topic on this website.
 
 ### Layer Properties ###
 
-Layer properties (within the **tile-quickstart.zip** at *src/main/resources/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. 
+Layer properties (within the **tile-quickstart.war** at *WEB-INF/classes/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. 
 
 For this example, you only need to edit the layer properties file if you saved your Avro tiles to HBase. Otherwise, you can skip ahead to the configuration of the [Tile Client Application](#tile-client-application). 
 
 <h6 class="procedure">To edit the layer properties for your project</h6>
 
-1. Access the *src/main/resources/layers/***julia-layer.json** file.
+1. Access the *WEB-INF/classes/layers/***julia-layer.json** file.
 2. Make sure the **id** property under the `private` node matches the name given to the HBase table name to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
 3. Clear the existing attributes under the `pyramidio` node and add the following HBase connection details:
 	- `type`: Enter *hbase*
@@ -249,34 +249,15 @@ For information on additional layer properties you can specify, see the Layers s
 
 ## <a name="tile-client-application"></a> Tile Client Application ##
 
-For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Template ([tile-quickstart.zip](../../../download/#tile-quick-start-template)). The client displays the base map or plot and any layers passed in from the server.
-
-To configure the tile client application to display the Avro files containing your source data, you must edit the map properties (within the **tile-quickstart.zip** at *src/main/webapp/***app.js**) to specify the attributes of the base map or plot on which your data is displayed.
-
-### Map Properties ###
-
-<h6 class="procedure">To edit the map properties for your project</h6>
-
-1. Open the **app.js** file in the the extracted Tile Quick Start template.
-2. Edit the *serverLayer* to pass in the name given to the directory (file system directory or HBase table name) to which your Avro tiles were generated. For the Julia set example, this should be *julia.x.y.v*.
-3. Save the file.
+For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
 For information on additional map properties you can specify, see the Maps section of the [Configuration](../configuration/#maps) topic, which describes how to configure settings such as boundaries and axes. 
 
 ## <a name="deployment"></a> Deployment ##
 
-Once you have finished configuring the map and layer properties, copy the *tile-quickstart/* folder to your web server's (e.g., Apache Tomcat or Jetty) *webapps/* directory.
+Once you have finished configuring the map and layer properties, copy the *tile-quickstart.war* to the *webapps/* directory or your web server (e.g., Apache Tomcat or Jetty).
 
-**NOTE**: If you have the Aperture Tiles source code, you can also use Gradle to deploy a Jetty server:
-
-1. Copy the *tile-quickstart/* folder to the root `aperture-tiles` directory.
-2. Run the following command:
-
-```bash
-./gradlew jettyRun
-```
-
-Once your server is running, you can access the application at `http://localhost:8080/julia-demo` from any web browser to view the Julia set data plotted on an X/Y chart with six layers of zoom available.
+Once your server is running, use your web browser to access the application at `http://localhost:8080/julia-demo`. The Julia set application data is plotted on an X/Y chart with six layers of zoom available.
 
 ## Next Steps ##
 
