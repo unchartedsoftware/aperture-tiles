@@ -43,7 +43,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurationException;
 
-public class KryoSerializationTests {
+public class KryoSerializationTests extends SerializerTestUtils {
 	private static final Class<?>[] EMPTY = new Class<?>[0];
 
 	@Test
@@ -389,22 +389,5 @@ public class KryoSerializationTests {
 		TileData<List<Integer>> output = serializer.deserialize(index, bais);
 
 		assertListTilesEqual(input, output);
-	}
-
-	private <T> void assertListTilesEqual (TileData<List<T>> expected, TileData<List<T>> actual) {
-		Assert.assertEquals(expected.getDefinition(), actual.getDefinition());
-		int xN = expected.getDefinition().getXBins();
-		int yN = expected.getDefinition().getYBins();
-		for (int x=0; x<xN; ++x) {
-			for (int y=0; y<yN; ++y) {
-				List<T> expectedBin = expected.getBin(x, y);
-				List<T> actualBin = actual.getBin(x, y);
-				int zN = expectedBin.size();
-
-				Assert.assertEquals(zN, actualBin.size());
-				for (int z=0; z<zN; ++z)
-					Assert.assertEquals(expectedBin.get(z), actualBin.get(z));
-			}
-		}
 	}
 }

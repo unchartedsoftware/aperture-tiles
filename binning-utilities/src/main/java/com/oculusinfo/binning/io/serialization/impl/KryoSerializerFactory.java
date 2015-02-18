@@ -36,8 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer.Codec;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.EnumProperty;
 import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.util.Pair;
@@ -56,6 +58,8 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 		                           null),
 		        "classes",
 		        "A list of fully-specified classes (as read by Class.forName()) that will need to be registered with Kryo for this serializer to work properly.");
+	private static final EnumProperty<Codec> CODEC = new EnumProperty<Codec>(
+	        "codec", "The compression scheme to use to compress Kryo's output", Codec.class, Codec.GZIP);
 
 
 
@@ -124,12 +128,16 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 	public KryoSerializerFactory (ConfigurableFactory<?> parent, List<String> path, TypeDescriptor type) {
 		super(getName(type), KryoSerializerFactory.<T>getGenericSerializerClass(), parent, path, true);
 		_type = type;
+
+		addProperty(NEEDED_CLASSES);
+		addProperty(CODEC);
 	}
 
 	@Override
 	protected TileSerializer<T> create () {
 		// Check class registrations
 		List<String> classNames = getPropertyValue(NEEDED_CLASSES);
+		Codec codec = getPropertyValue(CODEC);
 		int nc = classNames.size();
 		Class<?>[] classes = new Class<?>[nc];
 		for (int n=0; n<nc; ++n) {
@@ -139,6 +147,6 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
                 LOGGER.warn("Class {} not found", classNames.get(n));
             }
 		}
-		return new KryoSerializer<>(_type, classes);
+		return new KryoSerializer<>(_type, codec, classes);
 	}
 }
