@@ -32,16 +32,18 @@ import com.oculusinfo.factory.util.Pair;
  * @param <T> The type of data this instance of the serializer intends to serialize.
  */
 public class KryoSerializer<T> implements TileSerializer<T> {
-    private static final long serialVersionUID = 611839716702420914L;
+	private static final long serialVersionUID = 611839716702420914L;
+	public static enum Codec {Deflate, bzip, gzip};
 
 
 
-    // Store a kryo instance per thread
-    transient private LocalizedKryo  _localKryo;
-    // A list of classes each kryo instance must register
-    private Class<?>[]     _classesToRegister;
-    // Our type description
-    private TypeDescriptor _typeDesc;
+	// Store a kryo instance per thread
+	transient private LocalizedKryo  _localKryo;
+	// A list of classes each kryo instance must register
+	private Class<?>[]     _classesToRegister;
+	// Our type description
+	private TypeDescriptor _typeDesc;
+	private Codec _codec;
 	
 	/**
 	 * Create a serializer.
@@ -53,16 +55,20 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	 *            violating it will cause a host of problems.
 	 */
 	public KryoSerializer (TypeDescriptor typeDesc, Class<?>... classesToRegister) {
+		this(typeDesc, Codec.Deflate, classesToRegister);
+	}
+	public KryoSerializer (TypeDescriptor typeDesc, Codec codec, Class<?>... classesToRegister) {
 		_typeDesc = typeDesc;
+		_codec = codec;
 		_classesToRegister = classesToRegister;
 	}
 
-    // Get the kryo instance for this thread.
-    private Kryo kryo () {
-        if (null == _localKryo)
-            _localKryo = new LocalizedKryo();
-        return _localKryo.get();
-    }
+	// Get the kryo instance for this thread.
+	private Kryo kryo () {
+		if (null == _localKryo)
+			_localKryo = new LocalizedKryo();
+		return _localKryo.get();
+	}
 
 	@Override
 	public TypeDescriptor getBinTypeDescription() {
@@ -73,15 +79,27 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public TileData<T> deserialize(TileIndex index, InputStream stream)
 		throws IOException {
-	    // Input input = new Input(new InflaterInputStream(stream));
-        // Input input = new Input(new BZip2CompressorInputStream(stream));
-	    Input input = new Input(new GzipCompressorInputStream(stream));
+		InputStream compressionStream;
+		switch (_codec) {
+		case bzip:
+			compressionStream = new BZipInputStreamWrapper(new BZip2CompressorInputStream(stream));
+			break;
+		case gzip:
+			compressionStream = new GzipCompressorInputStream(stream);
+			break;
+		case Deflate:
+		default:
+			compressionStream = new InflaterInputStream(stream);
+			break;
+		}
+		Input input = new Input(compressionStream);
 		try {
 	
 			Object data = kryo().readClassAndObject(input);
 			if (data instanceof TileData) return (TileData) data;
 			else return null;
 		} finally {
+			compressionStream.close();
 			input.close();
 		}
 	}
@@ -89,52 +107,133 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public void serialize(TileData<T> data, OutputStream stream)
 		throws IOException {
-        // OutputStream compressionStream = new DeflaterOutputStream(stream);
-        // OutputStream compressionStream = new BZip2CompressorOutputStream(stream);
-        OutputStream compressionStream = new GzipCompressorOutputStream(stream);
-	    Output output = new Output(compressionStream);
+		OutputStream compressionStream;
+		switch (_codec) {
+		case bzip:
+			compressionStream = new BZip2CompressorOutputStream(stream);
+			break;
+		case gzip:
+			compressionStream = new GzipCompressorOutputStream(stream);
+			break;
+		case Deflate:
+		default:
+			compressionStream = new DeflaterOutputStream(stream);
+			break;
+		}
+		Output output = new Output(compressionStream);
+		try {
+			kryo().writeClassAndObject(output, data);
 
-		kryo().writeClassAndObject(output, data);
-
-		output.flush();
-		output.close();
-		compressionStream.flush();
-		compressionStream.close();
+			output.flush();
+			compressionStream.flush();
+		} finally {
+			output.close();
+			compressionStream.close();
+		}
 	}
 
     
     
-    private class LocalizedKryo extends ThreadLocal<Kryo> {
-        protected Kryo initialValue () {
-            Kryo kryo = new Kryo();
+	private class LocalizedKryo extends ThreadLocal<Kryo> {
+		protected Kryo initialValue () {
+			Kryo kryo = new Kryo();
 
-            kryo.register(TileIndex.class);
-            kryo.register(DenseTileData.class);
-            kryo.register(SparseTileData.class);
+			kryo.register(TileIndex.class);
+			kryo.register(DenseTileData.class);
+			kryo.register(SparseTileData.class);
 
-            // Standard collection types
-            kryo.register(java.util.ArrayDeque.class);
-            kryo.register(java.util.ArrayList.class);
-            kryo.register(java.util.BitSet.class);
-            kryo.register(java.util.HashMap.class);
-            kryo.register(java.util.HashSet.class);
-            kryo.register(java.util.Hashtable.class);
-            kryo.register(java.util.IdentityHashMap.class);
-            kryo.register(java.util.LinkedHashMap.class);
-            kryo.register(java.util.LinkedHashSet.class);
-            kryo.register(java.util.PriorityQueue.class);
-            kryo.register(java.util.TreeMap.class);
-            kryo.register(java.util.TreeSet.class);
-            kryo.register(java.util.Vector.class);
+			// Standard collection types
+			kryo.register(java.util.ArrayDeque.class);
+			kryo.register(java.util.ArrayList.class);
+			kryo.register(java.util.BitSet.class);
+			kryo.register(java.util.HashMap.class);
+			kryo.register(java.util.HashSet.class);
+			kryo.register(java.util.Hashtable.class);
+			kryo.register(java.util.IdentityHashMap.class);
+			kryo.register(java.util.LinkedHashMap.class);
+			kryo.register(java.util.LinkedHashSet.class);
+			kryo.register(java.util.PriorityQueue.class);
+			kryo.register(java.util.TreeMap.class);
+			kryo.register(java.util.TreeSet.class);
+			kryo.register(java.util.Vector.class);
 
-            // Our own standard types
-            kryo.register(Pair.class);
+			// Our own standard types
+			kryo.register(Pair.class);
 
-            // And our custom classes
-            for (Class<?> ctr: _classesToRegister) {
-                kryo.register(ctr);
-            }
-            return kryo;
-        }
-    }
+			// And our custom classes
+			for (Class<?> ctr: _classesToRegister) {
+				kryo.register(ctr);
+			}
+			return kryo;
+		}
+	}
+
+	/**
+	 * This is just a quick wrapping InputStream to get around a bug in apache commons bzip 
+	 * uncompression, where when it is passed a buffer into which to read, and told to offset by 
+	 * the length of the buffer, it returns that the file is done, rather than that the buffer is 
+	 * done.
+	 * 
+	 * The bug is Commons Compress / COMPRESS-300
+	 * (https://issues.apache.org/jira/browse/COMPRESS-309)
+	 * 
+	 * @author nkronenfeld
+	 */
+	public static class BZipInputStreamWrapper extends InputStream {
+		private InputStream _source;
+		public BZipInputStreamWrapper (InputStream source) {
+			_source = source;
+		}
+
+
+		// This is the one we care about, the one with the bug in apache commons bzip compression
+		@Override
+		public int read (byte[] buffer, int offset, int length) throws IOException {
+			if (offset == buffer.length) {
+				return 0;
+			}
+			return _source.read(buffer, offset, length);
+		}
+
+		// The rest are just pass-throughs to _source
+		@Override
+		public int available () throws IOException {
+			return _source.available();
+		}
+
+		@Override
+		public void close () throws IOException {
+			_source.close();
+		}
+
+		@Override
+		public synchronized void mark (int readlimit) {
+			_source.mark(readlimit);
+		}
+
+		@Override
+		public boolean markSupported () {
+			return _source.markSupported();
+		}
+
+		@Override
+		public synchronized void reset () throws IOException {
+			_source.reset();
+		}
+
+		@Override
+		public int read () throws IOException {
+			return _source.read();
+		}
+
+		@Override
+		public int read (byte[] buffer) throws IOException {
+			return _source.read(buffer);
+		}
+
+		@Override
+		public long skip (long n) throws IOException {
+			return _source.skip(n);
+		}
+	}
 }
