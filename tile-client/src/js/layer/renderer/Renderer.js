@@ -138,11 +138,12 @@
      */
     Renderer.prototype.executeHooks = function( elements, entries, data ) {
 
-        function exec( index, elem ) {
+        function execHook( index, elem ) {
             hook( elem, entries[index], entries, data );
         }
 
         var hooks = this.spec.hook ? [ this.spec.hook ] : this.spec.hooks,
+            selector = this.getEntrySelector(),
             hook,
             $elements,
             i;
@@ -153,11 +154,11 @@
                     // get the entries
                     $elements = $( elements );
                     // if entry selector is set, use it to select entries
-                    if ( this.getEntrySelector() ) {
-                        $elements = $elements.find( this.getEntrySelector() );
+                    if ( selector ) {
+                        $elements = $elements.find( selector );
                     }
                     // call entry function on each entry
-                    $elements.each( exec );
+                    $elements.each( execHook );
                 }
             }
         }

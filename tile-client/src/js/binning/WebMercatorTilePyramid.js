@@ -62,9 +62,6 @@
 		function gudermannian( y ) {
 			// converts a y value from -PI(bottom) to PI(top) into the
 			// mercator projection latitude
-			var sinh = function (arg) {
-				return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
-			};
 			return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
 		}
 		return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );

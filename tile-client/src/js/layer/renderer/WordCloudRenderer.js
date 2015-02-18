@@ -186,8 +186,9 @@
                 if ( !intersectWord( pos, dim, cloud, boundingBox ) ) {
                     cloud.push({
                         word: word,
+                        entry: wordCounts[i].entry,
                         fontSize: fontSize,
-                        percentLabel: Math.round( percent / 10 ) * 10, // round to nearest 10
+                        percentLabel: Math.round( percent / 10 ) * 10,
                         x:pos.x,
                         y:pos.y,
                         width: dim.width,
@@ -249,15 +250,15 @@
             i,
             cloud;
 
-         // get maximum count for layer if it exists in meta data
+        // get maximum count for layer if it exists in meta data
         maxCount = meta.minMax.max[ countKey ] / 4;
 
         for (i=0; i<numEntries; i++) {
             value = values[i];
-            entries.push( value );
             wordCounts.push({
                 word: RendererUtil.getAttributeValue( value, textKey ),
-                count: RendererUtil.getAttributeValue( value, countKey )
+                count: RendererUtil.getAttributeValue( value, countKey ),
+                entry: value
             });
         }
 
@@ -266,7 +267,7 @@
         for ( i=0; i<cloud.length; i++ ) {
 
             word = cloud[i];
-            value = values[i];
+            entries.push( word.entry );
 
             html += '<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
