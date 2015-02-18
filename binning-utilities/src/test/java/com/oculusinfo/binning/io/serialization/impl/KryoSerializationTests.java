@@ -292,7 +292,7 @@ public class KryoSerializationTests {
 		// Create our serializer
 		KryoSerializer<List<Integer>> serializer =
 			new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)),
-			                     KryoSerializer.Codec.bzip);
+			                     KryoSerializer.Codec.BZIP);
 
 		// Create a large tile
 		int xN = 256;
@@ -327,7 +327,7 @@ public class KryoSerializationTests {
 		// Create our serializer
 		KryoSerializer<List<Integer>> serializer =
 			new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)),
-			                     KryoSerializer.Codec.gzip);
+			                     KryoSerializer.Codec.GZIP);
 
 		// Create a large tile
 		int xN = 256;
@@ -362,7 +362,7 @@ public class KryoSerializationTests {
 		// Create our serializer
 		KryoSerializer<List<Integer>> serializer =
 			new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)),
-			                     KryoSerializer.Codec.Deflate);
+			                     KryoSerializer.Codec.DEFLATE);
 
 		// Create a large tile
 		int xN = 256;

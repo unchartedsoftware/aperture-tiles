@@ -33,7 +33,7 @@ import com.oculusinfo.factory.util.Pair;
  */
 public class KryoSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 611839716702420914L;
-	public static enum Codec {Deflate, bzip, gzip};
+	public static enum Codec {DEFLATE, BZIP, GZIP};
 
 
 
@@ -55,7 +55,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	 *            violating it will cause a host of problems.
 	 */
 	public KryoSerializer (TypeDescriptor typeDesc, Class<?>... classesToRegister) {
-		this(typeDesc, Codec.Deflate, classesToRegister);
+		this(typeDesc, Codec.BZIP, classesToRegister);
 	}
 	public KryoSerializer (TypeDescriptor typeDesc, Codec codec, Class<?>... classesToRegister) {
 		_typeDesc = typeDesc;
@@ -81,13 +81,13 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 		throws IOException {
 		InputStream compressionStream;
 		switch (_codec) {
-		case bzip:
+		case BZIP:
 			compressionStream = new BZipInputStreamWrapper(new BZip2CompressorInputStream(stream));
 			break;
-		case gzip:
+		case GZIP:
 			compressionStream = new GzipCompressorInputStream(stream);
 			break;
-		case Deflate:
+		case DEFLATE:
 		default:
 			compressionStream = new InflaterInputStream(stream);
 			break;
@@ -109,13 +109,13 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 		throws IOException {
 		OutputStream compressionStream;
 		switch (_codec) {
-		case bzip:
+		case BZIP:
 			compressionStream = new BZip2CompressorOutputStream(stream);
 			break;
-		case gzip:
+		case GZIP:
 			compressionStream = new GzipCompressorOutputStream(stream);
 			break;
-		case Deflate:
+		case DEFLATE:
 		default:
 			compressionStream = new DeflaterOutputStream(stream);
 			break;
