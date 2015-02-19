@@ -50,6 +50,7 @@ import org.xerial.snappy.SnappyOutputStream;
 
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer.Codec;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
@@ -85,21 +86,37 @@ public class SeriesSerializationSpeedTests {
             }
         }
 
-        TileSerializer<List<Double>> kryo = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)));
+        TileSerializer<List<Double>> kryoBZIP = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)), Codec.BZIP);
+        TileSerializer<List<Double>> kryoGZIP = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)), Codec.GZIP);
+        TileSerializer<List<Double>> kryoDEFLATE = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)), Codec.DEFLATE);
         TileSerializer<List<Double>> avro = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
-        List<String> tables = Arrays.asList("kryo-002.julia.x.y.series",
-                                            "kryo-005.julia.x.y.series",
-                                            "kryo-010.julia.x.y.series",
-                                            "kryo-020.julia.x.y.series",
-                                            "kryo-050.julia.x.y.series",
-                                            "kryo-100.julia.x.y.series",
+        List<String> tables = Arrays.asList("kryo-002-BZIP.julia.x.y.series",
+                                            "kryo-005-BZIP.julia.x.y.series",
+                                            "kryo-010-BZIP.julia.x.y.series",
+                                            "kryo-020-BZIP.julia.x.y.series",
+                                            "kryo-050-BZIP.julia.x.y.series",
+                                            "kryo-100-BZIP.julia.x.y.series",
+                                            "kryo-002-GZIP.julia.x.y.series",
+                                            "kryo-005-GZIP.julia.x.y.series",
+                                            "kryo-010-GZIP.julia.x.y.series",
+                                            "kryo-020-GZIP.julia.x.y.series",
+                                            "kryo-050-GZIP.julia.x.y.series",
+                                            "kryo-100-GZIP.julia.x.y.series",
+                                            "kryo-002-DEFLATE.julia.x.y.series",
+                                            "kryo-005-DEFLATE.julia.x.y.series",
+                                            "kryo-010-DEFLATE.julia.x.y.series",
+                                            "kryo-020-DEFLATE.julia.x.y.series",
+                                            "kryo-050-DEFLATE.julia.x.y.series",
+                                            "kryo-100-DEFLATE.julia.x.y.series",
                                             "avro-002.julia.x.y.series",
                                             "avro-005.julia.x.y.series",
                                             "avro-010.julia.x.y.series",
                                             "avro-020.julia.x.y.series",
                                             "avro-050.julia.x.y.series",
                                             "avro-100.julia.x.y.series");
-        List<TileSerializer<List<Double>>> serializers = Arrays.asList(kryo, kryo, kryo, kryo, kryo, kryo,
+        List<TileSerializer<List<Double>>> serializers = Arrays.asList(kryoBZIP, kryoBZIP, kryoBZIP, kryoBZIP, kryoBZIP, kryoBZIP,
+                                                                       kryoGZIP, kryoGZIP, kryoGZIP, kryoGZIP, kryoGZIP, kryoGZIP,
+                                                                       kryoDEFLATE, kryoDEFLATE, kryoDEFLATE, kryoDEFLATE, kryoDEFLATE, kryoDEFLATE,
                                                                        avro, avro, avro, avro, avro, avro);
         byte[]      EMPTY_BYTES          = new byte[0];
         byte[]      TILE_FAMILY_NAME     = "tileData".getBytes();
