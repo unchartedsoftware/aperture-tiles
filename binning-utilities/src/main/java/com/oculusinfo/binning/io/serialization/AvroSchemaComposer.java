@@ -137,8 +137,13 @@ public class AvroSchemaComposer {
 	/** Load a schema via the class-loader resource mechanism. **/
 	public AvroSchemaComposer addResource (String path) throws IOException {
 		try {
-			add(AvroSchemaComposer.class.getClassLoader()
-			    .getResourceAsStream(path));
+			// Try with the system class loader first and use the current class loader if that
+			// fails.
+			InputStream stream = AvroSchemaComposer.class.getClassLoader().getResourceAsStream(path);
+			if (stream == null) {
+				stream = getClass().getResourceAsStream(path);
+			}
+			add(stream);
 		} catch (Exception e) {
 			throw new RuntimeException("Error loading schema " + path,
 			                           e.getCause());
