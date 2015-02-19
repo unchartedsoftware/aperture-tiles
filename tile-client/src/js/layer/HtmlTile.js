@@ -180,6 +180,8 @@
         }
 
         if ( renderer ) {
+            // inject selected entry classes
+            renderer.injectEntries( div.children, entries );
             // if renderer is attached, call hook function
             renderer.executeHooks( div.children, entries, data );
         }

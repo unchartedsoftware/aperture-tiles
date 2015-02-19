@@ -135,12 +135,12 @@
         // for each entry, check if they have the matching value to the select
         $entries.each( function() {
             var $elem = $( this ),
-                entry = $elem.data('entry' ),
+                entry = $elem.data( 'entry' ),
                 value = RendererUtil.getAttributeValue( entry, selectKey );
             if ( value === selectValue ) {
-                 $elem.removeClass('de-emphasized' ).addClass('emphasized');
+                 $elem.removeClass( 'de-emphasized' ).addClass( 'emphasized' );
             } else {
-                $elem.removeClass('emphasized' ).addClass('de-emphasized');
+                $elem.removeClass( 'emphasized' ).addClass( 'de-emphasized' );
             }
         });
     };
@@ -157,8 +157,10 @@
         $entries = selector ? $tiles.find( selector ) : $tiles.children();
         // for each entry, remove relevant classes
         $entries.each( function() {
-            $( this ).removeClass('de-emphasized' ).removeClass('emphasized');
+            $( this ).removeClass( 'de-emphasized' ).removeClass( 'emphasized' );
         });
+        // clear the select value
+        this.selectValue = null;
     };
 
     /**
@@ -178,6 +180,41 @@
     };
 
     /**
+     * This iterates over every data entry's DOM element and if there is a current selected
+     * value in the renderer, it will inject the correct emphasize and de-emphasize flags.
+     * @memberof Renderer
+     * @private
+     *
+     * @param {HTMLCollection} elements - A collection of html elements.
+     * @param {Array} entries - The array of all data entries.
+     */
+    Renderer.prototype.injectEntries = function( elements, entries ) {
+        var selector = this.getEntrySelector(),
+            selectKey = this.spec.select.selectKey,
+            selectValue = this.selectValue,
+            $elements = $( elements );
+        // if entry selector is set, use it to select entries
+        if ( selector ) {
+            $elements = $elements.find( selector );
+        }
+        // call entry function on each entry
+        $elements.each( function( index, elem ) {
+            var $elem = $( elem ),
+                entry = entries[index],
+                value = RendererUtil.getAttributeValue( entry, selectKey );
+            // store the entry data in the entry element
+            $elem.data( 'entry', entry );
+            if ( selectValue && selectKey ) {
+                if ( value === selectValue ) {
+                    $elem.removeClass( 'de-emphasized' ).addClass( 'emphasized' );
+                } else {
+                    $elem.removeClass( 'emphasized' ).addClass( 'de-emphasized' );
+                }
+            }
+        });
+    };
+
+    /**
      * The hook callback executor function. If a hook function is provided to the renderer, this
      * will execute it passing the respective element and data entry along with all entries and
      * the raw tile data. This is called by the HtmlTile object, should not be called manually.
@@ -191,24 +228,11 @@
     Renderer.prototype.executeHooks = function( elements, entries, data ) {
 
         function execHook( index, elem ) {
-            var $elem = $( elem ),
-                entry = entries[index],
-                value = RendererUtil.getAttributeValue( entry, selectKey );
-            $elem.data( 'entry', entry );
-            if ( selectValue && selectKey ) {
-                if ( value === selectValue ) {
-                    $elem.removeClass('de-emphasized' ).addClass('emphasized');
-                } else {
-                    $elem.removeClass('emphasized' ).addClass('de-emphasized');
-                }
-            }
-            hook( elem, entry, entries, data );
+            hook( elem, entries[index], entries, data );
         }
 
         var hooks = this.spec.hook ? [ this.spec.hook ] : this.spec.hooks,
             selector = this.getEntrySelector(),
-            selectKey = this.spec.select.selectKey,
-            selectValue = this.selectValue,
             hook,
             $elements,
             i;
