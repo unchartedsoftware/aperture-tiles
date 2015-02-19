@@ -37,18 +37,15 @@ import java.lang.{Iterable => JavaIterable}
 import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
-
 import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.sql.SQLContext
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable.{Set => MutableSet}
 import scala.collection.mutable.Stack
 import scala.reflect.ClassTag
-
 import org.apache.spark.Accumulable
 import org.apache.spark.AccumulableParam
 import org.apache.spark.SparkContext
@@ -59,6 +56,7 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import scala.util.Try
+import grizzled.slf4j.Logging
 
 
 
@@ -66,7 +64,7 @@ import scala.util.Try
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
+class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Logging {
 	private val sc = sqlc.sparkContext
 	private val tasks = MutableMap[String, TilingTask[_, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
@@ -301,11 +299,11 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 			accStore.release(data)
 		}
 
-		println("Read "+results.size+" tiles.")
-		println("\t"+accStore.inUseCount+" accumulators in use")
-		println("\t"+accStore.inUseData+" bins locked in in-use accumulators")
-		println("\t"+accStore.availableCount+" accumulators available")
-		println("\t"+accStore.availableData+" bins size locked in available accumulators")
+		info("Read "+results.size+" tiles.")
+		info("\t"+accStore.inUseCount+" accumulators in use")
+		info("\t"+accStore.inUseData+" bins locked in in-use accumulators")
+		info("\t"+accStore.availableCount+" accumulators available")
+		info("\t"+accStore.availableData+" bins size locked in available accumulators")
 
 		results
 	}
