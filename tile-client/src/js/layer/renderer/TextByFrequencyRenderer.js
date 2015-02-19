@@ -93,11 +93,11 @@
      * <pre>
      * {
      *     text: {
-     *         textKey  {String} - The attribute for the text in the data entry.
+     *         textKey  {String|Function} - The attribute for the text in the data entry.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     },
      *     frequency: {
-     *         countKey {String} - The attribute for the count in the data entry.
+     *         countKey {String|Function} - The attribute for the count in the data entry.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *         invertOrder {Boolean} - The boolean to determine order of chart values.  Defaults to false if not present
      *     }

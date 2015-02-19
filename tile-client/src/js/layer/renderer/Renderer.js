@@ -27,6 +27,8 @@
 
     "use strict";
 
+    var RendererUtil = require('./RendererUtil');
+
     /**
      * Instantiate a Renderer object.
      * @class Renderer
@@ -110,6 +112,56 @@
     };
 
     /**
+     * Select all entries in the rendered layer that also share the same selected value. The
+     * 'selectKey' of the 'select' option must be set.
+     * @memberof Renderer
+     *
+     * @param {Object} selectedEntry - The selected data entry.
+     */
+    Renderer.prototype.select = function( selectedEntry ) {
+        var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml' ),
+            selectKey = this.spec.select.selectKey,
+            selector = this.getEntrySelector(),
+            selectValue,
+            $entries;
+        // if no key specified, exit
+        if ( !selectKey ) {
+            return;
+        }
+        // get the select value based on key
+        this.selectValue = selectValue = RendererUtil.getAttributeValue( selectedEntry, selectKey );
+        // if entry selector is set, use it to select entries
+        $entries = selector ? $tiles.find( selector ) : $tiles.children();
+        // for each entry, check if they have the matching value to the select
+        $entries.each( function() {
+            var $elem = $( this ),
+                entry = $elem.data('entry' ),
+                value = RendererUtil.getAttributeValue( entry, selectKey );
+            if ( value === selectValue ) {
+                 $elem.removeClass('de-emphasized' ).addClass('emphasized');
+            } else {
+                $elem.removeClass('emphasized' ).addClass('de-emphasized');
+            }
+        });
+    };
+
+    /**
+     * Unselect all entries in the rendered layer.
+     * @memberof Renderer
+     */
+    Renderer.prototype.unselect = function() {
+        var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml' ),
+            selector = this.getEntrySelector(),
+            $entries;
+        // if entry selector is set, use it to select entries
+        $entries = selector ? $tiles.find( selector ) : $tiles.children();
+        // for each entry, remove relevant classes
+        $entries.each( function() {
+            $( this ).removeClass('de-emphasized' ).removeClass('emphasized');
+        });
+    };
+
+    /**
      * The central rendering function. This function is called for every tile containing data.
      * Returns an object containing the tiles html, along with an array of each data entry. The
      * implementation of this function is unique to each renderer.
@@ -139,11 +191,24 @@
     Renderer.prototype.executeHooks = function( elements, entries, data ) {
 
         function execHook( index, elem ) {
-            hook( elem, entries[index], entries, data );
+            var $elem = $( elem ),
+                entry = entries[index],
+                value = RendererUtil.getAttributeValue( entry, selectKey );
+            $elem.data( 'entry', entry );
+            if ( selectValue && selectKey ) {
+                if ( value === selectValue ) {
+                    $elem.removeClass('de-emphasized' ).addClass('emphasized');
+                } else {
+                    $elem.removeClass('emphasized' ).addClass('de-emphasized');
+                }
+            }
+            hook( elem, entry, entries, data );
         }
 
         var hooks = this.spec.hook ? [ this.spec.hook ] : this.spec.hooks,
             selector = this.getEntrySelector(),
+            selectKey = this.spec.select.selectKey,
+            selectValue = this.selectValue,
             hook,
             $elements,
             i;

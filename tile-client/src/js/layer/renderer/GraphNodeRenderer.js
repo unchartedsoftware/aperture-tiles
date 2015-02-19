@@ -66,19 +66,19 @@
      * <pre>
      * {
      *     node: {
-     *         xKey      {String} - The attribute for the x coordinate.
-     *         yKey      {String} - The attribute for the y coordinate.
-     *         radiusKey {String} - The attribute for the node radius.
+     *         xKey      {String|Function} - The attribute for the x coordinate.
+     *         yKey      {String|Function} - The attribute for the y coordinate.
+     *         radiusKey {String|Function} - The attribute for the node radius.
      *         themes    {Array}   The array of RenderThemes to be attached to this component.
      *     },
      *     criticalNode: {
-     *         flag     {String} - The boolean attribute to designate critical nodes.
+     *         flag     {String|Function} - The boolean attribute to designate critical nodes.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     },
      *     parentNode: {
-     *         xKey      {String} - The attribute for the parent node x coordinate.
-     *         yKey      {String} - The attribute for the parent node y coordinate.
-     *         radiusKey {String} - The attribute for the node radius.
+     *         xKey      {String|Function} - The attribute for the parent node x coordinate.
+     *         yKey      {String|Function} - The attribute for the parent node y coordinate.
+     *         radiusKey {String|Function} - The attribute for the node radius.
      *         themes    {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }

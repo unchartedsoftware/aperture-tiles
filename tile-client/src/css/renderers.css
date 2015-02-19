@@ -263,3 +263,19 @@
 .clear {
     clear: both;
 }
+
+.emphasized {
+  opacity: 1;
+}
+
+.de-emphasized {
+  opacity: 0.4;
+  -webkit-filter: grayscale(75%);
+  filter: grayscale(75%);
+}
+
+.de-emphasized:hover {
+  opacity: 1;
+  filter: none;
+  -webkit-filter: none;
+}
