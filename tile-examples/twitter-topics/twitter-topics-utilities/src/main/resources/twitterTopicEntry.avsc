@@ -24,8 +24,8 @@
                    "type": "record",
                    "fields": [
                        {"name": "tweet", "type": "string"},
-                       {"name": "time", "type": "long"}
-                       {"name": "user", "type": "string"}
+                       {"name": "time", "type": "long"},
+                       {"name": "user", "type": "string"},
                        {"name": "sentiment", "type": "string"}
                    ]
                   }
