@@ -30,7 +30,9 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 8,
+		INVERT_ORDER = false,
         injectCss,
+		initialize,
         getYOffset,
         getHighestCount;
 
@@ -51,6 +53,17 @@
                     parentSelector: ".text-by-frequency-entry"
                 });
             }
+        }
+    };
+	
+	/**
+     * Initialize any values based on the spec
+     */
+	initialize = function( spec ) {
+        if ( typeof spec.frequency.invertOrder !== "undefined" ) {
+            if ( spec.frequency.invertOrder === true ) {
+				INVERT_ORDER = true;				
+			}
         }
     };
 
@@ -98,7 +111,8 @@
      *     },
      *     frequency: {
      *         countKey {String} - The attribute for the count in the data entry.
-     *         themes   {Array}  - The array of RenderThemes to be attached to this component.
+     *         themes	{Array}  - The array of RenderThemes to be attached to this component.
+	 *		   invertOrder {Boolean} - The boolean to determine order of chart values.  Defaults to false if not present
      *     }
      * }
      * </pre>
@@ -107,6 +121,7 @@
         spec.rootKey = spec.rootKey || "tile.values[0].value";
         Renderer.call( this, spec );
         injectCss( this.spec );
+		initialize( spec );
     }
 
     TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
@@ -155,7 +170,11 @@
             html += '<div class="text-by-frequency-left">';
             for (j=0; j<chartSize; j++) {
                 // get the percent relative to the highest count in the tile
-                relativePercent = ( counts[j] / highestCount ) * 100;
+				var index = chartSize - j - 1;
+				if ( INVERT_ORDER === true ) { 
+					index = j;
+				}
+                relativePercent = ( counts[index] / highestCount ) * 100;
                 // if percent === 0, hide bar
                 visibility = ( relativePercent > 0 ) ? '' : 'hidden';
                 // class percent in increments of 10
