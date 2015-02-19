@@ -31,12 +31,12 @@ import org.scalatest.FunSuite
 class IndexingSchemeTests extends FunSuite {
 	test("Test null conversion") {
 		val converter = new Object with NumberConverter
-    try {
-      converter.asDouble(null)
-      fail
-    } catch {
-      case e: Any => assert(e.isInstanceOf[IllegalArgumentException])
-    }
+		try {
+			converter.asDouble(null)
+			fail
+		} catch {
+			case e: Any => assert(e.isInstanceOf[IllegalArgumentException])
+		}
 	}
 
 	test("Test cartesian indices on non-doubles") {

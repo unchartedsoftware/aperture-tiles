@@ -46,22 +46,22 @@ trait TimeIndexScheme[T] extends IndexScheme[T] {
 }
 
 trait NumberConverter {
-  @throws(classOf[IllegalArgumentException])
+	@throws(classOf[IllegalArgumentException])
 	def asDouble (x: Any): Double = {
-    if (x == null) {
-      throw new IllegalArgumentException
-    } else {
-      x match {
-        case c: Byte => c.toDouble
-        case c: Short => c.toDouble
-        case c: Int => c.toDouble
-        case c: Long => c.toDouble
-        case c: Float => c.toDouble
-        case c: Double => c.toDouble
-        case c: Date => c.getTime
-      }
-    }
-  }
+		if (x == null) {
+			throw new IllegalArgumentException
+		} else {
+			x match {
+				case c: Byte => c.toDouble
+				case c: Short => c.toDouble
+				case c: Int => c.toDouble
+				case c: Long => c.toDouble
+				case c: Float => c.toDouble
+				case c: Double => c.toDouble
+				case c: Date => c.getTime
+			}
+		}
+	}
 }
 
 class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with NumberConverter with Serializable {
