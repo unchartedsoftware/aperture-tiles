@@ -154,26 +154,26 @@ public final class DefaultTileSerializerFactoryProvider
 
 	// Simple Pair serializers
 	public static final List<DefaultTileSerializerFactoryProvider> PAIRS =
-	    Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
-	        private static final long serialVersionUID = 1L;
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
 
-	        {
-                for (final Class<?> keyType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
-                    String keyName = PrimitiveAvroSerializer.getAvroType(keyType);
-                    for (final Class<?> valueType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
-                        String valueName = PrimitiveAvroSerializer.getAvroType(valueType);
-                        String name = keyName + "_" + valueName + "_pair_avro";
-                        add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
-                            @Override
-                            public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-                                                                                            List<String> path) {
-                                return new PairAvroSerializerFactory<>(parent, path, keyType, valueType);
-                            }
-                        }));
-                    }
-	            }
-	        }
-	    });
+				{
+					for (final Class<?> keyType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String keyName = PrimitiveAvroSerializer.getAvroType(keyType);
+						for (final Class<?> valueType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+							String valueName = PrimitiveAvroSerializer.getAvroType(valueType);
+							String name = keyName + "_" + valueName + "_pair_avro";
+							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+									@Override
+									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+									                                                                List<String> path) {
+										return new PairAvroSerializerFactory<>(parent, path, keyType, valueType);
+									}
+								}));
+						}
+					}
+				}
+			});
 
 	// Array of Pair (can be used for maps) serializers
 	public static final List<DefaultTileSerializerFactoryProvider> PAIR_ARRAYS =

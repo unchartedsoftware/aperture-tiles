@@ -62,51 +62,51 @@ abstract public class ConfigurableFactory<T> {
 
 
 
-    private String                                          _name;
-    private Class<T>                                        _factoryType;
-    private List<String>                                    _rootPath;
-    private ConfigurableFactory<?>                          _parent;
-    private List<ConfigurableFactory<?>>                    _children;
-    private Set<ConfigurationProperty<?>>                   _properties;
-    private boolean                                         _configured;
-    private JSONObject                                      _configurationNode;
-    private Map<ConfigurationProperty<?>, Object>           _defaultValues;
-    private boolean                                         _isSingleton;
-    private T                                               _singletonProduct;
-    private Map<ConfigurationProperty<?>, List<String>> _pathsByProperty;
+	private String                                      _name;
+	private Class<T>                                    _factoryType;
+	private List<String>                                _rootPath;
+	private ConfigurableFactory<?>                      _parent;
+	private List<ConfigurableFactory<?>>                _children;
+	private Set<ConfigurationProperty<?>>               _properties;
+	private boolean                                     _configured;
+	private JSONObject                                  _configurationNode;
+	private Map<ConfigurationProperty<?>, Object>       _defaultValues;
+	private boolean                                     _isSingleton;
+	private T                                           _singletonProduct;
+	private Map<ConfigurationProperty<?>, List<String>> _pathsByProperty;
 
-    /**
-     * Create a factory
-     * 
-     * @param factoryType The type of object to be constructed by this factory.
-     *            Can not be null.
-     * @param parent The parent factory; all configuration nodes of this factory
-     *            will be under the parent factory's root configuration node.
-     * @param path The path from the parent factory's root configuration node to
-     *            this factory's root configuration node.
-     */
-    protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path) {
-        this(null, factoryType, parent, path, false);
-    }
+	/**
+	 * Create a factory
+	 * 
+	 * @param factoryType The type of object to be constructed by this factory.
+	 *            Can not be null.
+	 * @param parent The parent factory; all configuration nodes of this factory
+	 *            will be under the parent factory's root configuration node.
+	 * @param path The path from the parent factory's root configuration node to
+	 *            this factory's root configuration node.
+	 */
+	protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path) {
+		this(null, factoryType, parent, path, false);
+	}
 
-    /**
-     * Create a factory
-     * 
-     * @param factoryType The type of object to be constructed by this factory.
-     *            Can not be null.
-     * @param parent The parent factory; all configuration nodes of this factory
-     *            will be under the parent factory's root configuration node.
-     * @param path The path from the parent factory's root configuration node to
-     *            this factory's root configuration node.
-     * @param isSingleton If true, this factory will only ever produce one
-     *            product, which it will return every time it is asked to
-     *            produce. Do note that if the factory is set to produce a
-     *            singleton, production may be a synchronized, blocking
-     *            operation.
-     */
-    protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
-        this(null, factoryType, parent, path, isSingleton);
-    }
+	/**
+	 * Create a factory
+	 * 
+	 * @param factoryType The type of object to be constructed by this factory.
+	 *            Can not be null.
+	 * @param parent The parent factory; all configuration nodes of this factory
+	 *            will be under the parent factory's root configuration node.
+	 * @param path The path from the parent factory's root configuration node to
+	 *            this factory's root configuration node.
+	 * @param isSingleton If true, this factory will only ever produce one
+	 *            product, which it will return every time it is asked to
+	 *            produce. Do note that if the factory is set to produce a
+	 *            singleton, production may be a synchronized, blocking
+	 *            operation.
+	 */
+	protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
+		this(null, factoryType, parent, path, isSingleton);
+	}
     
 	/**
 	 * Create a factory
@@ -122,42 +122,42 @@ abstract public class ConfigurableFactory<T> {
 	 *            this factory's root configuration node.
 	 */
 	protected ConfigurableFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path) {
-	    this(name, factoryType, parent, path, false);
+		this(name, factoryType, parent, path, false);
 	}
 
-    /**
-     * Create a factory
-     * 
-     * @param name A name by which this factory can be known, to be used to
-     *            differentiate it from other child factories of this factory's
-     *            parent that return the same type.
-     * @param factoryType The type of object to be constructed by this factory.
-     *            Can not be null.
-     * @param parent The parent factory; all configuration nodes of this factory
-     *            will be under the parent factory's root configuration node.
-     * @param path The path from the parent factory's root configuration node to
-     *            this factory's root configuration node.
-     * @param isSingleton If true, this factory will only ever produce one
-     *            product, which it will return every time it is asked to
-     *            produce. Do note that if the factory is set to produce a
-     *            singleton, production may be a synchronized, blocking
-     *            operation.
-     */
+	/**
+	 * Create a factory
+	 * 
+	 * @param name A name by which this factory can be known, to be used to
+	 *            differentiate it from other child factories of this factory's
+	 *            parent that return the same type.
+	 * @param factoryType The type of object to be constructed by this factory.
+	 *            Can not be null.
+	 * @param parent The parent factory; all configuration nodes of this factory
+	 *            will be under the parent factory's root configuration node.
+	 * @param path The path from the parent factory's root configuration node to
+	 *            this factory's root configuration node.
+	 * @param isSingleton If true, this factory will only ever produce one
+	 *            product, which it will return every time it is asked to
+	 *            produce. Do note that if the factory is set to produce a
+	 *            singleton, production may be a synchronized, blocking
+	 *            operation.
+	 */
 	protected ConfigurableFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
-        _name = name;
-        _factoryType = factoryType;
+		_name = name;
+		_factoryType = factoryType;
 		_rootPath = Collections.unmodifiableList(mergePaths(parent, path));
-        _children = new ArrayList<>();
-        _configured = false;
-        _properties = new HashSet<>();
-        _pathsByProperty = new HashMap<>();
-        _defaultValues = new HashMap<>();
-        _isSingleton = isSingleton;
-        _singletonProduct = null;
+		_children = new ArrayList<>();
+		_configured = false;
+		_properties = new HashSet<>();
+		_pathsByProperty = new HashMap<>();
+		_defaultValues = new HashMap<>();
+		_isSingleton = isSingleton;
+		_singletonProduct = null;
         
-        //NOTE: this should not be set to the parent passed in cause the parent won't necessarily
-        //be created before the children if you're doing a bottom up approach for some reason.
-        _parent = null; 
+		//NOTE: this should not be set to the parent passed in cause the parent won't necessarily
+		//be created before the children if you're doing a bottom up approach for some reason.
+		_parent = null; 
 	}
 
 	/**
@@ -197,14 +197,14 @@ abstract public class ConfigurableFactory<T> {
 	 * Add a property to the list of properties used by this factory
 	 * 
 	 * @param property
-     * @param path
+	 * @param path
 	 */
 	public <PT> void addProperty (ConfigurationProperty<PT> property, List<String> path) {
 		_properties.add(property);
-        _pathsByProperty.put( property, path );
+		_pathsByProperty.put( property, path );
 	}
 
-    /**
+	/**
 	 * Add a property to the list of properties used by this factory
 	 *
 	 * @param property
@@ -217,38 +217,38 @@ abstract public class ConfigurableFactory<T> {
 	 * Set the default value of a property for this factory, and this factory only.
 	 */
 	public <PT> void setDefaultValue (ConfigurationProperty<PT> property, PT defaultValue) {
-	    _defaultValues.put(property, defaultValue);
+		_defaultValues.put(property, defaultValue);
 	}
 
 	/**
 	 * gets the default value for a given property for this factory.
 	 */
 	protected <PT> PT getDefaultValue (ConfigurationProperty<PT> property) {
-	    if (_defaultValues.containsKey(property)) {
-	        return property.getType().cast(_defaultValues.get(property));
-	    } else {
-	        return property.getDefaultValue();
-	    }
+		if (_defaultValues.containsKey(property)) {
+			return property.getType().cast(_defaultValues.get(property));
+		} else {
+			return property.getDefaultValue();
+		}
 	}
 
 	/**
-     * Return a SHA-256 hexcode representing the state of the configuration
-     * @return String representing the hexcode SHA-256 hash of the configuration state
-     */
-    public String generateSHA256() {
-        try {
-            String propertyString = getFactoryString();
-            // generate SHA-256 from the string
-            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
-            md.update( propertyString.getBytes( "UTF-8" ) );
-            byte[] digest = md.digest();
-            // convert SHA-256 bytes to hex string
-            return Hex.encodeHexString( digest );
-        } catch ( Exception e ) {
+	 * Return a SHA-256 hexcode representing the state of the configuration
+	 * @return String representing the hexcode SHA-256 hash of the configuration state
+	 */
+	public String generateSHA256() {
+		try {
+			String propertyString = getFactoryString();
+			// generate SHA-256 from the string
+			MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+			md.update( propertyString.getBytes( "UTF-8" ) );
+			byte[] digest = md.digest();
+			// convert SHA-256 bytes to hex string
+			return Hex.encodeHexString( digest );
+		} catch ( Exception e ) {
 			LOGGER.warn( "Error registering configuration to SHA", e );
-            return "";
+			return "";
 		}
-    }
+	}
 
 	/**
 	 * Indicates if an actual value is recorded for the given property.
@@ -257,7 +257,7 @@ abstract public class ConfigurableFactory<T> {
 	 * @return True if the property is listed and non-default in the factory.
 	 */
 	public boolean hasPropertyValue (ConfigurationProperty<?> property) {
-        return (_configured && null != _configurationNode && getPropertyNode( property ).has( property.getName() ) );
+		return (_configured && null != _configurationNode && getPropertyNode( property ).has( property.getName() ) );
 	}
 
 	/**
@@ -268,10 +268,10 @@ abstract public class ConfigurableFactory<T> {
 	 */
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
 		// if a value has not been configured for this property, return default
-        if ( !hasPropertyValue( property ) ) {
-            return getDefaultValue(property);
-        }
-        try {
+		if ( !hasPropertyValue( property ) ) {
+			return getDefaultValue(property);
+		}
+		try {
 			return property.unencodeJSON( new JSONNode( getPropertyNode( property ) , property.getName() ) );
 		} catch (JSONException e) {
 			// Must not have been there.  Ignore, leaving as default. 
@@ -325,18 +325,18 @@ abstract public class ConfigurableFactory<T> {
 			throw new ConfigurationException("Attempt to get value from uninitialized factory");
 		}
 		if ((null == name || name.equals(_name)) && goodsType.equals(_factoryType)) {
-		    if (_isSingleton) {
-		        if (null == _singletonProduct) {
-		            synchronized (this) {
-		                if (null == _singletonProduct) {
-		                    _singletonProduct = create();
-		                }
-		            }
-		        }
-		        return goodsType.cast(_singletonProduct);
-		    } else {
-		        return goodsType.cast(create());
-		    }
+			if (_isSingleton) {
+				if (null == _singletonProduct) {
+					synchronized (this) {
+						if (null == _singletonProduct) {
+							_singletonProduct = create();
+						}
+					}
+				}
+				return goodsType.cast(_singletonProduct);
+			} else {
+				return goodsType.cast(create());
+			}
 		} else {
 			for (ConfigurableFactory<?> child: _children) {
 				GT result = child.produce(name, goodsType);
@@ -404,14 +404,14 @@ abstract public class ConfigurableFactory<T> {
 		writeConfigurationInformation(stream, "");
 	}
 
-    /**
-     * Get the explicit configuration JSON, containing ALL properties.
-     * @return JSONObject containing all properties used by the configuration
-     */
-    public JSONObject getExplicitConfiguration() {
-        JSONObject config = new JSONObject();
-        return generateConfigurationObj( config );
-    }
+	/**
+	 * Get the explicit configuration JSON, containing ALL properties.
+	 * @return JSONObject containing all properties used by the configuration
+	 */
+	public JSONObject getExplicitConfiguration() {
+		JSONObject config = new JSONObject();
+		return generateConfigurationObj( config );
+	}
 
 	/**
 	 * Get the JSON object used to configure this factory.
@@ -430,31 +430,31 @@ abstract public class ConfigurableFactory<T> {
 		return _factoryType;
 	}
 
-    private JSONObject getPropertyNode( ConfigurationProperty<?> property ) {
-        if ( _pathsByProperty.get( property ) == null ) {
-            return new JSONObject();
-        }
-        JSONObject node;
-        List<String> path = new ArrayList<>( _pathsByProperty.get( property ) );
-        if ( path.isEmpty() ) {
-            return _configurationNode;
-        } else {
-            String subPath;
-            JSONObject currentNode = _configurationNode;
-            while ( path.size() > 1 ) {
-                subPath = path.remove( 0 );
-                currentNode = currentNode.optJSONObject( subPath );
-                if ( currentNode == null ) {
-                    return new JSONObject();
-                }
-            }
-            node = currentNode.optJSONObject( path.get(0) );
-            if ( node == null ) {
-                return new JSONObject();
-            }
-            return node;
-        }
-    }
+	private JSONObject getPropertyNode( ConfigurationProperty<?> property ) {
+		if ( _pathsByProperty.get( property ) == null ) {
+			return new JSONObject();
+		}
+		JSONObject node;
+		List<String> path = new ArrayList<>( _pathsByProperty.get( property ) );
+		if ( path.isEmpty() ) {
+			return _configurationNode;
+		} else {
+			String subPath;
+			JSONObject currentNode = _configurationNode;
+			while ( path.size() > 1 ) {
+				subPath = path.remove( 0 );
+				currentNode = currentNode.optJSONObject( subPath );
+				if ( currentNode == null ) {
+					return new JSONObject();
+				}
+			}
+			node = currentNode.optJSONObject( path.get(0) );
+			if ( node == null ) {
+				return new JSONObject();
+			}
+			return node;
+		}
+	}
 
 	/*
 	 * Gets the JSON node with all this factory's configuration information
@@ -520,75 +520,75 @@ abstract public class ConfigurableFactory<T> {
 		return result;
 	}
 
-    private String getFullPropertyString( ConfigurationProperty<?> property, String name ) {
-        StringBuilder sb = new StringBuilder();
-        for ( String subPath : _rootPath ) {
-            sb.append( subPath );
-            sb.append(".");
-        }
-        if ( _pathsByProperty.get( property ) != null ) {
-            List<String> attributePath = new ArrayList<>( _pathsByProperty.get( property ) );
-            for ( String subPath : attributePath ) {
-                sb.append( subPath );
-                sb.append( "." );
-            }
-        }
-        sb.append( name );
-        return sb.toString();
-    }
+	private String getFullPropertyString( ConfigurationProperty<?> property, String name ) {
+		StringBuilder sb = new StringBuilder();
+		for ( String subPath : _rootPath ) {
+			sb.append( subPath );
+			sb.append(".");
+		}
+		if ( _pathsByProperty.get( property ) != null ) {
+			List<String> attributePath = new ArrayList<>( _pathsByProperty.get( property ) );
+			for ( String subPath : attributePath ) {
+				sb.append( subPath );
+				sb.append( "." );
+			}
+		}
+		sb.append( name );
+		return sb.toString();
+	}
 
-    private String getFactoryString() {
-        StringBuilder sb = new StringBuilder();
-        for ( ConfigurationProperty<?> prop : _properties ) {
-            sb.append( getFullPropertyString( prop, prop.getName() ) );
-            sb.append( ":" );
-            sb.append( getPropertyValue( prop ) );
-        }
-        for ( ConfigurableFactory<?> child: _children ) {
+	private String getFactoryString() {
+		StringBuilder sb = new StringBuilder();
+		for ( ConfigurationProperty<?> prop : _properties ) {
+			sb.append( getFullPropertyString( prop, prop.getName() ) );
+			sb.append( ":" );
+			sb.append( getPropertyValue( prop ) );
+		}
+		for ( ConfigurableFactory<?> child: _children ) {
 			sb.append( child.getFactoryString() );
 		}
-        return sb.toString();
-    }
+		return sb.toString();
+	}
 
-    private JSONObject addJSONPathAndReturnLeaf( JSONObject config, List<String> path ) throws JSONException {
-        // if a path does not exist in the json object, create it
-        JSONObject node = config;
-        for ( String subpath : path ) {
-            if ( !node.has( subpath ) ) {
-                node.put( subpath, new JSONObject() );
-            }
-            node = node.getJSONObject( subpath );
-        }
-        // return the leaf node of the path
-        return node;
-    }
+	private JSONObject addJSONPathAndReturnLeaf( JSONObject config, List<String> path ) throws JSONException {
+		// if a path does not exist in the json object, create it
+		JSONObject node = config;
+		for ( String subpath : path ) {
+			if ( !node.has( subpath ) ) {
+				node.put( subpath, new JSONObject() );
+			}
+			node = node.getJSONObject( subpath );
+		}
+		// return the leaf node of the path
+		return node;
+	}
 
-    private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
-        // get the properties path
-        List<String> fullPath = getRootPath();
-        fullPath.addAll(_pathsByProperty.get( property ) );
-        // ensure the path exists by adding it if it doesn't
-        // append root path to start of property path since they are relative to the
-        // current factories path
-        JSONObject node = addJSONPathAndReturnLeaf( config, fullPath );
-        // add the property to the leaf node of the path
-        node.put( property.getName(), getPropertyValue( property ) );
-    }
+	private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
+		// get the properties path
+		List<String> fullPath = getRootPath();
+		fullPath.addAll(_pathsByProperty.get( property ) );
+		// ensure the path exists by adding it if it doesn't
+		// append root path to start of property path since they are relative to the
+		// current factories path
+		JSONObject node = addJSONPathAndReturnLeaf( config, fullPath );
+		// add the property to the leaf node of the path
+		node.put( property.getName(), getPropertyValue( property ) );
+	}
 
-    private JSONObject generateConfigurationObj( JSONObject config ) {
-        try {
-            for ( ConfigurationProperty<?> prop : _properties ) {
-                // add property to the config object under its path
-                addPropertyUnderPath( config, prop );
-            }
-            for ( ConfigurableFactory<?> child: _children ) {
-                addJSONPathAndReturnLeaf( config, child.getRootPath() );
-                child.generateConfigurationObj( config );
-            }
-        } catch ( JSONException e ) {
-            LOGGER.warn( "Error occurred while generating configuration JSON", e );
-        }
-        return config;
-    }
+	private JSONObject generateConfigurationObj( JSONObject config ) {
+		try {
+			for ( ConfigurationProperty<?> prop : _properties ) {
+				// add property to the config object under its path
+				addPropertyUnderPath( config, prop );
+			}
+			for ( ConfigurableFactory<?> child: _children ) {
+				addJSONPathAndReturnLeaf( config, child.getRootPath() );
+				child.generateConfigurationObj( config );
+			}
+		} catch ( JSONException e ) {
+			LOGGER.warn( "Error occurred while generating configuration JSON", e );
+		}
+		return config;
+	}
 
 }

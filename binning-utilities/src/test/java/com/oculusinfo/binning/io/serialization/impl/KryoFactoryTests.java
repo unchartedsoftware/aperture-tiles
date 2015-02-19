@@ -34,98 +34,98 @@ import com.oculusinfo.binning.io.serialization.impl.KryoSerializer.Codec;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 public class KryoFactoryTests extends SerializerTestUtils {
-    @Test
-    public void testKryoDefaultCodecSpecification () throws Exception {
-        TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-        KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
-        factory.readConfiguration(new JSONObject("{}"));
-        TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
-                                                                                 Integer.class, integerType);
-        TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.GZIP);
-        assertSerializersEqual(expected, product, new IntegerSource());
-    }
+	@Test
+	public void testKryoDefaultCodecSpecification () throws Exception {
+		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		factory.readConfiguration(new JSONObject("{}"));
+		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
+			   Integer.class, integerType);
+		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.GZIP);
+		assertSerializersEqual(expected, product, new IntegerSource());
+	}
 
-    @Test
-    public void testKryoGZipSpecification () throws Exception {
-        TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-        KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
-        factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"GZIP\"}}"));
-        TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
-                                                                                 Integer.class, integerType);
-        TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.GZIP);
-        assertSerializersEqual(expected, product, new IntegerSource());
-    }
+	@Test
+	public void testKryoGZipSpecification () throws Exception {
+		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"GZIP\"}}"));
+		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
+			   Integer.class, integerType);
+		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.GZIP);
+		assertSerializersEqual(expected, product, new IntegerSource());
+	}
 
-    @Test
-    public void testKryoBZip2Specification () throws Exception {
-        TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-        KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
-        factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"BZIP\"}}"));
-        TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
-                                                                                 Integer.class, integerType);
-        TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.BZIP);
-        assertSerializersEqual(expected, product, new IntegerSource());
-    }
+	@Test
+	public void testKryoBZip2Specification () throws Exception {
+		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"BZIP\"}}"));
+		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
+			   Integer.class, integerType);
+		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.BZIP);
+		assertSerializersEqual(expected, product, new IntegerSource());
+	}
 
-    @Test
-    public void testKryoDeflateSpecification () throws Exception {
-        TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-        KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
-        factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"DEFLATE\"}}"));
-        TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
-                                                                                 Integer.class, integerType);
-        TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.DEFLATE);
-        assertSerializersEqual(expected, product, new IntegerSource());
-    }
+	@Test
+	public void testKryoDeflateSpecification () throws Exception {
+		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"DEFLATE\"}}"));
+		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
+			   Integer.class, integerType);
+		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.DEFLATE);
+		assertSerializersEqual(expected, product, new IntegerSource());
+	}
 
-    @Test
-    public void testKryoCustomClassSpecification () throws Exception {
-        TypeDescriptor testType = new TypeDescriptor(TestClass.class);
-        KryoSerializerFactory<TestClass> factory = new KryoSerializerFactory<TestClass>(null, Arrays.asList("factory"), testType);
-        factory.readConfiguration(new JSONObject(
-            "{\"factory\": {\n"+
-            "  \"codec\": \"DEFLATE\",\n"+
-            "  \"classes\": [\""+TestClass.class.getName()+"\"]\n"+
-            "}}"));
-        TileSerializer<TestClass> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
-                                                                                   TestClass.class, testType);
-        TileSerializer<TestClass> expected = new KryoSerializer<TestClass>(testType, Codec.DEFLATE, TestClass.class);
-        assertSerializersEqual(expected, product, new TestClassSource());
-    }
+	@Test
+	public void testKryoCustomClassSpecification () throws Exception {
+		TypeDescriptor testType = new TypeDescriptor(TestClass.class);
+		KryoSerializerFactory<TestClass> factory = new KryoSerializerFactory<TestClass>(null, Arrays.asList("factory"), testType);
+		factory.readConfiguration(new JSONObject(
+		                                         "{\"factory\": {\n"+
+		                                         "  \"codec\": \"DEFLATE\",\n"+
+		                                         "  \"classes\": [\""+TestClass.class.getName()+"\"]\n"+
+		                                         "}}"));
+		TileSerializer<TestClass> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
+			     TestClass.class, testType);
+		TileSerializer<TestClass> expected = new KryoSerializer<TestClass>(testType, Codec.DEFLATE, TestClass.class);
+		assertSerializersEqual(expected, product, new TestClassSource());
+	}
 
-    public static class TestClassSource implements DataSource<TestClass> {
-        @Override
-        public void reset () {}
+	public static class TestClassSource implements DataSource<TestClass> {
+		@Override
+		public void reset () {}
 
-        @Override
-        public TestClass create () {
-            return new TestClass((int) Math.floor(Math.random()*1000),
-                                 "abc"+(int) Math.floor(Math.random()*1000),
-                                 Math.random()*1000);
-        }
-    }
+		@Override
+		public TestClass create () {
+			return new TestClass((int) Math.floor(Math.random()*1000),
+			                     "abc"+(int) Math.floor(Math.random()*1000),
+			                     Math.random()*1000);
+		}
+	}
 
-    public static class TestClass {
-        int    _i;
-        String _s;
-        double _d;
-        TestClass () {
-            _i = 0;
-            _s = null;
-            _d = 0.0;
-        }
-        TestClass (int i, String s, double d) {
-            _i = i;
-            _s = s;
-            _d = d;
-        }
-        @Override
-        public boolean equals (Object objThat) {
-            if (this == objThat) return true;
-            if (null == objThat) return false;
-            if (!(objThat instanceof TestClass)) return false;
-            TestClass that = (TestClass) objThat;
-            return this._i == that._i && objectsEqual(this._s, that._s) && this._d == that._d;
-        }
-    }
+	public static class TestClass {
+		int    _i;
+		String _s;
+		double _d;
+		TestClass () {
+			_i = 0;
+			_s = null;
+			_d = 0.0;
+		}
+		TestClass (int i, String s, double d) {
+			_i = i;
+			_s = s;
+			_d = d;
+		}
+		@Override
+		public boolean equals (Object objThat) {
+			if (this == objThat) return true;
+			if (null == objThat) return false;
+			if (!(objThat instanceof TestClass)) return false;
+			TestClass that = (TestClass) objThat;
+			return this._i == that._i && objectsEqual(this._s, that._s) && this._d == that._d;
+		}
+	}
 }

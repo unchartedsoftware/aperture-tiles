@@ -70,10 +70,10 @@ class ArrayBinningAnalytic[PT, RT] (elementAnalytic: BinningAnalytic[PT, RT])
 		with BinningAnalytic[Seq[PT], JavaList[RT]]
 {
 	def finish (value: Seq[PT]): JavaList[RT] = {
-   val result = new ArrayList[RT](value.size)
-   value.foreach(elt => result.add(elementAnalytic.finish(elt)))
-   result
-  }
+		val result = new ArrayList[RT](value.size)
+		value.foreach(elt => result.add(elementAnalytic.finish(elt)))
+		result
+	}
 }
 class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
                              analyticName: Option[String] = None)

@@ -84,7 +84,7 @@ public class UberFactory<T> extends ConfigurableFactory<T> {
 
 		_defaultType = defaultType;
 		if (null == _defaultType)
-		    _defaultType = children.get(0).getName();
+			_defaultType = children.get(0).getName();
 	}
 
 	@Override

@@ -58,8 +58,8 @@ public class TypeDescriptor implements Serializable {
 
 	public Class<?> getMainType () {return _mainType;}
 	public List<TypeDescriptor> getGenericTypes () {
-	    if (null == _genericTypes) return null;
-	    else return Collections.unmodifiableList(_genericTypes);
+		if (null == _genericTypes) return null;
+		else return Collections.unmodifiableList(_genericTypes);
 	}
 
 	@Override

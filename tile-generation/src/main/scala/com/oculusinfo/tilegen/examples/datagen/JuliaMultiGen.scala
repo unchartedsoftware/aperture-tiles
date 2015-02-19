@@ -47,17 +47,17 @@ object MultiJuliaSetGenerator {
 			val sc = argParser.getSparkConnector().createContext(Some(jobName))
 
 			val cRealMin = argParser.getDouble("realmin",
-			                                "The minimum value for the real portion of the parameter defining the Julia set to generate.")
+			                                   "The minimum value for the real portion of the parameter defining the Julia set to generate.")
 			val cRealMax = argParser.getDouble("realmax",
-			                                "The maximum value for the real portion of the parameter defining the Julia set to generate.")
+			                                   "The maximum value for the real portion of the parameter defining the Julia set to generate.")
 			val cRealSteps = argParser.getInt("realsteps",
-			                                "The number of steps of real valuse to generate.")
+			                                  "The number of steps of real valuse to generate.")
 			val cImagMin = argParser.getDouble("imagmin",
-			                                "The minimum value for the real portion of the parameter defining the Julia set to generate.")
+			                                   "The minimum value for the real portion of the parameter defining the Julia set to generate.")
 			val cImagMax = argParser.getDouble("imagmax",
-			                                "The maximum value for the real portion of the parameter defining the Julia set to generate.")
+			                                   "The maximum value for the real portion of the parameter defining the Julia set to generate.")
 			val cImagSteps = argParser.getInt("imagsteps",
-			                                "The number of steps of real valuse to generate.")
+			                                  "The number of steps of real valuse to generate.")
 			val minR = argParser.getDouble("minreal",
 			                               "The minimum real value of the "
 				                               +"input domain.",

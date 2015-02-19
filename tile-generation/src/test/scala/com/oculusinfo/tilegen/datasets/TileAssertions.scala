@@ -30,18 +30,18 @@ trait TileAssertions extends Assertions {
 		}
 	}
 
-  protected def assertListTileContents[T] (expected: List[List[T]], tile: TileData[_]): Unit = {
-    val index = tile.getDefinition
-    val xBins = index.getXBins
-    val yBins = index.getYBins
-    for (x <- 0 until xBins; y <- 0 until yBins) {
-      val i = x+xBins*y
-      val bin = tile.getBin(x, y).asInstanceOf[JavaList[_]]
-      val expectedBin = expected(i)
-      assert(expectedBin.size === bin.size)
-      for (n <- 0 until bin.size) {
-        assert(expectedBin(n) === bin.get(n))
-      }
-    }
-  }
+	protected def assertListTileContents[T] (expected: List[List[T]], tile: TileData[_]): Unit = {
+		val index = tile.getDefinition
+		val xBins = index.getXBins
+		val yBins = index.getYBins
+		for (x <- 0 until xBins; y <- 0 until yBins) {
+			val i = x+xBins*y
+			val bin = tile.getBin(x, y).asInstanceOf[JavaList[_]]
+			val expectedBin = expected(i)
+			assert(expectedBin.size === bin.size)
+			for (n <- 0 until bin.size) {
+				assert(expectedBin(n) === bin.get(n))
+			}
+		}
+	}
 }
