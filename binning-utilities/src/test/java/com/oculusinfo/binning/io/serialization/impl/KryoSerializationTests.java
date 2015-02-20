@@ -29,10 +29,10 @@ import java.io.ByteArrayOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.DenseTileData;
-import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
+import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;

@@ -32,10 +32,9 @@ import java.util.*;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.DenseTileData;
-import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData.StorageType;
 import com.oculusinfo.factory.util.Pair;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
@@ -47,6 +46,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 
+import com.oculusinfo.binning.impl.DenseTileData;
+import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {

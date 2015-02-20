@@ -37,26 +37,32 @@ import java.lang.{Iterable => JavaIterable}
 import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
-import com.oculusinfo.binning.TileData.StorageType
-import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import org.apache.spark.sql.SQLContext
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable.{Set => MutableSet}
 import scala.collection.mutable.Stack
 import scala.reflect.ClassTag
+import scala.util.Try
+
 import org.apache.spark.Accumulable
 import org.apache.spark.AccumulableParam
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
+
+import grizzled.slf4j.Logging
+
 import com.oculusinfo.binning._
+import com.oculusinfo.binning.TileData.StorageType
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import scala.util.Try
-import grizzled.slf4j.Logging
+import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
+import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 

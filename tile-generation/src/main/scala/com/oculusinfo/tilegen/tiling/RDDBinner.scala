@@ -44,6 +44,8 @@ import org.apache.spark.storage.StorageLevel
 
 
 import com.oculusinfo.binning._
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
 
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription

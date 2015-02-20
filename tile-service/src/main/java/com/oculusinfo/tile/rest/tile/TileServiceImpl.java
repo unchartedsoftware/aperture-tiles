@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.SubTileDataView;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
@@ -38,7 +39,7 @@ import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.util.AvroJSONConverter;
-import com.oculusinfo.tile.util.TileDataView;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public class TileServiceImpl implements TileService {
 			}
 
 			// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
-			data = TileDataView.fromSourceAbsolute(tileDatas.get(0), index);
+			data = SubTileDataView.fromSourceAbsolute(tileDatas.get(0), index);
 		} else {
 			// No coarseness - use requested tile
 			java.util.List<TileData<T>> tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));

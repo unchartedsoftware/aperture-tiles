@@ -35,12 +35,13 @@ import java.util.Collection;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.DenseTileData;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 
 
 public abstract class GenericJSONSerializer<T> implements TileSerializer<T> {

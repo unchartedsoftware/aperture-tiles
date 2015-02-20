@@ -40,7 +40,10 @@ import org.scalatest.FunSuite
 import org.apache.spark.SharedSparkContext
 import org.apache.spark.rdd.RDD
 
-import com.oculusinfo.binning.{SparseTileData, BinIndex, TileData, TileIndex}
+import com.oculusinfo.binning.BinIndex
+import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription

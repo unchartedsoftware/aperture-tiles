@@ -27,6 +27,8 @@ package com.oculusinfo.binning;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.oculusinfo.binning.impl.DenseTileData;
+
 import java.util.ArrayList;
 import java.util.List;
 

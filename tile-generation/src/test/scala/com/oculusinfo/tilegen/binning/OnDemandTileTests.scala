@@ -41,8 +41,10 @@ import org.scalatest.BeforeAndAfterAll
 import org.apache.spark.SparkContext
 import org.apache.spark.SharedSparkContext
 
-import com.oculusinfo.binning.{DenseTileData, SparseTileData, TileData, TileIndex}
-
+import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.impl.DenseTileData 
+import com.oculusinfo.binning.impl.SparseTileData
 
 class LiveTileTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
 	val pyramidId1 = "live-tile test 1"

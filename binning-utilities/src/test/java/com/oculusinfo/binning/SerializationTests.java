@@ -37,6 +37,7 @@ import junit.framework.Assert;
 import org.apache.avro.file.CodecFactory;
 import org.junit.Test;
 
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;

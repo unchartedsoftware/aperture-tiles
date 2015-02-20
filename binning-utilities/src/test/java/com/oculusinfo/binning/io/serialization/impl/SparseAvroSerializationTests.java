@@ -34,9 +34,9 @@ import org.apache.avro.file.CodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 // Test that primitive avro serialization works with sparse tile datas
