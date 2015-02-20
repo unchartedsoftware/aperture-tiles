@@ -52,8 +52,8 @@
      * <pre>
      * {
      *     text: {
-     *         xKey   {String} - The attribute for the x coordinate.
-     *         yKey   {String} - The attribute for the y coordinate.
+     *         xKey   {String|Function} - The attribute for the x coordinate.
+     *         yKey   {String|Function} - The attribute for the y coordinate.
      *         themes {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }

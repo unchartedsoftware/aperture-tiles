@@ -93,18 +93,20 @@
      * <pre>
      * {
      *     text: {
-     *         textKey  {String} - The attribute for the text in the data entry.
+     *         textKey  {String|Function} - The attribute for the text in the data entry.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     },
      *     frequency: {
-     *         countKey {String} - The attribute for the count in the data entry.
+     *         countKey {String|Function} - The attribute for the count in the data entry.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
+     *         invertOrder {Boolean} - The boolean to determine order of chart values.  Defaults to false if not present
      *     }
      * }
      * </pre>
      */
     function TextByFrequencyRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value";
+        spec.frequency.invertOrder = spec.frequency.invertOrder || false;
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -123,7 +125,9 @@
     TextByFrequencyRenderer.prototype.render = function( data ) {
 
         var textKey = this.spec.text.textKey,
-            countKey = this.spec.frequency.countKey,
+            frequency = this.spec.frequency,
+            countKey = frequency.countKey,
+            invertOrder = frequency.invertOrder,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             percentLabel,
@@ -136,6 +140,7 @@
             relativePercent,
             visibility,
             chartSize,
+            index,
             i, j;
 
         highestCount = getHighestCount( numEntries, values, countKey );
@@ -154,8 +159,10 @@
             // create chart
             html += '<div class="text-by-frequency-left">';
             for (j=0; j<chartSize; j++) {
+                // if invertOrder is true, invert the order of iteration
+                index = ( invertOrder ) ? chartSize - j - 1 : j;
                 // get the percent relative to the highest count in the tile
-                relativePercent = ( counts[j] / highestCount ) * 100;
+                relativePercent = ( counts[index] / highestCount ) * 100;
                 // if percent === 0, hide bar
                 visibility = ( relativePercent > 0 ) ? '' : 'hidden';
                 // class percent in increments of 10

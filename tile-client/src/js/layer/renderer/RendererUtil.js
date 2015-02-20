@@ -75,15 +75,19 @@
          * @memberof RenderUtil
          *
          * @param {Object} obj - The object to traverse.
-         * @param {String} attribPath - Period delimited attribute path.
+         * @param {String|Function} attribPath - Period delimited attribute path or a function that returns one.
          *
          * @returns {*} The nested value within the object.
          */
         getAttributeValue: function( obj, attribPath ) {
-            var attribs = attribPath.split('.'),
+            var attribs,
                 arraySplit,
                 attrib,
                 i;
+            if ( typeof attribPath === "function" ) {
+                attribPath = attribPath( obj );
+            }
+            attribs = attribPath.split('.');
             attrib = obj;
             for (i=0; i<attribs.length; i++) {
                 arraySplit = attribs[i].replace(/ /g, '' ).split(/[\[\]]/);
