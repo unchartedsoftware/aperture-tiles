@@ -48,18 +48,15 @@ trait TimeIndexScheme[T] extends IndexScheme[T] {
 trait NumberConverter {
 	@throws(classOf[IllegalArgumentException])
 	def asDouble (x: Any): Double = {
-		if (x == null) {
-			throw new IllegalArgumentException
-		} else {
-			x match {
-				case c: Byte => c.toDouble
-				case c: Short => c.toDouble
-				case c: Int => c.toDouble
-				case c: Long => c.toDouble
-				case c: Float => c.toDouble
-				case c: Double => c.toDouble
-				case c: Date => c.getTime
-			}
+		x match {
+			case null => throw new IllegalArgumentException
+			case c: Byte => c.toDouble
+			case c: Short => c.toDouble
+			case c: Int => c.toDouble
+			case c: Long => c.toDouble
+			case c: Float => c.toDouble
+			case c: Double => c.toDouble
+			case c: Date => c.getTime
 		}
 	}
 }

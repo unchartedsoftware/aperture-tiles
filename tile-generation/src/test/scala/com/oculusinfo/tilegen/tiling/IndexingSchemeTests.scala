@@ -31,11 +31,9 @@ import org.scalatest.FunSuite
 class IndexingSchemeTests extends FunSuite {
 	test("Test null conversion") {
 		val converter = new Object with NumberConverter
-		try {
+		intercept[IllegalArgumentException] {
 			converter.asDouble(null)
 			fail
-		} catch {
-			case e: Any => assert(e.isInstanceOf[IllegalArgumentException])
 		}
 	}
 
