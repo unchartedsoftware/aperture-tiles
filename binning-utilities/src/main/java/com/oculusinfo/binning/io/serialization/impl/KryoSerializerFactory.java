@@ -26,17 +26,23 @@ package com.oculusinfo.binning.io.serialization.impl;
 
 
 
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer.Codec;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.EnumProperty;
 import com.oculusinfo.factory.properties.ListProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.util.Pair;
 
 
 
@@ -52,6 +58,8 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 		                           null),
 		        "classes",
 		        "A list of fully-specified classes (as read by Class.forName()) that will need to be registered with Kryo for this serializer to work properly.");
+	private static final EnumProperty<Codec> CODEC = new EnumProperty<Codec>(
+		   "codec", "The compression scheme to use to compress Kryo's output", Codec.class, Codec.GZIP);
 
 
 
@@ -62,29 +70,83 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 	}
 
 
+	// Get the name to associate with a given value type
+	private static final Map<Class<?>, String> TYPE_NAMES =
+		Collections.unmodifiableMap(new HashMap<Class<?>, String>() {
+				private static final long serialVersionUID = 1L;
+				{
+					put(Boolean.class, "boolean");
+					put(Integer.class, "int");
+					put(Long.class, "long");
+					put(Float.class, "float");
+					put(Double.class, "double");
+					put(ByteBuffer.class, "bytes");
+					put(String.class, "string");
+				}
+			});
+	private static String getTypeName (TypeDescriptor type) {
+		Class<?> mainType = type.getMainType();
+		String name;
+		String startSubList;
+		String endSubList;
+
+		if (List.class.isAssignableFrom(mainType)) {
+			// It's a list = use [...]
+			name="";
+			startSubList = "[";
+			endSubList = "]";
+		} else if (Pair.class.equals(mainType)) {
+			// It's a pair - use (..., ...)
+			name="";
+			startSubList = "(";
+			endSubList = ")";
+		} else {
+			// Normal case: name + generics
+			if (TYPE_NAMES.containsKey(mainType)) name = TYPE_NAMES.get(mainType);
+			else name = mainType.getSimpleName().toLowerCase();
+			startSubList = "<";
+			endSubList = ">";
+		}
+
+		List<TypeDescriptor> genericTypes = type.getGenericTypes();
+		if (null != genericTypes && !genericTypes.isEmpty()) {
+			name += startSubList;
+			for (int i=0; i<genericTypes.size(); ++i) {
+				if (i > 0) name += ",";
+				name += getTypeName(genericTypes.get(i));
+			}
+			name += endSubList;
+		}
+		return name;
+	}
+	private static String getName (TypeDescriptor type) {
+		return getTypeName(type)+"-k";
+	}
 
 	private TypeDescriptor _type;
 
 	public KryoSerializerFactory (ConfigurableFactory<?> parent, List<String> path, TypeDescriptor type) {
-		super("kryo", KryoSerializerFactory.<T>getGenericSerializerClass(), parent, path, true);
+		super(getName(type), KryoSerializerFactory.<T>getGenericSerializerClass(), parent, path, true);
 		_type = type;
+
+		addProperty(NEEDED_CLASSES);
+		addProperty(CODEC);
 	}
 
 	@Override
 	protected TileSerializer<T> create () {
 		// Check class registrations
 		List<String> classNames = getPropertyValue(NEEDED_CLASSES);
-		if (!classNames.isEmpty()) {
-			List<Class<?>> neededClasses = new ArrayList<>();
-			for (String name: classNames) {
-				try {
-					neededClasses.add(Class.forName(name));
-				} catch (ClassNotFoundException e) {
-					LOGGER.warn("Class {} not found", name);
-				}
+		Codec codec = getPropertyValue(CODEC);
+		int nc = classNames.size();
+		Class<?>[] classes = new Class<?>[nc];
+		for (int n=0; n<nc; ++n) {
+			try {
+				classes[n] = Class.forName(classNames.get(n));
+			} catch (ClassNotFoundException e) {
+				LOGGER.warn("Class {} not found", classNames.get(n));
 			}
-			KryoSerializer.registerClasses(neededClasses.toArray(new Class<?>[neededClasses.size()]));
 		}
-		return new KryoSerializer<>(_type);
+		return new KryoSerializer<>(_type, codec, classes);
 	}
 }

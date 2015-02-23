@@ -31,6 +31,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;

@@ -54,7 +54,7 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.0.0-cdh4.6.0"
 				hadoopCoreVersion = "2.0.0-mr1-cdh4.6.0"
 				hbaseVersion = "0.94.15-cdh4.6.0"
-				sparkVersion = "1.1.1" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
+				sparkVersion = "1.2.0" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
@@ -136,17 +136,20 @@ subprojects {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 		} else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
@@ -155,9 +158,10 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 		}
-	}	
+	}
 	
 	// Function passed down to subprojects that produces calls to add hbase jars
 	// to a spark-run script.

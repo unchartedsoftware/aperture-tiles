@@ -21,13 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.binning.io;
 
 
 
 import java.util.List;
 
-import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.impl.DummyPyramidIOFactory;
 import com.oculusinfo.binning.io.impl.HBasePyramidIOFactory;
 import com.oculusinfo.binning.io.impl.JDBCPyramidIOFactory;

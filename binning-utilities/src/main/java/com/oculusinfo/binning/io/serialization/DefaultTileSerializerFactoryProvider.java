@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.binning.io.serialization;
 
 
 
@@ -31,10 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.PairAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
@@ -152,8 +152,31 @@ public final class DefaultTileSerializerFactoryProvider
 				}
 			});
 
-	// Array of Pair (can be used for maps) serializers
+	// Simple Pair serializers
 	public static final List<DefaultTileSerializerFactoryProvider> PAIRS =
+		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
+				private static final long serialVersionUID = 1L;
+
+				{
+					for (final Class<?> keyType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+						String keyName = PrimitiveAvroSerializer.getAvroType(keyType);
+						for (final Class<?> valueType: PrimitiveAvroSerializer.PRIMITIVE_TYPES) {
+							String valueName = PrimitiveAvroSerializer.getAvroType(valueType);
+							String name = keyName + "_" + valueName + "_pair_avro";
+							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
+									@Override
+									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
+									                                                                List<String> path) {
+										return new PairAvroSerializerFactory<>(parent, path, keyType, valueType);
+									}
+								}));
+						}
+					}
+				}
+			});
+
+	// Array of Pair (can be used for maps) serializers
+	public static final List<DefaultTileSerializerFactoryProvider> PAIR_ARRAYS =
 		Collections.unmodifiableList(new ArrayList<DefaultTileSerializerFactoryProvider>() {
 				private static final long serialVersionUID = 1L;
 

@@ -57,7 +57,7 @@ class SparkConnectorTestSuite extends FunSuite {
 	}
 
 	test("create context with job name override") {
-		val connector = new SparkConnector(Map("spark.app.name" -> "someJob", "spark.master" -> "local"))
+		val connector = new SparkConnector(Map("spark.app.name" -> "someJob", "spark.master" -> "local", "spark.driver.allowMultipleContexts" -> "true"))
 		connector.createContext(Some("someOtherJob"))
 		assertResult(Some("someOtherJob")) {
 			connector.getConfProperty("spark.app.name")

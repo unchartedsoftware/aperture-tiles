@@ -35,6 +35,9 @@ trait SharedSparkContext extends BeforeAndAfterAll { self: Suite =>
 	var conf = new SparkConf(false)
 
 	override def beforeAll() {
+		// Make sure to allow multiple contexts for testing
+		conf.set("spark.driver.allowMultipleContexts", "true")
+
 		_sc = new SparkContext("local", "test", conf)
 		_sqlc = new SQLContext(_sc)
 		super.beforeAll()

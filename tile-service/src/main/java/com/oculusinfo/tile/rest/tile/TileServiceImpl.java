@@ -29,16 +29,17 @@ import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.SerializationTypeChecker;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.util.AvroJSONConverter;
 import com.oculusinfo.tile.util.TileDataView;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
