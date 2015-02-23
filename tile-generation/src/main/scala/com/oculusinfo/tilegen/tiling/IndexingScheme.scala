@@ -25,12 +25,12 @@
 
 package com.oculusinfo.tilegen.tiling
 
-
 import java.util.Date
 
-import com.oculusinfo.binning.impl.AOITilePyramid
-
+import scala.Range
 import scala.collection.mutable.ArrayBuffer
+
+import com.oculusinfo.binning.impl.AOITilePyramid
 
 
 trait IndexScheme[T] {
@@ -46,8 +46,10 @@ trait TimeIndexScheme[T] extends IndexScheme[T] {
 }
 
 trait NumberConverter {
-	def asDouble (x: Any): Double =
+	@throws(classOf[IllegalArgumentException])
+	def asDouble (x: Any): Double = {
 		x match {
+			case null => throw new IllegalArgumentException
 			case c: Byte => c.toDouble
 			case c: Short => c.toDouble
 			case c: Int => c.toDouble
@@ -56,6 +58,7 @@ trait NumberConverter {
 			case c: Double => c.toDouble
 			case c: Date => c.getTime
 		}
+	}
 }
 
 class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with NumberConverter with Serializable {
