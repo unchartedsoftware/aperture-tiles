@@ -63,6 +63,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 
 
 
@@ -329,8 +330,8 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 			                    taskMetaData.getValidZoomLevels(),
 			                    taskMetaData.getBounds(),
 			                    null, null)
-		task.getTileAnalytics.map(_.applyTo(newTaskMetaData))
-		task.getDataAnalytics.map(_.applyTo(newTaskMetaData))
+		task.getTileAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
+		task.getDataAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
 		newTaskMetaData.addValidZoomLevels(
 			tiles.map(tile =>
 				new JavaInt(tile.getDefinition().getLevel())
