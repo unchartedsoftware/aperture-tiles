@@ -36,6 +36,7 @@ import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.SparseTileData;
 import com.oculusinfo.binning.TileData.StorageType;
 import com.oculusinfo.factory.util.Pair;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
@@ -73,16 +74,16 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 
 
 
-	private Map<StorageType, Schema> _tileSchema;
-	private Schema                   _recordSchema;
+	private transient ThreadLocal<Map<StorageType, Schema>> _tileSchema;
+	private transient Schema                                _recordSchema;
 
-	private String                   _compressionCodec;
-	private TypeDescriptor           _typeDescription;
+	private String                                          _compressionCodec;
+	private TypeDescriptor                                  _typeDescription;
 
 	protected GenericAvroSerializer (CodecFactory compressionCodec, TypeDescriptor typeDescription) {
 		_compressionCodec = codecToDescription(compressionCodec);
 		_typeDescription = typeDescription;
-		_tileSchema = new HashMap<>();
+		_tileSchema = null;
 		_recordSchema = null;
 	}
 
@@ -106,10 +107,17 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 	}
 
 	protected Schema getTileSchema (StorageType storage) throws IOException {
-		if (!_tileSchema.containsKey(storage)) {
-			_tileSchema.put(storage, createTileSchema(storage));
+		if (null == _tileSchema)
+			_tileSchema = new ThreadLocal<Map<StorageType, Schema>>() {
+				@Override
+				protected Map<StorageType, Schema> initialValue () {
+					return new HashMap<TileData.StorageType, Schema>();
+				}
+			};
+		if (!_tileSchema.get().containsKey(storage)) {
+			_tileSchema.get().put(storage, createTileSchema(storage));
 		}
-		return _tileSchema.get(storage);
+		return _tileSchema.get().get(storage);
 	}
 	
 	protected Schema createTileSchema (StorageType storage) throws IOException {
