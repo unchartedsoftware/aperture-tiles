@@ -39,6 +39,9 @@ import java.util.List;
  * for information about what primitives are supported, and how.
  */
 public class PrimitiveAvroSerializerFactory<T> extends ConfigurableFactory<TileSerializer<T>> {
+
+    public static String DEFAULT = getName( Double.class );
+
 	private static <T> String getName (Class<? extends T> type) {
 		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
 			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);

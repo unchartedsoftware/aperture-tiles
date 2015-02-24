@@ -53,6 +53,11 @@
                     }
                 }
             });
+            if ( layer.isEnabled() ) {
+                $layerBody.css( 'display', "" );
+            } else {
+                $layerBody.css( 'display', "none" );
+            }
             $layerEntry.append( $layerHeader );
             $layerEntry.append( $layerBody );
             return $layerEntry;
