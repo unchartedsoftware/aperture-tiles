@@ -45,7 +45,7 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 		super(compressionCodec, new TypeDescriptor(List.class, elementTypeDescription));
 	}
 
-	private Schema _entrySchema;
+	transient private Schema _entrySchema;
 	
 	abstract protected String getEntrySchemaFile ();
 	abstract protected T getEntryValue (GenericRecord entry);
@@ -58,7 +58,7 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 
 	protected Schema getEntrySchema () throws IOException {
 		if (_entrySchema == null) {
-				_entrySchema = createEntrySchema();
+			_entrySchema = createEntrySchema();
 		}
 		return _entrySchema;
 	}
