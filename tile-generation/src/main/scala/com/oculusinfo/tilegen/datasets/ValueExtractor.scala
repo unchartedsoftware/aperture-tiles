@@ -97,7 +97,7 @@ object ValueExtractorFactory {
 	                                                                     IndirectSeriesValueExtractorFactory.provider,
 	                                                                     StringValueExtractorFactory.provider,
 	                                                                     SubstringValueExtractorFactory.provider)
-	/** Create a standard index extractor uber-factory provider */
+	/** Create a standard value extractor uber-factory provider */
 	def provider (defaultProvider: String = defaultFactory,
 	              subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
 		new StandardUberFactoryProvider[ValueExtractor[_, _]](subFactoryProviders.asJava) {
@@ -108,7 +108,7 @@ object ValueExtractorFactory {
 				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, createChildren(path), defaultProvider)
 		}
 
-	/** Short-hand for accessing the standard index extractor uber-factory easily. */
+	/** Short-hand for accessing the standard value extractor uber-factory easily. */
 	def apply (parent: ConfigurableFactory[_],
 	           path: JavaList[String],
 	           defaultProvider: String = defaultFactory,
