@@ -106,7 +106,7 @@ Save and unzip the following Aperture Tiles distributions available on the [Down
 - [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
 - [Tile Quick Start Application](../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
 
-The full Aperture Tiles source code, available for download from [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
+The full Aperture Tiles source code, available for download from [GitHub](https://github.com/unchartedsoftware/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
 ### <a name="julia-set-data-generation"></a> Julia Set Data Generation ###
 

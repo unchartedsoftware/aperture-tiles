@@ -327,7 +327,7 @@ baseLayer = new tiles.BaseLayer({
 });
 ```
 
-The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS) that uses the Oculus World Graphite map set. You can use these maps in offline mode by first downloading the [map tiles WAR](http://aperturejs.com/downloads/) on [aperturejs.com](http://aperturejs.com/).
+The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS) that uses the Uncharted World Graphite map set. You can use these maps in offline mode by first downloading the [map tiles WAR](http://aperturejs.com/downloads/) on [aperturejs.com](http://aperturejs.com/).
 
 ```javascript
 {

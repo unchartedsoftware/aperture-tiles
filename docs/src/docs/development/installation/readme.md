@@ -114,11 +114,11 @@ This project has the following prerequisites:
 
 ## <a name="source-code"></a> Source Code ##
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/oculusinfo/aperture-tiles/tree/master).
+The Aperture Tiles source code is available on [GitHub](https://github.com/unchartedsoftware/aperture-tiles/tree/master).
 
 ### Dependencies ###
 
-Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/oculusinfo/aperturejs/tree/master).
+Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/unchartedsoftware/aperturejs/tree/master).
 
 ### <a name="project-structure"></a> Project Structure ###
 
@@ -187,7 +187,7 @@ Prior to building the project, you must specify which version of Hadoop and/or H
 
 #### Installing Dependencies ####
 
-Install the [Aperture JS](https://github.com/oculusinfo/aperturejs/tree/master) project by running the following command in your root Aperture JS directory:
+Install the [Aperture JS](https://github.com/unchartedsoftware/aperturejs/tree/master) project by running the following command in your root Aperture JS directory:
 	
 ```bash
 mvn build
