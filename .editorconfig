@@ -9,10 +9,16 @@ charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
-
-# Matches multiple files with brace expansion notation
-# Set default charset
-[*.{js,py,java,scala,gradle,sh,bash,less,css,xml,md,json}]
 indent_style = tab
 indent_size = tab
 tab_width = 2
+
+[*.{js,json,scala}]
+indent_style = tab
+indent_size = tab
+tab_width = 2
+
+[*.{py,java,gvy,gy,gsh,groovy}]
+indent_style = tab
+indent_size = tab
+tab_width = 4
