@@ -398,8 +398,8 @@ public class AnnotationServiceTests {
 			try {
 
 				LayerConfiguration config = _layerService.getLayerConfiguration( _layerId, null );
-				PyramidIO tileIo = config.produce( PyramidIO.class );
-				AnnotationIO dataIo = config.produce( AnnotationIO.class );
+				config.produce( PyramidIO.class );
+				config.produce( AnnotationIO.class );
                 LOGGER.debug("Deleting temporary file system folders");
                 try {
                     File testDir = new File( ".\\" + _dataId );

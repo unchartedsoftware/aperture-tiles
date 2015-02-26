@@ -46,6 +46,8 @@ import java.util.Map;
  */
 
 public class AnnotationTile extends DenseTileData< AnnotationBin > {
+    private static final long serialVersionUID = 1L;
+
 
     public AnnotationTile( TileIndex index ) {
         super( index );
