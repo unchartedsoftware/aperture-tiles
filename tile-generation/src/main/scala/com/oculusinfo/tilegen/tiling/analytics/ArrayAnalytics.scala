@@ -29,9 +29,9 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 import java.util.{List => JavaList}
 import scala.collection.JavaConverters._
-
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.ArrayList
 
 
 
@@ -69,8 +69,11 @@ class ArrayBinningAnalytic[PT, RT] (elementAnalytic: BinningAnalytic[PT, RT])
 		extends ArrayAnalytic[PT](elementAnalytic)
 		with BinningAnalytic[Seq[PT], JavaList[RT]]
 {
-	def finish (value: Seq[PT]): JavaList[RT] =
-		value.map(elt => elementAnalytic.finish(elt)).asJava
+	def finish (value: Seq[PT]): JavaList[RT] = {
+		val result = new ArrayList[RT](value.size)
+		value.foreach(elt => result.add(elementAnalytic.finish(elt)))
+		result
+	}
 }
 class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
                              analyticName: Option[String] = None)

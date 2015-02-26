@@ -20,8 +20,8 @@ import java.lang.{Double => JavaDouble}
 trait TypeConversion[S, T] extends Serializable {
 	def forwards (n: S): T
 	def backwards (n: T): S
-	def fromClass: Class[_ <: S]
-	def toClass: Class[_ <: T]
+	def fromClass: Class[S]
+	def toClass: Class[T]
 }
 object TypeConversion {
 	implicit object IntPair extends TypeConversion[Int, JavaInt] {

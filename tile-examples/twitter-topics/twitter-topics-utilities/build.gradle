@@ -13,6 +13,13 @@ test << {
 	}
 }
 
+// Turn on test logging regardless of gradle log level
+test {
+	testLogging {
+		events "passed", "skipped", "failed", "standardOut", "standardError"
+	}
+}
+
 // By default the Gradle scala plugin builds java code before scala code.  This leads to problems
 // in our setup because the scala code in this project is used by the java code (causing 
 // compile errors).  We force the plugin to use an empty source set for java, and then set the
@@ -34,5 +41,6 @@ sourceSets {
 dependencies {
 	compile project(":tile-generation")
 	compile project(":tile-service")
-	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:1.9.1"	
+	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:1.9.1"
+	testCompile "junit:junit:4.8.1"
 }

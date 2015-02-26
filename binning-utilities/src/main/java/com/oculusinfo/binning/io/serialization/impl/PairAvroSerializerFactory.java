@@ -24,48 +24,52 @@
  */
 package com.oculusinfo.binning.io.serialization.impl;
 
+import java.util.List;
+
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-
-import java.util.List;
+import com.oculusinfo.factory.util.Pair;
 
 /**
  * This serializer factory constructs a
- * {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer},
- * for use with tiles whose bin values are the basic avro primitive value types.
+ * {@link com.oculusinfo.binning.io.serialization.impl.PairAvroSerializer},
+ * for use with tiles whose values are pairs of primitive Avro types.
  *
  * See {@link com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer}
  * for information about what primitives are supported, and how.
  */
-public class PrimitiveAvroSerializerFactory<T> extends ConfigurableFactory<TileSerializer<T>> {
-
-    public static String DEFAULT = getName( Double.class );
-
-	private static <T> String getName (Class<? extends T> type) {
-		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
-			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
-		return type.getSimpleName().toLowerCase()+"-a";
+public class PairAvroSerializerFactory<S, T> extends ConfigurableFactory<TileSerializer<Pair<S, T>>>
+{
+	private static <S, T> String getName (Class<? extends S> keyType, Class<? extends T> valueType) {
+		if (!PrimitiveAvroSerializer.isValidPrimitive(keyType) ||
+		    !PrimitiveAvroSerializer.isValidPrimitive(valueType))
+			throw new IllegalArgumentException("Attempt to create pair serializer factory with non-primitive class(es) "+keyType+" and/or "+valueType);
+		return "("+keyType.getSimpleName().toLowerCase()+", "+valueType.getSimpleName().toLowerCase()+")-a";
 	}
+
 	// This is the only way to get a generified class object, but because of erasure, it's guaranteed to work.
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static <ST> Class<TileSerializer<ST>> getGenericSerializerClass (Class<? extends ST> type) {
-		if (!PrimitiveAvroSerializer.isValidPrimitive(type))
-			throw new IllegalArgumentException("Attempt to create primitive serializer factory with non-primitive class "+type);
+	private static <S, T> Class<TileSerializer<Pair<S, T>>>
+		getGenericSerializerClass (Class<? extends S> keyType, Class<? extends T> valueType) {
+		if (!PrimitiveAvroSerializer.isValidPrimitive(keyType) ||
+		    !PrimitiveAvroSerializer.isValidPrimitive(valueType))
+			throw new IllegalArgumentException("Attempt to create pair array serializer factory with non-primitive class(es) "+keyType+" and/or "+valueType);
 		return (Class) TileSerializer.class;
-	}
+	} 
 
-
-
-	private Class<? extends T> _type;
-
-	public PrimitiveAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path, Class<? extends T> type) {
-		super(getName(type), getGenericSerializerClass(type), parent, path);
-		_type = type;
+	private Class<? extends S> _keyType;
+	private Class<? extends T> _valueType;
+	public PairAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path,
+	                                  Class<? extends S> keyType,
+	                                  Class<? extends T> valueType) {
+		super(getName(keyType, valueType), getGenericSerializerClass(keyType, valueType), parent, path);
+		_keyType = keyType;
+		_valueType = valueType;
 	}
 
 	@Override
-	protected TileSerializer<T> create () {
-		return new PrimitiveAvroSerializer<>(_type, TileSerializerFactory.getCodecFactory(this));
+	protected TileSerializer<Pair<S, T>> create () {
+		return new PairAvroSerializer<S, T>(_keyType, _valueType, TileSerializerFactory.getCodecFactory(this));
 	}
 }

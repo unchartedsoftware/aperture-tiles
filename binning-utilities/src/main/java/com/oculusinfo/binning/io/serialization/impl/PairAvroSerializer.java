@@ -40,78 +40,78 @@ import java.io.IOException;
  * for information about what primitives are supported, and how.
  */
 public class PairAvroSerializer<S, T> extends GenericAvroSerializer<Pair<S, T>> {
-    private static final long serialVersionUID = 1777339648086558933L;
-    private static PatternedSchemaStore __schemaStore = new PatternedSchemaStore(
-            "{\n" +
-                    "  \"name\":\"recordType\",\n" +
-                    "  \"namespace\":\"ar.avro\",\n" +
-                    "  \"type\":\"record\",\n" +
-                    "  \"fields\":[\n" +
-                    "    {\"name\":\"key\", \"type\":\"%s\"},\n" +
-                    "    {\"name\":\"value\", \"type\":\"%s\"}\n" +
-                    "  ]\n" +
-                    "}");
+	private static final long serialVersionUID = 1777339648086558933L;
+	private static PatternedSchemaStore __schemaStore = new PatternedSchemaStore(
+		       "{\n" +
+		       "  \"name\":\"recordType\",\n" +
+		       "  \"namespace\":\"ar.avro\",\n" +
+		       "  \"type\":\"record\",\n" +
+		       "  \"fields\":[\n" +
+		       "    {\"name\":\"key\", \"type\":\"%s\"},\n" +
+		       "    {\"name\":\"value\", \"type\":\"%s\"}\n" +
+		       "  ]\n" +
+		       "}");
 
 
 
-    private Class<? extends S>          _keyType;
-    private Class<? extends T>          _valueType;
-    private transient Schema _schema    = null;
-    // A bit of a hack to handle string tiles as strings rather than Utf8s
-    private boolean                     _keyToString;
-    private boolean                     _valueToString;
+	private Class<? extends S>          _keyType;
+	private Class<? extends T>          _valueType;
+	private transient Schema _schema    = null;
+	// A bit of a hack to handle string tiles as strings rather than Utf8s
+	private boolean                     _keyToString;
+	private boolean                     _valueToString;
 
-    public PairAvroSerializer (Class<? extends S> keyType, Class<? extends T> valueType,
-                               CodecFactory compressionCodec) {
-        super(compressionCodec,
-                new TypeDescriptor(Pair.class,
-                        PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(keyType),
-                        PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(valueType)));
+	public PairAvroSerializer (Class<? extends S> keyType, Class<? extends T> valueType,
+	                           CodecFactory compressionCodec) {
+		super(compressionCodec,
+		      new TypeDescriptor(Pair.class,
+		                         PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(keyType),
+		                         PrimitiveAvroSerializer.getPrimitiveTypeDescriptor(valueType)));
 
-        _keyType = keyType;
-        _valueType = valueType;
-        _keyToString = (String.class.equals(keyType));
-        _valueToString = (String.class.equals(valueType));
-    }
+		_keyType = keyType;
+		_valueType = valueType;
+		_keyToString = (String.class.equals(keyType));
+		_valueToString = (String.class.equals(valueType));
+	}
 
 
-    @Override
-    protected String getRecordSchemaFile () {
-        throw new UnsupportedOperationException("Primitive types have standard schema; schema files should not be required.");
-    }
+	@Override
+	protected String getRecordSchemaFile () {
+		throw new UnsupportedOperationException("Primitive types have standard schema; schema files should not be required.");
+	}
 
-    @Override
-    protected Schema createRecordSchema () throws IOException {
-        if (null == _schema) {
-            String keyTypeName = PrimitiveAvroSerializer.getAvroType(_keyType);
-            String valueTypeName = PrimitiveAvroSerializer.getAvroType(_valueType);
-            _schema = __schemaStore.getSchema(new Pair<>(_keyType, _valueType), keyTypeName, valueTypeName);
-        }
-        return _schema;
-    }
+	@Override
+	protected Schema createRecordSchema () throws IOException {
+		if (null == _schema) {
+			String keyTypeName = PrimitiveAvroSerializer.getAvroType(_keyType);
+			String valueTypeName = PrimitiveAvroSerializer.getAvroType(_valueType);
+			_schema = __schemaStore.getSchema(new Pair<>(_keyType, _valueType), keyTypeName, valueTypeName);
+		}
+		return _schema;
+	}
 
-    // This doesn't need to be checked because
-    //  (a) One can't create a serializer for which it theoreticallly won't work.
-    //  (b) It is possible to use the wrong serializer for a given tile, in which
-    //      case it will fail - but it should fail in that case.
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Pair<S, T> getValue (GenericRecord bin) {
-        S key;
-        if (_keyToString) key = (S) bin.get("key").toString();
-        else key = (S) bin.get("key");
+	// This doesn't need to be checked because
+	//  (a) One can't create a serializer for which it theoreticallly won't work.
+	//  (b) It is possible to use the wrong serializer for a given tile, in which
+	//      case it will fail - but it should fail in that case.
+	@SuppressWarnings("unchecked")
+	@Override
+	protected Pair<S, T> getValue (GenericRecord bin) {
+		S key;
+		if (_keyToString) key = (S) bin.get("key").toString();
+		else key = (S) bin.get("key");
 
-        T value;
-        if (_valueToString) value = (T) bin.get("value").toString();
-        else value = (T) bin.get("value");
+		T value;
+		if (_valueToString) value = (T) bin.get("value").toString();
+		else value = (T) bin.get("value");
 
-        return new Pair<S, T>(key, value);
-    }
+		return new Pair<S, T>(key, value);
+	}
 
-    @Override
-    protected void setValue (GenericRecord bin, Pair<S, T> value) throws IOException {
-        if (null == value) throw new IOException("Null value for bin");
-        bin.put("key", value.getFirst());
-        bin.put("value", value.getSecond());
-    }
+	@Override
+	protected void setValue (GenericRecord bin, Pair<S, T> value) throws IOException {
+		if (null == value) throw new IOException("Null value for bin");
+		bin.put("key", value.getFirst());
+		bin.put("value", value.getSecond());
+	}
 }

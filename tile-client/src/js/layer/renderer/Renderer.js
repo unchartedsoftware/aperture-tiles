@@ -190,9 +190,16 @@
      */
     Renderer.prototype.injectEntries = function( elements, entries ) {
         var selector = this.getEntrySelector(),
-            selectKey = this.spec.select.selectKey,
+            $elements = $( elements ),
             selectValue = this.selectValue,
-            $elements = $( elements );
+            select = this.spec.select,
+            selectKey;
+
+        if ( !select || !select.selectKey ) {
+            return;
+        }
+        // get select key
+        selectKey = select.selectKey;
         // if entry selector is set, use it to select entries
         if ( selector ) {
             $elements = $elements.find( selector );

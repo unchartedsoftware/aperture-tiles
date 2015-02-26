@@ -22,28 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init;
+package com.oculusinfo.tilegen.tiling
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import com.oculusinfo.factory.providers.FactoryProvider;
-import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
+import org.scalatest.FunSuite
 
-public class StandardPyramidIOFactoryModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		Multibinder<FactoryProvider<PyramidIO>> factoryProviderBinder =
-			Multibinder.newSetBinder(binder(), new TypeLiteral<FactoryProvider<PyramidIO>>(){});
 
-		for (DefaultPyramidIOFactoryProvider provider: DefaultPyramidIOFactoryProvider.values()) {
-			factoryProviderBinder.addBinding().toInstance(provider);
+class IndexingSchemeTests extends FunSuite {
+	test("Test null conversion") {
+		val converter = new Object with NumberConverter
+		intercept[IllegalArgumentException] {
+			converter.asDouble(null)
+			fail
 		}
-
-		bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
 	}
-	
+
+	test("Test cartesian indices on non-doubles") {
+		val scheme = new CartesianSchemaIndexScheme
+		assert(1.0 === scheme.toCartesian(Seq[Any](1, 2))._1)
+		assert(2.0 === scheme.toCartesian(Seq[Any](1, 2L))._2)
+		assert(3.5 === scheme.toCartesian(Seq[Any](3.5f, 3.4f))._1)
+		assert(6.0 === scheme.toCartesian(Seq[Any](1, 6.toByte))._2)
+		assert(7.0 === scheme.toCartesian(Seq[Any](7.toShort, 8.toShort))._1)
+		assert(456789.0 === scheme.toCartesian(Seq[Any](1, new java.util.Date(456789L)))._2)
+	}
 }

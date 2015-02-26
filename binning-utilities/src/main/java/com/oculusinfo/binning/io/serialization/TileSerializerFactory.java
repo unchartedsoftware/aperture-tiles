@@ -26,6 +26,7 @@ package com.oculusinfo.binning.io.serialization;
 
 import java.util.List;
 
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
 import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -73,7 +74,7 @@ public class TileSerializerFactory
 	                              ConfigurableFactory<?> parent,
 	                              List<String> path,
 	                              List<ConfigurableFactory<? extends TileSerializer<?>>> children) {
-		super(name, getGenericSerializerClass(), parent, path, children, null);
+		super(name, getGenericSerializerClass(), parent, path, children, PrimitiveAvroSerializerFactory.DEFAULT );
 
 		addProperty(CODEC_TYPE);
 		addProperty(DEFLATE_LEVEL);

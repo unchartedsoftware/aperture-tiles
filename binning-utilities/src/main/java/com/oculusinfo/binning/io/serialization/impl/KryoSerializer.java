@@ -3,18 +3,13 @@ package com.oculusinfo.binning.io.serialization.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
+
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -24,8 +19,8 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import com.oculusinfo.factory.util.Pair;
 
 
 
@@ -37,161 +32,18 @@ import com.oculusinfo.binning.util.TypeDescriptor;
  * @param <T> The type of data this instance of the serializer intends to serialize.
  */
 public class KryoSerializer<T> implements TileSerializer<T> {
-	private static final long serialVersionUID = -1983162656743117212L;
+	private static final long serialVersionUID = 611839716702420914L;
+	public static enum Codec {DEFLATE, BZIP, GZIP};
 
 
-
-	// Per-thread info: a Kryo instance for registration, and an indicator of what classes will 
-	// need to be registered.
-	private static class ThreadInfo {
-		Kryo _kryo;
-		int _nextUpdate;
-		ThreadInfo () {
-			_kryo = new Kryo();
-			_nextUpdate = 0;
-		}
-		// Get the kryo instance for this thread, updating it with new classes if necessary.
-		Kryo getKryo () {
-			__classRegistryLock.readLock().lock();
-			try {
-				int nextUpdate = __classesToRegister.size();
-				if (nextUpdate > _nextUpdate) {
-					for (int update = _nextUpdate; update < nextUpdate; ++update) {
-						for (Class<?> newClass: __classesToRegister.get(update)) {
-							_kryo.register(newClass);
-						}
-					}
-				}
-				_nextUpdate = nextUpdate;
-			} finally {
-				__classRegistryLock.readLock().unlock();
-			}
-
-			return _kryo;
-		}
-	}
 
 	// Store a kryo instance per thread
-	private static ThreadLocal<ThreadInfo> __threadInfo = new ThreadLocal<ThreadInfo>(){
-		protected ThreadInfo initialValue () {
-			return new ThreadInfo();
-		}
-	};
-
-	// Get the kryo instance for this thread.
-	private static Kryo kryo () {
-		return __threadInfo.get().getKryo();
-	}
-
-
-
-	// Handle registering extra classes
-	//
-	// Classes are registered a set at a time.  Each thread keeps track of the latest set it's 
-	// registered, and registers the new ones since then as necessary.
-	//
-	// The key in this map is the set number.  This number will be sequential, starting at 0 - 
-	// so the next key to be added is always the current size of the set.
-	private static Map<Integer, Collection<Class<?>>> __classesToRegister = new ConcurrentHashMap<>();
-	// And we need a lock to prevent collisions
-	private static ReadWriteLock __classRegistryLock = new ReentrantReadWriteLock();
-
-	/**
-	 * Register a set of classes for serialization/deserialization via Kryo.
-	 * 
-	 * Classes so registered <em>must</em> have a zero-argument constructor.
-	 * 
-	 * Trying to register the same class twice should be a no-op the second time.  However, this 
-	 * is not a trivial test - and is less trivial the more classes are registered - so 
-	 * re-registrations should be kept to a minimum.
-	 * 
-	 * Also, any classes registered via this class are stored for the life of the application -
-	 * so don't overuse for that reason too.
-	 * 
-	 * @param classes The classes the user knows will be needed to serialize a tile set.
-	 */
-	public static void registerClasses (Class<?>... classes) {
-		// Get the set of classes that need to be registered that haven't been.
-		Set<Class<?>> newClasses = new HashSet<>(Arrays.asList(classes));
-		int lastChecked = -1;
-		__classRegistryLock.readLock().lock();
-		try {
-			for (Entry<Integer, Collection<Class<?>>> entry: __classesToRegister.entrySet()) {
-				newClasses.removeAll(entry.getValue());
-				if (newClasses.isEmpty()) break;
-				lastChecked = Math.max(lastChecked, entry.getKey());
-			}
-		} finally {
-			__classRegistryLock.readLock().unlock();
-		}
-
-		if (!newClasses.isEmpty()) {
-			__classRegistryLock.writeLock().lock();
-
-			try {
-				// Make sure there are still more classes to register
-				int update = lastChecked+1;
-				while (update < __classesToRegister.size()) {
-					newClasses.remove(__classesToRegister.get(update));
-				}
-    
-				if (!newClasses.isEmpty()) {
-					__classesToRegister.put(__classesToRegister.size(), Collections.unmodifiableSet(newClasses));
-				}
-			} finally {
-				__classRegistryLock.writeLock().unlock();
-			}
-		}
-	}
-
-	// Our initial registration of classes we expect, by default, to need to register is handled 
-	// using the same mechanism as other registration class updates - so should be update 0 on all
-	// threads.
-	static {
-		Kryo testKryo = kryo();
-		List<Class<?>> toRegister = new ArrayList<>();
-		for (Class<?> initialClass: new Class<?>[] {
-				DenseTileData.class,
-					SparseTileData.class,
-
-					// Standard primitives
-					Boolean.class,
-					Byte.class, Short.class, Integer.class, Long.class,
-					Float.class, Double.class,
-					String.class,
-					java.util.UUID.class,
-
-					// Standard collection types
-					java.util.ArrayDeque.class,
-					java.util.ArrayList.class,
-					java.util.BitSet.class,
-					java.util.HashMap.class,
-					java.util.HashSet.class,
-					java.util.Hashtable.class,
-					java.util.IdentityHashMap.class,
-					java.util.LinkedHashMap.class,
-					java.util.LinkedHashSet.class,
-					java.util.PriorityQueue.class,
-					java.util.TreeMap.class,
-					java.util.TreeSet.class,
-					java.util.Vector.class,
-
-					// Our own standard types
-					Pair.class
-					}) {
-			// Don't re-register anything Kryo already registers by default - it should be 
-			// harmless to do so (I checked the Kryo code), but just in case they ever change 
-			// things, we wouldn't want to overwrite a class registered with a specific serializer.
-			if (null == testKryo.getClassResolver().getRegistration(initialClass))
-				toRegister.add(initialClass);
-		}
-
-		registerClasses(toRegister.toArray(new Class<?>[toRegister.size()]));
-	}
-
-
-
+	transient private LocalizedKryo  _localKryo;
+	// A list of classes each kryo instance must register
+	private Class<?>[]     _classesToRegister;
+	// Our type description
 	private TypeDescriptor _typeDesc;
+	private Codec _codec;
 	
 	/**
 	 * Create a serializer.
@@ -202,8 +54,20 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	 *            class was created; there is no way of enforcing this, but
 	 *            violating it will cause a host of problems.
 	 */
-	public KryoSerializer (TypeDescriptor typeDesc) {
+	public KryoSerializer (TypeDescriptor typeDesc, Class<?>... classesToRegister) {
+		this(typeDesc, Codec.BZIP, classesToRegister);
+	}
+	public KryoSerializer (TypeDescriptor typeDesc, Codec codec, Class<?>... classesToRegister) {
 		_typeDesc = typeDesc;
+		_codec = codec;
+		_classesToRegister = classesToRegister;
+	}
+
+	// Get the kryo instance for this thread.
+	private Kryo kryo () {
+		if (null == _localKryo)
+			_localKryo = new LocalizedKryo();
+		return _localKryo.get();
 	}
 
 	@Override
@@ -215,13 +79,27 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public TileData<T> deserialize(TileIndex index, InputStream stream)
 		throws IOException {
-		Input input = new Input(stream);
+		InputStream compressionStream;
+		switch (_codec) {
+		case BZIP:
+			compressionStream = new BZipInputStreamWrapper(new BZip2CompressorInputStream(stream));
+			break;
+		case GZIP:
+			compressionStream = new GzipCompressorInputStream(stream);
+			break;
+		case DEFLATE:
+		default:
+			compressionStream = new InflaterInputStream(stream);
+			break;
+		}
+		Input input = new Input(compressionStream);
 		try {
 	
 			Object data = kryo().readClassAndObject(input);
 			if (data instanceof TileData) return (TileData) data;
 			else return null;
 		} finally {
+			compressionStream.close();
 			input.close();
 		}
 	}
@@ -229,11 +107,133 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	@Override
 	public void serialize(TileData<T> data, OutputStream stream)
 		throws IOException {
-		Output output = new Output(stream);
+		OutputStream compressionStream;
+		switch (_codec) {
+		case BZIP:
+			compressionStream = new BZip2CompressorOutputStream(stream);
+			break;
+		case GZIP:
+			compressionStream = new GzipCompressorOutputStream(stream);
+			break;
+		case DEFLATE:
+		default:
+			compressionStream = new DeflaterOutputStream(stream);
+			break;
+		}
+		Output output = new Output(compressionStream);
+		try {
+			kryo().writeClassAndObject(output, data);
 
-		kryo().writeClassAndObject(output, data);
+			output.flush();
+			compressionStream.flush();
+		} finally {
+			output.close();
+			compressionStream.close();
+		}
+	}
 
-		output.flush();
-		output.close();
+    
+    
+	private class LocalizedKryo extends ThreadLocal<Kryo> {
+		protected Kryo initialValue () {
+			Kryo kryo = new Kryo();
+
+			kryo.register(TileIndex.class);
+			kryo.register(DenseTileData.class);
+			kryo.register(SparseTileData.class);
+
+			// Standard collection types
+			kryo.register(java.util.ArrayDeque.class);
+			kryo.register(java.util.ArrayList.class);
+			kryo.register(java.util.BitSet.class);
+			kryo.register(java.util.HashMap.class);
+			kryo.register(java.util.HashSet.class);
+			kryo.register(java.util.Hashtable.class);
+			kryo.register(java.util.IdentityHashMap.class);
+			kryo.register(java.util.LinkedHashMap.class);
+			kryo.register(java.util.LinkedHashSet.class);
+			kryo.register(java.util.PriorityQueue.class);
+			kryo.register(java.util.TreeMap.class);
+			kryo.register(java.util.TreeSet.class);
+			kryo.register(java.util.Vector.class);
+
+			// Our own standard types
+			kryo.register(Pair.class);
+
+			// And our custom classes
+			for (Class<?> ctr: _classesToRegister) {
+				kryo.register(ctr);
+			}
+			return kryo;
+		}
+	}
+
+	/**
+	 * This is just a quick wrapping InputStream to get around a bug in apache commons bzip 
+	 * uncompression, where when it is passed a buffer into which to read, and told to offset by 
+	 * the length of the buffer, it returns that the file is done, rather than that the buffer is 
+	 * done.
+	 * 
+	 * The bug is Commons Compress / COMPRESS-300
+	 * (https://issues.apache.org/jira/browse/COMPRESS-309)
+	 * 
+	 * @author nkronenfeld
+	 */
+	public static class BZipInputStreamWrapper extends InputStream {
+		private InputStream _source;
+		public BZipInputStreamWrapper (InputStream source) {
+			_source = source;
+		}
+
+
+		// This is the one we care about, the one with the bug in apache commons bzip compression
+		@Override
+		public int read (byte[] buffer, int offset, int length) throws IOException {
+			if (offset == buffer.length) {
+				return 0;
+			}
+			return _source.read(buffer, offset, length);
+		}
+
+		// The rest are just pass-throughs to _source
+		@Override
+		public int available () throws IOException {
+			return _source.available();
+		}
+
+		@Override
+		public void close () throws IOException {
+			_source.close();
+		}
+
+		@Override
+		public synchronized void mark (int readlimit) {
+			_source.mark(readlimit);
+		}
+
+		@Override
+		public boolean markSupported () {
+			return _source.markSupported();
+		}
+
+		@Override
+		public synchronized void reset () throws IOException {
+			_source.reset();
+		}
+
+		@Override
+		public int read () throws IOException {
+			return _source.read();
+		}
+
+		@Override
+		public int read (byte[] buffer) throws IOException {
+			return _source.read(buffer);
+		}
+
+		@Override
+		public long skip (long n) throws IOException {
+			return _source.skip(n);
+		}
 	}
 }
