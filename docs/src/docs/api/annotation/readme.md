@@ -88,7 +88,7 @@ Example:
 
 ### <a name="annotation-tile"></a> Annotation Tile ###
 
-A collection of annotations from a single GET request. Contains all annotations (aggregated by bin-key) that pass through the current [filter configuration](../webservices/#filter configuration).
+A collection of annotations from a single GET request. Contains all annotations (aggregated by bin-key) that pass through the current filter configuration.
 
 <div class="details props">
 	<div class="innerProps">
