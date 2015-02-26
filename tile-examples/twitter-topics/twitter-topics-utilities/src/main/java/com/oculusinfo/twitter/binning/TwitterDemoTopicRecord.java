@@ -31,8 +31,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.oculusinfo.factory.util.Pair;
-
 public class TwitterDemoTopicRecord implements Serializable {
 	private static final long serialVersionUID = 1L;	//NOTE:  using default serialVersion ID
 	
@@ -46,14 +44,14 @@ public class TwitterDemoTopicRecord implements Serializable {
 	private List<Integer> _countDaily; 				// tweet count per day for the past month with this topic
 	private List<Integer> _countPer6hrs; 			// tweet count per six hours for last week with this topic
 	private List<Integer> _countPerHour; 			// tweet count per hour for last 24 hrs with this topic
-	private List<Pair<String, Long>> _recentTweets; // 10 most recent tweets with this topic
+	private List<RecentTweet> _recentTweets; // 10 most recent tweets with this topic
 	private long _endTimeSecs;						// end time (in secs) for this data record (so valid time window
 													//    between endTimeSecs and endTimeSecs - 1 month
 
 	public TwitterDemoTopicRecord(String topic, String topicEnglish,
 			int countMonthly, List<Integer> countDaily,
 			List<Integer> countPer6hrs, List<Integer> countPerHour,
-			List<Pair<String, Long>> recentTweets, long endTimeSecs) {
+			List<RecentTweet> recentTweets, long endTimeSecs) {
 		
 		_topic = topic;
 		_topicEnglish = topicEnglish;
@@ -76,7 +74,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 	
 	// Secondary constructor (for adding 1 new tweet to an empty record)
 	public TwitterDemoTopicRecord(String topic, String topicEnglish,
-			List<Pair<String, Long>> newTweet, long endTimeSecs) {
+			List<RecentTweet> newTweet, long endTimeSecs) {
 		
 		_topic = null;
 		_topicEnglish = null;
@@ -89,7 +87,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		
 		// time interval between new tweet and endTime
 		//assert(newTweet.size()==1);
-		float secsSinceEnd = (float)(endTimeSecs - newTweet.get(0).getSecond());	
+		float secsSinceEnd = (float)(endTimeSecs - newTweet.get(0).getTime());
 
 		if (secsSinceEnd > 2.6784e6) { // 2678400 = 31*24*60*60
 			// more than 1 month ago disregard this new tweet
@@ -176,7 +174,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		return _countPerHour;
 	}
 
-	public List<Pair<String, Long>> getRecentTweets() {
+	public List<RecentTweet> getRecentTweets() {
 		return _recentTweets;
 	}
 	
@@ -314,11 +312,11 @@ public class TwitterDemoTopicRecord implements Serializable {
 				+ mkString(_countPer6hrs, ", ") + "], " + "countPerHour: ["
 				+ mkString(_countPerHour, ", ") + "], " + "recent: [");
 		for (int i = 0; i < _recentTweets.size(); ++i) {
-			Pair<String, Long> rt = _recentTweets.get(i);
+			RecentTweet rt = _recentTweets.get(i);
 			if (i > 0)
 				result += ", ";
-			result += "(" + escapeString(rt.getFirst()) + ", " + rt.getSecond()
-					+ ")";
+			result += "(" + escapeString(rt.getText()) + ", " + rt.getTime() + ", " + escapeString(rt.getUser()) + ", "
+					+ escapeString(rt.getSentiment()) + ")";
 		}
 		result += "], endTimeSecs: " + _endTimeSecs + "}";
 		return result;
@@ -364,17 +362,25 @@ public class TwitterDemoTopicRecord implements Serializable {
 		value = eatIntList(value, countPerHour);
 
 		value = eat(value, "], recent: [");
-		List<Pair<String, Long>> recentTweets = new ArrayList<>();
+		List<RecentTweet> recentTweets = new ArrayList<>();
 		while (value.startsWith("(")) {
 			value = eat(value, "(");
 			end = getQuotedStringEnd(value);
 			String tweet = unescapeString(value.substring(0, end));
 
 			value = eat(value.substring(end), ", ");
-			end = value.indexOf(")");
+			end = value.indexOf(",");
 			long tweetCount = Long.parseLong(value.substring(0, end));
 
-			recentTweets.add(new Pair<String, Long>(tweet, tweetCount));
+			value = eat(value.substring(end), ", ");
+			end = value.indexOf(",");
+			String user = unescapeString(value.substring(0, end));
+
+			value = eat(value.substring(end), ", ");
+			end = value.indexOf(")");
+			String sentiment = unescapeString(value.substring(0, end));
+
+			recentTweets.add(new RecentTweet(tweet, tweetCount, user, sentiment));
 
 			value = value.substring(end + 1);
 			if (value.startsWith(", "))
@@ -401,16 +407,16 @@ public class TwitterDemoTopicRecord implements Serializable {
 	}
 
 	private static void addRecentTweetInPlace(
-			LinkedList<Pair<String, Long>> accumulatedTweets,
-			Pair<String, Long> newTweet) {
-		ListIterator<Pair<String, Long>> i = accumulatedTweets.listIterator();
+			LinkedList<RecentTweet> accumulatedTweets,
+			RecentTweet newTweet) {
+		ListIterator<RecentTweet> i = accumulatedTweets.listIterator();
 		int size = 0;
 		while (true) {
 			if (i.hasNext()) {
-				Pair<String, Long> next = i.next();
+				RecentTweet next = i.next();
 				++size;
 
-				if (next.getSecond() <= newTweet.getSecond()) {
+				if (next.getTime() <= newTweet.getTime()) {
 					// Insert the new tweet...
 					i.previous();
 					i.add(newTweet);
@@ -437,9 +443,9 @@ public class TwitterDemoTopicRecord implements Serializable {
 	}
 
 	private static void addRecentTweetsInPlace(
-			LinkedList<Pair<String, Long>> accumulatedTweets,
-			List<Pair<String, Long>> newTweets) {
-		for (Pair<String, Long> newTweet : newTweets) {
+			LinkedList<RecentTweet> accumulatedTweets,
+			List<RecentTweet> newTweets) {
+		for (RecentTweet newTweet : newTweets) {
 			addRecentTweetInPlace(accumulatedTweets, newTweet);
 		}
 	}
@@ -459,7 +465,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		List<Integer> countDaily = new ArrayList<>(records[0]._countDaily);
 		List<Integer> countPer6hrs = new ArrayList<>(records[0]._countPer6hrs);
 		List<Integer> countPerHour = new ArrayList<>(records[0]._countPerHour);
-		LinkedList<Pair<String, Long>> recentTweets = new LinkedList<>(
+		LinkedList<RecentTweet> recentTweets = new LinkedList<>(
 				records[0]._recentTweets);
 		long endTimeSecs = records[0]._endTimeSecs;
 
@@ -485,7 +491,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 	 * endTime - 1 month)
 	 */
 	public static TwitterDemoTopicRecord addTweetToRecord(
-			TwitterDemoTopicRecord record, Pair<String, Long> newTweet) {
+			TwitterDemoTopicRecord record, RecentTweet newTweet) {
 		if (null == record)
 			return null;
 		
@@ -496,11 +502,11 @@ public class TwitterDemoTopicRecord implements Serializable {
 		List<Integer> countPer6hrs = new ArrayList<>(record._countPer6hrs);
 		List<Integer> countPerHour = new ArrayList<>(record._countPerHour);
 
-		LinkedList<Pair<String, Long>> recentTweets = new LinkedList<>(
+		LinkedList<RecentTweet> recentTweets = new LinkedList<>(
 				record._recentTweets);
 		long endTimeSecs = record._endTimeSecs;	
 	
-		float secsSinceEnd = (float)(endTimeSecs - newTweet.getSecond());	// time interval between new tweet and endTime
+		float secsSinceEnd = (float)(endTimeSecs - newTweet.getTime());	// time interval between new tweet and endTime
 		
 		if (secsSinceEnd > 2.6784e6) { // 2678400 = 31*24*60*60
 			// more than 1 month ago disregard this new tweet
@@ -548,9 +554,6 @@ public class TwitterDemoTopicRecord implements Serializable {
 
 	/**
 	 * Get minimums of all counts across some number of records.
-	 * 
-	 * @param that
-	 * @return
 	 */
 	public static TwitterDemoTopicRecord minOfRecords(
 			TwitterDemoTopicRecord... records) {
@@ -574,7 +577,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		}
 		return new TwitterDemoTopicRecord(null, null, minCount, minCountDaily,
 				minCountPer6hrs, minCountPerHour,
-				new ArrayList<Pair<String, Long>>(), minEndTime);
+				new ArrayList<RecentTweet>(), minEndTime);
 	}
 	
 	private static void maxInPlace(List<Integer> accumulatedMax,
@@ -591,9 +594,6 @@ public class TwitterDemoTopicRecord implements Serializable {
 
 	/**
 	 * Get maximums of all counts across some number of records.
-	 * 
-	 * @param that
-	 * @return
 	 */
 	public static TwitterDemoTopicRecord maxOfRecords(
 			TwitterDemoTopicRecord... records) {
@@ -612,7 +612,7 @@ public class TwitterDemoTopicRecord implements Serializable {
 		}
 		return new TwitterDemoTopicRecord(null, null, maxCount, maxCountDaily,
 				maxCountPer6hrs, maxCountPerHour,
-				new ArrayList<Pair<String, Long>>(), maxEndTime);
+				new ArrayList<RecentTweet>(), maxEndTime);
 	}
 
 }
