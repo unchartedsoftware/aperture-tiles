@@ -11,11 +11,11 @@ Download
 
 The Aperture Tiles source code is available on GitHub. Aperture Tiles is under ongoing development and is freely available for download under [The MIT License](http://www.opensource.org/licenses/MIT) (MIT) open source licensing. Unlike GNU General Public License (GPL), MIT freely permits distribution of derivative work under proprietary license, without requiring the release of source code.
 
-<a href="https://github.com/oculusinfo/aperture-tiles/tree/master" class="download-link">Aperture Tiles Source Code</a>
+<a href="https://github.com/unchartedsoftware/aperture-tiles/tree/master" class="download-link">Aperture Tiles Source Code</a>
 
 **NOTE**: Aperture Tiles is dependent on the *master* branch of Aperture JS, an agile, extensible visualization framework library project. Like Aperture Tiles, the Aperture JS source code is under ongoing development and is freely available for download under the The MIT License. The Aperture JS source code is available on GitHub.
 
-<a href="https://github.com/oculusinfo/aperturejs/tree/master" class="download-link">Aperture JS Source Code</a>
+<a href="https://github.com/unchartedsoftware/aperturejs/tree/master" class="download-link">Aperture JS Source Code</a>
 
 For information on full installations of Aperture Tiles (along with Aperture JS), see the [Installation](../docs/development/installation/) page.
 

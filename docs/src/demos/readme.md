@@ -53,7 +53,7 @@ This demo shows map-oriented tile applications using multiple layers of tile dat
 In this demo, topics of interest are extracted from Twitter messages across South America.  Word clouds summarize the frequency of each topic in the tiles, while histograms show trends.  Integrated [machine translation](https://translate.google.com/) converts from the native language in which tweets are written to English.
 
 &gt; Explore the [Twitter Topics demo](https://aperturetiles.com/twitter-topics/)
-<br>&gt; Access the source code in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project
+<br>&gt; Access the source code in the [tile-examples](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples) directory of the project
 
 Tile-based Sentiment Analysis of Twitter Messages
 -------------------------------------------------
@@ -76,4 +76,4 @@ Julia Set Example
 This demo is used in the [Quick Start guide](../docs/development/quickstart/) to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
 
 &gt; Explore the [Julia Set demo](https://aperturetiles.com/julia-demo/)
-<br>&gt; Access the source code in the [tile-examples](https://github.com/oculusinfo/aperture-tiles/tree/master/tile-examples) directory of the project
+<br>&gt; Access the source code in the [tile-examples](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples) directory of the project
