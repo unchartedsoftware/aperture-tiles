@@ -33,8 +33,12 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
-import com.oculusinfo.factory.providers.{StandardUberFactoryProvider, FactoryProvider}
-import com.oculusinfo.factory.{ConfigurationProperty, UberFactory, ConfigurableFactory}
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.ConfigurationProperty
+import com.oculusinfo.factory.UberFactory
+import com.oculusinfo.factory.providers.FactoryProvider
+import com.oculusinfo.factory.providers.AbstractFactoryProvider
+import com.oculusinfo.factory.providers.StandardUberFactoryProvider
 import com.oculusinfo.factory.properties._
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
@@ -101,31 +105,48 @@ object ValueExtractorFactory {
 	                                                                     StringValueExtractorFactory.provider,
 	                                                                     SubstringValueExtractorFactory.provider)
 	/** Create a standard value extractor uber-factory provider */
-	def provider (defaultProvider: String = defaultFactory,
-	              subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
+	def provider(name: String = null,
+	             defaultProvider: String = defaultFactory,
+	             subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
 		new StandardUberFactoryProvider[ValueExtractor[_, _]](subFactoryProviders.asJava) {
-			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
-				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], null, path, createChildren(path), defaultProvider)
-			override def createFactory(parent: ConfigurableFactory[_],
-			                           path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
-				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, createChildren(path), defaultProvider)
+			override def createFactory(name: String, parent: ConfigurableFactory[_], path: JavaList[String]):
+					ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				new UberFactory[ValueExtractor[_, _]](name, classOf[ValueExtractor[_, _]], parent, path,
+				                                      createChildren(parent, path), defaultProvider)
 		}
 
 	/** Short-hand for accessing the standard value extractor uber-factory easily. */
-	def apply (parent: ConfigurableFactory[_],
-	           path: JavaList[String],
-	           defaultProvider: String = defaultFactory,
-	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
-		provider(defaultProvider, subFactoryProviders).createFactory(parent, path)
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String]) =
+		provider().createFactory(parent, path)
+
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String], defaultProvider: String) =
+		provider(defaultProvider = defaultProvider).createFactory(parent, path)
+
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String,
+	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]]) =
+		provider(defaultProvider = defaultProvider,
+		         subFactoryProviders = subFactoryProviders).createFactory(parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String]) =
+		provider(name).createFactory(name, parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String) =
+		provider(name, defaultProvider).createFactory(name, parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String,
+	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]]) =
+		provider(name, defaultProvider, subFactoryProviders).createFactory(name, parent, path)
 
 	/** Helper method for quick and easy construction of factory providers for sub-factories. */
 	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => ValueExtractorFactory) =
-		new FactoryProvider[ValueExtractor[_, _]] {
-			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
-				ctor(null, path)
-
-			override def createFactory(parent: ConfigurableFactory[_],
+		new AbstractFactoryProvider[ValueExtractor[_, _]] {
+			override def createFactory(name: String,
+			                           parent: ConfigurableFactory[_],
 			                           path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				// Name is ignored, since these are sub-factories
 				ctor(parent, path)
 		}
 }

@@ -70,11 +70,18 @@ public enum DefaultAnnotationIOFactoryProvider implements FactoryProvider<Annota
 
 	@Override
 	public ConfigurableFactory<AnnotationIO> createFactory (List<String> path) {
-		return createFactory(null, path);
+		return createFactory(null, null, path);
 	}
 
-	@Override
-	public ConfigurableFactory<AnnotationIO> createFactory (ConfigurableFactory<?> parent,
+    @Override
+    public ConfigurableFactory<AnnotationIO> createFactory (ConfigurableFactory<?> parent,
+                                                            List<String> path) {
+        return createFactory(null, parent, path);
+    }
+
+    @Override
+	public ConfigurableFactory<AnnotationIO> createFactory (String name,
+	                                                        ConfigurableFactory<?> parent,
 	                                                        List<String> path) {
 		return _constructor.create(parent, path);
 	}

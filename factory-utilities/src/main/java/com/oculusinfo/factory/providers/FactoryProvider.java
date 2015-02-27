@@ -56,4 +56,18 @@ public interface FactoryProvider<T> {
 	 */
 	public ConfigurableFactory<? extends T> createFactory (ConfigurableFactory<?> parent,
 	                                                       List<String> path);
+
+	/**
+     * Create a new factory of the required type.
+     * 
+     * Passing in a null parent is the equivalent of calling the no-parent version of this method.
+     * 
+     * @param name The name to assign to the given factory
+     * @param parent The parent factory to which this factory will provide its goods
+     * @param path The path from the parent factory's configuration node to this one.
+     * @return A new factory ready to initialize its parameters from the parent factory's configuration node.
+	 */
+	public ConfigurableFactory<? extends T> createFactory (String name,
+	                                                       ConfigurableFactory<?> parent,
+	                                                       List<String> path);
 }

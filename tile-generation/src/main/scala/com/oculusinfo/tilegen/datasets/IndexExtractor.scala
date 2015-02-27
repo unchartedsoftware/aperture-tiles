@@ -30,8 +30,12 @@ package com.oculusinfo.tilegen.datasets
 import java.text.SimpleDateFormat
 import java.util.{List => JavaList}
 
-import com.oculusinfo.factory.properties.{DoubleProperty, StringProperty, ListProperty}
-import com.oculusinfo.factory.providers.{StandardUberFactoryProvider, FactoryProvider}
+import com.oculusinfo.factory.properties.DoubleProperty
+import com.oculusinfo.factory.properties.ListProperty
+import com.oculusinfo.factory.properties.StringProperty
+import com.oculusinfo.factory.providers.FactoryProvider
+import com.oculusinfo.factory.providers.AbstractFactoryProvider
+import com.oculusinfo.factory.providers.StandardUberFactoryProvider
 import org.json.JSONObject
 
 import scala.collection.JavaConverters._
@@ -91,11 +95,10 @@ object IndexExtractorFactory {
 	def provider (defaultProvider: String = defaultFactory,
 	              subFactoryProviders: Set[FactoryProvider[IndexExtractor]] = defaultSubFactories) =
 		new StandardUberFactoryProvider[IndexExtractor](subFactoryProviders.asJava) {
-			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
-				new UberFactory[IndexExtractor](classOf[IndexExtractor], null, path, createChildren(path), defaultProvider)
-			override def createFactory(parent: ConfigurableFactory[_],
+			override def createFactory(name: String,
+			                           parent: ConfigurableFactory[_],
 			                           path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
-				new UberFactory[IndexExtractor](classOf[IndexExtractor], parent, path, createChildren(path), defaultProvider)
+				new UberFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path, createChildren(parent, path), defaultProvider)
 		}
 
 	/** Short-hand for accessing the standard index extractor uber-factory easily. */
@@ -107,12 +110,11 @@ object IndexExtractorFactory {
 
 	/** Helper method for quick and easy construction of factory providers for sub-factories. */
 	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => IndexExtractorFactory) =
-		new FactoryProvider[IndexExtractor] {
-			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
-				ctor(null, path)
-
-			override def createFactory(parent: ConfigurableFactory[_],
+		new AbstractFactoryProvider[IndexExtractor] {
+			override def createFactory(name: String,
+			                           parent: ConfigurableFactory[_],
 			                           path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+				// Name is ignored, because these are sub-factories
 				ctor(parent, path)
 		}
 }

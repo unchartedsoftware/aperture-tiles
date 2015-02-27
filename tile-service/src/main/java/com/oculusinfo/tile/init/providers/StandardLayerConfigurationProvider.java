@@ -30,12 +30,13 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
 import java.util.List;
 
-public class StandardLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
+public class StandardLayerConfigurationProvider extends AbstractFactoryProvider<LayerConfiguration>{
 
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
     private FactoryProvider<TilePyramid> _tilePyramidFactoryProvider;
@@ -58,23 +59,14 @@ public class StandardLayerConfigurationProvider implements FactoryProvider<Layer
     }
 
     @Override
-    public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
-        return new LayerConfiguration(_pyramidIOFactoryProvider,
-                                      _tilePyramidFactoryProvider,
-                                      _serializationFactoryProvider,
-                                      _rendererFactoryProvider, 
-                                      _tileTransformerFactoryProvider,
-                                      null, path);
-    }
-
-    @Override
-    public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
+    public ConfigurableFactory<LayerConfiguration> createFactory (String name,
+                                                                  ConfigurableFactory<?> parent,
                                                                   List<String> path) {
         return new LayerConfiguration(_pyramidIOFactoryProvider,
                                       _tilePyramidFactoryProvider,
                                       _serializationFactoryProvider,
                                       _rendererFactoryProvider,
                                       _tileTransformerFactoryProvider,
-                                      parent, path);
+                                      name, parent, path);
     }
 }
