@@ -43,7 +43,7 @@ start_date = pytz.utc.localize(parse(sys.argv[1]))
 end_date = pytz.utc.localize(parse(sys.argv[2]))
 
 # fetch the 100 most recent pulls
-response = urllib2.urlopen('https://api.github.com/repos/oculusinfo/aperture-tiles/pulls?state=all&per_page=100')
+response = urllib2.urlopen('https://api.github.com/repos/unchartedsoftware/aperture-tiles/pulls?state=all&per_page=100')
 pulls = json.loads(response.read())
 response.close()
 
