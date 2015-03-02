@@ -30,6 +30,7 @@
 	var Axis = require('./Axis'),
         MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
+        Carousel = require('../layer/Carousel'),
         BaseLayer = require('../layer/BaseLayer'),
         PubSub = require('../util/PubSub'),
 	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
@@ -42,9 +43,11 @@
         activateDeferredComponents,
         addBaseLayer,
         addLayer,
+        addCarousel,
         addAxis,
         removeBaseLayer,
         removeLayer,
+        removeCarousel,
         removeAxis;
 
     /**
@@ -99,7 +102,15 @@
      * @param component {*}   The component to activate.
      */
     activateComponent = function( map, component ) {
-        if ( component instanceof Layer ) {
+        if ( component instanceof Carousel ) {
+            addCarousel( map, component );
+        } else if ( component instanceof Layer ) {
+            if ( component.carousel ) {
+                console.log(
+                    "You cannot add a layer that is part of a carousel to a map " +
+                    "independently, remove it from the carousel first." );
+                return;
+            }
             addLayer( map, component );
         } else if ( component instanceof Axis ) {
             addAxis( map, component );
@@ -116,6 +127,8 @@
     deactivateComponent = function( map, component ) {
         if ( component instanceof BaseLayer ) {
             removeBaseLayer( map, component );
+        } else if ( component instanceof Carousel ) {
+            removeCarousel( map, component );
         } else if ( component instanceof Layer ) {
             removeLayer( map, component );
         } else if ( component instanceof Axis ) {
@@ -185,6 +198,26 @@
         // add it to layer map
         map.layersById = map.layersById || {};
         map.layersById[ layer.getUUID() ] = layer;
+    };
+
+    /**
+     * Adds a carousel object to the map and activates it.
+     * @private
+     *
+     * @param map   {Map}   The map object.
+     * @param carousel {Carousel} The carousel object.
+     */
+    addCarousel = function( map, carousel ) {
+        // add map to carousel
+        carousel.map = map;
+        // activate the carousel
+        carousel.activate();
+        // add to carousel array
+        map.carousels = map.carousels || [];
+        map.carousels.push( carousel );
+        // add it to carousel map
+        map.carouselsById = map.carouselsById || {};
+        map.carouselsById[ carousel.getUUID() ] = carousel;
     };
 
     /**
@@ -272,6 +305,26 @@
             // deactivate it
             layer.deactivate();
             layer.map = null;
+        }
+    };
+
+    /**
+     * Removes a carousel object from the map and deactivates it.
+     * @private
+     *
+     * @param map   {Map}   The map object.
+     * @param carousel {Carousel} The carousel object.
+     */
+    removeCarousel = function( map, carousel ) {
+        var index = map.carousels.indexOf( carousel );
+        if ( index !== -1 ) {
+             // remove it from layer map
+            delete map.carouselsById[ carousel.getUUID() ];
+            // remove it from layer array
+            map.carousels.splice( index, 1 );
+            // deactivate it
+            carousel.deactivate();
+            carousel.map = null;
         }
     };
 
