@@ -102,7 +102,7 @@
 
     /**
      * Patches the get/set functions of the attached layer in order to delegate
-     * behaviour to and fro the carousel.
+     * behaviour to and from the carousel.
      *
      * @param {Carousel} carousel - The carousel object.
      * @param {Layer} layer - The layer object to patch.
@@ -161,6 +161,13 @@
         };
     }
 
+		/**
+		 * Returns the layer to its original state be repairing the previously
+		 * patched methods.
+		 *
+		 * @param {Layer} layer - The layer object to patch.
+		 * @param {Object} layerSpec - The object containing the original methods.
+		 */
     function unpatchLayer( layer, layerSpec ) {
         // return all the layers functions to thier previous state
         layer.setOpacity = layerSpec.setOpacity;
@@ -204,7 +211,8 @@
      * Adds a client rendered layer to the carousel object. This involves
      * 'patching' the methods of the layer with those from the carousel to
      * give the required functionality.
-     *
+     * @memberof Carousel
+		 *
      * @param {Layer} layer - The client rendered layer object.
      */
     Carousel.prototype.addLayer = function( layer ) {
@@ -254,7 +262,8 @@
     /**
      * Remove a layer from the carousel. This will 'unpatch' the
      * layers and return them to their original state.
-     *
+     * @memberof Carousel
+		 *
      * @param {Layer} layer - The layer object.
      */
     Carousel.prototype.removeLayer = function( layer ) {
@@ -291,6 +300,11 @@
         }
     };
 
+		/**
+     * Activates the carousel object. This should never be called manually.
+     * @memberof Carousel
+     * @private
+     */
     Carousel.prototype.activate = function() {
 
         if ( this.layers.length === 0 &&
@@ -339,7 +353,8 @@
     /**
      * Increment which layer index the current tile points to. This will
      * redraw the modified tile.
-     *
+     * @memberof Carousel
+		 *
      * @param {String} tilekey - The tile key string.
      */
     Carousel.prototype.incrementTileLayerIndex = function( tilekey ) {
@@ -357,7 +372,8 @@
     /**
      * Decrement which layer index the current tile points to. This will
      * redraw the modified tile.
-     *
+     * @memberof Carousel
+		 *
      * @param {String} tilekey - The tile key string.
      */
     Carousel.prototype.decrementTileLayerIndex = function( tilekey ) {
@@ -375,7 +391,8 @@
     /**
      * Set which layer index the current tile points to. This will
      * redraw the modified tile.
-     *
+     * @memberof Carousel
+		 *
      * @param {String} tilekey - The tile key string.
      * @param {number} index - The new layer index for the tile.
      */
@@ -391,7 +408,8 @@
     /**
      * Set the layer index for all tiles. This will redraw the entire
      * layer.
-     *
+     * @memberof Carousel
+		 *
      * @param {String} index - The layer index for all tiles.
      */
     Carousel.prototype.setTileLayerIndices = function( index ) {
@@ -402,7 +420,8 @@
 
     /**
      * Returns the layer index for a particular tile.
-     *
+     * @memberof Carousel
+		 *
      * @param {String} tilekey - The tile key string.
      *
      * @returns {number} The layer index for the tile.
@@ -414,7 +433,8 @@
 
     /**
      * Returns the renderer for a particular tile.
-     *
+     * @memberof Carousel
+		 *
      * @param {String} tilekey - The tile key string.
      *
      * @returns {number} The renderer for the tile.
