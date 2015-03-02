@@ -39,11 +39,11 @@
 
     OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
 
-    OpenLayers.Tile.HTML.prototype.draw = function() {
+    OpenLayers.Tile.HTML.prototype.draw = function( force ) {
         var that = this,
-            shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments),
+            shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments ),
             dataUrl;
-        if ( shouldDraw ) {
+        if ( force || shouldDraw ) {
             this.positionTile();
             dataUrl = this.layer.getURL( this.bounds );
             if ( dataUrl !== this.url ) {
@@ -71,6 +71,7 @@
                 }).then(
                     function( data ) {
                         that.tileData = data;
+                        that.tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
                         that.renderTile( that.div, that.tileData );
                     },
                     function( xhr ) {
@@ -157,6 +158,7 @@
         html = this.layer.html;
 
         if ( renderer ) {
+            renderer = ( typeof renderer === "function" ) ? renderer.call( this.layer, this.bounds ) : renderer;
             // if renderer is attached, use it
             render = renderer.render( data );
             html = render.html;
