@@ -27,7 +27,8 @@
 
     "use strict";
 
-    var RendererUtil = require('./RendererUtil');
+    var Util = require('../../util/Util' ),
+        RendererUtil = require('./RendererUtil');
 
     /**
      * Instantiate a Renderer object.
@@ -60,10 +61,12 @@
      */
     function Renderer( spec ) {
         this.spec = spec || {};
+        this.uuid = Util.generateUuid();
     }
 
     /**
      * Add a hook function to the renderer.
+     * @memberof Renderer
      *
      * @param {Function} hook - the callback function.
      */
@@ -80,6 +83,7 @@
 
     /**
      * Remove a hook function from the renderer.
+     * @memberof Renderer
      *
      * @param {Function} hook - the callback function.
      */
@@ -122,6 +126,7 @@
         var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml' ),
             selectKey = this.spec.select.selectKey,
             selector = this.getEntrySelector(),
+            uuid = this.uuid,
             selectValue,
             $entries;
         // if no key specified, exit
@@ -135,8 +140,15 @@
         // for each entry, check if they have the matching value to the select
         $entries.each( function() {
             var $elem = $( this ),
-                entry = $elem.data( 'entry' ),
-                value = RendererUtil.getAttributeValue( entry, selectKey );
+                entry,
+                value;
+            // if this renderer did not create the elements, abort
+            if ( uuid !== $elem.data( 'uuid' ) ) {
+                return;
+            }
+            // get the entry and value
+            entry = $elem.data( 'entry' );
+            value = RendererUtil.getAttributeValue( entry, selectKey );
             if ( value === selectValue ) {
                  $elem.removeClass( 'de-emphasized' ).addClass( 'emphasized' );
             } else {
@@ -180,8 +192,28 @@
     };
 
     /**
+     * Attaches the renderer to its respective layer. This method should not be called
+     * manually.
+     * @memberof Renderer
+     * @private
+     *
+     * @param {Layer} layer - The layer to attach to the renderer.
+     */
+    Renderer.prototype.attach = function( layer ) {
+        if ( this.parent ) {
+            console.log( "This renderer has already been attached " +
+                         "to a layer, please use another instance." );
+            return;
+        }
+        this.meta = layer.source.meta.meta;
+        this.map = layer.map;
+        this.parent = layer;
+    };
+
+    /**
      * This iterates over every data entry's DOM element and if there is a current selected
      * value in the renderer, it will inject the correct emphasize and de-emphasize flags.
+     * This method should not be called manually.
      * @memberof Renderer
      * @private
      *
@@ -193,6 +225,7 @@
             $elements = $( elements ),
             selectValue = this.selectValue,
             select = this.spec.select,
+            uuid = this.uuid,
             selectKey;
 
         if ( !select || !select.selectKey ) {
@@ -211,6 +244,8 @@
                 value = RendererUtil.getAttributeValue( entry, selectKey );
             // store the entry data in the entry element
             $elem.data( 'entry', entry );
+            // store the renderer uuid
+            $elem.data( 'uuid', uuid );
             if ( selectValue && selectKey ) {
                 if ( value === selectValue ) {
                     $elem.removeClass( 'de-emphasized' ).addClass( 'emphasized' );

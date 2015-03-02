@@ -131,9 +131,7 @@
         this.setTheme( this.map.getTheme() );
 
         if ( this.renderer ) {
-            this.renderer.meta = this.source.meta.meta;
-            this.renderer.map = this.map;
-            this.renderer.parent = this;
+            this.renderer.attach( this );
         }
     };
 
@@ -146,6 +144,7 @@
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
+            this.olLayer = null;
         }
     };
 
@@ -250,6 +249,16 @@
                // TODO: refresh tile
                 callback();
             });
+    };
+
+    /**
+     * Redraws the entire layer.
+     * @memberof ServerLayer
+     */
+    AnnotationLayer.prototype.redraw = function () {
+        if ( this.olLayer ) {
+             this.olLayer.redraw();
+        }
     };
 
     module.exports = AnnotationLayer;
