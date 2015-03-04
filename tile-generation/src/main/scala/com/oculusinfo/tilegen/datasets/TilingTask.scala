@@ -68,7 +68,7 @@ object TilingTask {
 	def apply (sqlc: SQLContext,
 	           table: String,
 	           config: Properties):
-	TilingTask[_, _, _, _] = {
+			TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
 		val indexerFactory = IndexExtractorFactory(null,
@@ -253,23 +253,23 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
 		dataAnalytics.map(_.addGlobalAccumulator(sc))
-		getLevels.map(levels => {
+		getLevels.map{levels =>
 			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
 			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
 					val tiles = binner.processDataByLevel(rdd, getIndexScheme,
-						getBinningAnalytic, tileAnalytics, dataAnalytics,
-						getTilePyramid, levels, getNumXBins, getNumYBins,
-						getConsolidationPartitions)
+					                                      getBinningAnalytic, tileAnalytics, dataAnalytics,
+					                                      getTilePyramid, levels, getNumXBins, getNumYBins,
+					                                      getConsolidationPartitions)
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-						tileAnalytics, dataAnalytics, getName, getDescription)
+					                    tileAnalytics, dataAnalytics, getName, getDescription)
 				}
 
 			process(procFcn, None)
-		})
+		}
 	}
 
 	// Axis-related methods and fields

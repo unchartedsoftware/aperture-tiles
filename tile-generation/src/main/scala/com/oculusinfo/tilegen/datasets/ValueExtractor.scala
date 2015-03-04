@@ -117,7 +117,7 @@ object ValueExtractorFactory {
 	subFactoryProviders(FactoryKey(SeriesValueExtractorFactory.NAME,         classOf[SeriesValueExtractorFactory]))         = SeriesValueExtractorFactory.provider
 	subFactoryProviders(FactoryKey(IndirectSeriesValueExtractorFactory.NAME, classOf[IndirectSeriesValueExtractorFactory])) = IndirectSeriesValueExtractorFactory.provider
 	subFactoryProviders(FactoryKey(StringValueExtractorFactory.NAME,         classOf[StringValueExtractorFactory]))         = StringValueExtractorFactory.provider
-	subFactoryProviders(FactoryKey(SubstringValueExtractorFactory.NAME,      classOf[SubstringValueExtractorFactory]))      = SubstringValueExtractorFactory.provider 
+	subFactoryProviders(FactoryKey(SubstringValueExtractorFactory.NAME,      classOf[SubstringValueExtractorFactory]))      = SubstringValueExtractorFactory.provider
 
 	/**
 	 * Add a ValueExtractor sub-factory provider to the list of all possible such providers.
