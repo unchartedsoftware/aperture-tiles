@@ -217,7 +217,7 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 	}
 
 	def getDefaultSerializerType (baseType: String, expectedPrimitiveCLass: Class[_]*): String = {
-		baseType.format(expectedPrimitiveCLass.map(PrimitiveAvroSerializer.getAvroType(_)):_*)
+		baseType.format(expectedPrimitiveCLass.map(_.getSimpleName.toLowerCase()):_*)
 	}
 }
 
