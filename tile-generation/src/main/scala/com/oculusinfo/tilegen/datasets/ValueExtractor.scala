@@ -97,7 +97,7 @@ abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
  */
 object ValueExtractorFactory {
 	private[datasets] val FIELD_PROPERTY =
-		new StringProperty("field", "The field used by this value extractor", "")
+		new StringProperty("field", "The field used by this value extractor", "INVALID FIELD")
 	private[datasets] val FIELDS_PROPERTY =
 		new ListProperty[String](new StringProperty("fields", "The fields used by this value extractor", ""),
 		                         "fields", "The fields used by this value extractor")
