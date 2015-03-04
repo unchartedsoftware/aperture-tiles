@@ -125,8 +125,8 @@ object ValueExtractorFactory {
 	 * This will replace a previous provider of the same key
 	 */
 	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[ValueExtractor[_, _]]): Unit =
-		subFactoryProviders(identityKey, provider)
-	private def getSubFactoryProviders = subFactoryProviders.values.toSet
+		subFactoryProviders(identityKey) = provider
+	def getSubFactoryProviders = subFactoryProviders.values.toSet
 
 
 
