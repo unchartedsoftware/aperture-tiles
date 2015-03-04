@@ -67,22 +67,18 @@ object TilingTask {
 	 */
 	def apply (sqlc: SQLContext,
 	           table: String,
-	           config: Properties,
-	           externalValuerFactories: Set[FactoryProvider[ValueExtractor[_,_]]] = Set(),
-	           externalIndexerFactories: Set[FactoryProvider[IndexExtractor]] = Set()):
+	           config: Properties):
 	TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
 		val indexerFactory = IndexExtractorFactory(null,
 		                                           java.util.Arrays.asList("oculus", "binning", "index"),
-		                                           IndexExtractorFactory.defaultFactory,
-		                                           IndexExtractorFactory.defaultSubFactories ++ externalIndexerFactories)
+		                                           IndexExtractorFactory.defaultFactory)
 		indexerFactory.readConfiguration(jsonConfig)
 
 		val valuerFactory = ValueExtractorFactory(null,
 		                                          java.util.Arrays.asList("oculus", "binning", "value"),
-		                                          ValueExtractorFactory.defaultFactory,
-		                                          ValueExtractorFactory.defaultSubFactories ++ externalValuerFactories)
+		                                          ValueExtractorFactory.defaultFactory)
 		valuerFactory.readConfiguration(jsonConfig)
 
 		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))

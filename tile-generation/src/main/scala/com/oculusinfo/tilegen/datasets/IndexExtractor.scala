@@ -39,6 +39,7 @@ import com.oculusinfo.factory.providers.StandardUberFactoryProvider
 import org.json.JSONObject
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.{Map => MutableMap}
 
 import com.oculusinfo.binning.impl.{AOITilePyramid, WebMercatorTilePyramid}
 import com.oculusinfo.factory.{UberFactory, ConfigurableFactory}
@@ -84,16 +85,35 @@ object IndexExtractorFactory {
 		                 "field",
 		                 "The fields that the index extractor will pull from a data record to construct that record's index")
 
+	/**
+	 * The default index type to use when tiling - a cartesian index.
+	 */
 	val defaultFactory = "cartesian"
-	val defaultSubFactories = Set[FactoryProvider[IndexExtractor]](CartesianIndexExtractorFactory.provider,
-	                                                               LineSegmentIndexExtractorFactory.provider,
-	                                                               IPv4IndexExtractorFactory.provider,
-	                                                               TimeRangeIndexExtractorFactory.provider)
+	/**
+	 * A set of providers for index extractor factories, to be used when constructing tile tasks 
+	 * to construct the relevant index extractor for the current task.
+	 */
+	val subFactoryProviders = MutableMap[Any, FactoryProvider[IndexExtractor]]()
+	subFactoryProviders(FactoryKey(CartesianIndexExtractorFactory.NAME,   classOf[CartesianIndexExtractorFactory]))   = CartesianIndexExtractorFactory.provider
+	subFactoryProviders(FactoryKey(LineSegmentIndexExtractorFactory.NAME, classOf[LineSegmentIndexExtractorFactory])) = LineSegmentIndexExtractorFactory.provider
+	subFactoryProviders(FactoryKey(IPv4IndexExtractorFactory.NAME,        classOf[IPv4IndexExtractorFactory]))        = IPv4IndexExtractorFactory.provider
+	subFactoryProviders(FactoryKey(TimeRangeIndexExtractorFactory.NAME,   classOf[TimeRangeIndexExtractorFactory]))   = TimeRangeIndexExtractorFactory.provider
+
+	/**
+	 * Add an IndexExtractor sub-factory provider to the list of all possible such providers.
+	 * 
+	 * This will replace a previous provider of the same key
+	 */
+	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[IndexExtractor]): Unit =
+		subFactoryProviders(identityKey, provider)
+	private def getSubFactoryProviders = subFactoryProviders.values.toSet
+
 
 
 	/** Create a standard index extractor uber-factory provider */
-	def provider (defaultProvider: String = defaultFactory,
-	              subFactoryProviders: Set[FactoryProvider[IndexExtractor]] = defaultSubFactories) =
+	def provider (name: String = null,
+	              defaultProvider: String = defaultFactory,
+	              subFactoryProviders: Set[FactoryProvider[IndexExtractor]] = getSubFactoryProviders) =
 		new StandardUberFactoryProvider[IndexExtractor](subFactoryProviders.asJava) {
 			override def createFactory(name: String,
 			                           parent: ConfigurableFactory[_],
@@ -102,11 +122,31 @@ object IndexExtractorFactory {
 		}
 
 	/** Short-hand for accessing the standard index extractor uber-factory easily. */
-	def apply (parent: ConfigurableFactory[_],
-	           path: JavaList[String],
-	           defaultProvider: String = defaultFactory,
-	           subFactoryProviders: Set[FactoryProvider[IndexExtractor]] = defaultSubFactories) =
-		provider(defaultProvider, subFactoryProviders).createFactory(parent, path)
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String]) =
+		provider().createFactory(parent, path)
+
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String], defaultProvider: String) =
+		provider(defaultProvider = defaultProvider).createFactory(parent, path)
+
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String,
+	           subFactoryProviders: Set[FactoryProvider[IndexExtractor]]) =
+		provider(defaultProvider = defaultProvider,
+		         subFactoryProviders = subFactoryProviders).createFactory(parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String]) =
+		provider(name).createFactory(name, parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String) =
+		provider(name, defaultProvider).createFactory(name, parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String,
+	           subFactoryProviders: Set[FactoryProvider[IndexExtractor]]) =
+		provider(name, defaultProvider, subFactoryProviders).createFactory(name, parent, path)
+
+
 
 	/** Helper method for quick and easy construction of factory providers for sub-factories. */
 	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => IndexExtractorFactory) =
@@ -134,12 +174,13 @@ abstract class IndexExtractorFactory (name: String, parent: ConfigurableFactory[
 }
 
 object CartesianIndexExtractorFactory {
+	val NAME = "cartesian"
 	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
 		new CartesianIndexExtractorFactory(parent, path))
 }
 /** A constructor for a standard cartesian index extractor */
 class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends IndexExtractorFactory("cartesian", parent, path)
+		extends IndexExtractorFactory(CartesianIndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
 	addProperty(IndexExtractorFactory.FIELDS_PROPERTY)
@@ -165,12 +206,13 @@ class CartesianIndexExtractor (xField: String, yField: String) extends IndexExtr
 }
 
 object LineSegmentIndexExtractorFactory {
+	val NAME = "segment"
 	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
 		new LineSegmentIndexExtractorFactory(parent, path))
 }
 /** A constructor for a standard line segment index extractor */
 class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends IndexExtractorFactory("segment", parent, path)
+		extends IndexExtractorFactory(LineSegmentIndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
 	addProperty(IndexExtractorFactory.FIELDS_PROPERTY)
@@ -201,12 +243,13 @@ class LineSegmentIndexExtractor (x1Var: String, y1Var: String, x2Var: String, y2
 }
 
 object IPv4IndexExtractorFactory {
+	val NAME = "ipv4"
 	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
 		new IPv4IndexExtractorFactory(parent, path))
 }
 /** A constructor for a standard ip address index extractor */
 class IPv4IndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends IndexExtractorFactory("ipv4", parent, path)
+		extends IndexExtractorFactory(IPv4IndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
 	addProperty(IndexExtractorFactory.FIELDS_PROPERTY)
@@ -233,6 +276,7 @@ class IPv4IndexExtractor (ipField: String) extends IndexExtractor() {
 }
 
 object TimeRangeIndexExtractorFactory {
+	private[datasets] val NAME = "timerange"
 	private[datasets] val START_DATE_PROPERTY =
 		new DoubleProperty("start-date", "The start of the first time period, for binned times", 0.0)
 	private[datasets] val SECONDS_PER_PERIOD_PROPERTY =
@@ -244,7 +288,7 @@ object TimeRangeIndexExtractorFactory {
 
 /** A constructor for a standard time range/cartesian point index extractor */
 class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends IndexExtractorFactory("timerange", parent, path)
+		extends IndexExtractorFactory(TimeRangeIndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
 	addProperty(IndexExtractorFactory.FIELDS_PROPERTY)
