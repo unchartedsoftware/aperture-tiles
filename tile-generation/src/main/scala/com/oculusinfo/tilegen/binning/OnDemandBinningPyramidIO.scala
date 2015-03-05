@@ -174,6 +174,23 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 		}
 	}
 
+	/**
+	 * Direct programatic initialization.
+	 * 
+	 * Temporary route until we get full pipeline configuration
+	 */
+	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
+		if (!tasks.contains(pyramidId)) {
+			tasks.synchronized {
+				if (!tasks.contains(pyramidId)) {
+					task.getTileAnalytics.map(_.addGlobalAccumulator(sc))
+					task.getDataAnalytics.map(_.addGlobalAccumulator(sc))
+					tasks(pyramidId) = task
+				}
+			}
+		}
+	}
+
 	def readTiles[BT] (pyramidId: String,
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]):

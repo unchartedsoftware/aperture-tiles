@@ -124,6 +124,11 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 		}
 	}
 
+	/**
+	 * Direct programatic initialization.
+	 * 
+	 * Temporary route until we get full pipeline configuration
+	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
 		if (!tasks.contains(pyramidId)) {
 			tasks.synchronized {
