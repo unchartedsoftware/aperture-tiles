@@ -40,6 +40,7 @@
         ServerLayer: require('./layer/ServerLayer'),
         ClientLayer: require('./layer/ClientLayer'),
         LayerUtil: require('./layer/LayerUtil'),
+        ElasticLayer: require('./layer/ElasticLayer'),
 
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),
