@@ -67,20 +67,52 @@
     var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
     this.icon = new OpenLayers.Icon('http://dev.openlayers.org/img/marker.png', size, offset);
     this.markers = [];
+    this.iconData = {externalGraphic: 'http://dev.openlayers.org/img/marker.png',
+      graphicHeight: 25, graphicWidth: 21,
+      graphicXOffset: -12, graphicYOffset: -25};
+  }
+
+  var parser = function parser(hits){
+    return _.map(hits, function(hit){
+      if(hit._source.locality[0]){
+        var latlon = hit._source.locality[0].coordinates.split(",");
+        return {lat:Number(latlon[0]),lon:Number(latlon[1])};
+      }
+      else{
+        return {lat:null,lon:null};
+      }
+    })
   }
 
   ElasticLayer.prototype = Object.create( Layer.prototype );
 
-  ElasticLayer.prototype.buildFeatureVectors = function(adList){
-    var featureVector;
+  ElasticLayer.prototype.buildFeatureVectors = function(hits){
+    var that = this;
+    return _.map(this.source.data,function(data){return that.buildFeatureVector(data,that)});
+  }
 
-    featureVector = new OpenLayers.Feature.Vector(
-      new OpenLayers.Geometry.Point().transform(epsg4326, projectTo),
-      {description:"feature description"},
-      {externalGraphic: 'http://dev.openlayers.org/img/marker.png', graphicHeight: 25, graphicWidth: 21,
-      graphicXOffset: -12, graphicYOffset: -25}
+  /*
+  * Take in an Elasticsearch hit and return an OpenLayers point */
+  var parseHitIntoPoint = function parseHitIntoPoint(hit,that){
+
+    var epsg4326 =  new OpenLayers.Projection("EPSG:4326");
+    var projectTo = that.map.olMap.getProjectionObject();
+    if(hit._source.locality[0]){
+      var coordinate = hit._source.locality[0].coordinates.split(",");
+      return new OpenLayers.Geometry.Point(Number(coordinate[1]),Number(coordinate[0])).transform(epsg4326, projectTo);
+    }
+    else{
+      return null;
+    }
+  }
+
+  ElasticLayer.prototype.buildFeatureVector = function(ad,that){
+    var loc = parseHitIntoPoint(ad,that);
+    return new OpenLayers.Feature.Vector(
+      loc,
+      ad,
+      null
     );
-
   }
 
   /*
@@ -100,6 +132,24 @@
 
   }
 
+  function createPopup(feature) {
+    feature.popup = new OpenLayers.Popup("pop",
+      feature.geometry.getBounds().getCenterLonLat(),
+      null,
+      '<div class="markerContent">'+feature.cluster[0].attributes._source.cluster.name+'</div>',
+      null,
+      true,
+      function() { controls['selector'].unselectAll(); }
+    );
+    //feature.popup.closeOnMove = true;
+    feature.layer.map.addPopup(feature.popup);
+  }
+
+  function destroyPopup(feature) {
+    feature.popup.destroy();
+    feature.popup = null;
+  }
+
   /**
    * Activates the layer object. This should never be called manually.
    * @memberof ElasticLayer
@@ -109,15 +159,28 @@
 
     var that = this;
     // add the new layer
-    this.olLayer = new OpenLayers.Layer.Markers("Markers");
-
-    this.buildMarkers(this.source.coordinates);
-
-    _.each(this.markers,function(marker){
-      that.olLayer.addMarker(marker);
-    })
-
+    //this.olLayer = new OpenLayers.Layer.Markers("Markers");
+    this.olLayer = new OpenLayers.Layer.Vector("Overlay",
+      {strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})]});
     this.map.olMap.addLayer( this.olLayer );
+
+    this.olLayer.addFeatures(this.buildFeatureVectors(this.source.data));
+
+    //this.buildMarkers(this.source.coordinates);
+    //
+    //_.each(this.markers,function(marker){
+    //  that.olLayer.addMarker(marker);
+    //})
+
+
+    var controls = {
+      selector: new OpenLayers.Control.SelectFeature( this.olLayer, { onSelect: createPopup, onUnselect: destroyPopup })
+    };
+
+    this.map.olMap.addControl(controls['selector']);
+
+    controls['selector'].activate();
+
 
     this.setZIndex( this.zIndex );
     this.setOpacity( this.opacity );
