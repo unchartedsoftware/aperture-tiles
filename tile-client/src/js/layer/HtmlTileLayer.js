@@ -54,8 +54,8 @@
             for( var i = 0, len = childNodes.length; i < len; ++i ) {
                 childNodes[i].style.opacity = this.opacity;
             }
-            if (this.map !== null) {
-                this.map.events.triggerEvent("changelayer", {
+            if ( this.map !== null ) {
+                this.map.events.triggerEvent( "changelayer", {
                     layer: this,
                     property: "opacity"
                 });

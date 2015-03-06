@@ -269,13 +269,13 @@
 }
 
 .de-emphasized {
-  opacity: 0.4;
-  -webkit-filter: grayscale(75%);
-  filter: grayscale(75%);
+  opacity: 0.6;
+  -webkit-filter: grayscale(50%);
+          filter: grayscale(50%);
 }
 
 .de-emphasized:hover {
   opacity: 1;
-  filter: none;
   -webkit-filter: none;
+  		  filter: none;
 }
