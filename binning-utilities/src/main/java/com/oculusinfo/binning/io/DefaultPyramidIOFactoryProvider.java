@@ -96,11 +96,18 @@ public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO
 
 	@Override
 	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-		return createFactory(null, path);
+		return createFactory(null, null, path);
 	}
 
-	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
+    @Override
+    public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
+                                                         List<String> path) {
+        return createFactory(null, parent, path);
+    }
+
+    @Override
+	public ConfigurableFactory<PyramidIO> createFactory (String name,
+	                                                     ConfigurableFactory<?> parent,
 	                                                     List<String> path) {
 		return _constructor.create(parent, path);
 	}

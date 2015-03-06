@@ -32,10 +32,14 @@ import scala.collection.TraversableOnce
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
 import scala.util.Try
+
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
+
 import com.oculusinfo.binning._
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.util.EndPointsToLine

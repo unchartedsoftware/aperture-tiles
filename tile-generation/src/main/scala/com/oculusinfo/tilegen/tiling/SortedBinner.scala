@@ -43,7 +43,7 @@ import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.DenseTileData
+import com.oculusinfo.binning.impl.DenseTileData
 
 import com.oculusinfo.tilegen.datasets.{TilingTask, CSVReader, CSVDataSource}
 import com.oculusinfo.tilegen.spark.SparkConnector

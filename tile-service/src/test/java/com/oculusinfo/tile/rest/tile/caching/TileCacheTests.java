@@ -25,9 +25,10 @@ package com.oculusinfo.tile.rest.tile.caching;
 
 
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.tile.rest.tile.caching.TileCacheEntry.CacheRequestCallback;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

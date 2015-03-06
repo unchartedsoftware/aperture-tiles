@@ -24,9 +24,9 @@
 package com.oculusinfo.annotation;
 
 import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.factory.util.Pair;
 
 import java.util.ArrayList;
@@ -46,6 +46,8 @@ import java.util.Map;
  */
 
 public class AnnotationTile extends DenseTileData< AnnotationBin > {
+    private static final long serialVersionUID = 1L;
+
 
     public AnnotationTile( TileIndex index ) {
         super( index );

@@ -1,3 +1,13 @@
+package com.oculusinfo.factory.providers;
+
+
+
+import java.util.List;
+
+import com.oculusinfo.factory.ConfigurableFactory;
+
+
+
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
  * 
@@ -21,28 +31,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.init.providers;
 
+/**
+ * A simple partial implementation of FactoryProvider that provides some
+ * argument defaulting.
+ * 
+ * @author nkronenfeld
+ *
+ * @param <T> The type of good produced by the factory produced by this
+ *            provider.
+ */
+abstract public class AbstractFactoryProvider<T> implements FactoryProvider<T> {
 
-import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.AbstractFactoryProvider;
-import com.oculusinfo.tile.rendering.ImageRendererFactory;
-import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+    @Override
+    public ConfigurableFactory<? extends T> createFactory (List<String> path) {
+        return createFactory(null, null, path);
+    }
 
-import java.util.List;
-
-
-
-public class StandardImageRendererFactoryProvider extends AbstractFactoryProvider<TileDataImageRenderer<?>> {
-	@Override
-	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (List<String> path) {
-		return new ImageRendererFactory(null, path);
-	}
-
-	@Override
-	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (String name,
-	                                                                    ConfigurableFactory<?> parent,
-	                                                                    List<String> path) {
-		return new ImageRendererFactory(name, parent, path);
-	}
+    @Override
+    public ConfigurableFactory<? extends T> createFactory (ConfigurableFactory<?> parent,
+                                                           List<String> path) {
+        return createFactory(null, parent, path);
+    }
 }

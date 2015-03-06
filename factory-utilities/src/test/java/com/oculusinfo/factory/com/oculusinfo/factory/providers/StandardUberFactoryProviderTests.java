@@ -28,6 +28,7 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.UberFactory;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,13 +53,8 @@ public class StandardUberFactoryProviderTests {
         subProviders.add(new ConstructFactoryProvider("C", "c"));
         FactoryProvider<TestConstruct> provider = new StandardUberFactoryProvider<TestConstruct>(subProviders) {
             @Override
-            public ConfigurableFactory<TestConstruct> createFactory(List<String> path) {
-                return new UberFactory<TestConstruct>(TestConstruct.class, null, path, createChildren(path), "A");
-            }
-
-            @Override
-            public ConfigurableFactory<TestConstruct> createFactory(ConfigurableFactory<?> parent, List<String> path) {
-                return new UberFactory<TestConstruct>(TestConstruct.class, parent, path, createChildren(parent, path), "A");
+            public ConfigurableFactory<TestConstruct> createFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
+                return new UberFactory<TestConstruct>(name, TestConstruct.class, parent, path, createChildren(parent, path), "A");
             }
         };
 
@@ -128,7 +124,7 @@ public class StandardUberFactoryProviderTests {
         }
     }
 
-    public static class ConstructFactoryProvider implements FactoryProvider<TestConstruct> {
+    public static class ConstructFactoryProvider extends AbstractFactoryProvider<TestConstruct> {
         private String _name;
         private List<String> _pathAdditions;
         public ConstructFactoryProvider (String name, String... pathAdditions) {
@@ -137,12 +133,8 @@ public class StandardUberFactoryProviderTests {
         }
 
         @Override
-        public ConfigurableFactory<? extends TestConstruct> createFactory(List<String> path) {
-            return new ConstructFactory(_name, _pathAdditions, null, path);
-        }
-
-        @Override
-        public ConfigurableFactory<? extends TestConstruct> createFactory(ConfigurableFactory<?> parent, List<String> path) {
+        public ConfigurableFactory<? extends TestConstruct> createFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
+            // Ignore passed-in name, we have a specific name to use here.
             return new ConstructFactory(_name, _pathAdditions, parent, path);
         }
     }

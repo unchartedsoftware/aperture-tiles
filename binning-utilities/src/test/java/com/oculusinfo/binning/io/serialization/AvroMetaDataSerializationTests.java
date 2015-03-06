@@ -26,7 +26,6 @@ package com.oculusinfo.binning.io.serialization;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import com.oculusinfo.binning.DenseTileData;
 import org.apache.avro.file.CodecFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -35,6 +34,7 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializer;
 

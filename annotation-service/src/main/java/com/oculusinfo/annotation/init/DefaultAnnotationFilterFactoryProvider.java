@@ -83,12 +83,19 @@ public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<An
 
 	@Override
 	public ConfigurableFactory<AnnotationFilter> createFactory (List<String> path) {
-		return createFactory(null, path);
+		return createFactory(null, null, path);
 	}
 
 	@Override
 	public ConfigurableFactory<AnnotationFilter> createFactory (ConfigurableFactory<?> parent,
 	                                                            List<String> path) {
+	    return createFactory(null, parent, path);
+	}
+
+	@Override
+    public ConfigurableFactory<AnnotationFilter> createFactory (String name,
+                                                                ConfigurableFactory<?> parent,
+                                                                List<String> path) {
 		return _constructor.create(parent, path);
 	}
 

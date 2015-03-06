@@ -21,10 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.binning;
+package com.oculusinfo.binning.impl;
 
 
 
+import com.oculusinfo.binning.BinIndex;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileDataMetadataImpl;
+import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.factory.util.Pair;
 
 import java.util.*;
