@@ -86,6 +86,16 @@
      */
     function GraphNodeRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value[0].communities";
+        spec.node = spec.node || {};
+        spec.node.xKey = spec.node.xKey || 'x';
+        spec.node.yKey = spec.node.yKey || 'y';
+        spec.node.radiusKey = spec.node.radiusKey || 'r';
+        spec.parentNode = spec.parentNode || {};
+        spec.parentNode.xKey = spec.parentNode.xKey || 'parentX';
+        spec.parentNode.yKey = spec.parentNode.yKey || 'parentY';
+        spec.parentNode.radiusKey = spec.parentNode.radiusKey || 'parentR';
+        spec.criticalNode = spec.criticalNode || {};
+        spec.criticalNode.flag = spec.criticalNode.flag || 'isPrimaryNode';
         Renderer.call( this, spec );
         injectCss( this.spec );
     }

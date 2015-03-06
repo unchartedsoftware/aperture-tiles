@@ -62,6 +62,10 @@
      * </pre>
      */
     function PointRenderer( spec ) {
+        spec.rootKey = spec.rootKey || "tile.values";
+        spec.point = spec.point || {};
+        spec.point.xKey = spec.point.xKey || 'x';
+        spec.point.yKey = spec.point.yKey || 'y';
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -93,6 +97,11 @@
             value,
             i, j;
 
+        // get tilekey
+        tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
+        // get tile pos
+        tilePos = MapUtil.getTopLeftViewportPixelForTile( this.map, tilekey );
+
         // for each bin
         for ( i=0; i<values.length; i++ ) {
 
@@ -106,9 +115,7 @@
 
                 entries.push( value[j] );
 
-                // get annotations position in viewport space
-                tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
-                tilePos = MapUtil.getTopLeftViewportPixelForTile( this.map, tilekey );
+                // get position in viewport space                  
                 position = MapUtil.getViewportPixelFromCoord( this.map, value[j][point.xKey], value[j][point.yKey] );
                 // get relative position from tile top left
                 offset = {
