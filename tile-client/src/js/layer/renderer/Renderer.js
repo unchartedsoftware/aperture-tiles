@@ -200,12 +200,12 @@
      * @param {Layer} layer - The layer to attach to the renderer.
      */
     Renderer.prototype.attach = function( layer ) {
-        if ( this.parent ) {
+        if ( this.parent && this.parent !== layer ) {
             console.log( "This renderer has already been attached " +
-                         "to a layer, please use another instance." );
+                         "to a different layer, please use another instance." );
             return;
         }
-        this.meta = layer.source.meta.meta;
+        this.meta = layer.source.meta ? layer.source.meta.meta : null;
         this.map = layer.map;
         this.parent = layer;
     };
