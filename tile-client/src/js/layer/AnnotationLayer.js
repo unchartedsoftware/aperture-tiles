@@ -95,8 +95,13 @@
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 500;
         this.domain = "annotation";
         this.source = spec.source;
-        this.renderer = spec.renderer || null;
-        this.html = spec.html || null;
+        this.getURL = spec.getURL || LayerUtil.getURL;
+        if ( spec.renderer ) {
+            this.renderer = spec.renderer;
+        }
+        if ( spec.html ) {
+            this.html = spec.html;
+        }
     }
 
     AnnotationLayer.prototype = Object.create( Layer.prototype );
@@ -118,7 +123,7 @@
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
                     20037500,  20037500),
                 isBaseLayer: false,
-                getURL: LayerUtil.getURL,
+                getURL: this.getURL,
                 html: this.html,
                 renderer: this.renderer
             });

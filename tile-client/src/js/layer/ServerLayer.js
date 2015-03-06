@@ -128,6 +128,7 @@
         this.tileTransform = spec.tileTransform || {};
         this.domain = "server";
         this.source = spec.source;
+        this.getURL = spec.getURL || LayerUtil.getURL;
     }
 
     ServerLayer.prototype = Object.create( Layer.prototype );
@@ -146,7 +147,7 @@
         this.map.on( "zoomend", this.zoomCallback );
 
         function getURL( bounds ) {
-            return LayerUtil.getURL.call( this, bounds ) + that.getQueryParamString();
+            return that.getURL.call( this, bounds ) + that.getQueryParamString();
         }
 
         // add the new layer
