@@ -102,13 +102,17 @@
             var layerMap,
                 i;
             if ( !(layerData instanceof Array) ) {
-                layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                if ( layerData.meta ) {
+                    layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                }
                 return layerData;
             }
             // if given an array, convert it into a map keyed by layerId
             layerMap = {};
             for ( i=0; i<layerData.length; i++ ) {
-                layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                if ( layerData[i].meta ) {
+                    layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                }
                 layerMap[ layerData[i].id ] = layerData[i];
             }
             return layerMap;
