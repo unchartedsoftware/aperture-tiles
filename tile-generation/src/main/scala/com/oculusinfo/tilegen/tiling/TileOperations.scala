@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
+import java.util.Properties
 import java.util.concurrent.atomic.AtomicInteger
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning.util.JsonUtilities
@@ -462,9 +463,10 @@ object TileOperations {
 		// TODO: Replace with analytics from valuer after move to factory invocation
 		val tileAnalytics = new ExtremaTileAnalytic
 
+		val tableName = getOrGenTableName(input, "heatmap_op")
 		val tilingTask = new StaticTilingTask(
 			input.sqlContext,
-			getOrGenTableName(input, "heatmap_op"),
+			tableName,
 			tilingParms,
 			indexer,
 			valuer,
@@ -476,8 +478,70 @@ object TileOperations {
 		tilingTask.initialize()
 		tilingTask.doTiling(tileIO)
 
-		PipelineData(input.sqlContext, input.srdd, Some("heatmap_op"))
+		PipelineData(input.sqlContext, input.srdd, Some(tableName))
 	}
+
+
+
+	/**
+	 * A basic tile generator that writes output to HBase.
+	 * This just attaches an HBase tile IO to a generic tiling op.
+	 *
+	 * @param tilingConfig The configuration of the tiling job to run
+	 * @param zookeeperQuorum Zookeeper quorum addresses specified as a comma separated list.
+	 * @param zookeeperPort Zookeeper port.
+	 * @param hbaseMaster HBase master address.
+	 * @param baseTableName A base name to use for the table if the table is not already registered and named
+	 * @param input Pipeline data to tile
+	 * @return Unmodified input data
+	 */
+	def hbaseTilingOp(tilingConfig: Properties,
+	                  zookeeperQuorum: String,
+	                  zookeeperPort: String,
+	                  hbaseMaster: String,
+	                  baseTableName: String = "tiling")
+	                 (input: PipelineData) = {
+		val tileIO = new HBaseTileIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
+		tilingOp(tilingConfig, tileIO, baseTableName)(input)
+	}
+
+	/**
+	 * A basic tile generator that writes output to the local file system.
+	 * This just attaches a local file system tile IO to a generic tiling op.
+	 *
+	 * @param tilingConfig The configuration of the tiling job to run
+	 * @param baseTableName A base name to use for the table if the table is not already registered and named
+	 * @param input Pipeline data to tile
+	 * @return Unmodified input data
+	 */
+	def fileTilingOp(tilingConfig: Properties,
+	                 baseTableName: String = "tiling")
+	                (input: PipelineData) = {
+		val tileIO = new LocalTileIO("avro")
+		tilingOp(tilingConfig, tileIO, baseTableName)(input)
+	}
+
+	/**
+	 * A basic tile generator
+	 *
+	 * @param tilingConfig The configuration of the tiling job to run
+	 * @param tileIO The Tile IO describing where to write the output
+	 * @param baseTableName A base name to use for the table if the table is not already registered and named
+	 * @param input Pipeline data to tile
+	 * @return Unmodified input data
+	 */
+	def tilingOp (tilingConfig: Properties,
+	                      tileIO: TileIO,
+	                      baseTableName: String = "tiling")
+	                     (input: PipelineData) = {
+		val tableName = getOrGenTableName(input, baseTableName)
+		val tilingTask = TilingTask(input.sqlContext, tableName, tilingConfig)
+		tilingTask.doTiling(tileIO)
+
+		PipelineData(input.sqlContext, input.srdd, Some(tableName))
+	}
+
+
 
 	/**
 	 * Composite analytic to compute local min/max value of Double data for each tile the pyramid.
