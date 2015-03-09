@@ -208,7 +208,7 @@ trait TileIO extends Serializable {
 			writeMetaData(baseLocation, metaData)
 		}
 	}
-	
+
 	/**
 	 * Takes a map of levels to (mins, maxes) and combines them with the current metadata
 	 * that already exists, or creates a new one if none exists.
@@ -255,16 +255,16 @@ trait TileIO extends Serializable {
 
 	def writeMetaData (baseLocation: String, metaData: PyramidMetaData): Unit =
 		getPyramidIO.writeMetaData(baseLocation, metaData.toString)
-	
+
 }
 
 
 /**
  * Read and write tiles from the local file system
  */
-class LocalTileIO (extension: String) extends TileIO {
+class LocalTileIO (extension: String = "avro", baseLocation: String = "") extends TileIO {
 	def getPyramidIO : PyramidIO =
-		new FileBasedPyramidIO(new FileSystemPyramidSource("", extension))
+		new FileBasedPyramidIO(new FileSystemPyramidSource(baseLocation, extension))
 }
 
 
@@ -305,7 +305,7 @@ object TileSerializerChooser {
 
 /**
  * Read and rewrite metadata for a table.
- * 
+ *
  * This should update the metadata to the latest format, in case of a format change.
  */
 object FixMetaData {
