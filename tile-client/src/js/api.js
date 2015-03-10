@@ -46,7 +46,6 @@
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),
         RendererUtil: require('./layer/renderer/RendererUtil'),
-        AxisPointRenderer: require('./layer/renderer/AxisPointRenderer'),
         GraphLabelRenderer: require('./layer/renderer/GraphLabelRenderer'),
         GraphNodeRenderer: require('./layer/renderer/GraphNodeRenderer'),
         PointAggregateRenderer: require('./layer/renderer/PointAggregateRenderer'),
