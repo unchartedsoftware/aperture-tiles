@@ -245,7 +245,7 @@
 
         // update dimensions
         _.forIn( map.axes, function( value ) {
-            value.setContentDimension();
+            value.updateDimension();
         });
 
         // redraw
@@ -372,6 +372,15 @@
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
 
+		// navigation controls
+		this.navigationControls = new OpenLayers.Control.Navigation({
+				documentDrag: true,
+				zoomBoxEnabled: false
+		});
+
+		// zoom controls
+		this.zoomControls = new OpenLayers.Control.Zoom();
+
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
             theme: null, // prevent OpenLayers from checking for default css
@@ -386,8 +395,8 @@
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
-                new OpenLayers.Control.Navigation({ documentDrag: true }),
-                new OpenLayers.Control.Zoom()
+                this.navigationControls,
+                this.zoomControls
             ]
         });
 
@@ -436,6 +445,22 @@
             }
             // activate the component
             deactivateComponent( this, component );
+        },
+
+        /**
+         * Enables the panning and zoom controls for the map.
+         */
+        enableControls: function() {
+            this.navigationControls.activate();
+            this.zoomControls.activate();
+        },
+
+        /**
+         * Disables the panning and zoom controls for the map.
+         */
+        disableControls: function() {
+            this.navigationControls.deactivate();
+            this.zoomControls.deactivate();
         },
 
         /**

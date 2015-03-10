@@ -39,7 +39,7 @@
         this.getURL = options.getURL;
         this.layername = options.layername;
         this.type = options.type;
-        this.tileClass = HtmlTile;
+        this.tileClass = options.tileClass || HtmlTile;
         this.html = options.html;
         this.renderer = options.renderer;
         this.CLASS_NAME = 'OpenLayers.Layer.HTML';

@@ -46,9 +46,9 @@
     function getURLFunction( carousel ) {
         return function( bounds ) {
             var tileIndex = LayerUtil.getTileIndex( this, bounds ),
-                x = tileIndex.x,
-                y = tileIndex.y,
-                z = tileIndex.z,
+                x = tileIndex.xIndex,
+                y = tileIndex.yIndex,
+                z = tileIndex.level,
                 tilekey = z + "," + x + "," + y,
                 layerIndex = carousel.getLayerIndexForTile( tilekey ),
                 layerSpec = carousel.layerSpecs[ layerIndex ],

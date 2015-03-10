@@ -36,7 +36,7 @@ import java.util.List;
  * The LayerService is the service driving the LayerResource, and used by many
  * other services and resources throughout the tile server. it keeps track of
  * available layers, and the configurations thereof.
- * 
+ *
  * @author nkronenfeld, kbirk
  */
 public interface LayerService {
@@ -88,7 +88,7 @@ public interface LayerService {
     public JSONObject getLayerState( String layerId, String stateId );
 
     /**
-     * Returns the meta-data associated with the given layer
+     * Returns the meta-data associated with the given layer.
      * @param layerId The layer identification string
      */
     public PyramidMetaData getMetaData (String layerId);

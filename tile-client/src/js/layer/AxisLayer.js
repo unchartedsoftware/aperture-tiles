@@ -29,16 +29,15 @@
 
     var Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
-        HtmlTileLayer = require('./HtmlTileLayer'),
+        UnivariateTileLayer = require('./UnivariateTileLayer'),
         PubSub = require('../util/PubSub');
 
     /**
-     * Instantiate a ClientLayer object.
-     * @class ClientLayer
+     * Instantiate a AxisLayer object.
+     * @class AxisLayer
      * @augments Layer
-     * @classdesc A client rendered layer object. Uses JSON data retrieved from the
-     *            server in conjunction with a Renderer object or html function to
-     *            create interactable DOM elements.
+     * @classdesc A axis rendered layer object. Uses data received from the server and
+     *            renders it over the axis.
      *
      * @param {Object} spec - The specification object.
      * <pre>
@@ -51,14 +50,15 @@
      * }
      * </pre>
      */
-    function ClientLayer( spec ) {
+    function AxisLayer( spec ) {
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
-        this.domain = "client";
+        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1500;
+        this.domain = "axis";
         this.source = spec.source;
         this.getURL = spec.getURL || LayerUtil.getURL;
+        this.dimension = spec.dimension || 'x';
         if ( spec.tileClass) {
             this.tileClass = spec.tileClass;
         }
@@ -70,18 +70,17 @@
         }
     }
 
-    ClientLayer.prototype = Object.create( Layer.prototype );
+    AxisLayer.prototype = Object.create( Layer.prototype );
 
     /**
      * Activates the layer object. This should never be called manually.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      * @private
      */
-    ClientLayer.prototype.activate = function() {
-
+    AxisLayer.prototype.activate = function() {
         // add the new layer
-        this.olLayer = new HtmlTileLayer(
-            'Client Rendered Tile Layer',
+        this.olLayer = new UnivariateTileLayer(
+            'Axis Rendered Tile Layer',
             this.source.tms,
             {
                 layername: this.source.id,
@@ -90,9 +89,10 @@
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: this.getURL,
-                tileClass: this.tileClass,
                 html: this.html,
-                renderer: this.renderer
+                tileClass: this.tileClass,
+                renderer: this.renderer,
+                dimension: this.dimension
             });
 
         this.map.olMap.addLayer( this.olLayer );
@@ -109,10 +109,10 @@
 
     /**
      * Dectivates the layer object. This should never be called manually.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      * @private
      */
-    ClientLayer.prototype.deactivate = function() {
+    AxisLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
@@ -122,31 +122,31 @@
 
     /**
      * Updates the theme associated with the layer.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      *
      * @param {String} theme - The theme identifier string.
      */
-    ClientLayer.prototype.setTheme = function( theme ) {
+    AxisLayer.prototype.setTheme = function( theme ) {
         this.theme = theme;
     };
 
     /**
      * Get the current theme for the layer.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      *
      * @returns {String} The theme identifier string.
      */
-    ClientLayer.prototype.getTheme = function() {
+    AxisLayer.prototype.getTheme = function() {
         return this.theme;
     };
 
     /**
      * Set the z index of the layer.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      *
      * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
      */
-    ClientLayer.prototype.setZIndex = function ( zIndex ) {
+    AxisLayer.prototype.setZIndex = function ( zIndex ) {
         // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
         // set the z-index of the layer dev. setLayerIndex sets a relative
         // index based on current map layers, which then sets a z-index. This
@@ -158,23 +158,23 @@
 
     /**
      * Get the layers zIndex.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      *
      * @returns {integer} The zIndex for the layer.
      */
-    ClientLayer.prototype.getZIndex = function () {
+    AxisLayer.prototype.getZIndex = function () {
         return this.zIndex;
     };
 
     /**
      * Redraws the entire layer.
-     * @memberof ClientLayer
+     * @memberof AxisLayer
      */
-    ClientLayer.prototype.redraw = function () {
+    AxisLayer.prototype.redraw = function () {
         if ( this.olLayer ) {
              this.olLayer.redraw();
         }
     };
 
-    module.exports = ClientLayer;
+    module.exports = AxisLayer;
 }());

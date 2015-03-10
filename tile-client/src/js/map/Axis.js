@@ -28,6 +28,7 @@
     "use strict";
 
     var Util = require('../util/Util'),
+        PubSub = require('../util/PubSub'),
         AxisUtil = require('./AxisUtil'),
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
@@ -319,17 +320,19 @@
         };
         horizontalSlide = function() {
             axis.setEnabled( !axis.isEnabled() );
-            axis.setContentDimension();
+            axis.updateDimension();
             disableSlide();
             axis.$content.animate({width: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             axis.redraw();
+            PubSub.publish( axis.getChannel(), { field: 'open', value: axis.isEnabled() } );
         };
         verticalSlide = function() {
             axis.setEnabled( !axis.isEnabled() );
-            axis.setContentDimension();
+            axis.updateDimension();
             disableSlide();
             axis.$content.animate({height: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             axis.redraw();
+            PubSub.publish( axis.getChannel(), { field: 'open', value: axis.isEnabled() } );
         };
         // create axis title, header, and container and append them to root
         axis.$title = createTitle( axis );
@@ -461,6 +464,7 @@
      */
     function Axis( spec ) {
 
+        this.uuid = Util.generateUuid();
         this.position = ( spec.position !== undefined ) ? spec.position.toLowerCase() : 'bottom';
         this.repeat = ( spec.repeat !== undefined ) ? spec.repeat : false;
         this.title = spec.title || 'Axis';
@@ -572,17 +576,27 @@
     };
 
     /**
-     * Iterates over all axes on the map, determines the max content size, and 
+     * Iterates over all axes on the map, determines the max content size, and
      * sets the content dimension to that size.
      * @memberof Axis
+     *
+     * @returns {integer} The max dimension of the axes attached to the map.
      */
-    Axis.prototype.setContentDimension = function() {
-        var dim = this.isXAxis ? 'height' : 'width',
-            maxAxisLabelDim = 0;
-        _.forIn( this.map.axes, function( value ) {
-            maxAxisLabelDim = Math.max( value.getContentDimension() || 0, maxAxisLabelDim );
+    Axis.prototype.getMaxContentDimension = function() {
+        var maxAxisLabelDim = 0;
+        _.forIn( this.map.axes, function( axis ) {
+            maxAxisLabelDim = Math.max( axis.getContentDimension() || 0, maxAxisLabelDim );
         });
-        this.$content[ dim ]( maxAxisLabelDim );
+        return maxAxisLabelDim;
+    };
+
+    /**
+     * Sets the content dimension of the axis.
+     * @memberof Axis
+     */
+    Axis.prototype.updateDimension = function() {
+        var dim = this.isXAxis ? 'height' : 'width';
+        this.$content[ dim ]( this.getMaxContentDimension( this.map ) );
     };
 
     /**
@@ -598,6 +612,16 @@
         }
         // add each marker to correct pixel location in axis DOM elements
         updateAxisContent( this );
+    };
+
+    /**
+     * Returns the publish/subscribe channel id of this specific axis.
+     * @memberof Axis
+     *
+     * @returns {String} The publish/subscribe channel for the axis.
+     */
+     Axis.prototype.getChannel = function () {
+        return 'axis.' + this.position + '.' + this.uuid;
     };
 
     module.exports = Axis;

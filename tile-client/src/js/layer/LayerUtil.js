@@ -102,13 +102,17 @@
             var layerMap,
                 i;
             if ( !(layerData instanceof Array) ) {
-                layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                if ( layerData.meta ) {
+                    layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                }
                 return layerData;
             }
             // if given an array, convert it into a map keyed by layerId
             layerMap = {};
             for ( i=0; i<layerData.length; i++ ) {
-                layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                if ( layerData[i].meta ) {
+                    layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                }
                 layerMap[ layerData[i].id ] = layerData[i];
             }
             return layerMap;
@@ -128,9 +132,9 @@
                 maxBounds = olLayer.maxExtent,
                 tileSize = olLayer.tileSize;
             return {
-                x: Math.round( (bounds.left - maxBounds.left) / (res * tileSize.w) ),
-                y: Math.round( (bounds.bottom - maxBounds.bottom) / (res * tileSize.h) ),
-                z: olLayer.map.getZoom()
+                xIndex: Math.round( (bounds.left - maxBounds.left) / (res * tileSize.w) ),
+                yIndex: Math.round( (bounds.bottom - maxBounds.bottom) / (res * tileSize.h) ),
+                level: olLayer.map.getZoom()
             };
         },
 
@@ -145,9 +149,9 @@
          */
         getTilekey: function( olLayer, bounds ) {
             var tileIndex = LayerUtil.getTileIndex( olLayer, bounds ),
-                x = tileIndex.x,
-                y = tileIndex.y,
-                z = tileIndex.z;
+                x = tileIndex.xIndex,
+                y = tileIndex.yIndex,
+                z = tileIndex.level;
             return z + "," + x + "," + y;
         },
 
@@ -161,9 +165,9 @@
          */
         getURL: function( bounds ) {
             var tileIndex = LayerUtil.getTileIndex( this, bounds ),
-                x = tileIndex.x,
-                y = tileIndex.y,
-                z = tileIndex.z;
+                x = tileIndex.xIndex,
+                y = tileIndex.yIndex,
+                z = tileIndex.level;
             if ( x >= 0 && y >= 0 ) {
                 return this.url + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
             }

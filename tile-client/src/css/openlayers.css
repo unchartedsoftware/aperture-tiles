@@ -19,7 +19,7 @@ div.olLayerDiv {
     -webkit-backface-visibility: hidden;
 }
 
-.olLayerGrid .olTileHtml {
+.olLayerGrid .olTileHtml .olTileUnivariate {
     /*pointer-events: none;*/
     -webkit-backface-visibility: hidden;
 }
@@ -512,7 +512,8 @@ a.olControlZoomOut {
  */
  
 .olTileImage,
-.olTileHtml { 
+.olTileHtml,
+.olTileUnivariate { 
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;
