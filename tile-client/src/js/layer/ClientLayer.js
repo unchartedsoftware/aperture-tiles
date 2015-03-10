@@ -59,6 +59,9 @@
         this.domain = "client";
         this.source = spec.source;
         this.getURL = spec.getURL || LayerUtil.getURL;
+        if ( spec.tileClass) {
+            this.tileClass = spec.tileClass;
+        }
         if ( spec.renderer ) {
             this.renderer = spec.renderer;
         }
@@ -87,6 +90,7 @@
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: this.getURL,
+                tileClass: this.tileClass,
                 html: this.html,
                 renderer: this.renderer
             });

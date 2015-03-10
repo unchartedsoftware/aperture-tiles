@@ -83,7 +83,7 @@
         this.layername = options.layername;
         this.dimension = options.dimension || 'x';
         this.type = options.type;
-        this.tileClass = UnivariateTile;
+        this.tileClass = options.tileClass || UnivariateTile;
         this.html = options.html;
         this.renderer = options.renderer;
         this.CLASS_NAME = 'OpenLayers.Layer.Univariate';

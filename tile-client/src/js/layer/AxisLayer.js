@@ -59,6 +59,9 @@
         this.source = spec.source;
         this.getURL = spec.getURL || LayerUtil.getURL;
         this.dimension = spec.dimension || 'x';
+        if ( spec.tileClass) {
+            this.tileClass = spec.tileClass;
+        }
         if ( spec.renderer ) {
             this.renderer = spec.renderer;
         }
@@ -87,6 +90,7 @@
                 isBaseLayer: false,
                 getURL: this.getURL,
                 html: this.html,
+                tileClass: this.tileClass,
                 renderer: this.renderer,
                 dimension: this.dimension
             });

@@ -33,32 +33,37 @@
 
     "use strict";
 
+    var LayerUtil = require('./LayerUtil');
+
     OpenLayers.Tile.HTML = function() {
         OpenLayers.Tile.apply( this, arguments );
     };
 
     OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
 
-    OpenLayers.Tile.HTML.prototype.draw = function( force ) {
+    OpenLayers.Tile.HTML.prototype.draw = function() {
         var that = this,
             shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments ),
             dataUrl;
-        if ( force || shouldDraw ) {
+        if ( shouldDraw ) {
             this.positionTile();
             dataUrl = this.layer.getURL( this.bounds );
+
             if ( dataUrl !== this.url ) {
 
                 this.url = dataUrl;
                 this.tileData = null;
+                this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
+                this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
                 // new url to render
-                if (this.isLoading) {
+                if ( this.isLoading ) {
                     this.dataRequest.abort();
                     this.dataRequest = null;
                     this.isLoading = false;
                 }
 
-                if (!this.url) {
+                if ( !this.url ) {
                     this.unload();
                     return;
                 }
@@ -71,7 +76,6 @@
                 }).then(
                     function( data ) {
                         that.tileData = data;
-                        that.tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
                         that.renderTile( that.div, that.tileData );
                     },
                     function( xhr ) {
@@ -110,11 +114,7 @@
 
         var style = this.div.style,
             size = this.layer.getImageSize( this.bounds ),
-            ratio = 1;
-
-        if ( this.layer instanceof OpenLayers.Layer.Grid ) {
             ratio = this.layer.getServerResolution() / this.layer.map.getResolution();
-        }
 
         style.left = this.position.x + 'px';
         style.top = this.position.y + 'px';
@@ -149,9 +149,14 @@
         div.style.opacity = this.layer.opacity;
         div.style.visibility = 'inherit';
 
-        if ( !data || !data.tile ) {
+        if ( !data || ( !data.tile && !data.hits ) ) {
             // exit early if not data to render
             return;
+        }
+
+        if ( data.hits ) {
+            // add tile index to elastic search result
+            data.index = this.tileIndex;
         }
 
         renderer = this.layer.renderer;
