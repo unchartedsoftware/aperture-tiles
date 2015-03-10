@@ -263,7 +263,7 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 		assert(schema.fieldNames.contains("num"))
 	}
 
-	test("Test file heatmap parse and operation") {
+	test("Test geo heatmap parse and operation") {
 		try {
 			// pipeline stage to create test data
 			def createDataOp(count: Int)(input: PipelineData) = {
@@ -284,7 +284,7 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 				"ops.tileHeight" -> "4")
 
 			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
-			rootStage.addChild(PipelineStage("file_heatmap_op", parseFileHeatmapOp(args)))
+			rootStage.addChild(PipelineStage("geo_heatmap_op", parseGeoHeatMapOp(args)))
 			TilePipelines.execute(rootStage, sqlc)
 
 			// Load the metadata and validate its contents - gives us an indication of whether or not the

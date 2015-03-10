@@ -25,10 +25,12 @@
 package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble, Long => JavaLong}
+import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Properties
 import java.util.concurrent.atomic.AtomicInteger
-import com.oculusinfo.binning.impl.AOITilePyramid
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.{WebMercatorTilePyramid, AOITilePyramid}
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescriptionTileWrapper, ComposedTileAnalytic, NumericMaxTileAnalytic, NumericMinTileAnalytic}
@@ -76,8 +78,8 @@ object TileOperations {
 		tilePipeline.registerPipelineOp("integral_range_filter", parseIntegralRangeFilterOp)
 		tilePipeline.registerPipelineOp("fractional_range_filter", parseFractionalRangeFilterOp)
 		tilePipeline.registerPipelineOp("regex_filter", parseRegexFilterOp)
-		tilePipeline.registerPipelineOp("file_heatmap_tiling", parseFileHeatmapOp)
-		tilePipeline.registerPipelineOp("hbase_heatmap_tiling", parseHbaseHeatmapOp)
+		tilePipeline.registerPipelineOp("geo_heatmap_tiling", parseGeoHeatMapOp)
+		tilePipeline.registerPipelineOp("crossplot_heatmap_tiling", parseCrossplotHeatmapOp)
 
 		logger.debug(s"Registered tile operations: ${tilePipeline.pipelineOps.keys}")
 
@@ -351,12 +353,12 @@ object TileOperations {
 
 	/**
 	 * Parse args for basic heatmap tile generator operation that writes to HDFS, and return an instance of that
-	 * operation with those arguments applied.
+	 * operation with those arguments applied.  If HBase properties are not set, file based IO is used.
 	 *
 	 * Arguments:
-	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list.
-	 *    hbase.zookeeper.port - Zookeeper port.
-	 *    hbase.master - HBase master address.
+	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
+	 *    hbase.zookeeper.port - Zookeeper port. (optional)
+	 *    hbase.master - HBase master address. (optional)
 	 *    ops.xColumn - Colspec denoting data x column
 	 *    ops.yColumn - Colspec denoting data y column
 	 *
@@ -364,37 +366,66 @@ object TileOperations {
 	 *    is populated via an argument map.  The argument map passed to this function will be used for that
 	 *    purpose, so all arguments required by that object should be set.
 	 */
-	def parseHbaseHeatmapOp(args: Map[String, String]) = {
+	def parseGeoHeatMapOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing hbaseHeatmapOp with args $args")
 		val argParser = KeyValuePassthrough(args)
-		val zookeeperQuorum = argParser.getString("hbase.zookeeper.quorum", "Zookeeper quorum addresses")
-		val zookeeperPort = argParser.getString("hbase.zookeeper.port", "Zookeeper port")
-		val hbaseMaster = argParser.getString("hbase.master", "HBase master address")
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
-
-		hbaseHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, zookeeperQuorum, zookeeperPort, hbaseMaster)(_)
+		geoHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4)(_)
 	}
 
 	/**
 	 * Parse args for basic heatmap tile generator operation that writes to the local file system, and return an
-	 * instance of that operation with those arguments applied.
+	 * instance of that operation with those arguments applied.  If hbase parameters are unset, file IO will be used.
+	 * Likewise, if bounds are not set, auto bounds will be used.
 	 *
 	 * Arguments:
 	 *    ops.xColumn - Colspec denoting data x column
 	 *    ops.yColumn - Colspec denoting data y column
-	 *
+	 *    ops.bounds.minX - Bounds minX value (optional)
+	 *    ops.bounds.minY - Bounds minX value (optional)
+	 *    ops.bounds.maxX - Bounds minX value (optional)
+	 *    ops.bounds.maxT - Bounds minX value (optional)
+	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
+	 *    hbase.zookeeper.port - Zookeeper port. (optional)
+	 *    hbase.master - HBase master address. (optional)
+	*
 	 *    Tiling task consumes a TilingTaskParameters object that
 	 *    is populated via an argument map.  The argument map passed to this function will be used for that
 	 *    purpose, so all arguments required by that object should be set.
 	 */
-	def parseFileHeatmapOp(args: Map[String, String]) = {
+	def parseCrossplotHeatmapOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing fileHeatmapOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
-		fileHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3)(_)
+
+		val parsedBounds = List(argParser.getDoubleOption("ops.bounds.minX", "Bounds min X", None),
+		                        argParser.getDoubleOption("ops.bounds.minY", "Bounds min Y", None),
+		                        argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
+		                        argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
+		val aoiBounds = if (parsedBounds.flatten.length < parsedBounds.length) {
+			Some(new AOITilePyramid(parsedBounds(0).get, parsedBounds(1).get, parsedBounds(1).get, parsedBounds(3).get))
+		} else {
+			None
+		}
+		crossplotHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, aoiBounds)(_)
 	}
 
+	/**
+	 * @param zookeeperQuorum Zookeeper quorum addresses specified as a comma separated list.
+	 * @param zookeeperPort Zookeeper port.
+	 * @param hbaseMaster HBase master address
+	 */
+	case class HBaseParameters(val zookeeperQuorum: String, val zookeeperPort: String, val hbaseMaster: String)
+
 	private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
+		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
+		                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+		                      argParser.getStringOption("hbase.master", "HBase master address", None))
+		val hbaseArgs = if (parsedArgs.flatten.length < parsedArgs.length) {
+			Some(HBaseParameters(parsedArgs(0).get, parsedArgs(1).get, parsedArgs(2).get))
+		} else {
+			None
+		}
 		val xColSpec = argParser.getString("ops.xColumn", "Colspec denoting data x column")
 		val yColSpec = argParser.getString("ops.yColumn", "Colspec denoting data y column")
 
@@ -402,7 +433,7 @@ object TileOperations {
 		taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
 		val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
 
-		(xColSpec, yColSpec, taskParameters)
+		(xColSpec, yColSpec, taskParameters, hbaseArgs)
 	}
 
 	/**
@@ -413,52 +444,62 @@ object TileOperations {
 	 * @param xColSpec Colspec denoting data x column
 	 * @param yColSpec Colspec denoting data y column
 	 * @param tilingParams Parameters to forward to the tiling task.
-	 * @param zookeeperQuorum Zookeeper quorum addresses specified as a comma separated list.
-	 * @param zookeeperPort Zookeeper port.
-	 * @param hbaseMaster HBase master address.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
 	 */
-	def hbaseHeatMapOp(xColSpec: String,
-	                   yColSpec: String,
-	                   tilingParams: TilingTaskParameters,
-	                   zookeeperQuorum: String,
-	                   zookeeperPort: String,
-	                   hbaseMaster: String)
-	                  (input: PipelineData) = {
-
-		val tileIO = new HBaseTileIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
-		heatMapOpImpl(xColSpec, yColSpec, tilingParams, tileIO)(input)
+	def geoHeatMapOp(xColSpec: String,
+	                 yColSpec: String,
+	                 tilingParams: TilingTaskParameters,
+	                 hbaseParameters: Option[HBaseParameters])
+	                (input: PipelineData) = {
+		val tileIO = hbaseParameters match {
+			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
+			case None => new LocalTileIO("avro")
+		}
+		val tilePyramid = new DeferredTilePyramid(new WebMercatorTilePyramid, false)
+		heatMapOpImpl(xColSpec, yColSpec, tilingParams, tileIO, tilePyramid)(input)
 	}
 
 	/**
-	 * A basic heatmap tile generator that writes output to the local file system. Uses
+	 * A basic heatmap tile generator that writes output to HDFS. Uses
 	 * TilingTaskParameters to manage tiling task arguments; the arguments map
 	 * will be passed through to that object, so all arguments required for its configuration should be set in the map.
 	 *
 	 * @param xColSpec Colspec denoting data x column
 	 * @param yColSpec Colspec denoting data y column
 	 * @param tilingParams Parameters to forward to the tiling task.
+	 * @param hbaseParameters Optional hbase config.  Will use local file IO if set to None.
+	 * @param bounds Optional tile pyramid bounds.  Will derive bounds from data if None (default).
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
 	 */
-	def fileHeatMapOp(xColSpec: String,
-	                  yColSpec: String,
-	                  tilingParams: TilingTaskParameters)
-	                 (input: PipelineData) = {
-		val tileIO = new LocalTileIO("avro")
-		heatMapOpImpl(xColSpec, yColSpec, tilingParams, tileIO)(input)
+	def crossplotHeatMapOp(xColSpec: String,
+	                 yColSpec: String,
+	                 tilingParams: TilingTaskParameters,
+	                 hbaseParameters: Option[HBaseParameters],
+	                 bounds: Option[AOITilePyramid] = None)
+	                (input: PipelineData) = {
+		val tileIO = hbaseParameters match {
+			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
+			case None => new LocalTileIO("avro")
+		}
+		val tilePyramid = bounds match {
+			case Some(b) => new DeferredTilePyramid(b, false)
+			case None => new DeferredTilePyramid(new AOITilePyramid(0.0, 0.0, 1.0, 1.0), true)
+		}
+		heatMapOpImpl(xColSpec, yColSpec, tilingParams, tileIO, tilePyramid)(input)
 	}
 
 	private def heatMapOpImpl(xColSpec: String,
 	                          yColSpec: String,
 	                          tilingParms: TilingTaskParameters,
-	                          tileIO: TileIO)
+	                          tileIO: TileIO,
+		                        tilePyramid: DeferredTilePyramid)
 	                         (input: PipelineData) = {
 		// TODO: Switch to the factory based invocation
-		val valuer = new CountValueExtractor[Long, JavaLong](new PrimitiveAvroSerializer[JavaLong](classOf[JavaLong], CodecFactory.bzip2Codec))
+		val valuer = new CountValueExtractor[Long, JavaLong](
+			new PrimitiveAvroSerializer[JavaLong](classOf[JavaLong], CodecFactory.bzip2Codec))
 		val indexer = new CartesianIndexExtractor(xColSpec, yColSpec)
-		val deferredPyramid = new DeferredTilePyramid(new AOITilePyramid(0.0, 0.0, 1.0, 1.0), true)
 
 		// TODO: Replace with analytics from valuer after move to factory invocation
 		val tileAnalytics = new ExtremaTileAnalytic
@@ -470,7 +511,7 @@ object TileOperations {
 			tilingParms,
 			indexer,
 			valuer,
-			deferredPyramid,
+			tilePyramid,
 			Nil,
 			None,
 			Some(tileAnalytics))
