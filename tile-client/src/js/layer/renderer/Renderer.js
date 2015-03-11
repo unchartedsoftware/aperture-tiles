@@ -123,7 +123,7 @@
      * @param {Object} selectedEntry - The selected data entry.
      */
     Renderer.prototype.select = function( selectedEntry ) {
-        var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml' ),
+        var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml,.olTileUnivariate' ),
             selectKey = this.spec.select.selectKey,
             selector = this.getEntrySelector(),
             uuid = this.uuid,
@@ -162,7 +162,7 @@
      * @memberof Renderer
      */
     Renderer.prototype.unselect = function() {
-        var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml' ),
+        var $tiles = $( this.parent.olLayer.div ).find( '.olTileHtml,.olTileUnivariate' ),
             selector = this.getEntrySelector(),
             $entries;
         // if entry selector is set, use it to select entries
