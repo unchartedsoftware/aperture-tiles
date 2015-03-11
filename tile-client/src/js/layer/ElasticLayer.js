@@ -30,7 +30,8 @@
   var Layer = require('./Layer'),
     LayerUtil = require('./LayerUtil'),
     HtmlTileLayer = require('./HtmlTileLayer'),
-    PubSub = require('../util/PubSub');
+    PubSub = require('../util/PubSub'),
+    popover = require('../ui/popover');
 
   /**
    * Instantiate an ElasticLayer object.
@@ -54,7 +55,7 @@
     // call base constructor
     Layer.call( this, spec );
     // set reasonable defaults
-    this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+    this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 749;
     this.domain = "client";
     this.source = spec.source;
     if ( spec.renderer ) {
@@ -70,6 +71,9 @@
     this.iconData = {externalGraphic: 'http://dev.openlayers.org/img/marker.png',
       graphicHeight: 25, graphicWidth: 21,
       graphicXOffset: -12, graphicYOffset: -25};
+
+    this.featureFunction = spec.featureRenderFunction;
+    this.featureDestroyFunction = spec.featureDestroyFunction;
   }
 
   var parser = function parser(hits){
@@ -145,6 +149,21 @@
     feature.layer.map.addPopup(feature.popup);
   }
 
+  function createPopover(feature) {
+
+    var pt = feature.geometry.clone().transform(feature.layer.map.projection,feature.layer.map.displayProjection)
+    var coord =  new OpenLayers.LonLat(pt.x,pt.y).transform(feature.layer.map.displayProjection, feature.layer.map.projection);
+    feature.popup = new OpenLayers.Popup.Popover(
+      "popup-" + feature.id,
+      coord,
+      "content",
+      "title",
+      null,
+      feature.cluster
+    )
+    feature.layer.map.addPopup(feature.popup, true);
+  }
+
   function destroyPopup(feature) {
     feature.popup.destroy();
     feature.popup = null;
@@ -161,7 +180,9 @@
     // add the new layer
     //this.olLayer = new OpenLayers.Layer.Markers("Markers");
     this.olLayer = new OpenLayers.Layer.Vector("Overlay",
-      {strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})]});
+      {strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})],
+      });
+
     this.map.olMap.addLayer( this.olLayer );
 
     this.olLayer.addFeatures(this.buildFeatureVectors(this.source.data));
@@ -174,7 +195,11 @@
 
 
     var controls = {
-      selector: new OpenLayers.Control.SelectFeature( this.olLayer, { onSelect: createPopup, onUnselect: destroyPopup })
+      selector: new OpenLayers.Control.SelectFeature( this.olLayer,
+        { onSelect: createPopover,
+          onUnselect: destroyPopup,
+          clickout:true
+        })
     };
 
     this.map.olMap.addControl(controls['selector']);
