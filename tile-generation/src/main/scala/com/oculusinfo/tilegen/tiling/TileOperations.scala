@@ -402,7 +402,7 @@ object TileOperations {
 		                        argParser.getDoubleOption("ops.bounds.minY", "Bounds min Y", None),
 		                        argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
 		                        argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
-		val aoiBounds = if (parsedBounds.flatten.length < parsedBounds.length) {
+		val aoiBounds = if (parsedBounds.flatten.length == parsedBounds.length) {
 			Some(new AOITilePyramid(parsedBounds(0).get, parsedBounds(1).get, parsedBounds(1).get, parsedBounds(3).get))
 		} else {
 			None
@@ -421,7 +421,7 @@ object TileOperations {
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
 		                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
 		                      argParser.getStringOption("hbase.master", "HBase master address", None))
-		val hbaseArgs = if (parsedArgs.flatten.length < parsedArgs.length) {
+		val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
 			Some(HBaseParameters(parsedArgs(0).get, parsedArgs(1).get, parsedArgs(2).get))
 		} else {
 			None

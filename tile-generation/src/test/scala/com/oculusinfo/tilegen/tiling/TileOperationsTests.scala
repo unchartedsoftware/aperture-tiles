@@ -267,7 +267,11 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 		try {
 			// pipeline stage to create test data
 			def createDataOp(count: Int)(input: PipelineData) = {
-				val jsonData = for (x <- 0 until count; y <- 0 until count if y % 2 == 0) yield s"""{"x":$x, "y":$y}\n"""
+				val jsonData = for (x <- 0 until count) yield {
+					val lon = -180.0 + (x / count.toFloat * 360.0)
+					val lat = 0.0
+					s"""{"x":$lon, "y":$lat}\n"""
+				}
 				val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
 				PipelineData(sqlc, srdd)
 			}
@@ -292,25 +296,66 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			val tileIO = new LocalTileIO("avro")
 			val metaData = tileIO.readMetaData("test_prefix.test.x.y.count").getOrElse(fail("Metadata not created"))
 
+			val customMeta = metaData.getAllCustomMetaData
+			assertResult(
+				"{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")(customMeta.toString)
+		} finally {
+			// If you want to look at the tile set (not remove it) comment out this line.
+			removeRecursively(new File("test_prefix.test.x.y.count"))
+		}
+	}
+
+	test("Test crossplot heatmap parse and operation") {
+		try {
+			// pipeline stage to create test data
+			// pipeline stage to create test data
+			def createDataOp(count: Int)(input: PipelineData) = {
+				val jsonData = for (x <- 0 until count; y <- 0 until count if y % 2 == 0) yield s"""{"x":$x, "y":$y}\n"""
+				val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+				PipelineData(sqlc, srdd)
+			}
+
+			// Run the tile job
+			val args = Map(
+				"ops.xColumn" -> "x",
+				"ops.yColumn" -> "y",
+				"ops.name" -> "test",
+				"ops.description" -> "a test description",
+				"ops.prefix" -> "cross_test_prefix",
+				"ops.levels.0" -> "0,1",
+				"ops.tileWidth" -> "4",
+				"ops.tileHeight" -> "4")
+
+			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+			rootStage.addChild(PipelineStage("crossplot_heatmap_op", parseCrossplotHeatmapOp(args)))
+			TilePipelines.execute(rootStage, sqlc)
+
+			// Load the metadata and validate its contents - gives us an indication of whether or not the
+			// job completed successfully.
+			val tileIO = new LocalTileIO("avro")
+			val metaData = tileIO.readMetaData("cross_test_prefix.test.x.y.count").getOrElse(fail("Metadata not created"))
+
 			val bounds = metaData.getBounds
 			assertResult(bounds.getMinX)(0.0)
 			assertResult(bounds.getMinY)(0.0)
 			assertResult(bounds.getMaxX)(7.0)
 			assertResult(bounds.getMaxY)(6.0)
+
 			val customMeta = metaData.getAllCustomMetaData
-			assertResult(customMeta.toString)("{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")
+			assertResult(
+				"{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")(customMeta.toString)
 		} finally {
-			// Remove the tile set we created
-			def removeRecursively (file: File): Unit = {
-				if (file.isDirectory) {
-					val list = file.list()
-					val files = file.listFiles()
-					file.listFiles().map(removeRecursively)
-				}
-				file.delete()
-			}
 			// If you want to look at the tile set (not remove it) comment out this line.
-			removeRecursively(new File("test_prefix.test.x.y.count"))
+			removeRecursively(new File("cross_test_prefix.test.x.y.count"))
 		}
+	}
+
+	def removeRecursively (file: File): Unit = {
+		if (file.isDirectory) {
+			val list = file.list()
+			val files = file.listFiles()
+			file.listFiles().map(removeRecursively)
+		}
+		file.delete()
 	}
 }
