@@ -37,6 +37,13 @@ import scala.collection.mutable.ListBuffer
 class TestTileOperations extends FunSuite with SharedSparkContext {
 	import com.oculusinfo.tilegen.tiling.TileOperations._
 
+	def removeRecursively (file: File): Unit = {
+		if (file.isDirectory) {
+			file.listFiles().map(removeRecursively)
+		}
+		file.delete()
+	}
+
 	def outputOps(colSpecs: List[String], output: ListBuffer[Any])(input: PipelineData) = {
 		val extractors = colSpecs.map(SchemaTypeUtilities.calculateExtractor(_, input.srdd.schema))
 		val results = input.srdd.collect.map(row => extractors.map(_(row)))
@@ -350,12 +357,4 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 		}
 	}
 
-	def removeRecursively (file: File): Unit = {
-		if (file.isDirectory) {
-			val list = file.list()
-			val files = file.listFiles()
-			file.listFiles().map(removeRecursively)
-		}
-		file.delete()
-	}
 }
