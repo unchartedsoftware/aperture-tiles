@@ -136,7 +136,7 @@ object SchemaTypeUtilities {
 	private[datasets] def fieldSpecToIndices (fieldSpec: Array[(String, Array[Int])],
 	                                          schema: StructType): Array[Int] = {
 		def getImmediateIndex(symbol: String, testSchema: StructType): Int =
-			testSchema.fields.zipWithIndex.filter(p => p._1.name == symbol).map(_._2).head
+			testSchema.fields.zipWithIndex.filter(p => p._1.name.equalsIgnoreCase(symbol)).map(_._2).head
 		def getArrayType (depth: Int, arrayType: DataType): DataType =
 			if (0 == depth) arrayType
 			else if (1 == depth) arrayType.asInstanceOf[ArrayType].elementType
