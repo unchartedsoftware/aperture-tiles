@@ -25,11 +25,9 @@
 package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble, Long => JavaLong}
-import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Properties
 import java.util.concurrent.atomic.AtomicInteger
-import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.impl.{WebMercatorTilePyramid, AOITilePyramid}
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
@@ -151,7 +149,7 @@ object TileOperations {
 	 *    ops.column - Column spec denoting the time field in input data
 	 *    ops.start - Start date string
 	 *    ops.end - End date string
-	 *    ops.format - Date format string (based on [[java.text.SimpleDateFormat]])
+	 *    ops.format - Date format string (based on java.text.SimpleDateFormat)
 	 */
 	def parseDateFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing dateFilterOp with args $args")
@@ -166,9 +164,9 @@ object TileOperations {
 	/**
 	 * Pipeline op to filter records to a specific date range.
 	 *
-	 * @param minDate Start date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
-	 * @param maxDate End date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
-	 * @param format Date parsing string, expressed according to [[java.text.SimpleDateFormat]].
+	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
 	 * @param timeCol Column spec denoting name of time column in input schema RDD.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
@@ -415,7 +413,7 @@ object TileOperations {
 	 * @param zookeeperPort Zookeeper port.
 	 * @param hbaseMaster HBase master address
 	 */
-	case class HBaseParameters(val zookeeperQuorum: String, val zookeeperPort: String, val hbaseMaster: String)
+	case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String)
 
 	private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
