@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Configuration
 permalink: docs/development/configuration/
+subsection: Development
+chapter: How-To
+topic: Configuration
 layout: submenu
 ---
 

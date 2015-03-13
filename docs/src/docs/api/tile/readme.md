@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: API
-chapter: Tile
 permalink: docs/api/tile/
+subsection: Development
+chapter: API
+topic: Tile
 layout: submenu
 ---
 

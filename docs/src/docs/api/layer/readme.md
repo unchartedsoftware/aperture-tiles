@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: API
-chapter: Layer
 permalink: docs/api/layer/
+subsection: Development
+chapter: API
+topic: Layer
 layout: submenu
 ---
 

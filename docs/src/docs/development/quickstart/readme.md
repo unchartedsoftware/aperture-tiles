@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Quick Start
 permalink: docs/development/quickstart/
+subsection: Development
+chapter: How-To
+topic: Quick Start
 layout: submenu
 ---
 

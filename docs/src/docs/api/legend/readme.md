@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: API
-chapter: Legend
 permalink: docs/api/legend/
+subsection: Development
+chapter: API
+topic: Legend
 layout: submenu
 ---
 

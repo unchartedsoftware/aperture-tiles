@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Installation
 permalink: docs/development/installation/
+subsection: Development
+chapter: How-To
+topic: Installation
 layout: submenu
 ---
 

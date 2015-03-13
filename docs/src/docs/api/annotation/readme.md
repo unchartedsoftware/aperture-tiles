@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: API
-chapter: Annotation
 permalink: docs/api/annotation/
+subsection: Development
+chapter: API
+topic: Annotation
 layout: submenu
 ---
 

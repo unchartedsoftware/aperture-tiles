@@ -1,6 +1,6 @@
 ---
 section: Docs
-subtitle: User Guide
+subsection: User Guide
 permalink: docs/userguide/
 layout: submenu
 ---

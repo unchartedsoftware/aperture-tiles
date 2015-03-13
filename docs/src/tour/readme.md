@@ -1,6 +1,6 @@
 ---
 section: Tour
-subtitle: Overview
+subsection: Overview
 permalink: tour/
 layout: submenu
 ---

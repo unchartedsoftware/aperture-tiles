@@ -1,6 +1,6 @@
 ---
 section: Tour
-subtitle: Process
+subsection: Process
 permalink: tour/process/
 layout: submenu
 ---

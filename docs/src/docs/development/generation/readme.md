@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Generation
 permalink: docs/development/generation/
+subsection: Development
+chapter: How-To
+topic: Generation
 layout: submenu
 ---
 
