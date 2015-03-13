@@ -109,7 +109,7 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 					<div class="description">
 						<a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
 						<ul>
-							<li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+							<li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
 							<li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
 							<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
 							<li><a href="http://hortonworks.com/">HortonWorks</a></li>
