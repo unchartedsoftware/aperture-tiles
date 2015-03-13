@@ -2,12 +2,12 @@
 section: Docs
 subsection: Development
 chapter: How-To
-topic: Configuration
+topic: App Configuration
 permalink: docs/development/how-to/configuration/
 layout: submenu
 ---
 
-# Configuration #
+# App Configuration #
 
 Once you have generated a tile set from your source data, you should configure and deploy a Tile Server and a Tile Client to make your visual analytic viewable in a web browser. The Tile Server serves tiles from your pyramid, while the Tile Client is a simple web client to view those tiles on a map or plot. 
 

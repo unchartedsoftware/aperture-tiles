@@ -2,7 +2,7 @@
 section: Docs
 subsection: Development
 chapter: How-To
-topic: Generation
+topic: Tile Generation
 permalink: docs/development/how-to/generation/
 layout: submenu
 ---
