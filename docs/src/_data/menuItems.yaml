@@ -19,7 +19,7 @@ docs:
     path: docs/development/how-to/quickstart/
 
   - label: User Guide
-    path: docs/userguide/
+    path: docs/user-guide/
 
 tour:
   - label: Overview
