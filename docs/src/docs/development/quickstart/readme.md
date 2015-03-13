@@ -143,55 +143,74 @@ A pre-configured properties file (**julia-base.bd**) can be found in the Tile Ge
 
 These properties specify the location of your Julia set data.
 
-<div class="details props">
-    <div class="innerProps">
-        <ul class="methodDetail" id="MethodDetail">
-            <dl class="detailList params">              
-                <dt>oculus.binning.source.location</dt>
-                <dd>Path of the source data files in your local file system (e.g., <em>/data/julia</em>) or HDFS path (e.g., <em>hdfs://hadoop.example.com/data/julia</em>).</dd>
-            </dl>
-        </ul>
-    </div>
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Property</th>
+                <th scope="col" width="80%">Description</th>
+            </thead>
+            <tr>
+                <td class="attributes"><strong>oculus.binning.source.location</strong></td>
+                <td class="attributes">Path of the source data files:
+                    <ul>
+                        <li>Local system: <em>/data/julia</em></li>
+                        <li>HDFS path: <em>hdfs://hadoop.example.com/data/julia</em></li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+    </nav>
 </div>
 
 #### General Output Properties ####
 
 These properties specify where to save the generated tiles.
 
-<div class="details props">
-    <div class="innerProps">
-        <ul class="methodDetail" id="MethodDetail">
-            <dl class="detailList params">
-                <dt>oculus.tileio.type</dt>
-                <dd>Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</dd>
-
-                <dt>oculus.binning.name</dt>
-                <dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
-                                
-            </dl>
-        </ul>
-    </div>
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Property</th>
+                <th scope="col" width="80%">Description</th>
+            </thead>
+            <tr>
+                <td class="attributes"><strong>oculus.tileio.type</strong></td>
+                <td class="attributes">Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</td>
+            </tr>
+            <tr>
+                <td class="attributes"><strong>oculus.binning.name</strong></td>
+                <td class="attributes">Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</td>
+            </tr>
+        </table>
+    </nav>
 </div>
 
 #### HBase Connection Details (Optional) ####
 
 These properties should only be included if you are using Hadoop/HDFS and HBase, and are required if you want to run a tile generation job on a multi-computer cluster.
 
-<div class="details props">
-    <div class="innerProps">
-        <ul class="methodDetail" id="MethodDetail">
-            <dl class="detailList params">
-                <dt>hbase.zookeeper.quorum</dt>
-                <dd>Zookeeper quorum location needed to connect to HBase.</dd>
-                
-                <dt>hbase.zookeeper.port</dt>
-                <dd>Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</dd>
-                
-                <dt>hbase.master</dt>
-                <dd>Location of the HBase master to which to save the tiles.</dd>
-            </dl>
-        </ul>
-    </div>
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Property</th>
+                <th scope="col" width="80%">Description</th>
+            </thead>
+            <tr>
+                <td class="attributes"><strong>hbase.zookeeper.quorum</strong></td>
+                <td class="attributes">Zookeeper quorum location needed to connect to HBase.</td>
+            </tr>
+            <tr>
+                <td class="attributes"><strong>hbase.zookeeper.port</strong></td>
+                <td class="attributes">Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</td>
+            </tr>
+            <tr>
+                <td class="attributes"><strong>hbase.master</strong></td>
+                <td class="attributes">Location of the HBase master to which to save the tiles.</td>
+            </tr>
+        </table>
+    </nav>
 </div>
 
 ### <a name="tiling-property-file-configuration"></a> Tiling Property File Configuration ###
