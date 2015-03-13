@@ -79,7 +79,7 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 				<th scope="col" width="30%">Required</th>
 				<th scope="col" width="50%">Notes</th>
 			</thead>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Languages</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -90,7 +90,7 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 					<div class="description"></div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -104,7 +104,7 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 					</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
 						<a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):

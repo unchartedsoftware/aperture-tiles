@@ -39,7 +39,7 @@ Aperture Tiles requires the following third-party tools on your local system:
                 <th scope="col" width="30%">Required</th>
                 <th scope="col" width="50%">Notes</th>
             </thead>
-            <tr >
+            <tr>
                 <td style="vertical-align: text-top" class="attributes">Operating System</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
@@ -50,7 +50,7 @@ Aperture Tiles requires the following third-party tools on your local system:
                     <div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
                 </td>
             </tr>
-            <tr >
+            <tr>
                 <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
@@ -77,7 +77,7 @@ If you later intend to create Aperture Tiles projects using particularly large d
                 <th scope="col" width="30%">Required</th>
                 <th scope="col" width="50%">Notes</th>
             </thead>
-            <tr >
+            <tr>
                 <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">

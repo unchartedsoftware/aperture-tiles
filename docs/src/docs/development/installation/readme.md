@@ -29,7 +29,7 @@ This project has the following prerequisites:
 				<th scope="col" width="30%">Required</th>
 				<th scope="col" width="50%">Notes</th>
 			</thead>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Operating System</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -40,7 +40,7 @@ This project has the following prerequisites:
 					<div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Languages</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -52,7 +52,7 @@ This project has the following prerequisites:
 					<div class="description"></div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -66,7 +66,7 @@ This project has the following prerequisites:
 					</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
 						<a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
@@ -84,7 +84,7 @@ This project has the following prerequisites:
 					</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Web Server</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -95,7 +95,7 @@ This project has the following prerequisites:
 					<div class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Build Automation</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
