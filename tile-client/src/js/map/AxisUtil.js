@@ -239,9 +239,9 @@
      * @returns {string}
      */
     function formatTime( value ) {
-        var d = new Date( 0 ); // The 0 there is the key, which sets the date to the epoch
-        d.setUTCSeconds( value / 1000 ); // Assume default of milliseconds
-        return ( d.getMonth() + 1 ) + '/' + d.getDate() + '/' + ( d.getFullYear() );
+        var d = new Date( value ); // The 0 there is the key, which sets the date to the epoch
+        return d.getFullYear() + "-" + ( d.getMonth() + 1 ) + '-' + d.getDate() + " " +
+            "<br>" + ("0" + d.getHours() ).slice(-2) + ":" + ("0" + d.getMinutes() ).slice(-2);
     }
 
     /**

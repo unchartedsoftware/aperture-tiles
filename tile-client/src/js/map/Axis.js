@@ -85,7 +85,6 @@
             + axis.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
             + 'style="position:absolute;'
             + 'text-align: center; '    // center text horizontally
-            + 'width: ' + axis.MAX_LABEL_WIDTH + 'px;'
             + 'height: ' + axis.MAX_LABEL_HEIGHT + 'px;'
             + 'line-height: ' + axis.MAX_LABEL_HEIGHT + 'px;'   // center text vertically
             + axis.leftOrTop + ":" + primaryPosition + 'px;'
