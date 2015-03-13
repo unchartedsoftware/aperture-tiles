@@ -37,26 +37,33 @@ import java.lang.{Iterable => JavaIterable}
 import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
-import com.oculusinfo.binning.TileData.StorageType
-import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import org.apache.spark.sql.SQLContext
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable.{Set => MutableSet}
 import scala.collection.mutable.Stack
 import scala.reflect.ClassTag
+import scala.util.Try
+
 import org.apache.spark.Accumulable
 import org.apache.spark.AccumulableParam
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
+
+import grizzled.slf4j.Logging
+
 import com.oculusinfo.binning._
+import com.oculusinfo.binning.TileData.StorageType
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import scala.util.Try
-import grizzled.slf4j.Logging
+import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
+import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 
 
 
@@ -124,6 +131,11 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 		}
 	}
 
+	/**
+	 * Direct programatic initialization.
+	 * 
+	 * Temporary route until we get full pipeline configuration
+	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
 		if (!tasks.contains(pyramidId)) {
 			tasks.synchronized {
@@ -323,8 +335,8 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 			                    taskMetaData.getValidZoomLevels(),
 			                    taskMetaData.getBounds(),
 			                    null, null)
-		task.getTileAnalytics.map(_.applyTo(newTaskMetaData))
-		task.getDataAnalytics.map(_.applyTo(newTaskMetaData))
+		task.getTileAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
+		task.getDataAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
 		newTaskMetaData.addValidZoomLevels(
 			tiles.map(tile =>
 				new JavaInt(tile.getDefinition().getLevel())

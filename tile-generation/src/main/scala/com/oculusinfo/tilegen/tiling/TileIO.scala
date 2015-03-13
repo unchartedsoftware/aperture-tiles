@@ -240,8 +240,8 @@ trait TileIO extends Serializable {
 				metaData
 			}
 		}
-		tileAnalytics.map(_.applyTo(metaData))
-		dataAnalytics.map(_.applyTo(metaData))
+		tileAnalytics.map(AnalysisDescription.record(_, metaData))
+		dataAnalytics.map(AnalysisDescription.record(_, metaData))
 
 		metaData
 	}

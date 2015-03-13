@@ -57,6 +57,7 @@ trait ExtendedNumeric[T] extends Numeric[T] {
 	def fromLong (x: Long): T
 	def fromFloat (x: Float): T
 	def fromDouble (x: Double): T
+	def fromNumber (x: Number): T
 	def fromString (s: String): T
 
 	// Extended numeric methods
@@ -87,6 +88,7 @@ object ExtendedNumeric {
 		def fromLong (n: Long): Int = n.toInt
 		def fromFloat (n: Float): Int = n.toInt
 		def fromDouble (n: Double): Int = n.toInt
+		def fromNumber (n: Number): Int = n.intValue()
 		def fromString (s: String): Int = s.toInt
 
 		def isNaN (n: Int): Boolean = false
@@ -104,6 +106,7 @@ object ExtendedNumeric {
 		def fromLong (n: Long): Long = n
 		def fromFloat (n: Float): Long = n.toLong
 		def fromDouble (n: Double): Long = n.toLong
+		def fromNumber (n: Number): Long = n.longValue()
 		def fromString (s: String): Long = s.toLong
 		
 		def isNaN (n: Long): Boolean = false
@@ -119,6 +122,7 @@ object ExtendedNumeric {
 		def fromLong (x: Long): Float = x.toFloat
 		def fromFloat (x: Float): Float = x
 		def fromDouble (x: Double): Float = x.toFloat
+		def fromNumber (x: Number): Float = x.floatValue()
 		def fromString (s: String): Float = s.toFloat
 
 		def isNaN (x: Float): Boolean = x.isNaN
@@ -134,6 +138,7 @@ object ExtendedNumeric {
 		def fromLong (x: Long): Double = x.toDouble
 		def fromFloat (x: Float): Double = x.toDouble
 		def fromDouble (x: Double): Double = x
+		def fromNumber (x: Number): Double = x.doubleValue()
 		def fromString (s: String): Double = s.toDouble
 
 		def isNaN (x: Double): Boolean = x.isNaN

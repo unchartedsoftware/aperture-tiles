@@ -186,7 +186,7 @@
 /********************************************/
 
 .node-label {
-	position:absolute;	
+	position:absolute;
 	width: 256px;
 	padding: 5px 0 5px 0;
 	margin-left: -128px;
@@ -237,13 +237,13 @@
     z-index: 1;
 }
 
-.point-annotation-single:hover.point-annotation {  
+.point-annotation-single:hover.point-annotation {
     width: 12px;
     height: 12px;
     margin: -2px 0px 0px -2px;
 }
 
-.point-annotation-aggregate:hover .point-annotation {  
+.point-annotation-aggregate:hover .point-annotation {
     width: 12px;
     height: 12px;
 }
@@ -254,6 +254,42 @@
 
 .point-annotation-aggregate:hover .point-annotation-border {
     margin: -6px 0 0 -6px;
+}
+
+/********************************************/
+/*             Axis Annotation             */
+/********************************************/
+
+.axis-annotation {
+    cursor: pointer;
+    position:absolute;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    z-index:1;
+	-webkit-transition: top 0.1s ease-in-out;
+	   -moz-transition: top 0.1s ease-in-out;
+		-ms-transition: top 0.1s ease-in-out;
+			transition: top 0.1s ease-in-out;
+}
+
+.axis-annotation:hover {
+    z-index:2;
+}
+
+.axis-annotation-border {
+    pointer-events:none;
+    margin: -4px 0 0 -4px;
+    z-index: 1;
+}
+
+.axis-annotation-line {
+	cursor: pointer;
+    position:absolute;
+	-webkit-transition: height 0.1s ease-in-out;
+	   -moz-transition: height 0.1s ease-in-out;
+		-ms-transition: height 0.1s ease-in-out;
+			transition: height 0.1s ease-in-out;
 }
 
 /********************************************/
@@ -269,13 +305,13 @@
 }
 
 .de-emphasized {
-  opacity: 0.4;
-  -webkit-filter: grayscale(75%);
-  filter: grayscale(75%);
+  opacity: 0.6;
+  -webkit-filter: grayscale(50%);
+          filter: grayscale(50%);
 }
 
 .de-emphasized:hover {
   opacity: 1;
-  filter: none;
   -webkit-filter: none;
+  		  filter: none;
 }

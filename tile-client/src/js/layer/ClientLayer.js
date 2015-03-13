@@ -58,6 +58,10 @@
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
         this.domain = "client";
         this.source = spec.source;
+        this.getURL = spec.getURL || LayerUtil.getURL;
+        if ( spec.tileClass) {
+            this.tileClass = spec.tileClass;
+        }
         if ( spec.renderer ) {
             this.renderer = spec.renderer;
         }
@@ -85,7 +89,8 @@
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
                     20037500,  20037500),
                 isBaseLayer: false,
-                getURL: LayerUtil.getURL,
+                getURL: this.getURL,
+                tileClass: this.tileClass,
                 html: this.html,
                 renderer: this.renderer
             });
@@ -98,9 +103,7 @@
         this.setTheme( this.map.getTheme() );
 
         if ( this.renderer ) {
-            this.renderer.meta = this.source.meta.meta;
-            this.renderer.map = this.map;
-            this.renderer.parent = this;
+            this.renderer.attach( this );
         }
     };
 
@@ -113,6 +116,7 @@
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
+            this.olLayer = null;
         }
     };
 
@@ -160,6 +164,16 @@
      */
     ClientLayer.prototype.getZIndex = function () {
         return this.zIndex;
+    };
+
+    /**
+     * Redraws the entire layer.
+     * @memberof ClientLayer
+     */
+    ClientLayer.prototype.redraw = function () {
+        if ( this.olLayer ) {
+             this.olLayer.redraw();
+        }
     };
 
     module.exports = ClientLayer;

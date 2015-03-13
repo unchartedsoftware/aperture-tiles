@@ -23,12 +23,14 @@
  * SOFTWARE.
  */
 
-package com.oculusinfo.tile.util;
+package com.oculusinfo.binning.impl;
 
 
-import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
+import com.oculusinfo.binning.impl.SubTileDataView;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,7 +43,7 @@ public class TileDataViewTests {
 
 	@Test
 	public void testSimple () {
-		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
+		SubTileDataView<Integer> underTest = SubTileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
 
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
@@ -55,7 +57,7 @@ public class TileDataViewTests {
 
 	@Test
 	public void testSimpleTwoLevels () {
-		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source16, new TileIndex(2, 1, 1));
+		SubTileDataView<Integer> underTest = SubTileDataView.fromSourceAbsolute(source16, new TileIndex(2, 1, 1));
 
 		Assert.assertEquals(2, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
@@ -69,24 +71,24 @@ public class TileDataViewTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadRelativeLevel() {
 		TileData<Integer> source = new DenseTileData<>(new TileIndex(3, 0, 0));
-		TileDataView.fromSourceAbsolute(source, new TileIndex(2, 1, 1));
+		SubTileDataView.fromSourceAbsolute(source, new TileIndex(2, 1, 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testBadRelativeIndex () {
 		TileData<Integer> source = new DenseTileData<>(new TileIndex(1, 0, 0));
-		TileDataView.fromSourceAbsolute(source, new TileIndex(2, 2, 1));
+		SubTileDataView.fromSourceAbsolute(source, new TileIndex(2, 2, 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOutOfBoundsXBin () {
-		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
+		SubTileDataView<Integer> underTest = SubTileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
 		underTest.getBin(2,1);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOutOfBoundsYBin () {
-		TileDataView<Integer> underTest = TileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
+		SubTileDataView<Integer> underTest = SubTileDataView.fromSourceAbsolute(source16, new TileIndex(1, 1, 1));
 		underTest.getBin(1,2);
 	}
 }

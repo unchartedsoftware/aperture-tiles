@@ -88,7 +88,7 @@
         return meta;
     }
 
-    module.exports = {
+    var LayerUtil = {
 
         /**
          * Parses a layer or an array of layer data objects, formats meta data
@@ -102,16 +102,57 @@
             var layerMap,
                 i;
             if ( !(layerData instanceof Array) ) {
-                layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                if ( layerData.meta ) {
+                    layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                }
                 return layerData;
             }
             // if given an array, convert it into a map keyed by layerId
             layerMap = {};
             for ( i=0; i<layerData.length; i++ ) {
-                layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                if ( layerData[i].meta ) {
+                    layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                }
                 layerMap[ layerData[i].id ] = layerData[i];
             }
             return layerMap;
+        },
+
+        /**
+         * Given an OpenLayers.Layer class and a bounds object, return the x,
+         * y, and y components of the tile.
+         *
+         * @param {OpenLayers.Layer) olLayer - The OpenLayers Layer object.
+         * @param {OpenLayers.Bounds} bounds - The OpenLayers Bounds object.
+         *
+         * @returns {{x: (number), y: (number), z: integer}} The tile index.
+         */
+        getTileIndex: function( olLayer, bounds ) {
+            var res = olLayer.map.getResolution(),
+                maxBounds = olLayer.maxExtent,
+                tileSize = olLayer.tileSize;
+            return {
+                xIndex: Math.round( (bounds.left - maxBounds.left) / (res * tileSize.w) ),
+                yIndex: Math.round( (bounds.bottom - maxBounds.bottom) / (res * tileSize.h) ),
+                level: olLayer.map.getZoom()
+            };
+        },
+
+        /**
+         * Given an OpenLayers.Layer class and a OpenLayers.Bounds object, return the
+         * tilekey.
+         *
+         * @param {OpenLayers.Layer) olLayer - The OpenLayers Layer object.
+         * @param {OpenLayers.Bounds} bounds - The OpenLayers Bounds object.
+         *
+         * @returns {String} The tilekey from the bounds.
+         */
+        getTilekey: function( olLayer, bounds ) {
+            var tileIndex = LayerUtil.getTileIndex( olLayer, bounds ),
+                x = tileIndex.xIndex,
+                y = tileIndex.yIndex,
+                z = tileIndex.level;
+            return z + "," + x + "," + y;
         },
 
         /**
@@ -123,17 +164,15 @@
          * @param {Object} bounds - The bounds object for the current tile.
          */
         getURL: function( bounds ) {
-            var res = this.map.getResolution(),
-                maxBounds = this.maxExtent,
-                tileSize = this.tileSize,
-                x = Math.round( (bounds.left-maxBounds.left) / (res*tileSize.w) ),
-                y = Math.round( (bounds.bottom-maxBounds.bottom) / (res*tileSize.h) ),
-                z = this.map.getZoom();
+            var tileIndex = LayerUtil.getTileIndex( this, bounds ),
+                x = tileIndex.xIndex,
+                y = tileIndex.yIndex,
+                z = tileIndex.level;
             if ( x >= 0 && y >= 0 ) {
-                return this.url + this.layername
-                    + "/" + z + "/" + x + "/" + y + "."
-                    + this.type;
+                return this.url + this.layername + "/" + z + "/" + x + "/" + y + "." + this.type;
             }
         }
     };
+
+    module.exports = LayerUtil;
 }());

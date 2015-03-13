@@ -206,6 +206,21 @@ object AnalysisDescription {
 	def getGlobalOnlyMetadataMap (name: String) :
 			Map[String, TileIndex => Boolean] =
 		Map("global."+name -> ((t: TileIndex) => true))
+
+
+	// Apply accumulated metadata info to actual global metadata for a pyramid
+	def record (analysis: AnalysisDescription[_, _], metaData: PyramidMetaData): Unit = {
+		analysis.toGlobalMap.foreach{case (key, value) =>
+			metaData.setCustomMetaData(value, key.split("\\.") :_*)
+		}
+	}
+
+	// Apply accumulated metadata info to an actual tile
+	def record (analysis: AnalysisDescription[_, _], tile: TileData[_]): Unit = {
+		analysis.toTileMap.foreach{case (key, value) =>
+			tile.setMetaData(key, value)
+		}
+	}
 }
 /**
  * An AnalysisDescription describes an analysis that needs to be executed
@@ -234,10 +249,9 @@ trait AnalysisDescription[RT, AT] extends Serializable {
 	// Add a data point to appropriate accumulators
 	def accumulate (tile: TileIndex, data: AT): Unit
 	// Get accumulatoed metadata info in a form that can be applied
-	// directly to metadata.
-	def toMap: Map[String, Any]
-	// Apply accumulated metadata info to actual metadata
-	def applyTo (metaData: PyramidMetaData): Unit
+	// directly to metadata for an individual tile.
+	def toTileMap: Map[String, Any]
+  def toGlobalMap: Map[String, Any]
 
 	// Deal with accumulators
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit
@@ -281,17 +295,10 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				info._2.accumulator += data
 		)
 
-	def toMap: Map[String, Any] = accumulatorInfos.map(info =>
+	def toTileMap: Map[String, Any] = accumulatorInfos.map(info =>
 		analytic.toMap(info._2.accumulator.value).map{case (k, v) => (info._2.name+"."+k, v)}
 	).reduceOption(_ ++ _).getOrElse(Map[String, Any]())
-
-	def applyTo (metaData: PyramidMetaData): Unit = {
-		toMap.foreach{case (key, value) =>
-			{
-				metaData.setCustomMetaData(value, key.split("\\.") :_*)
-			}
-		}
-	}
+  def toGlobalMap: Map[String, Any] = toTileMap
 
 	// Deal with accumulators
 	protected val accumulatorInfos = MutableMap[String, MetaDataAccumulatorInfo[AT]]()
@@ -353,11 +360,8 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.accumulate(tile, data._1)
 		analysis2.accumulate(tile, data._2)
 	}
-	def toMap: Map[String, Any] = analysis1.toMap ++ analysis2.toMap
-	def applyTo (metaData: PyramidMetaData): Unit = {
-		analysis1.applyTo(metaData)
-		analysis2.applyTo(metaData)
-	}
+	def toTileMap: Map[String, Any] = analysis1.toTileMap ++ analysis2.toTileMap
+  def toGlobalMap: Map[String, Any] = analysis1.toGlobalMap ++ analysis2.toGlobalMap
 
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {
 		analysis1.addAccumulator(sc, name, test)
@@ -465,12 +469,10 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 	def analytic: TileAnalytic[String] = new CustomMetadataAnalytic
 	def accumulate (tile: TileIndex, data: String): Unit = {}
 	// This is used to apply the analytic to tiles; we don't want anything to happen there
-	def toMap: Map[String, Any] = Map[String, Any]()
+	def toTileMap: Map[String, Any] = Map[String, Any]()
 	// This is used to apply the analytic to metadata; here's where we want stuff used.
-	def applyTo (metaData: PyramidMetaData): Unit =
-		customData.map{case (key, value) =>
-			metaData.setCustomMetaData(value, key)
-		}
+	def toGlobalMap: Map[String, Any] = customData
+
 	// Global metadata needs no accumulators - it doesn't actually have any data.
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {}
 }

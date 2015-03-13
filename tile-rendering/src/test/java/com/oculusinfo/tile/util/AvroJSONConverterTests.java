@@ -46,8 +46,8 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer;
 import com.oculusinfo.factory.util.Pair;

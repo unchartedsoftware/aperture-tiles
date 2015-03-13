@@ -51,10 +51,6 @@
                 if ( callback ) {
                     callback( url );
                 }
-                var i;
-                for ( i=0; i<layer.rampImageUrlCallbacks.length; i++ ) {
-                    layer.rampImageUrlCallbacks[i]( url );
-                }
             });
     };
 
@@ -132,7 +128,7 @@
         this.tileTransform = spec.tileTransform || {};
         this.domain = "server";
         this.source = spec.source;
-        this.rampImageUrlCallbacks = [];
+        this.getURL = spec.getURL || LayerUtil.getURL;
     }
 
     ServerLayer.prototype = Object.create( Layer.prototype );
@@ -151,7 +147,7 @@
         this.map.on( "zoomend", this.zoomCallback );
 
         function getURL( bounds ) {
-            return LayerUtil.getURL.call( this, bounds ) + that.getQueryParamString();
+            return that.getURL.call( this, bounds ) + that.getQueryParamString();
         }
 
         // add the new layer
@@ -185,6 +181,7 @@
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
+            this.olLayer = null;
         }
         this.map.off( "zoomend", this.zoomCallback );
         this.zoomCallback = null;
@@ -285,26 +282,6 @@
      */
     ServerLayer.prototype.getRampImageUrl = function() {
         return this.rampImageUrl;
-    };
-
-    /**
-     * Registers a callback to be executed when the ramp image url is updated.
-     * @memberof ServerLayer
-     *
-     * @param {Function} callback - The callback to be registered.
-     */
-    ServerLayer.prototype.addRampImageUrlCallback = function( callback ) {
-        this.rampImageUrlCallbacks.push( callback );
-    };
-
-    /**
-     * Unregisters a callback to be executed when the ramp image url is updated.
-     * @memberof ServerLayer
-     *
-     * @param {Function} callback - The callback to be unregistered.
-     */
-    ServerLayer.prototype.removeRampImageUrlCallback = function( callback ) {
-        this.rampImageUrlCallbacks.splice( this.rampImageUrlCallbacks.indexOf( callback ), 1 );
     };
 
     /**
@@ -530,6 +507,16 @@
             valueTransform: this.valueTransform
         };
         return Util.encodeQueryParams( query );
+    };
+
+    /**
+     * Redraws the entire layer.
+     * @memberof ServerLayer
+     */
+    ServerLayer.prototype.redraw = function () {
+        if ( this.olLayer ) {
+             this.olLayer.redraw();
+        }
     };
 
     module.exports = ServerLayer;

@@ -38,7 +38,6 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
-import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.JavaConverters._
@@ -59,8 +58,10 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.util.Pair
 
+import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
 import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 
 
 
@@ -174,6 +175,23 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 		}
 	}
 
+	/**
+	 * Direct programatic initialization.
+	 * 
+	 * Temporary route until we get full pipeline configuration
+	 */
+	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
+		if (!tasks.contains(pyramidId)) {
+			tasks.synchronized {
+				if (!tasks.contains(pyramidId)) {
+					task.getTileAnalytics.map(_.addGlobalAccumulator(sc))
+					task.getDataAnalytics.map(_.addGlobalAccumulator(sc))
+					tasks(pyramidId) = task
+				}
+			}
+		}
+	}
+
 	def readTiles[BT] (pyramidId: String,
 	                   serializer: TileSerializer[BT],
 	                   javaTiles: JavaIterable[TileIndex]):
@@ -240,8 +258,8 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 					                    taskMetaData.getValidZoomLevels(),
 					                    taskMetaData.getBounds(),
 					                    null, null)
-				task.getTileAnalytics.map(_.applyTo(newTaskMetaData))
-				task.getDataAnalytics.map(_.applyTo(newTaskMetaData))
+				task.getTileAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
+				task.getDataAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
 				newTaskMetaData.addValidZoomLevels(
 					results.map(tile =>
 						new JavaInt(tile.getDefinition().getLevel())

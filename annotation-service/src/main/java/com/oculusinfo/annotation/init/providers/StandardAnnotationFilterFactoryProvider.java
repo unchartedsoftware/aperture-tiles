@@ -44,13 +44,9 @@ public class StandardAnnotationFilterFactoryProvider extends StandardUberFactory
 	}
 
 	@Override
-	public ConfigurableFactory<AnnotationFilter> createFactory (List<String> path) {
-		return new AnnotationFilterFactory(null, path, createChildren(path));
-	}
-
-	@Override
-	public ConfigurableFactory<AnnotationFilter> createFactory (ConfigurableFactory<?> parent,
+	public ConfigurableFactory<AnnotationFilter> createFactory (String name,
+	                                                            ConfigurableFactory<?> parent,
 	                                                            List<String> path) {
-		return new AnnotationFilterFactory(parent, path, createChildren(parent, path));
+		return new AnnotationFilterFactory(name, parent, path, createChildren(parent, path));
 	}
 }

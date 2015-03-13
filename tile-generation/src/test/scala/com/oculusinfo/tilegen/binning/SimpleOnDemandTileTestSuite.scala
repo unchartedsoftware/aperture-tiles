@@ -24,6 +24,8 @@
  */
 package com.oculusinfo.tilegen.binning
 
+
+
 import java.util.Properties
 import java.io.File
 import java.io.FileWriter
@@ -38,7 +40,7 @@ import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.SparseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.tilegen.datasets.TileAssertions
 
 

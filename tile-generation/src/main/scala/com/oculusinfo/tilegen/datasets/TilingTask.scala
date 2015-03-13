@@ -30,6 +30,8 @@ import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
 import com.oculusinfo.binning.metadata.PyramidMetaData
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.providers.FactoryProvider
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.binning.{TileData, TileIndex}
@@ -63,13 +65,20 @@ object TilingTask {
 	 * @param config A configuration object describing how the data is to be tiled
 	 * @return A tiling task that can be used to take the data and produce a tile pyramid
 	 */
-	def apply (sqlc: SQLContext, table: String, config: Properties): TilingTask[_, _, _, _] = {
+	def apply (sqlc: SQLContext,
+	           table: String,
+	           config: Properties):
+			TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
-		val indexerFactory = IndexExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "index"))
+		val indexerFactory = IndexExtractorFactory(null,
+		                                           java.util.Arrays.asList("oculus", "binning", "index"),
+		                                           IndexExtractorFactory.defaultFactory)
 		indexerFactory.readConfiguration(jsonConfig)
 
-		val valuerFactory = ValueExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "value"))
+		val valuerFactory = ValueExtractorFactory(null,
+		                                          java.util.Arrays.asList("oculus", "binning", "value"),
+		                                          ValueExtractorFactory.defaultFactory)
 		valuerFactory.readConfiguration(jsonConfig)
 
 		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
@@ -244,23 +253,23 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
 		dataAnalytics.map(_.addGlobalAccumulator(sc))
-		getLevels.map(levels => {
+		getLevels.map{levels =>
 			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
 			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
 					val tiles = binner.processDataByLevel(rdd, getIndexScheme,
-						getBinningAnalytic, tileAnalytics, dataAnalytics,
-						getTilePyramid, levels, getNumXBins, getNumYBins,
-						getConsolidationPartitions)
+					                                      getBinningAnalytic, tileAnalytics, dataAnalytics,
+					                                      getTilePyramid, levels, getNumXBins, getNumYBins,
+					                                      getConsolidationPartitions)
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-						tileAnalytics, dataAnalytics, getName, getDescription)
+					                    tileAnalytics, dataAnalytics, getName, getDescription)
 				}
 
 			process(procFcn, None)
-		})
+		}
 	}
 
 	// Axis-related methods and fields

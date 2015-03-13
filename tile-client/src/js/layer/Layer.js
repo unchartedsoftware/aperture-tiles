@@ -38,6 +38,7 @@
      * @param {Object} spec - The specification object.
      */
     function Layer( spec ) {
+        spec = spec || {};
         this.uuid = Util.generateUuid();
         this.name = spec.name || "Unnamed Layer";
         this.domain = spec.domain;

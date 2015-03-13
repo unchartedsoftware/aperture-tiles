@@ -44,13 +44,9 @@ public class StandardAnnotationIOFactoryProvider extends StandardUberFactoryProv
 	}
 
 	@Override
-	public ConfigurableFactory<AnnotationIO> createFactory (List<String> path) {
-		return new AnnotationIOFactory(null, path, createChildren(path));
-	}
-
-	@Override
-	public ConfigurableFactory<AnnotationIO> createFactory (ConfigurableFactory<?> parent,
+	public ConfigurableFactory<AnnotationIO> createFactory (String name,
+	                                                        ConfigurableFactory<?> parent,
 	                                                        List<String> path) {
-		return new AnnotationIOFactory(parent, path, createChildren(parent, path));
+		return new AnnotationIOFactory(name, parent, path, createChildren(parent, path));
 	}
 }

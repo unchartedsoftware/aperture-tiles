@@ -40,6 +40,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
@@ -47,7 +48,7 @@ import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 
 @Singleton
-public class CachingLayerConfigurationProvider implements FactoryProvider<LayerConfiguration>{
+public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<LayerConfiguration>{
 	private static final Logger LOGGER = LoggerFactory.getLogger(CachingLayerConfigurationProvider.class);
 
     private FactoryProvider<PyramidIO> _pyramidIOFactoryProvider;
@@ -83,12 +84,8 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 	}
 
 	@Override
-	public ConfigurableFactory<LayerConfiguration> createFactory (List<String> path) {
-		return new CachingLayerConfiguration(null, path);
-	}
-
-	@Override
-	public ConfigurableFactory<LayerConfiguration> createFactory (ConfigurableFactory<?> parent,
+	public ConfigurableFactory<LayerConfiguration> createFactory (String name,
+	                                                              ConfigurableFactory<?> parent,
 	                                                              List<String> path) {
 		return new CachingLayerConfiguration(parent, path);
 	}
@@ -177,15 +174,11 @@ public class CachingLayerConfigurationProvider implements FactoryProvider<LayerC
 		}
         
 	}
-	private class CachingPyramidIOProvider implements FactoryProvider<PyramidIO> {
+	private class CachingPyramidIOProvider extends AbstractFactoryProvider<PyramidIO> {
 		@Override
-		public ConfigurableFactory<? extends PyramidIO> createFactory (List<String> path) {
-			return new CachingPyramidIOFactory(null, path, _pyramidIOFactoryProvider.createFactory(path));
-		}
-
-		@Override
-		public ConfigurableFactory<? extends PyramidIO> createFactory (ConfigurableFactory<?> parent,
-		                                                     List<String> path) {
+		public ConfigurableFactory<? extends PyramidIO> createFactory (String name,
+		                                                               ConfigurableFactory<?> parent,
+		                                                               List<String> path) {
 			return new CachingPyramidIOFactory(parent, path, _pyramidIOFactoryProvider.createFactory(parent, path));
 		}
 	}

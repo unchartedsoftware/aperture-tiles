@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.oculusinfo.binning.DenseTileData;
 import junit.framework.Assert;
 
 import org.apache.avro.file.CodecFactory;
@@ -36,6 +35,7 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.TestPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;

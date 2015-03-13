@@ -62,7 +62,7 @@ class InSituAnalyticTestSuite extends FunSuite with SharedSparkContext {
 		                                   Seq(Int.box(0), Int.box(1)).asJava,
 		                                   pyramid.getTileBounds(new TileIndex(0, 0, 0)),
 		                                   null, null)
-		analyticDesc.applyTo(metaData)
+		AnalysisDescription.record(analyticDesc, metaData)
 
 		def getInnerValues (from: String): List[Int] = {
 			val json = new JSONObject(from).getJSONArray("outer")
