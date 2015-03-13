@@ -1,9 +1,9 @@
 ---
 section: Docs
-permalink: docs/development/installation/
 subsection: Development
 chapter: How-To
 topic: Installation
+permalink: docs/development/how-to/installation/
 layout: submenu
 ---
 
@@ -14,8 +14,8 @@ The instructions on this page are intended for developers who want to install th
 
 For quick examples of the capabilities of Aperture Tiles, see the following topics:
 
-- [Demos](../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
-- [Download](../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
+- [Demos](../../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
+- [Download](../../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
@@ -111,7 +111,7 @@ This project has the following prerequisites:
 	</nav>
 </div>
 
-<img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
+<img src="../../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
 ## <a name="source-code"></a> Source Code ##
 

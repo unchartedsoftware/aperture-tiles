@@ -1,9 +1,9 @@
 ---
 section: Docs
-permalink: docs/development/quickstart/
 subsection: Development
 chapter: How-To
 topic: Quick Start
+permalink: docs/development/how-to/quickstart/
 layout: submenu
 ---
 
@@ -17,7 +17,7 @@ This guide, which provides a short tutorial on the process of creating and confi
 
 At the end of this guide, you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
 
-<img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
+<img src="../../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
@@ -102,10 +102,10 @@ If you later intend to create Aperture Tiles projects using particularly large d
 
 ### <a name="aperture-tiles-utilities"></a> Aperture Tiles Packaged Distribution ###
 
-Save and unzip the following Aperture Tiles distributions available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
+Save and unzip the following Aperture Tiles distributions available on the [Download](../../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
-- [Tile Quick Start Application](../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](../../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
+- [Tile Quick Start Application](../../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/unchartedsoftware/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
@@ -113,7 +113,7 @@ The full Aperture Tiles source code, available for download from [GitHub](https:
 
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
-1. Extract the contents of the [tile-generator.zip](../../../download/#tile-generator).
+1. Extract the contents of the [tile-generator.zip](../../../../download/#tile-generator).
 2. Execute the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. <p class="list-paragraph">The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.</p>
 
 ```bash
@@ -242,7 +242,7 @@ The `oculus.binning.prefix` value is only included if you set it in the property
 
 ## <a name="tile-server-configuration"></a> Tile Server Configuration ##
 
-For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
+For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
 
 If you stored your Avro tiles on your local filesystem, zip the *julia.x.y.v* directory produced during the Tile Generation stage and add it to the *WEB-INF/classes/* directory of the Tile Quick Start Application.
 
@@ -269,7 +269,7 @@ For information on additional layer properties you can specify, see the Layers s
 
 ## <a name="tile-client-application"></a> Tile Client Application ##
 
-For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
+For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
 For information on additional map properties you can specify, see the Maps section of the [Configuration](../configuration/#maps) topic, which describes how to configure settings such as boundaries and axes. 
 

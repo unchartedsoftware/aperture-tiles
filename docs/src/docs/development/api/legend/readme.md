@@ -1,17 +1,17 @@
 ---
 section: Docs
-permalink: docs/api/tile/
 subsection: Development
 chapter: API
-topic: Tile
+topic: Legend
+permalink: docs/development/api/legend/
 layout: submenu
 ---
 
-# Tile Service #
+# Legend Service #
 
-## <a name="get-tile"></a> Get Tile ##
+## <a name="get-encoded-image-key"></a> Get Encoded Image Key ##
 
-Returns a tile for a given layer at the specified level and index.
+Returns an image describing the values that a tile can take, with a specified orientation, width, and height.
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
@@ -28,8 +28,8 @@ Returns a tile for a given layer at the specified level and index.
 					<tr class='item0'>
 						<td class="attributes">URL</td>
 						<td class="nameDescription">
-							<div class="description">/{version}/tile/{layer}/{level}/{x}/{y}.{ext}
-								<br>/tile/{layer}/{level}/{x}/{y}.{ext}</div>
+							<div class="description">/{version}/legend/{layer}
+								<br>/legend/{layer}</div>
 						</td>
 					</tr>
 					
@@ -37,13 +37,6 @@ Returns a tile for a given layer at the specified level and index.
 						<td class="attributes">Method</td>
 						<td class="nameDescription">
 							<div class="description">`GET`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Params</td>
-						<td class="nameDescription">
-							<div class="description">Attributes to override in the "public" node of the server configuration JSON.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -54,11 +47,13 @@ Returns a tile for a given layer at the specified level and index.
 Example request:
 
 ```http
-GET http://localhost:8080/instagram/rest/v1.0/tiles/twitter-heatmap4/2/3.png?renderer.ramp=spectral&renderer.coarseness=2
+GET http://localhost:8080/instagram/rest/v1.0/legend/instagram-heatmap
 ```
 
 Example response:
 
 ```
-3.png
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA
+AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+9TXL0Y4OHwAAAABJRU5ErkJggg==
 ```

@@ -1,9 +1,9 @@
 ---
 section: Docs
-permalink: docs/api/layer/
 subsection: Development
 chapter: API
 topic: Layer
+permalink: docs/development/api/layer/
 layout: submenu
 ---
 

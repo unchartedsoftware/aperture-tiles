@@ -1,9 +1,9 @@
 ---
 section: Docs
-permalink: docs/development/configuration/
 subsection: Development
 chapter: How-To
 topic: Configuration
+permalink: docs/development/how-to/configuration/
 layout: submenu
 ---
 
@@ -488,4 +488,4 @@ Access the `/new-project/` directory on the server from any web browser to to vi
 
 ## Next Steps ##
 
-For details on using your Aperture Tiles visual analytic, see the [User Guide](../../userguide/) topic.
+For details on using your Aperture Tiles visual analytic, see the [User Guide](../../../user-guide/) topic.

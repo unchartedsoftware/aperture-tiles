@@ -1,9 +1,9 @@
 ---
 section: Docs
-permalink: docs/api/
 subsection: Development
 chapter: API
 topic: Overview
+permalink: docs/development/api/
 layout: submenu
 ---
 
