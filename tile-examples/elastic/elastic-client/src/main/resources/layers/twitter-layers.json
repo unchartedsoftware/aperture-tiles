@@ -1,0 +1,48 @@
+[
+    {
+        "id":"tweet-heatmap",
+        "public": {
+            "name": "Twitter Activity Heatmap",
+            "pyramid": {
+                "type": "WebMercator"
+            }
+        },
+        "private": {
+           "data" : {
+                "id": "twitter.2014.02-04.SA.twitter.longitude.latitude",
+                "pyramidio" : {
+                    "type" : "file",
+                    "root.path" : "res:///twitter.2014.02-04.SA.twitter.longitude.latitude.zip",
+                    "extension" : "avro"
+                },
+                "serializer": {
+                    "type": "double-a"
+                }
+            }
+        }
+    },
+    {
+        "id": "top-tweets",
+        "public": {
+            "name": "Twitter Top Tweets",
+            "pyramid": {
+                "type": "WebMercator"
+            }
+        },
+        "private": {
+           "data" : {
+                "id": "twittertopicstargeted.L12.march.2014-05-14",
+                "pyramidio" : {
+                    "type" : "file",
+                    "root.path" : "res:///twittertopicstargeted.L12.march.2014-05-14.zip",
+                    "extension" : "avro"
+                },
+                "serializer": {
+                    "type": "[twitterdemorecord]-a"
+                }
+            }
+        }
+    }
+]
+
+

@@ -35,6 +35,49 @@
 
     module.exports = {
 
+        /*
+        * Request both the vector layers and tile layers.
+        * Return an object with keys "tileLayers" and "vectorLayers"
+        * with respective lists of each layer type.
+        * */
+        getAllLayers: function(success){
+
+            var _success = ( typeof success === "function" ) ? success : null;
+
+            var d1 = $.Deferred();
+            var d2 = $.Deferred();
+
+            var layers = {};
+
+            this.getLayers(function(tileLayers){
+                layers["tileLayers"] = tileLayers;
+                d1.resolve();
+            });
+
+            this.getVectorLayers(function(vectorLayers){
+                layers["vectorLayers"] = JSON.parse(vectorLayers);
+                d2.resolve();
+            });
+
+            return $.when(d1,d2).then(
+                function(){_success(layers)},
+                Util.handleHTTPError
+            );
+        },
+        /*
+        * Request the Vector Feature Layers from configuration file
+        */
+        getVectorLayers: function(success){
+
+            var _success = ( typeof success === "function" ) ? success : null;
+            $.get(
+                "resources/elasticlayers.json"
+            ).then(
+                _success,
+                Util.handleHTTPError
+            );
+        },
+
         /**
          * Request all layers from the server. Upon success, will execute success
          * callback function passing the resulting object as first argument.

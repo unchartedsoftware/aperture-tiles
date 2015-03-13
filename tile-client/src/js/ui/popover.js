@@ -97,10 +97,26 @@
         setContentHTML: function() {
           this.contentHTML = "";
 
+          var clustercounter = {};
+
           for(var i = 0; i<this.data.length; i++){
             var cluster = this.data[i]['data']['_source']['cluster'];
-            this.contentHTML = this.contentHTML.concat("<p>" + "Cluster ID: " + cluster.id + "</p>" + "<p>" + "Cluster Name: " + cluster.name + "</p>");
+            if( typeof clustercounter[cluster.id] !== "undefined" && clustercounter[cluster.id] !== null){
+              clustercounter[cluster.id]['count'] += 1;
+            }
+            else {
+              clustercounter[cluster.id] = {};
+              clustercounter[cluster.id]['count'] = 0;
+              clustercounter[cluster.id]['name'] = cluster.name;
+            }
           }
+
+          var that = this;
+          var buildHTML = function(clust, key){
+            that.contentHTML = that.contentHTML.concat("<p>" + "Cluster ID: " + key + "</p>" + "<p>" + "Cluster Name: " + clust.name + "</p>"+ "<p>" + "Cluster Ads: " + clust.count + "</p>");
+          }
+          _.each(clustercounter,buildHTML);
+
 
         },
         draw: function(px) {
