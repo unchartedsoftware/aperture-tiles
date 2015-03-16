@@ -128,6 +128,18 @@
         },
 
         /**
+         * Rounds a number towards another number.
+         * @param value {number} the value
+         * @returns {number}
+         */
+         roundTowards: function( value, num ) {
+            if ( value < num ) {
+                return Math.ceil( value );
+            }
+            return Math.floor( value );
+        },
+
+        /**
          * Rounds a given value to a set number of decimals. Defaults to 2.
          *
          * @param value    {number} value to round

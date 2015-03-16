@@ -70,13 +70,15 @@
 
                 // hide tile contents until have data
                 this.div.style.visibility = 'hidden';
-
+                this.isLoading = true;
                 this.dataRequest = $.ajax({
                     url: this.url
                 }).then(
                     function( data ) {
-                        that.tileData = data;
-                        that.renderTile( that.div, that.tileData );
+                        if ( dataUrl === this.url ) {
+                            that.tileData = data;
+                            that.renderTile( that.div, that.tileData );
+                        }
                     },
                     function( xhr ) {
                         console.error( xhr.responseText );
@@ -161,6 +163,7 @@
 
         renderer = this.layer.renderer;
         html = this.layer.html;
+        div.innerHTML = "";
 
         if ( renderer ) {
             renderer = ( typeof renderer === "function" ) ? renderer.call( this.layer, this.bounds ) : renderer;
