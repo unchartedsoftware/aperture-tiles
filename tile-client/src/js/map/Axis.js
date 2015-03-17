@@ -558,7 +558,7 @@
         this.$map.append( this.$axis );
 
         this.$axis.on( 'mousemove', this.mouseHoverCallback );
-        this.$axis.on( 'mouseleave', this.mouseOutCallback );
+        this.$axis.on( 'mouseout', this.mouseOutCallback );
 
         // calculate the dimensions of the individual elements once
         calcElementDimensions( this );
@@ -572,9 +572,6 @@
             this.$header.click();
             this.$content.finish();
         }
-        // allow events to propagate below to map except 'click'
-        Util.enableEventPropagation( this.$axis );
-        Util.disableEventPropagation( this.$axis, ['click', 'dblclick'] );
     };
 
     /**
@@ -587,7 +584,7 @@
         this.map.off( 'mousemove', this.mouseMoveCallback );
 
         this.$axis.off( 'mousemove', this.mouseHoverCallback );
-        this.$axis.off( 'mouseleave', this.mouseOutCallback );
+        this.$axis.off( 'mouseout', this.mouseOutCallback );
         this.$axis.remove();
         this.$axis = null;
         this.$title = null;
