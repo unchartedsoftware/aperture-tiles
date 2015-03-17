@@ -223,15 +223,13 @@ class SequenceFileTileIO (connection: String) extends TileIO {
 
 		// Don't alter metadata if there was no data added.
 		// Ideally, we'd still alter levels
-		if (tileCount.value > 0) {
-			val metaData =
-				combineMetaData(pyramider, baseLocation,
-				                levelSet.value.toSet,
-				                tileAnalytics, dataAnalytics,
-				                xbins.value, ybins.value,
-				                name, description)
-			writeMetaData(baseLocation, metaData)
-		}
+		val metaData =
+			combineMetaData(pyramider, baseLocation,
+											levelSet.value.toSet,
+											tileAnalytics, dataAnalytics,
+											xbins.value, ybins.value,
+											name, description)
+		writeMetaData(baseLocation, metaData)
 	}
 
 	override def readMetaData (baseLocation: String): Option[PyramidMetaData] = {
