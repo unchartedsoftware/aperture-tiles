@@ -67,13 +67,6 @@
     var size = new OpenLayers.Size(21,25);
     var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
     this.icon = new OpenLayers.Icon('http://dev.openlayers.org/img/marker.png', size, offset);
-    this.markers = [];
-    this.iconData = {externalGraphic: 'http://dev.openlayers.org/img/marker.png',
-      graphicHeight: 25, graphicWidth: 21,
-      graphicXOffset: -12, graphicYOffset: -25};
-
-    this.featureFunction = spec.featureRenderFunction;
-    this.featureDestroyFunction = spec.featureDestroyFunction;
   }
 
   var parser = function parser(hits){
