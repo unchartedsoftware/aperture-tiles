@@ -23,6 +23,15 @@
  */
 package com.oculusinfo.annotation;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.oculusinfo.annotation.impl.JSONAnnotation;
 import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.annotation.index.impl.AnnotationIndexerImpl;
@@ -30,16 +39,6 @@ import com.oculusinfo.annotation.util.AnnotationGenerator;
 import com.oculusinfo.annotation.util.AnnotationUtil;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class JSONAnnotationTest {
 

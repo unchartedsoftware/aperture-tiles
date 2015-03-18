@@ -36,9 +36,8 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FunSuite
 
-import com.oculusinfo.binning.DenseTileData
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.DenseTileData
+import com.oculusinfo.binning.impl.DenseTileData
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.ipArrayToString
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.longToIPArray
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme

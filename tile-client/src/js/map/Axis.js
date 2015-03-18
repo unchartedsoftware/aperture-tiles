@@ -28,6 +28,7 @@
     "use strict";
 
     var Util = require('../util/Util'),
+        PubSub = require('../util/PubSub'),
         AxisUtil = require('./AxisUtil'),
         AXIS_TITLE_CLASS = "axis-title-label",
         AXIS_DIV_CLASS_SUFFIX = "-axis",
@@ -84,7 +85,6 @@
             + axis.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
             + 'style="position:absolute;'
             + 'text-align: center; '    // center text horizontally
-            + 'width: ' + axis.MAX_LABEL_WIDTH + 'px;'
             + 'height: ' + axis.MAX_LABEL_HEIGHT + 'px;'
             + 'line-height: ' + axis.MAX_LABEL_HEIGHT + 'px;'   // center text vertically
             + axis.leftOrTop + ":" + primaryPosition + 'px;'
@@ -319,17 +319,19 @@
         };
         horizontalSlide = function() {
             axis.setEnabled( !axis.isEnabled() );
-            axis.setContentDimension();
+            axis.updateDimension();
             disableSlide();
             axis.$content.animate({width: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             axis.redraw();
+            PubSub.publish( axis.getChannel(), { field: 'open', value: axis.isEnabled() } );
         };
         verticalSlide = function() {
             axis.setEnabled( !axis.isEnabled() );
-            axis.setContentDimension();
+            axis.updateDimension();
             disableSlide();
             axis.$content.animate({height: 'toggle'}, {duration: 300, complete: function(){ enableSlide();} });
             axis.redraw();
+            PubSub.publish( axis.getChannel(), { field: 'open', value: axis.isEnabled() } );
         };
         // create axis title, header, and container and append them to root
         axis.$title = createTitle( axis );
@@ -433,6 +435,49 @@
     }
 
     /**
+     * Returns the mouse hover callback function on 'mouseover' event.
+     * @private
+     *
+     * @param axis {Axis} The axis object.
+     */
+    function mouseHoverCallback( axis ) {
+        return function( event ) {
+            var offset = axis.$content.offset(),
+                position = {
+                    x: event.clientX - offset.left,
+                    y: event.clientY - offset.top
+                },
+                marker = AxisUtil.getMarker( axis, position.x, position.y ),
+                $label;
+            axis.$content.find('.axis-hover-label').remove();
+            $label = $('<div class="axis-hover-label hover-label" style="'+
+                axis.leftOrTop+':'+ marker.pixel +'px;">'+
+                    '<div class="hover-label-text">'+ AxisUtil.formatText( marker.label, axis.units, true ) +'</div>'+
+                '</div>');
+            axis.$content.append( $label );
+            if ( axis.isXAxis ) {
+                $label.css( axis.oppositePosition, -( $label.outerHeight() + 10 ) );
+                $label.css( 'margin-left', -$label.outerWidth()/2 );
+            } else {
+                $label.css( axis.oppositePosition, -( $label.outerWidth() + 10 ) );
+                $label.css( 'margin-top', -$label.outerHeight()/2 );
+            }
+        };
+    }
+
+    /**
+     * Returns the mouse hover callback function on 'mouseout' event.
+     * @private
+     *
+     * @param axis {Axis} The axis object.
+     */
+    function mouseOutCallback( axis ) {
+        return function() {
+            axis.$content.find('.axis-hover-label').remove();
+        };
+    }
+
+    /**
      * Instantiate an Axis object.
      * @class Axis
      * @classdesc A map axis object that will attach to a map edge and display coordinates based on
@@ -446,10 +491,11 @@
      *     enabled  {boolean} Have the axis initialize to an open or closed state. Default = true
      *     repeat   {boolean} Whether or not the axis repeats. Default = false
      *     intervals: {
-     *         type        {String}  Whether the intervals are by "percentage" or by "value". Default = "percentage"
-     *         increment   {number}  The interval increment in. Default = 10
-     *         pivot       {number}  The value from with increments are generated from. Default = 0
-     *         scaleByZoom {boolean} Whether the increments should be scaled by zoom level. Default = true
+     *         type          {String}  Whether the intervals are by "percentage" or by "value". Default = "percentage"
+     *         increment     {number}  The interval increment in. Default = 10
+     *         pivot         {number}  The value from with increments are generated from. Default = undefined
+     *         scaleByZoom   {boolean} Whether the increments should be scaled by zoom level. Default = true
+     *         minPixelWidth {number}  The minimum width for a full axis increment. Default = undefined;
      *     }
      *     units: {
      *         type     {String}  The type of unit, ["integer", "decimal", "thousands", "millions", "billions", "degrees"]. Default = "decimal"
@@ -461,6 +507,7 @@
      */
     function Axis( spec ) {
 
+        this.uuid = Util.generateUuid();
         this.position = ( spec.position !== undefined ) ? spec.position.toLowerCase() : 'bottom';
         this.repeat = ( spec.repeat !== undefined ) ? spec.repeat : false;
         this.title = spec.title || 'Axis';
@@ -470,8 +517,9 @@
         this.intervals = {};
         this.intervals.type = ( spec.intervals.type !== undefined ) ? spec.intervals.type.toLowerCase() : 'percentage';
         this.intervals.increment = spec.intervals.increment || 10;
-        this.intervals.pivot = ( spec.intervals.pivot !== undefined ) ? spec.intervals.pivot : 0;
+        this.intervals.pivot = spec.intervals.pivot;
         this.intervals.scaleByZoom = ( spec.intervals.scaleByZoom !== undefined ) ? spec.intervals.scaleByZoom : true;
+        this.intervals.minPixelWidth = ( spec.intervals.minPixelWidth !== undefined ) ? spec.intervals.minPixelWidth : false;
 
         spec.units = spec.units || {};
         this.units = {};
@@ -499,6 +547,8 @@
         // create unique callbacks so they can be removed later
         this.redrawCallback = redrawCallback( this );
         this.mouseMoveCallback = mouseMoveCallback( this );
+        this.mouseHoverCallback = mouseHoverCallback( this );
+        this.mouseOutCallback = mouseOutCallback( this );
         // attach callbacks
         this.map.on( 'move', this.redrawCallback );
         this.map.on( 'mousemove', this.mouseMoveCallback );
@@ -506,6 +556,10 @@
         this.$map = $( this.map.getElement() );
         this.$axis = createAxis( this );
         this.$map.append( this.$axis );
+
+        this.$axis.on( 'mousemove', this.mouseHoverCallback );
+        this.$axis.on( 'mouseout', this.mouseOutCallback );
+
         // calculate the dimensions of the individual elements once
         calcElementDimensions( this );
         // check if axis starts open or closed
@@ -518,9 +572,6 @@
             this.$header.click();
             this.$content.finish();
         }
-        // allow events to propagate below to map except 'click'
-        Util.enableEventPropagation( this.$axis );
-        Util.disableEventPropagation( this.$axis, ['click', 'dblclick'] );
     };
 
     /**
@@ -531,6 +582,9 @@
     Axis.prototype.deactivate = function() {
         this.map.off( 'move', this.redrawCallback );
         this.map.off( 'mousemove', this.mouseMoveCallback );
+
+        this.$axis.off( 'mousemove', this.mouseHoverCallback );
+        this.$axis.off( 'mouseout', this.mouseOutCallback );
         this.$axis.remove();
         this.$axis = null;
         this.$title = null;
@@ -538,6 +592,8 @@
         this.$content = null;
         this.redrawCallback = null;
         this.mouseMoveCallback = null;
+        this.mouseHoverCallback = null;
+        this.mouseOffCallback = null;
     };
 
     /**
@@ -572,17 +628,27 @@
     };
 
     /**
-     * Iterates over all axes on the map, determines the max content size, and 
+     * Iterates over all axes on the map, determines the max content size, and
      * sets the content dimension to that size.
      * @memberof Axis
+     *
+     * @returns {integer} The max dimension of the axes attached to the map.
      */
-    Axis.prototype.setContentDimension = function() {
-        var dim = this.isXAxis ? 'height' : 'width',
-            maxAxisLabelDim = 0;
-        _.forIn( this.map.axes, function( value ) {
-            maxAxisLabelDim = Math.max( value.getContentDimension() || 0, maxAxisLabelDim );
+    Axis.prototype.getMaxContentDimension = function() {
+        var maxAxisLabelDim = 0;
+        _.forIn( this.map.axes, function( axis ) {
+            maxAxisLabelDim = Math.max( axis.getContentDimension() || 0, maxAxisLabelDim );
         });
-        this.$content[ dim ]( maxAxisLabelDim );
+        return maxAxisLabelDim;
+    };
+
+    /**
+     * Sets the content dimension of the axis.
+     * @memberof Axis
+     */
+    Axis.prototype.updateDimension = function() {
+        var dim = this.isXAxis ? 'height' : 'width';
+        this.$content[ dim ]( this.getMaxContentDimension( this.map ) );
     };
 
     /**
@@ -598,6 +664,16 @@
         }
         // add each marker to correct pixel location in axis DOM elements
         updateAxisContent( this );
+    };
+
+    /**
+     * Returns the publish/subscribe channel id of this specific axis.
+     * @memberof Axis
+     *
+     * @returns {String} The publish/subscribe channel for the axis.
+     */
+     Axis.prototype.getChannel = function () {
+        return 'axis.' + this.position + '.' + this.uuid;
     };
 
     module.exports = Axis;

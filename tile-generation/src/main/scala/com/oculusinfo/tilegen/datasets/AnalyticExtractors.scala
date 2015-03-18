@@ -151,8 +151,8 @@ class DataAnalyticWrapper[AT: ClassTag] (private[datasets] var base: AnalysisDes
 	// Simple pass-through methods into our base analytic
 	def analytic: TileAnalytic[AT] = base.analytic
 	def accumulate (tile: TileIndex, data: AT): Unit = base.accumulate(tile, data)
-	def toMap: Map[String, Any] = base.toMap
-	def applyTo (metaData: PyramidMetaData): Unit = base.applyTo(metaData)
+	def toTileMap: Map[String, Any] = base.toTileMap
+	def toGlobalMap: Map[String, Any] = base.toGlobalMap
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
 		base.addAccumulator(sc, name, test)
 }

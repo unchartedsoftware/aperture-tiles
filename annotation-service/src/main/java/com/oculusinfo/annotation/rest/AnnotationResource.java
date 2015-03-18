@@ -24,15 +24,10 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import com.google.inject.Inject;
-import com.oculusinfo.annotation.AnnotationData;
-import com.oculusinfo.annotation.impl.JSONAnnotation;
-import com.oculusinfo.annotation.index.AnnotationIndexer;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.factory.util.Pair;
-import com.oculusinfo.tile.rendering.LayerConfiguration;
+import java.util.List;
+
 import oculus.aperture.common.rest.ApertureServerResource;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,8 +39,13 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
-import java.util.List;
-import java.util.Map;
+import com.google.inject.Inject;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.annotation.impl.JSONAnnotation;
+import com.oculusinfo.annotation.index.AnnotationIndexer;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 
 public class AnnotationResource extends ApertureServerResource {
 

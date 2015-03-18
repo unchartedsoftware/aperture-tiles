@@ -23,8 +23,8 @@
  */
 package com.oculusinfo.annotation;
 
-import com.oculusinfo.binning.DenseTileData;
 import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.factory.util.Pair;
 
 import java.io.Serializable;

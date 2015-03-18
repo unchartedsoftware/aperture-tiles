@@ -36,7 +36,10 @@ import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfterAll
 import org.apache.spark.SparkContext
 import org.apache.spark.SharedSparkContext
-import com.oculusinfo.binning.{DenseTileData, SparseTileData, TileData, TileIndex}
+import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.tilegen.datasets.CSVReader
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 

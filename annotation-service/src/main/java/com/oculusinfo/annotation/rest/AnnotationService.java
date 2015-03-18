@@ -23,14 +23,13 @@
  */
 package com.oculusinfo.annotation.rest;
 
-import com.oculusinfo.annotation.AnnotationData;
-import com.oculusinfo.binning.BinIndex;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.factory.util.Pair;
+import java.util.List;
+
 import org.json.JSONObject;
 
-import java.util.List;
-import java.util.Map;
+import com.oculusinfo.annotation.AnnotationData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.factory.util.Pair;
 
 
 

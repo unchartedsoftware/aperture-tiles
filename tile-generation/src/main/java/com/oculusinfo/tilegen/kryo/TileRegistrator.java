@@ -28,6 +28,8 @@ package com.oculusinfo.tilegen.kryo;
 import com.esotericsoftware.kryo.Kryo;
 import com.oculusinfo.binning.*;
 import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.DenseTileData;
+import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tilegen.spark.DoubleMaxAccumulatorParam;
@@ -37,6 +39,7 @@ import com.oculusinfo.tilegen.tiling.HBaseTileIO;
 import com.oculusinfo.tilegen.tiling.TileIO;
 import com.oculusinfo.tilegen.util.PropertiesWrapper;
 import com.oculusinfo.tilegen.util.Rectangle;
+
 import org.apache.spark.serializer.KryoRegistrator;
 
 

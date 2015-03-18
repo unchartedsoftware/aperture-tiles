@@ -31,8 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import com.oculusinfo.binning.DenseTileData;
-
 import org.apache.avro.file.CodecFactory;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -40,6 +38,7 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.serialization.impl.GenericJavaSerializer;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;

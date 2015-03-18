@@ -91,10 +91,19 @@ public class UberFactory<T> extends ConfigurableFactory<T> {
 	protected T create () {
 		String subType = getPropertyValue(FACTORY_TYPE);
 		try {
-			return produce(subType, getFactoryType());
+			return super.produce(subType, getFactoryType());
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error creating product {}[{}] for {}", new Object[] {getFactoryType(), getName(), subType});
 			return null;
 		}
+	}
+
+	@Override
+	public <GT> GT produce (String name, Class<GT> goodsType) throws ConfigurationException {
+	    // Uber-factories only produce for exact name matches.
+	    if (null == getName() && null != name) return null;
+	    if (null != getName() && !getName().equals(name)) return null;
+
+	    return super.produce(name, goodsType);
 	}
 }

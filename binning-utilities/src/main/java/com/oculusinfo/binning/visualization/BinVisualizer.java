@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -44,22 +44,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.BorderFactory;
-import javax.swing.GroupLayout;
+import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -80,7 +66,7 @@ import com.oculusinfo.binning.metadata.PyramidMetaData;
 
 /**
  * A class, used mostly for testing, that reads and displays a tile.
- * 
+ *
  * @author Nathan Kronenfeld
  */
 @SuppressWarnings("deprecation")
@@ -106,7 +92,7 @@ public class BinVisualizer extends JFrame {
 		Geographic,
 		AreaOfInterest
 	}
-    
+
 	private static enum SerializerEnum {
 		Avro,
 		Legacy
@@ -137,6 +123,7 @@ public class BinVisualizer extends JFrame {
 	private JComboBox<Integer>        _xField;
 	private JComboBox<Integer>        _yField;
 	private JButton                   _show;
+	private JCheckBox                 _showText;
 
 
 
@@ -181,7 +168,7 @@ public class BinVisualizer extends JFrame {
 			});
 		fileMenu.add(exit);
 
-        
+
 		menuBar.add(fileMenu);
 		setJMenuBar(menuBar);
 	}
@@ -228,6 +215,8 @@ public class BinVisualizer extends JFrame {
 		_show = new JButton("Show tile");
 		_show.addActionListener(new ShowTile());
 
+		_showText = new JCheckBox("Bin values");
+		_showText.setHorizontalAlignment(SwingConstants.RIGHT);
 
 		JPanel chooser = new JPanel();
 
@@ -250,22 +239,24 @@ public class BinVisualizer extends JFrame {
 		                           .addGroup(_layout.createSequentialGroup().addComponent(xLabel, 0, pref, max).addComponent(_xField))
 		                           .addGroup(_layout.createSequentialGroup().addComponent(yLabel, 0, pref, max).addComponent(_yField))
 		                           .addComponent(_show, Alignment.TRAILING)
+		                           .addComponent(_showText, Alignment.TRAILING)
 		                           .addComponent(extraArea)
 		                           );
 		_layout.setVerticalGroup(
-		                         _layout.createSequentialGroup()
-		                         .addGroup(_layout.createParallelGroup().addComponent(ioLabel).addComponent(_ioField))
-		                         .addComponent(_ioSelectorContainer, 0, pref, 100)
-		                         .addGroup(_layout.createParallelGroup().addComponent(pyramidLabel).addComponent(_pyramidField))
-		                         .addGroup(_layout.createParallelGroup().addComponent(_pyramidDesc))
-		                         .addGroup(_layout.createParallelGroup().addComponent(serializerLabel).addComponent(_serializerField))
-		                         .addGroup(_layout.createParallelGroup().addComponent(idLabel).addComponent(_idField))
-		                         .addGroup(_layout.createParallelGroup().addComponent(levelLabel).addComponent(_levelField))
-		                         .addGroup(_layout.createParallelGroup().addComponent(xLabel).addComponent(_xField))
-		                         .addGroup(_layout.createParallelGroup().addComponent(yLabel).addComponent(_yField))
-		                         .addComponent(_show)
-		                         .addComponent(extraArea, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
-		                         );
+			_layout.createSequentialGroup()
+				.addGroup(_layout.createParallelGroup().addComponent(ioLabel).addComponent(_ioField))
+				.addComponent(_ioSelectorContainer, 0, pref, 100)
+				.addGroup(_layout.createParallelGroup().addComponent(pyramidLabel).addComponent(_pyramidField))
+				.addGroup(_layout.createParallelGroup().addComponent(_pyramidDesc))
+				.addGroup(_layout.createParallelGroup().addComponent(serializerLabel).addComponent(_serializerField))
+				.addGroup(_layout.createParallelGroup().addComponent(idLabel).addComponent(_idField))
+				.addGroup(_layout.createParallelGroup().addComponent(levelLabel).addComponent(_levelField))
+				.addGroup(_layout.createParallelGroup().addComponent(xLabel).addComponent(_xField))
+				.addGroup(_layout.createParallelGroup().addComponent(yLabel).addComponent(_yField))
+				.addComponent(_show)
+				.addComponent(_showText)
+				.addComponent(extraArea, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
+		);
 		_layout.linkSize(_ioField, _pyramidField, _serializerField, _idField, _levelField, _xField, _yField);
 
 
@@ -460,7 +451,7 @@ public class BinVisualizer extends JFrame {
 		}
 	}
 
-	private void showTile (final TileData<Double> tile) {
+	private <T extends Number> void showTile(final TileData<T> tile) {
 		if (null == tile) {
 			_image = null;
 			_imageVis.setIcon(null);
@@ -477,7 +468,7 @@ public class BinVisualizer extends JFrame {
 		double maxValue = Double.MIN_VALUE;
 		for (int x=0; x<xBins; ++x) {
 			for (int y=0; y<yBins; ++y) {
-				double value = tile.getBin(x, y);
+				double value = tile.getBin(x, y).doubleValue();
 				if (value > maxValue) maxValue = value;
 			}
 		}
@@ -487,15 +478,19 @@ public class BinVisualizer extends JFrame {
 				int maxX = (int) Math.round(1024*((double) x+1) / ((double) xBins));
 				int minY = (int) Math.round(1024*((double) y)   / ((double) yBins));
 				int maxY = (int) Math.round(1024*((double) y+1) / ((double) yBins));
-				float value = (float) Math.sqrt(tile.getBin(x, y) / maxValue);
+				float value = (float) Math.sqrt(tile.getBin(x, y).doubleValue() / maxValue);
 				float alpha;
-				if (tile.getBin(x, y) > 0)
+				if (tile.getBin(x, y).doubleValue() > 0)
 					alpha = 1.0f;
 				else
 					alpha = 0.0f;
 				Color c = new Color(1.0f, 1.0f-value, 1.0f-value, alpha);
 				g.setColor(c);
 				g.fillRect(minX, minY, maxX-minX, maxY-minY);
+				if (_showText.isSelected()) {
+					g.setColor(Color.BLACK);
+					g.drawString(tile.getBin(x, y).toString(), minX + (maxX - minX)/2f, minY + (maxY - minY)/2f);
+				}
 			}
 		}
 		g.dispose();
@@ -543,7 +538,7 @@ public class BinVisualizer extends JFrame {
 			return null;
 		}
 	}
-    
+
 
 	private class IOFieldUpdate implements ActionListener {
 		@Override

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.util;
+package com.oculusinfo.binning.impl;
 
 import java.util.Collection;
 
@@ -36,13 +36,13 @@ import com.oculusinfo.binning.TileIndex;
  *
  * @author robharper
  */
-public class TileDataView<T> implements TileData<T> {
+public class SubTileDataView<T> implements TileData<T> {
 	private static final long serialVersionUID = -4853326888627107022L;
 
 
 
 	/**
-     * Factory method that creates a TileDataView given a source tile and a target tile index which must be contained
+     * Factory method that creates a SubTileDataView given a source tile and a target tile index which must be contained
      * within the source tile. The returned view will appear to users as a tile at the target index but with data sourced
      * from the given source parent tile.
      * @param source The source tile for the data
@@ -50,7 +50,7 @@ public class TileDataView<T> implements TileData<T> {
      * @param <T> The type of tile data
      * @return A view TileData object representing the target index
      */
-    public static <T> TileDataView<T> fromSourceAbsolute(TileData<T> source, TileIndex targetIndex) {
+    public static <T> SubTileDataView<T> fromSourceAbsolute(TileData<T> source, TileIndex targetIndex) {
         TileIndex sourceIndex = source.getDefinition();
         int levelDelta = targetIndex.getLevel() - sourceIndex.getLevel();
 
@@ -75,7 +75,7 @@ public class TileDataView<T> implements TileData<T> {
         // Flip the bin counts (y axis opposite direction to bin y axis)
         int yBinStart = sourceIndex.getYBins() - (int)(yPosFraction * sourceIndex.getYBins());
 
-        return new TileDataView<>(source,
+        return new SubTileDataView<>(source,
                 new TileIndex(targetIndex.getLevel(), targetIndex.getX(), targetIndex.getY(), sourceIndex.getXBins()/tileCountRatio, sourceIndex.getYBins()/tileCountRatio),
                 xBinStart, yBinStart);
     }
@@ -87,7 +87,7 @@ public class TileDataView<T> implements TileData<T> {
     private final int         _xOffset;
     private final int         _yOffset;
 
-    private TileDataView(TileData<T> source, TileIndex index, int xOffset, int yOffset) {
+    private SubTileDataView(TileData<T> source, TileIndex index, int xOffset, int yOffset) {
         _source = source;
         _index = index;
         _xOffset = xOffset;

@@ -42,7 +42,7 @@ import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerial
 import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.factory.util.Pair;
 
 
@@ -63,8 +63,8 @@ import com.oculusinfo.factory.util.Pair;
  * </pre>
  */
 public final class DefaultTileSerializerFactoryProvider
-	implements FactoryProvider<TileSerializer<?>>,
-	           Comparable<DefaultTileSerializerFactoryProvider>
+	extends AbstractFactoryProvider<TileSerializer<?>>
+	implements Comparable<DefaultTileSerializerFactoryProvider>
 {
 	private static int __currentOrdinal                                        = 0;
 	private static List<DefaultTileSerializerFactoryProvider> __values         = new ArrayList<>();
@@ -288,8 +288,9 @@ public final class DefaultTileSerializerFactoryProvider
 	}
 
 	@Override
-	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
-		 List<String> path) {
+	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (String name,
+	                                                                       ConfigurableFactory<?> parent,
+	                                                                       List<String> path) {
 		return _constructor.create(parent, path);
 	}
 

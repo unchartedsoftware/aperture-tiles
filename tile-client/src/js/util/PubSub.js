@@ -69,6 +69,14 @@
 
     "use strict";
 
+    function createChannel( path ) {
+        return {
+            path : path,
+            subscribers : [],
+            children : {}
+        };
+    }
+
     module.exports = {
 
         /**
@@ -95,11 +103,9 @@
             while ( paths.length > 0 ) {
                 path = paths.shift();
                 currentPath += ( currentPath.length > 0 ) ? '.' + path : path;
-                channel.children[ path ] = channel.children[ path ] || {
-                    path : currentPath,
-                    subscribers : [],
-                    children : {}
-                };
+                if ( !channel.children[ path ] ) {
+                    channel.children[ path ] = createChannel( currentPath );
+                }
                 channel = channel.children[ path ];
             }
             channel.subscribers.push( subscriber );
@@ -122,6 +128,7 @@
                 queue = [],
                 path, i, sub,
                 leafChannel,
+                currentPath = '',
                 channel = this.channels || {
                     subscribers : [],
                     children : {}
@@ -130,8 +137,9 @@
             // find channel
             while ( paths.length > 0 ) {
                 path = paths.shift();
-                if ( channel.children[ path ] === undefined ) {
-                    return;
+                currentPath += ( currentPath.length > 0 ) ? '.' + path : path;
+                if ( !channel.children[ path ] ) {
+                    channel.children[ path ] = createChannel( currentPath );
                 }
                 channel = channel.children[ path ];
                 queue.push( channel );

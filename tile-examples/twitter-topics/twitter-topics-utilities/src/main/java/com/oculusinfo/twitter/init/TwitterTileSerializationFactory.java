@@ -28,7 +28,7 @@ import java.util.List;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord;
 import com.oculusinfo.twitter.binning.TwitterTopicAvroSerializer;
 
@@ -48,14 +48,10 @@ public class TwitterTileSerializationFactory extends ConfigurableFactory<TileSer
 		return new TwitterTopicAvroSerializer(TileSerializerFactory.getCodecFactory(this));
 	}
 
-	public static class TwitterTileSerializationFactoryDelegate implements FactoryProvider<TileSerializer<?>> {
+	public static class TwitterTileSerializationFactoryDelegate extends AbstractFactoryProvider<TileSerializer<?>> {
 		@Override
-		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (List<String> path) {
-			return this.createFactory(null, path);
-		}
-
-		@Override
-		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (ConfigurableFactory<?> parent,
+		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (String name,
+			 ConfigurableFactory<?> parent,
 			 List<String> path) {
 			return new TwitterTileSerializationFactory(parent, path);
 		}

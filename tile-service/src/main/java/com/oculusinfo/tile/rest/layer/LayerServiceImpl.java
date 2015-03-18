@@ -108,6 +108,9 @@ public class LayerServiceImpl implements LayerService {
 		try {
 			LayerConfiguration config = getLayerConfiguration( layerId, null );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+            if ( dataId == null ) {
+                return null;
+            }
 			PyramidIO pyramidIO = config.produce( PyramidIO.class );
 			return getMetaData( layerId, dataId, pyramidIO );
 		} catch (ConfigurationException e) {
@@ -115,7 +118,7 @@ public class LayerServiceImpl implements LayerService {
 			return null;
 		}
 	}
-    
+
 	private PyramidMetaData getMetaData( String layerId, String dataId, PyramidIO pyramidIO ) {
 		try {
 			JSONObject metadata = _metaDataCache.get( layerId );
@@ -176,14 +179,14 @@ public class LayerServiceImpl implements LayerService {
             factory.readConfiguration( mergeQueryConfigOptions( layerConfig, requestParams ) );
             // produce the layer configuration
 			LayerConfiguration config = factory.produce( LayerConfiguration.class );
-			// initialize the PyramidIO for reading
-			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
-            PyramidIO pyramidIO = config.produce( PyramidIO.class );
 			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
             if ( initJSON != null ) {
+			    String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+                // initialize the PyramidIO for reading
+                PyramidIO pyramidIO = config.produce( PyramidIO.class );
 				pyramidIO.initializeForRead( dataId, width, height, initProps);
 			}
 			return config;
