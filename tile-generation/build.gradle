@@ -138,5 +138,6 @@ dependencies {
 	assemblyJarReq project (":binning-utilities")
 	assemblyJarReq project (":factory-utilities")
 	assemblyJarReq "org.json:json:20090211"
+	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
 	addHBaseDependencies("assemblyJarReq")
 }
