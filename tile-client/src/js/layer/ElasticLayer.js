@@ -56,7 +56,7 @@
     Layer.call( this, spec );
     // set reasonable defaults
     this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 749;
-    this.domain = "client";
+    this.domain = "elastic";
     this.source = spec.source;
     if ( spec.renderer ) {
       this.renderer = spec.renderer;

@@ -789,6 +789,17 @@
             return this.olMap.getZoom();
         },
 
+        getCenterProjected: function () {
+            var projectTo,
+                lonlat;
+
+            lonlat = this.olMap.getCenter();
+            projectTo = new OpenLayers.Projection('EPSG:4326');
+
+            return lonlat.transform(this.olMap.getProjectionObject(),projectTo);
+        },
+
+
         /**
          * Set a map event callback. Supports all of the following OpenLayers.Map events:
          * <pre>
