@@ -128,7 +128,7 @@
             minCull = axis.min;
         }
         // determine how many sub increments from the pivot to the minimum culling point
-        incrementCount = Util.roundTowards( ( minCull - intervals.pivot ) / intervals.subIncrement, minCull );
+        incrementCount = Math.ceil( ( minCull - intervals.pivot ) / intervals.subIncrement, minCull );
         intervals.startingMarkerTypeIndex = incrementCount;
         // return the minimum increment that is still in view
         return intervals.pivot + intervals.subIncrement * incrementCount;
@@ -154,7 +154,7 @@
             maxCull = axis.max;
         }
         // determine how many sub increments from the pivot to the maximum culling point
-        incrementCount = Util.roundTowards( ( maxCull - intervals.pivot ) / intervals.subIncrement, maxCull );
+        incrementCount = Math.floor( ( maxCull - intervals.pivot ) / intervals.subIncrement, maxCull );
         // return the maximum increment that is still in view
         return intervals.pivot + intervals.subIncrement * incrementCount;
     }
