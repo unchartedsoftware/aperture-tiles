@@ -449,12 +449,17 @@
                 },
                 marker = AxisUtil.getMarker( axis, position.x, position.y ),
                 $label;
+            // remove existing markers
             axis.$content.find('.axis-hover-label').remove();
+            axis.$content.find( '.mouse-marker' ).remove();
+            // create label
             $label = $('<div class="axis-hover-label hover-label" style="'+
                 axis.leftOrTop+':'+ marker.pixel +'px;">'+
                     '<div class="hover-label-text">'+ AxisUtil.formatText( marker.label, axis.units, true ) +'</div>'+
                 '</div>');
+            // append label
             axis.$content.append( $label );
+            // position label
             if ( axis.isXAxis ) {
                 $label.css( axis.oppositePosition, -( $label.outerHeight() + 10 ) );
                 $label.css( 'margin-left', -$label.outerWidth()/2 );
@@ -462,6 +467,8 @@
                 $label.css( axis.oppositePosition, -( $label.outerWidth() + 10 ) );
                 $label.css( 'margin-top', -$label.outerHeight()/2 );
             }
+            // create and append marker
+            axis.$content.append( $( createLargeMarkerHTML( axis, marker ) ).addClass( 'mouse-marker' ) );
         };
     }
 
@@ -474,6 +481,7 @@
     function mouseOutCallback( axis ) {
         return function() {
             axis.$content.find('.axis-hover-label').remove();
+            axis.$content.find( '.mouse-marker' ).remove();
         };
     }
 

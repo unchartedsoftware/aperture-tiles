@@ -27,7 +27,8 @@
 
 	"use strict";
 
-	var Layer = require('./Layer');
+	var Layer = require('./Layer'),
+		PubSub = require('../util/PubSub');
 
     /**
      * Instantiate a BaseLayer object.
@@ -106,6 +107,7 @@
         // reset visibility / opacity
         this.setOpacity( this.getOpacity() );
         this.setEnabled( this.isEnabled() );
+		PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
     /**
@@ -119,6 +121,7 @@
             this.olLayer.destroy();
         }
         this.map.getElement().style['background-color'] = '';
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
 	module.exports = BaseLayer;

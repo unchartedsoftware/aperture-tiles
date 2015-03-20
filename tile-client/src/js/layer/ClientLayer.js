@@ -59,7 +59,7 @@
         this.domain = "client";
         this.source = spec.source;
         this.getURL = spec.getURL || LayerUtil.getURL;
-        if ( spec.tileClass) {
+        if ( spec.tileClass ) {
             this.tileClass = spec.tileClass;
         }
         if ( spec.renderer ) {
@@ -105,6 +105,7 @@
         if ( this.renderer ) {
             this.renderer.attach( this );
         }
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
     /**
@@ -118,6 +119,7 @@
             this.olLayer.destroy();
             this.olLayer = null;
         }
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
     /**
@@ -152,8 +154,10 @@
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
         this.zIndex = zIndex;
-        $( this.olLayer.div ).css( 'z-index', zIndex );
-        PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
+        if ( this.olLayer ) {
+            $( this.olLayer.div ).css( 'z-index', zIndex );
+            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
+        }
     };
 
     /**
