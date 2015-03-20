@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,20 +52,28 @@ var appStart = function() {
         axis0 = new tiles.Axis({
             title: 'X',
             position: 'bottom',
-            enabled: false,
+            enabled: true,
             intervals: {
-                increment: 20,
-                pivot: 0
+                type: 'fixed',
+                increment: 86400000,
+                scaleByZoom: false,
+                minPixelWidth: 80
             },
             units: {
-                type: 'decimal'
+                type: 'time'
             }
         });
+
+        /**
+         * if full marker range is less than X, double it,
+         *
+         *
+         */
 
         axis1 = new tiles.Axis({
             title: 'Y',
             position: 'left',
-            enabled: false,
+            enabled: true,
             intervals: {
                 increment: 20,
                 pivot: 0
@@ -78,10 +86,10 @@ var appStart = function() {
         map = new tiles.Map( "map", {
             pyramid : {
                 type : "AreaOfInterest",
-                minX : -2,
-                maxX : 2,
-                minY : -2,
-                maxY : 2
+                minX: 1417392000000,
+				maxX: 1426377600000,
+				minY: -2,
+				maxY: 2
             }
         });
         map.add( axis0 );

@@ -14,7 +14,12 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	classifier = "javadoc"
 	from javadoc.destinationDir
 }
- 
+
+task runBinVisualizer(type:JavaExec) {
+	main = "com.oculusinfo.binning.visualization.BinVisualizer"
+	classpath = sourceSets.main.runtimeClasspath
+}
+
 // Artifacts that will be produced when this project is built
 artifacts {
 	archives sourcesJar

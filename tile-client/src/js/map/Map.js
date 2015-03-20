@@ -519,6 +519,19 @@
         },
 
         /**
+         * Returns the currently active baselayer, or null if there isn't one.
+         * @memberof Map.prototype
+         *
+         * @returns {BaseLayer} The currently active baselayer.
+         */
+        getActiveBaseLayer: function() {
+            if ( this.baseLayerIndex === -1 ) {
+                return null;
+            }
+            return this.baselayers[ this.baseLayerIndex ];
+        },
+
+        /**
          * Set the theme of the map. Currently restricted to "dark" and "light".
          * @memberof Map.prototype
          *

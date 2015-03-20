@@ -19,7 +19,12 @@ div.olLayerDiv {
     -webkit-backface-visibility: hidden;
 }
 
-.olLayerGrid .olTileHtml .olTileUnivariate {
+.olLayerGrid .olTileHtml {
+    /*pointer-events: none;*/
+    -webkit-backface-visibility: hidden;
+}
+
+.olLayerGrid .olTileUnivariate {
     /*pointer-events: none;*/
     -webkit-backface-visibility: hidden;
 }
@@ -458,8 +463,8 @@ div.olControlZoom a {
     text-decoration: none;
     text-align: center;
     height: 22px;
-    width:22px;
-    line-height: 19px;
+    width: 22px;
+    line-height: 22px;
     background: #4d4d4d; /* fallback for IE - IE6 requires background shorthand*/
     background: rgba(60, 60, 60, 0.5);
     filter: alpha(opacity=80);
@@ -510,10 +515,10 @@ a.olControlZoomOut {
 /**
  * Animations
  */
- 
+
 .olTileImage,
 .olTileHtml,
-.olTileUnivariate { 
+.olTileUnivariate {
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;
