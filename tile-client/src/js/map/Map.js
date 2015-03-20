@@ -789,6 +789,13 @@
             return this.olMap.getZoom();
         },
 
+        
+        /**
+         * Returns the Openlayers LonLat object for the center point of the viewport
+         * projected into EPSG:4326.
+         * 
+         * @return {OpenLayers.LonLat}
+         */
         getCenterProjected: function () {
             var projectTo,
                 lonlat;
@@ -797,6 +804,24 @@
             projectTo = new OpenLayers.Projection('EPSG:4326');
 
             return lonlat.transform(this.olMap.getProjectionObject(),projectTo);
+        },
+
+        /**
+         * Get the top-left and bottom-right extents of the visible map.
+         * 
+         * @return {Object}
+         */
+        getMapExtents: function () {
+
+            var extents = this.olMap.getExtent();
+
+            var projectFrom = this.olMap.getProjectionObject();
+            var projectTo = new OpenLayers.Projection('EPSG:4326');
+
+            var topLeft = new OpenLayers.LonLat(extents.left,extents.top).transform(projectFrom,projectTo);
+            var bottomRight = new OpenLayers.LonLat(extents.right, extents.bottom).transform(projectFrom,projectTo);
+
+            return {'topLeft' : topLeft, 'bottomRight' : bottomRight};
         },
 
 
