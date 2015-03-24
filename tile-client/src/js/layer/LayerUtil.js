@@ -82,7 +82,11 @@
             key;
         for ( key in meta ) {
             if ( meta.hasOwnProperty( key ) ) {
-                meta[ key ].minMax = parseMetaMinMaxJson( meta[key] );
+                if ( key !== "bucketCount" &&
+                    key !== "rangeMin" &&
+                    key !== "rangeMax" ) {
+                    meta[ key ].minMax = parseMetaMinMaxJson( meta[key] );
+                }
             }
         }
         return meta;

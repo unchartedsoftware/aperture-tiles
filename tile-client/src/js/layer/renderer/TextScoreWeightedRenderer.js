@@ -30,7 +30,8 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 5,
-        WEIGHT_BARS_WIDTH = 125,
+        MIN_BAR_WIDTH = 30,
+        MAX_BAR_WIDTH = 125,
         injectCss;
 
     injectCss = function( spec ) {
@@ -41,8 +42,11 @@
                     selector: ".text-score-label",
                     parentSelector: ".text-score-entry"
                 });
+                spec.text.themes[i].injectTheme({
+                    selector: ".text-score-entry-count",
+                    parentSelector: ".text-score-entry"
+                });
             }
-
             for ( i=0; i<spec.weights.length; i++ ) {
                 for ( j=0; j<spec.weights[i].themes.length; j++ ) {
                     spec.weights[i].themes[j].injectTheme( {
@@ -51,7 +55,6 @@
                     });
                 }
             }
-
         }
     };
 
@@ -123,7 +126,9 @@
             middleWeight,
             weightCounts,
             weightTotal,
+            weightPercent,
             weight,
+            barWidth,
             totalCount,
             yOffset,
             value,
@@ -147,19 +152,22 @@
                 minFontSize: minFontSize,
                 maxFontSize: maxFontSize
             });
+            weightPercent = (fontSize-minFontSize) / (maxFontSize-minFontSize);
 
             // parent
             html += '<div class="text-score-entry-parent" style="top:' + yOffset + 'px;">';
 
             // create entry
             html += '<div class="text-score-entry">';
+
+            html += '<div class="text-score-entry-count">'+ textCount +'</div>';
+
             // create label
-            percentLabel = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
-            percentLabel = Math.round( percentLabel / 10 ) * 10;
+            percentLabel = Math.round( (weightPercent*100) / 10 ) * 10;
             html += '<div class="text-score-label text-score-label-'+percentLabel+'" style="'
-                  + 'font-size:'+ fontSize +'px;'
-                  + 'line-height:'+ fontSize +'px;'
-                  + 'bottom:'+-(maxFontSize-fontSize)+'px;">'+textEntry+'</div>';
+                + 'font-size:'+ fontSize +'px;'
+                + 'line-height:'+ fontSize +'px;'
+                + 'bottom:'+-(maxFontSize-fontSize)+'px;">'+textEntry+'</div>';
             // create weights
             weightCounts = [];
             weightTotal = 0;
@@ -179,13 +187,15 @@
             for ( j=middleWeightIndex-1; j>=0; j-- ) {
                 middleWeight += weightCounts[j];
             }
+            barWidth = MIN_BAR_WIDTH + ( MAX_BAR_WIDTH - MIN_BAR_WIDTH ) * weightPercent;
             // create bar container
             html += '<div class="text-score-weight-bar" style="'
-                  + 'left:'+ (-WEIGHT_BARS_WIDTH*(middleWeight/weightTotal)) + 'px;">';
+                + 'width:' + barWidth + 'px;'
+                + 'left:' + (-barWidth*(middleWeight/weightTotal)) + 'px;">';
             for ( j=0; j<weights.length; j++ ) {
                 // create bar
                 html += '<div class="text-score-weight text-score-weight-'+ j +'" style="'
-                      + 'width:'+((weightCounts[j]/weightTotal)*100)+'%;"></div>';
+                    + 'width:'+((weightCounts[j]/weightTotal)*100)+'%;"></div>';
             }
             html += '</div>';
             html += '</div>';
