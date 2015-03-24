@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Quick Start
-permalink: docs/development/quickstart/
+subsection: Development
+chapter: How-To
+topic: Quick Start
+permalink: docs/development/how-to/quickstart/
 layout: submenu
 ---
 
@@ -16,7 +17,7 @@ This guide, which provides a short tutorial on the process of creating and confi
 
 At the end of this guide, you will have successfully created an example Aperture Tiles project that displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels.
 
-<img src="../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
+<img src="../../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
@@ -38,7 +39,7 @@ Aperture Tiles requires the following third-party tools on your local system:
                 <th scope="col" width="30%">Required</th>
                 <th scope="col" width="50%">Notes</th>
             </thead>
-            <tr >
+            <tr>
                 <td style="vertical-align: text-top" class="attributes">Operating System</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
@@ -49,7 +50,7 @@ Aperture Tiles requires the following third-party tools on your local system:
                     <div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
                 </td>
             </tr>
-            <tr >
+            <tr>
                 <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
@@ -76,13 +77,13 @@ If you later intend to create Aperture Tiles projects using particularly large d
                 <th scope="col" width="30%">Required</th>
                 <th scope="col" width="50%">Notes</th>
             </thead>
-            <tr >
+            <tr>
                 <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
                         <a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
                         <ul>
-                            <li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+                            <li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
                             <li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
                             <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
                             <li><a href="http://hortonworks.com/">HortonWorks</a></li>
@@ -101,10 +102,10 @@ If you later intend to create Aperture Tiles projects using particularly large d
 
 ### <a name="aperture-tiles-utilities"></a> Aperture Tiles Packaged Distribution ###
 
-Save and unzip the following Aperture Tiles distributions available on the [Download](../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
+Save and unzip the following Aperture Tiles distributions available on the [Download](../../../../download/) section of this website. You will use these utilities to create the Julia set data and provision the example Aperture Tiles project.
 
-- [Tile Generator](../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
-- [Tile Quick Start Application](../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
+- [Tile Generator](../../../../download/#tile-generator): Enables you to create the Julia set data and generate a set of tiles that can be viewed in the Tile Quick Start Application
+- [Tile Quick Start Application](../../../../download/#tile-quick-start-application): An example Tile Client application that you can quickly copy and deploy to your web server after minimal modification
 
 The full Aperture Tiles source code, available for download from [GitHub](https://github.com/unchartedsoftware/aperture-tiles/tree/master), is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) page.
 
@@ -112,7 +113,7 @@ The full Aperture Tiles source code, available for download from [GitHub](https:
 
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
-1. Extract the contents of the [tile-generator.zip](../../../download/#tile-generator).
+1. Extract the contents of the [tile-generator.zip](../../../../download/#tile-generator).
 2. Execute the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. <p class="list-paragraph">The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.</p>
 
 ```bash
@@ -142,55 +143,74 @@ A pre-configured properties file (**julia-base.bd**) can be found in the Tile Ge
 
 These properties specify the location of your Julia set data.
 
-<div class="details props">
-    <div class="innerProps">
-        <ul class="methodDetail" id="MethodDetail">
-            <dl class="detailList params">              
-                <dt>oculus.binning.source.location</dt>
-                <dd>Path of the source data files in your local file system (e.g., <em>/data/julia</em>) or HDFS path (e.g., <em>hdfs://hadoop.example.com/data/julia</em>).</dd>
-            </dl>
-        </ul>
-    </div>
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Property</th>
+                <th scope="col" width="80%">Description</th>
+            </thead>
+            <tr>
+                <td class="attributes"><strong>oculus.binning.source.location</strong></td>
+                <td class="attributes">Path of the source data files:
+                    <ul>
+                        <li>Local system: <em>/data/julia</em></li>
+                        <li>HDFS path: <em>hdfs://hadoop.example.com/data/julia</em></li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+    </nav>
 </div>
 
 #### General Output Properties ####
 
 These properties specify where to save the generated tiles.
 
-<div class="details props">
-    <div class="innerProps">
-        <ul class="methodDetail" id="MethodDetail">
-            <dl class="detailList params">
-                <dt>oculus.tileio.type</dt>
-                <dd>Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</dd>
-
-                <dt>oculus.binning.name</dt>
-                <dd>Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</dd>
-                                
-            </dl>
-        </ul>
-    </div>
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Property</th>
+                <th scope="col" width="80%">Description</th>
+            </thead>
+            <tr>
+                <td class="attributes"><strong>oculus.tileio.type</strong></td>
+                <td class="attributes">Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</td>
+            </tr>
+            <tr>
+                <td class="attributes"><strong>oculus.binning.name</strong></td>
+                <td class="attributes">Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</td>
+            </tr>
+        </table>
+    </nav>
 </div>
 
 #### HBase Connection Details (Optional) ####
 
 These properties should only be included if you are using Hadoop/HDFS and HBase, and are required if you want to run a tile generation job on a multi-computer cluster.
 
-<div class="details props">
-    <div class="innerProps">
-        <ul class="methodDetail" id="MethodDetail">
-            <dl class="detailList params">
-                <dt>hbase.zookeeper.quorum</dt>
-                <dd>Zookeeper quorum location needed to connect to HBase.</dd>
-                
-                <dt>hbase.zookeeper.port</dt>
-                <dd>Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</dd>
-                
-                <dt>hbase.master</dt>
-                <dd>Location of the HBase master to which to save the tiles.</dd>
-            </dl>
-        </ul>
-    </div>
+<div class="props">
+    <nav>
+        <table class="summaryTable" width="100%">
+            <thead >
+                <th scope="col" width="20%">Property</th>
+                <th scope="col" width="80%">Description</th>
+            </thead>
+            <tr>
+                <td class="attributes"><strong>hbase.zookeeper.quorum</strong></td>
+                <td class="attributes">Zookeeper quorum location needed to connect to HBase.</td>
+            </tr>
+            <tr>
+                <td class="attributes"><strong>hbase.zookeeper.port</strong></td>
+                <td class="attributes">Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</td>
+            </tr>
+            <tr>
+                <td class="attributes"><strong>hbase.master</strong></td>
+                <td class="attributes">Location of the HBase master to which to save the tiles.</td>
+            </tr>
+        </table>
+    </nav>
 </div>
 
 ### <a name="tiling-property-file-configuration"></a> Tiling Property File Configuration ###
@@ -222,7 +242,7 @@ The `oculus.binning.prefix` value is only included if you set it in the property
 
 ## <a name="tile-server-configuration"></a> Tile Server Configuration ##
 
-For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
+For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The server renders the layers that are displayed in your Aperture Tiles visualization and passes them to the client.
 
 If you stored your Avro tiles on your local filesystem, zip the *julia.x.y.v* directory produced during the Tile Generation stage and add it to the *WEB-INF/classes/* directory of the Tile Quick Start Application.
 
@@ -249,7 +269,7 @@ For information on additional layer properties you can specify, see the Layers s
 
 ## <a name="tile-client-application"></a> Tile Client Application ##
 
-For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
+For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
 For information on additional map properties you can specify, see the Maps section of the [Configuration](../configuration/#maps) topic, which describes how to configure settings such as boundaries and axes. 
 
