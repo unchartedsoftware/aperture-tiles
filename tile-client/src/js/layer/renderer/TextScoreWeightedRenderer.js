@@ -76,7 +76,8 @@
      *     weights: [{
      *         weightKey {Array|Function} - The attributes for the weights in the data entry
      *         themes    {Array}  - The array of RenderThemes to be attached to this component.
-     *     }]
+     *     }],
+     *     threshold: {number} - The count threshold at which to de-saturate the colors.
      * }
      * </pre>
      */
@@ -112,6 +113,7 @@
 
         var text = this.spec.text,
             weights = this.spec.weights,
+            threshold = this.spec.threshold || 5,
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
@@ -120,7 +122,8 @@
             minFontSize = 12,
             maxFontSize = 22,
             entries = [],
-            html = '',
+            html = ''
+            desaturate,
             percentLabel,
             middleWeightIndex,
             middleWeight,
@@ -148,7 +151,7 @@
             entries.push( value );
             textEntry = RendererUtil.getAttributeValue( value, textKey );
             textCount = RendererUtil.getAttributeValue( value, countKey );
-            var desaturate = ( textCount < 5 ) ? "de-saturate" : "";
+            desaturate = ( textCount < threshold ) ? "de-saturate" : "";
             fontSize = RendererUtil.getFontSize( textCount, totalCount, {
                 minFontSize: minFontSize,
                 maxFontSize: maxFontSize
@@ -192,8 +195,6 @@
                 }
                 barWidth = MAX_BAR_WIDTH; //MIN_BAR_WIDTH + ( MAX_BAR_WIDTH - MIN_BAR_WIDTH ) * weightPercent;
                 // create bar container
-
-
                 html += '<div class="text-score-weight-bar" style="'
                     + 'width:' + barWidth + 'px;'
                     + 'left:' + (-barWidth*(middleWeight/weightTotal)) + 'px;">';
