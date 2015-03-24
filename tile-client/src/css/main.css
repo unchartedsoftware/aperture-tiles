@@ -36,6 +36,11 @@ body {
   color: #000;
 }
 
+.de-saturate {
+   -webkit-filter: brightness(25%);
+           filter: brightness(25%);
+}
+
 select:focus {
   outline:none;
 }

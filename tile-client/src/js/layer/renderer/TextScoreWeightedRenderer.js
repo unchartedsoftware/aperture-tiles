@@ -148,6 +148,7 @@
             entries.push( value );
             textEntry = RendererUtil.getAttributeValue( value, textKey );
             textCount = RendererUtil.getAttributeValue( value, countKey );
+            var desaturate = ( textCount < 5 ) ? "de-saturate" : "";
             fontSize = RendererUtil.getFontSize( textCount, totalCount, {
                 minFontSize: minFontSize,
                 maxFontSize: maxFontSize
@@ -164,40 +165,46 @@
 
             // create label
             percentLabel = Math.round( (weightPercent*100) / 10 ) * 10;
-            html += '<div class="text-score-label text-score-label-'+percentLabel+'" style="'
+            html += '<div class="text-score-label text-score-label-'+percentLabel+' '+desaturate+'" style="'
                 + 'font-size:'+ fontSize +'px;'
                 + 'line-height:'+ fontSize +'px;'
                 + 'bottom:'+-(maxFontSize-fontSize)+'px;">'+textEntry+'</div>';
-            // create weights
-            weightCounts = [];
-            weightTotal = 0;
-            for ( j=0; j<weights.length; j++ ) {
-                weight = RendererUtil.getAttributeValue( value, weights[j].weightKey );
-                weightTotal += weight;
-                weightCounts.push( weight );
+
+            if ( textCount > 0 ) {
+                // create weights
+                weightCounts = [];
+                weightTotal = 0;
+                for ( j=0; j<weights.length; j++ ) {
+                    weight = RendererUtil.getAttributeValue( value, weights[j].weightKey );
+                    weightTotal += weight;
+                    weightCounts.push( weight );
+                }
+                // get the index of the middle weight
+                middleWeightIndex = Math.floor( (weights.length-1) / 2 );
+                // sum the amount of weight to centre the bar on the middle weight
+                if ( weights.length % 2 === 0 ) {
+                    middleWeight = weightCounts[ middleWeightIndex ];
+                } else {
+                    middleWeight = weightCounts[ middleWeightIndex ] / 2;
+                }
+                for ( j=middleWeightIndex-1; j>=0; j-- ) {
+                    middleWeight += weightCounts[j];
+                }
+                barWidth = MAX_BAR_WIDTH; //MIN_BAR_WIDTH + ( MAX_BAR_WIDTH - MIN_BAR_WIDTH ) * weightPercent;
+                // create bar container
+
+
+                html += '<div class="text-score-weight-bar" style="'
+                    + 'width:' + barWidth + 'px;'
+                    + 'left:' + (-barWidth*(middleWeight/weightTotal)) + 'px;">';
+                for ( j=0; j<weights.length; j++ ) {
+                    // create bar
+                    html += '<div class="text-score-weight text-score-weight-'+ j +' '+desaturate+'" style="'
+                        + 'width:'+((weightCounts[j]/weightTotal)*100)+'%;"></div>';
+                }
+                html += '</div>';
             }
-            // get the index of the middle weight
-            middleWeightIndex = Math.floor( (weights.length-1) / 2 );
-            // sum the amount of weight to centre the bar on the middle weight
-            if ( weights.length % 2 === 0 ) {
-                middleWeight = weightCounts[ middleWeightIndex ];
-            } else {
-                middleWeight = weightCounts[ middleWeightIndex ] / 2;
-            }
-            for ( j=middleWeightIndex-1; j>=0; j-- ) {
-                middleWeight += weightCounts[j];
-            }
-            barWidth = MIN_BAR_WIDTH + ( MAX_BAR_WIDTH - MIN_BAR_WIDTH ) * weightPercent;
-            // create bar container
-            html += '<div class="text-score-weight-bar" style="'
-                + 'width:' + barWidth + 'px;'
-                + 'left:' + (-barWidth*(middleWeight/weightTotal)) + 'px;">';
-            for ( j=0; j<weights.length; j++ ) {
-                // create bar
-                html += '<div class="text-score-weight text-score-weight-'+ j +'" style="'
-                    + 'width:'+((weightCounts[j]/weightTotal)*100)+'%;"></div>';
-            }
-            html += '</div>';
+
             html += '</div>';
             html += '</div>';
             html += '<div class="clear"></div>';
