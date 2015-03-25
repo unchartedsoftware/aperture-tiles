@@ -29,7 +29,8 @@ import java.io.File
 
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
 import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.Column
+import org.apache.spark.sql.types._
 import org.scalatest.FunSuite
 
 import scala.collection.mutable.ListBuffer
@@ -46,6 +47,13 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 
 	def outputOp(colSpec: String, output: ListBuffer[Any])(input: PipelineData) = {
 		outputOps(List(colSpec), output)(input)
+	}
+
+	def convertColumnOp (colSpec: String, targetType: DataType)(input: PipelineData) = {
+		val withConvert = input.srdd.withColumnRenamed(colSpec, colSpec + "Old").withColumn(colSpec, new Column(colSpec + "Old").cast(targetType))
+		val lessOld = withConvert.select(withConvert.columns.filter(_ != (colSpec+"Old")).map(new Column(_)):_*)
+
+		PipelineData(input.sqlContext, lessOld)
 	}
 
 	test("Test load JSON data parse and operation") {
@@ -145,6 +153,40 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 		assertResult(List(2, 3))(resultList.toList)
 	}
 
+
+	test("Test integral range filter parse and operation with multiple types") {
+		val resultList = ListBuffer[Any]()
+		val argMap = Map(
+			"ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
+			"ops.columns" -> "num,num_1",
+			"ops.min" -> "2,2",
+			"ops.max" -> "3,3")
+
+		{
+			resultList.clear()
+			val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
+			val stage1 = rootStage.addChild(PipelineStage("convert", convertColumnOp("num", IntegerType)(_)))
+			val stage2 = stage1.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
+			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+			TilePipelines.execute(rootStage, sqlc)
+
+			assertResult(List(2, 3))(resultList.toList)
+		}
+
+		{
+			resultList.clear()
+			val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
+			val stage1 = rootStage.addChild(PipelineStage("convert", convertColumnOp("num", LongType)(_)))
+			val stage2 = stage1.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
+			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+			TilePipelines.execute(rootStage, sqlc)
+
+			assertResult(List(2, 3))(resultList.toList)
+		}
+	}
+
 	test("Test integral range filter parse and operation with exclusions") {
 		val resultList = ListBuffer[Any]()
 		val argMap = Map(
@@ -166,7 +208,6 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 	test("Test fractional range filter parse and operation") {
 		val resultList = ListBuffer[Any]()
 
-		getClass.getResource("/json_test.data").toURI.getPath
 		val argMap = Map(
 			"ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
 			"ops.columns" -> "num,num_1",
@@ -180,6 +221,39 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 		TilePipelines.execute(rootStage, sqlc)
 
 		assertResult(List(2, 3))(resultList.toList)
+	}
+
+	test("Test fractional range filter parse and operation with multiple types") {
+		val resultList = ListBuffer[Any]()
+		val argMap = Map(
+			"ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
+			"ops.columns" -> "num,num_1",
+			"ops.min" -> "2.0,2.0",
+			"ops.max" -> "3.0,3.0")
+
+		{
+			resultList.clear()
+			val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
+			val stage1 = rootStage.addChild(PipelineStage("convert", convertColumnOp("num", FloatType)(_)))
+			val stage2 = stage1.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
+			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+			TilePipelines.execute(rootStage, sqlc)
+
+			assertResult(List(2, 3))(resultList.toList)
+		}
+
+		{
+			resultList.clear()
+			val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
+			val stage1 = rootStage.addChild(PipelineStage("convert", convertColumnOp("num", DoubleType)(_)))
+			val stage2 = stage1.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
+			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+			TilePipelines.execute(rootStage, sqlc)
+
+			assertResult(List(2, 3))(resultList.toList)
+		}
 	}
 
 	test("Test fractional range filter parse and operation with exclusions") {
@@ -298,7 +372,13 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			assertResult(bounds.getMaxX)(7.0)
 			assertResult(bounds.getMaxY)(6.0)
 			val customMeta = metaData.getAllCustomMetaData
-			assertResult(customMeta.toString)("{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")
+			assertResult("0")(customMeta.get("global.minimum"))
+			assertResult("0")(customMeta.get("0.minimum"))
+			assertResult("0")(customMeta.get("1.minimum"))
+			assertResult("2")(customMeta.get("global.maximum"))
+			assertResult("2")(customMeta.get("0.maximum"))
+			assertResult("1")(customMeta.get("1.maximum"))
+			assertResult(6)(customMeta.size)
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {
