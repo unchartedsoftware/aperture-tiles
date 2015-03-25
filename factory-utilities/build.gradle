@@ -2,6 +2,9 @@ description = "A factory system for Aperture Tiles, to allow relatively easy con
 
 // Pulls in the Java plugin
 apply plugin: "java"
+// Gradle/intellij don't work properly together with 1.8
+sourceCompatibility = '1.7'
+
 
 // Task to create a JAR from the all source set
 task sourcesJar(type: Jar, dependsOn: classes) {

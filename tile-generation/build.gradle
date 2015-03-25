@@ -4,6 +4,9 @@ description = "A Spark-based library to aid in easy tile and tile pyramid genera
 
 // Configure for scala compilation via the scala plugin
 apply plugin: "scala"
+// Gradle/intellij don't work properly together with 1.8
+sourceCompatibility = '1.7'
+
 
 // appends scala test functionality to the baseline test task
 test << {
