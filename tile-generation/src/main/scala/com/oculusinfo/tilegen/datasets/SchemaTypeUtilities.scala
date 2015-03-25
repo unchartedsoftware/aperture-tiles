@@ -31,7 +31,7 @@ import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{Map => MutableMap}
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, GenericRow}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -67,7 +67,7 @@ object SchemaTypeUtilities {
 
 	// Convenience functions for easy row construction
 	/** Construct a row */
-	def row (values: Any*) = new GenericRow(values.toArray)
+	def row (values: Any*) = Row(values:_*)
 	/** Construct an array for use as a value in a row */
 	def array (values: Any*) = ArrayBuffer[Any](values:_*)
 
@@ -337,7 +337,7 @@ object SchemaTypeUtilities {
 
 			input: Any => {
 				val row = input.asInstanceOf[Row]
-				val values: Array[Any] = (1 to toSize).map(toIndex =>
+				val values = (1 to toSize).map(toIndex =>
 					{
 						if (fieldConverters.contains(toIndex)) {
 							val (field, fromIndex, converter) = fieldConverters(toIndex)
@@ -346,8 +346,8 @@ object SchemaTypeUtilities {
 							null
 						}
 					}
-				).toArray
-				new GenericRow(values)
+				)
+				Row(values:_*)
 			}
 		} else if (to.isInstanceOf[ArrayType] && from.isInstanceOf[ArrayType]) {
 			val fromArray = from.asInstanceOf[ArrayType]

@@ -38,7 +38,6 @@ import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.types.{BooleanType, StringType, TimestampType}
 import org.apache.spark.sql.types.{ByteType, ShortType, IntegerType, LongType}
 import org.apache.spark.sql.types.{FloatType, DoubleType}
-import org.apache.spark.sql.catalyst.expressions.GenericRow
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -163,15 +162,15 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		                          schemaField("b", DoubleType),
 		                          schemaField("c", StringType))
 
-		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
-		                new GenericRow(Array(2, 2.2, "2.22")),
-		                new GenericRow(Array(3, 3.3, "3.33")),
-		                new GenericRow(Array(4, 4.4, "4.44")),
-		                new GenericRow(Array(5, 5.5, "5.55")),
-		                new GenericRow(Array(6, 6.6, "6.66")),
-		                new GenericRow(Array(7, 7.7, "7.77")),
-		                new GenericRow(Array(8, 8.8, "8.88")),
-		                new GenericRow(Array(9, 9.9, "9.99")))
+		val data = List(Row(1, 1.1, "1.11"),
+		                Row(2, 2.2, "2.22"),
+		                Row(3, 3.3, "3.33"),
+		                Row(4, 4.4, "4.44"),
+		                Row(5, 5.5, "5.55"),
+		                Row(6, 6.6, "6.66"),
+		                Row(7, 7.7, "7.77"),
+		                Row(8, 8.8, "8.88"),
+		                Row(9, 9.9, "9.99"))
 
 		assert(IntegerType == getColumnType("a", schema))
 		val aExtractor = calculateExtractor("a", schema)
@@ -236,15 +235,15 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		                          schemaField("b", DoubleType),
 		                          schemaField("c", StringType))
 
-		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
-		                new GenericRow(Array(2, 2.2, "2.22")),
-		                new GenericRow(Array(3, 3.3, "3.33")),
-		                new GenericRow(Array(4, 4.4, "4.44")),
-		                new GenericRow(Array(5, 5.5, "5.55")),
-		                new GenericRow(Array(6, 6.6, "6.66")),
-		                new GenericRow(Array(7, 7.7, "7.77")),
-		                new GenericRow(Array(8, 8.8, "8.88")),
-		                new GenericRow(Array(9, 9.9, "9.99")))
+		val data = List(Row(1, 1.1, "1.11"),
+		                Row(2, 2.2, "2.22"),
+		                Row(3, 3.3, "3.33"),
+		                Row(4, 4.4, "4.44"),
+		                Row(5, 5.5, "5.55"),
+		                Row(6, 6.6, "6.66"),
+		                Row(7, 7.7, "7.77"),
+		                Row(8, 8.8, "8.88"),
+		                Row(9, 9.9, "9.99"))
 
 		val aExtractor = calculateExtractor("a", schema)
 		val iToL = calculateConverter(IntegerType, LongType)
@@ -262,15 +261,15 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		                          schemaField("b", DoubleType),
 		                          schemaField("c", StringType))
 
-		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
-		                new GenericRow(Array(2, 2.2, "2.22")),
-		                new GenericRow(Array(3, 3.3, "3.33")),
-		                new GenericRow(Array(4, 4.4, "4.44")),
-		                new GenericRow(Array(5, 5.5, "5.55")),
-		                new GenericRow(Array(6, 6.6, "6.66")),
-		                new GenericRow(Array(7, 7.7, "7.77")),
-		                new GenericRow(Array(8, 8.8, "8.88")),
-		                new GenericRow(Array(9, 9.9, "9.99")))
+		val data = List(Row(1, 1.1, "1.11"),
+		                Row(2, 2.2, "2.22"),
+		                Row(3, 3.3, "3.33"),
+		                Row(4, 4.4, "4.44"),
+		                Row(5, 5.5, "5.55"),
+		                Row(6, 6.6, "6.66"),
+		                Row(7, 7.7, "7.77"),
+		                Row(8, 8.8, "8.88"),
+		                Row(9, 9.9, "9.99"))
 
 		val aExtractor = calculateExtractor("a", schema)
 		val functionCreator = new FunctionCreator {
