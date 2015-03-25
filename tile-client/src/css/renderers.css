@@ -56,7 +56,7 @@
 
 .text-score-weight-bar {
 	position:absolute;
-	height: 4px;
+	height: 6px;
 	width: 120px;
 	margin-left: 50%;
 	bottom: 0px;
@@ -321,4 +321,9 @@
   opacity: 1;
   -webkit-filter: none;
   		  filter: none;
+}
+
+.de-saturate {
+   -webkit-filter: brightness(50%);
+           filter: brightness(50%);
 }
