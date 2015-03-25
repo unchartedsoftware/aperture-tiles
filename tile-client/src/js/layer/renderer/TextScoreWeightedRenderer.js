@@ -122,7 +122,7 @@
             minFontSize = 12,
             maxFontSize = 22,
             entries = [],
-            html = ''
+            html = '',
             desaturate,
             percentLabel,
             middleWeightIndex,
