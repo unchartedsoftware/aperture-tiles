@@ -46,20 +46,20 @@ import org.json.JSONObject;
  * 
  */
 
-public class FilterByTimeTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FilterByTimeTileTransformer.class);
+public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(FilterByBucketTileTransformer.class);
 	
-	private int _startTimeBucket = 0;
-	private int _endTimeBucket = 0;
-	private int _totalTimeBuckets = 0;
+	private int _startBucket = 0;
+	private int _endBucket   = 0;
+	private int _bucketCount = 0;
 	
-	public FilterByTimeTileTransformer(JSONObject arguments){
+	public FilterByBucketTileTransformer(JSONObject arguments){
 		try {
 			if (arguments != null) {
 				// get the start and end time range
-				_startTimeBucket = arguments.getInt("startTimeBucket");
-				_endTimeBucket = arguments.getInt("endTimeBucket");
-				_totalTimeBuckets = arguments.getInt("totalTimeBuckets");
+				_startBucket = arguments.getInt("startBucket");
+				_endBucket   = arguments.getInt("endBucket");
+				_bucketCount = arguments.getInt("bucketCount");
 			}
 		}
 		catch (JSONException e) {
@@ -85,8 +85,8 @@ public class FilterByTimeTileTransformer<T> implements TileTransformer<List<T>> 
 
     	TileData<List<T>> resultTile = null;
         
-        if ( _startTimeBucket < 0 || _startTimeBucket > _endTimeBucket || _endTimeBucket > _totalTimeBuckets ) { 
-			throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startTimeBucket + ", end time bucket: " + _endTimeBucket);
+        if ( _startBucket < 0 || _startBucket > _endBucket || _endBucket > _bucketCount ) { 
+			throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
         }      
 
         int xBins = inputData.getDefinition().getXBins();
@@ -101,9 +101,9 @@ public class FilterByTimeTileTransformer<T> implements TileTransformer<List<T>> 
                 int binSize = binContents.size();
                 
                 // make sure we have a full array to add into the tile for dense tile creation
-                List<T> transformedBin = new ArrayList<>(_totalTimeBuckets);
+                List<T> transformedBin = new ArrayList<>(_bucketCount);
                 for(int i = 0; i < binSize; i++) {
-                    if ( i >= _startTimeBucket && i <= _endTimeBucket ) {
+                    if ( i >= _startBucket && i <= _endBucket ) {
                     	transformedBin.add(i, binContents.get(i));
                     } else {
                     	transformedBin.add(i, null);
