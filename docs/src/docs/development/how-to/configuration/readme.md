@@ -1,12 +1,13 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Configuration
-permalink: docs/development/configuration/
+subsection: Development
+chapter: How-To
+topic: App Configuration
+permalink: docs/development/how-to/configuration/
 layout: submenu
 ---
 
-# Configuration #
+# App Configuration #
 
 Once you have generated a tile set from your source data, you should configure and deploy a Tile Server and a Tile Client to make your visual analytic viewable in a web browser. The Tile Server serves tiles from your pyramid, while the Tile Client is a simple web client to view those tiles on a map or plot. 
 
@@ -487,4 +488,4 @@ Access the `/new-project/` directory on the server from any web browser to to vi
 
 ## Next Steps ##
 
-For details on using your Aperture Tiles visual analytic, see the [User Guide](../../userguide/) topic.
+For details on using your Aperture Tiles visual analytic, see the [User Guide](../../../user-guide/) topic.

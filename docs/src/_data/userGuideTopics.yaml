@@ -1,0 +1,32 @@
+- label: Twitter Latin American Topic Summarization Data
+  anchor: twitter-data
+
+- label: Interface
+  anchor: interface
+  bookmarks:
+    - label: Map
+      anchor: int-map
+
+    - label: Heatmap Layer
+      anchor: int-heatmap
+
+    - label: Tile Carousel
+      anchor: int-carousel
+
+    - label: Axes
+      anchor: int-axes
+
+    - label: Description
+      anchor: int-desc
+
+    - label: Controls
+      anchor: int-controls
+
+- label: Navigation
+  anchor: navigation
+  bookmarks:
+    - label: Zoom
+      anchor: zoom
+
+    - label: Explore
+      anchor: explore
