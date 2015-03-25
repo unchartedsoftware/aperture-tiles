@@ -49,14 +49,14 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		rawProps.setProperty("oculus.binning.source.partitions", "13")
 		rawProps.setProperty("oculus.binning.name", "sample name")
 		rawProps.setProperty("oculus.binning.parsing.a.index", "0")
-		rawProps.setProperty("oculus.binning.parsing.a.fieldType", "Int")
+		rawProps.setProperty("oculus.binning.parsing.a.fieldType", "int")
 		rawProps.setProperty("oculus.binning.parsing.e.index", "3")
-		rawProps.setProperty("oculus.binning.parsing.e.fieldType", "Double")
+		rawProps.setProperty("oculus.binning.parsing.e.fieldType", "double")
 		rawProps.setProperty("oculus.binning.parsing.d.index", "7")
-		rawProps.setProperty("oculus.binning.parsing.d.fieldType", "Date")
+		rawProps.setProperty("oculus.binning.parsing.d.fieldType", "date")
 		rawProps.setProperty("oculus.binning.parsing.d.dateFormat", "yyyy-MM-dd HH:mm:ss")
 		rawProps.setProperty("oculus.binning.parsing.c.index", "5")
-		rawProps.setProperty("oculus.binning.parsing.c.fieldType", "Long")
+		rawProps.setProperty("oculus.binning.parsing.c.fieldType", "long")
 		rawProps.setProperty("oculus.binning.parsing.separator", "\t")
 
 		val data = sc.parallelize(List("1\ta\tb\t1.1\tc\t1\td\t2001-01-01 01:01:01\te",

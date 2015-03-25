@@ -63,8 +63,9 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 				val ipv4String     = "192.168.0."+n
 				val dateString     = "%02d:%02d:%02d".format(n%12, n%60, n%60)
 				val propertyString = "a=aval;b=bval;n="+n
+				val mixedString     = "str val"
 				Array(boolString, byteString, shortString, intString, longString, floatString,
-				      doubleString, strString, ipv4String, dateString, propertyString).mkString(",")
+				      doubleString, strString, ipv4String, dateString, propertyString, mixedString).mkString(",")
 			}
 		)
 		val configuration = new Properties()
@@ -97,6 +98,8 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		configuration.setProperty("oculus.binning.parsing.prop.propertyType",           "int")
 		configuration.setProperty("oculus.binning.parsing.prop.propertySeparator",      ";")
 		configuration.setProperty("oculus.binning.parsing.prop.propertyValueSeparator", "=")
+		configuration.setProperty("oculus.binning.parsing.mixedCase.index",   "11")
+		configuration.setProperty("oculus.binning.parsing.mixedCase.fieldType", "string")
 
 		new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 	}
@@ -104,7 +107,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 	test("Test CSV => schema conversion") {
 		val reader = createReader
 		val fields = reader.schema.fields
-		assert(11 === fields.size)
+		assert(12 === fields.size)
 
 		assert(("bool",   BooleanType)         === (fields( 0).name, fields( 0).dataType))
 		assert(("byte",   ByteType)            === (fields( 1).name, fields( 1).dataType))
@@ -175,5 +178,12 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 
 		val props = reader.asSchemaRDD.select('prop).map(_(0).asInstanceOf[Int]).collect.toList
 		props.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
+	}
+
+	test("CSV case sensitivity") {
+		val reader = createReader
+		import reader.sqlc._
+		val result = reader.asSchemaRDD.select('mixedCase).map(_(0).asInstanceOf[String]).first
+		assertResult("str val")(result)
 	}
 }

@@ -70,7 +70,7 @@ import scala.util.Try
  *            into a double </dd>
  *       <dt> date </dt>
  *       <dd> Treat the column as containing a date.  The date will be parsed and transformed into milliseconds
- *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but 
+ *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but
  *            this can be overridden using the oculus.binning.parsing.&lt;field&gt;.dateFormat. </dd>
  *       <dt> propertyMap </dt>
  *       <dd> Treat the column as a property map.  Further information is then needed to get the specific property.
@@ -155,7 +155,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 		def getParseFunction (fieldName: String, stringType: String): (DataType, String => Any) =
 			stringType match {
 				case "boolean" => (BooleanType, s => {
-					                   val ss = s.toLowerCase.trim
+					                   val ss = s.trim
 					                   s == "yes" || s == "true" || s == "1"
 				                   })
 				case "byte" => (ByteType, s => s.trim.toShort.toByte)
@@ -177,11 +177,11 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 					(TimestampType, s => new Timestamp(format.parse(s.trim).getTime()))
 				}
-				case "propertymap" => {
+				case "propertyMap" => {
 					val property = configuration.getString(
 						"oculus.binning.parsing." + fieldName + ".property",
 						"Property name for the property of interest in the "+fieldName+" field",
-						None).toLowerCase.trim
+						None).trim
 					val propertyType = getFieldType(fieldName, "propertyType")
 					val propSep = configuration.getString(
 						"oculus.binning.parsing." + fieldName + ".propertySeparator",
@@ -196,7 +196,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 					(eltType, s => {
 						 val rawValue = s.split(propSep)
 							 .map(_.split(valueSep))
-							 .filter(kv => property == kv(0).trim.toLowerCase)
+							 .filter(kv => property == kv(0).trim)
 							 .map(kv => if (kv.size > 1) kv(1) else "")
 							 .takeRight(1)(0)
 						 eltParser(rawValue)
@@ -214,7 +214,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 				val fieldName = indexProperty.substring("oculus.binning.parsing.".length,
 				                                        indexProperty.length - ".index".length)
 				val fieldIndex = configuration.getInt(indexProperty, "The column number of the " + fieldName + " field")
-				val fieldType = getFieldType(fieldName).toLowerCase.trim
+				val fieldType = getFieldType(fieldName).trim
 				val (dataType, parser) = getParseFunction(fieldName, fieldType)
 
 				(schemaField(fieldName, dataType), fieldIndex, parser)

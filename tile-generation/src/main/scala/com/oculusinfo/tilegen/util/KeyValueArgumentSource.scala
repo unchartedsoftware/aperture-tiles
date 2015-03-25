@@ -81,7 +81,7 @@ abstract class KeyValueArgumentSource {
 
 	/**
 	 * Indicates that this object is used in a distributed computation, or not.
-	 * When in a distributed computation, nothing is saved (so that nothing need 
+	 * When in a distributed computation, nothing is saved (so that nothing need
 	 * be returned to the master object)
 	 */
 	def setDistributedComputation (distributed: Boolean): Unit = {
@@ -105,7 +105,7 @@ abstract class KeyValueArgumentSource {
 		var result: Option[T] = default
 		var defaulted = true
 		try {
-			val firstKey = keys.map(_.toLowerCase()).filter(properties.get(_).isDefined).take(1)
+			val firstKey = keys.filter(properties.get(_).isDefined).take(1)
 			if (1 == firstKey.size) {
 				result = Some(conversion(properties.get(firstKey(0)).get))
 				defaulted = false
@@ -146,12 +146,11 @@ abstract class KeyValueArgumentSource {
 	                                        argType: String,
 	                                        conversion: String => T,
 	                                        default: Option[Seq[T]] = Some(Seq[T]())): Option[Seq[T]] = {
-		val lcKey = key.toLowerCase
 		var result: Option[Seq[T]] = default
 		var defaulted = true
 
 		try {
-			val entries = properties.keySet.filter(_.startsWith(lcKey))
+			val entries = properties.keySet.filter(_.startsWith(key))
 			entries.size match {
 				case 0 => {}
 				case 1 => {
@@ -161,7 +160,7 @@ abstract class KeyValueArgumentSource {
 				case _ => {
 					val maxEntry = entries.map(_.substring(key.length+1).toInt).reduce(_ max _)
 					result = Some(Range(0, maxEntry+1).map(index =>
-						              conversion(properties(lcKey+"."+index))
+						              conversion(properties(key+"."+index))
 					              ).toSeq)
 					defaulted = false;
 				}
@@ -191,13 +190,13 @@ abstract class KeyValueArgumentSource {
 	 * Simple function to get a string property
 	 *
 	 * @param key
-	 *        The text (case-insensitive) of the property for which to look.  
+	 *        The text (case-insensitive) of the property for which to look.
 	 * @param description
-	 *        A description of this property, for purposes of helping the user 
+	 *        A description of this property, for purposes of helping the user
 	 *        to use it correctly
-	 * @param default The default value.  If None, and the property is not 
-	 *        specified in the properties, an exception is thrown; if Some, 
-	 *        this default value will be used if the property is absent, or if 
+	 * @param default The default value.  If None, and the property is not
+	 *        specified in the properties, an exception is thrown; if Some,
+	 *        this default value will be used if the property is absent, or if
 	 *        there is an error parsing the property.
 	 */
 	def getString (key: String,
@@ -218,8 +217,8 @@ abstract class KeyValueArgumentSource {
 
 	/**
 	 * Simple function to get an optional string property.
-	 * 
-	 * The only functional difference between this and the above getString is 
+	 *
+	 * The only functional difference between this and the above getString is
 	 * that this version allows a default of None, which the above does not.
 	 */
 	def getStringOption (key: String,
@@ -231,9 +230,9 @@ abstract class KeyValueArgumentSource {
 	}
 
 	/**
-	 * Simple function to get a list of strings out of a single property,  The 
-	 * list uses the specified separator to separate elements.  All arguments 
-	 * to this method are as in {@link #getString}, except those listed 
+	 * Simple function to get a list of strings out of a single property,  The
+	 * list uses the specified separator to separate elements.  All arguments
+	 * to this method are as in {@link #getString}, except those listed
 	 * below
 	 *
 	 * @param separator
@@ -250,16 +249,16 @@ abstract class KeyValueArgumentSource {
 	}
 
 	/**
-	 * Simple function to get a sequence of related properties.  This sequence 
+	 * Simple function to get a sequence of related properties.  This sequence
 	 * must be in one of two forms:
-	 * 
+	 *
 	 * <ol>
 	 * <li> A single-element list can just have the stated key, as is </li>
-	 * <li> Otherwise, the list must be of properties of the form 
-	 * &lt;key&gt;.&lt;index&gt;, where &lt;index&gt; is a number; the list is 
+	 * <li> Otherwise, the list must be of properties of the form
+	 * &lt;key&gt;.&lt;index&gt;, where &lt;index&gt; is a number; the list is
 	 * 0-based, and no indices may be skipped.
 	 * </ol>
-	 * 
+	 *
 	 * All arguments are as in {@link #getString}.
 	 */
 	def getStringPropSeq (key: String,
@@ -427,13 +426,13 @@ abstract class KeyValueArgumentSource {
 
 
 	private def toBoolean (value: String): Boolean = {
-		val lowerValue = value.toLowerCase.trim
-		if (lowerValue == "true".substring(0, lowerValue.length min "true".length)) {
+		val trimmedValue = value.trim
+		if (trimmedValue == "true".substring(0, trimmedValue.length min "true".length)) {
 			true
-		} else if (lowerValue == "yes".substring(0, lowerValue.length min "yes".length)) {
+		} else if (trimmedValue == "yes".substring(0, trimmedValue.length min "yes".length)) {
 			true
-		} else if (lowerValue.map(c => '-' == c || ('0' <= c && c <= '9')).reduce(_ && _)) {
-			0 != lowerValue.toInt
+		} else if (trimmedValue.map(c => '-' == c || ('0' <= c && c <= '9')).reduce(_ && _)) {
+			0 != trimmedValue.toInt
 		} else {
 			false
 		}
