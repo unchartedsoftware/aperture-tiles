@@ -27,15 +27,22 @@ package com.oculusinfo.tilegen.tiling
 import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
+
+import grizzled.slf4j.Logger
+
+import org.apache.avro.file.CodecFactory
+
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+
 import com.oculusinfo.binning.impl.AOITilePyramid
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
-import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescriptionTileWrapper, ComposedTileAnalytic, NumericMaxTileAnalytic, NumericMinTileAnalytic}
+import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import com.oculusinfo.tilegen.tiling.analytics.ComposedTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMaxTileAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.NumericMinTileAnalytic
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-import grizzled.slf4j.Logger
-import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
-import org.apache.avro.file.CodecFactory
 
 /**
  * Provides operations and companion argument parsers that can be bound into a TilePipeline
@@ -175,10 +182,10 @@ object TileOperations {
 		val minTime = formatter.parse(minDate).getTime
 		val maxTime = formatter.parse(maxDate).getTime
 		val timeExtractor = calculateExtractor(timeCol, input.srdd.schema)
-		val filtered = input.srdd.filter { row =>
+		val filtered = input.sqlContext.createDataFrame(input.srdd.rdd.filter { row =>
 			val time = formatter.parse(timeExtractor(row).toString).getTime
 			minTime <= time && time <= maxTime
-		}
+		}, input.srdd.schema)
 		PipelineData(input.sqlContext, filtered)
 	}
 
@@ -233,11 +240,11 @@ object TileOperations {
 	 */
 	def integralRangeFilterOp(min: Seq[Long], max: Seq[Long], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
 		val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
-		val result = input.srdd.filter { row =>
+		val result = input.sqlContext.createDataFrame(input.srdd.rdd.filter { row =>
 			val data = extractors.map(_(row).asInstanceOf[Number].longValue)
 			val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
 			if (exclude) !inRange else inRange
-		}
+		}, input.srdd.schema)
 		PipelineData(input.sqlContext, result)
 	}
 
@@ -274,11 +281,11 @@ object TileOperations {
 	 */
 	def fractionalRangeFilterOp(min: Seq[Double], max: Seq[Double], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
 		val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
-		val result = input.srdd.filter { row =>
+		val result = input.sqlContext.createDataFrame(input.srdd.rdd.filter { row =>
 			val data = extractors.map(_(row).asInstanceOf[Number].doubleValue)
 			val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
 			if (exclude) !inRange else inRange
-		}
+		}, input.srdd.schema)
 		PipelineData(input.sqlContext, result)
 	}
 
@@ -312,12 +319,12 @@ object TileOperations {
 	def regexFilterOp(regexStr: String, colSpec: String, exclude: Boolean = false)(input: PipelineData) = {
 		val regex = regexStr.r
 		val extractor = calculateExtractor(colSpec, input.srdd.schema)
-		val result = input.srdd.filter { row =>
+		val result = input.sqlContext.createDataFrame(input.srdd.rdd.filter { row =>
 			extractor(row).toString match {
 				case regex(_*) => if (exclude) false else true
 				case _ => if (exclude) true else false
 			}
-		}
+		}, input.srdd.schema)
 		PipelineData(input.sqlContext, result)
 	}
 
@@ -343,8 +350,9 @@ object TileOperations {
 	 * @return Pipeline data containing a schema RDD with only the selected columns.
 	 */
 	def columnSelectOp(colSpecs: Seq[String])(input: PipelineData) = {
-		val colExprs = colSpecs.map(UnresolvedAttribute(_))
-		val result = input.srdd.select(colExprs:_*)
+//		val colExprs = colSpecs.map(UnresolvedAttribute(_))
+//		val result = input.srdd.select(colExprs:_*)
+		val result = input.srdd.selectExpr(colSpecs:_*)
 		PipelineData(input.sqlContext, result)
 	}
 

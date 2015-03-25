@@ -280,8 +280,9 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
 				.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
-		val minBounds = bounds.grouped(2).map(_(0)).toSeq
-		val maxBounds = bounds.grouped(2).map(_(1)).toSeq
+		val fields = indexer.fields.size
+		val minBounds: Seq[Any] = (1 to fields).map(n => bounds((n-1)*2))
+		val maxBounds: Seq[Any] = (1 to fields).map(n => bounds(n*2-1))
 		val (minX, minY) = indexer.indexScheme.toCartesian(minBounds)
 		val (maxX, maxY) = indexer.indexScheme.toCartesian(maxBounds)
 		(minX, maxX, minY, maxY)
@@ -369,12 +370,12 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val localValuer = valuer
 			data.map(row =>
 				{
-					val index = row.take(indexFields)
+					val index = (0 until indexFields).map(n => row(n))
 
-					val values = row.drop(indexFields).take(valueFields)
+					val values = (indexFields until (indexFields+valueFields)).map(n => row(n))
 					val value = localValuer.convert(values)
 
-					val analyticInputs = row.drop(indexFields+valueFields)
+					val analyticInputs = ((indexFields+valueFields) until row.length).map(n => row(n))
 					val analysis = localDataAnalytics.map(analytic => analytic.convert(analyticInputs))
 
 					(index, value, analysis)

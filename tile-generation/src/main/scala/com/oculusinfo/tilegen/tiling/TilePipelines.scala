@@ -26,7 +26,9 @@ package com.oculusinfo.tilegen.tiling
 
 import com.oculusinfo.tilegen.tiling.TilePipelines.PipelineOpBinding
 import grizzled.slf4j.Logger
-import org.apache.spark.sql.{SQLContext, SchemaRDD, StructType}
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.sql.types.StructType
 
 /**
  * Data that is passed from stage to stage of the tile pipeline.
@@ -104,7 +106,7 @@ object TilePipelines {
 		input match {
 			case Some(i) => ex(start, i)
 			case None =>
-				val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
+				val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Array()))
 				ex(start, PipelineData(sqlContext, emptySchema))
 		}
 

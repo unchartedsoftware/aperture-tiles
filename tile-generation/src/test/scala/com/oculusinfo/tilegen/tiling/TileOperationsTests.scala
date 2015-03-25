@@ -29,7 +29,7 @@ import java.io.File
 
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
 import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.catalyst.types.StructType
+import org.apache.spark.sql.types.StructType
 import org.scalatest.FunSuite
 
 import scala.collection.mutable.ListBuffer

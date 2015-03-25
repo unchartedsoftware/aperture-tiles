@@ -32,10 +32,10 @@ import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.tiling.analytics.{NumericMaxBinningAnalytic, NumericSumBinningAnalytic, NumericMinBinningAnalytic}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.IntegerType
-import org.apache.spark.sql.LongType
-import org.apache.spark.sql.DoubleType
-import org.apache.spark.sql.TimestampType
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.DoubleType
+import org.apache.spark.sql.types.TimestampType
 import org.scalatest.FunSuite
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer
 
