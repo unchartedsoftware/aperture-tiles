@@ -114,6 +114,10 @@ subprojects {
 		maven {			
 			url = "https://repository.cloudera.com/artifactory/cloudera-repos"
 		}
+		// Needed for our org.restlet dependencies
+		maven {
+			url "https://repository.sonatype.org/content/groups/forge"
+		}
 	}
 
 	// A shared function to determine whether we use the older unified HBase jar, or the
