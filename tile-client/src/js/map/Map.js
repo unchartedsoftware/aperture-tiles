@@ -448,17 +448,19 @@
         },
 
         /**
-         * Enables the panning controls for the map.
+         * Enables the panning and zoom controls for the map.
          */
-        enableNavigation: function() {
+        enableControls: function() {
             this.navigationControls.activate();
+            this.zoomControls.activate();
         },
 
         /**
-         * Disables the panning controls for the map.
+         * Disables the panning and zoom controls for the map.
          */
-        disableNavigation: function() {
+        disableControls: function() {
             this.navigationControls.deactivate();
+            this.zoomControls.deactivate();
         },
 
         /**

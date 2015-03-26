@@ -38,6 +38,7 @@
     cursor: pointer;
 	float: right;
     right: -50%;
+    height: 30px;
     position: relative;
     z-index: 1;
 }
@@ -55,6 +56,8 @@
 
 .text-score-weight-bar {
 	position:absolute;
+	height: 6px;
+	width: 120px;
 	margin-left: 50%;
 	bottom: 0px;
 	border: 1px solid #000000;
