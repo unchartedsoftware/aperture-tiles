@@ -6,6 +6,13 @@ description = "A library to generate Twitter topic tiles"
 apply plugin: "scala"
 // Gradle/intellij don't work properly together with 1.8
 sourceCompatibility = '1.7'
+if (JavaVersion.current().isJava8Compatible()) {
+	allprojects {
+		tasks.withType(Javadoc) {
+			options.addStringOption('Xdoclint:none', '-quiet')
+		}
+	}
+}
 
 
 // appends scala test functionality to the baseline test task

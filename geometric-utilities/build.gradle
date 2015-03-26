@@ -4,6 +4,13 @@ description = "Useful geometric utilities for general use"
 apply plugin: "scala"
 // Gradle/intellij don't work properly together with 1.8
 sourceCompatibility = '1.7'
+if (JavaVersion.current().isJava8Compatible()) {
+	allprojects {
+		tasks.withType(Javadoc) {
+			options.addStringOption('Xdoclint:none', '-quiet')
+		}
+	}
+}
 
 
 // Task to create a JAR from all source (java and scala)
