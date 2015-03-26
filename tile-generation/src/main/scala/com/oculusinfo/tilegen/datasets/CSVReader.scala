@@ -70,7 +70,7 @@ import scala.util.Try
  *            into a double </dd>
  *       <dt> date </dt>
  *       <dd> Treat the column as containing a date.  The date will be parsed and transformed into milliseconds
- *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but
+ *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but 
  *            this can be overridden using the oculus.binning.parsing.&lt;field&gt;.dateFormat. </dd>
  *       <dt> propertyMap </dt>
  *       <dd> Treat the column as a property map.  Further information is then needed to get the specific property.
@@ -174,7 +174,8 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 						                        "The date format of the "+fieldName+" field",
 						                        Some("yyMMddHHmm")))
 					format.setTimeZone(TimeZone.getTimeZone("GMT"))
-					(LongType, s => format.parse(s.trim).getTime())
+
+					(TimestampType, s => new Timestamp(format.parse(s.trim).getTime()))
 				}
 				case "propertymap" => {
 					val property = configuration.getString(
