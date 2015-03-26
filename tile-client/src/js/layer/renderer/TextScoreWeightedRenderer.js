@@ -31,7 +31,7 @@
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 5,
         MIN_BAR_WIDTH = 30,
-        MAX_BAR_WIDTH = 125,
+        MAX_BAR_WIDTH = 110,
         injectCss;
 
     injectCss = function( spec ) {
