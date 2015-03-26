@@ -53,7 +53,7 @@ import com.oculusinfo.factory.properties.StringProperty;
  * @author mkielo
  */
 
-public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<List<Number>> {
+public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<List<Number>> {
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
@@ -66,7 +66,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
     }
 
     public TypeDescriptor getAcceptedTypeDescriptor () {
-        return new TypeDescriptor(List.class, new TypeDescriptor(Double.class));
+        return new TypeDescriptor(List.class, new TypeDescriptor(Number.class));
     }
 
 
@@ -133,17 +133,17 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
                     int maxY = (int) Math.round((ty+1)*yScale);
 
                     List<Number> binContents = transformedContents.getBin(tx, ty);
-                    Number binCount = 0;
+                    double binCount = 0;
                     for(int i = 0; i < binContents.size(); i++) {
                     	if ( binContents.get(i) != null ) {
-                    		binCount = binCount.doubleValue() + binContents.get(i).doubleValue();
+                    		binCount = binCount + binContents.get(i).doubleValue();
                     	}
                     }
 
                     //log/linear
-                    Number transformedValue = t.transform(binCount.doubleValue());
+                    Number transformedValue = t.transform(binCount);
                     int rgb;
-                    if (binCount.doubleValue() > 0) {
+                    if (binCount > 0) {
                         rgb = colorRamp.getRGB( ( transformedValue.doubleValue() - scaledMin ) * oneOverScaledRange );
                     } else {
                         rgb = COLOR_BLANK.getRGB();
