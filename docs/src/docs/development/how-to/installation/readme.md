@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Installation
-permalink: docs/development/installation/
+subsection: Development
+chapter: How-To
+topic: Installation
+permalink: docs/development/how-to/installation/
 layout: submenu
 ---
 
@@ -13,8 +14,8 @@ The instructions on this page are intended for developers who want to install th
 
 For quick examples of the capabilities of Aperture Tiles, see the following topics:
 
-- [Demos](../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
-- [Download](../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
+- [Demos](../../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
+- [Download](../../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
@@ -28,7 +29,7 @@ This project has the following prerequisites:
 				<th scope="col" width="30%">Required</th>
 				<th scope="col" width="50%">Notes</th>
 			</thead>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Operating System</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -39,7 +40,7 @@ This project has the following prerequisites:
 					<div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Languages</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -51,7 +52,7 @@ This project has the following prerequisites:
 					<div class="description"></div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -65,12 +66,12 @@ This project has the following prerequisites:
 					</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
 						<a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
 						<ul>
-							<li><a href="http://www.cloudera.com/content/cloudera/en/products/cdh.html">Cloudera</a>  v4.6 (<em>recommended)</em></li>
+							<li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
 							<li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
 							<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
 							<li><a href="http://hortonworks.com/">HortonWorks</a></li>
@@ -83,7 +84,7 @@ This project has the following prerequisites:
 					</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Web Server</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -94,7 +95,7 @@ This project has the following prerequisites:
 					<div class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</div>
 				</td>
 			</tr>
-			<tr >
+			<tr>
 				<td style="vertical-align: text-top" class="attributes">Build Automation</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
@@ -110,7 +111,7 @@ This project has the following prerequisites:
 	</nav>
 </div>
 
-<img src="../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
+<img src="../../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
 ## <a name="source-code"></a> Source Code ##
 
@@ -124,56 +125,73 @@ Aperture Tiles is dependent on the *master* branch of Aperture JS source code, w
 
 Aperture Tiles is made up of the following sub-projects:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>math-utilities</dt>
-				<dd>Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.</dd>
-				
-				<dt>geometric-utilities</dt>
-				<dd>Advanced math utilities for processing geometry and geographic problems.</dd>
-				
-				<dt>binning-utilities</dt>
-				<dd>Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</dd>
-				
-				<dt>factory-utilities</dt>
-				<dd>Factory system to allow construction and configuration of generic objects.</dd>
-
-				<dt>tile-generation</dt>
-				<dd>Spark-based tools to generate tile pyramids from raw data.</dd>
-				
-				<dt>tile-rendering</dt>
-				<dd>Library that handles turning tile data into useful output formats, generally graphical.</dd>
-
-				<dt>tile-service</dt>
-				<dd>Web service to serve tiles from tile pyramids to web clients.</dd>
-				
-				<dt>spark-tile-utilities</dt>
-				<dd>Optional services for allowing the tile server to communicate directly with Spark.</dd>
-				
-				<dt>annotation-service</dt>
-				<dd>Optional services for adding annotations to Aperture Tiles visualizations.</dd>
-				
-				<dt>tile-client</dt>
-				<dd>Simple web client to display tiles from tile pyramids.</dd>
-				
-				<dt>tile-packaging</dt>
-				<dd>Packaged assembly of the tile generation service for the <a href="../quickstart/">Quick Start</a> example on this site.</dd>
-				
-				<dt>tile-examples</dt>
-				<dd>Example applications.</dd>
-				
-				<dt>gradle</dt>
-				<dd>Gradle build system support.</dd>
-				
-				<dt>docs</dt>
-				<dd>Source files for the documentation on this website.</dd>
-			</dl>
-		</ul>
-	</div>
+<div class="props">
+	<nav>
+		<table class="summaryTable" width="100%">
+			<thead>
+				<th scope="col" width="25%">Sub-Project</th>
+				<th scope="col" width="75%">Description</th>
+			</thead>
+			<tr>
+				<td class="attributes">math-utilities</td>
+				<td class="attributes">Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.</td>
+			</tr>
+			<tr>
+				<td class="attributes">geometric-utilities</td>
+				<td class="attributes">Advanced math utilities for processing geometry and geographic problems.</td>
+			</tr>
+			<tr>
+				<td class="attributes">binning-utilities</td>
+				<td class="attributes">Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</td>
+			</tr>
+			<tr>
+				<td class="attributes">factory-utilities</td>
+				<td class="attributes">Factory system to allow construction and configuration of generic objects.</td>
+			</tr>
+			<tr>
+				<td class="attributes">tile-generation</td>
+				<td class="attributes">Spark-based tools to generate tile pyramids from raw data.</td>
+			</tr>
+			<tr>
+				<td class="attributes">tile-rendering</td>
+				<td class="attributes">Library that handles turning tile data into useful output formats, generally graphical.</td>
+			</tr>
+			<tr>
+				<td class="attributes">tile-service</td>
+				<td class="attributes">Web service to serve tiles from tile pyramids to web clients.</td>
+			</tr>
+			<tr>
+				<td class="attributes">spark-tile-utilities</td>
+				<td class="attributes">Optional services for allowing the tile server to communicate directly with Spark.</td>
+			</tr>
+			<tr>
+				<td class="attributes">annotation-service</td>
+				<td class="attributes">Optional services for adding annotations to Aperture Tiles visualizations.</td>
+			</tr>
+			<tr>
+				<td class="attributes">tile-client</td>
+				<td class="attributes">Simple web client to display tiles from tile pyramids.</td>
+			</tr>
+			<tr>
+				<td class="attributes">tile-packaging</td>
+				<td class="attributes">Packaged assembly of the tile generation service for the <a href="../quickstart/">Quick Start</a> example on this site.</td>
+			</tr>
+			<tr>
+				<td class="attributes">tile-examples</td>
+				<td class="attributes">Example applications.</td>
+			</tr>
+			<tr>
+				<td class="attributes">gradle</td>
+				<td class="attributes">Gradle build system support.</td>
+			</tr>
+			<tr>
+				<td class="attributes">docs</td>
+				<td class="attributes">Source files for the documentation on this website.</td>
+			</tr>
+		</table>
+	</nav>
 </div>
- 
+
 ### <a name="building-project"></a> Building the Project ###
 
 #### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####

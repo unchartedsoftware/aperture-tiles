@@ -1,0 +1,120 @@
+- label: How-To
+  path: how-to
+  listType: ol
+  topics:
+    - label: Quick Start
+      path: quickstart
+      bookmarks:
+        - label: Prerequisites
+          anchor: prerequisites
+
+        - label: Tile Generation
+          anchor: tile-generation
+
+        - label: Tile Server Configuration
+          anchor: tile-server-configuration
+
+        - label: Tile Client Application
+          anchor: tile-client-application
+
+        - label: Deployment
+          anchor: deployment
+
+    - label: Installation
+      path: installation
+      bookmarks:
+        - label: Prerequisites
+          anchor: prerequisites
+
+        - label: Source Code
+          anchor: source-code
+
+    - label: Tile Generation
+      path: generation
+      bookmarks:
+        - label: Tile Pyramid Hierarchy
+          anchor: pyramid-hierarchy
+
+        - label: Tile Generation Process
+          anchor: tile-gen-process
+
+        - label: Prerequisites
+          anchor: prerequisites
+
+        - label: Standard Tiling Jobs
+          anchor: csvbinner
+
+        - label: Custom Tiling Jobs
+          anchor: custom-tiling
+
+        - label: Testing Tiling Job Output
+          anchor: bin-visualizer
+
+    - label: App Configuration
+      path: configuration
+      bookmarks:
+        - label: Template Setup
+          anchor: template-setup
+
+        - label: Tile Server Configuration
+          anchor: server-config
+
+        - label: Tile Client Configuration
+          anchor: clientconfig
+
+        - label: Deployment
+          anchor: deployment
+
+- label: API
+  path: api
+  listType: ul
+  topics:
+    - label: Overview
+      path: 
+      bookmarks:
+
+    - label: Annotation
+      path: annotation
+      bookmarks:
+        - label: Data Types
+          anchor: data-types
+
+        - label: Web Services
+          anchor: web-services
+
+    - label: Layer
+      path: layer
+      bookmarks:
+        - label: Configuration
+          anchor: configuration
+
+        - label: Request All Layers
+          anchor: request-all-layers
+
+        - label: Request Specific Layer
+          anchor: request-specific-layer
+
+        - label: Store a Configuration State
+          anchor: store-configuration-state
+
+        - label: Get a Configuration State
+          anchor: get-configuration-state
+
+        - label: Get Configuration States
+          anchor: get-configuration-states
+
+    - label: Legend
+      path: legend
+      bookmarks:
+        - label: Get Encoded Image Key
+          anchor: get-encoded-image-key
+
+    - label: Tile
+      path: tile
+      bookmarks:
+        - label: Get Tile
+          anchor: get-tile
+
+    - label: Tile Client
+      path: jsdocs
+      bookmarks:

@@ -1,8 +1,9 @@
 ---
 section: Docs
-subtitle: Development
-chapter: Generation
-permalink: docs/development/generation/diagram.html
+subsection: Development
+chapter: How-To
+topic: Generation
+permalink: docs/development/how-to/generation/diagram.html
 layout: image
 ---
 

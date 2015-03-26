@@ -84,7 +84,7 @@
      * @returns {{large: Array, medium: Array, small: Array}}
      */
     function fillArrayByIncrement( axis, start, end, intervals ) {
-        var EPSILON = ( end - start ) * 0.0000001,
+        var EPSILON = ( end - start ) * 0.000001,
             subIncrement = intervals.subIncrement,
             startingMarkerTypeIndex = intervals.startingMarkerTypeIndex,
             markers = {
@@ -95,7 +95,13 @@
             i = Util.mod( startingMarkerTypeIndex, MARKER_TYPE_ORDER.length ),
             value;
         // reduce sub increment by epsilon to prevent precision errors culling max point
-        subIncrement -= EPSILON;
+        if ( axis.units.type !== 'time' &&
+            axis.units.type !== 'date' &&
+            axis.units.type !== 'i' &&
+            axis.units.type !== 'int' &&
+            axis.units.type !== 'integer' ) {
+            subIncrement -= EPSILON;
+        }
         for ( value=start; value<=end; value+=subIncrement ) {
             markers[ MARKER_TYPE_ORDER[i] ].push({
                 label: getMarkerRollover( axis, value ),
@@ -128,7 +134,7 @@
             minCull = axis.min;
         }
         // determine how many sub increments from the pivot to the minimum culling point
-        incrementCount = Util.roundTowards( ( minCull - intervals.pivot ) / intervals.subIncrement, minCull );
+        incrementCount = Math.ceil( ( minCull - intervals.pivot ) / intervals.subIncrement, minCull );
         intervals.startingMarkerTypeIndex = incrementCount;
         // return the minimum increment that is still in view
         return intervals.pivot + intervals.subIncrement * incrementCount;
@@ -154,7 +160,7 @@
             maxCull = axis.max;
         }
         // determine how many sub increments from the pivot to the maximum culling point
-        incrementCount = Util.roundTowards( ( maxCull - intervals.pivot ) / intervals.subIncrement, maxCull );
+        incrementCount = Math.floor( ( maxCull - intervals.pivot ) / intervals.subIncrement, maxCull );
         // return the maximum increment that is still in view
         return intervals.pivot + intervals.subIncrement * incrementCount;
     }

@@ -170,6 +170,7 @@
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
         setLevelMinMax( this );
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
     /**
@@ -185,6 +186,7 @@
         }
         this.map.off( "zoomend", this.zoomCallback );
         this.zoomCallback = null;
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
     /**
