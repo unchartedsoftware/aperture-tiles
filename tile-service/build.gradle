@@ -7,7 +7,7 @@ apply plugin: "java"
 // location to the set from the parent build file.
 repositories {
 	maven {
-		url = "http://maven.restlet.org"
+		url = "https://maven.restlet.com"
 	}
 }
 
