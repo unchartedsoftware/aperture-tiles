@@ -35,7 +35,7 @@ import org.apache.spark.sql.types._
 import scala.util.Try
 
 /**
- * A class that allows reading a schema file and a CSV file as a SchemaRDD.
+ * A class that allows reading a schema file and a CSV file as a DataFrame.
  *
  * This may eventually become obsolete - Spark may be writing a similar thing.
  *
@@ -71,7 +71,7 @@ import scala.util.Try
  *            into a double </dd>
  *       <dt> date </dt>
  *       <dd> Treat the column as containing a date.  The date will be parsed and transformed into milliseconds
- *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but 
+ *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but
  *            this can be overridden using the oculus.binning.parsing.&lt;field&gt;.dateFormat. </dd>
  *       <dt> propertyMap </dt>
  *       <dd> Treat the column as a property map.  Further information is then needed to get the specific property.
@@ -115,9 +115,9 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 
 	/**
-	 * Get the wrapped CSV RDD as a SchemaRDD, parsed and typed.
+	 * Get the wrapped CSV RDD as a DataFrame, parsed and typed.
 	 */
-	def asSchemaRDD = _parsed
+	def asDataFrame = _parsed
 
 	def schema = _schema
 
@@ -126,7 +126,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 	                                                 "The separator to use between fields in the input data",
 	                                                 Some("\t"))
 
-	private lazy val _parsed: SchemaRDD = {
+	private lazy val _parsed: DataFrame = {
 		val separator = _separator
 		val parsers = _parsers
 		val indices = _indices

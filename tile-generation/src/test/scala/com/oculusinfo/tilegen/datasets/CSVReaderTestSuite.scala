@@ -125,31 +125,31 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val reader = createReader
 		import reader.sqlc._
 
-		val booleans = reader.asSchemaRDD.selectExpr("cbool").map(_(0).asInstanceOf[Boolean]).collect.toList
+		val booleans = reader.asDataFrame.selectExpr("cbool").map(_(0).asInstanceOf[Boolean]).collect.toList
 		booleans.grouped(2).foreach(values => assert(List(false, true) === values))
 
-		val bytes = reader.asSchemaRDD.selectExpr("cbyte").map(_(0).asInstanceOf[Byte]).collect.toList
+		val bytes = reader.asDataFrame.selectExpr("cbyte").map(_(0).asInstanceOf[Byte]).collect.toList
 		bytes.zipWithIndex.foreach(values => assert((1+values._2).toByte === values._1))
 
-		val shorts = reader.asSchemaRDD.selectExpr("cshort").map(_(0).asInstanceOf[Short]).collect.toList
+		val shorts = reader.asDataFrame.selectExpr("cshort").map(_(0).asInstanceOf[Short]).collect.toList
 		shorts.zipWithIndex.foreach(values => assert((1+values._2).toShort=== values._1))
 
-		val ints = reader.asSchemaRDD.selectExpr("cint").map(_(0).asInstanceOf[Int]).collect.toList
+		val ints = reader.asDataFrame.selectExpr("cint").map(_(0).asInstanceOf[Int]).collect.toList
 		ints.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
 
-		val longs = reader.asSchemaRDD.selectExpr("clong").map(_(0).asInstanceOf[Long]).collect.toList
+		val longs = reader.asDataFrame.selectExpr("clong").map(_(0).asInstanceOf[Long]).collect.toList
 		longs.zipWithIndex.foreach(values => assert((1+values._2).toLong === values._1))
 
-		val floats = reader.asSchemaRDD.selectExpr("cfloat").map(_(0).asInstanceOf[Float]).collect.toList
+		val floats = reader.asDataFrame.selectExpr("cfloat").map(_(0).asInstanceOf[Float]).collect.toList
 		floats.zipWithIndex.foreach(values => assert((1+values._2).toFloat === values._1))
 
-		val doubles = reader.asSchemaRDD.selectExpr("cdouble").map(_(0).asInstanceOf[Double]).collect.toList
+		val doubles = reader.asDataFrame.selectExpr("cdouble").map(_(0).asInstanceOf[Double]).collect.toList
 		doubles.zipWithIndex.foreach(values => assert((1+values._2).toDouble === values._1))
 
-		val strings = reader.asSchemaRDD.selectExpr("cstr").map(_(0).asInstanceOf[String]).collect.toList
+		val strings = reader.asDataFrame.selectExpr("cstr").map(_(0).asInstanceOf[String]).collect.toList
 		strings.zipWithIndex.foreach(values => assert("abc%d".format(1+values._2) == values._1))
 
-		val ips = reader.asSchemaRDD.selectExpr("cip").map(_(0).asInstanceOf[Seq[Byte]]).collect.toList
+		val ips = reader.asDataFrame.selectExpr("cip").map(_(0).asInstanceOf[Seq[Byte]]).collect.toList
 		ips.zipWithIndex.foreach(values =>
 			{
 				assert(4 === values._1.size)
@@ -160,7 +160,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			}
 		)
 
-		val dates = reader.asSchemaRDD.selectExpr("cdate").map(_(0).asInstanceOf[Timestamp]).collect.toList
+		val dates = reader.asDataFrame.selectExpr("cdate").map(_(0).asInstanceOf[Timestamp]).collect.toList
 		dates.zipWithIndex.foreach(values =>
 			{
 				// val date: Timestamp = values._1
@@ -174,7 +174,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			}
 		)
 
-		val props = reader.asSchemaRDD.selectExpr("cprop").map(_(0).asInstanceOf[Int]).collect.toList
+		val props = reader.asDataFrame.selectExpr("cprop").map(_(0).asInstanceOf[Int]).collect.toList
 		props.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
 	}
 }

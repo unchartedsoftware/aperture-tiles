@@ -66,7 +66,7 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		                               "5\tu\tv\t5.5\tw\t5\tx\t2005-05-05 05:05:05\ty"))
 		val props = new PropertiesWrapper(rawProps)
 		val reader = new CSVReader(sqlc, data, props)
-		val srdd = reader.asSchemaRDD
+		val srdd = reader.asDataFrame
 		assert(4 === srdd.schema.fields.size)
 		assert("a" === srdd.schema.fields(0).name)
 		assert(IntegerType === srdd.schema.fields(0).dataType);

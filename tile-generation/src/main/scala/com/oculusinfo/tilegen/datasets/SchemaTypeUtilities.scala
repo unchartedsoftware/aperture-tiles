@@ -215,7 +215,7 @@ object SchemaTypeUtilities {
 	}
 
 	/**
-	 * Calculate a function to extract a single, typed field from a SchemaRDD.  calculateExtractor does not in itself
+	 * Calculate a function to extract a single, typed field from a DataFrame.  calculateExtractor does not in itself
 	 * extract these values, it just returns a function that does.
 	 *
 	 * @param columnSpec A specification of the field of interest
@@ -376,68 +376,68 @@ object SchemaTypeUtilities {
 	}
 
 	/**
-	 * Take an existing SchemaRDD, and add a new column to it.
-	 * @param base The existing SchemaRDD
+	 * Take an existing DataFrame, and add a new column to it.
+	 * @param base The existing DataFrame
 	 * @param columnName The name of the column to add
 	 * @param columnType the type of the column to add
 	 * @param columnFcn A function mapping the values of the base data specified by inputColumns onto an output value,
 	 *                  which had darn well better be of the right type.
 	 * @param inputColumns The input columns needed to calculate the output column; their extracted values become the
 	 *                     inputs to columnFcn
-	 * @return A new SchemaRDD with the named added value.
+	 * @return A new DataFrame with the named added value.
 	 */
-	def addColumn (base: SchemaRDD, columnName: String, columnType: DataType,
-	               columnFcn: Array[Any] => Any, inputColumns: String*): SchemaRDD = {
+	def addColumn (base: DataFrame, columnName: String, columnType: DataType,
+	               columnFcn: Array[Any] => Any, inputColumns: String*): DataFrame = {
 		val columns = inputColumns.map(new Column(_))
 		val newColumn = inputColumns.length match {
 			case  0 =>
 				callUDF(() => columnFcn(Array[Any]()),
 				        columnType)
-			case  1 => 
+			case  1 =>
 				callUDF((a: Any) => columnFcn(Array[Any](a)),
 				        columnType,
 				        columns(0))
-			case  2 => 
+			case  2 =>
 				callUDF((a: Any, b: Any) => columnFcn(Array[Any](a, b)),
 				        columnType,
 				        columns(0), columns(1))
-			case  3 => 
+			case  3 =>
 				callUDF((a: Any, b: Any, c: Any) => columnFcn(Array[Any](a, b, c)),
 				        columnType,
 				        columns(0), columns(1), columns(2))
-			case  4 => 
+			case  4 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any) => columnFcn(Array[Any](a, b, c, d)),
 				        columnType,
 				        columns(0), columns(1), columns(2), columns(3))
-			case  5 => 
+			case  5 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any) => columnFcn(Array[Any](a, b, c, d, e)),
 				        columnType,
 				        columns(0), columns(1), columns(2), columns(3), columns(4))
-			case  6 => 
+			case  6 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any) =>
 					columnFcn(Array[Any](a, b, c, d, e, f)),
 				        columnType,
 				        columns(0), columns(1), columns(2), columns(3), columns(4),
 				        columns(5))
-			case  7 => 
+			case  7 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any) =>
 					columnFcn(Array[Any](a, b, c, d, e, f, g)),
 				        columnType,
 				        columns(0), columns(1), columns(2), columns(3), columns(4),
 				        columns(5), columns(6))
-			case  8 => 
+			case  8 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any, h: Any) =>
 					columnFcn(Array[Any](a, b, c, d, e, f, g, h)),
 				        columnType,
 				        columns(0), columns(1), columns(2), columns(3), columns(4),
 				        columns(5), columns(6), columns(7))
-			case  9 => 
+			case  9 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any, h: Any, i: Any) =>
 					columnFcn(Array[Any](a, b, c, d, e, f, g, h, i)),
 				        columnType,
 				        columns(0), columns(1), columns(2), columns(3), columns(4),
 				        columns(5), columns(6), columns(7), columns(8))
-			case 10 => 
+			case 10 =>
 				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any, h: Any, i: Any, j: Any) =>
 					columnFcn(Array[Any](a, b, c, d, e, f, g, h, i, j)),
 				        columnType,

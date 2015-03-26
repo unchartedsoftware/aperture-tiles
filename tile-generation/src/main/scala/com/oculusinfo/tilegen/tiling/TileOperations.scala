@@ -148,7 +148,7 @@ object TileOperations {
 	 */
 	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource)(data: PipelineData): PipelineData = {
 		val reader = new CSVReader(data.sqlContext, path, argumentSource)
-		PipelineData(reader.sqlc, reader.asSchemaRDD)
+		PipelineData(reader.sqlc, reader.asDataFrame)
 	}
 
 	/**

@@ -27,17 +27,17 @@ package com.oculusinfo.tilegen.tiling
 import com.oculusinfo.tilegen.tiling.TilePipelines.PipelineOpBinding
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types.StructType
 
 /**
  * Data that is passed from stage to stage of the tile pipeline.
  *
  * @param sqlContext The spark SQL context
- * @param srdd Valid SchemaRDD
+ * @param srdd Valid DataFrame
  * @param tableName Optional associated temporary table name
  */
-case class PipelineData(sqlContext: SQLContext, srdd: SchemaRDD, tableName: Option[String] = None)
+case class PipelineData(sqlContext: SQLContext, srdd: DataFrame, tableName: Option[String] = None)
 
 /**
  * Tile pipeline tree node that transforms PipelineData
@@ -93,7 +93,7 @@ object TilePipelines {
 	 *
 	 * @param start PipelineStage to start the traversal from
 	 * @param sqlContext Spark SQL context to run the jobs under
-	 * @param input Optional start data.  Data based on an empty SchemaRDD will be used if not set.
+	 * @param input Optional start data.  Data based on an empty DataFrame will be used if not set.
 	 */
 	def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
 		// TODO: Should run a check for cycles here (tsort?)
@@ -114,7 +114,7 @@ object TilePipelines {
 }
 
 /**
- * Symbolic tile pipeline interface - allows pipelines to be constructed and manipulated using strings, making it 
+ * Symbolic tile pipeline interface - allows pipelines to be constructed and manipulated using strings, making it
  * suitable for calls via a rest interface or a config file.  Direct programmatic creation and execution should be
  * done by instancing PipelineStage objects and using the execute function directly.
  *

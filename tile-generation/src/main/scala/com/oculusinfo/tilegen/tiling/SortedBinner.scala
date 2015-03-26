@@ -55,7 +55,7 @@ import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 /**
- * This class takes a data set that is pre-sorted in Z-curve order, and 
+ * This class takes a data set that is pre-sorted in Z-curve order, and
  * transforms it into a pyramid of tiles
  */
 class SortedBinner {
@@ -67,7 +67,7 @@ class SortedBinner {
 	 * but minimal, data into an RDD of tiles on the given levels.
 	 *
 	 * @param data The data to be processed
-	 * @param binAnalytic A description of how raw values are aggregated into 
+	 * @param binAnalytic A description of how raw values are aggregated into
 	 *                    bin values
 	 * @param tileAnalytics A description of analytics that can be run on each
 	 *                      tile, and how to aggregate them
@@ -117,7 +117,7 @@ class SortedBinner {
 	/**
 	 * Process a simplified input dataset minimally - transform an RDD of raw,
 	 * but minimal, data into an RDD of tiles.
-	 * 
+	 *
 	 * @param data The data to be processed
 	 * @param binAnalytic A description of how raw values are to be aggregated into bin values
 	 * @param tileAnalytics Analytics to apply to entire produced tiles
@@ -362,7 +362,7 @@ object SortedBinnerTest {
 			}
 		}
 	}
-	
+
 	def processTask[PT: ClassTag,
 	                DT: ClassTag,
 	                AT: ClassTag,
@@ -398,7 +398,7 @@ object SortedBinnerTest {
 			}
 		)
 	}
-	
+
 	/**
 	 * This function is simply for pulling out the generic params from the TilingTask,
 	 * so that they can be used as params for other types.
@@ -460,7 +460,7 @@ object SortedBinnerTest {
 				Some(true))
 			// Register it as a table
 			val table = "table"+argIdx
-			reader.asSchemaRDD.registerTempTable(table)
+			reader.asDataFrame.registerTempTable(table)
 			if (cache) sqlc.cacheTable(table)
 
 			// Process the data

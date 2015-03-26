@@ -43,20 +43,20 @@ import scala.reflect.ClassTag
 
 /*
  * The following properties control how the application runs:
- * 
+ *
  *  hbase.zookeeper.quorum
  *      If tiles are written to hbase, the zookeeper quorum location needed to
  *      connect to hbase.
- * 
+ *
  *  hbase.zookeeper.port
  *      If tiles are written to hbase, the port through which to connect to
  *      zookeeper.  Defaults to 2181
- * 
+ *
  *  hbase.master
  *      If tiles are written to hbase, the location of the hbase master to
  *      which to write them
  *
- * 
+ *
  *  spark
  *      The location of the spark master.
  *      Defaults to "localhost"
@@ -65,13 +65,13 @@ import scala.reflect.ClassTag
  *      The file system location of Spark in the remote location (and,
  *      necessarily, on the local machine too)
  *      Defaults to "/srv/software/spark-0.7.2"
- * 
+ *
  *  user
  *      A user name to stick in the job title so people know who is running the
  *      job
  *
  *
- * 
+ *
  *  oculus.tileio.type
  *      The way in which tiles are written - either hbase (to write to hbase,
  *      see hbase. properties above to specify where) or file  to write to the
@@ -211,7 +211,7 @@ object CSVBinner {
 				Some(true))
 			// Register it as a table
 			val table = "table"+argIdx
-			reader.asSchemaRDD.registerTempTable(table)
+			reader.asDataFrame.registerTempTable(table)
 			if (cache) sqlc.cacheTable(table)
 
 			// Process the data

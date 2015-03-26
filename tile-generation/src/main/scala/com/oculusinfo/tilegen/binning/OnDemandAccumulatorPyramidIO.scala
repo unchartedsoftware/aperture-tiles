@@ -118,7 +118,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 						Some(true))
 					// Register it as a table
 					val table = TilingTask.rectifyTableName("table "+pyramidId)
-					reader.asSchemaRDD.registerTempTable(table)
+					reader.asDataFrame.registerTempTable(table)
 					if (cache) sqlc.cacheTable(table)
 
 					// Create our tiling task
@@ -133,7 +133,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 
 	/**
 	 * Direct programatic initialization.
-	 * 
+	 *
 	 * Temporary route until we get full pipeline configuration
 	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
@@ -224,8 +224,8 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 							if (tileInfos.contains(tile)) {
 								val bin = pyramid.rootToBin(x, y, tile)
 								// update bin value
-								// Can't recover from an accumulator aggregation exception (we 
-								// don't know what it has added in, and what it hasn't), so just 
+								// Can't recover from an accumulator aggregation exception (we
+								// don't know what it has added in, and what it hasn't), so just
 								// move on if we get one.
 								Try(tileInfos(tile).accumulable += (bin, value))
 								// update data analytic value

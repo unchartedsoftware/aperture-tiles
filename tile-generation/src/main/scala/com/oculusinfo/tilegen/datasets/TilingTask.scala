@@ -47,7 +47,7 @@ import scala.reflect.ClassTag
 
 object TilingTask {
 	/**
-	 * From a list of name pieces, construct a string that can be used as a table name when registering a SchemaRDD
+	 * From a list of name pieces, construct a string that can be used as a table name when registering a DataFrame
 	 * with a SQLContext.
 	 *
 	 * Basically, this strips out non-alphanumerics, and concatenates the remainder using camel-case.
@@ -60,7 +60,7 @@ object TilingTask {
 
 	/**
 	 * Create a standard tiling task from necessary ingredients
-	 * @param sqlc A SQL context in which the data, in the form of a SchemaRDD, has been registered
+	 * @param sqlc A SQL context in which the data, in the form of a DataFrame, has been registered
 	 * @param table The table name as which the data has been registered
 	 * @param config A configuration object describing how the data is to be tiled
 	 * @return A tiling task that can be used to take the data and produce a tile pyramid
