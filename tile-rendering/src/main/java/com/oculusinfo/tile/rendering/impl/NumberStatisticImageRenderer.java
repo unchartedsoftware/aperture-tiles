@@ -58,14 +58,14 @@ import com.oculusinfo.tile.util.GraphicsUtilities;
  * 
  * @author  dgray
  */
-public class DoublesStatisticImageRenderer implements TileDataImageRenderer<Double> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesStatisticImageRenderer.class);
+public class NumberStatisticImageRenderer implements TileDataImageRenderer<Number> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(NumberStatisticImageRenderer.class);
 	private static final Font   FONT   = new Font("Tahoma", Font.PLAIN, 13);
 
 
 	@Override
-	public Class<Double> getAcceptedBinClass () {
-		return Double.class;
+	public Class<Number> getAcceptedBinClass () {
+		return Number.class;
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer<Doub
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render(TileData<Double> data, LayerConfiguration config) {
+	public BufferedImage render(TileData<Number> data, LayerConfiguration config) {
 		BufferedImage bi;
 		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
@@ -108,7 +108,7 @@ public class DoublesStatisticImageRenderer implements TileDataImageRenderer<Doub
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 
-					double binCount = data.getBin(tx, ty);
+					double binCount = data.getBin(tx, ty).doubleValue();
 					if (binCount > 0 ){
 						
 						totalNonEmptyBins += 1;

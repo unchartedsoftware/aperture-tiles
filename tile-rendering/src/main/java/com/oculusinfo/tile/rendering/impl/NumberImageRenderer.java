@@ -45,19 +45,19 @@ import java.awt.image.DataBufferInt;
 /**
  * @author  dgray
  */
-public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
+public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DoublesImageRenderer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(NumberImageRenderer.class);
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
 
 	@Override
-	public Class<Double> getAcceptedBinClass () {
-		return Double.class;
+	public Class<Number> getAcceptedBinClass () {
+		return Number.class;
 	}
 
 	@Override
 	public TypeDescriptor getAcceptedTypeDescriptor () {
-		return new TypeDescriptor(Double.class);
+		return new TypeDescriptor(getAcceptedBinClass());
 	}
 
 
@@ -86,7 +86,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render(TileData<Double> data, LayerConfiguration config) {
+	public BufferedImage render(TileData<Number> data, LayerConfiguration config) {
 		int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 		int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 		BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
@@ -97,9 +97,9 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 
 			// This is the best we can do; supress the warning and move on.
 			@SuppressWarnings("unchecked")
-			ValueTransformer<Double> t = config.produce(ValueTransformer.class);
-			double scaledMax = (double)rangeMax/100;
-			double scaledMin = (double)rangeMin/100;
+			ValueTransformer<Number> t = config.produce(ValueTransformer.class);
+			Number scaledMax = rangeMax/100;
+			Number scaledMin = rangeMin/100;
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
@@ -112,8 +112,8 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 		return bi;
 	}
 
-	protected BufferedImage renderImage(TileData<Double> data,
-								   ValueTransformer<Double> t, double valueMin, double valueMax,
+	protected BufferedImage renderImage(TileData<Number> data,
+								   ValueTransformer<Number> t, Number valueMin, Number valueMax,
 								   ColorRamp colorRamp, BufferedImage bi) {
 
 		int outWidth = bi.getWidth();
@@ -124,7 +124,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 		float xScale = outWidth / xBins;
 		float yScale = outHeight / yBins;
 
-		double oneOverScaledRange = 1.0 / (valueMax - valueMin);
+		Number oneOverScaledRange = 1.0 / (valueMax.doubleValue() - valueMin.doubleValue());
 
 		int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
 
@@ -136,12 +136,12 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 				int minY = (int) Math.round(ty*yScale);
 				int maxY = (int) Math.round((ty+1)*yScale);
 
-				double binCount = data.getBin(tx, ty);
-				double transformedValue = t.transform(binCount);
+				double binCount = data.getBin(tx, ty).doubleValue();
+				Number transformedValue = t.transform(binCount).doubleValue();
 				int rgb;
 
 				if (binCount > 0) {
-					rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
+					rgb = colorRamp.getRGB( ( transformedValue.doubleValue() - valueMin.doubleValue() ) * oneOverScaledRange.doubleValue() );
 				} else {
 					rgb = COLOR_BLANK.getRGB();
 				}
@@ -165,7 +165,7 @@ public class DoublesImageRenderer implements TileDataImageRenderer<Double> {
 	 */
 	@Override
 	public int getNumberOfImagesPerTile (PyramidMetaData metadata) {
-		// Double tile rendering always produces a single image.
+		// Number tile rendering always produces a single image.
 		return 1;
 	}
 

@@ -31,9 +31,9 @@ import java.util.List;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.ColorRampFactory;
-import com.oculusinfo.tile.rendering.impl.DoubleListHeatMapImageRenderer;
-import com.oculusinfo.tile.rendering.impl.DoublesImageRenderer;
-import com.oculusinfo.tile.rendering.impl.DoublesStatisticImageRenderer;
+import com.oculusinfo.tile.rendering.impl.NumberListHeatMapImageRenderer;
+import com.oculusinfo.tile.rendering.impl.NumberImageRenderer;
+import com.oculusinfo.tile.rendering.impl.NumberStatisticImageRenderer;
 import com.oculusinfo.tile.rendering.impl.TopAndBottomTextScoresImageRenderer;
 import com.oculusinfo.tile.rendering.impl.TopTextScoresImageRenderer;
 
@@ -73,15 +73,15 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 		rendererType = rendererType.toLowerCase();
 
 		if ("heatmap".equals(rendererType)) {
-            return new DoublesImageRenderer();
+            return new NumberImageRenderer();
         } else if ("listheatmap".equals(rendererType)) {
-            return new DoubleListHeatMapImageRenderer();
+            return new NumberListHeatMapImageRenderer();
 		} else if ("toptextscores".equals(rendererType)) {
 			return new TopTextScoresImageRenderer();
 		} else if ("textscores".equals(rendererType)) {
 			return new TopAndBottomTextScoresImageRenderer();
 		} else if ("doublestatistics".equals(rendererType)) {
-			return new DoublesStatisticImageRenderer();
+			return new NumberStatisticImageRenderer();
 		} else {
 			return null;
 		}
