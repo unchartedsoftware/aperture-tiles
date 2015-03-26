@@ -111,10 +111,7 @@
      */
     TextScoreWeightedRenderer.prototype.render = function( data ) {
 
-        var ENTRY_HEIGHT = 30,
-            BAR_HEIGHT = 6,
-            BOTTOM_OFFSET = ENTRY_HEIGHT - BAR_HEIGHT - 2,
-            text = this.spec.text,
+        var text = this.spec.text,
             weights = this.spec.weights,
             threshold = this.spec.threshold || 5,
             textKey = text.textKey,
@@ -165,7 +162,7 @@
             html += '<div class="text-score-entry-parent" style="top:' + yOffset + 'px;">';
 
             // create entry
-            html += '<div class="text-score-entry" style="height:'+ENTRY_HEIGHT+'px;">';
+            html += '<div class="text-score-entry">';
 
             html += '<div class="text-score-entry-count">'+ textCount +'</div>';
 
@@ -174,7 +171,7 @@
             html += '<div class="text-score-label text-score-label-'+percentLabel+' '+desaturate+'" style="'
                 + 'font-size:'+ fontSize +'px;'
                 + 'line-height:'+ fontSize +'px;'
-                + 'bottom:'+-(BOTTOM_OFFSET-fontSize)+'px;">'+textEntry+'</div>';
+                + 'bottom:'+-(maxFontSize-fontSize)+'px;">'+textEntry+'</div>';
 
             if ( textCount > 0 ) {
                 // create weights
@@ -200,7 +197,6 @@
                 // create bar container
                 html += '<div class="text-score-weight-bar" style="'
                     + 'width:' + barWidth + 'px;'
-                    + 'height:' + BAR_HEIGHT + 'px;'
                     + 'left:' + (-barWidth*(middleWeight/weightTotal)) + 'px;">';
                 for ( j=0; j<weights.length; j++ ) {
                     // create bar

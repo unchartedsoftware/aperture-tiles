@@ -70,7 +70,12 @@ public class DenseTileSliceView<T> implements TileData<T> {
 
     @Override
     public T getBin (int x, int y) {
-        return _base.getBin(x, y).get(_slice);
+	    T result = null;
+	    List<T> bin = _base.getBin(x, y);
+	    if (bin.size() > 0) {
+		    result = bin.get(_slice);
+	    }
+	    return result;
     }
 
     @Override
