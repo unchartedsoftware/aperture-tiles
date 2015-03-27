@@ -27,20 +27,14 @@ package com.oculusinfo.tilegen.datasets
 
 
 
-import java.io.{FileWriter, File}
-import java.util.{TimeZone, Calendar, Properties}
 import java.sql.Timestamp
+import java.util.{Calendar, Properties, TimeZone}
 
-import org.apache.log4j.{LogManager, Level}
-
-import scala.collection.mutable.ArrayBuffer
-
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import org.apache.spark.{SparkContext, SharedSparkContext}
-import org.apache.spark.sql._
-
-import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import org.apache.log4j.{Level, LogManager}
+import org.apache.spark.SharedSparkContext
+import org.apache.spark.sql._
+import org.scalatest.FunSuite
 
 
 
@@ -63,9 +57,8 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 				val ipv4String     = "192.168.0."+n
 				val dateString     = "%02d:%02d:%02d".format(n%12, n%60, n%60)
 				val propertyString = "a=aval;b=bval;n="+n
-				val mixedString     = "str val"
 				Array(boolString, byteString, shortString, intString, longString, floatString,
-				      doubleString, strString, ipv4String, dateString, propertyString, mixedString).mkString(",")
+				      doubleString, strString, ipv4String, dateString, propertyString).mkString(",")
 			}
 		)
 		val configuration = new Properties()
@@ -98,8 +91,6 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		configuration.setProperty("oculus.binning.parsing.prop.propertyType",           "int")
 		configuration.setProperty("oculus.binning.parsing.prop.propertySeparator",      ";")
 		configuration.setProperty("oculus.binning.parsing.prop.propertyValueSeparator", "=")
-		configuration.setProperty("oculus.binning.parsing.mixedCase.index",   "11")
-		configuration.setProperty("oculus.binning.parsing.mixedCase.fieldType", "string")
 
 		new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 	}
@@ -107,7 +98,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 	test("Test CSV => schema conversion") {
 		val reader = createReader
 		val fields = reader.schema.fields
-		assert(12 === fields.size)
+		assert(11 === fields.size)
 
 		assert(("bool",   BooleanType)         === (fields( 0).name, fields( 0).dataType))
 		assert(("byte",   ByteType)            === (fields( 1).name, fields( 1).dataType))
@@ -180,10 +171,24 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		props.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
 	}
 
-	test("CSV case sensitivity") {
-		val reader = createReader
+	test("CSV parsing key case sensitivity") {
+
+		val configuration = new Properties()
+		configuration.setProperty("oculus.binning.parsing.caseSensitiveKey.index",     "0")
+		configuration.setProperty("oculus.binning.parsing.caseSensitiveKey.fieldType", "string")
+		val data = sc.parallelize(List("test result"))
+		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 		import reader.sqlc._
-		val result = reader.asSchemaRDD.select('mixedCase).map(_(0).asInstanceOf[String]).first
-		assertResult("str val")(result)
+
+		val result = reader.asSchemaRDD.select('caseSensitiveKey).map(_(0).asInstanceOf[String]).first
+		assertResult("test result")(result)
+
+		intercept[Exception] {
+			reader.asSchemaRDD.select('CaseSensitiveKey).map(_(0).asInstanceOf[String]).first
+		}
+
+		intercept[Exception] {
+			reader.asSchemaRDD.select('casesensitivekey).map(_(0).asInstanceOf[String]).first
+		}
 	}
 }

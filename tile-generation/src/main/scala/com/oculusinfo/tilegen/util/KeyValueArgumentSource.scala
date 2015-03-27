@@ -426,13 +426,13 @@ abstract class KeyValueArgumentSource {
 
 
 	private def toBoolean (value: String): Boolean = {
-		val trimmedValue = value.trim
-		if (trimmedValue == "true".substring(0, trimmedValue.length min "true".length)) {
+		val lowerValue = value.toLowerCase.trim
+		if (lowerValue == "true".substring(0, lowerValue.length min "true".length)) {
 			true
-		} else if (trimmedValue == "yes".substring(0, trimmedValue.length min "yes".length)) {
+		} else if (lowerValue == "yes".substring(0, lowerValue.length min "yes".length)) {
 			true
-		} else if (trimmedValue.map(c => '-' == c || ('0' <= c && c <= '9')).reduce(_ && _)) {
-			0 != trimmedValue.toInt
+		} else if (lowerValue.map(c => '-' == c || ('0' <= c && c <= '9')).reduce(_ && _)) {
+			0 != lowerValue.toInt
 		} else {
 			false
 		}

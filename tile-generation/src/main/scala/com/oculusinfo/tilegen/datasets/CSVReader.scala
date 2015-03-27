@@ -214,7 +214,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 				val fieldName = indexProperty.substring("oculus.binning.parsing.".length,
 				                                        indexProperty.length - ".index".length)
 				val fieldIndex = configuration.getInt(indexProperty, "The column number of the " + fieldName + " field")
-				val fieldType = getFieldType(fieldName).trim
+				val fieldType = getFieldType(fieldName).toLowerCase.trim
 				val (dataType, parser) = getParseFunction(fieldName, fieldType)
 
 				(schemaField(fieldName, dataType), fieldIndex, parser)
