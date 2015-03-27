@@ -44,7 +44,7 @@ Aperture Tiles is under ongoing development and is freely available for download
 ###Interested in Learning More?
 
 * [Tour](tour/): Take our tour to learn more about Aperture Tiles.
-* [Documentation](docs/development/quickstart/): Learn how to install, implement and test your Aperture Tiles applications.
-	* [Quick Start](docs/development/quickstart/): Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+* [Documentation](docs/development/how-to/quickstart/): Learn how to install, implement and test your Aperture Tiles applications.
+	* [Quick Start](docs/development/how-to/quickstart/): Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
 * [Live Examples](demos/): See our demos page to see live examples of the capabilities of Aperture Tiles.
 * [Download](download/): For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.

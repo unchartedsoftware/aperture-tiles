@@ -107,7 +107,7 @@
                 i;
             if ( !(layerData instanceof Array) ) {
                 if ( layerData.meta ) {
-                    layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                    parseLevelsMinMax( layerData.meta );
                 }
                 return layerData;
             }

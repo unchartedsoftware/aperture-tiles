@@ -84,7 +84,7 @@
      * @returns {{large: Array, medium: Array, small: Array}}
      */
     function fillArrayByIncrement( axis, start, end, intervals ) {
-        var EPSILON = ( end - start ) * 0.0000001,
+        var EPSILON = ( end - start ) * 0.000001,
             subIncrement = intervals.subIncrement,
             startingMarkerTypeIndex = intervals.startingMarkerTypeIndex,
             markers = {
@@ -95,7 +95,13 @@
             i = Util.mod( startingMarkerTypeIndex, MARKER_TYPE_ORDER.length ),
             value;
         // reduce sub increment by epsilon to prevent precision errors culling max point
-        subIncrement -= EPSILON;
+        if ( axis.units.type !== 'time' &&
+            axis.units.type !== 'date' &&
+            axis.units.type !== 'i' &&
+            axis.units.type !== 'int' &&
+            axis.units.type !== 'integer' ) {
+            subIncrement -= EPSILON;
+        }
         for ( value=start; value<=end; value+=subIncrement ) {
             markers[ MARKER_TYPE_ORDER[i] ].push({
                 label: getMarkerRollover( axis, value ),

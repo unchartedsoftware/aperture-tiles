@@ -81,6 +81,10 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 			JSONObject variables = getPropertyValue(INITIALIZATION_DATA);
 			return new FilterVarsDoubleArrayTileTransformer<Object>(variables);
 		}
+		if("filtertime".equals(transformerTypes)) {
+			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
+			return new FilterByBucketTileTransformer<Object>(arguments);
+		}
 		else {  // 'identity' or none passed in will give the default transformer
 			return new IdentityTileTransformer<Object>();
 		}
