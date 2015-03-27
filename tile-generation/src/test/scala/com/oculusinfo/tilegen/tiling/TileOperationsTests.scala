@@ -84,14 +84,14 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			"oculus.binning.parsing.num.fieldType" -> "long",
 			"oculus.binning.parsing.num_1.index" -> "2",
 			"oculus.binning.parsing.num_1.fieldType" -> "double",
-			"oculus.binning.parsing.time.index" -> "3",
-			"oculus.binning.parsing.time.fieldType" -> "string",
+			"oculus.binning.parsing.timeStamp.index" -> "3",
+			"oculus.binning.parsing.timeStamp.fieldType" -> "string",
 			"oculus.binning.parsing.desc.index" -> "4",
 			"oculus.binning.parsing.desc.fieldType" -> "string"
 		)
 
 		val loadStage = PipelineStage("load", parseLoadCsvDataOp(argsMap))
-		loadStage.addChild(PipelineStage("output", outputOps(List("val", "time"), resultList)_))
+		loadStage.addChild(PipelineStage("output", outputOps(List("val", "timeStamp"), resultList)_))
 		TilePipelines.execute(loadStage, sqlc)
 
 		assertResult(List(
@@ -356,5 +356,4 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			removeRecursively(new File("cross_test_prefix.test.x.y.count"))
 		}
 	}
-
 }
