@@ -46,20 +46,25 @@ body {
 	line-height: 1.4em;
 	background: $site-bg-color;
 	background-image: $site-bg-img;
-	margin:0;
+	margin: 0;
 	padding: 15px 0 0;
 	color: $color-body;
 }
 
 ul {
-    padding-left:30px;
+	padding-left: 30px;
+	&.table {
+		margin: 0;
+		padding-left: 26.25px;
+	}
 }​
 
 ol {
-    padding-left:30px;
+	padding-left: 30px;
 }​
+
 li {
-	margin: 0 0 5px 0;
+	margin: 0 0 6px 0;
 }
 
 .methodDetail {
@@ -83,7 +88,6 @@ li {
 h1 {
 	@include heading(32px,25px,$color-h1);
 	padding-top: 30px;
-	
 	.tagline {
 		font-size: 18px;
 		color: $color-tagline;
@@ -119,12 +123,15 @@ h3 {
 		padding: 0 10px 10px 0;
 	}
 }
+
 h4 {
 	@include heading(18.66px,0px,$color-sub-h1);
 }
+
 h5 {
 	@include heading(16px,0px,$color-sub-h1);
 }
+
 h6 {
 	@include heading(14.66px,0px,$color-sub-h1);
 	&.fine {
@@ -138,22 +145,18 @@ h6 {
 
 a {
 	text-decoration: none;
-
 	&:link,&:active,&:visited {
 		color: $color-body-link;
 	}
-
 	&:hover,&:focus {
 		color: $color-body-link-hover;
 	}
-	
 	&.download-link {
 		background-image: url("../img/resources/download.png"); 
 		background-position: left; 
 		background-repeat: no-repeat; 
 		padding: 6px 0px 6px 30px;
 	}
-	
 	&.context-info-title {
 		color: $color-api-sidebar-link;
 		&:hover {
@@ -164,14 +167,13 @@ a {
 		color: $color-api-sidebar-link-hover;
 	}
 }
+
 img {
 	border-style: none;
-
 	&.home-image {
 		margin: 20px 0 4px;
 		border: 1px solid $img-border;
 	}
-	
 	&.context-logo {
 		margin: 20px 0 4px;
 	}
@@ -179,7 +181,10 @@ img {
 		margin: 20px auto 4px;
 		display: block;
 	}
-
+	&.procedure-screenshot {
+		margin: 6px auto 6px;
+		display: block;
+	}
 	&.table {
 		margin: 0px auto 4px;
 		display: block;
@@ -189,22 +194,21 @@ img {
 		border: 1px solid $img-border;
 	}
 	&.thumbs {
-        position: relative;
-        width: 120px;
-        height: 100px;
-        border: 1px solid $img-border;
-        border-radius: 2px;
-        cursor: pointer;
+		position: relative;
+		width: 120px;
+		height: 100px;
+		border: 1px solid $img-border;
+		border-radius: 2px;
+		cursor: pointer;
 		&:hover{
 			border: 1px solid $img-hover-border;
-        }			
-    }
+		}
+	}
 }
 
 code{
 	font-family: $family-code;
 	font-size: 0.9em;
-	
 	&.example {
 		@extend code-block;
 		display: block;
@@ -213,7 +217,6 @@ code{
 
 pre {
 	margin: 10px 0 10px 0;
-	
 	&.code {
 		@extend code-block;
 	}
@@ -233,7 +236,7 @@ pre {
 }
 
 .toc {
-    margin: 20px 0 10px 0;
+	margin: 20px 0 10px 0;
 	padding: 5px 30px 5px 0px;
 	position: static;
 }
@@ -247,9 +250,11 @@ pre {
 	height: 60px;
 	z-index: -1;
 }
+
 #header-logo {
 	position: absolute;
 }
+
 #header-menu {
 	position: absolute;
 	right: 0px;
@@ -265,7 +270,6 @@ pre {
 		&.selected {
 			border-bottom: 3px solid $color-main-nav;
 		}
-		
 		&:hover {
 			color: $color-main-nav-hover;
 		}
@@ -280,6 +284,7 @@ pre {
 		color: white;
 	}
 }
+
 .submenu-item {
 	cursor: pointer;
 	float: left;
@@ -290,15 +295,17 @@ pre {
 		color: $color-main-nav-hover;
 	}
 }
+
 .submenu-item-background {
 	background: $submenu-bg-color;
 	border-radius: 50%;
-	webkit-border-radius: 50%;
+	-webkit-border-radius: 50%;
 	color: $color-submenu-nav-num;
 	float: left;
 	margin-right: 15px;
 	padding: 16px;
 }
+
 .submenu-item-label {
 	float: left;
 	font-size: 17px;
@@ -307,6 +314,7 @@ pre {
 	text-transform: uppercase;
 	white-space: nowrap;
 }
+
 .submenu-item-number {
 	font-family: $family-standard;
 	font-size: 15px;
@@ -320,6 +328,7 @@ pre {
 	background-color: $map-bg;
 	border: 1px solid $map-border;
 }
+
 #all {
 	position: absolute;
 	width: 1000px;
@@ -343,6 +352,7 @@ pre {
 	font-size: 14px;
 	margin-top: -20px;
 }
+
 .uncharted-footer
 {
 	background-image: url("../img/resources/footer-symbols.png");
@@ -350,12 +360,13 @@ pre {
 	background-repeat: no-repeat;
 	padding-bottom: 60px;
 }
+
 .footer-padding {
 	padding-bottom: 20px;
 }
 
 .toc-body {
-    line-height: 23px;
+	line-height: 23px;
 	margin: 0 0 5px;
 }​
 
@@ -376,22 +387,24 @@ pre {
 	background-color: $map-bg;
 	border: 1px solid $map-border;
 }
+
 .content-body {
-	text-align:	justify;
+	text-align: justify;
 	padding: 0 30px;
 	margin: 41px 0 0 310px;
 	font-size: 16px;
 	background: $content-body-bg-color;
-	border:	1px solid $txt-block-border;
+	border: 1px solid $txt-block-border;
 	line-height: 1.4em;
 }
+
 .content-image {
-	text-align:	center;
+	text-align: center;
 	padding: 0 30px;
 	margin: 41px;
 	font-size: 16px;
 	background: $content-body-bg-color;
-	border:	1px solid $txt-block-border;
+	border: 1px solid $txt-block-border;
 	line-height: 1.4em;
 	display: inline-block;
 }
@@ -406,10 +419,12 @@ pre {
 	padding-left: 30px;
 	text-align: justify;
 }
+
 #infoTxt {
 	font-size: 16px;
 	line-height: 1.2em;
 }
+
 .disclaimer {
 	color: $color-disclaimer;
 }
@@ -420,8 +435,6 @@ sub {
 	line-height: 1;
 	position: relative;
 	vertical-align: baseline;
-	_vertical-align: bottom;
-	
 }
 
 sup {
@@ -443,6 +456,7 @@ sub {
 dl {
 	&.detailList {
 		margin: 7px 0 0 0;
+		padding: 0 28px 0 0;
 	}
 
 	&.detailList dt {
@@ -494,18 +508,35 @@ th {
 	padding: 10px;
 	margin: 0;
 }
+
 table.summaryTable {
-	left:-10px;
-	position:relative;
+	left: 10px;
+	position: relative;
 	border-spacing: 0;
+}
+
+@mixin table-cell($font-weight, $font-style, $text-align) {
+		padding: 0 10px 10px 10px;
+		font-size: 14px;
+		line-height: 19.6px;
+		vertical-align: top;
+		font-weight: $font-weight;
+		font-style: $font-style;
+		text-align: $text-align;
 }
 
 td {
 	&.attributes {
-		padding:0 10px 10px 10px;
-		font-size:14px;
-		line-height:19.6px;
-		vertical-align: top;
+		@include table-cell(normal,normal,left);
+	}
+	&.property {
+		@include table-cell(bold,normal,left);
+	}
+	&.value {
+		@include table-cell(normal,italic,left);
+	}
+	&.description {
+		@include table-cell(normal,normal,left);
 	}
 	&.caption {
 		font-size: 14px;
@@ -518,26 +549,33 @@ td {
 }
 
 div.description {
-	padding:0 10px 10px 10px;
-	font-size:14px;
-	line-height:19.6px;
+	padding: 0 10px 10px 10px;
+	font-size: 14px;
+	line-height: 19.6px;
 }
+
 .version {
 	display: block;
 	text-align: center;
 	font-size: 14px;
 }
+
 .fine-print {
 	font-size: 14px;
 	margin-top: 0;
 }
 
 .procedure-text {
-	padding-left:13px;
+	padding-left: 13px;
 }
 
 .list-paragraph {
-	margin-bottom: 0;
+	margin: 6px 0;
+}
+
+.list-paragraph-2 {
+	padding-left: 40px;
+	margin: 6px 0;
 }
 
 hr {
