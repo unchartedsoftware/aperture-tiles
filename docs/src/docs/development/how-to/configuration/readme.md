@@ -16,13 +16,15 @@ Aperture Tiles supports two types of tile rendering:
 - **Server-side rendering**, in which the Server renders the tiles as image files and passes them on to the Client.
 - **Client-side rendering**, in which the Server passes the tiles as JSON data to the Client, which then renders them directly.
 
-The fastest way to create a Tile Server and Tile Client is to modify an existing example application, which are available in the source code (*tile-examples/*). These examples will help you understand the structure and configuration of the Tile Server and Tile Client.
+The fastest way to create a Tile Server and Tile Client is to modify an existing example application, which are available in the source code ([tile-examples/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples)). These examples will help you understand the structure and configuration of the Tile Server and Tile Client.
 
 ## <a name="template-setup"></a> Template Setup ##
 
 To begin configuring your Tile Server and Tile Client:
 
-1. Choose the Julia demo (*tile-examples/julia-demo/*) or Twitter Topics demo (*tile-examples/twitter-topics/*) to use as a template. The Julia demo displays a server-rendered heatmap on a blank crossplot baselayer, while the Twitter Topics demo displays a server-rendered heatmap and client-rendered word clouds on a geographic Google Maps baselayer.
+1. Choose the one of the following demos to use as a template:
+	- Julia demo ([tile-examples/julia-demo/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/julia-demo)), which displays a server-rendered heatmap on a blank cross-plot baselayer.
+	- Twitter Topics demo ([tile-examples/twitter-topics/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics)), which displays a server-rendered heatmap and client-rendered word clouds on a geographic Google Maps baselayer.
 2. Copy the appropriate demo and give it a unique name (e.g., *new-project*).
 3. Update the Gradle build file (*new-project/build.gradle*) to add or change the following fields:
 	- `description`: Enter an appropriate project description. 
@@ -59,7 +61,7 @@ Edit the client **tile.properties** file in *new-project/src/main/resources/*. T
 
 The layers file describes the tile layers to be made available to the server and client application. Parameters in the layers file are split into two sections: those in the public node are accessible from the client, while those under the private note are not.
 
-Layer file examples can be found in in the Julia example at *tile-examples\julia-demo\src\main\resources\layers* and the Twitter Topics example at *tile-examples\twitter-topics\twitter-topics-client\src\main\resources\layers*.
+Layer file examples can be found in in the Julia example at [tile-examples\julia-demo\src\main\resources\layers](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/julia-demo/src/main/resources/layers) and the Twitter Topics example at [tile-examples\twitter-topics\twitter-topics-client\src\main\resources\layers](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-client/src/main/resources/layers).
 
 #### <a name="layer-id"></a> ID ####
 
@@ -432,7 +434,7 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 
 The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
 
-A sample application using this method is available in the Aperture Tiles source code at */tile-examples/twitter-topics/twitter-topics-client/*. The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in */tile-client/src/js/layer/renderer/*.
+A sample application using this method is available in the Aperture Tiles source code at [tile-examples/twitter-topics/twitter-topics-client/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-client). The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in [tile-client/src/js/layer/renderer/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-client/src/js/layer/renderer).
 
 Line 33 requests the layer configuration objects from the server, passing them to the supplied callback function as arguments.
 
