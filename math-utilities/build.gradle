@@ -2,16 +2,6 @@ description = "Useful mathematical utilities for general use"
 
 // Pulls in the Java plugin
 apply plugin: "java"
-// Gradle/intellij don't work properly together with 1.8
-sourceCompatibility = '1.7'
-if (JavaVersion.current().isJava8Compatible()) {
-	allprojects {
-		tasks.withType(Javadoc) {
-			options.addStringOption('Xdoclint:none', '-quiet')
-		}
-	}
-}
-
 
 // Task to create a JAR from the all source set
 task sourcesJar(type: Jar, dependsOn: classes) {
