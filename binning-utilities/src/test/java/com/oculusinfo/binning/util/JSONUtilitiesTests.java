@@ -150,7 +150,7 @@ public class JSONUtilitiesTests {
 
         JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
         JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
-        Assert.assertEquals(expected.toString(), actual.toString());
+		assertJsonEqual(expected, actual);
 	}
 
 	@Test
@@ -166,6 +166,17 @@ public class JSONUtilitiesTests {
 
 		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
 		JSONObject actual = JsonUtilities.mapToJSON(p);
-		Assert.assertEquals(expected.toString(), actual.toString());
+		assertJsonEqual(expected, actual);
+	}
+
+	public static void assertJsonEqual (JSONObject expected, JSONObject actual) {
+		Map<String, Object> mapE = JsonUtilities.jsonObjToMap(expected);
+		Map<String, Object> mapA = JsonUtilities.jsonObjToMap(actual);
+
+		Assert.assertEquals(mapE.size(), mapA.size());
+		for (String key: mapE.keySet()) {
+			Assert.assertTrue(mapA.containsKey(key));
+			Assert.assertEquals(mapE.get(key), mapA.get(key));
+		}
 	}
 }
