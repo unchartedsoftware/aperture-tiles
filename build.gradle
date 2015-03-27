@@ -195,6 +195,31 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 	// Client projects are flagged by a property called 'clientProject' - if that's present,
 	// the client behavior gets injected into the project in question.
 	afterEvaluate {
+		// Gradle/intellij don't work properly together with 1.8 at the moment,
+		// at least not with our code, so we have to modify java and scala
+		// plugins to compile with 1.7 compatibility for now, and turn off
+		// doclint
+		project.plugins.withType(JavaPlugin) {
+			sourceCompatibility = '1.7'
+			if (JavaVersion.current().isJava8Compatible()) {
+				allprojects {
+					tasks.withType(Javadoc) {
+						options.addStringOption('Xdoclint:none', '-quiet')
+					}
+				}
+			}
+		}
+		project.plugins.withType(ScalaPlugin) {
+			sourceCompatibility = '1.7'
+			if (JavaVersion.current().isJava8Compatible()) {
+				allprojects {
+					tasks.withType(Javadoc) {
+						options.addStringOption('Xdoclint:none', '-quiet')
+					}
+				}
+			}
+		}
+
 		if (project.ext.has("clientProject") && project.clientProject) {
 			
 			// Directory constants

@@ -2,16 +2,6 @@ description = "Library that handles turning tile data into useful output formats
 
 // Pulls in the Java plugin
 apply plugin: "java"
-// Gradle/intellij don't work properly together with 1.8
-sourceCompatibility = '1.7'
-if (JavaVersion.current().isJava8Compatible()) {
-    allprojects {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
-    }
-}
-
 
 
 // Jars / projects this project depends on.

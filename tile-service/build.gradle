@@ -2,16 +2,6 @@ description = "Useful utilites to help pyramid-based binning schemes (and others
 
 // Pulls in the Java plugin
 apply plugin: "java"
-// Gradle/intellij don't work properly together with 1.8
-sourceCompatibility = '1.7'
-if (JavaVersion.current().isJava8Compatible()) {
-    allprojects {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
-    }
-}
-
 
 // Restlet isn't in maven central for some reason, so we need to add their
 // location to the set from the parent build file.
