@@ -98,8 +98,8 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 			// This is the best we can do; supress the warning and move on.
 			@SuppressWarnings("unchecked")
 			ValueTransformer<Number> t = config.produce(ValueTransformer.class);
-			Number scaledMax = rangeMax/100;
-			Number scaledMin = rangeMin/100;
+			double scaledMax = (double)rangeMax/100;
+			double scaledMin = (double)rangeMin/100;
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
@@ -113,7 +113,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 	}
 
 	protected BufferedImage renderImage(TileData<Number> data,
-								   ValueTransformer<Number> t, Number valueMin, Number valueMax,
+								   ValueTransformer<Number> t, double valueMin, double valueMax,
 								   ColorRamp colorRamp, BufferedImage bi) {
 
 		int outWidth = bi.getWidth();
@@ -124,7 +124,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 		float xScale = outWidth / xBins;
 		float yScale = outHeight / yBins;
 
-		Number oneOverScaledRange = 1.0 / (valueMax.doubleValue() - valueMin.doubleValue());
+		double oneOverScaledRange = 1.0 / (valueMax - valueMin);
 
 		int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
 
@@ -141,7 +141,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 				int rgb;
 
 				if (binCount > 0) {
-					rgb = colorRamp.getRGB( ( transformedValue.doubleValue() - valueMin.doubleValue() ) * oneOverScaledRange.doubleValue() );
+					rgb = colorRamp.getRGB( ( transformedValue.doubleValue() - valueMin ) * oneOverScaledRange );
 				} else {
 					rgb = COLOR_BLANK.getRGB();
 				}
