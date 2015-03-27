@@ -65,15 +65,19 @@ Layer file examples can be found in in the Julia example at *tile-examples\julia
 
 The ID parameter uniquely identifies the layer.
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>id</dt>
-				<dd>The identification string for the layer. This is used in all layer-related REST calls. Must conform to JSON property name format.</dd>
-			</dl>
-		</ul>
-	</div>
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Property</th>
+			<th scope="col" width="80%">Description</th>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="property">id</td>
+				<td class="description">Layer identification string, which is used in all layer-related REST calls. Must conform to JSON property name format.</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 #### Public Parameters ####
@@ -110,101 +114,111 @@ pyramid: {
 
 This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data. The current renderer options are:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">				
-				<dt>renderer</dt>
-				<dd>Used for server-side rendering.
-					
-					<dl>
-						<dt>type</dt>
-						<dd>
-							<dl>
-								<dt>'heatmap'</dt>
-								<dd>Renders to a heat-map, based on a standard Avro double-valued tile</dd>
-								
-								<dt>'doubleseries'</dt>
-								<dd>Renders to a series of heat-maps, based on a standard Avro double-series-valued tile</dd>
-								
-								<dt>'doublestatistics'</dt>
-								<dd>Renders tile's total hit and % coverage as text to the tile</dd>
-								
-								<dt>'textscore'</dt>
-								<dd>Renders to an image showing scored words, with bars based on their score</dd>
-							</dl>
-						</dd>
-					
-						<dt>ramp</dt>
-						<dd>Determines the color scale applied to the data points based on their concentration. The default color scales are:
-							<ul>
-								<li>'hot': A warm orange ramp.
-								<li>'neutral': A black-grey-white ramp.
-								<li>'cool': A cool blue ramp.
-								<li>'spectral': A red-green-yellow ramp.
-								<li>'flat': A single color (white) ramp.
-							</ul>
-						</dd>
-						
-						<dt>rangeMin</dt>
-						<dd>The minimum percentage to clamp the low end of the color ramp.</dd>
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Property</th>
+			<th scope="col" width="80%">Description</th>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="property">type</td>
+				<td class="description">
+					<ul>
+						<li><em>'heatmap'</em>: Renders to a heatmap, based on a standard Avro double-valued tile</li>
+						<li><em>'doubleseries'</em>: Renders to a series of heatmaps, based on a standard Avro double-series-valued tile</li>
+						<li><em>'doublestatistics'</em>: Renders tile's total hit and % coverage as text to the tile</li>
+						<li><em>'textscore'</em>: Renders to an image showing scored words, with bars based on their score</li>
+					</ul>
+				</td>
+			</tr>
 
-						<dt>rangeMax</dt>
-						<dd>The maximum percentage to clamp the low end of the color ramp.</dd>
+			<tr>
+				<td class="property">ramp</td>
+				<td class="description">
+					Determines the color scale applied to the data points based on their concentration. The default color scales are:
+					<ul>
+						<li><em>'hot'</em>: Warm orange ramp.</li>
+						<li><em>'neutral'</em>: Black-grey-white ramp.</li>
+						<li><em>'cool'</em>: Cool blue ramp.</li>
+						<li><em>'spectral'</em>: Red-green-yellow ramp.</li>
+						<li><em>'flat'</em>: Single color (white) ramp.</li>
+					</ul>
+				</td>
+			</tr>
 
-						<dt>opacity</dt>
-						<dd>Opacity of the rendered tile layer expressed as a decimal ranging from 0 (completely transparent) to 1 (completely opaque).</dd>
+			<tr>
+				<td class="property">rangeMin</td>
+				<td class="description">Minimum percentage to clamp the low end of the color ramp.</td>
+			</tr>
 
-						<dt>enabled</dt>
-						<dd>Indicates whether the layer is enabled on load.</dd>
-					</dl>
-				</dd>
-			</dl>
-		</ul>
-	</div>
+			<tr>
+				<td class="property">rangeMax</td>
+				<td class="description">Maximum percentage to clamp the low end of the color ramp.</td>
+			</tr>
+
+			<tr>
+				<td class="property">opacity</td>
+				<td class="description">Opacity of the rendered tile layer expressed as a decimal ranging from <em>0</em> (completely transparent) to <em>1</em> (completely opaque).</td>
+			</tr>
+
+			<tr>
+				<td class="property">enabled</td>
+				<td class="description">Indicates whether the layer is enabled on load.</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 ##### Value Transformer #####
 
-Type of transformations that can be applied to the data values when determining color:
+The **valueTransform** defines the **type** of transformation that can be applied to the data values when determining color:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>valueTransform</dt>
-				<dd>
-					<dl>
-						<dt>'type'</dt>
-						<dd>Value transformer type:
-							<dl>
-								<dt>minmax</dt>
-								<dd>Do not change the value, but allow capping within min and max values.</dd>
-								
-								<dt>sigmoid</dt>
-								<dd>Apply a sigmoid function to each value to make them fall between fixed values. With data that can be infinitely large in either direction, this can be used to bring it into finite, displayable bounds. Uses the following properties to indicate the minimum and maximum expected values while allowing values infinitely above or below them.
-								<ul>
-									<li>layerMin
-									<li>layerMax
-								</ul>
-								These two values should be symmetric around the desired central value.</dd>
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Value</th>
+			<th scope="col" width="80%">Description</th>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="value">minmax</td>
+				<td class="description">Do not change the value, but allow capping within min and max values.</td>
+			</tr>
 
-								<dt>half-sigmoid</dt>
-								<dd>Apply a sigmoid function to each value to make them fall between fixed values. With data that can be infinitely large in one direction only, this can be used to bring it into finite, displayable bounds. Uses the following properties:
-								<ul>
-									<li><em>layerMin</em> corresponds to the minimum allowed data value
-									<li><em>layerMax</em> indicates the maximum expected data value while allowing values infinitely above it
-								</ul></dd>
-								
-								<dt>log10</dt>
-								<dd>Take the log (base 10) of each value. Useful when displaying data that can be large (but not infinite) in one direction only. Uses the <em>layerMax</em> property to indicate the maximum.</dd>
-							</dl>
-						</dd>
-					</dl>
-				</dd>
-			</dl>
-		</ul>
-	</div>
+			<tr>
+				<td class="value">sigmoid</td>
+				<td class="description">
+					Apply a sigmoid function to each value to make them fall between fixed values. With data that can be infinitely large in either direction, this can be used to bring it into finite, displayable bounds. 
+					
+					<p>Uses the following properties to indicate the minimum and maximum expected values while allowing values infinitely above or below them.</p>
+					<ul>
+						<li><strong>layerMin</strong></li>
+						<li><strong>layerMax</strong></li>
+					</ul>
+					These two values should be symmetric around the desired central value.
+				</td>
+			</tr>
+
+			<tr>
+				<td class="value">half-sigmoid</td>
+				<td class="description">
+					Apply a sigmoid function to each value to make them fall between fixed values. With data that can be infinitely large in one direction only, this can be used to bring it into finite, displayable bounds.
+
+					<p>Uses the following properties:</p>
+					<ul>
+						<li><strong>layerMin</strong> corresponds to the minimum allowed data value
+						<li><strong>layerMax</strong> indicates the maximum expected data value while allowing values infinitely above it
+					</ul>
+				</td>
+			</tr>
+
+			<tr>
+				<td class="value">log10</td>
+				<td class="description">Take the log (base 10) of each value. Useful when displaying data that can be large (but not infinite) in one direction only. Uses the <em>layerMax</em> property to indicate the maximum.</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 #### Private Parameters ####

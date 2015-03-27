@@ -72,13 +72,13 @@ Aperture Tiles uses a distributed framework built on the Apache Spark engine to 
 See the [Installation](../installation/#prerequisites) topic for full details on required third-party tools.
 
 <div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead >
-				<th scope="col" width="20%">Component</th>
-				<th scope="col" width="30%">Required</th>
-				<th scope="col" width="50%">Notes</th>
-			</thead>
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Component</th>
+			<th scope="col" width="30%">Required</th>
+			<th scope="col" width="50%">Notes</th>
+		</thead>
+		<tbody>
 			<tr>
 				<td style="vertical-align: text-top" class="attributes">Languages</td>
 				<td style="vertical-align: text-top" class="nameDescription">
@@ -122,8 +122,8 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 					</div>
 				</td>
 			</tr>
-		</table>
-	</nav>
+		</tbody>
+	</table>
 </div>
 
 ### <a name="spark-config"></a> Apache Spark Configuration ###
@@ -170,55 +170,62 @@ The base properties file describes the tiling job, the systems on which it will 
 
 The tile storage properties indicate whether the tile set created from your source data should be stored in HBase or your local file system:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>oculus.tileio.type</dt>
-				<dd>
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Property</th>
+			<th scope="col" width="80%">Description</th>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="property">oculus.tileio.type</td>
+				<td class="description">
 					Location to which tiles are written:
-					<dl>
-						<dt>hbase</dt>
-						<dd>Writes to HBase. See the <a href="#hbase-connection">HBase Connection</a> section below for further HBase configuration properties</dd>
-						<dt>file</dt>
-						<dd>Writes to the local file system. This is the default.</dd>
-					</dl>
-				</dd>
-				
-				<dt>
-					user (Optional)
-				</dt>
-				<dd>Username passed to the Spark job title. Defaults to the username of the current user.</dd>
-			</dl>
-		</ul>
-	</div>
+					<ul>
+						<li><em>hbase</em>: Writes to HBase. See the <a href="#hbase-connection">HBase Connection</a> section below for further HBase configuration properties</li>
+						<li><em>file</em>: Writes to the local file system. This is the default.</li>
+					</ul>
+				</td>
+			</tr>
+
+			<tr>
+				<td class="property">user</td>
+				<td class="description">Optional username passed to the Spark job title. Defaults to the username of the current user.
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 #### <a name="hbase-connection"></a> HBase Connection ####
 
 If you chose to store your tile set in HBase (i.e., **oculus.tileio.type** is set to *hbase*), these properties define how to connect to HBase:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>
-					hbase.zookeeper.quorum
-				</dt>
-				<dd>Zookeeper quorum location needed to connect to HBase.</dd>
-				
-				<dt>
-					hbase.zookeeper.port
-				</dt>
-				<dd>Port through which to connect to zookeeper.</dd>
-   
-				<dt>
-					hbase.master
-				</dt>
-				<dd>Location of the HBase master to which to write tiles.</dd>
-			</dl>
-		</ul>
-	</div>
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Property</th>
+			<th scope="col" width="80%">Description</th>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="property">hbase.zookeeper.quorum</td>
+				<td class="description">Zookeeper quorum location needed to connect to HBase.</td>
+			</tr>
+
+			<tr>
+				<td class="property">hbase.zookeeper.port</td>
+				<td class="description">Port through which to connect to zookeeper.</ul>
+				</td>
+			</tr>
+
+			<tr>
+				<td class="property">hbase.master</td>
+				<td class="description">Location of the HBase master to which to write tiles.</ul>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 #### <a name="source-data"></a> Source Data ####

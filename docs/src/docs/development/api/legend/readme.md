@@ -15,33 +15,31 @@ Returns an image describing the values that a tile can take, with a specified or
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/legend/{layer}
-								<br>/legend/{layer}</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`GET`</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/legend/{layer}
+						<br>/legend/{layer}</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`GET`</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:

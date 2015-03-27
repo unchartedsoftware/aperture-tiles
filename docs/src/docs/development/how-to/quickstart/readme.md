@@ -32,72 +32,52 @@ To begin this Quick Start example, you must perform the following steps:
 Aperture Tiles requires the following third-party tools on your local system:
 
 <div class="props">
-    <nav>
-        <table class="summaryTable" width="100%">
-            <thead >
-                <th scope="col" width="20%">Component</th>
-                <th scope="col" width="30%">Required</th>
-                <th scope="col" width="50%">Notes</th>
-            </thead>
+    <table class="summaryTable" width="100%">
+        <thead>
+            <th scope="col" width="20%">Component</th>
+            <th scope="col" width="30%">Required</th>
+            <th scope="col" width="50%">Notes</th>
+        </thead>
+        <tbody>
             <tr>
-                <td style="vertical-align: text-top" class="attributes">Operating System</td>
-                <td style="vertical-align: text-top" class="nameDescription">
-                    <div class="description">
-                        Linux or OS X
-                    </div>
-                </td>
-                <td style="vertical-align: text-top" class="nameDescription">
-                    <div class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</div>
-                </td>
+                <td style="vertical-align: text-top" class="description">Operating System</td>
+                <td style="vertical-align: text-top" class="description">Linux or OS X</td>
+                <td style="vertical-align: text-top" class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</td>
             </tr>
             <tr>
-                <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
-                <td style="vertical-align: text-top" class="nameDescription">
-                    <div class="description">
-                        <a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
-                    </div>
-                </td>
-                <td style="vertical-align: text-top" class="nameDescription">
-                    <div class="description">
-                        The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.
-                    </div>
-                </td>
+                <td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
+                <td style="vertical-align: text-top" class="description"><a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+</td>
+                <td style="vertical-align: text-top" class="description">The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</td>
             </tr>
-        </table>
-    </nav>
+        </tbody>
+    </table>
 </div>
 
 If you later intend to create Aperture Tiles projects using particularly large data sets, we recommend you also install the following tools. Otherwise, if your data set is sufficiently small (i.e., it can fit in the memory of a single machine) or if wait times are not an issue, you can simply install and run Spark locally.
 
 <div class="props">
-    <nav>
-        <table class="summaryTable" width="100%">
-            <thead >
-                <th scope="col" width="20%">Component</th>
-                <th scope="col" width="30%">Required</th>
-                <th scope="col" width="50%">Notes</th>
-            </thead>
+    <table class="summaryTable" width="100%">
+        <thead>
+            <th scope="col" width="20%">Component</th>
+            <th scope="col" width="30%">Required</th>
+            <th scope="col" width="50%">Notes</th>
+        </thead>
+        <tbody>
             <tr>
-                <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
-                <td style="vertical-align: text-top" class="nameDescription">
-                    <div class="description">
-                        <a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
-                        <ul>
-                            <li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
-                            <li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
-                            <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
-                            <li><a href="http://hortonworks.com/">HortonWorks</a></li>
-                        </ul>
-                    </div>
+                <td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
+                <td style="vertical-align: text-top" class="description">
+                    A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
+                    <ul class="table">
+                        <li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
+                        <li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
+                        <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
+                        <li><a href="http://hortonworks.com/">HortonWorks</a></li>
+                    </ul>
                 </td>
-                <td style="vertical-align: text-top" class="nameDescription">
-                    <div class="description">
-                        Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
-                    </div>
-                </td>
+                <td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.</td>
             </tr>
-        </table>
-    </nav>
+        </tbody>
+    </table>
 </div>
 
 ### <a name="aperture-tiles-utilities"></a> Aperture Tiles Packaged Distribution ###
