@@ -115,7 +115,7 @@
             layerMap = {};
             for ( i=0; i<layerData.length; i++ ) {
                 if ( layerData[i].meta ) {
-                    layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                    parseLevelsMinMax( layerData[i].meta );
                 }
                 layerMap[ layerData[i].id ] = layerData[i];
             }
