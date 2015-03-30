@@ -202,10 +202,9 @@ class DataAnalyticWrapper[AT: ClassTag] (private[datasets] var base: AnalysisDes
 	// Simple pass-through methods into our base analytic
 	def analytic: TileAnalytic[AT] = base.analytic
 	def accumulate (tile: TileIndex, data: AT): Unit = base.accumulate(tile, data)
-	def toTileMap: Map[String, Any] = base.toTileMap
-	def toGlobalMap: Map[String, Any] = base.toGlobalMap
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
 		base.addAccumulator(sc, name, test)
+	def accumulatorValues = base.accumulatorValues
 }
 class AnalyticExtractor (_tileAnalytics: Seq[AnalysisDescription[TileData[_], _]],
                          _dataAnalytics: Seq[(AnalysisDescription[Seq[Any], _], Seq[String])]) {

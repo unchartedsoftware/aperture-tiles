@@ -45,6 +45,7 @@ import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
 
 
 class NumericAnalyticsTestSuite extends FunSuite {
+	import TileAnalytic.Locations._
 	def toJava (l: List[Double]) = l.map(new JavaDouble(_)).asJava
 
 	def assertSeqsEqual[T] (a: Seq[T], b: Seq[T]): Unit = {
@@ -67,7 +68,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1, 2).isInstanceOf[Int])
 
 		// Check tile analytic output
-		assert("4" === analytic.valueToString(4))
+		assert("4" === analytic.storableValue(4, Tile))
 	}
 
 	test("Standard Long Analytic") {
@@ -79,7 +80,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1L, 2L).isInstanceOf[Long])
 
 		// Check tile analytic output
-		assert("4444444444" === analytic.valueToString(4444444444L))
+		assert("4444444444" === analytic.storableValue(4444444444L, Tile))
 	}
 
 	test("Standard Float Analytic") {
@@ -91,7 +92,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1.0f, 2.0f).isInstanceOf[Float])
 
 		// Check tile analytic output
-		assert("4.2" === analytic.valueToString(4.2f))
+		assert("4.2" === analytic.storableValue(4.2f, Tile))
 	}
 
 	test("Standard Double Analytic") {
@@ -106,7 +107,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1, 2).isInstanceOf[Double])
 
 		// Check tile analytic output
-		assert("4.3" === analytic.valueToString(4.3))
+		assert("4.3" === analytic.storableValue(4.3, Tile))
 	}
 
 	// Having testing the summation analytic fully for each type, we just do

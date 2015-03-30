@@ -32,6 +32,7 @@ import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
 import org.apache.avro.util.Utf8
+import org.json.{JSONArray, JSONObject}
 
 import scala.collection.JavaConverters._
 
@@ -127,15 +128,15 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
 		with TileAnalytic[Map[String, T]]
 {
 	def name = analyticName.getOrElse(baseAnalytic.name)
-	override def valueToString (value: Map[String, T]): String =
-		order.map(sorter => value.toList.sortWith(sorter)).getOrElse(value.toList)
-			.map{p =>
-        val subVal = baseAnalytic.valueToString(p._2)
-        ("{\""+stringName+"\":\""+p._1+"\", \""+scoreName+"\":\""+baseAnalytic.valueToString(p._2)+"\"}")
-      }
-			.mkString("[",",","]")
-	override def toMap (value: Map[String, T]): Map[String, Any] =
-    Map(name -> valueToString(value))
+	override def storableValue (value: Map[String, T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
+		val result = new JSONObject()
+		values.foreach { case (key, value) =>
+			baseAnalytic.storableValue(value, location).map(bsv => result.put(key, bsv))
+		}
+		if (result.length()>0) Some(result)
+		else None
+	}
 }
 
 /**
@@ -155,14 +156,19 @@ class OrderedStringTileAnalytic[T] (analyticName: Option[String],
 		with TileAnalytic[Map[String, T]]
 {
 	def name = analyticName.getOrElse(baseAnalytic.name)
-	override def valueToString (value: Map[String, T]): String =
-		order.map(sorter => value.toList.sortWith(sorter)).getOrElse(value.toList)
-			.map(p => ("\""+p._1+"\""))
-			.mkString("[",",","]")
-	override def toMap (value: Map[String, T]): Map[String, Any] =
-		value.map{case (k1, v1) =>
-			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
-		}.flatten.toMap
+	override def storableValue (value: Map[String, T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
+		val outputValues = new JSONArray()
+		values.foreach { case (key, value) =>
+			baseAnalytic.storableValue(value, location).map(bsv => outputValues.put(bsv))
+		}
+		if (outputValues.length()>0) {
+			val result = new JSONObject()
+			result.put(name, outputValues)
+			Some(result)
+		}
+		else None
+	}
 }
 
 /**
@@ -209,12 +215,15 @@ class CategoryValueTileAnalytic[T] (analyticName: Option[String],
 		with TileAnalytic[Seq[T]]
 {
 	def name = analyticName.getOrElse(baseAnalytic.name)
-	override def valueToString (value: Seq[T]): String =
-		value.map(baseAnalytic.valueToString(_)).mkString("[", ",", "]")
-	override def toMap (value: Seq[T]): Map[String, Any] =
-		categoryNames.zip(value).map{case (k1, v1) =>
-			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
-		}.flatten.toMap
+	override def storableValue (value: Seq[T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val outputValues = new JSONArray()
+		value.map(t => baseAnalytic.storableValue(t, location).map(bt => outputValues.put(bt)))
+		if (outputValues.length()>0) {
+			val result = new JSONObject()
+			result.put(name, outputValues)
+			Some(result)
+		} else None
+	}
 }
 
 
