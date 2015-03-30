@@ -41,11 +41,11 @@ import com.oculusinfo.factory.util.Pair
 
 /**
  * Standard string score ordering
- * 
+ *
  * @param baseAnalytic An analytic used to aggregate scores
- * @param aggregationLimit An optional number of elements to keep when 
+ * @param aggregationLimit An optional number of elements to keep when
  *                         aggregating.  If None, all elements are kept.
- * @param order An optional function to specify the order of values.  If not 
+ * @param order An optional function to specify the order of values.  If not
  *              given, the order will be random.
  */
 class StringScoreAnalytic[T]
@@ -76,7 +76,7 @@ class StringScoreAnalytic[T]
 
 /**
  * Extends the standard string score analytic into a binning analytic.
- * 
+ *
  * @param baseAnalytic See StringScoreAnalytic
  * @param aggregationLimit See StringScoreAnalytic
  * @param order See StringScoreAnalytic
@@ -107,17 +107,20 @@ class StringScoreBinningAnalytic[T, JT]
 }
 
 /**
- * Extends the standard string score analytic into a tile analytic.
- * 
- * @param analyticName The name by which the analytic value should be known in 
- *                     metadata
+ * Extends the standard string score analytic into a tile analytic with scores keyed by string.
+ *
+ * @param analyticName The name by which the analytic value should be known in metadata
  * @param baseAnalytic See StringScoreAnalytic
+ * @param stringName The name by which the string in each entry is known in the metadata to which this analytic is written
+ * @param scoreName The name by which the score in each entry is known in the metadata to which this analytic is written
  * @param aggregationLimit See StringScoreAnalytic
  * @param order See StringScoreAnalytic
  * @tparam T See StringScoreAnalytic
  */
 class StringScoreTileAnalytic[T] (analyticName: Option[String],
                                   baseAnalytic: TileAnalytic[T],
+                                  stringName: String = "string",
+                                  scoreName: String = "score",
                                   aggregationLimit: Option[Int] = None,
                                   order: Option[((String, T), (String, T)) => Boolean] = None)
 		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
@@ -125,7 +128,9 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
 {
 	def name = analyticName.getOrElse(baseAnalytic.name)
 	override def valueToString (value: Map[String, T]): String =
-		value.map(p => "\""+p._1+"\":"+baseAnalytic.valueToString(p._2)).mkString("[", ",", "]")
+		order.map(sorter => value.toList.sortWith(sorter)).getOrElse(value.toList)
+			.map(p => ("{\""+stringName+"\":\""+p._1+"\", \""+scoreName+"\":\""+baseAnalytic.valueToString(p._2)+"\"}"))
+			.mkString("[",",","]")
 	override def toMap (value: Map[String, T]): Map[String, Any] =
 		value.map{case (k1, v1) =>
 			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
@@ -133,12 +138,39 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
 }
 
 /**
- * Similar to a StringScoreAnalytic, but this analytic tracks fixed, rather 
+ * Extends the standard string score analytic into a tile analytic with the top scoring strings, in order
+ *
+ * @param analyticName The name by which the analytic value should be known in metadata
+ * @param baseAnalytic See StringScoreAnalytic
+ * @param aggregationLimit See StringScoreAnalytic
+ * @param order See StringScoreAnalytic
+ * @tparam T See StringScoreAnalytic
+ */
+class OrderedStringTileAnalytic[T] (analyticName: Option[String],
+                                    baseAnalytic: TileAnalytic[T],
+                                    aggregationLimit: Option[Int] = None,
+                                    order: Option[((String, T), (String, T)) => Boolean] = None)
+		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
+		with TileAnalytic[Map[String, T]]
+{
+	def name = analyticName.getOrElse(baseAnalytic.name)
+	override def valueToString (value: Map[String, T]): String =
+		order.map(sorter => value.toList.sortWith(sorter)).getOrElse(value.toList)
+			.map(p => ("\""+p._1+"\""))
+			.mkString("[",",","]")
+	override def toMap (value: Map[String, T]): Map[String, Any] =
+		value.map{case (k1, v1) =>
+			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
+		}.flatten.toMap
+}
+
+/**
+ * Similar to a StringScoreAnalytic, but this analytic tracks fixed, rather
  * than arbitrary, categories.
- * 
- * @param categoryNames The names of the fixed categories this analytic will 
+ *
+ * @param categoryNames The names of the fixed categories this analytic will
  *                      track
- * @param baseAnalytic An analytic used to process the scores associated with 
+ * @param baseAnalytic An analytic used to process the scores associated with
  *                     each category.
  * @tparam T The type of the score associated with each category
  */
@@ -153,7 +185,7 @@ class CategoryValueAnalytic[T] (categoryNames: Seq[String], baseAnalytic: Analyt
 }
 /**
  * Extends the standard category value analytic into a binning analytic.
- * 
+ *
  * @param categoryNames {@see CategoryValueAnalytic}
  * @param baseAnalytic {@see CategoryValueAnalytic}
  * @tparam T {@see CategoryValueAnalytic}

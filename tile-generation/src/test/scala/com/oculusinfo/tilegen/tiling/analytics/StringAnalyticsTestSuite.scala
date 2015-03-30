@@ -28,10 +28,11 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 
 import java.lang.{Double => JavaDouble}
-
 import scala.collection.JavaConverters._
-
 import org.scalatest.FunSuite
+import org.codehaus.jettison.json.JSONObject
+import com.oculusinfo.binning.util.JSONUtilitiesTests
+import org.json.JSONArray
 
 
 
@@ -49,9 +50,33 @@ class StringAnalyticsTestSuite extends FunSuite {
 		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
 		val b = Map("a" -> 5.0, "b" -> 4.0, "c" -> 3.0, "d" -> 2.0, "e" -> 1.0)
 
-		val analytic = new StringScoreTileAnalytic[Double](Some("test"), new NumericSumTileAnalytic[Double]())
-		println("value: \""+analytic.valueToString(a)+"\"")
-		assert("[\"a\":1.0,\"b\":2.0,\"c\":3.0,\"d\":4.0]" === analytic.valueToString(a))
+		val order: ((String, Double), (String, Double)) => Boolean = (a, b) => a._2 < b._2
+		val analytic = new StringScoreTileAnalytic[Double](Some("test"), new NumericSumTileAnalytic[Double](), order=Some(order))
+		JSONUtilitiesTests.assertJsonEqual(
+			new JSONArray("""[{"string": "a", "score": "1.0"},
+                        | {"string": "b", "score": "2.0"},
+                        | {"string": "c", "score": "3.0"},
+                        | {"string": "d", "score": "4.0"}]""".stripMargin),
+			new JSONArray(analytic.valueToString(a)))
+		JSONUtilitiesTests.assertJsonEqual(
+			new JSONArray("""[{"string": "e", "score": "1.0"},
+                        | {"string": "d", "score": "2.0"},
+                        | {"string": "c", "score": "3.0"},
+                        | {"string": "b", "score": "4.0"},
+                        | {"string": "a", "score": "5.0"}]""".stripMargin),
+			new JSONArray(analytic.valueToString(b)))
+	}
+
+	test("Ordered String Tile Analytic") {
+		val a = Map("a" -> 1.0, "b" -> 2.0, "c" -> 3.0, "d" -> 4.0)
+		val b = Map("a" -> 5.0, "b" -> 4.0, "c" -> 3.0, "d" -> 2.0, "e" -> 1.0)
+		val c = Map("a" -> 2.0, "b" -> 3.0, "c" -> 1.0, "d" -> 0.0)
+
+		val order: ((String, Double), (String, Double)) => Boolean = (a, b) => a._2 < b._2
+		val analytic = new OrderedStringTileAnalytic[Double](Some("test"), new NumericSumTileAnalytic[Double](), order=Some(order))
+		assert("[\"a\",\"b\",\"c\",\"d\"]" === analytic.valueToString(a))
+		assert("[\"e\",\"d\",\"c\",\"b\",\"a\"]" === analytic.valueToString(b))
+		assert("[\"d\",\"c\",\"a\",\"b\"]" === analytic.valueToString(c))
 	}
 
 	test("String score processing limits") {
