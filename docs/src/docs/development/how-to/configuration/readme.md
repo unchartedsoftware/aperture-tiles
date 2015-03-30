@@ -114,7 +114,7 @@ pyramid: {
 
 ##### <a name="layer-renderers"></a> Renderers #####
 
-This option defines which renderer the server should use to render tiles. The renderer will be dependent on the type of tile data. The current renderer options are:
+The **renderer** defines how tiles are rendered on the server side. Renderers are dependent on the type of tile data. The renderer options are:
 
 <div class="props">
 	<table class="summaryTable" width="100%">
@@ -498,9 +498,9 @@ map.add( clientLayer );
 
 ## <a name="deployment"></a> Deployment ##
 
-Once you have finished configuring the map and layer properties, copy the `/new-project/` folder to your Apache Tomcat or Jetty server.
+Once you have finished configuring the map and layer properties, copy the *new-project/* folder to your Apache Tomcat or Jetty server.
 
-Access the `/new-project/` directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
+Access the *new-project/* directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
 
 ## Next Steps ##
 
