@@ -31,7 +31,7 @@
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 5,
         MIN_BAR_WIDTH = 30,
-        MAX_BAR_WIDTH = 125,
+        MAX_BAR_WIDTH = 110,
         injectCss;
 
     injectCss = function( spec ) {
@@ -145,7 +145,7 @@
             j;
 
         // get maximum count for layer if it exists in meta data
-        totalCount = meta.minMax.max[ countKey ];
+        totalCount = meta.max[ countKey ];
         yOffset = RendererUtil.getYOffset( numEntries, 36, 122 );
 
         for (i=0; i<numEntries; i++) {

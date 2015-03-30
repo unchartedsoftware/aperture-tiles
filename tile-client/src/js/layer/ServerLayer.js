@@ -64,8 +64,8 @@
             coarseness = layer.renderer.coarseness,
             adjustedZoom = Math.max( zoomLevel - ( coarseness-1 ), 0 ),
             meta =  layer.source.meta,
-            levelMinMax = meta.minMax[ adjustedZoom ],
-            minMax = levelMinMax ? levelMinMax.minMax : {
+            levelMinMax = meta.meta[ adjustedZoom ],
+            minMax = levelMinMax ? levelMinMax : {
                 min: null,
                 max: null
             };

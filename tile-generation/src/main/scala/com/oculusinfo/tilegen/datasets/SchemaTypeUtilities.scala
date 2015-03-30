@@ -24,15 +24,20 @@
  */
 package com.oculusinfo.tilegen.datasets
 
+
+
 import java.sql.Timestamp
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.catalyst.util.Metadata
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{Map => MutableMap}
 
 import org.apache.spark.sql.catalyst.expressions.{Expression, GenericRow}
 import org.apache.spark.sql._
+
+
 
 /**
  * Created by nkronenfeld on 12/16/2014.
@@ -47,8 +52,8 @@ object SchemaTypeUtilities {
 	def schemaField (name: String, dataType: Class[_], nullable: Boolean): StructField =
 		schemaField(name, _dataTypesOfClasses(dataType), nullable)
 	/** Construct a field for use in map schema */
-	def schemaField (name: String, dataType: DataType, nullable: Boolean = true) =
-		new StructField(name, dataType, nullable)
+	def schemaField (name: String, dataType: DataType, nullable: Boolean = true, metadata: Metadata = Metadata.empty) =
+		new StructField(name, dataType, nullable, metadata)
 
 	/** Construct an array type for use in schema fields */
 	def arraySchema (elementType: Class[_]): ArrayType =
@@ -131,7 +136,7 @@ object SchemaTypeUtilities {
 	private[datasets] def fieldSpecToIndices (fieldSpec: Array[(String, Array[Int])],
 	                                          schema: StructType): Array[Int] = {
 		def getImmediateIndex(symbol: String, testSchema: StructType): Int =
-			testSchema.fields.zipWithIndex.filter(p => p._1.name == symbol).map(_._2).head
+			testSchema.fields.zipWithIndex.filter(p => p._1.name.equalsIgnoreCase(symbol)).map(_._2).head
 		def getArrayType (depth: Int, arrayType: DataType): DataType =
 			if (0 == depth) arrayType
 			else if (1 == depth) arrayType.asInstanceOf[ArrayType].elementType

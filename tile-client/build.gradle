@@ -1,5 +1,5 @@
 plugins {
-	id "com.moowork.node" version "0.8"
+	id "com.moowork.node" version "0.9"
 }
 
 // pull in maven publish plugin to let us upload the .zip file
@@ -41,18 +41,18 @@ npmInstall.outputs.dir "$projectDir/node_install"
 task zipMinifiedFiles(type: Zip) {
  	from buildDir
  	include "*.js", "*.css"
- 	destinationDir file( buildDir.getPath() + "/distribution" ) 
+ 	destinationDir file( buildDir.getPath() + "/distribution" )
 }
 zipMinifiedFiles.dependsOn build_full
 assemble.dependsOn zipMinifiedFiles
 
-// The 'build' task is typically provided by the 'java' plugin, an empty task is added here to 
+// The 'build' task is typically provided by the 'java' plugin, an empty task is added here to
 // provide a similar interface.
 task build {}
 build.dependsOn assemble
 build.dependsOn test
 
-// The 'install' task is typically provided by the 'maven' plugin, an empty task is added here to 
+// The 'install' task is typically provided by the 'maven' plugin, an empty task is added here to
 // provide a similar interface, with the implementation provided by the 'maven-publish' plugin.
 task install {}
 install.dependsOn assemble

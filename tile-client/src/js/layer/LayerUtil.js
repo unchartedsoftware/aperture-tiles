@@ -37,13 +37,13 @@
      *
      * @param jsonString {String} the malformed JSON string.
      */
-     function parseMalformedJson( jsonString ) {
+    function parseMalformedJson( jsonString ) {
         // replace ( and ) with [ and ]
         var squared = jsonString.replace( /\(/g, '[' ).replace( /\)/g, ']'),
             // ensure all attributes are quoted in ""
             quoted = squared.replace(/([a-zA-Z0-9]+)(:)/g,'"$1"$2');
         return JSON.parse( quoted );
-     }
+    }
 
     /**
      * Parse a given layers meta data min and max json strings,
@@ -54,17 +54,23 @@
      * @param meta {Object} the layers meta data object.
      */
     function parseMetaMinMaxJson( meta ) {
-        var min = {}, max = {};
-        if ( meta && ( ( meta.max && meta.max.maximum ) || meta.maximum ) ) {
-            max = parseMalformedJson( meta.maximum || meta.max.maximum );
+        var minMax,
+            key;
+        if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum )  ) {
+            // single bucket entries
+            return {
+                max: parseMalformedJson( meta.maximum || meta.max.maxmium || meta.max ),
+                min: parseMalformedJson( meta.minimum || meta.min.minimum || meta.min )
+            };
         }
-        if ( meta && ( ( meta.min && meta.min.minimum ) || meta.minimum ) ) {
-            min = parseMalformedJson( meta.minimum || meta.min.minimum );
+        // multi-bucket entries
+        minMax = [];
+        for ( key in meta ) {
+            if ( meta.hasOwnProperty( key ) ) {
+                minMax.push( parseMetaMinMaxJson( meta[key] ) );
+            }
         }
-        return {
-            min: $.isArray( min ) ? min[0] : min,
-            max: $.isArray( max ) ? max[0] : max
-        };
+        return minMax;
     }
 
     /**
@@ -85,7 +91,7 @@
                 if ( key !== "bucketCount" &&
                     key !== "rangeMin" &&
                     key !== "rangeMax" ) {
-                    meta[ key ].minMax = parseMetaMinMaxJson( meta[key] );
+                    meta[ key ] = parseMetaMinMaxJson( meta[key] );
                 }
             }
         }
@@ -107,7 +113,7 @@
                 i;
             if ( !(layerData instanceof Array) ) {
                 if ( layerData.meta ) {
-                    layerData.meta.minMax = parseLevelsMinMax( layerData.meta );
+                    parseLevelsMinMax( layerData.meta );
                 }
                 return layerData;
             }
@@ -115,7 +121,7 @@
             layerMap = {};
             for ( i=0; i<layerData.length; i++ ) {
                 if ( layerData[i].meta ) {
-                    layerData[i].meta.minMax = parseLevelsMinMax( layerData[i].meta );
+                    parseLevelsMinMax( layerData[i].meta );
                 }
                 layerMap[ layerData[i].id ] = layerData[i];
             }

@@ -39,7 +39,7 @@ import scala.collection.JavaConverters._
  */
 class PropertiesWrapper (rawProperties: Properties) extends KeyValueArgumentSource with Serializable {
 	private val propertiesAsMap = rawProperties.stringPropertyNames.asScala.map(key =>
-		(key.trim.toLowerCase, rawProperties.getProperty(key))
+		(key.trim, rawProperties.getProperty(key))
 	).toMap
 	override def properties = propertiesAsMap
 }

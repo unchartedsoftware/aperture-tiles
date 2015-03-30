@@ -29,6 +29,6 @@ package com.oculusinfo.tilegen.util
 
 class ArgumentParser (args: Array[String]) extends KeyValueArgumentSource {
 	private val argsAsMap = args.sliding(2).filter(_(0).startsWith("-")).map(p =>
-		(p(0).substring(1).trim.toLowerCase() -> p(1))).toMap
+		(p(0).substring(1).trim -> p(1))).toMap
 	override def properties = argsAsMap
 }

@@ -71,6 +71,7 @@
 	right: calc(50% - 100px);
 	font-size: 10px;
 	bottom: 0px;
+	z-index: 1;
 }
 
 .count-summary {

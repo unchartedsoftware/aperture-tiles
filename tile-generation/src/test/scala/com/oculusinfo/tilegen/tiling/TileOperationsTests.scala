@@ -37,6 +37,13 @@ import scala.collection.mutable.ListBuffer
 class TestTileOperations extends FunSuite with SharedSparkContext {
 	import com.oculusinfo.tilegen.tiling.TileOperations._
 
+	def removeRecursively (file: File): Unit = {
+		if (file.isDirectory) {
+			file.listFiles().map(removeRecursively)
+		}
+		file.delete()
+	}
+
 	def outputOps(colSpecs: List[String], output: ListBuffer[Any])(input: PipelineData) = {
 		val extractors = colSpecs.map(SchemaTypeUtilities.calculateExtractor(_, input.srdd.schema))
 		val results = input.srdd.collect.map(row => extractors.map(_(row)))
@@ -77,14 +84,14 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			"oculus.binning.parsing.num.fieldType" -> "long",
 			"oculus.binning.parsing.num_1.index" -> "2",
 			"oculus.binning.parsing.num_1.fieldType" -> "double",
-			"oculus.binning.parsing.time.index" -> "3",
-			"oculus.binning.parsing.time.fieldType" -> "string",
+			"oculus.binning.parsing.timeStamp.index" -> "3",
+			"oculus.binning.parsing.timeStamp.fieldType" -> "string",
 			"oculus.binning.parsing.desc.index" -> "4",
 			"oculus.binning.parsing.desc.fieldType" -> "string"
 		)
 
 		val loadStage = PipelineStage("load", parseLoadCsvDataOp(argsMap))
-		loadStage.addChild(PipelineStage("output", outputOps(List("val", "time"), resultList)_))
+		loadStage.addChild(PipelineStage("output", outputOps(List("val", "timeStamp"), resultList)_))
 		TilePipelines.execute(loadStage, sqlc)
 
 		assertResult(List(
@@ -263,11 +270,15 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 		assert(schema.fieldNames.contains("num"))
 	}
 
-	test("Test file heatmap parse and operation") {
+	test("Test geo heatmap parse and operation") {
 		try {
 			// pipeline stage to create test data
 			def createDataOp(count: Int)(input: PipelineData) = {
-				val jsonData = for (x <- 0 until count; y <- 0 until count if y % 2 == 0) yield s"""{"x":$x, "y":$y}\n"""
+				val jsonData = for (x <- 0 until count) yield {
+					val lon = -180.0 + (x / count.toFloat * 360.0)
+					val lat = 0.0
+					s"""{"x":$lon, "y":$lat}\n"""
+				}
 				val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
 				PipelineData(sqlc, srdd)
 			}
@@ -284,7 +295,7 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 				"ops.tileHeight" -> "4")
 
 			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
-			rootStage.addChild(PipelineStage("file_heatmap_op", parseFileHeatmapOp(args)))
+			rootStage.addChild(PipelineStage("geo_heatmap_op", parseGeoHeatMapOp(args)))
 			TilePipelines.execute(rootStage, sqlc)
 
 			// Load the metadata and validate its contents - gives us an indication of whether or not the
@@ -292,25 +303,57 @@ class TestTileOperations extends FunSuite with SharedSparkContext {
 			val tileIO = new LocalTileIO("avro")
 			val metaData = tileIO.readMetaData("test_prefix.test.x.y.count").getOrElse(fail("Metadata not created"))
 
+			val customMeta = metaData.getAllCustomMetaData
+			assertResult(
+				"{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")(customMeta.toString)
+		} finally {
+			// If you want to look at the tile set (not remove it) comment out this line.
+			removeRecursively(new File("test_prefix.test.x.y.count"))
+		}
+	}
+
+	test("Test crossplot heatmap parse and operation") {
+		try {
+			// pipeline stage to create test data
+			// pipeline stage to create test data
+			def createDataOp(count: Int)(input: PipelineData) = {
+				val jsonData = for (x <- 0 until count; y <- 0 until count if y % 2 == 0) yield s"""{"x":$x, "y":$y}\n"""
+				val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+				PipelineData(sqlc, srdd)
+			}
+
+			// Run the tile job
+			val args = Map(
+				"ops.xColumn" -> "x",
+				"ops.yColumn" -> "y",
+				"ops.name" -> "test",
+				"ops.description" -> "a test description",
+				"ops.prefix" -> "cross_test_prefix",
+				"ops.levels.0" -> "0,1",
+				"ops.tileWidth" -> "4",
+				"ops.tileHeight" -> "4")
+
+			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+			rootStage.addChild(PipelineStage("crossplot_heatmap_op", parseCrossplotHeatmapOp(args)))
+			TilePipelines.execute(rootStage, sqlc)
+
+			// Load the metadata and validate its contents - gives us an indication of whether or not the
+			// job completed successfully.
+			val tileIO = new LocalTileIO("avro")
+			val metaData = tileIO.readMetaData("cross_test_prefix.test.x.y.count").getOrElse(fail("Metadata not created"))
+
 			val bounds = metaData.getBounds
 			assertResult(bounds.getMinX)(0.0)
 			assertResult(bounds.getMinY)(0.0)
 			assertResult(bounds.getMaxX)(7.0)
 			assertResult(bounds.getMaxY)(6.0)
+
 			val customMeta = metaData.getAllCustomMetaData
-			assertResult(customMeta.toString)("{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")
+			assertResult(
+				"{0.minimum=0, global.minimum=0, global.maximum=2, 0.maximum=2, 1.minimum=0, 1.maximum=1}")(customMeta.toString)
 		} finally {
-			// Remove the tile set we created
-			def removeRecursively (file: File): Unit = {
-				if (file.isDirectory) {
-					val list = file.list()
-					val files = file.listFiles()
-					file.listFiles().map(removeRecursively)
-				}
-				file.delete()
-			}
 			// If you want to look at the tile set (not remove it) comment out this line.
-			removeRecursively(new File("test_prefix.test.x.y.count"))
+			removeRecursively(new File("cross_test_prefix.test.x.y.count"))
 		}
 	}
 }

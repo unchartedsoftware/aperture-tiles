@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2015 Uncharted Software. 
+ * Copyright (c) 2015 Uncharted Software.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -38,72 +38,74 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-/** 
- * 	This transformer will take in JSON or tileData object representing bins of a double array  
+/**
+ * 	This transformer will take in JSON or tileData object representing bins of a double array
  * 		tile and will filter out all counts in the bins representing the time buckets indicated
- * 		in the configuration.  The double arrays passed back will be in the order that they are 
+ * 		in the configuration.  The double arrays passed back will be in the order that they are
  * 		sequenced in the JSON/Tile array passed in.
- * 
+ *
  */
 
 public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FilterByBucketTileTransformer.class);
-	
-	private int _startBucket = 0;
-	private int _endBucket   = 0;
-	private int _bucketCount = 0;
-	
+	private static final Logger LOGGER = LoggerFactory.getLogger( FilterByBucketTileTransformer.class );
+
+	private Integer _startBucket = null;
+	private Integer _endBucket = null;
+	private Integer _bucketCount = null;
+
 	public FilterByBucketTileTransformer(JSONObject arguments){
-		try {
-			if (arguments != null) {
-				// get the start and end time range
-				_startBucket = arguments.getInt("startBucket");
-				_endBucket   = arguments.getInt("endBucket");
-				_bucketCount = arguments.getInt("bucketCount");
-			}
-		}
-		catch (JSONException e) {
-			LOGGER.warn("Exception getting arguments for filter by time tile transformer", e);
+		if ( arguments != null ) {
+			// get the start and end time range
+			_startBucket = arguments.optInt("startBucket");
+			_endBucket = arguments.optInt("endBucket");
+			_bucketCount = arguments.optInt("bucketCount");
 		}
 	}
 
-	
+
 	@Override
 	public JSONObject transform (JSONObject inputJSON) throws JSONException {
-		return inputJSON; // not implemented 
+		return inputJSON; // not implemented
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see com.oculusinfo.tile.rendering.transformations.tile.TileTransformer#transform(com.oculusinfo.binning.TileData)
-	 * 
-	 * Note: This transformer explicitly transforms all tiles into a dense tile format.  If a sparse tile is 
+	 *
+	 * Note: This transformer explicitly transforms all tiles into a dense tile format.  If a sparse tile is
 	 * 			passed in, the values not explicitly represented will be set to null.
 	 */
     @Override
     public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
 
     	TileData<List<T>> resultTile = null;
-        
-        if ( _startBucket < 0 || _startBucket > _endBucket || _endBucket > _bucketCount ) { 
-			throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
-        }      
+
+        if ( _startBucket != null &&
+			_endBucket != null &&
+			_bucketCount != null ) {
+			if ( _startBucket < 0 || _startBucket > _endBucket || _endBucket > _bucketCount ) {
+				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
+        	}
+		}
 
         int xBins = inputData.getDefinition().getXBins();
         int yBins = inputData.getDefinition().getYBins();
-        
+
         TileIndex index = inputData.getDefinition();
 		List<List<T>> transformedData = new ArrayList<>(index.getXBins()*index.getYBins());
 
-        for(int ty = 0; ty < yBins; ty++){
-            for(int tx = 0; tx < xBins; tx++){
+        for (int ty = 0; ty < yBins; ty++){
+            for (int tx = 0; tx < xBins; tx++){
                 List<T> binContents = inputData.getBin(tx, ty);
                 int binSize = binContents.size();
-                
+				int start = ( _startBucket != null ) ? _startBucket : 0;
+				int end = ( _endBucket != null ) ? _endBucket : binSize;
+				int count = ( _bucketCount != null ) ? _bucketCount : 32;
+
                 // make sure we have a full array to add into the tile for dense tile creation
-                List<T> transformedBin = new ArrayList<>(_bucketCount);
+                List<T> transformedBin = new ArrayList<>( count );
                 for(int i = 0; i < binSize; i++) {
-                    if ( i >= _startBucket && i <= _endBucket ) {
+                    if ( i >= start && i <= end ) {
                     	transformedBin.add(i, binContents.get(i));
                     } else {
                     	transformedBin.add(i, null);
@@ -114,7 +116,7 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
         }
 
         resultTile = new DenseTileData<>(inputData.getDefinition(), transformedData);
-        
+
         // add in metadata to the tile
         Collection<String> keys = inputData.getMetaDataProperties();
 		if (null != keys && !keys.isEmpty()) {
