@@ -100,7 +100,7 @@
           var clustercounter = {};
 
           for(var i = 0; i<this.data.length; i++){
-            var cluster = this.data[i]['data']['_source']['cluster'];
+            var cluster = this.data[i]['data'].key;
             if( typeof clustercounter[cluster.id] !== "undefined" && clustercounter[cluster.id] !== null){
               clustercounter[cluster.id]['count'] += 1;
             }

@@ -72,7 +72,7 @@
   var parser = function parser(hits){
     return _.map(hits, function(hit){
       if(hit._source.locality[0]){
-        var latlon = hit._source.locality[0].coordinates.split(",");
+        var latlon = hit._source.locality[0].location.split(",");
         return {lat:Number(latlon[0]),lon:Number(latlon[1])};
       }
       else{
@@ -83,7 +83,7 @@
 
   ElasticLayer.prototype = Object.create( Layer.prototype );
 
-  ElasticLayer.prototype.buildFeatureVectors = function(hits){
+  ElasticLayer.prototype.buildFeatureVectors = function(){
     var that = this;
     return _.map(this.source.data,function(data){return that.buildFeatureVector(data,that)});
   }
@@ -94,11 +94,19 @@
 
     var epsg4326 =  new OpenLayers.Projection("EPSG:4326");
     var projectTo = that.map.olMap.getProjectionObject();
-    if(hit._source.locality[0]){
-      var coordinate = hit._source.locality[0].coordinates.split(",");
-      return new OpenLayers.Geometry.Point(Number(coordinate[1]),Number(coordinate[0])).transform(epsg4326, projectTo);
+
+    var locality = null;
+    if (hit.lat_long.hits.hits[0]._source.locality) {
+      locality = hit.lat_long.hits.hits[0]._source.locality[0];
+      if (typeof locality === 'undefined')  {
+        locality = hit.lat_long.hits.hits[0]._source.locality;
+      }
     }
-    else{
+
+    if (locality) {
+      var coordinate = locality.location.split(",");
+      return new OpenLayers.Geometry.Point(Number(coordinate[1]),Number(coordinate[0])).transform(epsg4326, projectTo);
+    } else {
       return null;
     }
   }
@@ -133,7 +141,7 @@
     feature.popup = new OpenLayers.Popup("pop",
       feature.geometry.getBounds().getCenterLonLat(),
       null,
-      '<div class="markerContent">'+feature.cluster[0].attributes._source.cluster.name+'</div>',
+      '<div class="markerContent">'+feature.cluster[0].attributes.key+'</div>',
       null,
       true,
       function() { controls['selector'].unselectAll(); }
@@ -143,6 +151,7 @@
   }
 
   function createPopover(feature) {
+    console.log(feature);
 
     var pt = feature.geometry.clone().transform(feature.layer.map.projection,feature.layer.map.displayProjection)
     var coord =  new OpenLayers.LonLat(pt.x,pt.y).transform(feature.layer.map.displayProjection, feature.layer.map.projection);
@@ -173,12 +182,17 @@
     // add the new layer
     //this.olLayer = new OpenLayers.Layer.Markers("Markers");
     this.olLayer = new OpenLayers.Layer.Vector("Overlay",
-      {strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})],
+      {
+        strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})]//,
+        //styleMap: new OpenLayers.StyleMap({
+        //    pointRadius: "${doc_count}",
+            //fillColor: "#666666"
+        //})
       });
 
     this.map.olMap.addLayer( this.olLayer );
 
-    this.olLayer.addFeatures(this.buildFeatureVectors(this.source.data));
+    this.olLayer.addFeatures(this.buildFeatureVectors());
 
     //this.buildMarkers(this.source.coordinates);
     //
