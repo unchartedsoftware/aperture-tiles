@@ -93,6 +93,6 @@ class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
 				result.put(eltResult)
 			}
 		)
-		Map(name -> result)
+		Map(name -> result.toString)
 	}
 }
