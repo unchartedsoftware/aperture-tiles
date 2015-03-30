@@ -10,16 +10,19 @@ layout: submenu
 Installation and Compilation
 ============================
 
-The instructions on this page are intended for developers who want to install the Aperture Tiles source code and build their own custom projects.
+The following installation instructions are intended for developers who want to use Aperture Tiles to build their own custom projects. The [complete installation](#complete-installation) process requires several third-party tools and access to the Aperture Tiles source code.
 
-For quick examples of the capabilities of Aperture Tiles, see the following topics:
+For developers who want to quickly install a pre-configured example Aperture Tiles application with minimal modification, a set of [packaged distributions](#complete-installation) are available as an alternative.
 
-- [Demos](../../../../demos/): Access fully functional demonstrations of Aperture Tiles from your web browser.
-- [Download](../../../../download): Access a pre-built distribution designed to help you quickly understand the process of creating an Aperture Tiles application. Instructions for using these packages are available on the [Quick Start](../quickstart) page. 
+## <a name="supported-platforms"></a> Supported Platforms ##
+
+Aperture Tiles is compatible with Linux and OS X.
+
+Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or the DOS command prompt. Note however, that this platform is not compatible with Hadoop/HBase, which enable Aperture Tiles to work with particularly large datasets.
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
-This project has the following prerequisites:
+Aperture Tiles requires the following third-party tools:
 
 <div class="props">
 	<table class="summaryTable" width="100%">
@@ -29,28 +32,57 @@ This project has the following prerequisites:
 			<th scope="col" width="50%">Notes</th>
 		</thead>
 		<tr>
-			<td style="vertical-align: text-top" class="description">Operating System</td>
-			<td style="vertical-align: text-top" class="description">Linux or OS X</td>
-			<td style="vertical-align: text-top" class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</td>
-		</tr>
-		<tr>
 			<td style="vertical-align: text-top" class="description">Languages</td>
-			<td style="vertical-align: text-top" class="description"><a href="http://www.scala-lang.org/">Scala</a> v2.10.3
+			<td style="vertical-align: text-top" class="description">
+				<a href="http://www.scala-lang.org/">Scala</a> v2.10.3
 				<br><a href="http://www.java.com/">Java</a> (JDK v1.7+)
 			</td>
 			<td style="vertical-align: text-top" class="description"></td>
 		</tr>
 		<tr>
-			<td style="vertical-align: text-top" class="description" rowspan="2">Cluster Computing Framework</td>
-			<td style="vertical-align: text-top" class="description"><a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+</td>
+			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
 			<td style="vertical-align: text-top" class="description">
-				You must configure the version of Hadoop with which Spark will be working (if applicable).
-				<p>The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</p>
+				<a href="http://spark.incubator.apache.org/">Apache Spark</a>
+				<br>v1.0.0+
+			</td>
+			<td style="vertical-align: text-top" class="description">
+				Specify the version of Hadoop with which Spark will be working (if applicable).
+				<p>Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</p>
 			</td>
 		</tr>
 		<tr>
-			<td style="vertical-align: text-top" class="description"><a href="http://hadoop.apache.org/">Hadoop</a> (<em>optional</em>):
-				<ul>
+			<td style="vertical-align: text-top" class="description">Build Automation</td>
+			<td style="vertical-align: text-top" class="description">
+				<a href="http://www.eclipse.org/jetty/">Gradle</a>
+				<br>(requires <a href="http://nodejs.org/">Node.js</a>)
+			</td>
+			<td style="vertical-align: text-top" class="description">
+				The Node.js Windows installer has a known issue where it fails to install the following directory. To work around this issue, create the directory manually.
+				<p><code>C:\Users\&lt;UserName&gt;\AppData\Roaming\npm</code></p>
+			</td>
+		</tr>
+		<tr>
+			<td style="vertical-align: text-top" class="description">Web Server</td>
+			<td style="vertical-align: text-top" class="description"><a href="http://tomcat.apache.org/">Apache Tomcat</a> or <a href="http://www.eclipse.org/jetty/">Jetty</a></td>
+			<td style="vertical-align: text-top" class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</td>
+		</tr>
+	</table>
+</div>
+
+If you intend to work with datasets that cannot fit in the memory of a single machine or if you wish to avoid wait times, we recommend you also install the following tools to enable Aperture Tiles to work with particularly large datasets.
+
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="20%">Component</th>
+			<th scope="col" width="30%">Required</th>
+			<th scope="col" width="50%">Notes</th>
+		</thead>
+		<tr>
+			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
+			<td style="vertical-align: text-top" class="description">
+				A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
+				<ul class="table">
 					<li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
 					<li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
 					<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
@@ -59,33 +91,107 @@ This project has the following prerequisites:
 			</td>
 			<td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.</td>
 		</tr>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Web Server</td>
-			<td style="vertical-align: text-top" class="description"><a href="http://tomcat.apache.org/">Apache Tomcat</a> or <a href="http://www.eclipse.org/jetty/">Jetty</a></td>
-			<td style="vertical-align: text-top" class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Build Automation</td>
-			<td style="vertical-align: text-top" class="description"><a href="http://www.eclipse.org/jetty/">Gradle</a><br>(requires <a href="http://nodejs.org/">Node.js</a>)</td>
-			<td style="vertical-align: text-top" class="description">
-				The Node.js Windows installer has a known issue where it fails to install the following directory. To work around this issue, create the directory, then re-run the Aperture Tiles build
-				<p><code>C:\Users\&lt;UserName&gt;\AppData\Roaming\npm</code>
-			</td>
-		</tr>
 	</table>
 </div>
 
 <img src="../../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
-## <a name="source-code"></a> Source Code ##
+## <a name="complete-install"></a> Complete Install ##
 
-The Aperture Tiles source code is available on [GitHub](https://github.com/unchartedsoftware/aperture-tiles/tree/master).
+### <a name="source-code"></a> Source Code ###
 
-### Dependencies ###
+Source code repositories for Aperture Tiles and its dependent project, [Aperture JS](http://aperturejs.com/), are available on [GitHub](https://github.com/unchartedsoftware/).
 
-Aperture Tiles is dependent on the *master* branch of Aperture JS source code, which you can also download from [GitHub](https://github.com/unchartedsoftware/aperturejs/tree/master).
+<h6 class="procedure">To work with the Uncharted source code</h6>
 
-### <a name="project-structure"></a> Project Structure ###
+1. Execute the following command to clone the Aperture Tiles source code to an *aperture-tiles/* directory in your Git project folder:
+
+	```bash
+	git clone https://github.com/unchartedsoftware/aperture-tiles.git
+	```
+
+2. Check out the *master* branch to work with the most recent stable release:
+
+	```bash
+	git checkout master
+	```
+
+4. Execute the following command to clone the Aperture JS source code to an *aperturejs/* directory in Git project folder:
+
+	```bash
+	git clone https://github.com/unchartedsoftware/aperturejs.git
+	```
+
+5. Determine which version of Aperture JS you require:
+	<ol type="a">
+		<li>Open the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in the root of your Aperture Tiles working directory.</li>
+		<li>
+			Search for the **project.ext.apertureJsVersion** property, which specifies the required version.
+			<p class="list-paragraph"><strong>NOTE</strong>: While the <em>master</em> branch of Aperture Tiles is generally dependent on the <em>master</em> branch of Aperture JS, you should always perform this check.
+		</li>
+	</ol>
+6. Check out the Aperture JS branch or tag corresponding to the required version:
+
+	```bash
+	git checkout <branch>
+	```
+
+### <a name="building-project"></a> Building the Project ###
+
+Once you have cloned the Aperture Tiles and Aperture JS repositories, you can build the project.
+
+1. [Specify your Hadoop/HBase version](#hbase-version) (if applicable)
+2. [Build Aperture JS](#aperture-js)
+3. [Compile Aperture Tiles](#compiling)
+
+#### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
+
+**NOTE**: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
+
+Prior to building the project, you must specify which version of Hadoop and/or HBase you have installed (if applicable): 
+
+1. Review the *Deployment Variants* section of the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in [aperture-tiles/](https://github.com/unchartedsoftware/aperture-tiles/tree/master) to check for valid settings for your version.
+2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
+
+#### <a name="aperture-js"></a> Building Aperture JS ####
+
+Build [Aperture JS](https://github.com/unchartedsoftware/aperturejs/tree/master) by running the following command in your root Aperture JS directory:
+
+```bash
+mvn build
+```
+
+**NOTE**: The Aperture JS project requires [Apache Maven](http://maven.apache.org/) for build automation.
+
+#### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
+
+Build Aperture Tiles by running the following command in your root Aperture Tiles directory:
+
+```bash
+gradlew install -PbuildType=<buildType>
+``` 
+
+Where:
+
+<div class="props">
+	<table class="summaryTable" width="100%">
+		<thead>
+			<th scope="col" width="25%">Sub-Project</th>
+			<th scope="col" width="75%">Description</th>
+		</thead>
+		<tr>
+			<td class="property">buildType</td>
+			<td class="description">
+				A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).
+				<p>If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+			</td>
+		</tr>
+	</table>
+</div>
+
+This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
+
+##### <a name="project-structure"></a> Project Structure #####
 
 Aperture Tiles is made up of the following sub-projects:
 
@@ -154,54 +260,34 @@ Aperture Tiles is made up of the following sub-projects:
 	</table>
 </div>
 
-### <a name="building-project"></a> Building the Project ###
+## <a name="packaged-distributions"></a> Packaged Distributions ##
 
-#### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
+The Aperture Tiles packaged distributions are intended for use with the [Quick Start](../quick-start/) example workflow. These distributions require a subset of the complete installation [prerequisites](#prerequisites).
 
-**NOTE**: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
+### Prerequisites ###
 
-Prior to building the project, you must specify which version of Hadoop and/or HBase you have installed (if applicable): 
+The packaged distributions of Aperture Tiles require only a subset of the [prerequisites](#prerequisites) for complete installations.
 
-1. Review the *Deployment Variants* section of the *aperture-tiles/***build.gradle** file to check for valid settings for your version.
-2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
+<h6 class="procedure">To install the prerequisites for the packaged distributions</h6>
 
-#### Installing Dependencies ####
+1. Install [Apache Spark](http://spark.incubator.apache.org/).
+2. If you want to understand how Aperture Tiles works with particularly large datasets, install your preferred flavor of [Hadoop](http://hadoop.apache.org/):
+	- [Cloudera](http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html) v4.6 (*recommended*)
+	- [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
+	- [MapR](http://www.mapr.com/products/apache-hadoop)
+	- [HortonWorks](http://hortonworks.com/)
 
-Install the [Aperture JS](https://github.com/unchartedsoftware/aperturejs/tree/master) project by running the following command in your root Aperture JS directory:
-	
-```bash
-mvn build
-```
+### Download the Distributions ###
 
-**NOTE**: This step requires [Apache Maven](http://maven.apache.org/).
+The Aperture Tiles packaged distributions enable you to create a sample Aperture Tiles application that explores a Julia set fractal visualization.
 
-#### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
+<h6 class="procedure">To download the packaged distributions</h6>
 
-To build Aperture Tiles, run the following command in your root Aperture Tiles directory:
-
-```bash
-gradlew install -PbuildType=<buildType>
-``` 
-
-Where:
-
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<th scope="col" width="25%">Sub-Project</th>
-			<th scope="col" width="75%">Description</th>
-		</thead>
-		<tr>
-			<td class="property">buildType</td>
-			<td class="description">
-				A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).
-				<p>If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
-			</td>
-		</tr>
-	</table>
-</div>
-
-This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
+1. Download and save the following files:
+	- [Tile Generator](../../../../download/#tile-generator): Creates the Julia set data and generates a set of tiles
+	- [Tile Quick Start Application](../../../../download/#tile-quick-start-application): Serves as an example application that you can quickly deploy after minimal modification
+2. Extract the contents of each file to your local machine.
+3. See the [Quick Start](../quickstart/) topic for information on configuring each packaged distribution.
 
 ## <a name="next-steps"></a> Next Steps ##
 
