@@ -129,12 +129,13 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
 	def name = analyticName.getOrElse(baseAnalytic.name)
 	override def valueToString (value: Map[String, T]): String =
 		order.map(sorter => value.toList.sortWith(sorter)).getOrElse(value.toList)
-			.map(p => ("{\""+stringName+"\":\""+p._1+"\", \""+scoreName+"\":\""+baseAnalytic.valueToString(p._2)+"\"}"))
+			.map{p =>
+        val subVal = baseAnalytic.valueToString(p._2)
+        ("{\""+stringName+"\":\""+p._1+"\", \""+scoreName+"\":\""+baseAnalytic.valueToString(p._2)+"\"}")
+      }
 			.mkString("[",",","]")
 	override def toMap (value: Map[String, T]): Map[String, Any] =
-		value.map{case (k1, v1) =>
-			baseAnalytic.toMap(v1).map{case (k2, v2) => (k1+"."+k2, v2)}
-		}.flatten.toMap
+    Map(name -> valueToString(value))
 }
 
 /**

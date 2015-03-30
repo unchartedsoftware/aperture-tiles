@@ -170,6 +170,9 @@ class ComposedTileAnalytic[T1, T2]
 		(val1.defaultProcessedValue, val2.defaultProcessedValue)
 	def defaultUnprocessedValue: (T1, T2) =
 		(val1.defaultUnprocessedValue, val2.defaultUnprocessedValue)
+  override def valueToString (value: (T1, T2)): String =
+    "{\""+val1.name+"\":"+val1.valueToString(value._1)+", "+
+    " \""+val2.name+"\":"+val2.valueToString(value._2)+"}"
 	override def toMap (value: (T1, T2)): Map[String, Any] =
 		val1.toMap(value._1) ++ val2.toMap(value._2)
 	override def toString = "["+val1+" + "+val2+"]"
