@@ -344,308 +344,261 @@ If you chose to store your tile set in HBase (i.e., **oculus.tileio.type** is se
 
 The Source Data properties describe the raw data from which you want to create tiles:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>
-					oculus.binning.source.location
-				</dt>
-				<dd>Path (local file system or HDFS) to the source data file or files to be tiled.</dd>
-				
-				<dt>
-					oculus.binning.prefix (Optional)
-				</dt>
-				<dd>Prefix to be added to the name of every pyramid location. Used to separate this tile generation from previous runs. If not present, no prefix is used.</dd>
-   
-				<dt>
-					oculus.binning.parsing.separator
-				</dt>
-				<dd>Character or string used as a separator between columns in the input data files. Default is a tab.</dd>
-   
-				<dt>
-					oculus.binning.parsing.&lt;field&gt;.index
-				</dt>
-				<dd>Column number of the described field in the input data files. This field is mandatory for every field type to be used.</dd>
-   
-				<dt>
-					oculus.binning.parsing.&lt;field&gt;.fieldType
-				</dt>
-				<dd>Type of value expected in the column specified by:
-				<br><strong>oculus.binning.parsing.&lt;field&gt;.index</strong>.
-				
-				<br><br>By default columns are treated as containing real, double-precision values. Other possible types are:
-   
-				<dl>
-					<dt>constant or zero</dt>
-					<dd>Contains <em>0.0</em> (the column does not need to exist)</dd>
-					
-					<dt>int</dt>
-					<dd>Contains integers</dd>
-					
-					<dt>long</dt>
-					<dd>Contains double-precision integers</dd>
-					
-					<dt>date</dt>
-					<dd>Contains dates. Dates are parsed and transformed into milliseconds since the standard Java start date (using SimpleDateFormatter). The default format is <em>yyMMddHHmm</em>, but this can be overridden using the <strong>oculus.binning.parsing.&lt;field&gt;.dateFormat</strong> property.</dd>
-			
-					<dt>boolean</dt>
-					<dd>Contains boolean values (e.g., <em>true/false</em>, <em>yes/no</em>)</dd>
-					
-					<dt>byte</dt>
-					<dd>Contains bytes</dd>
-					
-					<dt>short</dt>
-					<dd>Contains short integers</dd>
-					
-					<dt>float</dt>
-					<dd>Contains floating-point numbers</dd>
-					
-					<dt>ipv4</dt>
-					<dd>Contains an IP address treated as a four-digit base 256 number turned into a double</dd>
+<div class="props">
+	<dl class="detailList params">
+		<dt>oculus.binning.source.location</dt>
+		<dd>Path (local file system or HDFS) to the source data file or files to be tiled.</dd>
 
-					<dt>string</dt>
-					<dd>Contains a string value</dd>
-			
-					<dt>propertyMap</dt>
-					<dd>Contains property maps. All of the following properties must be	present	to read the property:
-						<dl>
-							<dt>oculus.binning.parsing.&lt;field&gt;.property</dt>
-							<dd>Name of the property</dd>
-							
-							<dt>oculus.binning.parsing.&lt;field&gt;.propertyType</dt>
-							<dd>Equivalent to fieldType</dd>
-							
-							<dt>oculus.binning.parsing.&lt;field&gt;.propertySeparator</dt>
-							<dd>Character or string used to separate properties</dd>
-							
-							<dt>oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator</dt>
-							<dd>Character or string used to separate property keys from their values</dd>
-						</dl>
-					</dd>
-				</dl>
-				</dd>
-				
-				<dt>
-					oculus.binning.parsing.&lt;field&gt;.fieldScaling
-				</dt>
-				<dd>How field values should be scaled. The default leaves values as they are. Other possibilities are:				
+		<dt>oculus.binning.prefix (Optional)</dt>
+		<dd>Prefix to be added to the name of every pyramid location. Used to separate this tile generation from previous runs. If not present, no prefix is used.</dd>
+
+		<dt>oculus.binning.parsing.separator</dt>
+		<dd>Character or string used as a separator between columns in the input data files. Default is a tab.</dd>
+
+		<dt>oculus.binning.parsing.&lt;field&gt;.index</dt>
+		<dd>Column number of the described field in the input data files. This field is mandatory for every field type to be used.</dd>
+
+		<dt>oculus.binning.parsing.&lt;field&gt;.fieldType</dt>
+		<dd>
+			Type of value expected in the column specified by:
+			<br><strong>oculus.binning.parsing.&lt;field&gt;.index</strong>.
+
+			<br><br>By default columns are treated as containing real, double-precision values. Other possible types are:
+
+			<dl>
+				<dt>constant or zero</dt>
+				<dd>Contains <em>0.0</em> (the column does not need to exist)</dd>
+
+				<dt>int</dt>
+				<dd>Contains integers</dd>
+
+				<dt>long</dt>
+				<dd>Contains double-precision integers</dd>
+
+				<dt>date</dt>
+				<dd>Contains dates. Dates are parsed and transformed into milliseconds since the standard Java start date (using SimpleDateFormatter). The default format is <em>yyMMddHHmm</em>, but this can be overridden using the <strong>oculus.binning.parsing.&lt;field&gt;.dateFormat</strong> property.</dd>
+
+				<dt>boolean</dt>
+				<dd>Contains boolean values (e.g., <em>true/false</em>, <em>yes/no</em>)</dd>
+
+				<dt>byte</dt>
+				<dd>Contains bytes</dd>
+
+				<dt>short</dt>
+				<dd>Contains short integers</dd>
+
+				<dt>float</dt>
+				<dd>Contains floating-point numbers</dd>
+
+				<dt>ipv4</dt>
+				<dd>Contains an IP address treated as a four-digit base 256 number turned into a double</dd>
+
+				<dt>string</dt>
+				<dd>Contains a string value</dd>
+
+				<dt>propertyMap</dt>
+				<dd>
+					Contains property maps. All of the following properties must be	present	to read the property:
 					<dl>
-						<dt>log</dt>
-						<dd>take the log of the value (<strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong> is used, just as with fieldAggregation)</dd>
+						<dt>oculus.binning.parsing.&lt;field&gt;.property</dt>
+						<dd>Name of the property</dd>
+
+						<dt>oculus.binning.parsing.&lt;field&gt;.propertyType</dt>
+						<dd>Equivalent to fieldType</dd>
+
+						<dt>oculus.binning.parsing.&lt;field&gt;.propertySeparator</dt>
+						<dd>Character or string used to separate properties</dd>
+
+						<dt>oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator</dt>
+						<dd>Character or string used to separate property keys from their values</dd>
 					</dl>
 				</dd>
-				
-				<dt>
-					oculus.binning.parsing.&lt;field&gt;.fieldAggregation
-				</dt>
-				<dd>Method of aggregation used on values of the X field. Describes how values from multiple data points in the same bin should be aggregated together to create a single value for the bin.
-
-				<br><br>The default is addition.  Other possible aggregation types are:
-				
-				<dl>
-					<dt>min</dt>
-					<dd>Find the minimum value</dd>
-					
-					<dt>max</dt>
-					<dd>Find the maximum value</dd>
-					
-					<dt>log</dt>
-					<dd>Treat the number as a logarithmic value; aggregation of a and b is log_base(base^a+base^b). Base is taken from property <strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong>, and defaults to <em>e</em>.</dd>
-				</dd>
 			</dl>
-		</ul>
-	</div>
+		</dd>
+
+		<dt>oculus.binning.parsing.&lt;field&gt;.fieldScaling</dt>
+		<dd>
+			How field values should be scaled. The default leaves values as they are. Other possibilities are:
+			<dl>
+				<dt>log</dt>
+				<dd>take the log of the value (<strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong> is used, just as with fieldAggregation)</dd>
+			</dl>
+		</dd>
+
+		<dt>oculus.binning.parsing.&lt;field&gt;.fieldAggregation</dt>
+		<dd>
+			Method of aggregation used on values of the X field. Describes how values from multiple data points in the same bin should be aggregated together to create a single value for the bin.
+
+			<br><br>The default is addition.  Other possible aggregation types are:
+
+			<dl>
+				<dt>min</dt>
+				<dd>Find the minimum value</dd>
+
+				<dt>max</dt>
+				<dd>Find the maximum value</dd>
+
+				<dt>log</dt>
+				<dd>Treat the number as a logarithmic value; aggregation of a and b is log_base(base^a+base^b). Base is taken from property <strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong>, and defaults to <em>e</em>.</dd>
+			</dl>
+		</dd>
+	</dl>
 </div>
 
 ### <a name="tiling-properties"></a> Tiling Properties Files ###
 
 The tiling properties files define the tiling job parameters for each layer in your visual analytic, such as which fields to bin on and how values are binned:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>
-					oculus.binning.name
-				</dt>
-				<dd>Name (path) of the output data tile set pyramid. If you are writing to a file system, use a relative path instead of an absolute path. If you are writing to HBase, this is used as a table name. This name is also written to the tile set metadata and used as a plot label.</dd>
-				
-				<dt>
-					oculus.binning.projection
-				</dt>
-				<dd>Type of projection to use when binning data. Possible values are:
-					<dl>
-						<dt>EPSG:4326</dt>
-						<dd>Bin linearly over the whole range of values found (default)</dd>
-						
-						<dt>EPSG:900913</dt>
-						<dd>Web-mercator projection (used for geographic values only)</dd>
-					</dl>
-				</dd>
-   
-   				<dt>
-   					oculus.binning.projection.autobounds
-   				</dt>
-				<dd>
-					Indicates whether the tiling job should set the minimum and maximum	bounds automatically (<em>true</em>, which is the default value) or whether you will specify them manually (<em>false</em>). If set to <em>false</em>, you must also specify:
-					<dl>
-						<dt>
-							oculus.binning.projection.minx
-						</dt>
-						<dd>
-							Indicates the lowest value that will be displayed on the x-axis.
-						</dd>
-			
-						<dt>
-							oculus.binning.projection.maxx
-						</dt>
-						<dd>
-							Indicates the highest value that will be displayed on the x-axis.
-						</dd>
-			
-						<dt>
-							oculus.binning.projection.miny
-						</dt>
-						<dd>
-							Indicates the lowest value that will be displayed on the y-axis.
-						</dd>
-			
-						<dt>
-							oculus.binning.projection.maxy
-						</dt>
-						<dd>
-							Indicates the highest value that will be displayed on the y-axis.
-						</dd>
-					</dl>
-   				</dd>
-				
-				<dt>
-					oculus.binning.index.type
-				</dt>
-				<dd>Defines the index scheme used to locate the binning value on the base layer and map them to the corresponding tile bins. The value you select determines the number of index fields you must specify:
-					<dl>
-						<dt>cartesian (default)</dt>
-						<dd>
-							Use cartesian (x/y) coordinates:
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
-								<li>oculus.binning.index.field.1=&lt;y_Field&gt;</li>
-							</ul>
+<div class="props">
+	<dl class="detailList">
+		<dt>oculus.binning.name</dt>
+		<dd>Name (path) of the output data tile set pyramid. If you are writing to a file system, use a relative path instead of an absolute path. If you are writing to HBase, this is used as a table name. This name is also written to the tile set metadata and used as a plot label.</dd>
 
-						</dd>
-						
-						<dt>ipv4</dt>
-						<dd>
-							Use an IP address (v4):
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
-							</ul>
-						</dd>
-						
-						<dt>timerange</dt>
-						<dd>
-							Use a standard time range and cartesian point index:
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
-								<li>oculus.binning.index.field.1=&lt;x_Field&gt;</li>
-								<li>oculus.binning.index.field.2=&lt;y_Field&gt;</li>
-							</ul>
-						</dd>
-						
-						<dt>segment</dt>
-						<dd>
-							Use a line segment with two cartesian end points:
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
-								<li>oculus.binning.index.field.1=&lt;y1_Field&gt;</li>
-								<li>oculus.binning.index.field.2=&lt;x2_Field&gt;</li>
-								<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
-							</ul>
-						</dd>						
-					</dl>
-				</dd>
+		<dt>oculus.binning.projection</dt>
+		<dd>
+			Type of projection to use when binning data. Possible values are:
+			<dl>
+				<dt>EPSG:4326</dt>
+				<dd>Bin linearly over the whole range of values found (default)</dd>
 
-				<dt>
-					oculus.binning.index.field.&lt;order&gt;
-				</dt>
-				<dd>Field(s) to use as the index that locates the binning value on the base layer and map them to the corresponding tile bins. Your index scheme will determine how many index fields you must provide:
-					<dl>
-						<dt>ipv4</dt>
-						<dd>
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
-							</ul>
-						</dd>
-						
-						<dt>cartesian</dt>
-						<dd>
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
-								<li>oculus.binning.index.field.1=&lt;y_Field&gt;</li>
-							</ul>
-						</dd>
-						
-						<dt>timerange</dt>
-						<dd>
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
-								<li>oculus.binning.index.field.1=&lt;x_Field&gt;</li>
-								<li>oculus.binning.index.field.2=&lt;y_Field&gt;</li>
-							</ul>
-						</dd>
-						
-						<dt>segment</dt>
-						<dd>
-							<ul>
-								<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
-								<li>oculus.binning.index.field.1=&lt;y1_Field&gt;</li>
-								<li>oculus.binning.index.field.2=&lt;x2_Field&gt;</li>
-								<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
-							</ul>
-						</dd>						
-					</dl>
-				</dd>
-				
-				<dt>
-					oculus.binning.value.field
-				</dt>
-				<dd>Field to use as the bin value. Default counts entries only.</dd>
-				
-				<dt>
-					oculus.binning.levels.&lt;order&gt;
-				</dt>
-				<dd>Array property. For example, if you want to generate tile zoom levels in three groups, you should include:
-					<ul>
-						<li>oculus.binning.levels.0
-						<li>oculus.binning.levels.1
-						<li>oculus.binning.levels.2
-					</ul>
-					
-					<p>Each group is a description of the zoom levels to bin simultaneously - a comma-separated list of individual integers, or ranges of integers (described as start-end). For examples, "0-3,5" means levels 0, 1, 2, 3, and 5. If there are multiple level sets, the raw data is parsed once and cached for use with each level set. This property is mandatory, and has no default.</p>
-				
-					<p>Which levels you should bin together depends both on the size of your cluster and data.</p>
-   
-					<p>Each binning job has an overhead cost and a tiling cost. Generally, the			overhead cost is the dominant factor below level 8 and irrelevant above that. Tiling all levels below this point will save the overhead cost and reduce tile generation time. Above this level, you risk job failure out of memory errors if you try to simultaneously bin multiple levels due to the large number of tiles generated at lower levels.</p>
-				
-					<p>Our typical use case has:</p>
-				
-					<ul>
-						<li>binning.level.0=0-8</li>
-						<li>binning.level.1=9</li>
-						<li>binning.level.2=10</li>
-						<li>etc.</li>
-					</ul>
-				</dd>
-				
-				<dt>
-					oculus.binning.consolidationPartitions
-				</dt>
-				<dd>The number of partitions into which to consolidate data when binning. If not included, Spark automatically selects the number of partitions.</dd>
-				
+				<dt>EPSG:900913</dt>
+				<dd>Web-mercator projection (used for geographic values only)</dd>
 			</dl>
-		</ul>
-	</div>
+		</dd>
+
+		<dt>oculus.binning.projection.autobounds</dt>
+		<dd>
+			Indicates whether the tiling job should set the minimum and maximum	bounds automatically (<em>true</em>, which is the default value) or whether you will specify them manually (<em>false</em>). If set to <em>false</em>, you must also specify:
+			<dl>
+				<dt>oculus.binning.projection.minx</dt>
+				<dd>Indicates the lowest value that will be displayed on the x-axis.</dd>
+
+				<dt>oculus.binning.projection.maxx</dt>
+				<dd>Indicates the highest value that will be displayed on the x-axis.</dd>
+
+				<dt>oculus.binning.projection.miny</dt>
+				<dd>Indicates the lowest value that will be displayed on the y-axis.</dd>
+
+				<dt>oculus.binning.projection.maxy</dt>
+				<dd>Indicates the highest value that will be displayed on the y-axis.</dd>
+			</dl>
+		</dd>
+
+		<dt>oculus.binning.index.type</dt>
+		<dd>
+			Defines the index scheme used to locate the binning value on the base layer and map them to the corresponding tile bins. The value you select determines the number of index fields you must specify:
+			<dl>
+				<dt>cartesian (default)</dt>
+				<dd>
+					Use cartesian (x/y) coordinates:
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
+						<li>oculus.binning.index.field.1=&lt;y_Field&gt;</li>
+					</ul>
+				</dd>
+
+				<dt>ipv4</dt>
+				<dd>
+					Use an IP address (v4):
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
+					</ul>
+				</dd>
+
+				<dt>timerange</dt>
+				<dd>
+					Use a standard time range and cartesian point index:
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
+						<li>oculus.binning.index.field.1=&lt;x_Field&gt;</li>
+						<li>oculus.binning.index.field.2=&lt;y_Field&gt;</li>
+					</ul>
+				</dd>
+
+				<dt>segment</dt>
+				<dd>
+					Use a line segment with two cartesian end points:
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
+						<li>oculus.binning.index.field.1=&lt;y1_Field&gt;</li>
+						<li>oculus.binning.index.field.2=&lt;x2_Field&gt;</li>
+						<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
+					</ul>
+				</dd>
+			</dl>
+		</dd>
+
+		<dt>oculus.binning.index.field.&lt;order&gt;</dt>
+		<dd>
+			Field(s) to use as the index that locates the binning value on the base layer and map them to the corresponding tile bins. Your index scheme will determine how many index fields you must provide:
+			<dl>
+				<dt>ipv4</dt>
+				<dd>
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;IPv4_Field&gt;</li>
+					</ul>
+				</dd>
+
+				<dt>cartesian</dt>
+				<dd>
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;x_Field&gt;</li>
+						<li>oculus.binning.index.field.1=&lt;y_Field&gt;</li>
+					</ul>
+				</dd>
+
+				<dt>timerange</dt>
+				<dd>
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;time_Field&gt;</li>
+						<li>oculus.binning.index.field.1=&lt;x_Field&gt;</li>
+						<li>oculus.binning.index.field.2=&lt;y_Field&gt;</li>
+					</ul>
+				</dd>
+
+				<dt>segment</dt>
+				<dd>
+					<ul>
+						<li>oculus.binning.index.field.0=&lt;x1_Field&gt;</li>
+						<li>oculus.binning.index.field.1=&lt;y1_Field&gt;</li>
+						<li>oculus.binning.index.field.2=&lt;x2_Field&gt;</li>
+						<li>oculus.binning.index.field.3=&lt;y2_Field&gt;</li>
+					</ul>
+				</dd>
+			</dl>
+		</dd>
+
+		<dt>oculus.binning.value.field</dt>
+		<dd>Field to use as the bin value. Default counts entries only.</dd>
+
+		<dt>oculus.binning.levels.&lt;order&gt;</dt>
+		<dd>
+			Array property. For example, if you want to generate tile zoom levels in three groups, you should include:
+			<ul>
+				<li>oculus.binning.levels.0
+				<li>oculus.binning.levels.1
+				<li>oculus.binning.levels.2
+			</ul>
+
+			<p>Each group is a description of the zoom levels to bin simultaneously - a comma-separated list of individual integers, or ranges of integers (described as start-end). For examples, "0-3,5" means levels 0, 1, 2, 3, and 5. If there are multiple level sets, the raw data is parsed once and cached for use with each level set. This property is mandatory, and has no default.</p>
+
+			<p>Which levels you should bin together depends both on the size of your cluster and data.</p>
+
+			<p>Each binning job has an overhead cost and a tiling cost. Generally, the			overhead cost is the dominant factor below level 8 and irrelevant above that. Tiling all levels below this point will save the overhead cost and reduce tile generation time. Above this level, you risk job failure out of memory errors if you try to simultaneously bin multiple levels due to the large number of tiles generated at lower levels.</p>
+
+			<p>Our typical use case has:</p>
+
+			<ul>
+				<li>binning.level.0=0-8</li>
+				<li>binning.level.1=9</li>
+				<li>binning.level.2=10</li>
+				<li>etc.</li>
+			</ul>
+		</dd>
+
+		<dt>oculus.binning.consolidationPartitions</dt>
+		<dd>The number of partitions into which to consolidate data when binning. If not included, Spark automatically selects the number of partitions.</dd>
+	</dl>
 </div>
 
 ## <a name="custom-tiling"></a> Custom Tiling Jobs ##
@@ -876,73 +829,47 @@ val tiles = binner.processDataByLevel(data,
 
 It accepts the following properties:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>
-					data
-				</dt>
-				<dd>A distributed collection of (index, record) pairs as described above.</dd>
-				
-				<dt>
-					indexScheme
-				</dt>
-				<dd>Used to convert the index to a set X/Y coordinates that can be plotted.	When using a CartesianIndexScheme, the coordinates are taken as given.</dd>
-	
-				<dt>
-					binAnalytic
-				</dt>
-				<dd>A Binning Analytic that, as described above, defines how to aggregate two records, convert them into the form written and determine the extrema of the dataset.</dd>
-	
-				<dt>
-					tileAnalytics
-				</dt>
-				<dd>Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
-	
-				<dt>
-					dataAnalytics
-				</dt>
-				<dd>Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
-	
-				<dt>
-					tileScheme
-				</dt>
-				<dd>The projection to use to transform from the raw data index into tiles and bins. Two types are predefined:
-					<ul>
-						<li><em>/binning-utilities/src/main/java/com/oculusinfo/binning/impl/AOITilePyramid</em>, which is a linear transformation into an arbitrarily sized space
-						<li><em>/binning-utilities/src/main/java/com/oculusinfo/binning/impl/WebMercatorTilePyramid</em>, which is a standard geographical projection
-					</ul>
-				</dd>
+<div class="props">
+	<dl class="detailList">
+		<dt>data</dt>
+		<dd>A distributed collection of (index, record) pairs as described above.</dd>
 
-				<dt>
-					levels
-				</dt>
-				<dd>Specifies which levels to process at the same time. It is generally recommended you process levels 1-9 together, then run additional levels	one	at a time afterward. This arrangement typically makes effective use of system resources.</dd>
-	
-				<dt>
-					xBins (Optional)
-				</dt>
-				<dd>Number of bins on the x-axis.  Defaults to 256</dd>
-				
-				<dt>
-					yBins (Optional)
-				</dt>
-				<dd>Number of bins on the y-axis.  Defaults to 256</dd>
-				
-				<dt>
-					consolidationPartitions (Optional)
-				</dt>
-				<dd>The number of reducers to use when aggregating data records into bins and tiles. Defaults to the same number of partitions as the original data set. Alter if you encounter problems with the tiling job due to lack of resources.</dd>
+		<dt>indexScheme</dt>
+		<dd>Used to convert the index to a set X/Y coordinates that can be plotted.	When using a CartesianIndexScheme, the coordinates are taken as given.</dd>
 
-				<dt>
-					tileType (Optional)
-				</dt>
-				<dd>A specification of how data should be stored, <em>sparse</em> or <em>dense</em>. If not specified, a heuristic will use the optimal type for a double-valued tile. For significantly larger-valued types, <em>sparse</em> is recommended.</dd>
+		<dt>binAnalytic</dt>
+		<dd>A Binning Analytic that, as described above, defines how to aggregate two records, convert them into the form written and determine the extrema of the dataset.</dd>
 
-			</dl>
-		</ul>
-	</div>
+		<dt>tileAnalytics</dt>
+		<dd>Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
+
+		<dt>dataAnalytics</dt>
+		<dd>Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
+
+		<dt>tileScheme</dt>
+		<dd>
+			The projection to use to transform from the raw data index into tiles and bins. Two types are predefined:
+			<ul>
+				<li><a href="https://github.com/unchartedsoftware/aperture-tiles/blob/develop/binning-utilities/src/main/java/com/oculusinfo/binning/impl/AOITilePyramid.java">/binning-utilities/src/main/java/com/oculusinfo/binning/impl/AOITilePyramid</a>, which is a linear transformation into an arbitrarily sized space</li>
+				<li><a href="https://github.com/unchartedsoftware/aperture-tiles/blob/develop/binning-utilities/src/main/java/com/oculusinfo/binning/impl/WebMercatorTilePyramid.java">/binning-utilities/src/main/java/com/oculusinfo/binning/impl/WebMercatorTilePyramid</a>, which is a standard geographical projection</li>
+			</ul>
+		</dd>
+
+		<dt>levels</dt>
+		<dd>Specifies which levels to process at the same time. It is generally recommended you process levels 1-9 together, then run additional levels	one	at a time afterward. This arrangement typically makes effective use of system resources.</dd>
+
+		<dt>xBins (Optional)</dt>
+		<dd>Number of bins on the x-axis. Defaults to 256</dd>
+
+		<dt>yBins (Optional)</dt>
+		<dd>Number of bins on the y-axis. Defaults to 256</dd>
+
+		<dt>consolidationPartitions (Optional)</dt>
+		<dd>The number of reducers to use when aggregating data records into bins and tiles. Defaults to the same number of partitions as the original data set. Alter if you encounter problems with the tiling job due to lack of resources.</dd>
+
+		<dt>tileType (Optional)</dt>
+		<dd>A specification of how data should be stored, <em>sparse</em> or <em>dense</em>. If not specified, a heuristic will use the optimal type for a double-valued tile. For significantly larger-valued types, <em>sparse</em> is recommended.</dd>
+	</dl>
 </div>
 
 #### <a name="writing-tiles"></a> Writing Tiles ####
@@ -964,53 +891,32 @@ tileIO.writeTileSet(tilePyramid,
 
 It accepts the following properties:
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>
-					tileScheme
-				</dt>
-				<dd>Type of projection built from the set of bins and levels. Must match the tileScheme specified in binner.processDataByLevel.</dd>
-				
-				<dt>
-					writeLocation
-				</dt>
-				<dd>The ID to apply to the tile set when writing it. If writing to the local filesystem, this will be the base directory into which to write the tiles.	If writing to HBase, it will be the name of the table to write.</dd>
-	
-				<dt>
-					tiles
-				</dt>
-				<dd>The binned data set produced by binner.processDataByLevel.</dd>
-				
-				<dt>
-					serializer
-				</dt>
-				<dd>The serializer that determines how to read and write to the tile set.</dd>
-	
-				<dt>
-					tileAnalytics (Optional)
-				</dt>
-				<dd>Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
-	
-				<dt>
-					dataAnalytics (Optional)
-				</dt>
-				<dd>Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
-	
-				<dt>
-					name
-				</dt>
-				<dd>Name of the finished pyramid. Stored in the tile metadata.</dd>
-				
-				<dt>
-					description
-				</dt>
-				<dd>Description of the finished pyramid. Stored in the tile metadata.</dd>
-				
-			</dl>
-		</ul>
-	</div>
+<div class="props">
+	<dl class="detailList">
+		<dt>tileScheme</dt>
+		<dd>Type of projection built from the set of bins and levels. Must match the tileScheme specified in binner.processDataByLevel.</dd>
+
+		<dt>writeLocation</dt>
+		<dd>The ID to apply to the tile set when writing it. If writing to the local filesystem, this will be the base directory into which to write the tiles.	If writing to HBase, it will be the name of the table to write.</dd>
+
+		<dt>tiles</dt>
+		<dd>The binned data set produced by binner.processDataByLevel.</dd>
+
+		<dt>serializer</dt>
+		<dd>The serializer that determines how to read and write to the tile set.</dd>
+
+		<dt>tileAnalytics (Optional)</dt>
+		<dd>Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
+
+		<dt>dataAnalytics (Optional)</dt>
+		<dd>Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
+
+		<dt>name</dt>
+		<dd>Name of the finished pyramid. Stored in the tile metadata.</dd>
+
+		<dt>description</dt>
+		<dd>Description of the finished pyramid. Stored in the tile metadata.</dd>
+	</dl>
 </div>
 
 ## <a name="bin-visualizer"></a> Testing the Output of Your Tiling Jobs ##

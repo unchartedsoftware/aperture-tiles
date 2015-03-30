@@ -231,56 +231,52 @@ Parameters in the **private** node section of the **layers.json** file are not a
 
 The data parameters specify the location of the tiles that you created. If you are using HBase, separate parameters are required.
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>id</dt>
-				<dd>Must match the name of the folder to which the tiles were saved during the generation process, which is composed of the following parameters from the Tiling Property File:
-	
-				<br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.
-				&lt;oculus.binning.valueField&gt;</dd>
+<div class="props">
+	<dl class="detailList">
+		<dt>id</dt>
+		<dd>
+			Must match the name of the folder to which the tiles were saved during the generation process, which is composed of the following parameters from the Tiling Property File:
 
-				<br><br>Where oculus.binning.yField is set to 0 if no yField name is specified.
+			<br><br>&lt;oculus.binning.name&gt;.&lt;oculus.binning.xField&gt;.&lt;oculus.binning.yField&gt;.&lt;oculus.binning.valueField&gt;
 
-				<dt>pyramidio</dt>
-				<dd>
+			<br><br>Where oculus.binning.yField is set to 0 if no yField name is specified.
+		</dd>
+
+		<dt>pyramidio</dt>
+		<dd>
+			<dl>
+				<dt>type</dt>
+				<dd>Indicates the file format of your tiles:
 					<dl>
-						<dt>type</dt>
-						<dd>Indicates the file format of your tiles:
-							<dl>
-								<dt>hbase</dt>
-								<dd>Tiles are stored in HBase</dd>
-								
-								<dt>file</dt>
-								<dd>Tiles are stored in an uncompressed directory in a local filesystem</dd>
+						<dt>hbase</dt>
+						<dd>Tiles are stored in HBase</dd>
 
-								<dt>zip</dt>
-								<dd>Tiles are stored in compressed file in a local filesystem</dd>
-							</dl>
-						</dd>
-						
-						<dt>root.path</dt>
-						<dd>Root path in which the tiles are stored. Not used for HBase.</dd>
-						
-						<dt>extension</dt>
-						<dd>Name of the compressed file in which tiles are stored. Only used for ZIP
-						files.</dd>
-						
-						<dt>hbase.zookeeper.quorum</dt>
-						<dd>Zookeeper quorum location needed to connect to HBase.</dd>
-						
-						<dt>hbase.zookeeper.port</dt>
-						<dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
-						
-						<dt>hbase.master</dt>
-						<dd>Location of the HBase master on which the tiles are saved.</dd>
-						
+						<dt>file</dt>
+						<dd>Tiles are stored in an uncompressed directory in a local filesystem</dd>
+
+						<dt>zip</dt>
+						<dd>Tiles are stored in compressed file in a local filesystem</dd>
 					</dl>
 				</dd>
+
+				<dt>root.path</dt>
+				<dd>Root path in which the tiles are stored. Not used for HBase.</dd>
+
+				<dt>extension</dt>
+				<dd>Name of the compressed file in which tiles are stored. Only used for ZIP
+				files.</dd>
+
+				<dt>hbase.zookeeper.quorum</dt>
+				<dd>Zookeeper quorum location needed to connect to HBase.</dd>
+
+				<dt>hbase.zookeeper.port</dt>
+				<dd>Port through which to connect to zookeeper. Typically defaults to 2181.</dd>
+
+				<dt>hbase.master</dt>
+				<dd>Location of the HBase master on which the tiles are saved.</dd>
 			</dl>
-		</ul>
-	</div>
+		</dd>
+	</dl>
 </div>
 
 ## Application JavaScript ##
@@ -312,35 +308,35 @@ The BaseLayer parameters use map provider APIs to determine what features to inc
 
 ```json
 baseLayer = new tiles.BaseLayer({
-    type: "Google",
-    options : {
-       styles : [
-            { featureType: "all",
-              stylers : [ { invert_lightness : true },
-                            { saturation : -100 },
-                            { visibility : "simplified" } ] },
-            { featureType: "administrative",
-              elementType: "geometry",
-                stylers: [ { visibility: "off" } ] },
-            { featureType : "landscape.natural.landcover",
-              stylers : [ { visibility : "off" } ] },
-            { featureType : "road",
-              stylers : [ { visibility : "on" } ] },
-            { featureType : "landscape.man_made",
-              stylers : [ { visibility : "off" } ] },
-            { featureType : "landscape",
-              stylers : [ { lightness : "-100" } ] },
-            { featureType : "poi",
-              stylers : [ { visibility : "off" } ] },
-            { featureType : "administrative.country",
-              elementType : "geometry",
-              stylers : [ { visibility : "on" },
-                            { lightness : -56 } ] },
-            { elementType : "labels",
-              stylers : [ { lightness : -46 },
-                            { visibility : "on" } ] }
-        ]
-    }
+	type: "Google",
+	options : {
+		styles : [
+			{ featureType: "all",
+			  stylers : [ { invert_lightness : true },
+						  { saturation : -100 },
+						  { visibility : "simplified" } ] },
+			{ featureType: "administrative",
+			  elementType: "geometry",
+			  stylers: [ { visibility: "off" } ] },
+			{ featureType : "landscape.natural.landcover",
+			  stylers : [ { visibility : "off" } ] },
+			{ featureType : "road",
+			  stylers : [ { visibility : "on" } ] },
+			{ featureType : "landscape.man_made",
+			  stylers : [ { visibility : "off" } ] },
+			{ featureType : "landscape",
+			  stylers : [ { lightness : "-100" } ] },
+			{ featureType : "poi",
+			  stylers : [ { visibility : "off" } ] },
+			{ featureType : "administrative.country",
+			  elementType : "geometry",
+			  stylers : [ { visibility : "on" },
+						  { lightness : -56 } ] },
+			{ elementType : "labels",
+			  stylers : [ { lightness : -46 },
+						  { visibility : "on" } ] }
+		]
+	}
 });
 ```
 
@@ -351,12 +347,16 @@ The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS)
 	"type": "TMS",
 	"url" : "http://aperture.oculusinfo.com/map-world-graphite/",
 	"options" : {
-	  "name" : "Open Graphite",
-	  "layername": "world-graphite",
-	  "osm": 0,
-	  "type": "png",
-	  "serverResolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172],
-	  "resolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,9783.93961875,4891.96980938,2445.98490469,1222.99245234,611.496226172]
+		"name" : "Open Graphite",
+		"layername": "world-graphite",
+		"osm": 0,
+		"type": "png",
+		"serverResolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,
+							  9783.93961875,4891.96980938,2445.98490469,
+							  1222.99245234,611.496226172],
+		"resolutions": [156543.0339,78271.51695,39135.758475,19567.8792375,
+						9783.93961875,4891.96980938,2445.98490469,
+						1222.99245234,611.496226172]
 	}
 }
 ```
@@ -365,67 +365,62 @@ The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS)
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
 
-<div class="details props">
-	<div class="innerProps">
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt>position</dt>
-				<dd>Axis type, where <em>bottom</em> denotes the x-axis and <em>left</em> denotes the y-axis.</dd>
-				
-				<dt>title</dt>
-				<dd>Axis name (e.g., <em>Longitude</em> or <em>Latitude</em>).</dd>
-				
-				<dt>enabled</dt>
-				<dd>Indicates whether the axes are displayed (<em>true</em>) or hidden (<em>false</em>) when a new session begins.</dd>
+<div class="props">
+	<dl class="detailList">
+		<dt>position</dt>
+		<dd>Axis type, where <em>bottom</em> denotes the x-axis and <em>left</em> denotes the y-axis.</dd>
 
-				<dt>repeat</dt>
-				<dd>Indicates whether the map will repeat when the user scrolls off one end. Most useful for geographic maps.</dd>
-	
-				<dt>intervals</dt>
-				<dd>
+		<dt>title</dt>
+		<dd>Axis name (e.g., <em>Longitude</em> or <em>Latitude</em>).</dd>
+
+		<dt>enabled</dt>
+		<dd>Indicates whether the axes are displayed (<em>true</em>) or hidden (<em>false</em>) when a new session begins.</dd>
+
+		<dt>repeat</dt>
+		<dd>Indicates whether the map will repeat when the user scrolls off one end. Most useful for geographic maps.</dd>
+
+		<dt>intervals</dt>
+		<dd>
+			<dl>
+				<dt>type</dt>
+				<dd>How the following increment value is calculated based on the axis range. Accepted values include <em>percentage</em>, <em>%</em>, <em>value</em> or <em>#</em>.</dd>
+
+				<dt>increment</dt>
+				<dd>Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.</dd>
 				
-					<dl>
-						<dt>type</dt>
-						<dd>How the following increment value is calculated based on the axis range. Accepted values include <em>percentage</em>, <em>%</em>, <em>value</em> or <em>#</em>.</dd>
-		
-						<dt>increment</dt>
-						<dd>Value or percentage of units by which to increment the intervals. How this is applied is dependent on the specified type.</dd>
-						
-						<dt>pivot</dt>
-						<dd>Value or percentage from which all other values are incremented. Typically <em>0</em>.</dd>
-		
-						<dt>scaleByZoom</dt>
-						<dd>Indicates whether the axis should be scaled by the zoom factor (<em>true</em>/<em>false</em>).</dd>
-					</dl>
-				</dd>
-				
-				<dt>units</dt>
-				<dd>
-				
-					<dl>
-						<dt>type</dt>
-						<dd>Determines the individual axis label strings formats. Options include:
-							<ul>
-								<li>"billions": 150.25B
-								<li>"millions": 34.45M
-								<li>"thousands": 323.26K
-								<li>"decimal": 234243.32
-								<li>"integer": 563554
-								<li>"time": MM/DD/YYYY
-								<li>"degrees": 34.56&#176;
-							</ul>
-						</dd>
-						
-						<dt>decimals</dt>
-						<dd>Number of decimals to display for each unit. Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> and <em>decimal</em> types.</dd>
-		
-						<dt>stepDown</dt>
-						<dd>Indicates whether the units can step down if they are below range (<em>true</em>/<em>false</em>). Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> types.</dd>
-					</dl>
-				</dd>
+				<dt>pivot</dt>
+				<dd>Value or percentage from which all other values are incremented. Typically <em>0</em>.</dd>
+
+				<dt>scaleByZoom</dt>
+				<dd>Indicates whether the axis should be scaled by the zoom factor (<em>true</em>/<em>false</em>).</dd>
 			</dl>
-		</ul>
-	</div>
+		</dd>
+
+		<dt>units</dt>
+		<dd>
+			<dl>
+				<dt>type</dt>
+				<dd>
+					Determines the individual axis label strings formats. Options include:
+					<ul>
+						<li>"billions": 150.25B
+						<li>"millions": 34.45M
+						<li>"thousands": 323.26K
+						<li>"decimal": 234243.32
+						<li>"integer": 563554
+						<li>"time": MM/DD/YYYY
+						<li>"degrees": 34.56&#176;
+					</ul>
+				</dd>
+				
+				<dt>decimals</dt>
+				<dd>Number of decimals to display for each unit. Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> and <em>decimal</em> types.</dd>
+
+				<dt>stepDown</dt>
+				<dd>Indicates whether the units can step down if they are below range (<em>true</em>/<em>false</em>). Applicable to <em>billions</em>, <em>millions</em>, <em>thousands</em> types.</dd>
+			</dl>
+		</dd>
+	</dl>
 </div>
 
 ## <a name="clientconfig"></a> Tile Client Configuration ##
@@ -454,9 +449,9 @@ Lines 180-184 instantiate a render theme object that styles the rendered compone
 
 ```javascript
 darkRenderTheme = new tiles.RenderTheme( "dark", {
-    'color': "#FFFFFF",
-    'color:hover': "#09CFFF",
-    'text-shadow': "#000"
+	'color': "#FFFFFF",
+	'color:hover': "#09CFFF",
+	'text-shadow': "#000"
 });
 ```
 
@@ -466,17 +461,17 @@ Note the 'textKey' and 'countKey' attributes under the 'text' render target. The
 
 ```javascript
 wordCloudRenderer = new tiles.WordCloudRenderer({
-    text: {
-        textKey: "topic",
-        countKey: "countMonthly",
-        themes: [ darkRenderTheme ]
-    },
-    hook: function( elem, entry, entries, data ) {
-        elem.onclick = function() {
-            console.log( elem );
-            console.log( entry );
-        };
-    }
+	text: {
+		textKey: "topic",
+		countKey: "countMonthly",
+		themes: [ darkRenderTheme ]
+	},
+	hook: function( elem, entry, entries, data ) {
+		elem.onclick = function() {
+			console.log( elem );
+			console.log( entry );
+		};
+	}
 });
 ```
 
@@ -484,8 +479,8 @@ The client-rendered layer is instantiated on lines 234-237, passing the "top-twe
 
 ```javascript
 clientLayer = new tiles.ClientLayer({
-    source: layers["top-tweets"],
-    renderer: wordCloudRenderer
+	source: layers["top-tweets"],
+	renderer: wordCloudRenderer
 });
 ```
 
