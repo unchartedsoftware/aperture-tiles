@@ -2,23 +2,19 @@
 section: Docs
 subsection: Development
 chapter: How-To
-topic: App Configuration
-permalink: docs/development/how-to/configuration/
+topic: Configure the Tile Server
+permalink: docs/development/how-to/tile-server/
 layout: submenu
 ---
 
-# App Configuration #
+Configure the Tile Server
+=========================
 
-Once you have generated a tile set from your source data, you should configure and deploy a Tile Server and a Tile Client to make your visual analytic viewable in a web browser. The Tile Server serves tiles from your pyramid, while the Tile Client is a simple web client to view those tiles on a map or plot. 
-
-Aperture Tiles supports two types of tile rendering:
-
-- **Server-side rendering**, in which the Server renders the tiles as image files and passes them on to the Client.
-- **Client-side rendering**, in which the Server passes the tiles as JSON data to the Client, which then renders them directly.
-
-The fastest way to create a Tile Server and Tile Client is to modify an existing example application, which are available in the source code ([tile-examples/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples)). These examples will help you understand the structure and configuration of the Tile Server and Tile Client.
+Once you have generated a tile set from your source data, you should configure a Tile Server, which can render your tiles as image files and passes them on to the Client.
 
 ## <a name="template-setup"></a> Template Setup ##
+
+The fastest way to create a Tile Server is to modify an existing example application, which are available in the source code ([tile-examples/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples)).
 
 To begin configuring your Tile Server and Tile Client:
 
@@ -70,8 +66,10 @@ The ID parameter uniquely identifies the layer.
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="20%">Property</th>
-			<th scope="col" width="80%">Description</th>
+			<tr>
+				<th scope="col" width="20%">Property</th>
+				<th scope="col" width="80%">Description</th>
+			</tr>
 		</thead>
 		<tbody>
 			<tr>
@@ -119,8 +117,10 @@ The **renderer** defines how tiles are rendered on the server side. Renderers ar
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="20%">Property</th>
-			<th scope="col" width="80%">Description</th>
+			<tr>
+				<th scope="col" width="20%">Property</th>
+				<th scope="col" width="80%">Description</th>
+			</tr>
 		</thead>
 		<tbody>
 			<tr>
@@ -179,8 +179,10 @@ The **valueTransform** defines the **type** of transformation that can be applie
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="20%">Value</th>
-			<th scope="col" width="80%">Description</th>
+			<tr>
+				<th scope="col" width="20%">Value</th>
+				<th scope="col" width="80%">Description</th>
+			</tr>
 		</thead>
 		<tbody>
 			<tr>
@@ -279,7 +281,7 @@ The data parameters specify the location of the tiles that you created. If you a
 	</dl>
 </div>
 
-## Application JavaScript ##
+## <a name="application-javascript"></a> Application JavaScript ##
 
 The application JavaScript file (*/src/main/webapp/js/***app.js**) should request layers from server and return an array of layer configuration objects. Among the objects it should instantiate are the map, its baselayer and axis configurations.
 
@@ -423,80 +425,6 @@ The AxisConfig parameters determine how the X and Y axes are drawn in your cross
 	</dl>
 </div>
 
-## <a name="clientconfig"></a> Tile Client Configuration ##
-
-### <a name="clientside"></a> Client-Side Rendering ###
-
-The previous sections focus largely on the process of implementing an Aperture Tiles application using server-side tile rendering (where the Server renders the tiles as image files and passes them to the Client). The process of implementing an application using client-side tile rendering (where the Server passes the tiles as JSON data to the Client, which then renders them directly) requires custom code.
-
-A sample application using this method is available in the Aperture Tiles source code at [tile-examples/twitter-topics/twitter-topics-client/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-client). The Twitter Topics application uses client-side rendering to draw the top words occurring in each tile. As multiple renderers are attached to this client-side layer. The custom renderers for this application are available in [tile-client/src/js/layer/renderer/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-client/src/js/layer/renderer).
-
-Line 33 requests the layer configuration objects from the server, passing them to the supplied callback function as arguments.
-
-```javascript
-tiles.LayerService.getLayers( function( layers ) { 
-	... 
-});
-```
-
-Line 39 organizes the layer configuration object array into a map keyed by layer ID. It also parses the metadata JSON strings into their respective runtime objects. This ensures support for legacy layer metadata.
-
-```javascript
-layers = tiles.LayerUtil.parse( layers.layers );
-```
-
-Lines 180-184 instantiate a render theme object that styles the rendered components.
-
-```javascript
-darkRenderTheme = new tiles.RenderTheme( "dark", {
-	'color': "#FFFFFF",
-	'color:hover': "#09CFFF",
-	'text-shadow': "#000"
-});
-```
-
-Lines 204-216 instantiate a word cloud renderer, attaching the theme to the 'text' render target and appending a 'hook' function to give access to the rendered DOM elements and respective data entry.
-
-Note the 'textKey' and 'countKey' attributes under the 'text' render target. They specify that the renderer will find the 'text' and 'count' values required to build the word cloud under the attributes 'topic' and 'countMonthly' in the data entry.
-
-```javascript
-wordCloudRenderer = new tiles.WordCloudRenderer({
-	text: {
-		textKey: "topic",
-		countKey: "countMonthly",
-		themes: [ darkRenderTheme ]
-	},
-	hook: function( elem, entry, entries, data ) {
-		elem.onclick = function() {
-			console.log( elem );
-			console.log( entry );
-		};
-	}
-});
-```
-
-The client-rendered layer is instantiated on lines 234-237, passing the "top-tweets" layer as its source and the word cloud renderer as its renderer.
-
-```javascript
-clientLayer = new tiles.ClientLayer({
-	source: layers["top-tweets"],
-	renderer: wordCloudRenderer
-});
-```
-
-Finally the map is instantiated, along with all its components, including the client layer.
-
-```javascript
-map = new tiles.Map( "map" );
-map.add( clientLayer );
-```
-
-## <a name="deployment"></a> Deployment ##
-
-Once you have finished configuring the map and layer properties, copy the *new-project/* folder to your Apache Tomcat or Jetty server.
-
-Access the *new-project/* directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
-
 ## Next Steps ##
 
-For details on using your Aperture Tiles visual analytic, see the [User Guide](../../../user-guide/) topic.
+For details on configuring a tile client to create a tile-based visual analytic application, see the [Configure the Tile Server](../tile-client/) topic.

@@ -1,9 +1,9 @@
 ---
 section: Docs
 subsection: Development
-chapter: How-To
+chapter: Quick Start
 topic: Quick Start
-permalink: docs/development/how-to/quickstart/
+permalink: docs/development/quick-start/quickstart/
 layout: submenu
 ---
 
@@ -21,79 +21,9 @@ At the end of this guide, you will have an example Aperture Tiles application th
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
-To begin this Quick Start example, you must perform the following steps:
+Before beginning this Quick Start example, install the prerequisites described in the [Packaged Distribution](../installation/#packaged-distribution) section of the [Installation](../installation/) topic.
 
-1. Download and install the necessary [third-party tools](#third-party-tools).
-2. Download and install the [Aperture Tiles Packaged Distribution](#aperture-tiles-utilities).
-3. Generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
-
-### <a name="third-party-tools"></a> Third-Party Tools ###
-
-Aperture Tiles requires the following third-party tools on your local system:
-
-<div class="props">
-    <table class="summaryTable" width="100%">
-        <thead>
-            <th scope="col" width="20%">Component</th>
-            <th scope="col" width="30%">Required</th>
-            <th scope="col" width="50%">Notes</th>
-        </thead>
-        <tbody>
-            <tr>
-                <td style="vertical-align: text-top" class="description">Operating System</td>
-                <td style="vertical-align: text-top" class="description">Linux or OS X</td>
-                <td style="vertical-align: text-top" class="description">Windows support available with <a href="https://cygwin.com/">Cygwin</a> or DOS command prompt; precludes the use of Hadoop/HBase.</td>
-            </tr>
-            <tr>
-                <td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
-                <td style="vertical-align: text-top" class="description"><a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+</td>
-                <td style="vertical-align: text-top" class="description">The latest version of Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-If you intend to work only with datasets that are small enough to fit in the memory of a single machine or if wait times are not an issue, skip ahead to the [Packaged Distribution](#aperture-tiles-utilities) section.
-
-Otherwise, we recommend you also install the following tools, which enable Aperture Tiles to work with particularly large datasets.
-
-<div class="props">
-    <table class="summaryTable" width="100%">
-        <thead>
-            <th scope="col" width="20%">Component</th>
-            <th scope="col" width="30%">Required</th>
-            <th scope="col" width="50%">Notes</th>
-        </thead>
-        <tbody>
-            <tr>
-                <td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
-                <td style="vertical-align: text-top" class="description">
-                    A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
-                    <ul class="table">
-                        <li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
-                        <li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
-                        <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
-                        <li><a href="http://hortonworks.com/">HortonWorks</a></li>
-                    </ul>
-                </td>
-                <td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-### <a name="aperture-tiles-utilities"></a> Aperture Tiles Packaged Distribution ###
-
-The Aperture Tiles packaged distributions enable you to create the Julia set data and provision the web application for this example.
-
-**NOTE**: The full Aperture Tiles [source code](https://github.com/unchartedsoftware/aperture-tiles/tree/master) is not required for this example. For information on full installations of Aperture Tiles, see the [Installation](../installation/) topic.
-
-<h6 class="procedure">To download the packaged distributions</h6>
-
-1. Download and save the following files:
-    - [Tile Generator](../../../../download/#tile-generator): Creates the Julia set data and generates a set of tiles
-    - [Tile Quick Start Application](../../../../download/#tile-quick-start-application): Serves as an example application that you can quickly deploy after minimal modification
-2. Extract the contents of each file.
+Once you have installed all the prerequisites, you can generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
 ### <a name="julia-set-data-generation"></a> Julia Set Data Generation ###
 

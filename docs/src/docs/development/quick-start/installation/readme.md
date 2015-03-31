@@ -1,18 +1,18 @@
 ---
 section: Docs
 subsection: Development
-chapter: How-To
+chapter: Quick Start
 topic: Installation
-permalink: docs/development/how-to/installation/
+permalink: docs/development/quick-start/installation/
 layout: submenu
 ---
 
 Installation and Compilation
 ============================
 
-The following installation instructions are intended for developers who want to use Aperture Tiles to build their own custom projects. The [complete installation](#complete-installation) process requires several third-party tools and access to the Aperture Tiles source code.
+The following installation instructions are intended for developers who want to use Aperture Tiles to build their own custom projects. The [complete installation](#complete-install) process requires several third-party tools and access to the Aperture Tiles source code.
 
-For developers who want to quickly install a pre-configured example Aperture Tiles application with minimal modification, a set of [packaged distributions](#complete-installation) are available as an alternative.
+For developers who want to quickly install a pre-configured example Aperture Tiles application with minimal modification, a set of [packaged distributions](#packaged-distributions) are available as an alternative.
 
 ## <a name="supported-platforms"></a> Supported Platforms ##
 
@@ -27,9 +27,11 @@ Aperture Tiles requires the following third-party tools:
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="20%">Component</th>
-			<th scope="col" width="30%">Required</th>
-			<th scope="col" width="50%">Notes</th>
+			<tr>
+				<th scope="col" width="20%">Component</th>
+				<th scope="col" width="30%">Required</th>
+				<th scope="col" width="50%">Notes</th>
+			</tr>
 		</thead>
 		<tr>
 			<td style="vertical-align: text-top" class="description">Languages</td>
@@ -74,9 +76,11 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="20%">Component</th>
-			<th scope="col" width="30%">Required</th>
-			<th scope="col" width="50%">Notes</th>
+			<tr>
+				<th scope="col" width="20%">Component</th>
+				<th scope="col" width="30%">Required</th>
+				<th scope="col" width="50%">Notes</th>
+			</tr>
 		</thead>
 		<tr>
 			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
@@ -176,8 +180,10 @@ Where:
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="25%">Sub-Project</th>
-			<th scope="col" width="75%">Description</th>
+			<tr>
+				<th scope="col" width="25%">Sub-Project</th>
+				<th scope="col" width="75%">Description</th>
+			</tr>
 		</thead>
 		<tr>
 			<td class="property">buildType</td>
@@ -198,8 +204,10 @@ Aperture Tiles is made up of the following sub-projects:
 <div class="props">
 	<table class="summaryTable" width="100%">
 		<thead>
-			<th scope="col" width="25%">Sub-Project</th>
-			<th scope="col" width="75%">Description</th>
+			<tr>
+				<th scope="col" width="25%">Sub-Project</th>
+				<th scope="col" width="75%">Description</th>
+			</tr>
 		</thead>
 		<tr>
 			<td class="property">math-utilities</td>

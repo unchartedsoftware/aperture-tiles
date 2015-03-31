@@ -1,7 +1,22 @@
-- label: How-To
-  path: how-to
-  listType: ol
+- label: Quick Start
+  path: quick-start
+  listType: ul
   topics:
+    - label: Installation
+      path: installation
+      bookmarks:
+        - label: Supported Platforms
+          anchor: supported-platforms
+
+        - label: Prerequisites
+          anchor: prerequisites
+
+        - label: Complete Install
+          anchor: complete-install
+
+        - label: Packaged Distributions
+          anchor: packaged-distributions
+
     - label: Quick Start
       path: quickstart
       bookmarks:
@@ -20,17 +35,12 @@
         - label: Deployment
           anchor: deployment
 
-    - label: Installation
-      path: installation
-      bookmarks:
-        - label: Prerequisites
-          anchor: prerequisites
-
-        - label: Source Code
-          anchor: source-code
-
-    - label: Tile Generation
-      path: generation
+- label: How-To
+  path: how-to
+  listType: ol
+  topics:
+    - label: Understand the Tile Pyramid
+      path: tile-pyramid
       bookmarks:
         - label: Tile Pyramid Hierarchy
           anchor: pyramid-hierarchy
@@ -38,20 +48,42 @@
         - label: Tile Generation Process
           anchor: tile-gen-process
 
-        - label: Prerequisites
+        - label: Tiling Job Prerequisites
           anchor: prerequisites
 
-        - label: Standard Tiling Jobs
+        - label: spark-submit
+          anchor: spark-submit
+
+    - label: Run Standard Tiling Jobs
+      path: standard-tiling
+      bookmarks:
+        - label: CSVBinner
           anchor: csvbinner
 
+        - label: Base Properties File
+          anchor: base-properties
+
+        - label: Tiling Properties Files
+          anchor: tiling-properties
+
+    - label: Run Custom Tiling Jobs
+      path: custom-tiling
+      bookmarks:
         - label: Custom Tiling Jobs
           anchor: custom-tiling
 
-        - label: Testing Tiling Job Output
-          anchor: bin-visualizer
+        - label: Define Data Structure
+          anchor: define-data-structure
 
-    - label: App Configuration
-      path: configuration
+        - label: Bin Data
+          anchor: binning-your-data
+
+    - label: Test Tiling Job Output
+      path: test-output
+      bookmarks:
+
+    - label: Configure the Tile Server
+      path: tile-server
       bookmarks:
         - label: Template Setup
           anchor: template-setup
@@ -59,8 +91,14 @@
         - label: Tile Server Configuration
           anchor: server-config
 
-        - label: Tile Client Configuration
-          anchor: clientconfig
+        - label: Application JavaScript
+          anchor: application-javascript
+
+    - label: Configure the Tile Client
+      path: tile-client
+      bookmarks:
+        - label: Client-Side Rendering
+          anchor: clientside
 
         - label: Deployment
           anchor: deployment
