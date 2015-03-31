@@ -237,8 +237,10 @@ object AnalysisDescription {
 
 	// Apply accumulated metadata info to actual global metadata for a pyramid
 	def record[T] (analysis: AnalysisDescription[_, T], metaData: PyramidMetaData): Unit = {
-		analysis.accumulatorValues.map{case (key, value) =>
-				metaData.setCustomMetaData(key, value.toString)
+		analysis.accumulatorValues.foreach{case (key, value) =>
+			analysis.analytic.storableValue(value, TileAnalytic.Locations.Pyramid).foreach{json =>
+				metaData.setCustomMetaData(json.toString, key.split("\\."):_*)
+			}
 		}
 	}
 

@@ -27,10 +27,10 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 
 import java.lang.{Double => JavaDouble}
-
 import scala.collection.JavaConverters._
-
 import org.scalatest.FunSuite
+import com.oculusinfo.binning.util.JSONUtilitiesTests
+import org.json.JSONObject
 
 
 
@@ -60,7 +60,8 @@ class NumericArrayAnalyticsTestSuite extends FunSuite {
 		val b = toJava(bBase)
 
 		val analytic = new ArrayTileAnalytic[Double](new NumericSumTileAnalytic[Double](), Some("test"))
-		assert("[4.1,3.2,2.3,1.4]" === analytic.storableValue(Seq(4.1, 3.2, 2.3, 1.4), TileAnalytic.Locations.Tile))
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"test":[4.1, 3.2, 2.3, 1.4]}"""),
+		                                   analytic.storableValue(Seq(4.1, 3.2, 2.3, 1.4), TileAnalytic.Locations.Tile).get)
 	}
 
 	test("Minimum Double Array Analytic") {

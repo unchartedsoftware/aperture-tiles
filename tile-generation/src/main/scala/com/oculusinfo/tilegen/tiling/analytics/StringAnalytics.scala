@@ -130,12 +130,23 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
 	def name = analyticName.getOrElse(baseAnalytic.name)
 	override def storableValue (value: Map[String, T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
 		val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
-		val result = new JSONObject()
+		val subRes = new JSONArray()
 		values.foreach { case (key, value) =>
-			baseAnalytic.storableValue(value, location).map(bsv => result.put(key, bsv))
+			baseAnalytic.storableValue(value, location).foreach{bsv =>
+				val entry = new JSONObject()
+				if (bsv.length() > 1) entry.put(scoreName, bsv)
+				else if (bsv.length == 1) entry.put(scoreName, bsv.get(JSONObject.getNames(bsv)(0)))
+				if (entry.length() > 0) {
+					entry.put(stringName, key)
+					subRes.put(entry)
+				}
+			}
 		}
-		if (result.length()>0) Some(result)
-		else None
+		if (subRes.length() > 0) {
+			val result = new JSONObject()
+			result.put(name, subRes)
+			Some(result)
+		} else None
 	}
 }
 
@@ -159,9 +170,7 @@ class OrderedStringTileAnalytic[T] (analyticName: Option[String],
 	override def storableValue (value: Map[String, T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
 		val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
 		val outputValues = new JSONArray()
-		values.foreach { case (key, value) =>
-			baseAnalytic.storableValue(value, location).map(bsv => outputValues.put(bsv))
-		}
+		values.foreach { case (key, value) => outputValues.put(key)}
 		if (outputValues.length()>0) {
 			val result = new JSONObject()
 			result.put(name, outputValues)
