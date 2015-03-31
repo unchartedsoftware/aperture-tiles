@@ -144,6 +144,7 @@ object CSVGraphBinner {
 	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
 	private var _bDrawLineEnds = false	// [Boolean] switch to draw just the ends of very long line segments
 	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
+	private var _bDrawDirectedArcs = false	// [Boolean] switch to draw directed arcs (direction is inferred by clock-wise curve of arc)
 
 	def processTask[PT: ClassTag,
 	                   DT: ClassTag,
@@ -213,7 +214,8 @@ object CSVGraphBinner {
 						                                      task.getTileType,
 						                                      calcLinePixels,
 						                                      bUsePointBinner,
-						                                      _bLinesAsArcs)
+						                                      _bLinesAsArcs,
+										 															_bDrawDirectedArcs)
 						tileIO.writeTileSet(task.getTilePyramid,
 						                    task.getName,
 						                    tiles,
@@ -345,6 +347,9 @@ object CSVGraphBinner {
 			
 			// Draw line segments as straight lines (default) or as clock-wise arcs.
 			_bLinesAsArcs = Try(props.getProperty("oculus.binning.line.style.arcs").toBoolean).getOrElse(false)
+
+			// Draw directed arcs instead of undirected (direction is inferred by clockwise curve of arc)
+			_bDrawDirectedArcs = Try(props.getProperty("oculus.binning.line.directed.arcs").toBoolean).getOrElse(false)
 
 			// check if hierarchical mode is enabled
 			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");

@@ -285,7 +285,8 @@ class RDDLineBinner(minBins: Int = 2,
 		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]	=
 			 new EndPointsToLine().endpointsToLineBins,
 		 usePointBinner: Boolean = true,
-		 linesAsArcs: Boolean = false):
+		 linesAsArcs: Boolean = false,
+		 drawDirectedArcs: Boolean = false):
 			RDD[TileData[BT]] =
 	{
 		val tileBinToUniBin = (TileIndex.tileBinIndexToUniversalBinIndex)_
@@ -326,15 +327,19 @@ class RDDLineBinner(minBins: Int = 2,
 								(null, null, null)
 							} else {
 								// return endpoints as pair of universal bins per
-								// level
-								if (unvBin1.getX() < unvBin2.getX())
-								// use convention of endpoint with min X value
-								// is listed first
+								// level (note, we need one of the tile indices here
+								// to keep level info for this line segment)
+								if (linesAsArcs && drawDirectedArcs) {
 									(unvBin1, unvBin2, tile1)
-								else
-								// note, we need one of the tile indices here
-								// to keep level info for this line segment
-									(unvBin2, unvBin1, tile2)
+								}
+								else {
+									// If not drawing directed CW arcs, then use convention
+									// of endpoint with min X value listed first
+									if (unvBin1.getX() < unvBin2.getX())
+										(unvBin1, unvBin2, tile1)
+									else
+										(unvBin2, unvBin1, tile2)
+								}
 							}
 						}
 					}

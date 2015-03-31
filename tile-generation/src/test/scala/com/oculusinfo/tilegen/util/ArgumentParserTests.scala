@@ -172,4 +172,12 @@ class ArgumentParserTestSuite extends FunSuite {
 
 		assert(List(1.1, 3.0, 5.5) == argParser.getDoublePropSeq("dps", "").toList)
 	}
+
+	test("key case sensitivity") {
+		val args = Array("-TestKey", "1.0")
+		val argParser = new ArgumentParser(args)
+
+		assertResult(Some(1.0))(argParser.getDoubleOption("TestKey", ""))
+		assertResult(None)(argParser.getDoubleOption("testkey", ""))
+	}
 }

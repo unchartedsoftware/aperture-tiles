@@ -112,7 +112,7 @@
             i;
 
         // get maximum count for layer if it exists in meta data
-        totalCount = meta.minMax.max[ countKey ];
+        totalCount = meta.max[ countKey ];
         yOffset = RendererUtil.getYOffset( numEntries, 36, 122 );
 
         for (i=0; i<numEntries; i++) {
