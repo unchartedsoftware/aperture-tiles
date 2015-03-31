@@ -15,6 +15,28 @@ apply plugin: "idea"
 // ********************************************************
 task setBuildVersions {
 	switch (buildType) {
+		case "cdh5.3.0":
+			logger.info "Valid build type found - using $buildType"
+			project.ext { // apply project scope to vars, otherwise local to task
+				hadoopCommonVersion = "2.5.0-cdh5.3.0"
+				hadoopCoreVersion = "2.5.0-mr1-cdh5.3.0"
+				hbaseVersion = "0.98.6-cdh5.3.0"
+				sparkVersion = "1.2.0-cdh5.3.0"
+				dependencyScalaVersion = "2.10"
+				scalaVersion = "2.10.3"
+			}
+			break
+		case "cdh5.2.0":
+			logger.info "Valid build type found - using $buildType"
+			project.ext { // apply project scope to vars, otherwise local to task
+				hadoopCommonVersion = "2.5.0-cdh5.2.0"
+				hadoopCoreVersion = "2.5.0-mr1-cdh5.2.0"
+				hbaseVersion = "0.98.6-cdh5.2.0"
+				sparkVersion = "1.1.0-cdh5.2.0"
+				dependencyScalaVersion = "2.10"
+				scalaVersion = "2.10.3"
+			}
+			break
 		case "cdh5.1.2":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
