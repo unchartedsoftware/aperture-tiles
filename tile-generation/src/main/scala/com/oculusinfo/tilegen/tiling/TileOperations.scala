@@ -26,17 +26,13 @@ package com.oculusinfo.tilegen.tiling
 
 import java.lang.{Double => JavaDouble, Long => JavaLong}
 import java.text.SimpleDateFormat
-import java.util.Properties
 import java.util.concurrent.atomic.AtomicInteger
-import com.oculusinfo.binning.impl.{WebMercatorTilePyramid, AOITilePyramid}
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescriptionTileWrapper, ComposedTileAnalytic, NumericMaxTileAnalytic, NumericMinTileAnalytic}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
-import org.apache.avro.file.CodecFactory
 
 /**
  * Provides operations and companion argument parsers that can be bound into a TilePipeline
@@ -46,8 +42,8 @@ import org.apache.avro.file.CodecFactory
 // TODO: Add error checking to all operations and parsers
 object TileOperations {
 	import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
-
 	import scala.collection.JavaConversions._
+	import OperationType._
 
 	protected val logger = Logger[this.type]
 	protected var tableIdCount = new AtomicInteger(0)
@@ -58,7 +54,7 @@ object TileOperations {
 	 * @param args Wrapped argument map.
 	 */
 	case class KeyValuePassthrough(args: Map[String, String]) extends KeyValueArgumentSource {
-		def properties = args.map(entry => entry._1.trim -> entry._2)
+		def properties = args.map(entry => entry._1.toLowerCase -> entry._2)
 	}
 
 	/**
@@ -149,7 +145,7 @@ object TileOperations {
 	 *    ops.column - Column spec denoting the time field in input data
 	 *    ops.start - Start date string
 	 *    ops.end - End date string
-	 *    ops.format - Date format string (based on java.text.SimpleDateFormat)
+	 *    ops.format - Date format string (based on [[java.text.SimpleDateFormat]])
 	 */
 	def parseDateFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing dateFilterOp with args $args")
@@ -164,9 +160,9 @@ object TileOperations {
 	/**
 	 * Pipeline op to filter records to a specific date range.
 	 *
-	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
-	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
-	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
+	 * @param minDate Start date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
+	 * @param maxDate End date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
+	 * @param format Date parsing string, expressed according to [[java.text.SimpleDateFormat]].
 	 * @param timeCol Column spec denoting name of time column in input schema RDD.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
@@ -359,6 +355,9 @@ object TileOperations {
 	 *    hbase.master - HBase master address. (optional)
 	 *    ops.xColumn - Colspec denoting data x column
 	 *    ops.yColumn - Colspec denoting data y column
+	 *    ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
+	 *                          "sum", "mean", "max"
+	 *    ops.valueColumn - Colspec denoting data column to use as aggregation source.  Not required when type is
 	 *
 	 *    Tiling task consumes a TilingTaskParameters object that
 	 *    is populated via an argument map.  The argument map passed to this function will be used for that
@@ -368,7 +367,8 @@ object TileOperations {
 		logger.debug(s"Parsing hbaseHeatmapOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
-		geoHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4)(_)
+		geoHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
+		             heatmapParams._6, heatmapParams._7)(_)
 	}
 
 	/**
@@ -379,14 +379,21 @@ object TileOperations {
 	 * Arguments:
 	 *    ops.xColumn - Colspec denoting data x column
 	 *    ops.yColumn - Colspec denoting data y column
+	 *
 	 *    ops.bounds.minX - Bounds minX value (optional)
 	 *    ops.bounds.minY - Bounds minX value (optional)
 	 *    ops.bounds.maxX - Bounds minX value (optional)
 	 *    ops.bounds.maxT - Bounds minX value (optional)
+	 *
 	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
 	 *    hbase.zookeeper.port - Zookeeper port. (optional)
 	 *    hbase.master - HBase master address. (optional)
-	*
+	 *
+	 *    ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
+	 *                           "sum", "mean", "max"
+	 *
+	 *    ops.valueColumn - Colspec denoting data column to use as aggregation source.  Not required when type is
+	 *
 	 *    Tiling task consumes a TilingTaskParameters object that
 	 *    is populated via an argument map.  The argument map passed to this function will be used for that
 	 *    purpose, so all arguments required by that object should be set.
@@ -394,6 +401,7 @@ object TileOperations {
 	def parseCrossplotHeatmapOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing fileHeatmapOp with args $args")
 		val argParser = KeyValuePassthrough(args)
+
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
 
 		val parsedBounds = List(argParser.getDoubleOption("ops.bounds.minX", "Bounds min X", None),
@@ -401,37 +409,37 @@ object TileOperations {
 		                        argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
 		                        argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
 		val aoiBounds = if (parsedBounds.flatten.length == parsedBounds.length) {
-			Some(new AOITilePyramid(parsedBounds(0).get, parsedBounds(1).get, parsedBounds(1).get, parsedBounds(3).get))
+			Some(Bounds(parsedBounds.head.get, parsedBounds(1).get, parsedBounds(1).get, parsedBounds(3).get))
 		} else {
 			None
 		}
-		crossplotHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, aoiBounds)(_)
+		crossplotHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
+			heatmapParams._6, heatmapParams._7, aoiBounds)(_)
 	}
 
-	/**
-	 * @param zookeeperQuorum Zookeeper quorum addresses specified as a comma separated list.
-	 * @param zookeeperPort Zookeeper port.
-	 * @param hbaseMaster HBase master address
-	 */
-	case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String)
-
 	private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
+		val xColSpec = argParser.getString("ops.xColumn", "Colspec denoting data x column")
+		val yColSpec = argParser.getString("ops.yColumn", "Colspec denoting data y column")
+		val operationType = argParser.getString("ops.aggregationType", "")
+		val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
+		val valueColType = argParser.getStringOption("ops.valueType", "", None)
+
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
-		                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
-		                      argParser.getStringOption("hbase.master", "HBase master address", None))
+			argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+			argParser.getStringOption("hbase.master", "HBase master address", None))
 		val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
-			Some(HBaseParameters(parsedArgs(0).get, parsedArgs(1).get, parsedArgs(2).get))
+			Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
 		} else {
 			None
 		}
-		val xColSpec = argParser.getString("ops.xColumn", "Colspec denoting data x column")
-		val yColSpec = argParser.getString("ops.yColumn", "Colspec denoting data y column")
+
+		val operationEnum = OperationType.withName(operationType.toUpperCase)
 
 		val taskParametersFactory = new TilingTaskParametersFactory(null, List("ops"))
 		taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
 		val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
 
-		(xColSpec, yColSpec, taskParameters, hbaseArgs)
+		(xColSpec, yColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType)
 	}
 
 	/**
@@ -442,168 +450,120 @@ object TileOperations {
 	 * @param xColSpec Colspec denoting data x column
 	 * @param yColSpec Colspec denoting data y column
 	 * @param tilingParams Parameters to forward to the tiling task.
+	 * @param operation Aggregating operation.  Defaults to type Count if unspecified.
+	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
+	 *                     if the default type of Count is used.
+	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default
+	 *                     type of count is used for the operation.
+	 * @param hbaseParameters HBase connection configuration.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
 	 */
 	def geoHeatMapOp(xColSpec: String,
 	                 yColSpec: String,
 	                 tilingParams: TilingTaskParameters,
-	                 hbaseParameters: Option[HBaseParameters])
+	                 hbaseParameters: Option[HBaseParameters],
+	                 operation: OperationType = COUNT,
+	                 valueColSpec: Option[String] = None,
+	                 valueColType: Option[String] = None)
 	                (input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
 		}
-		val tilePyramid = new DeferredTilePyramid(new WebMercatorTilePyramid, false)
-		heatMapOpImpl(xColSpec, yColSpec, tilingParams, tileIO, tilePyramid)(input)
+		val properties = Map("oculus.binning.projection.type" -> "webmercator")
+
+		heatMapOpImpl(xColSpec, yColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO, properties)(input)
 	}
 
 	/**
-	 * A basic heatmap tile generator that writes output to HDFS. Uses
+	 * A basic heatmap tile generator that writes output to the local file system. Uses
 	 * TilingTaskParameters to manage tiling task arguments; the arguments map
 	 * will be passed through to that object, so all arguments required for its configuration should be set in the map.
 	 *
 	 * @param xColSpec Colspec denoting data x column
 	 * @param yColSpec Colspec denoting data y column
 	 * @param tilingParams Parameters to forward to the tiling task.
-	 * @param hbaseParameters Optional hbase config.  Will use local file IO if set to None.
-	 * @param bounds Optional tile pyramid bounds.  Will derive bounds from data if None (default).
+	 * @param operation Aggregating operation.  Defaults to type Count if unspecified.
+	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
+	 *                     if the default type of Count is used.
+	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default type
+	                       count is used for the operation.
+	 * @param bounds The bounds for the crossplot.  None indicates that bounds will be auto-generated based on input data.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
 	 */
 	def crossplotHeatMapOp(xColSpec: String,
-	                 yColSpec: String,
-	                 tilingParams: TilingTaskParameters,
-	                 hbaseParameters: Option[HBaseParameters],
-	                 bounds: Option[AOITilePyramid] = None)
-	                (input: PipelineData) = {
+	                       yColSpec: String,
+	                       tilingParams: TilingTaskParameters,
+	                       hbaseParameters: Option[HBaseParameters],
+	                       operation: OperationType = COUNT,
+	                       valueColSpec: Option[String] = None,
+	                       valueColType: Option[String] = None,
+	                       bounds: Option[Bounds] = None)
+	                      (input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
 		}
-		val tilePyramid = bounds match {
-			case Some(b) => new DeferredTilePyramid(b, false)
-			case None => new DeferredTilePyramid(new AOITilePyramid(0.0, 0.0, 1.0, 1.0), true)
+
+
+		val properties = Map("oculus.binning.projection.type" -> "areaofinterest")
+		val boundsProps = bounds match {
+				case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
+				                    "oculus.binning.projection.minX" -> b.minX.toString,
+				                    "oculus.binning.projection.minY" -> b.minY.toString,
+				                    "oculus.binning.projection.maxX" -> b.maxX.toString,
+				                    "oculus.binning.projection.maxY" -> b.maxY.toString)
+				case None => Map("oculus.binning.projection.autobounds" -> "true")
 		}
-		heatMapOpImpl(xColSpec, yColSpec, tilingParams, tileIO, tilePyramid)(input)
+
+		heatMapOpImpl(xColSpec, yColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO,
+		              properties ++ boundsProps)(input)
 	}
 
 	private def heatMapOpImpl(xColSpec: String,
 	                          yColSpec: String,
-	                          tilingParms: TilingTaskParameters,
+	                          operation: OperationType,
+	                          valueColSpec: Option[String],
+	                          valueColType: Option[String],
+	                          taskParameters: TilingTaskParameters,
 	                          tileIO: TileIO,
-		                        tilePyramid: DeferredTilePyramid)
+	                          properties: Map[String, String])
 	                         (input: PipelineData) = {
-		// TODO: Switch to the factory based invocation
-		val valuer = new CountValueExtractor[Long, JavaLong](
-			new PrimitiveAvroSerializer[JavaLong](classOf[JavaLong], CodecFactory.bzip2Codec))
-		val indexer = new CartesianIndexExtractor(xColSpec, yColSpec)
+		// Populate baseline args
+		val args = Map(
+			"oculus.binning.name" -> taskParameters.name,
+			"oculus.binning.description" -> taskParameters.description,
+			"oculus.binning.tileWidth" -> taskParameters.tileWidth.toString,
+			"oculus.binning.tileHeight" -> taskParameters.tileHeight.toString,
+			"oculus.binning.index.type" -> "cartesian",
+			"oculus.binning.index.field.0" -> xColSpec,
+			"oculus.binning.index.field.1" -> yColSpec)
 
-		// TODO: Replace with analytics from valuer after move to factory invocation
-		val tileAnalytics = new ExtremaTileAnalytic
+		val valueProps = operation match {
+			case SUM | MAX | MIN | MEAN =>
+				Map("oculus.binning.value.type" -> "field",
+					"oculus.binning.value.field" -> valueColSpec.get,
+					"oculus.binning.value.valueType" -> valueColType.get,
+					"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+					"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+			case _ =>
+				Map("oculus.binning.value.type" -> "count",
+					"oculus.binning.value.valueType" -> "int",
+					"oculus.binning.value.serializer" -> "[int]-a")
+		}
 
-		val tableName = getOrGenTableName(input, "heatmap_op")
-		val tilingTask = new StaticTilingTask(
-			input.sqlContext,
-			tableName,
-			tilingParms,
-			indexer,
-			valuer,
-			tilePyramid,
-			Nil,
-			None,
-			Some(tileAnalytics))
+		// Parse bounds and level args
+		val levelsProps = createLevelsProps("oculus.binning", taskParameters.levels)
 
-		tilingTask.initialize()
+		val tableName = TileOperations.getOrGenTableName(input, "heatmap_op_")
+
+		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
 		tilingTask.doTiling(tileIO)
 
-		PipelineData(input.sqlContext, input.srdd, Some(tableName))
+		PipelineData(input.sqlContext, input.srdd, Some("heatmap_op"))
 	}
-
-
-
-	/**
-	 * A basic tile generator that writes output to HBase.
-	 * This just attaches an HBase tile IO to a generic tiling op.
-	 *
-	 * @param tilingConfig The configuration of the tiling job to run
-	 * @param zookeeperQuorum Zookeeper quorum addresses specified as a comma separated list.
-	 * @param zookeeperPort Zookeeper port.
-	 * @param hbaseMaster HBase master address.
-	 * @param baseTableName A base name to use for the table if the table is not already registered and named
-	 * @param input Pipeline data to tile
-	 * @return Unmodified input data
-	 */
-	def hbaseTilingOp(tilingConfig: Properties,
-	                  zookeeperQuorum: String,
-	                  zookeeperPort: String,
-	                  hbaseMaster: String,
-	                  baseTableName: String = "tiling")
-	                 (input: PipelineData) = {
-		val tileIO = new HBaseTileIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
-		tilingOp(tilingConfig, tileIO, baseTableName)(input)
-	}
-
-	/**
-	 * A basic tile generator that writes output to the local file system.
-	 * This just attaches a local file system tile IO to a generic tiling op.
-	 *
-	 * @param tilingConfig The configuration of the tiling job to run
-	 * @param baseTableName A base name to use for the table if the table is not already registered and named
-	 * @param input Pipeline data to tile
-	 * @return Unmodified input data
-	 */
-	def fileTilingOp(tilingConfig: Properties,
-	                 baseTableName: String = "tiling")
-	                (input: PipelineData) = {
-		val tileIO = new LocalTileIO("avro")
-		tilingOp(tilingConfig, tileIO, baseTableName)(input)
-	}
-
-	/**
-	 * A basic tile generator
-	 *
-	 * @param tilingConfig The configuration of the tiling job to run
-	 * @param tileIO The Tile IO describing where to write the output
-	 * @param baseTableName A base name to use for the table if the table is not already registered and named
-	 * @param input Pipeline data to tile
-	 * @return Unmodified input data
-	 */
-	def tilingOp (tilingConfig: Properties,
-	                      tileIO: TileIO,
-	                      baseTableName: String = "tiling")
-	                     (input: PipelineData) = {
-		val tableName = getOrGenTableName(input, baseTableName)
-		val tilingTask = TilingTask(input.sqlContext, tableName, tilingConfig)
-		tilingTask.doTiling(tileIO)
-
-		PipelineData(input.sqlContext, input.srdd, Some(tableName))
-	}
-
-
-
-	/**
-	 * Composite analytic to compute local min/max value of Double data for each tile the pyramid.
-	 */
-	class ExtremaTileAnalytic extends AnalysisDescriptionTileWrapper[JavaLong, (Long, Long)](
-		d => (d.longValue(), d.longValue()),
-		new ComposedTileAnalytic[Long, Long](
-			new NumericMinTileAnalytic[Long](),
-			new NumericMaxTileAnalytic[Long]()))
-
-	/**
-	 * Analytic to compute local max value of Double data for each tile in the pyramid.
-	 */
-	class MaxTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, Long](
-		_.longValue,
-		new NumericMaxTileAnalytic[Long]()) {}
-
-	/**
-	 * Analytic to compute local min value of Double data for each tile in the pyramid.
-	 */
-	class MinTileAnalytic extends AnalysisDescriptionTileWrapper[JavaDouble, Long](
-		_.longValue,
-		new NumericMaxTileAnalytic[Long]()) {}
 
 	/**
 	 * Gets a table name out of the input if one exists, otherwise creates a new name
@@ -619,4 +579,44 @@ object TileOperations {
 			name
 		}
 	}
+
+	/**
+	 * Creates a map of levels properties that can be concatenated to another properties map
+	 */
+	def createLevelsProps(path: String, levels: Iterable[Seq[Int]]) = {
+		levels.zipWithIndex
+			.map(l => (s"$path.levels.${l._2}", l._1.mkString(",")))
+			.toMap
+	}
+
+	// Implicit for converting a scala map to a java properties object
+	implicit def map2Properties(map: Map[String,String]): java.util.Properties = {
+		(new java.util.Properties /: map) {case (props, (k,v)) => props.put(k,v); props}
+	}
 }
+
+/**
+ * HBase connection parameters
+ *
+ * @param zookeeperQuorum Zookeeper quorum addresses specified as a comma separated list.
+ * @param zookeeperPort Zookeeper port.
+ * @param hbaseMaster HBase master address
+ */
+case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String)
+
+/**
+ * Area of interest region
+ */
+case class Bounds(minX: Double, minY: Double, maxX: Double, maxY: Double)
+
+/**
+ * Supported heatmap aggregation types.  Count assigns a value of 1 to for each record and sums,
+ * Sum extracts a value from each record and sums, Max/Min extracts a value from each record and takes
+ * the max/min, mean extracts a value and computes a mean.
+ */
+object OperationType extends Enumeration {
+	type OperationType = Value
+	val COUNT, SUM, MIN, MAX, MEAN = Value
+}
+
+
