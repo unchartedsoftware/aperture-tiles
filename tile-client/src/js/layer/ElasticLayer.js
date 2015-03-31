@@ -179,39 +179,29 @@
   ElasticLayer.prototype.activate = function() {
 
     var that = this;
-    // add the new layer
-    //this.olLayer = new OpenLayers.Layer.Markers("Markers");
+
     this.olLayer = new OpenLayers.Layer.Vector("Overlay",
       {
         strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})]//,
-        //styleMap: new OpenLayers.StyleMap({
-        //    pointRadius: "${doc_count}",
-            //fillColor: "#666666"
-        //})
       });
 
     this.map.olMap.addLayer( this.olLayer );
 
     this.olLayer.addFeatures(this.buildFeatureVectors());
 
-    //this.buildMarkers(this.source.coordinates);
-    //
-    //_.each(this.markers,function(marker){
-    //  that.olLayer.addMarker(marker);
-    //})
 
 
-    var controls = {
-      selector: new OpenLayers.Control.SelectFeature( this.olLayer,
-        { onSelect: createPopover,
-          onUnselect: destroyPopup,
-          clickout:true
-        })
-    };
+    // var controls = {
+    //   selector: new OpenLayers.Control.SelectFeature( this.olLayer,
+    //     { onSelect: createPopover,
+    //       onUnselect: destroyPopup,
+    //       clickout:true
+    //     })
+    // };
 
-    this.map.olMap.addControl(controls['selector']);
+    // this.map.olMap.addControl(controls['selector']);
 
-    controls['selector'].activate();
+    // controls['selector'].activate();
 
 
     this.setZIndex( this.zIndex );
