@@ -557,12 +557,12 @@ object TileOperations {
 		// Parse bounds and level args
 		val levelsProps = createLevelsProps("oculus.binning", taskParameters.levels)
 
-		val tableName = TileOperations.getOrGenTableName(input, "heatmap_op_")
+		val tableName = TileOperations.getOrGenTableName(input, "heatmap_op")
 
 		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
 		tilingTask.doTiling(tileIO)
 
-		PipelineData(input.sqlContext, input.srdd, Some("heatmap_op"))
+		PipelineData(input.sqlContext, input.srdd, Option(tableName))
 	}
 
 	/**
