@@ -15,7 +15,7 @@ Aperture Tiles uses a pyramid of tiles to structure, analyze, visualize and inte
  
 Tailored analytic overlays (e.g., alerts, pattern detection, feature extraction) can be applied to the data at every scale, ranging from the entire dataset to a very small portion of it. Seeing all of the data reveals informative patterns and provides important context to understanding insights identified by computational analytics. 
 
-Aperture Tiles is open source, and free to use under the MIT License. 
+Aperture Tiles is an open source software product managed by Uncharted Software Inc. The MIT License is used.
 
 ### Easy-to-Use Big Data Visual Analytics
 
