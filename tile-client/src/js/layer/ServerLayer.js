@@ -273,6 +273,22 @@
      * @param {Object} The min and max of the level.
      */
     ServerLayer.prototype.getLevelMinMax = function() {
+        if ( this.levelMinMax instanceof Array ) {
+            var data = this.tileTransform.data,
+                start = data.startBucket !== undefined ? data.startBucket : 0,
+                stop = data.endBucket || this.levelMinMax.length,
+                min = 0,
+                max = 0,
+                i;
+            for ( i=start; i<stop; i++ ) {
+                min += this.levelMinMax[i].min;
+                max += this.levelMinMax[i].max;
+            }
+            return {
+                min: min,
+                max: max
+            };
+        }
         return this.levelMinMax;
     };
 
