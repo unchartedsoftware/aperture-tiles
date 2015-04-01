@@ -496,7 +496,7 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
  * @tparam T The raw data type of input records.  Nothing in this analytic uses
  *           this type, it just must match the dataset.
  */
-class CustomGlobalMetadata[T] (customData: Map[String, String])
+class CustomGlobalMetadata[T] (customData: Map[String, Object])
 		extends AnalysisDescription[T, String]
 {
 	val analysisTypeTag = implicitly[ClassTag[String]]
@@ -506,5 +506,5 @@ class CustomGlobalMetadata[T] (customData: Map[String, String])
 
 	// Global metadata needs no accumulators - it doesn't actually have any data.
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {}
-	def accumulatorValues: Map[String, String] = customData
+	def accumulatorValues: Map[String, String] = customData.map(p => (p._1, p._2.toString))
 }
