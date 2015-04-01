@@ -93,12 +93,14 @@ class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
 	def name = analyticName.getOrElse(elementAnalytic.name+" array")
 	override def storableValue (value: Seq[PT], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
 		val outputValues = new JSONArray()
-		value.foreach(p =>
-			elementAnalytic.storableValue(p, location).foreach(esv =>
-				if (esv.length() > 1) outputValues.put(esv)
-				else if (esv.length() == 1) outputValues.put(esv.get(JSONObject.getNames(esv)(0)))
+		value.foreach{p =>
+			val esv = elementAnalytic.storableValue(p, location)
+			if (esv.isEmpty) outputValues.put(null.asInstanceOf[Object])
+			else esv.foreach(e =>
+				if (e.length() > 1) outputValues.put(e)
+				else if (e.length() == 1) outputValues.put(e.get(JSONObject.getNames(e)(0)))
 			)
-		)
+		}
 		if (outputValues.length()>0) {
 			val result = new JSONObject()
 			result.put(name, outputValues)
