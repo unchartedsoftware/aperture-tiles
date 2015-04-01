@@ -54,7 +54,7 @@ object TileOperations {
 	 * @param args Wrapped argument map.
 	 */
 	case class KeyValuePassthrough(args: Map[String, String]) extends KeyValueArgumentSource {
-		def properties = args.map(entry => entry._1.toLowerCase -> entry._2)
+		def properties = args.map(entry => entry._1 -> entry._2)
 	}
 
 	/**

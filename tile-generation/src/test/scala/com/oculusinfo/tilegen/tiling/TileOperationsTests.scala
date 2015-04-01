@@ -71,8 +71,8 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		val argsMap = Map(
 			"ops.path" -> resPath,
 			"oculus.binning.parsing.separator" -> " *, *",
-			"oculus.binning.parsing.val.index" -> "0",
-			"oculus.binning.parsing.val.fieldType" -> "string",
+			"oculus.binning.parsing.vAl.index" -> "0",
+			"oculus.binning.parsing.vAl.fieldType" -> "string", // use mixed case fieldname to test case sensitivity
 			"oculus.binning.parsing.num.index" -> "1",
 			"oculus.binning.parsing.num.fieldType" -> "long",
 			"oculus.binning.parsing.num_1.index" -> "2",
@@ -84,7 +84,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		)
 
 		val loadStage = PipelineStage("load", parseLoadCsvDataOp(argsMap))
-		loadStage.addChild(PipelineStage("output", outputOps(List("val", "time"), resultList)(_)))
+		loadStage.addChild(PipelineStage("output", outputOps(List("vAl", "time"), resultList)(_)))
 		TilePipelines.execute(loadStage, sqlc)
 
 		assertResult(List(
