@@ -55,6 +55,7 @@
         Layer.call( this, spec );
         // set defaults
         this.type = spec.type || "blank";
+				this.url = spec.url;
         this.options = spec.options || {
             color : "rgb(0,0,0)"
         };
