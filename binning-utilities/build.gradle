@@ -37,6 +37,7 @@ task runBinVisualizer(type:JavaExec) {
 artifacts {
 	archives sourcesJar
 	archives javadocJar
+	archives testJar
 }
 
 // Jars / projects this project depends on.
@@ -59,4 +60,3 @@ dependencies {
 	// definition and explanation.
 	addHBaseDependencies()
 }
-
