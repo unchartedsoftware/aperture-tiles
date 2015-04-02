@@ -363,7 +363,7 @@
     function Map( id, spec ) {
         spec = spec || {};
         spec.options = spec.options || {};
-        spec.theme = spec.theme || 'light';
+        spec.theme = spec.theme || 'dark';
         // element id
         this.id = id;
         // set map tile pyramid
