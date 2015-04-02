@@ -55,7 +55,7 @@ This project has the following prerequisites:
 				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
-						<a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+						<a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.1.1
 					</div>
 				</td>
 				<td style="vertical-align: text-top" class="nameDescription">
@@ -79,7 +79,7 @@ This project has the following prerequisites:
 				</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
-						Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+						Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.1.1 if the installation is older.
 					</div>
 				</td>
 			</tr>

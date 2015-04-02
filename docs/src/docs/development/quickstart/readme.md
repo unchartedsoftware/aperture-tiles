@@ -53,7 +53,7 @@ Aperture Tiles requires the following third-party tools on your local system:
                 <td style="vertical-align: text-top" class="attributes">Cluster Computing Framework</td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
-                        <a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+                        <a href="http://spark.incubator.apache.org/">Apache Spark</a><br>v1.1.1
                     </div>
                 </td>
                 <td style="vertical-align: text-top" class="nameDescription">
@@ -91,7 +91,7 @@ If you later intend to create Aperture Tiles projects using particularly large d
                 </td>
                 <td style="vertical-align: text-top" class="nameDescription">
                     <div class="description">
-                        Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+                        Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.1.1 if the installation is older.
                     </div>
                 </td>
             </tr>
@@ -113,7 +113,7 @@ The full Aperture Tiles source code, available for download from [GitHub](https:
 For a typical Aperture Tiles project, you will work with your own custom data set. To avoid packaging a large example data set with Aperture Tiles, we have instead provided a simple data set generator. For this demonstration, you will use the provided Tile Generator utility to create the Julia set data.
 
 1. Extract the contents of the [tile-generator.zip](../../../download/#tile-generator).
-2. Execute the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. <p class="list-paragraph">The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.</p>
+2. Execute the standard [spark-submit](https://spark.apache.org/docs/1.1.1/submitting-applications.html) script using the following command, changing the output URI (HDFS or local file system) to specify the location in which you want to save the Julia set data. <p class="list-paragraph">The rest of the flags pass in the correct program main class, data set limits, number of output files (5) and total number of data points (10M) to generate in the Julia set.</p>
 
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen

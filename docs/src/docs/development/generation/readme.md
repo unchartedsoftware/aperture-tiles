@@ -93,7 +93,7 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 				<td style="vertical-align: text-top" class="attributes" rowspan="2">Cluster Computing Framework</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
-						<a href="http://spark.incubator.apache.org//">Apache Spark</a><br>v1.0.0+
+						<a href="http://spark.incubator.apache.org/">Apache Spark</a><br>v1.1.1
 					</div>
 				</td>
 				<td style="vertical-align: text-top" class="nameDescription">
@@ -117,7 +117,7 @@ See the [Installation](../installation/#prerequisites) topic for full details on
 				</td>
 				<td style="vertical-align: text-top" class="nameDescription">
 					<div class="description">
-						Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.0.0+ if the installation is older.
+						Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.1.1 if the installation is older.
 					</div>
 				</td>
 			</tr>
@@ -132,7 +132,7 @@ To configure Apache Spark for your installed version of Hadoop, perform one of t
 - [Download](http://spark.apache.org/downloads.html) the correct version directly.
 - If no version is listed for your flavor of Hadoop, [build](http://spark.apache.org/docs/latest/building-with-maven.html) Spark to support it.
 
-The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script to help you build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters.
+The Aperture Tiles source code relies on the standard [spark-submit](https://spark.apache.org/docs/1.1.1/submitting-applications.html) script to help you build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters.
 
 ## <a name="csvbinner"></a> Standard Tiling Jobs ##
 
