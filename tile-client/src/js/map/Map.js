@@ -361,26 +361,22 @@
      * </pre>
      */
     function Map( id, spec ) {
-
         spec = spec || {};
         spec.options = spec.options || {};
-
+        spec.theme = spec.theme || 'light';
         // element id
         this.id = id;
         // set map tile pyramid
         this.setPyramid( spec.pyramid );
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
-
 		// navigation controls
 		this.navigationControls = new OpenLayers.Control.Navigation({
 				documentDrag: true,
 				zoomBoxEnabled: false
 		});
-
 		// zoom controls
 		this.zoomControls = new OpenLayers.Control.Zoom();
-
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
             theme: null, // prevent OpenLayers from checking for default css
@@ -399,9 +395,8 @@
                 this.zoomControls
             ]
         });
-
-        // set theme default to 'dark' theme
-        this.setTheme( 'dark' );
+        // set theme, default to 'dark' theme
+        this.setTheme( spec.theme );
     }
 
     Map.prototype = {
