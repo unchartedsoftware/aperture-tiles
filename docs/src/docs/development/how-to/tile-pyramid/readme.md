@@ -96,7 +96,7 @@ Before you run a tiling job, make sure you meet all of the prerequisites listed 
 Aperture Tiles uses a distributed framework built on the Apache Spark engine to generate Avro tiles. Before you run a tiling job, you must install and configure the following prerequisites:
 
 - [Scala](http://www.scala-lang.org/) v2.10.3
-- [Apache Spark](http://spark.incubator.apache.org/) v1.0.0+
+- [Apache Spark](http://spark.incubator.apache.org/) v1.1.1
 
 If you intend to work with datasets that cannot fit in the memory of a single machine or if you wish to avoid wait times, we recommend you also install your preferred [Hadoop](http://hadoop.apache.org/) distribution to enable Aperture Tiles to work with particularly large datasets:
 
@@ -116,7 +116,7 @@ Perform one of the following actions:
 
 ## <a name="spark-submit"></a> spark-submit ##
 
-The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.0.0/submitting-applications.html) script to help you build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters.
+The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.1.1/submitting-applications.html) script to build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters.
 
 ## Next Steps ##
 
