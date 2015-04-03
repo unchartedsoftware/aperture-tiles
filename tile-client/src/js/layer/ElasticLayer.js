@@ -67,6 +67,9 @@
     var size = new OpenLayers.Size(21,25);
     var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
     this.icon = new OpenLayers.Icon('http://dev.openlayers.org/img/marker.png', size, offset);
+    this.styleMap = spec.styleMap;
+    this.eventListeners = spec.eventListeners;
+    this.strategies = spec.strategies;
   }
 
   var parser = function parser(hits){
@@ -180,10 +183,12 @@
 
     var that = this;
 
-    this.olLayer = new OpenLayers.Layer.Vector("Overlay",
-      {
-        strategies:[ new OpenLayers.Strategy.Cluster({distance: 20})]//,
-      });
+    var layerSpec = {};
+    if (this.strategies) layerSpec.strategies = this.strategies;
+    if (this.styleMap) layerSpec.styleMap = this.styleMap;
+    if (this.eventListeners) layerSpec.eventListeners = this.eventListeners;
+
+    this.olLayer = new OpenLayers.Layer.Vector("Overlay", layerSpec);
 
     this.map.olMap.addLayer( this.olLayer );
 
