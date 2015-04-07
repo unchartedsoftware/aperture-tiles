@@ -63,7 +63,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.{TileAnalytic, AnalysisDescription}
 
 
 
@@ -133,7 +133,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 
 	/**
 	 * Direct programatic initialization.
-	 * 
+	 *
 	 * Temporary route until we get full pipeline configuration
 	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
@@ -224,8 +224,8 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 							if (tileInfos.contains(tile)) {
 								val bin = pyramid.rootToBin(x, y, tile)
 								// update bin value
-								// Can't recover from an accumulator aggregation exception (we 
-								// don't know what it has added in, and what it hasn't), so just 
+								// Can't recover from an accumulator aggregation exception (we
+								// don't know what it has added in, and what it hasn't), so just
 								// move on if we get one.
 								Try(tileInfos(tile).accumulable += (bin, value))
 								// update data analytic value
@@ -278,26 +278,21 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 							tileData.foreach(analyticValue =>
 								{
 									da.accumulate(index, analyticValue)
-									val tileMetaData = da.analytic.toMap(analyticValue)
-									tileMetaData.map{case (key, value) =>
-										tile.setMetaData(key, value)
-									}
+									AnalysisDescription.record(analyticValue, da, tile)
 								}
 							)
 						}
 					)
 
 					// Apply tile analytics
-					tileAnalytics.map(analytic =>
+					tileAnalytics.map(ta =>
 						{
 							// Figure out the value for this tile
-							val analyticValue = analytic.convert(tile)
+							val analyticValue = ta.convert(tile)
 							// Add it into any appropriate accumulators
-							analytic.accumulate(tile.getDefinition(), analyticValue)
+							ta.accumulate(tile.getDefinition(), analyticValue)
 							// And store it in the tile's metadata
-							analytic.analytic.toMap(analyticValue).map{case (key, value) =>
-								tile.setMetaData(key, value)
-							}
+							AnalysisDescription.record(analyticValue, ta, tile)
 						}
 					)
 

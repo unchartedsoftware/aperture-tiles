@@ -31,20 +31,20 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
-
 import scala.collection.JavaConverters._
-
 import org.scalatest.FunSuite
-
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.DenseTileData
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.ipArrayToString
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme.longToIPArray
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme
+import com.oculusinfo.binning.util.JSONUtilitiesTests
+import org.json.JSONObject
 
 
 
 class NumericAnalyticsTestSuite extends FunSuite {
+	import TileAnalytic.Locations._
 	def toJava (l: List[Double]) = l.map(new JavaDouble(_)).asJava
 
 	def assertSeqsEqual[T] (a: Seq[T], b: Seq[T]): Unit = {
@@ -67,7 +67,8 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1, 2).isInstanceOf[Int])
 
 		// Check tile analytic output
-		assert("4" === analytic.valueToString(4))
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4}"""),
+		                                   analytic.storableValue(4, Tile).get)
 	}
 
 	test("Standard Long Analytic") {
@@ -79,7 +80,8 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1L, 2L).isInstanceOf[Long])
 
 		// Check tile analytic output
-		assert("4444444444" === analytic.valueToString(4444444444L))
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4444444444}"""),
+		                                   analytic.storableValue(4444444444L, Tile).get)
 	}
 
 	test("Standard Float Analytic") {
@@ -91,7 +93,9 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1.0f, 2.0f).isInstanceOf[Float])
 
 		// Check tile analytic output
-		assert("4.2" === analytic.valueToString(4.2f))
+		val expected = new JSONObject()
+		expected.put("sum", Float.box(4.2f))
+		JSONUtilitiesTests.assertJsonEqual(expected, analytic.storableValue(4.2f, Tile).get)
 	}
 
 	test("Standard Double Analytic") {
@@ -106,7 +110,8 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		assert(analytic.aggregate(1, 2).isInstanceOf[Double])
 
 		// Check tile analytic output
-		assert("4.3" === analytic.valueToString(4.3))
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4.3}"""),
+		                                   analytic.storableValue(4.3, Tile).get)
 	}
 
 	// Having testing the summation analytic fully for each type, we just do

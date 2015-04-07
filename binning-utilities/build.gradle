@@ -15,6 +15,19 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	from javadoc.destinationDir
 }
 
+task testJar(type: Jar) {
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+
+configurations {
+	tests
+}
+
+artifacts {
+	tests testJar
+}
+
 task runBinVisualizer(type:JavaExec) {
 	main = "com.oculusinfo.binning.visualization.BinVisualizer"
 	classpath = sourceSets.main.runtimeClasspath
@@ -24,6 +37,7 @@ task runBinVisualizer(type:JavaExec) {
 artifacts {
 	archives sourcesJar
 	archives javadocJar
+	archives testJar
 }
 
 // Jars / projects this project depends on.
@@ -46,4 +60,3 @@ dependencies {
 	// definition and explanation.
 	addHBaseDependencies()
 }
-
