@@ -144,8 +144,7 @@
         var div = this.div,
             renderer,
             html,
-            render,
-            entries;
+            render;
 
         // always style the opacity and visibility of the tile
         div.style.opacity = this.layer.opacity;
@@ -170,7 +169,7 @@
             // if renderer is attached, use it
             render = renderer.render( data );
             html = render.html;
-            entries = render.entries;
+            this.entries = render.entries;
         } else {
             // else execute html
             if ( typeof html === "function" ) {
@@ -191,9 +190,9 @@
 
         if ( renderer ) {
             // inject selected entry classes
-            renderer.injectEntries( div.children, entries );
+            renderer.injectEntries( div.children, this.entries );
             // if renderer is attached, call hook function
-            renderer.executeHooks( div.children, entries, data );
+            renderer.executeHooks( div.children, this.entries, data );
         }
     };
 

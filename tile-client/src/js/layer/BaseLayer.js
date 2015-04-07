@@ -55,6 +55,7 @@
         Layer.call( this, spec );
         // set defaults
         this.type = spec.type || "blank";
+				this.url = spec.url;
         this.options = spec.options || {
             color : "rgb(0,0,0)"
         };
@@ -69,41 +70,36 @@
      * @private
      */
     BaseLayer.prototype.activate = function() {
-
         var styledMapType;
-
+		// create base layer based on input type
         switch ( this.type.toLowerCase() ) {
-
             case "blank":
-
+				// blank layer
                 this.olLayer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
                 this.map.getElement().style['background-color'] = this.options.color;
                 break;
-
             case "google":
-
+				// google maps layer
                 if ( this.options.styles ) {
                     this.options.type = "styled";
                 }
                 this.olLayer = new OpenLayers.Layer.Google( "BaseLayer", this.options );
                 break;
-
             case "tms":
-
+				// tms layer
                 this.olLayer = new OpenLayers.Layer.TMS( "BaseLayer", this.url, this.options );
                 break;
         }
-
+		// create baselayer and set as baselayer
         this.map.olMap.addLayer( this.olLayer );
         this.map.olMap.setBaseLayer( this.olLayer );
-
+		// if google maps layer, set styles according to spec
         if ( this.options.styles ) {
             styledMapType = new google.maps.StyledMapType( this.options.styles, {name: 'Styled Map'} );
             this.olLayer.mapObject.mapTypes.set( 'styled', styledMapType );
         }
-
         // ensure baselayer remains bottom layer
-        this.map.olMap.setLayerIndex( this.olLayer, -1 );
+		$( this.olLayer.div ).css( 'z-index', -1 );
         // reset visibility / opacity
         this.setOpacity( this.getOpacity() );
         this.setEnabled( this.isEnabled() );
