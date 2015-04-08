@@ -215,7 +215,7 @@ object CSVGraphBinner {
 						                                      calcLinePixels,
 						                                      bUsePointBinner,
 						                                      _bLinesAsArcs,
-										 															_bDrawDirectedArcs)
+										 					  _bDrawDirectedArcs)
 						tileIO.writeTileSet(task.getTilePyramid,
 						                    task.getName,
 						                    tiles,
@@ -308,7 +308,6 @@ object CSVGraphBinner {
 			readFile(args(argIdx), defProps)
 			argIdx = argIdx + 1
 		}
-		defProps.setProperty("oculus.binning.index.type", "graph")
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
@@ -326,6 +325,13 @@ object CSVGraphBinner {
 			_graphDataType = Try(props.getProperty("oculus.binning.graph.data",
 			                                       "The type of graph data to tile (nodes or edges). "+
 				                                       "Default is nodes.")).getOrElse("nodes")
+			// Set binning index type accordingly
+		    if (_graphDataType == "edges") {
+		    	props.setProperty("oculus.binning.index.type", "segment")
+		    }
+		    else { //_graphDataType="nodes"
+		    	props.setProperty("oculus.binning.index.type", "cartesian")
+		    }
 
 			// init parameters for binning graph edges (note, not used for
 			// binning graph's nodes)

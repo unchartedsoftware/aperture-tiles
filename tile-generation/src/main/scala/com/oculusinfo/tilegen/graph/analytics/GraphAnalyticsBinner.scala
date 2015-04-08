@@ -407,7 +407,7 @@ object GraphAnalyticsBinner {
 			stream.close()
 			argIdx = argIdx + 1
 		}
-		defProps.setProperty("oculus.binning.index.type", "graph")
+		//defProps.setProperty("oculus.binning.index.type", "graph")
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
