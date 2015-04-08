@@ -55,13 +55,23 @@
      */
     function parseMetaMinMaxJson( meta ) {
         var minMax,
+            min, max,
             key;
-        if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum )  ) {
+        if ( typeof meta === 'string' ) {
+            // new meta data is valid json, hurray!
+            return JSON.parse( meta );
+        }
+        // old meta data was crafted in the fiery pits of hades and manifests
+        // as malformed json sometimes wrapped in an array, in one of four
+        // potential attribute paths:
+        if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum ) ) {
             // single bucket entries
+            max = parseMalformedJson( meta.maximum || meta.max.maxmium || meta.max );
+            min = parseMalformedJson( meta.minimum || meta.min.minimum || meta.min );
             return {
-                max: parseMalformedJson( meta.maximum || meta.max.maxmium || meta.max ),
-                min: parseMalformedJson( meta.minimum || meta.min.minimum || meta.min )
-            };
+                maximum: ( max instanceof Array ) ? max[0] : max, // legacy support
+                minimum: ( min instanceof Array ) ? min[0] : min // legacy support
+            }
         }
         // multi-bucket entries
         minMax = [];
