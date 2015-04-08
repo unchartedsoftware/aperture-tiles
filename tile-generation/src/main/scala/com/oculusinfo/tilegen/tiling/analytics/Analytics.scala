@@ -46,6 +46,7 @@ import org.apache.spark.AccumulatorParam
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.metadata.PyramidMetaData
+import scala.util.Try
 
 
 
@@ -235,11 +236,35 @@ object AnalysisDescription {
 		Map("global."+name -> ((t: TileIndex) => true))
 
 
+	/*
+	 * Take the old metadata value and overlay the new one on top of it.
+	 */
+	private def combineMetaData (origValue: Any, newValue: Any): Any =
+		Try{
+			// Convert both inputs to Json, and overlay them
+			val origJson = origValue match {
+				case json: JSONObject => JsonUtilities.deepClone(json)
+				case null => new JSONObject("{}")
+				case _ => new JSONObject(origValue.toString())
+			}
+			val newJson = newValue match {
+				case json: JSONObject => json
+				case null => new JSONObject("{}")
+				case _ => new JSONObject(newValue.toString())
+			}
+			JsonUtilities.overlayInPlace(origJson, newJson)
+		}.getOrElse(
+			// Default to simple replacement if there is any failure in overlaying.
+			newValue
+		)
+
 	// Apply accumulated metadata info to actual global metadata for a pyramid
 	def record[T] (analysis: AnalysisDescription[_, T], metaData: PyramidMetaData): Unit = {
 		analysis.accumulatorValues.foreach{case (key, value) =>
 			analysis.analytic.storableValue(value, TileAnalytic.Locations.Pyramid).foreach{json =>
-				metaData.setCustomMetaData(json.toString, key.split("\\."):_*)
+				val keys = key.split("\\.")
+				metaData.setCustomMetaData(combineMetaData(metaData.getCustomMetaData(keys:_*), json).toString,
+				                           keys:_*)
 			}
 		}
 	}
@@ -248,7 +273,7 @@ object AnalysisDescription {
 	def record[T] (value: T, analysis: AnalysisDescription[_, T], tile: TileData[_]): Unit = {
 		analysis.analytic.storableValue(value, TileAnalytic.Locations.Tile).foreach { json =>
 			TileAnalytic.topLevelMap(json).foreach{case (key, value) =>
-				tile.setMetaData(key, value)
+				tile.setMetaData(key, combineMetaData(tile.getMetaData(key), value))
 			}
 		}
 	}
