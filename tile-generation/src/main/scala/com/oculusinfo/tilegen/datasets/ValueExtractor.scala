@@ -374,10 +374,10 @@ class StatsValueExtractor[T: ClassTag] (field: String, analytic: NumericStatsBin
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[Pair[JavaDouble, JavaDouble]], _]] = {
 		val convertMean:  Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getFirst.doubleValue())
 		val convertSigma: Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getSecond.doubleValue())
-		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T]("minMean")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T]("maxMean")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T]("minStdDev")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T]("maxStdDev")))
+		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T](Some("minMean"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T](Some("maxMean"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T](Some("minStdDev"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T](Some("maxStdDev"))))
 	}
 	override def serializer: TileSerializer[Pair[JavaDouble, JavaDouble]] = _serializer
 }

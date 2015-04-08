@@ -29,15 +29,14 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
-
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.properties.{IntegerProperty, DoubleProperty, StringProperty}
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme._
 import com.oculusinfo.tilegen.util.{NumericallyConfigurableFactory, ExtendedNumeric, TypeConversion}
 import org.json.JSONObject
-
 import scala.reflect.ClassTag
+import com.oculusinfo.tilegen.util.OptionsFactoryMixin
 
 
 object NumericAnalyticFactory {
@@ -76,26 +75,33 @@ class NumericBinningAnalyticFactory (name: String,
 	 */
 	override protected def typedCreate[ST, JT](tag: ClassTag[ST], numeric: ExtendedNumeric[ST], conversion: TypeConversion[ST, JT]): BinningAnalytic[_, _] = {
 		getPropertyValue(AGGREGATION_TYPE).toLowerCase match {
-			case "sum" => new NumericSumBinningAnalytic[ST, JT]()(numeric, conversion)
-			case "min" => new NumericMinBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "sum" =>     new NumericSumBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "min" =>     new NumericMinBinningAnalytic[ST, JT]()(numeric, conversion)
 			case "minimum" => new NumericMinBinningAnalytic[ST, JT]()(numeric, conversion)
-			case "max" => new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
+			case "max" =>     new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
 			case "maximum" => new NumericMaxBinningAnalytic[ST, JT]()(numeric, conversion)
-			case "mean" => new NumericMeanBinningAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
+			case "mean" =>    new NumericMeanBinningAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
 			case "average" => new NumericMeanBinningAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
-			case "stats" => new NumericStatsBinningAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
-			                                                    getPropertyValue(MIN_COUNT))(numeric)
+			case "stats" =>   new NumericStatsBinningAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
+			                                                      getPropertyValue(MIN_COUNT))(numeric)
 		}
 	}
 }
 
+object NumericTileAnalyticFactory {
+	val ANALYTIC_NAME = new StringProperty("name", "The name of the tile analytic", "sum")
+	
+}
 class NumericTileAnalyticFactory (name: String = null,
                                   parent: ConfigurableFactory[_],
                                   path: JavaList[String])
 		extends NumericallyConfigurableFactory[TileAnalytic[_]](name, classOf[TileAnalytic[_]], parent, path, true)
+		with OptionsFactoryMixin[TileAnalytic[_]]
 {
 	import NumericAnalyticFactory._
+	import NumericTileAnalyticFactory._
 	addProperty(AGGREGATION_TYPE)
+	addProperty(ANALYTIC_NAME)
 	addProperty(EMPTY_MEAN)
 	addProperty(EMPTY_DEV)
 	addProperty(MIN_COUNT)
@@ -112,15 +118,25 @@ class NumericTileAnalyticFactory (name: String = null,
 	 * @return The factory to be returned by ConfigurableFactory.create.
 	 */
 	override protected def typedCreate[ST, JT](tag: ClassTag[ST], numeric: ExtendedNumeric[ST], conversion: TypeConversion[ST, JT]): TileAnalytic[_] = {
+		val name = optionalGet(ANALYTIC_NAME)
 		getPropertyValue(AGGREGATION_TYPE) match {
-			case "sum" => new NumericSumTileAnalytic[ST]()(numeric)
-			case "min" => new NumericMinTileAnalytic[ST]()(numeric)
-			case "max" => new NumericMaxTileAnalytic[ST]()(numeric)
-			case "mean" => new NumericMeanTileAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT))(numeric)
-			case "stats" => new NumericStatsTileAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
-			                                                    getPropertyValue(MIN_COUNT))(numeric)
+			case "sum"     => new NumericSumTileAnalytic[ST](name)(numeric)
+			case "min"     => new NumericMinTileAnalytic[ST](name)(numeric)
+			case "minimum" => new NumericMinTileAnalytic[ST](name)(numeric)
+			case "max"     => new NumericMaxTileAnalytic[ST](name)(numeric)
+			case "maximum" => new NumericMaxTileAnalytic[ST](name)(numeric)
+			case "mean"    => new NumericMeanTileAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT), name)(numeric)
+			case "average" => new NumericMeanTileAnalytic[ST](getPropertyValue(EMPTY_MEAN), getPropertyValue(MIN_COUNT), name)(numeric)
+			case "stats"   => new NumericStatsTileAnalytic[ST]((getPropertyValue(EMPTY_MEAN), getPropertyValue(EMPTY_DEV)),
+			                                                   getPropertyValue(MIN_COUNT), name)(numeric)
 		}
 	}
+}
+/**
+ * An trait that allows users of a class to retrieve its analytic type
+ */
+trait NumericType[T] {
+	val numericType: ExtendedNumeric[T]
 }
 
 /**
@@ -129,7 +145,8 @@ class NumericTileAnalyticFactory (name: String = null,
  *
  * @tparam T The numeric type of data of which to sum.
  */
-class NumericSumAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] {
+class NumericSumAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] with NumericType[T] {
+	val numericType = numeric
 	def aggregate (a: T, b: T): T = numeric.plus(a, b)
 	def defaultProcessedValue: T = numeric.zero
 	def defaultUnprocessedValue: T = numeric.zero
@@ -153,11 +170,11 @@ class NumericSumBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
  *
  * @tparam T The numeric type of data of which to sum.
  */
-class NumericSumTileAnalytic[T] (analyticName: String = "sum")(implicit numeric: ExtendedNumeric[T])
+class NumericSumTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T])
 		extends NumericSumAnalytic[T]
 		with TileAnalytic[T]
 {
-	def name = analyticName
+	def name = analyticName.getOrElse("sum")
 }
 
 
@@ -168,7 +185,8 @@ class NumericSumTileAnalytic[T] (analyticName: String = "sum")(implicit numeric:
  *
  * @tparam T The numeric type of data of which to take the maximum.
  */
-class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] {
+class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] with NumericType[T] {
+	val numericType = numeric
 	def aggregate (a: T, b: T): T =
 		if (numeric.isNaN(a)) b
 		else if (numeric.isNaN(b)) a
@@ -195,11 +213,11 @@ class NumericMaxBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
  *
  * @tparam T The numeric type of data of which to take the maximum.
  */
-class NumericMaxTileAnalytic[T] (analyticName: String = "maximum")(implicit numeric: ExtendedNumeric[T])
+class NumericMaxTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T])
 		extends NumericMaxAnalytic[T]
 		with TileAnalytic[T]
 {
-	def name = analyticName
+	def name = analyticName.getOrElse("maximum")
 }
 
 
@@ -217,8 +235,9 @@ class NumericMaxTileAnalytic[T] (analyticName: String = "maximum")(implicit nume
  * @tparam PT The type of the payload attached to the numeric data.
  */
 class NumericMaxWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: ExtendedNumeric[T])
-		extends Analytic[(T, PT)]
+		extends Analytic[(T, PT)] with NumericType[T]
 {
+	val numericType = numeric
 	def aggregate (a: (T, PT), b: (T, PT)): (T, PT) =
 		if (numeric.isNaN(a._1)) b
 		else if (numeric.isNaN(b._1) || numeric.gt(a._1, b._1)) a
@@ -250,12 +269,12 @@ class NumericMaxWithPayloadBinningAnalytic[T,
  * @tparam PT The type of the payload attached to the numeric data.
  */
 class NumericMaxWithPayloadTileAnalytic[T, PT <: Serializable] (
-	analyticName: String = "maximum")(
+	analyticName: Option[String] = None)(
 	implicit numeric: ExtendedNumeric[T])
 		extends NumericMaxWithPayloadAnalytic[T, PT]
 		with TileAnalytic[(T, PT)]
 {
-	def name = analyticName
+	def name = analyticName.getOrElse("maximum")
 }
 
 
@@ -266,7 +285,8 @@ class NumericMaxWithPayloadTileAnalytic[T, PT <: Serializable] (
  *
  * @tparam T The numeric type of data of which to take the minimum.
  */
-class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] {
+class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T]) extends Analytic[T] with NumericType[T] {
+	val numericType = numeric
 	def aggregate (a: T, b: T): T =
 		if (numeric.isNaN(a)) b
 		else if (numeric.isNaN(b)) a
@@ -293,11 +313,11 @@ class NumericMinBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
  *
  * @tparam T The numeric type of data of which to take the minimum.
  */
-class NumericMinTileAnalytic[T] (analyticName: String = "minimum")(implicit numeric: ExtendedNumeric[T])
+class NumericMinTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T])
 		extends NumericMinAnalytic[T]
 		with TileAnalytic[T]
 {
-	def name = analyticName
+	def name = analyticName.getOrElse("minimum")
 }
 
 
@@ -315,8 +335,9 @@ class NumericMinTileAnalytic[T] (analyticName: String = "minimum")(implicit nume
  * @tparam PT The type of the payload attached to the numeric data.
  */
 class NumericMinWithPayloadAnalytic[T, PT <: Serializable] (implicit numeric: ExtendedNumeric[T])
-		extends Analytic[(T, PT)]
+		extends Analytic[(T, PT)] with NumericType[T]
 {
+	val numericType = numeric
 	def aggregate (a: (T, PT), b: (T, PT)): (T, PT) =
 		if (numeric.isNaN(a._1)) b
 		else if (numeric.isNaN(b._1) || numeric.lt(a._1, b._1)) a
@@ -364,8 +385,9 @@ class NumericMinWithPayloadTileAnalytic[T, PT <: Serializable] (
  */
 class NumericMeanAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
                               minCount: Int = 1)(implicit numeric: ExtendedNumeric[T])
-		extends Analytic[(T, Int)]
+		extends Analytic[(T, Int)] with NumericType[Double]
 {
+	val numericType = ExtendedNumeric.ExtendedDouble
 	def aggregate (a: (T, Int), b: (T, Int)): (T, Int) =
 		(numeric.plus(a._1, b._1), (a._2 + b._2))
 	def defaultProcessedValue: (T, Int) = (numeric.zero, 0)
@@ -399,13 +421,11 @@ class NumericMeanBinningAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
  */
 class NumericMeanTileAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
                                   minCount: Int = 1,
-                                  analyticName: String = "")(implicit numeric: ExtendedNumeric[T])
+                                  analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T])
 		extends NumericMeanAnalytic[T](emptyValue, minCount)
 		with TileAnalytic[(T, Int)]
 {
-	private def statName (stat: String): String =
-		if (null == analyticName || analyticName.isEmpty) stat
-		else stat+" "+analyticName
+	private def statName (stat: String): String = analyticName.map(stat+" "+_).getOrElse(stat)
 	def name = statName("mean")
 	override def storableValue (value: (T, Int), location: TileAnalytic.Locations.Value): Option[JSONObject] = {
 		val result = new JSONObject()
@@ -464,13 +484,11 @@ class NumericStatsBinningAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble
 }
 class NumericStatsTileAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, JavaDouble.NaN),
                                    minCount: Int = 1,
-                                   analyticName: String = "")(implicit numeric: ExtendedNumeric[T])
+                                   analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T])
 		extends NumericStatsAnalytic[T]
 		with TileAnalytic[(T, T, Int)]
 {
-	private def statName (stat: String): String =
-		if (null == analyticName || analyticName.isEmpty) stat
-		else stat+" "+analyticName
+	private def statName (stat: String): String = analyticName.map(stat+" "+_).getOrElse(stat)
 	def name = statName("stats")
 	override def storableValue (value: (T, T, Int), location: TileAnalytic.Locations.Value): Option[JSONObject] = {
 		val result = new JSONObject()
