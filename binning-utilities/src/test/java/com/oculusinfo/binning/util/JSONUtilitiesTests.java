@@ -148,8 +148,11 @@ public class JSONUtilitiesTests {
 		p.setProperty("c.a", "cvala");
 		p.setProperty("c.b.a", "cbaval");
 		p.setProperty("c.b.b", "cbbval");
+		p.setProperty("d", "{\"x\":\"xval\", \"y\": 10}");
 
-		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
+		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], " +
+			"\"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}, " +
+			"\"d\" : { \"x\" : \"xval\", \"y\" : 10 }}");
 		JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
 		assertJsonEqual(expected, actual);
 	}

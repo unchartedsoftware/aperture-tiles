@@ -78,7 +78,7 @@ public class JsonUtilities {
             return null;
         }
     }
-    
+
     /**
      * Clone a JSON array and all its child objects
      */
@@ -108,7 +108,7 @@ public class JsonUtilities {
 
     /**
      * Overlays one JSON object, in place, over another, deeply.
-     * 
+     *
      * @param base The object to alter
      * @param overlay The object defining how the base will be altered.
      * @return The base object, with the overlay now overlaid upon it.
@@ -146,7 +146,7 @@ public class JsonUtilities {
     /**
      * Overlays one JSON array over another, deeply. This does not work in
      * place, but passes back a new array
-     * 
+     *
      * @param base
      *            The array to alter
      * @param overlay
@@ -156,10 +156,10 @@ public class JsonUtilities {
     public static JSONArray overlay (JSONArray base, JSONArray overlay) {
         if (null == overlay) return base;
         if (null == base) return deepClone(overlay);
-        
+
         try {
         	JSONArray result = new JSONArray();
-            
+
             // Overlay elements in both or just in the overlay
             for (int i=0; i<overlay.length(); ++i) {
                 Object value = overlay.get(i);
@@ -171,8 +171,8 @@ public class JsonUtilities {
                 	} else if (baseValue instanceof JSONArray) {
                 		result.put(i, deepClone((JSONArray) baseValue));
                 	} else {
-                		result.put(i, baseValue);	
-                	}                	
+                		result.put(i, baseValue);
+                	}
                 } else if (value instanceof JSONObject) {
                     if (base.length() > i && base.get(i) instanceof JSONObject) {
                         result.put(i, overlayInPlace((JSONObject) base.get(i), (JSONObject) value));
@@ -203,19 +203,19 @@ public class JsonUtilities {
 	 * This iterates through the tree and converts all {@link JSONObject}s
 	 * into their equivalent map, and converts {@link JSONArray}s into
 	 * {@link List}s.
-	 * 
+	 *
 	 * @param jsonObj
 	 * @return
-	 * 	Returns a map with the same 
+	 * 	Returns a map with the same
 	 */
 	public static Map<String, Object> jsonObjToMap(JSONObject jsonObj) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		
+
 		Iterator<?> keys = jsonObj.keys();
 		while (keys.hasNext()) {
 			String key = keys.next().toString();
 			Object obj = jsonObj.opt(key);
-			
+
 			if (obj instanceof JSONObject) {
 				map.put(key, jsonObjToMap((JSONObject)obj));
 			}
@@ -226,10 +226,10 @@ public class JsonUtilities {
 				map.put(key, obj);
 			}
 		}
-		
+
 		return map;
 	}
-	
+
 	/**
 	 * Converts a {@link JSONArray} into a {@link List} of values.
 	 * @param jsonList
@@ -251,16 +251,16 @@ public class JsonUtilities {
 				list.add(obj);
 			}
 		}
-		
+
 		return list;
 	}
-	
+
 	/**
 	 * Converts an object into a number.
 	 * @return
 	 * 	If the object is already a number then it just casts it.
 	 * 	If the object is a string, then it parses it as a double.
-	 * 	Otherwise the number returned is 0. 
+	 * 	Otherwise the number returned is 0.
 	 */
 	public static Number getNumber(Object o) {
 		Number val = 0;
@@ -285,21 +285,21 @@ public class JsonUtilities {
 		return val;
 	}
 
-	
+
 	/**
 	 * Gets a name to use from an object.
 	 * If the object is a String, then it will treat the string as the name.
 	 * If the object is a {@link JSONObject}, then the name must be a parameter within the object.
 	 * If the object is a {@link JSONArray}, then there can only be a single element, which should
 	 * contain the name.
-	 *  
+	 *
 	 * @param params
 	 * @return
 	 * 	Returns the name for the object, or null if none can be found.
 	 */
 	public static String getName(Object params) {
 		String name = null;
-		
+
 		if (params instanceof String) {
 			name = (String)params;
 		}
@@ -327,14 +327,14 @@ public class JsonUtilities {
 				name = null;
 			}
 		}
-		
+
 		return name;
 	}
 
 	/**
 	 * Simple getter for a {@link JSONObject} that handles exception handling, and
 	 * returns a default value in case there are any problems.
-	 * 
+	 *
 	 * @param obj
 	 * 	The {@link JSONObject} to query
 	 * @param keyName
@@ -360,7 +360,7 @@ public class JsonUtilities {
 	/**
      * Transform a JSON object into a properties object, concatenating levels
      * into keys using a period.
-     * 
+     *
      * @param jsonObj
      *            The JSON object to translate
      * @return The same data, in properties form
@@ -410,7 +410,7 @@ public class JsonUtilities {
     /**
      * Transform a JSON object into a properties object, concatenating levels
      * into keys using a period.
-     * 
+     *
      * @param properties The properties object to translate
      *
      * @return The same data, in properties form
@@ -450,7 +450,14 @@ public class JsonUtilities {
             if (json.has(key)) {
                 throw new JSONException("Duplicate key "+key);
             }
-            json.put(key, value);
+			// The value string itself may be valid JSON - try to parse it and add the JSON
+			// object instead of the string if so.
+			try {
+				JSONObject obj = new JSONObject(value);
+				json.put(key, obj);
+			} catch (JSONException e){
+				json.put(key, value);
+			}
         } else {
             String keyCAR = key.substring(0, keyBreak);
             String keyCDR = key.substring(keyBreak+1);
