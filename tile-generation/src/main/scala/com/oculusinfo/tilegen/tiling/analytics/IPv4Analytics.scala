@@ -29,7 +29,7 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TilePyramid
-
+import org.json.JSONObject
 
 
 /**
@@ -69,7 +69,7 @@ object IPv4Analytics extends Serializable {
 	}
 
 	/**
-	 * Get an analysis description for an analysis that stores the CIDR block 
+	 * Get an analysis description for an analysis that stores the CIDR block
 	 * of an IPv4-indexed tile, with an arbitrary tile pyramid.
 	 */
 	def getCIDRBlockAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
@@ -88,8 +88,11 @@ object IPv4Analytics extends Serializable {
 				def aggregate (a: Long, b: Long): Long = a min b
 				def defaultProcessedValue: Long = 0L
 				def defaultUnprocessedValue: Long = 0xffffffffL
-				override def valueToString (value: Long): String =
-					ipArrayToString(longToIPArray(value))
+				override def storableValue (value: Long, location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+					val result = new JSONObject()
+					result.put(name, ipArrayToString(longToIPArray(value)))
+					Some(result)
+				}
 			})
 
 	def getMaxIPAddressAnalysis[BT] (pyramid: TilePyramid = getDefaultIPPyramid):
@@ -101,7 +104,10 @@ object IPv4Analytics extends Serializable {
 				def aggregate (a: Long, b: Long): Long = a max b
 				def defaultProcessedValue: Long = 0xffffffffL
 				def defaultUnprocessedValue: Long = 0L
-				override def valueToString (value: Long): String =
-					ipArrayToString(longToIPArray(value))
+				override def storableValue (value: Long, location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+					val result = new JSONObject()
+					result.put(name, ipArrayToString(longToIPArray(value)))
+					Some(result)
+				}
 			})
 }

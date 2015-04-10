@@ -149,6 +149,7 @@
         // always style the opacity and visibility of the tile
         div.style.opacity = this.layer.opacity;
         div.style.visibility = 'inherit';
+        div.innerHTML = "";
 
         if ( !data || ( !data.tile && !data.hits ) ) {
             // exit early if not data to render
@@ -162,11 +163,12 @@
 
         renderer = this.layer.renderer;
         html = this.layer.html;
-        div.innerHTML = "";
 
         if ( renderer ) {
-            renderer = ( typeof renderer === "function" ) ? renderer.call( this.layer, this.bounds ) : renderer;
             // if renderer is attached, use it
+            if ( typeof renderer === "function" ) {
+                renderer = renderer.call( this.layer, this.bounds );
+            }
             render = renderer.render( data );
             html = render.html;
             this.entries = render.entries;

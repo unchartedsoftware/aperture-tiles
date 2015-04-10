@@ -26,13 +26,13 @@ package com.oculusinfo.tilegen.tiling
 
 
 import java.io.File
-
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
 import org.apache.spark.SharedSparkContext
 import org.apache.spark.sql.catalyst.types.StructType
 import org.scalatest.FunSuite
-
 import scala.collection.mutable.ListBuffer
+import com.oculusinfo.binning.util.JSONUtilitiesTests
+import org.json.JSONObject
 
 class TileOperationsTests extends FunSuite with SharedSparkContext {
 	import com.oculusinfo.tilegen.tiling.TileOperations._
@@ -59,9 +59,9 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		TilePipelines.execute(loadStage, sqlc)
 
 		assertResult(List(
-			"one", "2015-01-01 10:15:30",
-			"two", "2015-01-02 8:15:30",
-			"three", "2015-01-03 10:15:30"))(resultList.toList)
+			             "one", "2015-01-01 10:15:30",
+			             "two", "2015-01-02 8:15:30",
+			             "three", "2015-01-03 10:15:30"))(resultList.toList)
 	}
 
 	test("Test load CSV data parse and operation") {
@@ -88,9 +88,9 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		TilePipelines.execute(loadStage, sqlc)
 
 		assertResult(List(
-			"one", "2015-01-01 10:15:30",
-			"two", "2015-01-02 8:15:30",
-			"three", "2015-01-03 10:15:30"))(resultList.toList)
+			             "one", "2015-01-01 10:15:30",
+			             "two", "2015-01-02 8:15:30",
+			             "three", "2015-01-03 10:15:30"))(resultList.toList)
 	}
 
 	test("Test cache operation") {
@@ -101,12 +101,12 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 
 		val argMap = Map("ops.path" -> getClass.getResource("/json_test.data").toURI.getPath)
 		val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
-			rootStage.addChild(PipelineStage("cache_op_1", parseCacheDataOp(Map.empty)(_)))
-				.addChild(PipelineStage("check_cache_op_1", checkTableName(0, true)(_)))
-				.addChild(PipelineStage("cache_op_2", parseCacheDataOp(Map.empty)(_)))
-				.addChild(PipelineStage("check_cache_op_2", checkTableName(1, false)(_)))
-				.addChild(PipelineStage("cache_op_3", parseCacheDataOp(Map.empty)(_)))
-				.addChild(PipelineStage("check_cache_op_3", checkTableName(1, false)(_)))
+		rootStage.addChild(PipelineStage("cache_op_1", parseCacheDataOp(Map.empty)(_)))
+			.addChild(PipelineStage("check_cache_op_1", checkTableName(0, true)(_)))
+			.addChild(PipelineStage("cache_op_2", parseCacheDataOp(Map.empty)(_)))
+			.addChild(PipelineStage("check_cache_op_2", checkTableName(1, false)(_)))
+			.addChild(PipelineStage("cache_op_3", parseCacheDataOp(Map.empty)(_)))
+			.addChild(PipelineStage("check_cache_op_3", checkTableName(1, false)(_)))
 		TilePipelines.execute(rootStage, sqlc)
 	}
 
@@ -303,10 +303,12 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 			val metaData = tileIO.readMetaData("test.x.y.data").getOrElse(fail("Metadata not created"))
 
 			val customMeta = metaData.getAllCustomMetaData
-			assertResult("0.0")(customMeta("global.minimum"))
-			assertResult("218.0")(customMeta("global.maximum"))
-			assertResult("0.0")(customMeta("0.minimum"))
-			assertResult("218.0")(customMeta("0.maximum"))
+
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":218}"""),
+			                                   new JSONObject(customMeta.get("0").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":218}"""),
+			                                   new JSONObject(customMeta.get("global").toString))
+
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {
@@ -368,10 +370,10 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 			assertResult(6.0)(bounds.getMaxY)
 
 			val customMeta = metaData.getAllCustomMetaData
-			assertResult("0")(customMeta("global.minimum"))
-			assertResult("84")(customMeta("global.maximum"))
-			assertResult("0")(customMeta("0.minimum"))
-			assertResult("84")(customMeta("0.maximum"))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
+			                                   new JSONObject(customMeta.get("0").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
+			                                   new JSONObject(customMeta.get("global").toString))
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {

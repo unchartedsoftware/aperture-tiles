@@ -32,6 +32,9 @@ import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.util.{List => JavaList}
 
+import com.oculusinfo.binning.util.JsonUtilities
+import org.json.{JSONArray, JSONObject}
+
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
@@ -43,16 +46,17 @@ import org.apache.spark.AccumulatorParam
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.metadata.PyramidMetaData
+import scala.util.Try
 
 
 
 /**
- * An Analytic is basically an aggregation function, to describe how to 
- * aggregate the results of some analysis across bins, tiles, or anything 
+ * An Analytic is basically an aggregation function, to describe how to
+ * aggregate the results of some analysis across bins, tiles, or anything
  * else.
- * 
+ *
  * It also encapsulates some simple knowledge of default values.
- * 
+ *
  * @tparam T The type of value this analytic processes or aggregates.
  */
 trait Analytic[T] extends Serializable
@@ -60,7 +64,7 @@ trait Analytic[T] extends Serializable
 	/**
 	 * Used to combine two values during processing. No assumptions
 	 * should be made regarding the cardinality of either
-	 * value - i.e., don't assume that the first is the aggregate, and 
+	 * value - i.e., don't assume that the first is the aggregate, and
 	 * the second, the new value, or anything like that.  Either or
 	 * both may be a primary or aggregate value.
 	 */
@@ -81,21 +85,21 @@ trait Analytic[T] extends Serializable
 }
 
 /**
- * BinningAnalytic extends Analytic specifically for binning in tiles; it 
- * allows a two-stage processing of values, with a processing type that is 
- * aggregated, and converted to a result type just before writing out a final 
+ * BinningAnalytic extends Analytic specifically for binning in tiles; it
+ * allows a two-stage processing of values, with a processing type that is
+ * aggregated, and converted to a result type just before writing out a final
  * value.
- * 
- * There are two driving cases behind breaking the calculation into processing 
- * and final components.  [1] The first case is where the result type is 
- * complex, and can be represented more succinctly and efficiently durring 
+ *
+ * There are two driving cases behind breaking the calculation into processing
+ * and final components.  [1] The first case is where the result type is
+ * complex, and can be represented more succinctly and efficiently durring
  * processing (such as, for instance, using an array instead of a list, or an
- * native integer instead of a JavaInt).  [2] The second case is analytics 
- * (like mean or standard deviation) where different values are needed at 
- * processing than are written out (for example, when calculating a mean, one 
- * needs to record total number and running sum, but only writes a single 
+ * native integer instead of a JavaInt).  [2] The second case is analytics
+ * (like mean or standard deviation) where different values are needed at
+ * processing than are written out (for example, when calculating a mean, one
+ * needs to record total number and running sum, but only writes a single
  * number)
- * 
+ *
  * @tparam PROCESSING_TYPE An intermediate type used to store data
  *                         needed to produce the result type when the
  *                         analytic is complete.
@@ -110,14 +114,14 @@ trait BinningAnalytic[PROCESSING_TYPE, RESULT_TYPE] extends Analytic[PROCESSING_
 }
 
 /**
- * A TileAnalytic extends Analytic with a few simple pices that allow values to 
+ * A TileAnalytic extends Analytic with a few simple pices that allow values to
  * be written to metadata, both on each individual tile, and globally.
- * 
+ *
  * Note that, while binning analytics have a final form to which values must be
- * converted, tile analytics all convert their values to strings for writing to 
- * metadata, and therefore don't need an explicit final form type; this 
+ * converted, tile analytics all convert their values to strings for writing to
+ * metadata, and therefore don't need an explicit final form type; this
  * conversion is inherent in the valueToString method.
- * 
+ *
  * @tparam T The type of value this analytic processes or aggregates.
  */
 trait TileAnalytic[T] extends Analytic[T] {
@@ -129,33 +133,35 @@ trait TileAnalytic[T] extends Analytic[T] {
 	def name: String
 
 	/**
-	 * Convert an analytic value to a string representation thereof.
-	 * This is a one-way conversion, and is used to store values in
-	 * tile metadata.
+	 * Convert the analytic value to a JSON representation, that can be written into tile or pyramid metadata by
+	 * simple string conversion.  This method should capture everything about the analytic, including its name.
+	 *
+	 * @param value The collected value to be stored
+	 * @param location Where the value is to be stored.  Ordinarily, most implementations will ignore this, but they may
+	 *                 use it to specify only writing to pyramid metadata, or only writing to tile metadata
+	 * @return The same value, converted to JSON, and wrapped in Some, or None if nothing is to be stored
 	 */
-	def valueToString (value: T): String = value.toString
-
-	/**
-	 * Convert a value to a property map to be inserted into metadata.
-	 * 
-	 * The default behavior is simply to map the analytic name to the value.
-	 * 
-	 * Overriding this will the other functions in this trait to be made 
-	 * irrelevant; we should probably break it up into a TileAnalytic with 
-	 * only this function (unimplemented), and a StandardTileAnalytic with 
-	 * the rest
-	 */
-	def toMap (value: T): Map[String, Any] =
-		Map(name -> valueToString(value))
+	def storableValue (value: T, location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val result = new JSONObject()
+		result.put(name, value)
+		Some(result)
+	}
 
 	override def toString = "["+name+"]"
+}
+object TileAnalytic {
+	/** An enum of possible locations to which to store TileAnalytic data */
+	object Locations extends Enumeration {val Tile, Pyramid = Value}
+
+	private[analytics] def topLevelMap (value: JSONObject): Map[String, String] =
+		JSONObject.getNames(value).map(key => (key, value.get(key).toString)).toMap
 }
 
 
 
 /**
  * An analytic that combines two other analytics into one.
- * 
+ *
  * @see CompositeAnalysisDescription
  */
 class ComposedTileAnalytic[T1, T2]
@@ -170,8 +176,30 @@ class ComposedTileAnalytic[T1, T2]
 		(val1.defaultProcessedValue, val2.defaultProcessedValue)
 	def defaultUnprocessedValue: (T1, T2) =
 		(val1.defaultUnprocessedValue, val2.defaultUnprocessedValue)
-	override def toMap (value: (T1, T2)): Map[String, Any] =
-		val1.toMap(value._1) ++ val2.toMap(value._2)
+	override def storableValue (value: (T1, T2), location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		// We want to combine the results of both our components into a single return value.
+		val v1 = val1.storableValue(value._1, location)
+		val v2 = val2.storableValue(value._2, location)
+		val k1 = v1.map(JSONObject.getNames(_)).getOrElse(Array[String]())
+		val k2 = v2.map(JSONObject.getNames(_)).getOrElse(Array[String]())
+		val keys = k1.toSet ++ k2.toSet
+		val result = new JSONObject()
+		keys.foreach{key =>
+			val value1 = v1.map(json => if (json.has(key)) Some(json.get(key)) else None).getOrElse(None)
+			val value2 = v2.map(json => if (json.has(key)) Some(json.get(key)) else None).getOrElse(None)
+			// Where keys don't interfere, use the key as is
+			if (value1.isDefined && value2.isDefined) {
+				// sadly, keys are interfering; preface them with the analytic name
+				result.put(val1.name+"."+key, value1.get)
+				result.put(val2.name+"."+key, value2.get)
+			} else if (value1.isDefined) {
+				result.put(key, value1.get)
+			} else if (value2.isDefined) {
+				result.put(key, value2.get)
+			}
+		}
+		Some(result)
+	}
 	override def toString = "["+val1+" + "+val2+"]"
 }
 
@@ -179,8 +207,8 @@ class ComposedTileAnalytic[T1, T2]
 
 /**
  * An accumulator that accumulates a TileAnalytic across multiple tiles
- * 
- * @param analytic An analytic defining an aggregation function to be used to 
+ *
+ * @param analytic An analytic defining an aggregation function to be used to
  *                 accumulate values
  *
  * @tparam T The type of value to be accumulated
@@ -208,17 +236,45 @@ object AnalysisDescription {
 		Map("global."+name -> ((t: TileIndex) => true))
 
 
+	/*
+	 * Take the old metadata value and overlay the new one on top of it.
+	 */
+	private def combineMetaData (origValue: Any, newValue: Any): Any =
+		Try{
+			// Convert both inputs to Json, and overlay them
+			val origJson = origValue match {
+				case json: JSONObject => JsonUtilities.deepClone(json)
+				case null => new JSONObject("{}")
+				case _ => new JSONObject(origValue.toString())
+			}
+			val newJson = newValue match {
+				case json: JSONObject => json
+				case null => new JSONObject("{}")
+				case _ => new JSONObject(newValue.toString())
+			}
+			JsonUtilities.overlayInPlace(origJson, newJson)
+		}.getOrElse(
+			// Default to simple replacement if there is any failure in overlaying.
+			newValue
+		)
+
 	// Apply accumulated metadata info to actual global metadata for a pyramid
-	def record (analysis: AnalysisDescription[_, _], metaData: PyramidMetaData): Unit = {
-		analysis.toGlobalMap.foreach{case (key, value) =>
-			metaData.setCustomMetaData(value, key.split("\\.") :_*)
+	def record[T] (analysis: AnalysisDescription[_, T], metaData: PyramidMetaData): Unit = {
+		analysis.accumulatorValues.foreach{case (key, value) =>
+			analysis.analytic.storableValue(value, TileAnalytic.Locations.Pyramid).foreach{json =>
+				val keys = key.split("\\.")
+				metaData.setCustomMetaData(combineMetaData(metaData.getCustomMetaData(keys:_*), json).toString,
+				                           keys:_*)
+			}
 		}
 	}
 
 	// Apply accumulated metadata info to an actual tile
-	def record (analysis: AnalysisDescription[_, _], tile: TileData[_]): Unit = {
-		analysis.toTileMap.foreach{case (key, value) =>
-			tile.setMetaData(key, value)
+	def record[T] (value: T, analysis: AnalysisDescription[_, T], tile: TileData[_]): Unit = {
+		analysis.analytic.storableValue(value, TileAnalytic.Locations.Tile).foreach { json =>
+			TileAnalytic.topLevelMap(json).foreach{case (key, value) =>
+				tile.setMetaData(key, combineMetaData(tile.getMetaData(key), value))
+			}
 		}
 	}
 }
@@ -248,13 +304,11 @@ trait AnalysisDescription[RT, AT] extends Serializable {
 	def analytic: TileAnalytic[AT]
 	// Add a data point to appropriate accumulators
 	def accumulate (tile: TileIndex, data: AT): Unit
-	// Get accumulatoed metadata info in a form that can be applied
-	// directly to metadata for an individual tile.
-	def toTileMap: Map[String, Any]
-  def toGlobalMap: Map[String, Any]
 
 	// Deal with accumulators
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit
+	def accumulatorValues: Map[String, AT]
+
 	// Standard accumulators
 	def addLevelAccumulator (sc: SparkContext, level: Int): Unit =
 		addAccumulator(sc, ""+level, (test: TileIndex) => (level == test.getLevel))
@@ -263,9 +317,9 @@ trait AnalysisDescription[RT, AT] extends Serializable {
 }
 
 /**
- * A small, simple data class to store what an analysis description needs to 
+ * A small, simple data class to store what an analysis description needs to
  * remember about a single cross-dataset accumulator of its analysis.
- * 
+ *
  * @tparam AT The analysis type being accumulated
  */
 case class MetaDataAccumulatorInfo[AT] (name: String,
@@ -273,9 +327,9 @@ case class MetaDataAccumulatorInfo[AT] (name: String,
                                         accumulator: Accumulator[AT]) {}
 
 /**
- * A standard analysis description parent class for descriptions of a single, 
+ * A standard analysis description parent class for descriptions of a single,
  * monolithic analysis (as opposed to a composite analysis).
- * 
+ *
  * See AnalysisDescription for descriptions of the generic type parameters.
  */
 class MonolithicAnalysisDescription[RT, AT: ClassTag]
@@ -295,11 +349,6 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				info._2.accumulator += data
 		)
 
-	def toTileMap: Map[String, Any] = accumulatorInfos.map(info =>
-		analytic.toMap(info._2.accumulator.value).map{case (k, v) => (info._2.name+"."+k, v)}
-	).reduceOption(_ ++ _).getOrElse(Map[String, Any]())
-  def toGlobalMap: Map[String, Any] = toTileMap
-
 	// Deal with accumulators
 	protected val accumulatorInfos = MutableMap[String, MetaDataAccumulatorInfo[AT]]()
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
@@ -311,15 +360,16 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				new MetaDataAccumulatorInfo(name, test, accumulator)
 		}
 
-
+	def accumulatorValues: Map[String, AT] =
+		accumulatorInfos.map{case (key, accum) => (key, accum.accumulator.value)}.toMap
 
 	override def toString = analyticParam.toString
 }
 
 /**
- * A description of a single analysis which is not aggregated into the global 
+ * A description of a single analysis which is not aggregated into the global
  * metadata, but only exists on tiles
- * 
+ *
  * See AnalysisDescription for descriptions of the generic type parameters.
  */
 class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
@@ -330,18 +380,19 @@ class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
 	// Ignores requests to add standard accumulators
 	override def addLevelAccumulator (sc: SparkContext, level: Int): Unit = {}
 	override def addGlobalAccumulator (sc: SparkContext): Unit = {}
+	override def accumulatorValues: Map[String, AT] = Map[String, AT]()
 }
 
 /**
  * A class to combine two analyses into a single analysis.
- * 
+ *
  * This is needed because, for reasons of type generification, we can
  * only pass in a single tile analytic, and a single data analytic,
  * into the binning process.
- * 
+ *
  * If we actually need more than one analytic, we combine them into
  * one using this class.
- * 
+ *
  * See AnalysisDescription for descriptions of the generic type parameters.
  */
 class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
@@ -360,13 +411,21 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis1.accumulate(tile, data._1)
 		analysis2.accumulate(tile, data._2)
 	}
-	def toTileMap: Map[String, Any] = analysis1.toTileMap ++ analysis2.toTileMap
-  def toGlobalMap: Map[String, Any] = analysis1.toGlobalMap ++ analysis2.toGlobalMap
 
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {
 		analysis1.addAccumulator(sc, name, test)
 		analysis2.addAccumulator(sc, name, test)
 	}
+
+	def accumulatorValues: Map[String, (AT1, AT2)] = {
+		def zipMaps[A, B, C] (b: Map[A, B], c: Map[A, C]) =
+			(b.keySet ++ c.keySet).map(key => (key, (b.get(key), c.get(key)))).toMap
+
+		zipMaps(analysis1.accumulatorValues, analysis2.accumulatorValues)
+			.filter(p => p._2._1.isDefined && p._2._2.isDefined)
+			.map(p => (p._1, (p._2._1.get, p._2._2.get)))
+	}
+
 
 	// Helper functions for testing purposes only
 	/** Count all composed sub-components.  For testing purposes only. */
@@ -408,7 +467,7 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 }
 
 /**
- * A class (and companion object) to take an analysis of bin values and convert 
+ * A class (and companion object) to take an analysis of bin values and convert
  * it into an analysis of tiles.
  */
 object AnalysisDescriptionTileWrapper {
@@ -441,10 +500,10 @@ class AnalysisDescriptionTileWrapper[RT, AT: ClassTag]
 
 
 /**
- * The Custom Metadata analytic is a dummy tile analytic that does not actually 
- * write anything to tiles.  It's only purpose is to help 
+ * The Custom Metadata analytic is a dummy tile analytic that does not actually
+ * write anything to tiles.  It's only purpose is to help
  * CustomGlobalMetadata fulfill its interface without having any side-effects.
- * 
+ *
  */
 class CustomMetadataAnalytic extends TileAnalytic[String]
 {
@@ -452,13 +511,14 @@ class CustomMetadataAnalytic extends TileAnalytic[String]
 	def defaultProcessedValue: String = ""
 	def defaultUnprocessedValue: String = ""
 	def name: String = "VariableSeries"
-	override def toMap (value: String): Map[String, Any] = Map[String, String]()
+	override def storableValue (value: String, location: TileAnalytic.Locations.Value): Option[JSONObject] =
+		if (TileAnalytic.Locations.Pyramid == location) super.storableValue(value, location) else None
 }
 /**
- * A very simply tile analytic that just writes custom metadata directly to the tile set 
+ * A very simply tile analytic that just writes custom metadata directly to the tile set
  * metadata, and no where else.
- * 
- * @tparam T The raw data type of input records.  Nothing in this analytic uses 
+ *
+ * @tparam T The raw data type of input records.  Nothing in this analytic uses
  *           this type, it just must match the dataset.
  */
 class CustomGlobalMetadata[T] (customData: Map[String, Object])
@@ -468,11 +528,8 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 	def convert: T => String = (raw: T) => ""
 	def analytic: TileAnalytic[String] = new CustomMetadataAnalytic
 	def accumulate (tile: TileIndex, data: String): Unit = {}
-	// This is used to apply the analytic to tiles; we don't want anything to happen there
-	def toTileMap: Map[String, Any] = Map[String, Any]()
-	// This is used to apply the analytic to metadata; here's where we want stuff used.
-	def toGlobalMap: Map[String, Any] = customData
 
 	// Global metadata needs no accumulators - it doesn't actually have any data.
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {}
+	def accumulatorValues: Map[String, String] = customData.map(p => (p._1, p._2.toString))
 }

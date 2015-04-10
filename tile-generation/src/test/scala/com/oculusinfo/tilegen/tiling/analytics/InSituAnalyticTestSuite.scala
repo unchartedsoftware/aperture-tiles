@@ -67,7 +67,7 @@ class InSituAnalyticTestSuite extends FunSuite with SharedSparkContext {
 		def getInnerValues (from: String): List[Int] = {
 			val json = new JSONObject(from).getJSONArray("outer")
 			Range(0, json.length()).map(n =>
-				json.getJSONObject(n).getInt("inner")
+				json.getInt(n)
 			).toList
 		}
 		val global = getInnerValues(metaData.getCustomMetaData("global"))

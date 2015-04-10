@@ -193,8 +193,8 @@
         this.zIndex = zIndex;
         if ( this.olLayer ) {
             $( this.olLayer.div ).css( 'z-index', zIndex );
-            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         }
+        PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
 
     /**

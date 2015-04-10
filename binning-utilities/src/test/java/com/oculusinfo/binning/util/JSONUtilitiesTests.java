@@ -31,6 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -111,15 +112,15 @@ public class JSONUtilitiesTests {
 
 	@Test
 	public void testArrayOverlayTruncation () throws Exception {
-	    JSONArray base = new JSONArray("['a', 'b', 'c', 'd', 'e', 'f']");
-	    JSONArray overlay = new JSONArray("[1, 2, null, 4]");
-	    JSONArray result = JsonUtilities.overlay(base, overlay);
+		JSONArray base = new JSONArray("['a', 'b', 'c', 'd', 'e', 'f']");
+		JSONArray overlay = new JSONArray("[1, 2, null, 4]");
+		JSONArray result = JsonUtilities.overlay(base, overlay);
 
-        Assert.assertEquals(4, result.length());
-        Assert.assertEquals(1, result.getInt(0));
-        Assert.assertEquals(2, result.getInt(1));
-        Assert.assertEquals("c", result.getString(2));
-        Assert.assertEquals(4, result.getInt(3));
+		Assert.assertEquals(4, result.length());
+		Assert.assertEquals(1, result.getInt(0));
+		Assert.assertEquals(2, result.getInt(1));
+		Assert.assertEquals("c", result.getString(2));
+		Assert.assertEquals(4, result.getInt(3));
 	}
 
 	@Test
@@ -139,17 +140,17 @@ public class JSONUtilitiesTests {
 
 	@Test
 	public void testPropertyToJSONConversion () throws Exception {
-	    Properties p = new Properties();
-	    p.setProperty("a", "aval");
-        p.setProperty("b.0", "bval0");
-        p.setProperty("b.2", "bval2");
-        p.setProperty("c.1", "cval1");
-        p.setProperty("c.a", "cvala");
-        p.setProperty("c.b.a", "cbaval");
-        p.setProperty("c.b.b", "cbbval");
+		Properties p = new Properties();
+		p.setProperty("a", "aval");
+		p.setProperty("b.0", "bval0");
+		p.setProperty("b.2", "bval2");
+		p.setProperty("c.1", "cval1");
+		p.setProperty("c.a", "cvala");
+		p.setProperty("c.b.a", "cbaval");
+		p.setProperty("c.b.b", "cbbval");
 
-        JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
-        JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
+		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
+		JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
 		assertJsonEqual(expected, actual);
 	}
 
@@ -173,10 +174,36 @@ public class JSONUtilitiesTests {
 		Map<String, Object> mapE = JsonUtilities.jsonObjToMap(expected);
 		Map<String, Object> mapA = JsonUtilities.jsonObjToMap(actual);
 
-		Assert.assertEquals(mapE.size(), mapA.size());
-		for (String key: mapE.keySet()) {
-			Assert.assertTrue(mapA.containsKey(key));
-			Assert.assertEquals(mapE.get(key), mapA.get(key));
+		assertEquals(mapE, mapA);
+	}
+
+	public static void assertJsonEqual (JSONArray expected, JSONArray actual) {
+		List<Object> listE = JsonUtilities.jsonArrayToList(expected);
+		List<Object> listA = JsonUtilities.jsonArrayToList(actual);
+
+		assertEquals(listE, listA);
+	}
+
+	private static void assertEquals (Object expected, Object actual) {
+		if (expected instanceof List) {
+			Assert.assertTrue("Expected a list, but didn't get one", actual instanceof List);
+			List<?> eList = (List<?>) expected;
+			List<?> aList = (List<?>) actual;
+			Assert.assertEquals(eList.size(), aList.size());
+			for (int i=0; i<eList.size(); ++i) {
+				assertEquals(eList.get(i), aList.get(i));
+			}
+		} else if (expected instanceof Map) {
+			Assert.assertTrue("Expected a map, but didn't get one", actual instanceof Map);
+			Map<?, ?> eMap = (Map<?, ?>) expected;
+			Map<?, ?> aMap = (Map<?, ?>) actual;
+			Assert.assertEquals(eMap.size(), aMap.size());
+			for (Object key: eMap.keySet()) {
+				Assert.assertTrue(aMap.containsKey(key));
+				assertEquals(eMap.get(key), aMap.get(key));
+			}
+		} else {
+			Assert.assertEquals(expected, actual);
 		}
 	}
 }

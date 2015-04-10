@@ -47,15 +47,14 @@ import com.oculusinfo.binning.impl.DenseTileData
 
 import com.oculusinfo.tilegen.datasets.{TilingTask, CSVReader, CSVDataSource}
 import com.oculusinfo.tilegen.spark.SparkConnector
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
+import com.oculusinfo.tilegen.tiling.analytics.{TileAnalytic, AnalysisDescription, BinningAnalytic}
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 
 
 
 /**
- * This class takes a data set that is pre-sorted in Z-curve order, and 
+ * This class takes a data set that is pre-sorted in Z-curve order, and
  * transforms it into a pyramid of tiles
  */
 class SortedBinner {
@@ -67,7 +66,7 @@ class SortedBinner {
 	 * but minimal, data into an RDD of tiles on the given levels.
 	 *
 	 * @param data The data to be processed
-	 * @param binAnalytic A description of how raw values are aggregated into 
+	 * @param binAnalytic A description of how raw values are aggregated into
 	 *                    bin values
 	 * @param tileAnalytics A description of analytics that can be run on each
 	 *                      tile, and how to aggregate them
@@ -117,7 +116,7 @@ class SortedBinner {
 	/**
 	 * Process a simplified input dataset minimally - transform an RDD of raw,
 	 * but minimal, data into an RDD of tiles.
-	 * 
+	 *
 	 * @param data The data to be processed
 	 * @param binAnalytic A description of how raw values are to be aggregated into bin values
 	 * @param tileAnalytics Analytics to apply to entire produced tiles
@@ -219,10 +218,10 @@ class SortedBinner {
 		//
 		// cf stands for 'common form'
 		val cfTiles: RDD[(TileIndex, (Option[TileData[PT]],
-		                              Option[Map[String, Any]]))] =
+		                              Option[DT]))] =
 			processTypeTiles.map{case (index, tile) => (index, (Some(tile), None))}
 		val cfMetaData: Option[RDD[(TileIndex, (Option[TileData[PT]],
-		                                        Option[Map[String, Any]]))]] =
+		                                        Option[DT]))]] =
 			metaData.map(_.map{case (index, datum) => (index, (None, Some(datum)))})
 
 		val tiles =
@@ -242,14 +241,14 @@ class SortedBinner {
 				val defaultRawBin = binAnalytic.defaultUnprocessedValue
 				val defaultCookedBin = binAnalytic.defaultProcessedValue
 
-				val output = new DenseTileData[BT](index)
+				val tile = new DenseTileData[BT](index)
 
 				val withTiles = tileData.filter(_._1.isDefined)
 				if (withTiles.isEmpty) {
 					val defaultBin = binAnalytic.finish(defaultCookedBin)
 					// No tile data; default the whole tile
 					for (x <- 0 until xLimit; y <- 0 until yLimit) {
-						output.setBin(x, y, defaultBin)
+						tile.setBin(x, y, defaultBin)
 					}
 				} else {
 					// Copy in our tile data
@@ -260,7 +259,7 @@ class SortedBinner {
 								var inputBin =input.getBin(x, y)
 								if (inputBin == defaultRawBin)
 									inputBin = defaultCookedBin
-								output.setBin(x, y, binAnalytic.finish(inputBin))
+								tile.setBin(x, y, binAnalytic.finish(inputBin))
 							}
 						}
 					)
@@ -269,10 +268,8 @@ class SortedBinner {
 				// Copy in any pre-calculated raw-data analytics
 				tileData.filter(_._2.isDefined).foreach(p =>
 					{
-						val metaData = p._2.get
-						metaData.map{
-							case (key, value) => output.setMetaData(key, value)
-						}
+						val analyticValue = p._2.get
+						dataAnalytics.map(da => AnalysisDescription.record(analyticValue, da, tile))
 					}
 				)
 
@@ -281,17 +278,15 @@ class SortedBinner {
 				tileAnalytics.map(ta =>
 					{
 						// Figure out the value for this tile
-						val analyticValue = ta.convert(output)
+						val analyticValue = ta.convert(tile)
 						// Add t into any appropriate accumulators
-						ta.accumulate(output.getDefinition(), analyticValue)
+						ta.accumulate(tile.getDefinition(), analyticValue)
 						// And store it in the tile's metadata
-						ta.analytic.toMap(analyticValue).map{case (key, value) =>
-							output.setMetaData(key, value)
-						}
+						AnalysisDescription.record(analyticValue, ta, tile)
 					}
 				)
 
-				output
+				tile
 			}
 		)
 	}
@@ -301,7 +296,7 @@ class SortedBinner {
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToTiles: IT => TraversableOnce[(TileIndex, BinIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, Any])]] =
+			Option[RDD[(TileIndex, DT)]] =
 	{
 		dataAnalytics.map(da =>
 			{
@@ -329,9 +324,6 @@ class SortedBinner {
 						partitionResults.iterator
 					}
 				).reduceByKey(da.analytic.aggregate(_, _))
-					.map{case (tile, value) =>
-						(tile, da.analytic.toMap(value))
-				}
 			}
 		)
 	}
@@ -362,7 +354,7 @@ object SortedBinnerTest {
 			}
 		}
 	}
-	
+
 	def processTask[PT: ClassTag,
 	                DT: ClassTag,
 	                AT: ClassTag,
@@ -398,7 +390,7 @@ object SortedBinnerTest {
 			}
 		)
 	}
-	
+
 	/**
 	 * This function is simply for pulling out the generic params from the TilingTask,
 	 * so that they can be used as params for other types.

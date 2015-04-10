@@ -59,8 +59,8 @@
             this.opacity = opacity;
             if ( this.olLayer ) {
                 this.olLayer.setOpacity( opacity );
-                PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
             }
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
         },
 
         /**
@@ -83,8 +83,8 @@
             this.enabled = enabled;
             if ( this.olLayer ) {
                 this.olLayer.setVisibility( enabled );
-                PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
             }
+            PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
         },
 
         /**

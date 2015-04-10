@@ -41,9 +41,8 @@ import com.oculusinfo.binning._
 import com.oculusinfo.binning.impl.DenseTileData
 import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.analytics.{TileAnalytic, AnalysisDescription, BinningAnalytic}
 import com.oculusinfo.tilegen.util.EndPointsToLine
-import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 
 
 class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double)] with Serializable {
@@ -58,7 +57,7 @@ class LineSegmentIndexScheme extends IndexScheme[(Double, Double, Double, Double
  * line segments that are included in the binning process
  */
 object RDDLineBinner {
-	
+
 	def getNumSplits[T: ClassTag] (requestedPartitions: Option[Int], dataSet: RDD[T]): Int = {
 		val curSize = dataSet.partitions.size
 		val result = curSize max requestedPartitions.getOrElse(0)
@@ -107,7 +106,7 @@ object RDDLineBinner {
 			                        val tb = uniBinToTB(tile, ubin)
 			                        (tb, value)
 		                        })
-		
+
 		// filter results so only ones for current tile remain
 		tb_scale.filter(_._1.getTile().equals(tile))
 			.map(b => {
@@ -143,7 +142,7 @@ class RDDLineBinner(minBins: Int = 2,
 	/**
 	 * Fully process a dataset of input records into output tiles written out
 	 * somewhere
-	 * 
+	 *
 	 * @tparam RT The raw input record type
 	 * @tparam IT The coordinate type
 	 * @tparam PT The processing bin type
@@ -239,11 +238,11 @@ class RDDLineBinner(minBins: Int = 2,
 	 * but minimal, data into an RDD of tiles on the given levels.
 	 *
 	 * @param data The data to be processed
-	 * @param indexScheme A conversion scheme for converting from the index type 
+	 * @param indexScheme A conversion scheme for converting from the index type
 	 *        to one we can use.
-	 * @param binAnalytic A description of how raw values are aggregated into 
+	 * @param binAnalytic A description of how raw values are aggregated into
 	 *                    bin values
-	 * @param tileAnalytics A description of analytics that can be run on each 
+	 * @param tileAnalytics A description of analytics that can be run on each
 	 *                      tile, and how to aggregate them
 	 * @param dataAnalytics A description of analytics that can be run on the
 	 *                      raw data, and recorded (in the aggregate) on each
@@ -356,11 +355,11 @@ class RDDLineBinner(minBins: Int = 2,
 	/**
 	 * Process a simplified input dataset minimally - transform an RDD of raw,
 	 * but minimal, data into an RDD of tiles.
-	 * 
+	 *
 	 * @param data The data to be processed
-	 * @param binAnalytic A description of how raw values are aggregated into 
+	 * @param binAnalytic A description of how raw values are aggregated into
 	 *                    bin values
-	 * @param tileAnalytics A description of analytics that can be run on each 
+	 * @param tileAnalytics A description of analytics that can be run on each
 	 *                      tile, and how to aggregate them
 	 * @param dataAnalytics A description of analytics that can be run on the
 	 *                      raw data, and recorded (in the aggregate) on each
@@ -441,11 +440,11 @@ class RDDLineBinner(minBins: Int = 2,
 
 		// Now, combine by-partition bins into global bins, and turn them into tiles.
 		if (usePointBinner) {
-			consolidateByPoints(partitionBins, binAnalytic, tileAnalytics,
+			consolidateByPoints(partitionBins, binAnalytic, tileAnalytics, dataAnalytics,
 			                    metaData, consolidationPartitions, tileType,
 			                    xBins, yBins, uniBinToTileBin, calcLinePixels)
 		} else {
-			consolidateByTiles(partitionBins, binAnalytic, tileAnalytics,
+			consolidateByTiles(partitionBins, binAnalytic, tileAnalytics, dataAnalytics,
 			                   metaData, consolidationPartitions,
 			                   xBins, yBins, uniBinToTileBin, calcLinePixels)
 		}
@@ -455,7 +454,7 @@ class RDDLineBinner(minBins: Int = 2,
 
 	/**
 	 * Process a simplified input dataset to run any raw data-based analysis
-	 * 
+	 *
 	 * @tparam IT The index type of the data set
 	 * @tparam PT The type of data to be processed into tiles
 	 * @tparam DT The type of data analytic used
@@ -471,49 +470,40 @@ class RDDLineBinner(minBins: Int = 2,
 		(data: RDD[(IT, PT, Option[DT])],
 		 indexToUniversalBins: IT => TraversableOnce[(BinIndex, BinIndex, TileIndex)],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]]):
-			Option[RDD[(TileIndex, Map[String, Any])]] =
+			Option[RDD[(TileIndex, DT)]] =
 	{
-		dataAnalytics.map(da =>
-			data.mapPartitions(iter =>
-				{
-					val partitionResults = MutableMap[TileIndex, DT]()
-					iter.foreach(record =>
-						{
-							indexToUniversalBins(record._1).foreach(indices =>
-								{
-									val tile = indices._3
-									val value = record._3
-									value.foreach(v =>
-										{
-											partitionResults(tile) =
-												if (partitionResults.contains(tile)) {
-													da.analytic.aggregate(partitionResults(tile), v)
-												} else {
-													v
-												}
-											da.accumulate(tile, v)
-										}
-									)
+		dataAnalytics.map{da =>
+			data.mapPartitions{iter =>
+				val partitionResults = MutableMap[TileIndex, DT]()
+				iter.foreach{record =>
+					indexToUniversalBins(record._1).foreach{indices =>
+						val tile = indices._3
+						val value = record._3
+						value.foreach{v =>
+							partitionResults(tile) =
+								if (partitionResults.contains(tile)) {
+									da.analytic.aggregate(partitionResults(tile), v)
+								} else {
+									v
 								}
-							)
+							da.accumulate(tile, v)
 						}
-					)
-
-					partitionResults.map{case (tile, value) =>
-						(tile, da.analytic.toMap(value))
-					}.iterator
+					}
 				}
-			)
-		)
+
+				partitionResults.iterator
+			}.reduceByKey(da.analytic.aggregate(_, _))
+		}
 	}
 
 
 
-	private def consolidateByPoints[PT: ClassTag, AT: ClassTag, BT]
+	private def consolidateByPoints[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 tileMetaData: Option[RDD[(TileIndex, DT)]],
 		 consolidationPartitions: Option[Int],
 		 tileType: Option[StorageType],
 		 xBins: Int = 256,
@@ -556,14 +546,14 @@ class RDDLineBinner(minBins: Int = 2,
 		//     Rest of process is same as regular RDDBinner (reduceByKey, convert
 		//     to (tile,(bin,value)), groupByKey, and create tiled results)
 		val reduced: RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                              Option[Map[String, Any]]))] =
+		                              Option[DT]))] =
 			expanded.reduceByKey(binAnalytic.aggregate(_, _),
 			                     RDDLineBinner.getNumSplits(consolidationPartitions, expanded)
 			).map(p => (p._1._1, (Some((p._1._2, p._2)), None)))
 
 		// Now the metadata half (in a way that should take no work if there is no metadata)
 		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, PT)],
-		                                      Option[Map[String, Any]]))]] =
+		                                      Option[DT]))]] =
 			tileMetaData.map(
 				_.map{case (index, metaData) => (index, (None, Some(metaData))) }
 			)
@@ -612,10 +602,8 @@ class RDDLineBinner(minBins: Int = 2,
 				// Add in any pre-calculated metadata
 				tileData.filter(_._2.isDefined).foreach(p =>
 					{
-						val metaData = p._2.get
-						metaData.map{
-							case (key, value) => tile.setMetaData(key, value)
-						}
+						val analyticValue = p._2.get
+						dataAnalytics.map(da => AnalysisDescription.record(analyticValue, da, tile))
 					}
 				)
 
@@ -627,9 +615,7 @@ class RDDLineBinner(minBins: Int = 2,
 						// Add it into any appropriate accumulators
 						ta.accumulate(index, analyticValue)
 						// And store it in the tile's metadata
-						ta.analytic.toMap(analyticValue).map{case (key, value) =>
-							tile.setMetaData(key, value)
-						}
+						AnalysisDescription.record(analyticValue, ta, tile)
 					}
 				)
 
@@ -638,20 +624,21 @@ class RDDLineBinner(minBins: Int = 2,
 		)
 	}
 
-	
 
-	private def consolidateByTiles[PT: ClassTag, AT: ClassTag, BT]
+
+	private def consolidateByTiles[PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
 		(data: RDD[((BinIndex, BinIndex, TileIndex), PT)],
 		 binAnalytic: BinningAnalytic[PT, BT],
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
-		 tileMetaData: Option[RDD[(TileIndex, Map[String, Any])]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 tileMetaData: Option[RDD[(TileIndex, DT)]],
 		 consolidationPartitions: Option[Int],
 		 xBins: Int = 256,
 		 yBins: Int = 256,
 		 uniBinToTileBin: (TileIndex, BinIndex) => TileAndBinIndices,
 		 calcLinePixels: (BinIndex, BinIndex, PT) => IndexedSeq[(BinIndex, PT)]):
 			RDD[TileData[BT]] = {
-		
+
 
 		// Do reduceByKey to account for duplicate lines at a given level (not
 		// really necessary, but might speed things up?)
@@ -673,13 +660,13 @@ class RDDLineBinner(minBins: Int = 2,
 		// universal bins to tile,bin coords
 		// Need flatMap here, else result is an RDD IndexedSeq
 		// val reduced2 = reduced1.flatMap(p => {
-		
+
 		val segmentsByTile: RDD[(TileIndex, (Option[(BinIndex, BinIndex, PT)],
-		                                     Option[Map[String, Any]]))] =
+		                                     Option[DT]))] =
 			data.flatMap(p =>
 				{
 					val ((lineStart, lineEnd, tile), procType) = p
-					
+
 					RDDLineBinner.universalBinsToTiles(tile,
 					                                   calcLinePixels(lineStart, lineEnd, procType),
 					                                   uniBinToTileBin).map(tile =>
@@ -692,7 +679,7 @@ class RDDLineBinner(minBins: Int = 2,
 		// Now, the metadata half (in a way that should take no work if there
 		// is no metadata)
 		val metaData: Option[RDD[(TileIndex, (Option[(BinIndex, BinIndex, PT)],
-		                                      Option[Map[String, Any]]))]] =
+		                                      Option[DT]))]] =
 			tileMetaData.map(_.map{case (index, metaData) => (index, (None, Some(metaData)))})
 
 		// Get the combination of the two sets, again in a way that does no
@@ -747,7 +734,7 @@ class RDDLineBinner(minBins: Int = 2,
 						)
 					}
 				)
-				
+
 				// convert aggregated bin values from type PT to BT, and save tile results
 				// Create our tile
 				val tile = new DenseTileData[BT](index)
@@ -764,10 +751,8 @@ class RDDLineBinner(minBins: Int = 2,
 				// Add in any pre-calculated metadata
 				tileData.filter(_._2.isDefined).foreach(p =>
 					{
-						val metaData = p._2.get
-						metaData.map{
-							case (key, value) => tile.setMetaData(key, value)
-						}
+						val analyticValue = p._2.get
+						dataAnalytics.map(da => AnalysisDescription.record(analyticValue, da, tile))
 					}
 				)
 				// Calculate and add in any tile-level metadata we've been told
@@ -779,9 +764,7 @@ class RDDLineBinner(minBins: Int = 2,
 						// Add it into any appropriate accumulators
 						ta.accumulate(index, analyticValue)
 						// And store it in the tile's metadata
-						ta.analytic.toMap(analyticValue).map{case (key, value) =>
-							tile.setMetaData(key, value)
-						}
+						AnalysisDescription.record(analyticValue, ta, tile)
 					}
 				)
 				tile

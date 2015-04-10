@@ -227,7 +227,6 @@
             select = this.spec.select,
             uuid = this.uuid,
             selectKey;
-
         if ( !select || !select.selectKey ) {
             return;
         }
@@ -275,19 +274,17 @@
 
         var hooks = this.spec.hook ? [ this.spec.hook ] : this.spec.hooks,
             selector = this.getEntrySelector(),
+            $elements = $(elements),
             hook,
-            $elements,
             i;
+        // if entry selector is set, use it to select entries
+        if ( selector ) {
+            $elements = $elements.find( selector );
+        }
         if ( hooks ) {
             for ( i=0; i<hooks.length; i++ ) {
                 hook = hooks[i];
                 if ( typeof hook === "function" ) {
-                    // get the entries
-                    $elements = $( elements );
-                    // if entry selector is set, use it to select entries
-                    if ( selector ) {
-                        $elements = $elements.find( selector );
-                    }
                     // call entry function on each entry
                     $elements.each( execHook );
                 }

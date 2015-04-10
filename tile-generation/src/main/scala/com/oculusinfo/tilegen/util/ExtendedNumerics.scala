@@ -98,11 +98,12 @@ object ExtendedNumeric {
 				case null => throw new IllegalArgumentException
 				case c: Byte => c.toInt
 				case c: Short => c.toInt
-				case c: Int => c.toInt
+				case c: Int => c
 				case c: Long => c.toInt
 				case c: Float => c.toInt
 				case c: Double => c.toInt
 				case c: Date => c.getTime.toInt
+				case c: String => c.toInt
 			}
 
 		def isNaN (n: Int): Boolean = false
@@ -128,10 +129,11 @@ object ExtendedNumeric {
 				case c: Byte => c.toLong
 				case c: Short => c.toLong
 				case c: Int => c.toLong
-				case c: Long => c.toLong
+				case c: Long => c
 				case c: Float => c.toLong
 				case c: Double => c.toLong
 				case c: Date => c.getTime
+				case c: String => c.toLong
 			}
 
 		def isNaN (n: Long): Boolean = false
@@ -156,9 +158,10 @@ object ExtendedNumeric {
 				case c: Short => c.toFloat
 				case c: Int => c.toFloat
 				case c: Long => c.toFloat
-				case c: Float => c.toFloat
+				case c: Float => c
 				case c: Double => c.toFloat
 				case c: Date => c.getTime.toFloat
+				case c: String => c.toFloat
 			}
 
 		def isNaN (x: Float): Boolean = x.isNaN
@@ -184,8 +187,9 @@ object ExtendedNumeric {
 				case c: Int => c.toDouble
 				case c: Long => c.toDouble
 				case c: Float => c.toDouble
-				case c: Double => c.toDouble
+				case c: Double => c
 				case c: Date => c.getTime.toDouble
+				case c: String => c.toDouble
 			}
 
 		def isNaN (x: Double): Boolean = x.isNaN
