@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.impl.NumberListHeatMapImageRenderer;
@@ -44,6 +45,17 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
         "heatmap",
         new String[] {"heatmap", "listheatmap", "toptextscores", "textscores", "doublestatistics", "metadata"});
 
+	public static final IntegerProperty COARSENESS = new IntegerProperty("coarseness",
+	    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
+	    1);
+
+	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
+	    "The minimum value set to the lower bound of the color ramp spectrum",
+	    0);
+
+	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
+	    "The maximum value set to the upper bound of the color ramp spectrum",
+	    100);
 
     // One can't produce a Class<TileDataImageRenderer<?>> directly, one can only use erasure to fake it.
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -51,18 +63,19 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
     	return (Class) TileDataImageRenderer.class;
     }
 
-    public ImageRendererFactory (ConfigurableFactory<?> parent,
-	                             List<String> path) {
+	public ImageRendererFactory (ConfigurableFactory<?> parent,
+	                             String path) {
 		this(null, parent, path);
 	}
 
 	public ImageRendererFactory (String name, ConfigurableFactory<?> parent,
-	                             List<String> path) {
+	                             String path) {
 		super(name, getFactoryClass(), parent, path);
-
 		addProperty(RENDERER_TYPE);
-
-		addChildFactory(new ColorRampFactory(this, new ArrayList<String>()));
+		addProperty(COARSENESS);
+		addProperty(RANGE_MIN);
+		addProperty(RANGE_MAX);
+		addChildFactory( new ColorRampFactory( null ) );
 	}
 
 

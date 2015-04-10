@@ -35,7 +35,7 @@ public class StandardTileTransformerFactoryProvider extends AbstractFactoryProvi
 	@Override
 	public ConfigurableFactory<TileTransformer<?>> createFactory (String name,
 	                                                              ConfigurableFactory<?> parent,
-	                                                              List<String> path) {
+	                                                              String path) {
 		return new TileTransformerFactory(name, parent, path);
 	}
 }

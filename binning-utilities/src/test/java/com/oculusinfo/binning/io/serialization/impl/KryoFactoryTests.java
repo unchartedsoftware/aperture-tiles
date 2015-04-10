@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,51 +37,51 @@ public class KryoFactoryTests extends SerializerTestUtils {
 	@Test
 	public void testKryoDefaultCodecSpecification () throws Exception {
 		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<>(null, "factory", integerType);
 		factory.readConfiguration(new JSONObject("{}"));
 		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
 			   Integer.class, integerType);
-		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.GZIP);
+		TileSerializer<Integer> expected = new KryoSerializer<>(integerType, Codec.GZIP);
 		assertSerializersEqual(expected, product, new IntegerSource());
 	}
 
 	@Test
 	public void testKryoGZipSpecification () throws Exception {
 		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<>(null, "factory", integerType);
 		factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"GZIP\"}}"));
 		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
 			   Integer.class, integerType);
-		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.GZIP);
+		TileSerializer<Integer> expected = new KryoSerializer<>(integerType, Codec.GZIP);
 		assertSerializersEqual(expected, product, new IntegerSource());
 	}
 
 	@Test
 	public void testKryoBZip2Specification () throws Exception {
 		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<>(null, "factory", integerType);
 		factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"BZIP\"}}"));
 		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
 			   Integer.class, integerType);
-		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.BZIP);
+		TileSerializer<Integer> expected = new KryoSerializer<>(integerType, Codec.BZIP);
 		assertSerializersEqual(expected, product, new IntegerSource());
 	}
 
 	@Test
 	public void testKryoDeflateSpecification () throws Exception {
 		TypeDescriptor integerType = new TypeDescriptor(Integer.class);
-		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, Arrays.asList("factory"), integerType);
+		KryoSerializerFactory<Integer> factory = new KryoSerializerFactory<Integer>(null, "factory", integerType);
 		factory.readConfiguration(new JSONObject("{\"factory\": { \"codec\": \"DEFLATE\"}}"));
 		TileSerializer<Integer> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
 			   Integer.class, integerType);
-		TileSerializer<Integer> expected = new KryoSerializer<Integer>(integerType, Codec.DEFLATE);
+		TileSerializer<Integer> expected = new KryoSerializer<>(integerType, Codec.DEFLATE);
 		assertSerializersEqual(expected, product, new IntegerSource());
 	}
 
 	@Test
 	public void testKryoCustomClassSpecification () throws Exception {
 		TypeDescriptor testType = new TypeDescriptor(TestClass.class);
-		KryoSerializerFactory<TestClass> factory = new KryoSerializerFactory<TestClass>(null, Arrays.asList("factory"), testType);
+		KryoSerializerFactory<TestClass> factory = new KryoSerializerFactory<>(null, "factory", testType);
 		factory.readConfiguration(new JSONObject(
 		                                         "{\"factory\": {\n"+
 		                                         "  \"codec\": \"DEFLATE\",\n"+
@@ -89,7 +89,7 @@ public class KryoFactoryTests extends SerializerTestUtils {
 		                                         "}}"));
 		TileSerializer<TestClass> product = SerializationTypeChecker.checkBinClass(factory.produce(TileSerializer.class),
 			     TestClass.class, testType);
-		TileSerializer<TestClass> expected = new KryoSerializer<TestClass>(testType, Codec.DEFLATE, TestClass.class);
+		TileSerializer<TestClass> expected = new KryoSerializer<>(testType, Codec.DEFLATE, TestClass.class);
 		assertSerializersEqual(expected, product, new TestClassSource());
 	}
 

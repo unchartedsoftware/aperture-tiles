@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,7 +38,7 @@ import java.util.Map;
  * part related to the factory's properties, or those properties used to create
  * the product, so extraneous properties or configuration details will cause
  * false cache misses.
- * 
+ *
  * @author nkronenfeld
  */
 public abstract class SharedInstanceFactory<T> extends
@@ -47,7 +47,7 @@ public abstract class SharedInstanceFactory<T> extends
 	 * The static mapping containing all instances ever made. This maps from
 	 * factory type to configuration to object. Configurations are kepts as
 	 * strings, because equivalent JSON objects are not equal.
-	 * 
+	 *
 	 * We need concurrency across several calls, so just using a
 	 * ConcurrentHashMap is insufficient here - we instead have to synchronize
 	 * across the appropriate calls.
@@ -59,13 +59,13 @@ public abstract class SharedInstanceFactory<T> extends
 
 	protected SharedInstanceFactory (Class<T> factoryType,
 	                                 ConfigurableFactory<?> parent,
-	                                 List<String> path) {
+	                                 String path) {
 		super(factoryType, parent, path);
 	}
 
 	protected SharedInstanceFactory (String name, Class<T> factoryType,
 	                                 ConfigurableFactory<?> parent,
-	                                 List<String> path) {
+	                                 String path) {
 		super(name, factoryType, parent, path);
 	}
 

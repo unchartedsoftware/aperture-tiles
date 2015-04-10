@@ -63,7 +63,7 @@ public class PairArrayAvroSerializerFactory<S, T>
 
 	private Class<? extends S> _keyType;
 	private Class<? extends T> _valueType;
-	public PairArrayAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path,
+	public PairArrayAvroSerializerFactory (ConfigurableFactory<?> parent, String path,
 	                                       Class<? extends S> keyType,
 	                                       Class<? extends T> valueType) {
 		super(getName(keyType, valueType), getGenericSerializerClass(keyType, valueType), parent, path);

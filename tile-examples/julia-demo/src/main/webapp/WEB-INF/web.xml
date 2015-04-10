@@ -15,36 +15,39 @@
 	    </init-param>
 	    <load-on-startup>0</load-on-startup>
   	</servlet>
-  	
+
 	<!-- Module Configuration -->
 	<!-- If you have your own Guice module(s), put them here as a colon-separated
 	     list. -->
 	<context-param>
 		<param-name>guice-modules</param-name>
 		<param-value>
-	      	<!-- A :-separated list of modules, so there must be a : after all but 
+	      	<!-- A :-separated list of modules, so there must be a : after all but
 	     		the last module listed. -->
 	      	<!-- Pyramid factory module - override to add custom TilePyramids -->
 	      	com.oculusinfo.tile.init.TilePyramidFactoryModule:
-	      	<!-- Renderer factory module - override to add custom server-side 
+	      	<!-- Renderer factory module - override to add custom server-side
 	          	renderers. -->
 	      	com.oculusinfo.tile.init.ImageRendererFactoryModule:
-	      	<!-- Serialization factory module - override to add custom tile 
+	      	<!-- Serialization factory module - override to add custom tile
 	           	serializers -->
 	      	com.oculusinfo.tile.init.StandardTileSerializerFactoryModule:
-	      	<!-- Pyramid IO factory module - override to add custom PyramidIO 
+	      	<!-- Pyramid IO factory module - override to add custom PyramidIO
 	           	implementations -->
 	      	com.oculusinfo.tile.init.StandardPyramidIOFactoryModule:
-	      	<!-- LayerConfiguration factory module - override to add custom layer configuration 
+	      	<!-- LayerConfiguration factory module - override to add custom layer configuration
 	           	parameters -->
 	      	com.oculusinfo.tile.init.StandardLayerConfigurationModule:
 	      	<!-- Tile Transformer factory module - override to add custom tile
 	           	Transformer -->
 	      	com.oculusinfo.tile.init.TileTransformerFactoryModule:
-	      	<!-- Annotation IO factory module - override to add custom AnnotationIO 
+	      	<!-- Value Transformer factory module - override to add custom tile
+	           	Transformer -->
+	      	com.oculusinfo.tile.init.ValueTransformerFactoryModule:
+	      	<!-- Annotation IO factory module - override to add custom AnnotationIO
 	           	implementations -->
 	      	com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:
-	      	<!-- Annotation filter factory module - override to add custom AnnotationFilter 
+	      	<!-- Annotation filter factory module - override to add custom AnnotationFilter
 	           	implementations -->
 	      	com.oculusinfo.annotation.init.StandardAnnotationFilterFactoryModule:
 	      	<!-- Sets up the REST interface by which clients can retrieve tiles -->

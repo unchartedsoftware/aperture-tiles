@@ -62,12 +62,12 @@ object DeferredTilePyramidFactory {
 	                                              "If true, calculate tile pyramid bounds automatically; if false, use values given by properties",
 	                                              true)
 }
-class DeferredTilePyramidFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class DeferredTilePyramidFactory (parent: ConfigurableFactory[_], path: String)
 		extends ConfigurableFactory[DeferredTilePyramid](classOf[DeferredTilePyramid], parent, path)
 {
 	import DeferredTilePyramidFactory._
 	addProperty(AUTOBOUNDS_PROPERTY)
-	addChildFactory(new TilePyramidFactory(this, Seq[String]().asJava))
+	addChildFactory(new TilePyramidFactory(this, null))
 
 	override protected def create: DeferredTilePyramid = {
 		new DeferredTilePyramid(produce(classOf[TilePyramid]), getPropertyValue(AUTOBOUNDS_PROPERTY))

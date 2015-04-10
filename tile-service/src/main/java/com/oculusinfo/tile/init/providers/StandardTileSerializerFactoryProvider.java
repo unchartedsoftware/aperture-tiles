@@ -47,7 +47,7 @@ public class StandardTileSerializerFactoryProvider extends StandardUberFactoryPr
 	@Override
 	public ConfigurableFactory<TileSerializer<?>> createFactory (String name,
 	                                                             ConfigurableFactory<?> parent,
-	                                                             List<String> path) {
+	                                                             String path) {
 		return new TileSerializerFactory(name, parent, path, createChildren(parent, path));
 	}
 }

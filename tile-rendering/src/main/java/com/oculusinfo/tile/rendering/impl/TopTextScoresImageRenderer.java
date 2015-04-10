@@ -46,11 +46,11 @@ import java.util.List;
 /**
  * A server side to render Map<String, Double> (well, technically,
  * List<Pair<String, Double>>) tiles.
- * 
+ *
  * This renderer by default renders the top scores, rendering up to 10 per bin.
  * To render more, fewer, or different texts, override
  * {@link #getTextsToDraw(List)}.
- * 
+ *
  * @author nkronenfeld
  */
 public class TopTextScoresImageRenderer implements TileDataImageRenderer<List<Pair<String, Double>>> {

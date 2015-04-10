@@ -39,7 +39,7 @@ public class GraphTileSerializationFactory extends ConfigurableFactory<TileSeria
 		return (Class) TileSerializer.class;
 	}
 
-	public GraphTileSerializationFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public GraphTileSerializationFactory (ConfigurableFactory<?> parent, String path) {
 		super("[graphanalyticsrecord]-a", getGenericSerializerClass(), parent, path);
 	}
 
@@ -52,7 +52,7 @@ public class GraphTileSerializationFactory extends ConfigurableFactory<TileSeria
 		@Override
 		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (String name,
 		                                                                       ConfigurableFactory<?> parent,
-		                                                                       List<String> path) {
+		                                                                       String path) {
 			return new GraphTileSerializationFactory(parent, path);
 		}
 	}

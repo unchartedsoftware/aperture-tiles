@@ -32,10 +32,10 @@ import java.util.List;
 /**
  * A server side to render Map<String, Double> (well, technically,
  * List<Pair<String, Double>>) tiles.
- * 
+ *
  * This renderer modifies {@link TopTextScoresImageRenderer} to render the top
  * and bottom few scores, up to 5 of each.
- * 
+ *
  * @author nkronenfeld
  */
 public class TopAndBottomTextScoresImageRenderer extends TopTextScoresImageRenderer {

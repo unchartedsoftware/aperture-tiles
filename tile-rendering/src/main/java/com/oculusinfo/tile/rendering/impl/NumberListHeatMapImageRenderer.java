@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
@@ -100,8 +101,8 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
         try {
             int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
             int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-            int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
-            int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+            int rangeMax = config.getPropertyValue(ImageRendererFactory.RANGE_MAX);
+            int rangeMin = config.getPropertyValue(ImageRendererFactory.RANGE_MIN);
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 

@@ -28,7 +28,7 @@ package com.oculusinfo.tile.rendering.transformations.value;
 /**
  * A value transformer that transforms two-tailed infinite range into a finite
  * range
- * 
+ *
  * @author nkronenfeld
  */
 public class SigmoidValueTransformer implements ValueTransformer<Double> {

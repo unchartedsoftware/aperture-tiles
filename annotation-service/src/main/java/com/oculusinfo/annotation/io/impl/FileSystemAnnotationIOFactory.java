@@ -43,7 +43,7 @@ public class FileSystemAnnotationIOFactory extends ConfigurableFactory<Annotatio
 		   "The file extension which the serializer should expect to find on individual tiles.",
 		   "avro");
 
-	public FileSystemAnnotationIOFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public FileSystemAnnotationIOFactory(ConfigurableFactory<?> parent, String path) {
 		super(NAME, AnnotationIO.class, parent, path);
 
 		addProperty(ROOT_PATH);

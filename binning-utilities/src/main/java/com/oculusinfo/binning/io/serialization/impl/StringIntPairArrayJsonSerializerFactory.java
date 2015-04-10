@@ -37,7 +37,7 @@ public class StringIntPairArrayJsonSerializerFactory extends ConfigurableFactory
 		return (Class) TileSerializer.class;
 	}
 
-	public StringIntPairArrayJsonSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public StringIntPairArrayJsonSerializerFactory (ConfigurableFactory<?> parent, String path) {
 		super("[(string, integer)]-j", getGenericSerializerClass(), parent, path);
 	}
 

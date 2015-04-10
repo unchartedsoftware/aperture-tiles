@@ -34,6 +34,7 @@ import com.oculusinfo.binning.io.serialization.SerializationTypeChecker;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
@@ -163,7 +164,7 @@ public class TileServiceImpl implements TileService {
 		                                                                      renderer.getAcceptedBinClass(),
 		                                                                      renderer.getAcceptedTypeDescriptor());
 
-		int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
+		int coarseness = config.getPropertyValue(ImageRendererFactory.COARSENESS);
 		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
 
 		if (data != null) {

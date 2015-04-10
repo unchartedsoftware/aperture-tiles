@@ -41,6 +41,9 @@
 	      	<!-- Tile Transformer factory module - override to add custom tile
 	           	Transformer -->
 	      	com.oculusinfo.tile.init.TileTransformerFactoryModule:
+	      	<!-- Value Transformer factory module - override to add custom tile
+	           	Transformer -->
+	      	com.oculusinfo.tile.init.ValueTransformerFactoryModule:
 	      	<!-- Annotation IO factory module - override to add custom AnnotationIO 
 	           	implementations -->
 	      	com.oculusinfo.annotation.init.StandardAnnotationIOFactoryModule:

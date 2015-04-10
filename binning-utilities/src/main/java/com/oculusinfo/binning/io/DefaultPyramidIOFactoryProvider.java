@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,43 +42,43 @@ import com.oculusinfo.factory.providers.FactoryProvider;
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
- * 
+ *
  * <pre>
  * <code>
  * DefaultPyramidIOFactoryProvider.FILE.create();
  * </code>
  * </pre>
- * 
+ *
  * @author cregnier
  */
 public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO> {
 	HBASE(new Constructor() {
 			@Override
-			public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+			public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, String path) {
 				return new HBasePyramidIOFactory(parent, path);
 			}
 		}),
     FILE(new Constructor() {
             @Override
-            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, String path) {
                 return new FileBasedPyramidIOFactory(parent, path);
             }
         }),
     JDBC(new Constructor() {
             @Override
-            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, String path) {
                 return new JDBCPyramidIOFactory(parent, path);
             }
         }),
     SQLITE(new Constructor() {
             @Override
-            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, String path) {
                 return new SQLitePyramidIOFactory(parent, path);
             }
         }),
     DUMMY(new Constructor() {
             @Override
-            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+            public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, String path) {
                 return new DummyPyramidIOFactory(parent, path);
             }
         });
@@ -95,25 +95,25 @@ public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO
 	}
 
 	@Override
-	public ConfigurableFactory<PyramidIO> createFactory (List<String> path) {
-		return createFactory(null, null, path);
+	public ConfigurableFactory<PyramidIO> createFactory (String path) {
+		return createFactory(null, null, null);
 	}
 
     @Override
     public ConfigurableFactory<PyramidIO> createFactory (ConfigurableFactory<?> parent,
-                                                         List<String> path) {
-        return createFactory(null, parent, path);
+                                                         String path) {
+        return createFactory(null, parent, null);
     }
 
     @Override
 	public ConfigurableFactory<PyramidIO> createFactory (String name,
 	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
-		return _constructor.create(parent, path);
+	                                                     String path) {
+		return _constructor.create(parent, null);
 	}
 
 	private static interface Constructor {
 		ConfigurableFactory<PyramidIO> create (ConfigurableFactory<?> parent,
-		                                       List<String> path);
+		                                       String path);
 	}
 }

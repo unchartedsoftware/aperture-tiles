@@ -125,7 +125,7 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 
 	private TypeDescriptor _type;
 
-	public KryoSerializerFactory (ConfigurableFactory<?> parent, List<String> path, TypeDescriptor type) {
+	public KryoSerializerFactory (ConfigurableFactory<?> parent, String path, TypeDescriptor type) {
 		super(getName(type), KryoSerializerFactory.<T>getGenericSerializerClass(), parent, path, true);
 		_type = type;
 

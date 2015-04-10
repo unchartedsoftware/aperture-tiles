@@ -46,7 +46,7 @@ public class StandardPyramidIOFactoryProvider extends StandardUberFactoryProvide
 	@Override
 	public ConfigurableFactory<PyramidIO> createFactory (String name,
 	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
+	                                                     String path) {
 		return new PyramidIOFactory(name, parent, path, createChildren(parent, path));
 	}
 }

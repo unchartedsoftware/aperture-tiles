@@ -42,7 +42,7 @@ public class NMostRecentByGroupFactory extends ConfigurableFactory<AnnotationFil
 	    "Indicates the number of annotations to read for each bin, by priority",
 	    null);
 
-	public NMostRecentByGroupFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public NMostRecentByGroupFactory(ConfigurableFactory<?> parent, String path) {
 		super("n-most-recent-by-group", AnnotationFilter.class, parent, path);
 		
 		addProperty(COUNTS_BY_GROUP);

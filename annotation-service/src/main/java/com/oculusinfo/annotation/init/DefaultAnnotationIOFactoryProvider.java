@@ -46,13 +46,13 @@ import java.util.List;
 public enum DefaultAnnotationIOFactoryProvider implements FactoryProvider<AnnotationIO> {
 	HBASE(new Constructor() {
 			@Override
-			public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
+			public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, String path) {
 				return new HBaseAnnotationIOFactory(parent, path);
 			}
 		}),
     FILE(new Constructor() {
             @Override
-            public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, List<String> path) {
+            public ConfigurableFactory<AnnotationIO> create(ConfigurableFactory<?> parent, String path) {
                 return new FileSystemAnnotationIOFactory(parent, path);
             }
     });
@@ -69,25 +69,25 @@ public enum DefaultAnnotationIOFactoryProvider implements FactoryProvider<Annota
 	}
 
 	@Override
-	public ConfigurableFactory<AnnotationIO> createFactory (List<String> path) {
+	public ConfigurableFactory<AnnotationIO> createFactory (String path) {
 		return createFactory(null, null, path);
 	}
 
     @Override
     public ConfigurableFactory<AnnotationIO> createFactory (ConfigurableFactory<?> parent,
-                                                            List<String> path) {
+                                                            String path) {
         return createFactory(null, parent, path);
     }
 
     @Override
 	public ConfigurableFactory<AnnotationIO> createFactory (String name,
 	                                                        ConfigurableFactory<?> parent,
-	                                                        List<String> path) {
+	                                                        String path) {
 		return _constructor.create(parent, path);
 	}
 
 	private static interface Constructor {
 		ConfigurableFactory<AnnotationIO> create (ConfigurableFactory<?> parent,
-		                                          List<String> path);
+		                                          String path);
 	}
 }

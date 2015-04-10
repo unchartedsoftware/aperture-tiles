@@ -41,7 +41,7 @@ public class DoubleJsonSerializerFactory extends ConfigurableFactory<TileSeriali
 		return (Class) TileSerializer.class;
 	}
 
-	public DoubleJsonSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public DoubleJsonSerializerFactory (ConfigurableFactory<?> parent, String path) {
 		super("double-j", getGenericSerializerClass(), parent, path);
 	}
 

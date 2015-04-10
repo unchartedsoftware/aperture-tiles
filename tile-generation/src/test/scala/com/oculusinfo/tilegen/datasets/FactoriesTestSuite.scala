@@ -25,7 +25,6 @@
 package com.oculusinfo.tilegen.datasets
 
 
-import java.sql.Timestamp
 import java.util
 import java.util.Properties
 import com.oculusinfo.binning.util.JsonUtilities
@@ -35,10 +34,9 @@ import org.apache.spark.SharedSparkContext
 import org.apache.spark.sql.IntegerType
 import org.apache.spark.sql.LongType
 import org.apache.spark.sql.DoubleType
-import org.apache.spark.sql.TimestampType
 import org.scalatest.FunSuite
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer
-
+import com.oculusinfo.factory.EmptyFactory
 
 
 
@@ -106,7 +104,11 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.value.type", "field")
 		props.setProperty("oculus.binning.value.field", "a")
 		props.setProperty("oculus.binning.value.valueType", "double")
-		val factory1 = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+		val factory1 = new EmptyFactory( "oculus" )
+			.addChildFactory( new EmptyFactory( "binning" )
+				.addChildFactory( ValueExtractorFactory(null, "value") )
+			)
+
 		factory1.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
 		val valext1 = factory1.produce(classOf[ValueExtractor[_, _]])
 		assert(valext1.isInstanceOf[FieldValueExtractor[_, _]])
@@ -117,7 +119,10 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.value.field", "b")
 		props.setProperty("oculus.binning.value.valueType", "float")
 		props.setProperty("oculus.binning.value.aggregation", "min")
-		val factory2 = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+		val factory2 = new EmptyFactory( "oculus" )
+			.addChildFactory( new EmptyFactory( "binning" )
+				.addChildFactory( ValueExtractorFactory(null, "value") )
+			)
 		factory2.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
 		val valext2 = factory2.produce(classOf[ValueExtractor[_, _]])
 		assert(valext2.isInstanceOf[FieldValueExtractor[_, _]])
@@ -127,7 +132,11 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.value.field", "b")
 		props.setProperty("oculus.binning.value.valueType", "float")
 		props.setProperty("oculus.binning.value.aggregation", "max")
-		val factory3 = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+		val factory3 = new EmptyFactory( "oculus" )
+			.addChildFactory( new EmptyFactory( "binning" )
+				.addChildFactory( ValueExtractorFactory(null, "value") )
+			)
+
 		factory3.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
 		val valext3 = factory3.produce(classOf[ValueExtractor[_, _]])
 		assert(valext3.isInstanceOf[FieldValueExtractor[_, _]])
@@ -138,7 +147,10 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.value.field", "c")
 		props.setProperty("oculus.binning.value.valueType", "double")
 		props.setProperty("oculus.binning.value.aggregation", "mean")
-		val factory4 = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+		val factory4 = new EmptyFactory( "oculus" )
+			.addChildFactory( new EmptyFactory( "binning" )
+				.addChildFactory( ValueExtractorFactory(null, "value") )
+			)
 		factory4.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
 		val valext4 = factory4.produce(classOf[ValueExtractor[_, _]])
 		assert(valext4.isInstanceOf[MeanValueExtractor[_]])
@@ -147,7 +159,10 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.value.field", "c")
 		props.setProperty("oculus.binning.value.valueType", "double")
 		props.setProperty("oculus.binning.value.aggregation", "average")
-		val factory5 = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+		val factory5 = new EmptyFactory( "oculus" )
+			.addChildFactory( new EmptyFactory( "binning" )
+				.addChildFactory( ValueExtractorFactory(null, "value") )
+			)
 		factory5.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
 		val valext5 = factory5.produce(classOf[ValueExtractor[_, _]])
 		assert(valext5.isInstanceOf[MeanValueExtractor[_]])
@@ -170,8 +185,10 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		props.setProperty("oculus.binning.value.field", "a")
 		props.setProperty("oculus.binning.value.valueType", "double")
 		props.setProperty("oculus.binning.value.serializer.type", "double-k")
-
-		val factory = ValueExtractorFactory(null, util.Arrays.asList("oculus", "binning", "value"))
+		val factory = new EmptyFactory( "oculus" )
+			.addChildFactory( new EmptyFactory( "binning" )
+				.addChildFactory( ValueExtractorFactory(null, "value") )
+			)
 		factory.readConfiguration(JsonUtilities.propertiesObjToJSON(props))
 		val valext = factory.produce(classOf[ValueExtractor[_, _]])
 

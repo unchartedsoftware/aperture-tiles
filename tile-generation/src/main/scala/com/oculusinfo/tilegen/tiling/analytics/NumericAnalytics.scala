@@ -49,7 +49,7 @@ object NumericAnalyticFactory {
 }
 class NumericBinningAnalyticFactory (name: String,
                                      parent: ConfigurableFactory[_],
-                                     path: JavaList[String])
+                                     path: String)
 		extends NumericallyConfigurableFactory[BinningAnalytic[_, _]](name, classOf[BinningAnalytic[_, _]], parent, path, true)
 {
 	import NumericAnalyticFactory._
@@ -60,7 +60,7 @@ class NumericBinningAnalyticFactory (name: String,
 
 
 
-	def this (parent: ConfigurableFactory[_], path: JavaList[String]) = this(null, parent, path)
+	def this (parent: ConfigurableFactory[_], path: String) = this(null, parent, path)
 
 
 	/**
@@ -91,7 +91,7 @@ class NumericBinningAnalyticFactory (name: String,
 
 class NumericTileAnalyticFactory (name: String = null,
                                   parent: ConfigurableFactory[_],
-                                  path: JavaList[String])
+                                  path: String)
 		extends NumericallyConfigurableFactory[TileAnalytic[_]](name, classOf[TileAnalytic[_]], parent, path, true)
 {
 	import NumericAnalyticFactory._

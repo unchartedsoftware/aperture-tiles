@@ -37,7 +37,7 @@ public class EmptyFilterFactory extends ConfigurableFactory<AnnotationFilter> {
 	public static final String NAME = "empty";
 
 
-	public EmptyFilterFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public EmptyFilterFactory(ConfigurableFactory<?> parent, String path) {
 		super(NAME, AnnotationFilter.class, parent, path);
 	}
 

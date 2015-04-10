@@ -49,7 +49,7 @@ public class HBasePyramidIOFactory extends SharedInstanceFactory<PyramidIO> {
 		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
 		   null);
 	
-	public HBasePyramidIOFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public HBasePyramidIOFactory(ConfigurableFactory<?> parent, String path) {
 		super("hbase", PyramidIO.class, parent, path);
 		
 		addProperty(HBASE_ZOOKEEPER_QUORUM);

@@ -38,7 +38,7 @@ public class StringLongPairArrayMapJsonSerializerFactory extends ConfigurableFac
 		return (Class) TileSerializer.class;
 	}
 
-	public StringLongPairArrayMapJsonSerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public StringLongPairArrayMapJsonSerializerFactory (ConfigurableFactory<?> parent, String path) {
 		super("string->[(string, long)]-j", getGenericSerializerClass(), parent, path);
 	}
 

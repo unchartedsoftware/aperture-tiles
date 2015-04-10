@@ -90,7 +90,7 @@ object IndexExtractorFactory {
 	 */
 	val defaultFactory = "cartesian"
 	/**
-	 * A set of providers for index extractor factories, to be used when constructing tile tasks 
+	 * A set of providers for index extractor factories, to be used when constructing tile tasks
 	 * to construct the relevant index extractor for the current task.
 	 */
 	val subFactoryProviders = MutableMap[Any, FactoryProvider[IndexExtractor]]()
@@ -101,7 +101,7 @@ object IndexExtractorFactory {
 
 	/**
 	 * Add an IndexExtractor sub-factory provider to the list of all possible such providers.
-	 * 
+	 *
 	 * This will replace a previous provider of the same key
 	 */
 	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[IndexExtractor]): Unit =
@@ -117,31 +117,31 @@ object IndexExtractorFactory {
 		new StandardUberFactoryProvider[IndexExtractor](subFactoryProviders.asJava) {
 			override def createFactory(name: String,
 			                           parent: ConfigurableFactory[_],
-			                           path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+			                           path: String): ConfigurableFactory[_ <: IndexExtractor] =
 				new UberFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path, createChildren(parent, path), defaultProvider)
 		}
 
 	/** Short-hand for accessing the standard index extractor uber-factory easily. */
-	def apply (parent: ConfigurableFactory[_], path: JavaList[String]) =
+	def apply (parent: ConfigurableFactory[_], path: String) =
 		provider().createFactory(parent, path)
 
-	def apply (parent: ConfigurableFactory[_], path: JavaList[String], defaultProvider: String) =
+	def apply (parent: ConfigurableFactory[_], path: String, defaultProvider: String) =
 		provider(defaultProvider = defaultProvider).createFactory(parent, path)
 
-	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
+	def apply (parent: ConfigurableFactory[_], path: String,
 	           defaultProvider: String,
 	           subFactoryProviders: Set[FactoryProvider[IndexExtractor]]) =
 		provider(defaultProvider = defaultProvider,
 		         subFactoryProviders = subFactoryProviders).createFactory(parent, path)
 
-	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String]) =
+	def apply (name: String, parent: ConfigurableFactory[_], path: String) =
 		provider(name).createFactory(name, parent, path)
 
-	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	def apply (name: String, parent: ConfigurableFactory[_], path: String,
 	           defaultProvider: String) =
 		provider(name, defaultProvider).createFactory(name, parent, path)
 
-	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	def apply (name: String, parent: ConfigurableFactory[_], path: String,
 	           defaultProvider: String,
 	           subFactoryProviders: Set[FactoryProvider[IndexExtractor]]) =
 		provider(name, defaultProvider, subFactoryProviders).createFactory(name, parent, path)
@@ -149,11 +149,11 @@ object IndexExtractorFactory {
 
 
 	/** Helper method for quick and easy construction of factory providers for sub-factories. */
-	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => IndexExtractorFactory) =
+	def subFactoryProvider (ctor: (ConfigurableFactory[_], String) => IndexExtractorFactory) =
 		new AbstractFactoryProvider[IndexExtractor] {
 			override def createFactory(name: String,
 			                           parent: ConfigurableFactory[_],
-			                           path: JavaList[String]): ConfigurableFactory[_ <: IndexExtractor] =
+			                           path: String): ConfigurableFactory[_ <: IndexExtractor] =
 				// Name is ignored, because these are sub-factories
 				ctor(parent, path)
 		}
@@ -168,7 +168,7 @@ object IndexExtractorFactory {
  *
  * All parameters are pass-throughs to {@link ConfigurableFactory}.
  */
-abstract class IndexExtractorFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
+abstract class IndexExtractorFactory (name: String, parent: ConfigurableFactory[_], path: String)
 		extends ConfigurableFactory[IndexExtractor](name, classOf[IndexExtractor], parent, path)
 {
 }
@@ -179,7 +179,7 @@ object CartesianIndexExtractorFactory {
 		new CartesianIndexExtractorFactory(parent, path))
 }
 /** A constructor for a standard cartesian index extractor */
-class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: String)
 		extends IndexExtractorFactory(CartesianIndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
@@ -211,7 +211,7 @@ object LineSegmentIndexExtractorFactory {
 		new LineSegmentIndexExtractorFactory(parent, path))
 }
 /** A constructor for a standard line segment index extractor */
-class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: String)
 		extends IndexExtractorFactory(LineSegmentIndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
@@ -248,7 +248,7 @@ object IPv4IndexExtractorFactory {
 		new IPv4IndexExtractorFactory(parent, path))
 }
 /** A constructor for a standard ip address index extractor */
-class IPv4IndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class IPv4IndexExtractorFactory (parent: ConfigurableFactory[_], path: String)
 		extends IndexExtractorFactory(IPv4IndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties
@@ -287,7 +287,7 @@ object TimeRangeIndexExtractorFactory {
 }
 
 /** A constructor for a standard time range/cartesian point index extractor */
-class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class TimeRangeIndexExtractorFactory (parent: ConfigurableFactory[_], path: String)
 		extends IndexExtractorFactory(TimeRangeIndexExtractorFactory.NAME, parent, path)
 {
 	// Initialize needed properties

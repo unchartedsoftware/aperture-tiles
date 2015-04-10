@@ -60,7 +60,7 @@ public class PairAvroSerializerFactory<S, T> extends ConfigurableFactory<TileSer
 
 	private Class<? extends S> _keyType;
 	private Class<? extends T> _valueType;
-	public PairAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path,
+	public PairAvroSerializerFactory (ConfigurableFactory<?> parent, String path,
 	                                  Class<? extends S> keyType,
 	                                  Class<? extends T> valueType) {
 		super(getName(keyType, valueType), getGenericSerializerClass(keyType, valueType), parent, path);

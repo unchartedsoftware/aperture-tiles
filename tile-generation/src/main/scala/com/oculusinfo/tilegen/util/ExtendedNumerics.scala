@@ -222,11 +222,11 @@ object NumericallyConfigurableFactory {
  * All arguments are pass-throughs to {@see ConfigurableFactory}.
  */
 abstract class NumericallyConfigurableFactory[T]
-	(name: String, factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String], isSingleton: Boolean = false)
+	(name: String, factoryType: Class[T], parent: ConfigurableFactory[_], path: String, isSingleton: Boolean = false)
 		extends ConfigurableFactory[T](name, factoryType, parent, path, isSingleton) {
-	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String]) =
+	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: String) =
 		this("", factoryType, parent, path)
-	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: JavaList[String], isSingleton: Boolean) =
+	def this(factoryType: Class[T], parent: ConfigurableFactory[_], path: String, isSingleton: Boolean) =
 		this("", factoryType, parent, path, isSingleton)
 
 	import NumericallyConfigurableFactory._

@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,7 +57,8 @@ public class LayerServiceTests {
                 new StandardTilePyramidFactoryProvider(),
                 new StandardTileSerializerFactoryProvider(serializerSet),
                 new StandardImageRendererFactoryProvider(),
-                new StandardTileTransformerFactoryProvider()
+                new StandardTileTransformerFactoryProvider(),
+				new StandardValueTransformerFactoryProvider()
             );
             _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
 		} catch (Exception e) {
@@ -90,6 +91,12 @@ public class LayerServiceTests {
 	public void getLayerConfigurationTest() {
 		LayerConfiguration layerConfig0 = _layerService.getLayerConfiguration( "test-layer0", null );
 		LayerConfiguration layerConfig1 = _layerService.getLayerConfiguration( "test-layer1", null );
+		try {
+			PyramidIO io = layerConfig1.produce( PyramidIO.class );
+		} catch ( Exception e ) {
+
+		}
+
 		System.out.println( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ) );
 		System.out.println( layerConfig1.getPropertyValue( LayerConfiguration.LAYER_ID ) );
 		assert( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ).equals( "test-layer0" ) );

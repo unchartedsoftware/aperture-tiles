@@ -42,28 +42,28 @@ import com.oculusinfo.binning.TileIndex
  */
 class DeferredTilePyramidTests extends FunSuite {
 	test("Tile Pyramid construction - web mercator, default") {
-		val factory = new DeferredTilePyramidFactory(null, Arrays.asList("pyramid"))
+		val factory = new DeferredTilePyramidFactory(null, "pyramid")
 		factory.readConfiguration(new JSONObject("{\"pyramid\": {}}"))
 		val pyramid = factory.produce(classOf[DeferredTilePyramid]).getTilePyramid { () => (0.0, 0.0, 0.0, 0.0) }
 		assert(pyramid.isInstanceOf[WebMercatorTilePyramid])
 	}
 
 	test("Tile Pyramid construction - web mercator, explicit, WebMercator") {
-		val factory = new DeferredTilePyramidFactory(null, Arrays.asList("pyramid"))
+		val factory = new DeferredTilePyramidFactory(null, "pyramid")
 		factory.readConfiguration(new JSONObject("{\"pyramid\": {\"type\": \"WebMercator\"}}"))
 		val pyramid = factory.produce(classOf[DeferredTilePyramid]).getTilePyramid { () => (0.0, 0.0, 0.0, 0.0) }
 		assert(pyramid.isInstanceOf[WebMercatorTilePyramid])
 	}
 
 	test("Tile Pyramid construction - web mercator, explicit, EPSG:900913") {
-		val factory = new DeferredTilePyramidFactory(null, Arrays.asList("pyramid"))
+		val factory = new DeferredTilePyramidFactory(null, "pyramid")
 		factory.readConfiguration(new JSONObject("{\"pyramid\": {\"type\": \"EPSG:900913\"}}"))
 		val pyramid = factory.produce(classOf[DeferredTilePyramid]).getTilePyramid { () => (0.0, 0.0, 0.0, 0.0) }
 		assert(pyramid.isInstanceOf[WebMercatorTilePyramid])
 	}
 
 	test("Tile Pyramid construction - area of interest, preset bounds") {
-		val factory = new DeferredTilePyramidFactory(null, Arrays.asList("pyramid"))
+		val factory = new DeferredTilePyramidFactory(null, "pyramid")
 		factory.readConfiguration(new JSONObject("{\"pyramid\": {\"type\": \"AreaOfInterest\", \"autobounds\": \"false\", \"minX\": 0.1, \"maxX\": 1.1, \"minY\": 2.1, \"maxY\": 3.1}}"))
 		val pyramid = factory.produce(classOf[DeferredTilePyramid]).getTilePyramid { () => (0.0, 0.0, 200.0, 300.0) }
 		assert(pyramid.isInstanceOf[AOITilePyramid])
@@ -75,7 +75,7 @@ class DeferredTilePyramidTests extends FunSuite {
 	}
 
 	test("Tile Pyramid construction - area of interest, autobounds") {
-		val factory = new DeferredTilePyramidFactory(null, Arrays.asList("pyramid"))
+		val factory = new DeferredTilePyramidFactory(null, "pyramid")
 		factory.readConfiguration(new JSONObject("{\"pyramid\": {\"type\": \"EPSG:4326\", \"autobounds\": \"true\", \"minX\": 0.1, \"maxX\": 1.1, \"minY\": 2.1, \"maxY\": 3.1}}"))
 		val pyramid = factory.produce(classOf[DeferredTilePyramid]).getTilePyramid { () => (0.2, 0.3, 200.0, 300.0) }
 		assert(pyramid.isInstanceOf[AOITilePyramid])

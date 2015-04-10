@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,8 +28,10 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.factory.EmptyFactory;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
@@ -51,7 +53,7 @@ import java.util.*;
  *
  * Nodes that contain values are represented by ConfigurableProperty objects.
  * Nodes that contain class enumerations and are represented by ConfigurableFactory objects.
- * 
+ *
  * @author nkronenfeld, kbirk
  */
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
@@ -61,19 +63,20 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     /**
      * public configuration paths, properties under these paths are accessible to the client.
      */
-	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","tileTransform" ) );
-    public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
-    public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
-    public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
-	public static final List<String> RENDERER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "renderer" ) );
+	public static final String PUBLIC_PATH = "public";
+	public static final String TILE_TRANSFORM_PATH = "tileTransform";
+    public static final String VALUE_TRANSFORM_PATH = "valueTransform";
+    public static final String FILTER_PATH = "filter";
+    public static final String TILE_PYRAMID_PATH = "pyramid";
+	public static final String RENDERER_PATH = "renderer";
 
     /**
      * private configuration paths, properties under public nodes are not accessible to the client
      */
-    public static final List<String> DATA_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data" ) );
-    public static final List<String> PYRAMID_IO_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","pyramidio" ) );
-	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "private", "data","serializer" ) );
-    public static final List<String> REST_ENDPOINT_PATH = Collections.unmodifiableList( Arrays.asList( "private" ) );
+	public static final String PRIVATE_PATH = "private";
+    public static final String DATA_PATH = "data";
+    public static final String PYRAMID_IO_PATH = "pyramidio";
+	public static final String SERIALIZER_PATH = "serializer";
 
     public static final String DEFAULT_VERSION = "v1.0";
 
@@ -86,21 +89,12 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     public static final StringProperty REST_ENDPOINT = new StringProperty("restEndpoint",
 	    "The REST endpoint used for the layer, defaults to 'tile'",
 	    "tile");
-	public static final IntegerProperty COARSENESS = new IntegerProperty("coarseness",
-	    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
-	    1);
 	public static final IntegerProperty OUTPUT_WIDTH = new IntegerProperty("outputWidth",
 	    "The output image width, defaults to the standard 256",
 	    256);
 	public static final IntegerProperty OUTPUT_HEIGHT = new IntegerProperty("outputHeight",
 	    "The output image height, defaults to the standard 256",
 	    256);
-	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
-	    "The minimum value set to the lower bound of the color ramp spectrum",
-	    0);
-	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
-	    "The maximum value set to the upper bound of the color ramp spectrum",
-	    100);
 	public static final TileIndexProperty TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
         "For server use only, on a tile-by-tile basis",
         null);
@@ -128,44 +122,37 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
 	                           FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
 	                           FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
-	                           ConfigurableFactory<?> parent,
-	                           List<String> path) {
-		this( pyramidIOFactoryProvider, tilePyramidFactoryProvider, serializationFactoryProvider,
-		      rendererFactoryProvider, tileTransformerFactoryProvider,
-              null, parent, path);
-	}
+	                           FactoryProvider<ValueTransformer<?>> valueTransformerFactoryProvider ) {
+		super( null, LayerConfiguration.class, null, null );
 
+		addProperty( LAYER_ID );
+        addProperty( OUTPUT_WIDTH );
+		addProperty( OUTPUT_HEIGHT );
+		addProperty( TILE_COORDINATE );
+		addProperty( LEVEL_MINIMUMS );
+		addProperty( LEVEL_MAXIMUMS );
 
-	public LayerConfiguration( FactoryProvider<PyramidIO> pyramidIOFactoryProvider,
-                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
-	                           FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
-	                           FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
-	                           FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
-	                           String name,
-                               ConfigurableFactory<?> parent,
-	                           List<String> path) {
-		super( name, LayerConfiguration.class, parent, path );
+		// create the 'public' node of the layer config
+		addChildFactory(
+			new EmptyFactory( PUBLIC_PATH )
+				.addChildFactory( rendererFactoryProvider.createFactory( RENDERER_PATH ) )
+				.addChildFactory( tilePyramidFactoryProvider.createFactory( TILE_PYRAMID_PATH ) )
+				.addChildFactory( tileTransformerFactoryProvider.createFactory( TILE_TRANSFORM_PATH ) )
+				.addChildFactory( valueTransformerFactoryProvider.createFactory( VALUE_TRANSFORM_PATH ) )
+		);
 
-		addProperty(LAYER_ID);
-        addProperty(REST_ENDPOINT, REST_ENDPOINT_PATH);
-        addProperty(OUTPUT_WIDTH);
-		addProperty(OUTPUT_HEIGHT);
-        addProperty(DATA_ID, DATA_PATH);
-		addProperty(COARSENESS, RENDERER_PATH);
-		addProperty(RANGE_MIN, RENDERER_PATH);
-		addProperty(RANGE_MAX, RENDERER_PATH);
-		addProperty(TILE_COORDINATE);
-		addProperty(LEVEL_MINIMUMS);
-		addProperty(LEVEL_MAXIMUMS);
+		// create the 'private' node of the layer config
+		addChildFactory(
+			new EmptyFactory( PRIVATE_PATH )
+				.addProperty( REST_ENDPOINT )
+				.addChildFactory(
+					new EmptyFactory( DATA_PATH )
+						.addProperty( DATA_ID )
+						.addChildFactory( pyramidIOFactoryProvider.createFactory( PYRAMID_IO_PATH ) )
+						.addChildFactory( serializationFactoryProvider.createFactory( SERIALIZER_PATH ) )
+				)
+		);
 
-		_transformFactory = new ValueTransformerFactory( this, VALUE_TRANSFORM_PATH );
-		addChildFactory( _transformFactory );
-
-        addChildFactory( rendererFactoryProvider.createFactory(this, RENDERER_PATH) );
-        addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
-        addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
-        addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORM_PATH) );
-		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
 	}
 
 	@Override
@@ -214,11 +201,11 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	/**
 	 * This is a placeholder for the caching configuration to override; it does
 	 * nothing in this version.
-	 * 
+	 *
 	 * Theoretically, it allows for a hook point for extending classes to make
 	 * last-minute preparations before actually rendering a tile, whether to
 	 * JSON or an image.
-	 * 
+	 *
 	 * @param layer The layer to be rendered.
 	 * @param tile The tile to be rendered
 	 * @param tileSet Any other tiles that will need to be rendered along with

@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,6 +26,7 @@ package com.oculusinfo.tile.init.providers;
 import java.io.IOException;
 import java.util.List;
 
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,7 @@ public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<L
     private FactoryProvider<TileSerializer<?>> _serializationFactoryProvider;
     private FactoryProvider<TileDataImageRenderer<?>> _rendererFactoryProvider;
     private FactoryProvider<TileTransformer<?>> _tileTransformerFactoryProvider;
+    private FactoryProvider<ValueTransformer<?>> _valueTransformerFactoryProvider;
     private FactoryProvider<PyramidIO> _cachingProvider;
 	private CachingPyramidIO _pyramidIO;
 
@@ -64,13 +66,15 @@ public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<L
                                               FactoryProvider<TilePyramid> tilePyramidFactoryProvider,
                                               FactoryProvider<TileSerializer<?>> serializationFactoryProvider,
                                               FactoryProvider<TileDataImageRenderer<?>> rendererFactoryProvider,
-                                              FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider ) {
+                                              FactoryProvider<TileTransformer<?>> tileTransformerFactoryProvider,
+											  FactoryProvider<ValueTransformer<?>> valueTransformerFactoryProvider) {
 
         _pyramidIOFactoryProvider = pyramidIOFactoryProvider;
         _tilePyramidFactoryProvider = tilePyramidFactoryProvider;
         _serializationFactoryProvider = serializationFactoryProvider;
         _rendererFactoryProvider = rendererFactoryProvider;
         _tileTransformerFactoryProvider = tileTransformerFactoryProvider;
+		_valueTransformerFactoryProvider = valueTransformerFactoryProvider;
         _cachingProvider = new CachingPyramidIOProvider();
 		_pyramidIO = new CachingPyramidIO();
     }
@@ -86,32 +90,19 @@ public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<L
 	@Override
 	public ConfigurableFactory<LayerConfiguration> createFactory (String name,
 	                                                              ConfigurableFactory<?> parent,
-	                                                              List<String> path) {
-		return new CachingLayerConfiguration(parent, path);
+	                                                              String path) {
+		return new CachingLayerConfiguration();
 	}
 
 	private class CachingLayerConfiguration extends LayerConfiguration {
-		public CachingLayerConfiguration (ConfigurableFactory<?> parent,
-		                                  List<String> path) {
+		public CachingLayerConfiguration() {
 			super(_cachingProvider,
                   _tilePyramidFactoryProvider,
                   _serializationFactoryProvider,
                   _rendererFactoryProvider,
                   _tileTransformerFactoryProvider,
-                  parent, path);
+				  _valueTransformerFactoryProvider);
 		}
-
-
-		public CachingLayerConfiguration (String name, ConfigurableFactory<?> parent,
-		                                  List<String> path) {
-			super(_cachingProvider,
-                  _tilePyramidFactoryProvider,
-                  _serializationFactoryProvider,
-                  _rendererFactoryProvider,
-                  _tileTransformerFactoryProvider,
-                  name, parent, path);
-		}
-
 		@Override
 		public void prepareForRendering (String layer,
 		                                 TileIndex tile,
@@ -136,21 +127,21 @@ public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<L
 
 
 		CachingPyramidIOFactory (ConfigurableFactory<?> parent,
-		                         List<String> path,
+		                         String path,
 		                         ConfigurableFactory<? extends PyramidIO> base) {
-			this(null, parent, path, base);
+			this( null, parent, path, base );
 		}
 
 		CachingPyramidIOFactory (String name,
 		                         ConfigurableFactory<?> parent,
-		                         List<String> path,
+		                         String path,
 		                         ConfigurableFactory<? extends PyramidIO> base) {
-			super(name, PyramidIO.class, parent, path);
+			super( name, PyramidIO.class, parent, path );
 			_parent = parent;
 			_baseFactory = base;
 			_baseInitialized = false;
 
-			addProperty(PyramidIOFactory.INITIALIZATION_DATA);
+			addProperty( PyramidIOFactory.INITIALIZATION_DATA );
 		}
 
 		@Override
@@ -172,13 +163,13 @@ public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<L
 			setupBasePyramidIO();
 			return _pyramidIO;
 		}
-        
+
 	}
 	private class CachingPyramidIOProvider extends AbstractFactoryProvider<PyramidIO> {
 		@Override
 		public ConfigurableFactory<? extends PyramidIO> createFactory (String name,
 		                                                               ConfigurableFactory<?> parent,
-		                                                               List<String> path) {
+		                                                               String path) {
 			return new CachingPyramidIOFactory(parent, path, _pyramidIOFactoryProvider.createFactory(parent, path));
 		}
 	}

@@ -172,7 +172,7 @@ public class LayerServiceImpl implements LayerService {
                 layerConfig = _layersById.get( layerId );
             }
 			// create layer configuration factory
-			ConfigurableFactory<? extends LayerConfiguration> factory = _layerConfigurationProvider.createFactory( null, new ArrayList<String>() );
+			ConfigurableFactory<? extends LayerConfiguration> factory = _layerConfigurationProvider.createFactory( null, null );
 			// override the server configuration with supplied query parameters, this simply overlays
             // the query parameter JSON over the server default JSON, then sets the factory upp
             // to build our layer configuration object.

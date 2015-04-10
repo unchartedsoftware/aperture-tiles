@@ -69,11 +69,11 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 	}
 
 
-	public ValueTransformerFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public ValueTransformerFactory (ConfigurableFactory<?> parent, String path) {
 		this(null, parent, path);
 	}
 
-	public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, List<String> path) {
+	public ValueTransformerFactory (String name, ConfigurableFactory<?> parent, String path) {
 		super(name, getFactoryClass(), parent, path);
 
 		addProperty(TRANSFORM_NAME);

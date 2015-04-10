@@ -41,7 +41,7 @@ public class DummyPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 
 
 
-	public DummyPyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public DummyPyramidIOFactory (ConfigurableFactory<?> parent, String path) {
 		super("dummy", PyramidIO.class, parent, path);
 
 		addProperty(MIN_X);

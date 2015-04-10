@@ -42,7 +42,7 @@ public class SparkAwarePyramidIOFactoryProvider extends AbstractFactoryProvider<
 	@Override
 	public ConfigurableFactory<PyramidIO> createFactory (String name,
 	                                                     ConfigurableFactory<?> parent,
-	                                                     List<String> path) {
+	                                                     String path) {
 		return new OnDemandTilePyramidIOFactory(name, parent, path, _contextProvider);
 	}
 }

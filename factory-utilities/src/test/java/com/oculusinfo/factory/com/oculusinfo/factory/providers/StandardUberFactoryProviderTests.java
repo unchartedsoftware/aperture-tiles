@@ -53,7 +53,7 @@ public class StandardUberFactoryProviderTests {
         subProviders.add(new ConstructFactoryProvider("C", "c"));
         FactoryProvider<TestConstruct> provider = new StandardUberFactoryProvider<TestConstruct>(subProviders) {
             @Override
-            public ConfigurableFactory<TestConstruct> createFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
+            public ConfigurableFactory<TestConstruct> createFactory(String name, ConfigurableFactory<?> parent, String path) {
                 return new UberFactory<TestConstruct>(name, TestConstruct.class, parent, path, createChildren(parent, path), "A");
             }
         };
@@ -91,7 +91,7 @@ public class StandardUberFactoryProviderTests {
 
 
     public static class TestParent extends ConfigurableFactory<String> {
-        public TestParent (List<String> path) {
+        public TestParent (String path) {
             super(String.class, null, path);
         }
         @Override
@@ -103,7 +103,7 @@ public class StandardUberFactoryProviderTests {
         String _name;
         List<String> _path;
         int _value;
-        public TestConstruct (String name, List<String> path, int value) {
+        public TestConstruct (String name, String path, int value) {
             _name = name;
             _path = path;
             _value = value;
@@ -112,7 +112,7 @@ public class StandardUberFactoryProviderTests {
 
     public static class ConstructFactory extends ConfigurableFactory<TestConstruct> {
         public static IntegerProperty VALUE = new IntegerProperty("value", "", 0);
-        public ConstructFactory (String name, List<String> pathAdditions, ConfigurableFactory<?> parent, List<String> path) {
+        public ConstructFactory (String name, String pathAdditions, ConfigurableFactory<?> parent, String path) {
             super(name, TestConstruct.class, parent, mergePaths(path, pathAdditions));
             addProperty(VALUE);
         }
@@ -133,7 +133,7 @@ public class StandardUberFactoryProviderTests {
         }
 
         @Override
-        public ConfigurableFactory<? extends TestConstruct> createFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
+        public ConfigurableFactory<? extends TestConstruct> createFactory(String name, ConfigurableFactory<?> parent, String path) {
             // Ignore passed-in name, we have a specific name to use here.
             return new ConstructFactory(_name, _pathAdditions, parent, path);
         }

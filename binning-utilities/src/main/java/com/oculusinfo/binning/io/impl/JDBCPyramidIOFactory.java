@@ -46,7 +46,7 @@ public class JDBCPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		   "The full class name of the JDBC driver to use.  There is no default for this property.",
 		   null);
 	
-	public JDBCPyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public JDBCPyramidIOFactory (ConfigurableFactory<?> parent, String path) {
 		super("jdbc", PyramidIO.class, parent, path);
 		
 		addProperty(ROOT_PATH);

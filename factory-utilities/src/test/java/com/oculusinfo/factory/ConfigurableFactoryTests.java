@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,9 +22,6 @@
  * SOFTWARE.
  */
 package com.oculusinfo.factory;
-
-import java.util.Arrays;
-import java.util.List;
 
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
@@ -45,9 +42,9 @@ public class ConfigurableFactoryTests {
 	}
 	private class OuterTestFactory extends ConfigurableFactory<Integer> {
 	    public OuterTestFactory () {
-	        super(Integer.class, null, Arrays.asList("abc"));
+	        super(Integer.class, null, "abc");
 
-	        addChildFactory(new TestFactory(Arrays.asList("def")));
+	        addChildFactory(new TestFactory( "def" ));
 	    }
 	    @Override
 	    protected Integer create () {
@@ -58,7 +55,7 @@ public class ConfigurableFactoryTests {
 		public TestFactory () {
 		    this(null);
 		}
-		public TestFactory (List<String> path) {
+		public TestFactory (String path) {
 			super(FactoryResult.class, null, path);
 			addProperty(INT_PROP);
 			addProperty(DOUBLE_PROP);
@@ -99,7 +96,7 @@ public class ConfigurableFactoryTests {
 		Assert.assertEquals(4.2, result._double, 1E-12);
 		Assert.assertEquals("abc", result._string);
 	}
-    
+
     @Test
     public void testReadNestedConfiguration () throws Exception {
         OuterTestFactory factory = new OuterTestFactory();

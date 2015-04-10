@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,15 +47,15 @@ import com.oculusinfo.factory.util.Pair;
 
 
 /**
- * Basic enum of all the default {@link FactoryProvider} types
+ * Basic enum of all the default types
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
  *
- * This isn't really an enum, but acts like one in all ways except 
- * initialization; it is not one to allow us to use loops and generification 
+ * This isn't really an enum, but acts like one in all ways except
+ * initialization; it is not one to allow us to use loops and generification
  * during initialization.
- * 
+ *
  * <pre>
  * <code>
  * DefaultPyramidIOFactoryProvider.FILE.create();
@@ -79,7 +79,7 @@ public final class DefaultTileSerializerFactoryProvider
 		new DefaultTileSerializerFactoryProvider("legacy", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
+				                                                                String path) {
 					return new com.oculusinfo.binning.io.serialization.impl.BackwardsCompatibilitySerializerFactory(parent, path);
 				}
 			});
@@ -89,7 +89,7 @@ public final class DefaultTileSerializerFactoryProvider
 		new DefaultTileSerializerFactoryProvider("double_json", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
+				                                                                String path) {
 					return new DoubleJsonSerializerFactory(parent, path);
 				}
 			});
@@ -98,7 +98,7 @@ public final class DefaultTileSerializerFactoryProvider
 		new DefaultTileSerializerFactoryProvider("string_int_pair_array_json", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
+				                                                                String path) {
 					return new StringIntPairArrayJsonSerializerFactory(parent, path);
 				}
 			});
@@ -107,7 +107,7 @@ public final class DefaultTileSerializerFactoryProvider
 		new DefaultTileSerializerFactoryProvider("string_long_pair_array_map_json", new Constructor() {
 				@Override
 				public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-				                                                                List<String> path) {
+				                                                                String path) {
 					return new StringLongPairArrayMapJsonSerializerFactory(parent, path);
 				}
 			});
@@ -126,7 +126,7 @@ public final class DefaultTileSerializerFactoryProvider
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-								                                                                List<String> path) {
+								                                                                String path) {
 									return new PrimitiveAvroSerializerFactory<>(parent, path, type);
 								}
 							}, Double.class.equals(type)));
@@ -144,7 +144,7 @@ public final class DefaultTileSerializerFactoryProvider
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-								                                                                List<String> path) {
+								                                                                String path) {
 									return new PrimitiveArrayAvroSerializerFactory<>(parent, path, type);
 								}
 							}));
@@ -166,7 +166,7 @@ public final class DefaultTileSerializerFactoryProvider
 							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 									@Override
 									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-									                                                                List<String> path) {
+									                                                                String path) {
 										return new PairAvroSerializerFactory<>(parent, path, keyType, valueType);
 									}
 								}));
@@ -188,7 +188,7 @@ public final class DefaultTileSerializerFactoryProvider
 							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 									@Override
 									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-									                                                                List<String> path) {
+									                                                                String path) {
 										return new PairArrayAvroSerializerFactory<>(parent, path, keyType, valueType);
 									}
 								}));
@@ -219,7 +219,7 @@ public final class DefaultTileSerializerFactoryProvider
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-								                                                                List<String> path) {
+								                                                                String path) {
 									return new KryoSerializerFactory<>(parent, path, primitive.getSecond());
 								}
 							}));
@@ -231,7 +231,7 @@ public final class DefaultTileSerializerFactoryProvider
 						add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 								@Override
 								public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-								                                                                List<String> path) {
+								                                                                String path) {
 									return new KryoSerializerFactory<>(parent, path, new TypeDescriptor(List.class, primitive.getSecond()));
 								}
 							}));
@@ -244,7 +244,7 @@ public final class DefaultTileSerializerFactoryProvider
 							add(new DefaultTileSerializerFactoryProvider(name, new Constructor() {
 									@Override
 									public ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-									                                                                List<String> path) {
+									                                                                String path) {
 										return new KryoSerializerFactory<>(parent, path, new TypeDescriptor(List.class, new TypeDescriptor(Pair.class, kPrimitive.getSecond(), vPrimitive.getSecond())));
 									}
 								}));
@@ -253,7 +253,7 @@ public final class DefaultTileSerializerFactoryProvider
 				}
 			});
 
-	
+
 	// -------------------------------------
 
 	private final String      _name;
@@ -283,15 +283,15 @@ public final class DefaultTileSerializerFactoryProvider
 	}
 
 	@Override
-	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (List<String> path) {
-		return createFactory(null, path);
+	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (String path) {
+		return createFactory(null, null);
 	}
 
 	@Override
 	public ConfigurableFactory<? extends TileSerializer<?>> createFactory (String name,
 	                                                                       ConfigurableFactory<?> parent,
-	                                                                       List<String> path) {
-		return _constructor.create(parent, path);
+	                                                                       String path) {
+		return _constructor.create(parent, null);
 	}
 
 	// Enum mimics
@@ -339,6 +339,6 @@ public final class DefaultTileSerializerFactoryProvider
 
 	private static interface Constructor {
 		ConfigurableFactory<? extends TileSerializer<?>> create (ConfigurableFactory<?> parent,
-		                                                         List<String> path);
+		                                                         String path);
 	}
 }

@@ -74,7 +74,7 @@ object AnalyticFactory {
 }
 
 case class FieldList (fields: Seq[String]) {}
-class FieldListFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class FieldListFactory (parent: ConfigurableFactory[_], path: String)
 		extends ConfigurableFactory[FieldList](classOf[FieldList], parent, path)
 {
 	import AnalyticFactory._
@@ -86,13 +86,13 @@ class FieldListFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 	}
 }
 
-abstract class AnalyticFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
+abstract class AnalyticFactory (name: String, parent: ConfigurableFactory[_], path: String)
 		extends ConfigurableFactory[AnalysisDescription[_, _]] (name, classOf[AnalysisDescription[_, _]], parent, path)
 {
-	addChildFactory(new FieldListFactory(this, List[String]().asJava))
+	addChildFactory(new FieldListFactory(this, null))
 }
 
-class ParameterlessAnalyticFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
+class ParameterlessAnalyticFactory (name: String, parent: ConfigurableFactory[_], path: String)
 		extends AnalyticFactory(name, parent, path)
 {
 	import AnalyticFactory._
@@ -109,7 +109,7 @@ abstract class AnalyticFactoryProvider extends AbstractFactoryProvider[AnalysisD
 class DefaultAnalyticFactoryProvider extends AnalyticFactoryProvider {
 	def createFactory(name: String,
 	                  parent: ConfigurableFactory[_],
-	                  path: JavaList[String]): ConfigurableFactory[AnalysisDescription[_, _]] = {
+	                  path: String): ConfigurableFactory[AnalysisDescription[_, _]] = {
 		new ParameterlessAnalyticFactory(name, parent, path)
 	}
 }
@@ -126,7 +126,7 @@ object AnalyticExtractorFactory {
 	val DATA_ANALYTICS_PROPERTY = new JSONArrayProperty("data", "A list of data analytic types", "[]")
 	val TILE_ANALYTIC_PROPERTY = new JSONArrayProperty("tile", "A list of tile analytic types", "[]")
 }
-class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: String)
 		extends ConfigurableFactory[AnalyticExtractor](classOf[AnalyticExtractor], parent, path, true)
 {
 	import AnalyticExtractorFactory._
@@ -140,13 +140,13 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 			(0 until tileAnalyticConfig.length()).map(n =>
 				{
 					// Get the name of a provider of the factory type we need
-          val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
+          val typeSource = new EmptyFactory(null, ANALYTIC_FACTORY_PROPERTY)
 					typeSource.readConfiguration(tileAnalyticConfig.getJSONObject(n))
 					val providerType = typeSource.getPropertyValue(ANALYTIC_FACTORY_PROPERTY)
 
 					// Create our analytic factory
           val provider = Class.forName(providerType).newInstance().asInstanceOf[FactoryProvider[AnalysisDescription[_, _]]]
-					val factory = provider.createFactory(null, List[String]().asJava)
+					val factory = provider.createFactory(null, null)
 					factory.readConfiguration(tileAnalyticConfig.getJSONObject(n))
 
 					// Create our analytic
@@ -160,13 +160,13 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 			(0 until dataAnalyticConfig.length()).map(n =>
 				{
 					// Get the name of a provider of the factory type we need
-          val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
+          val typeSource = new EmptyFactory( null, ANALYTIC_FACTORY_PROPERTY)
 					typeSource.readConfiguration(dataAnalyticConfig.getJSONObject(n))
 					val providerType = typeSource.getPropertyValue(ANALYTIC_FACTORY_PROPERTY)
 
 					// Create our analytic factory
 					val provider = Class.forName(providerType).newInstance().asInstanceOf[FactoryProvider[AnalysisDescription[_, _]]]
-					val factory = provider.createFactory(null, List[String]().asJava)
+					val factory = provider.createFactory(null, null)
 					factory.readConfiguration(dataAnalyticConfig.getJSONObject(n))
 
 					// Create our analytic

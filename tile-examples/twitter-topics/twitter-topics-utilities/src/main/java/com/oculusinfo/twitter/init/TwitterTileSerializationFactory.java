@@ -39,7 +39,7 @@ public class TwitterTileSerializationFactory extends ConfigurableFactory<TileSer
 		return (Class) TileSerializer.class;
 	}
 
-	public TwitterTileSerializationFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public TwitterTileSerializationFactory (ConfigurableFactory<?> parent, String path) {
 		super("[twitterdemorecord]-a", getGenericSerializerClass(), parent, path);
 	}
 
@@ -52,7 +52,7 @@ public class TwitterTileSerializationFactory extends ConfigurableFactory<TileSer
 		@Override
 		public ConfigurableFactory<? extends TileSerializer<?>> createFactory (String name,
 			 ConfigurableFactory<?> parent,
-			 List<String> path) {
+			 String path) {
 			return new TwitterTileSerializationFactory(parent, path);
 		}
 	}

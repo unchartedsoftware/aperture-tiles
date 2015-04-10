@@ -46,7 +46,7 @@ public class HBaseAnnotationIOFactory extends SharedInstanceFactory<AnnotationIO
 		   "Only used if type=\"hbase\".  An HBase configuration parameter, this should match the similar value in hbase-site.xml.  There is no default for this property.",
 		   null);
 
-	public HBaseAnnotationIOFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public HBaseAnnotationIOFactory(ConfigurableFactory<?> parent, String path) {
 		super("hbase", AnnotationIO.class, parent, path);
 
 		addProperty(HBASE_ZOOKEEPER_QUORUM);

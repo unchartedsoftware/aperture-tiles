@@ -22,35 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.factory;
+package com.oculusinfo.tile.init;
 
-import java.util.List;
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardValueTransformerFactoryProvider;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 
-/**
- * A helper factory to enable getting data from data paths within the configuration phase.<br>
- * For example, if all configuration data is under some root path, then this factory
- * can be added as the root of the configurable hierarchy to give everyone a different path,
- * without having to modify the path values for each factory directly. This factory doesn't create anything.
- * 
- * @author cregnier
- *
- */
-public class EmptyConfigurableFactory extends ConfigurableFactory<Void> {
-
-	public EmptyConfigurableFactory(String name, ConfigurableFactory<?> parent, List<String> path) {
-		super(name, Void.class, parent, path);
-	}
+public class ValueTransformerFactoryModule extends AbstractModule {
 
 	@Override
-	protected Void create() {
-		return null;
-	}
-
-	/**
-	 * Overridden in order to make this public so others can compose trees
-	 */
-	@Override
-	public void addChildFactory(ConfigurableFactory<?> child) {
-		super.addChildFactory(child);
+	protected void configure() {
+		bind(new TypeLiteral<FactoryProvider<ValueTransformer<?>>>() {}).toInstance(new StandardValueTransformerFactoryProvider());
 	}
 }

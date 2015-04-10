@@ -30,12 +30,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.JSONNode;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.JSONArrayProperty;
@@ -51,47 +49,39 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 	/*
 	 * Color properties
 	 */
-	public static final JSONArrayProperty COLORS = new JSONArrayProperty("colors", 
+	public static final JSONArrayProperty COLORS = new JSONArrayProperty("colors",
 			"An array of hues for a theme in a hue ramp.", "[]");
-	
+
 	/*
 	 * Alpha properties, currently specified separately from color.
 	 */
-	public static final JSONArrayProperty ALPHAS = new JSONArrayProperty("alpha", 
+	public static final JSONArrayProperty ALPHAS = new JSONArrayProperty("alpha",
 			"An array of alpha values in a hue ramp.", "[]");
 
 	/*
-	 * The theme this gradient belongs to. 
+	 * The theme this gradient belongs to.
 	 */
 	public static final StringProperty THEME = new StringProperty("theme", "The theme that this gradient belongs to.", "dark");
-	
-	
+
+
 	// used for reading only
 	private static final StringProperty COLOR_READER = new StringProperty("", "", "0xffffff");
 	private static final IntegerProperty ALPHA_READER = new IntegerProperty("", "", 255);
 	static private final List<Color> DEFAULT_LIGHT = Arrays.asList(new Color[]{Color.WHITE, Color.BLACK});
 	static private final List<Color> DEFAULT_DARK = Arrays.asList(new Color[]{Color.BLACK, Color.WHITE});
 
-	
+
 	/**
 	 * Constructs a new factory.
 	 */
-	public ThemedGradientFactory (ConfigurableFactory<?> parent, List<String> path) {
-		super(ThemedGradient.class, parent, path);
+	public ThemedGradientFactory( String path ) {
+		super(ThemedGradient.class, null, path);
 
 		addProperty(THEME);
 		addProperty(COLORS);
 		addProperty(ALPHAS);
 	}
 
-	
-	@Override
-	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
-		
-		// read the predictable 
-	    super.readConfiguration(rootNode);
-	}
-	
 	/**
 	 * Returns the theme name.
 	 * @return the theme name
@@ -99,24 +89,24 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 	public String getTheme() {
 		return getPropertyValue(THEME);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.factory.ConfigurableFactory#create()
 	 */
 	@Override
 	protected ThemedGradient create() {
-		
+
 		final String theme = getTheme();
 		final List<Color> colors = new ArrayList<Color>();
 		final JSONArray jcolors = getPropertyValue(COLORS);
 		final JSONArray jalphas = getPropertyValue(ALPHAS);
-		
+
 		final int n = Math.max(jcolors.length(), jalphas.length());
-		
+
 		for (int i=0; i< n; i++) {
 			String color = COLOR_READER.getDefaultValue();
 			int alpha = ALPHA_READER.getDefaultValue();
-			
+
 			if (i < jcolors.length()) {
 				try {
 					color = COLOR_READER.unencodeJSON(new JSONNode(jcolors, i));
@@ -131,10 +121,10 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 					LOGGER.warn("Error reading one of the color gradient values. Using default...");
 				}
 			}
-			
+
 			colors.add(ColorRampParameter.getColorWithAlpha(color, alpha));
 		}
-		
+
 		if (colors.size() < 1) {
 			LOGGER.warn("Color gradient configuration has too few values. Added black and red.");
 			colors.add(new Color(0,0,0,255));
@@ -143,14 +133,14 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 			LOGGER.warn("Color gradient configuration has too few values. Added red.");
 			colors.add(new Color(255,0,0,255));
 		}
-		
+
 		return new ThemedGradient() {
-			
+
 			@Override
 			public String getTheme() {
 				return theme;
 			}
-			
+
 			@Override
 			public List<Color> getColors() {
 				return colors;

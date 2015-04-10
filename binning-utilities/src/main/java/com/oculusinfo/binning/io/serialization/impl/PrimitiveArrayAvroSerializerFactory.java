@@ -53,7 +53,7 @@ public class PrimitiveArrayAvroSerializerFactory<T>  extends ConfigurableFactory
 	}
 
 	private Class<? extends T> _entryType;
-	public PrimitiveArrayAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path,
+	public PrimitiveArrayAvroSerializerFactory (ConfigurableFactory<?> parent, String path,
 	                                            Class<? extends T> entryType) {
 		super(getName(entryType), getGenericSerializerClass(entryType), parent, path);
 		_entryType = entryType;

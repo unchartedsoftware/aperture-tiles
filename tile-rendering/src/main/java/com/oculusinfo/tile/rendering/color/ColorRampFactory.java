@@ -60,13 +60,10 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	public static final StringProperty THEME = new StringProperty("theme", "The active theme.", "dark");
 	public static final JSONArrayProperty GRADIENTS = new JSONArrayProperty("gradients", "A set of themed gradient definitions.", "[]");
 
-	
 	private List<ThemedGradientFactory> gradients = new ArrayList<>();
 
-	
-	public ColorRampFactory (ConfigurableFactory<?> parent, List<String> path) {
-		super(ColorRamp.class, parent, path);
-
+	public ColorRampFactory( String path ) {
+		super( ColorRamp.class, null, path );
 		addProperty(RAMP_TYPE);
 		addProperty(OPACITY);
 		addProperty(COLOR1);
@@ -80,36 +77,28 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	}
 
 	@Override
-	public void readConfiguration (JSONObject rootNode) throws ConfigurationException {
+	public void readConfiguration(JSONObject rootNode) throws ConfigurationException {
 	    super.readConfiguration(rootNode);
-
 	    gradients.clear();
-		
-		try {
-			readGradients(getPropertyValue(GRADIENTS), gradients);
-		} catch (JSONException e) {
-			throw new ConfigurationException("Error configuring factory "+ this.getClass().getName(), e);
-		}
+		readGradients(getPropertyValue(GRADIENTS), gradients);
 	}
-	
-	private void readGradients(JSONArray gradients, List<ThemedGradientFactory> into) throws JSONException, ConfigurationException {
+
+	private void readGradients(JSONArray gradients, List<ThemedGradientFactory> into) throws ConfigurationException {
 		for (int i=0; i<gradients.length(); i++) {
-			final JSONObject node = gradients.getJSONObject(i);
-			final List<String> nopath = Collections.emptyList();
-			final ThemedGradientFactory factory = new ThemedGradientFactory(null, nopath);
-			
+			final JSONObject node = gradients.optJSONObject(i);
+			final ThemedGradientFactory factory = new ThemedGradientFactory( null );
 			factory.readConfiguration(node);
 			into.add(factory);
-		}	 
+		}
 	}
 
 	@Override
 	protected ColorRamp create () {
 		final String rampType = getPropertyValue(RAMP_TYPE);
-		final double opacity = 1.0; //getPropertyValue(OPACITY);
+		final double opacity = 1.0;
 		final String theme = getPropertyValue(THEME);
 		final boolean islight = theme.equalsIgnoreCase("light");
-		
+
 		ColorRamp ramp;
 
 		// ANY CUSTOM GRADIENT
@@ -123,15 +112,15 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 					if (!scope[scope.length-1].equalsIgnoreCase(theme)) continue;
 				case 0:
 					break;
-					
+
 				default:
 					continue;
 				}
-				
+
 				return SteppedGradientColorRamp.from(factory.create().getColors());
 			}
 		}
-		
+
 		// CONSTRAINED HUE DEFAULTS
 		if (rampType.equalsIgnoreCase("hot")){
 			ramp = SteppedGradientColorRamp.hot(islight);
@@ -141,7 +130,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 			ramp = SteppedGradientColorRamp.polar(islight);
 		} else if (rampType.equalsIgnoreCase("valence")){
 			ramp = SteppedGradientColorRamp.valence(islight);
-			
+
 		// LEGACY BLUE / RED
 		} else if (rampType.equalsIgnoreCase("br")){
 			ramp = new BRColorRamp(islight, opacity);
@@ -155,15 +144,15 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		} else if (rampType.equalsIgnoreCase("inv-grey")) { // legacy
 			// We're forcing the inverse.
 			ramp = new GreyColorRamp(true, opacity);
-			
+
 		// FLAT
 		} else if (rampType.equalsIgnoreCase("flat")) {
 			Color color = hasPropertyValue(COLOR1)?
-					ColorRampParameter.getColor(getPropertyValue(COLOR1)) : 
+					ColorRampParameter.getColor(getPropertyValue(COLOR1)) :
 						islight? new Color(55,55,55) : Color.WHITE;
-						
+
 			ramp = new FlatColorRamp(color, opacity);
-			
+
 		// LEGACY GRADIENT
 		} else if (rampType.equalsIgnoreCase("single-gradient")) {
 			int alpha1 = getPropertyValue(ALPHA1);
@@ -173,19 +162,19 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 			if (-1 == alpha2) alpha2 = (int) Math.floor(255*opacity);
 			Color endColor = ColorRampParameter.getColorWithAlpha(getPropertyValue(COLOR2), alpha2);
 			ramp = new SingleGradientColorRamp(startColor, endColor);
-			
+
 		// LEGACY HUE
 		} else if (rampType.equalsIgnoreCase("hue")) {
 			ramp = new HueColorRamp(getPropertyValue(HUE1), getPropertyValue(HUE2));
-			
+
 		// SPECTRAL
 		} else {
 
 			// default
 			ramp = new WareColorRamp(islight, opacity);
 		}
-		
+
 		return ramp;
 	}
-	
+
 }

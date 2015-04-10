@@ -79,7 +79,7 @@ class AnalyticExtractorTestSuite extends FunSuite {
 				"}"
 		)
 
-		val factory = new AnalyticExtractorFactory(null, util.Arrays.asList("analytics"))
+		val factory = new AnalyticExtractorFactory(null, "analytics")
 		factory.readConfiguration(config)
 		val extractor = factory.produce(classOf[AnalyticExtractor])
 

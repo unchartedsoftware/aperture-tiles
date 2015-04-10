@@ -33,9 +33,9 @@ import com.oculusinfo.factory.ConfigurationException;
 import java.awt.image.BufferedImage;
 
 /**
- * A class to encapsulate rendering of tiles into any format potentially used 
+ * A class to encapsulate rendering of tiles into any format potentially used
  * by the client.  Currently supported formats are: images, and JSON objects.
- * 
+ *
  * @author dgray, nkronenfeld
  */
 public interface TileDataImageRenderer<T> {
@@ -66,7 +66,7 @@ public interface TileDataImageRenderer<T> {
 	/**
 	 * Determine how many images are available to be rendered given a set of
 	 * input parameters
-	 * 
+	 *
 	 * @param metadata The layers meta data pyramid.
 	 * @return The number of available images
 	 */
@@ -74,7 +74,7 @@ public interface TileDataImageRenderer<T> {
 
 	/**
 	 * From configuration information, collect metadata and figure out level extrema as needed and possible.
-	 * @throws ConfigurationException 
+	 * @throws ConfigurationException
 	 */
 	public abstract Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException;
 }

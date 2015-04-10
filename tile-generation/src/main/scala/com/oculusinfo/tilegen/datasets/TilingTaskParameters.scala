@@ -72,7 +72,7 @@ object TilingTaskParametersFactory {
 	val PARTITIONS_PROPERTY = new IntegerProperty("consolidationPartitions", "The number of partitions into which to consolidate data when performign reduce operations", 0)
 	val TILE_TYPE_PROPERTY = new StringProperty("tileType", "The type of tile storage to use when creating tiles.  If unspecified, a heuristic will be used that is ideal for tiles whose bin values are the size of doubles.  If tiles have bins significantly larger than doubles, sparse is recommended.", "unspecified", Array("unspecified", "dense", "sparse"))
 }
-class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: String)
 		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
 		with OptionsFactoryMixin[TilingTaskParameters]
 {

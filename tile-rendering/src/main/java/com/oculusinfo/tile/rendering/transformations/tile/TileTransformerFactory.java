@@ -60,13 +60,13 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 
 
 	public TileTransformerFactory( ConfigurableFactory<?> parent,
-                                   List<String> path ) {
+                                   String path ) {
 		this(null, parent, path);
 	}
 
 	public TileTransformerFactory( String name,
                                    ConfigurableFactory<?> parent,
-	                               List<String> path) {
+	                               String path) {
 		super(name, getFactoryClass(), parent, path);
         addProperty(TILE_TRANSFORMER_TYPE);
 		addProperty(INITIALIZATION_DATA);

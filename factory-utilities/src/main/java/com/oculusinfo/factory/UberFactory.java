@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ import com.oculusinfo.factory.properties.StringProperty;
  * one central UberFactory which is passed around as needed; the UberFactory's
  * create call calls the specific sub-factory as needed to create the actual
  * object.
- * 
+ *
  * @author nkronenfeld, pulled out from code by cregnier
  */
 public class UberFactory<T> extends ConfigurableFactory<T> {
@@ -60,19 +60,19 @@ public class UberFactory<T> extends ConfigurableFactory<T> {
 
 
 
-	public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+	public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, String path, List<ConfigurableFactory<? extends T>> children, String defaultType) {
 		this(null, factoryType, parent, path, false, children, defaultType);
 	}
 
-	public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+	public UberFactory (Class<T> factoryType, ConfigurableFactory<?> parent, String path, boolean isSingleton, List<ConfigurableFactory<? extends T>> children, String defaultType) {
 		this(null, factoryType, parent, path, isSingleton, children, defaultType);
 	}
 
-	public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+	public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, String path, List<ConfigurableFactory<? extends T>> children, String defaultType) {
 		this(name, factoryType, parent, path, false, children, defaultType);
 	}
 
-	public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton, List<ConfigurableFactory<? extends T>> children, String defaultType) {
+	public UberFactory (String name, Class<T> factoryType, ConfigurableFactory<?> parent, String path, boolean isSingleton, List<ConfigurableFactory<? extends T>> children, String defaultType) {
 		super(name, factoryType, parent, path, isSingleton);
 
 		_children = children;

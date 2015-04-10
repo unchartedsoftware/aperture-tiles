@@ -54,19 +54,19 @@ public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<An
 	EMPTY(new Constructor() {
 		@Override
 		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-				List<String> path) {
+				String path) {
 			return new EmptyFilterFactory(parent, path);
 		}
 	}), N_MOST_RECENT_BY_GROUP(new Constructor() {
 		@Override
 		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-				List<String> path) {
+				String path) {
 			return new NMostRecentByGroupFactory(parent, path);
 		}
 	}), SCRIPTABLE(new Constructor() {
 		@Override
 		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-				List<String> path) {
+				String path) {
 			return new ScriptableFilterFactory(parent, path);
 		}
 	});
@@ -82,20 +82,20 @@ public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<An
 	}
 
 	@Override
-	public ConfigurableFactory<AnnotationFilter> createFactory (List<String> path) {
+	public ConfigurableFactory<AnnotationFilter> createFactory (String path) {
 		return createFactory(null, null, path);
 	}
 
 	@Override
 	public ConfigurableFactory<AnnotationFilter> createFactory (ConfigurableFactory<?> parent,
-	                                                            List<String> path) {
+	                                                            String path) {
 	    return createFactory(null, parent, path);
 	}
 
 	@Override
     public ConfigurableFactory<AnnotationFilter> createFactory (String name,
                                                                 ConfigurableFactory<?> parent,
-                                                                List<String> path) {
+                                                                String path) {
 		return _constructor.create(parent, path);
 	}
 
@@ -103,6 +103,6 @@ public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<An
 
 	private static interface Constructor {
 		ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
-		                                              List<String> path);
+		                                              String path);
 	}
 }

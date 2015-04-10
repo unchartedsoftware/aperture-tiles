@@ -46,7 +46,7 @@ public class StandardAnnotationIOFactoryProvider extends StandardUberFactoryProv
 	@Override
 	public ConfigurableFactory<AnnotationIO> createFactory (String name,
 	                                                        ConfigurableFactory<?> parent,
-	                                                        List<String> path) {
+	                                                        String path) {
 		return new AnnotationIOFactory(name, parent, path, createChildren(parent, path));
 	}
 }

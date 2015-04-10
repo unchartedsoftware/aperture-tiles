@@ -43,7 +43,7 @@ public class SQLitePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 		   "Indicates the root path of the tile pyramid - the database path.  There is no default for this property.",
 		   null);
 	
-	public SQLitePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public SQLitePyramidIOFactory (ConfigurableFactory<?> parent, String path) {
 		super("sqlite", PyramidIO.class, parent, path);
 		
 		addProperty(ROOT_PATH);

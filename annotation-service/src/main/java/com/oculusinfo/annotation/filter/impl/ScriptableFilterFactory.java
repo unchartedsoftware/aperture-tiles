@@ -41,7 +41,7 @@ public class ScriptableFilterFactory extends ConfigurableFactory<AnnotationFilte
 	    "The javascript script string that evaluates to a boolean based off a single annotation",
 	    null);
 
-	public ScriptableFilterFactory(ConfigurableFactory<?> parent, List<String> path) {
+	public ScriptableFilterFactory(ConfigurableFactory<?> parent, String path) {
 		super("scriptable", AnnotationFilter.class, parent, path);
 		
 		addProperty(SCRIPT_STRING);

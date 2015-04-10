@@ -41,12 +41,12 @@ public class AnnotationIOFactory extends UberFactory<AnnotationIO> {
 	    "Data to be passed to the AnnotationIO for read initialization",
 	    null);
 
-	public AnnotationIOFactory (ConfigurableFactory<?> parent, List<String> path,
+	public AnnotationIOFactory (ConfigurableFactory<?> parent, String path,
 	                            List<ConfigurableFactory<? extends AnnotationIO>> children) {
 		this(null, parent, path, children);
 	}
 
-	public AnnotationIOFactory (String name, ConfigurableFactory<?> parent, List<String> path,
+	public AnnotationIOFactory (String name, ConfigurableFactory<?> parent, String path,
 	                            List<ConfigurableFactory<? extends AnnotationIO>> children) {
 		super(name, AnnotationIO.class, parent, path, true, children, FileSystemAnnotationIOFactory.NAME);
 

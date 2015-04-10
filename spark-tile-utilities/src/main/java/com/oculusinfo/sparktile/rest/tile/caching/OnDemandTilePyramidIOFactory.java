@@ -42,11 +42,11 @@ public class OnDemandTilePyramidIOFactory extends ConfigurableFactory<PyramidIO>
 	@Inject
 	private SparkContextProvider _contextProvider;
 
-    public OnDemandTilePyramidIOFactory (ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+    public OnDemandTilePyramidIOFactory (ConfigurableFactory<?> parent, String path, SparkContextProvider contextProvider) {
         this("live", parent, path, contextProvider);
     }
 
-    public OnDemandTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, List<String> path, SparkContextProvider contextProvider) {
+    public OnDemandTilePyramidIOFactory (String name, ConfigurableFactory<?> parent, String path, SparkContextProvider contextProvider) {
         super(name, PyramidIO.class, parent, path);
         _contextProvider = contextProvider;
         addProperty(PyramidIOFactory.INITIALIZATION_DATA);

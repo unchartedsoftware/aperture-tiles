@@ -30,6 +30,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
@@ -92,8 +93,8 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 		BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
 		try {
-			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
-			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+			int rangeMax = config.getPropertyValue(ImageRendererFactory.RANGE_MAX);
+			int rangeMin = config.getPropertyValue(ImageRendererFactory.RANGE_MIN);
 
 			// This is the best we can do; supress the warning and move on.
 			@SuppressWarnings("unchecked")

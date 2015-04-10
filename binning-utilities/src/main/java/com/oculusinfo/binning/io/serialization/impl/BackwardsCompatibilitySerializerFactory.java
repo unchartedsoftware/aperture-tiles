@@ -44,7 +44,7 @@ public class BackwardsCompatibilitySerializerFactory extends ConfigurableFactory
 		return (Class) TileSerializer.class;
 	}
 
-	public BackwardsCompatibilitySerializerFactory (ConfigurableFactory<?> parent, List<String> path) {
+	public BackwardsCompatibilitySerializerFactory (ConfigurableFactory<?> parent, String path) {
 		super("legacy", getGenericSerializerClass(), parent, path);
 	}
 

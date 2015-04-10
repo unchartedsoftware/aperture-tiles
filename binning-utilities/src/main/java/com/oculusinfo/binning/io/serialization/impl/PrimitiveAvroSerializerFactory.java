@@ -59,7 +59,7 @@ public class PrimitiveAvroSerializerFactory<T> extends ConfigurableFactory<TileS
 
 	private Class<? extends T> _type;
 
-	public PrimitiveAvroSerializerFactory (ConfigurableFactory<?> parent, List<String> path, Class<? extends T> type) {
+	public PrimitiveAvroSerializerFactory (ConfigurableFactory<?> parent, String path, Class<? extends T> type) {
 		super(getName(type), getGenericSerializerClass(type), parent, path);
 		_type = type;
 	}

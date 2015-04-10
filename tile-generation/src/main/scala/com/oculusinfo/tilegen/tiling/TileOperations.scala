@@ -435,7 +435,7 @@ object TileOperations {
 
 		val operationEnum = OperationType.withName(operationType.toUpperCase)
 
-		val taskParametersFactory = new TilingTaskParametersFactory(null, List("ops"))
+		val taskParametersFactory = new TilingTaskParametersFactory(null, "ops")
 		taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
 		val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
 

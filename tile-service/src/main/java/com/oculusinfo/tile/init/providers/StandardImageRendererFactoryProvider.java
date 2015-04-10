@@ -35,14 +35,14 @@ import java.util.List;
 
 public class StandardImageRendererFactoryProvider extends AbstractFactoryProvider<TileDataImageRenderer<?>> {
 	@Override
-	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (List<String> path) {
+	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (String path) {
 		return new ImageRendererFactory(null, path);
 	}
 
 	@Override
 	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (String name,
 	                                                                    ConfigurableFactory<?> parent,
-	                                                                    List<String> path) {
+	                                                                    String path) {
 		return new ImageRendererFactory(name, parent, path);
 	}
 }

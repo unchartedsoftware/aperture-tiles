@@ -30,7 +30,7 @@ import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.EmptyFactory
 import com.oculusinfo.factory.providers.FactoryProvider
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.binning.util.JsonUtilities
@@ -71,24 +71,27 @@ object TilingTask {
 			TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
+		val oculusNode = new EmptyFactory( "oculus" )
+
+		val configFactory = new TilingTaskParametersFactory( null, "binning" )
+		oculusNode.addChildFactory( configFactory )
+
 		val indexerFactory = IndexExtractorFactory(null,
-		                                           java.util.Arrays.asList("oculus", "binning", "index"),
+		                                           "index",
 		                                           IndexExtractorFactory.defaultFactory)
-		indexerFactory.readConfiguration(jsonConfig)
+		configFactory.addChildFactory( indexerFactory )
 
 		val valuerFactory = ValueExtractorFactory(null,
-		                                          java.util.Arrays.asList("oculus", "binning", "value"),
+		                                          "value",
 		                                          ValueExtractorFactory.defaultFactory)
-		valuerFactory.readConfiguration(jsonConfig)
+		configFactory.addChildFactory( valuerFactory )
 
-		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
-		deferredPyramidFactory.readConfiguration(jsonConfig)
+		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, "projection" )
+		configFactory.addChildFactory( deferredPyramidFactory );
+		val analyzerFactory = new AnalyticExtractorFactory(null,"analytics")
+		configFactory.addChildFactory( analyzerFactory );
 
-		val configFactory = new TilingTaskParametersFactory(null, java.util.Arrays.asList("oculus", "binning"))
 		configFactory.readConfiguration(jsonConfig)
-
-		val analyzerFactory = new AnalyticExtractorFactory(null, java.util.Arrays.asList("oculus", "binning", "analytics"))
-		analyzerFactory.readConfiguration(jsonConfig)
 
 		val indexer = indexerFactory.produce(classOf[IndexExtractor])
 		val valuer = valuerFactory.produce(classOf[ValueExtractor[_, _]])

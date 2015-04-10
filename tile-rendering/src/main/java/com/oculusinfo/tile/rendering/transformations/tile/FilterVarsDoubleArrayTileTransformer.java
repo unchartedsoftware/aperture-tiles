@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -38,19 +38,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-/** 
- * 	This transformer will take in JSON or tileData object representing bins of a double array 
+/**
+ * 	This transformer will take in JSON or tileData object representing bins of a double array
  * 		tile and will filter out all variables except the variables contained in the variable
- * 		array passed in during construction.  The double arrays passed back will be in the 
+ * 		array passed in during construction.  The double arrays passed back will be in the
  * 		order that they are sequenced in the JSON or tileData array passed in.
- * 
+ *
  */
 
 public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<List<T>> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FilterVarsDoubleArrayTileTransformer.class);
-	
+
 	private List<Integer> _variables = new ArrayList<>();
-	
+
 	public FilterVarsDoubleArrayTileTransformer(JSONObject variables){
 		// Get the JSONArray out of the variables JSONObject
 		try {
@@ -70,13 +70,13 @@ public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<
 		}
 	}
 
-	// For each bin in the tile described by the input JSON, extract the values from the 
+	// For each bin in the tile described by the input JSON, extract the values from the
 	//	bin's array only at the indexes stored in the _variables list and build the resulting'
 	// 	JSON based on this criteria
 	@Override
 	public JSONObject transform (JSONObject inputJSON) throws JSONException {
 		JSONObject resultJSON;
-		
+
 		if ( _variables == null ) {
 			resultJSON = inputJSON;
 		}
@@ -91,22 +91,22 @@ public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<
 			JSONArray bins = inputJSON.getJSONArray("values");
 			JSONArray resultBins = new JSONArray();
 
-			for (int binIndex = 0; binIndex < bins.length(); binIndex++) {				
+			for (int binIndex = 0; binIndex < bins.length(); binIndex++) {
 				JSONObject singleBin = bins.getJSONObject (binIndex);
 				JSONArray valuesInBin = singleBin.getJSONArray("value");
-				
+
 				JSONObject resultSingleBin = new JSONObject();
 				JSONArray resultValuesInSingleBin = new JSONArray();
-					
-				// just loop through variable indexes in _variables			
+
+				// just loop through variable indexes in _variables
 				for (int varIndex = 0; varIndex < _variables.size(); varIndex++) {
-					int arrayIndex = _variables.get(varIndex);					
+					int arrayIndex = _variables.get(varIndex);
 					if (arrayIndex < valuesInBin.length()) {
-						JSONObject value = valuesInBin.getJSONObject(arrayIndex);						
+						JSONObject value = valuesInBin.getJSONObject(arrayIndex);
 						JSONObject resultValue = new JSONObject();
 						resultValue.put("value", value.getDouble("value"));
 						resultValuesInSingleBin.put(resultValue);
-					}					
+					}
 				}
 				resultSingleBin.put("value", resultValuesInSingleBin);
 				resultBins.put(resultSingleBin);
