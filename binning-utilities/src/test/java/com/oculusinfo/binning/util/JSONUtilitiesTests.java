@@ -170,6 +170,51 @@ public class JSONUtilitiesTests {
 		assertJsonEqual(expected, actual);
 	}
 
+	@Test
+	public void testJSONObjectKeyExpansion () throws Exception {
+		JSONObject source = new JSONObject("{\n"+
+		                                   "  \"person.name.first\": \"Alice\",\n"+
+		                                   "  \"person.name.middle\": \"Barbara\",\n"+
+		                                   "  \"person.name.last\": \"Cavendish\",\n"+
+		                                   "  \"person.school.location.state\": \"Delaware\",\n"+
+		                                   "  \"person\": {\n"+
+		                                   "    \"school.location.country\": \"US\",\n"+
+		                                   "    \"school.grades\": [\n"+
+		                                   "      {\"year\": \"freshman\",\n"+
+		                                   "       \"bySemester.semester1\": \"A\",\n"+
+		                                   "       \"bySemester.semester2\": \"B\"},\n"+
+		                                   "      {\"year\":\"sophomore\",\n"+
+		                                   "       \"bySemester.semester1\": \"C\",\n"+
+		                                   "       \"bySemester\": {\"semester2\": \"D\", \"semester3\": \"E\"}}\n"+
+		                                   "    ]\n"+
+		                                   "  }\n"+
+		                                   "}");
+		JSONObject target = new JSONObject("{\n"+
+		                                   "  \"person\": {\n"+
+		                                   "    \"name\": { \"first\": \"Alice\",\n"+
+		                                   "                \"middle\": \"Barbara\",\n"+
+		                                   "                \"last\": \"Cavendish\" },\n"+
+		                                   "    \"school\": {\n"+
+		                                   "      \"location\": { \"state\": \"Delaware\",\n"+
+		                                   "                      \"country\": \"US\" },\n"+
+		                                   "      \"grades\": [\n"+
+		                                   "        { \"year\": \"freshman\",\n"+
+		                                   "          \"bySemester\": { \"semester1\": \"A\",\n"+
+		                                   "                            \"semester2\": \"B\" } },\n"+
+		                                   "        { \"year\": \"sophomore\",\n"+
+		                                   "          \"bySemester\": { \"semester1\": \"C\",\n"+
+		                                   "                            \"semester2\": \"D\",\n"+
+		                                   "                            \"semester3\": \"E\" } }\n"+
+		                                   "      ]\n"+
+		                                   "    }\n"+
+		                                   "  }\n"+
+		                                   "}");
+
+		assertJsonEqual(target, JsonUtilities.expandKeysInPlace(source));
+	}
+
+
+
 	public static void assertJsonEqual (JSONObject expected, JSONObject actual) {
 		Map<String, Object> mapE = JsonUtilities.jsonObjToMap(expected);
 		Map<String, Object> mapA = JsonUtilities.jsonObjToMap(actual);
