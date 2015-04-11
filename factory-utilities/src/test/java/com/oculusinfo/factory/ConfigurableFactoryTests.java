@@ -40,17 +40,6 @@ public class ConfigurableFactoryTests {
 		double _double;
 		String _string;
 	}
-	private class OuterTestFactory extends ConfigurableFactory<Integer> {
-	    public OuterTestFactory () {
-	        super(Integer.class, null, "abc");
-
-	        addChildFactory(new TestFactory( "def" ));
-	    }
-	    @Override
-	    protected Integer create () {
-	        return 1;
-	    }
-	}
 	private class TestFactory extends ConfigurableFactory<FactoryResult> {
 		public TestFactory () {
 		    this(null);
@@ -97,24 +86,11 @@ public class ConfigurableFactoryTests {
 		Assert.assertEquals("abc", result._string);
 	}
 
-    @Test
-    public void testReadNestedConfiguration () throws Exception {
-        OuterTestFactory factory = new OuterTestFactory();
-        JSONObject configuration = new JSONObject("{'abc':{'def':{'int':2, 'double':2.1, 'string': '2.2'}}, 'def':{'int':3, 'double':3.1, 'string': '3.2'}}");
-        factory.readConfiguration(configuration);
-        FactoryResult result = factory.produce(FactoryResult.class);
-        Assert.assertEquals(3,  result._int);
-        Assert.assertEquals(3.1, result._double, 1E-12);
-        Assert.assertEquals("3.2", result._string);
-    }
-
 	@Test
 	public void testConfigurationNode () throws Exception {
 		TestFactory factory = new TestFactory();
 		JSONObject configuration = new JSONObject("{'int':3, 'double': 4.2, 'string': 'abc'}");
-
 		Assert.assertNull(factory.getConfigurationNode());
-
 		factory.readConfiguration(configuration);
 		Assert.assertEquals(configuration, factory.getConfigurationNode());
 	}

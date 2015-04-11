@@ -41,13 +41,13 @@ public class AnnotationFilterFactory extends UberFactory<AnnotationFilter> {
 	    "Data to be passed to the annotation filter for  initialization",
 	    null);
 
-	public AnnotationFilterFactory (ConfigurableFactory<?> parent, String path,
-	                                List<ConfigurableFactory<? extends AnnotationFilter>> children) {
+	public AnnotationFilterFactory( ConfigurableFactory<?> parent, String path,
+	                                List<ConfigurableFactory<? extends AnnotationFilter>> children ) {
 		this(null, parent, path, children);
 	}
 
 	public AnnotationFilterFactory (String name, ConfigurableFactory<?> parent, String path,
-	                                List<ConfigurableFactory<? extends AnnotationFilter>> children) {
+	                                List<ConfigurableFactory<? extends AnnotationFilter>> children ) {
 		super(name, AnnotationFilter.class, parent, path, true, children, EmptyFilterFactory.NAME);
 
 		addProperty(FILTER_DATA);

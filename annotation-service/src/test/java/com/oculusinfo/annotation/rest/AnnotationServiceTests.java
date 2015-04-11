@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -74,8 +74,8 @@ public class AnnotationServiceTests {
 	final Object decisionLock = new Object();
 
 	@Before
-	public void setup () { 	
-    	
+	public void setup () {
+
 		try {
 
 			String configFile = "res:///unit-test-config.json";
@@ -94,7 +94,8 @@ public class AnnotationServiceTests {
                 new StandardTilePyramidFactoryProvider(),
                 new StandardTileSerializerFactoryProvider(serializerSet),
                 new StandardImageRendererFactoryProvider(),
-                new StandardTileTransformerFactoryProvider()
+                new StandardTileTransformerFactoryProvider(),
+				new StandardValueTransformerFactoryProvider()
             );
 
             _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
@@ -166,7 +167,7 @@ public class AnnotationServiceTests {
 		}
 	}
 
-    
+
 	private class Tester implements Runnable {
 
 		private String _name;
@@ -184,7 +185,7 @@ public class AnnotationServiceTests {
 				_annotations.add( new AnnotationWrapper( generator.generateJSONAnnotation() ) );
 			}
 		}
-		
+
 		public void run() {
 
 			while ( true ) {
@@ -263,7 +264,7 @@ public class AnnotationServiceTests {
 				}
 
 			}
-	    	
+
 		}
 
 		private void write( AnnotationWrapper annotation ) {
@@ -355,8 +356,8 @@ public class AnnotationServiceTests {
 			return JSONAnnotation.fromJSON(json);
 		}
 	}
-	
-	
+
+
 	@Test
 	public void concurrentTest() {
 		try {
@@ -429,7 +430,7 @@ public class AnnotationServiceTests {
         }
 		return annotations;
 	}
-	
+
 	private List<AnnotationData<?>> readAll() {
 		// scan all
 		return readTile( new TileIndex( 0, 0, 0 ) );

@@ -39,7 +39,7 @@ import java.util.List;
  * <pre><code>
  * DefaultAnnotationIOFactoryProvider.FILE_SYSTEM.create();
  * </code></pre>
- * 
+ *
  * @author cregnier
  *
  */
@@ -76,14 +76,14 @@ public enum DefaultAnnotationIOFactoryProvider implements FactoryProvider<Annota
     @Override
     public ConfigurableFactory<AnnotationIO> createFactory (ConfigurableFactory<?> parent,
                                                             String path) {
-        return createFactory(null, parent, path);
+        return createFactory(null, parent, null);
     }
 
     @Override
 	public ConfigurableFactory<AnnotationIO> createFactory (String name,
 	                                                        ConfigurableFactory<?> parent,
 	                                                        String path) {
-		return _constructor.create(parent, path);
+		return _constructor.create(parent, null);
 	}
 
 	private static interface Constructor {

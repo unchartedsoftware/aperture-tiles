@@ -143,6 +143,32 @@ abstract public class ConfigurableFactory<T> {
 		_parent = null;
 	}
 
+	public ConfigurableFactory<?> getFactoryByPath( List<String> path ) {
+		String subPath = path.get( 0 );
+		if ( _path == null ) {
+			for ( ConfigurableFactory<?> child : _children ) {
+				ConfigurableFactory<?> result = child.getFactoryByPath( path );
+				if ( result != null ) {
+					return result;
+				}
+			}
+		} else {
+			if ( _path.equals( subPath ) ) {
+				if ( path.size() == 1 ) {
+					return this;
+				} else {
+					for ( ConfigurableFactory<?> child : _children ) {
+						ConfigurableFactory<?> result = child.getFactoryByPath( path.subList( 1, path.size() ) );
+						if ( result != null ) {
+							return result;
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Get the root node in the tree of configurables.
 	 * @return Returns the root of the configurable factories, or this factory if no parent is set.
@@ -226,9 +252,15 @@ abstract public class ConfigurableFactory<T> {
 	 * @return True if the property is listed and non-default in the factory.
 	 */
 	public boolean hasPropertyValue( ConfigurationProperty<?> property ) {
-		return (_configured &&
-			_configurationNode != null &&
-			getPropertyNode( property ).has( property.getName() ) );
+		if ( !_configured ||
+			_configurationNode == null  ) {
+			return false;
+		}
+		JSONObject propertyNode = getPropertyNode( property );
+		if ( propertyNode != null ) {
+			return propertyNode.has( property.getName() );
+		}
+		return false;
 	}
 
 	/**
@@ -245,7 +277,7 @@ abstract public class ConfigurableFactory<T> {
 		// get the node
 		JSONObject node = getPropertyNode( property );
 		// if the node config value was not specified
-		if ( !node.has( property.getName() ) ) {
+		if ( node == null|| !node.has( property.getName() ) ) {
 			return getDefaultValue( property );
 		}
 		try {
@@ -388,7 +420,7 @@ abstract public class ConfigurableFactory<T> {
 	 * information.
 	 */
 	private JSONObject getConfigurationNode( JSONObject rootNode ) {
-		if ( _path == null || rootNode == null) {
+		if ( _path == null || rootNode == null ) {
 			return rootNode;
 		}
 		try {
@@ -420,7 +452,7 @@ abstract public class ConfigurableFactory<T> {
 				return result;
 			}
 		}
-		return new JSONObject();
+		return null;
 	}
 
 	private String getFactoryString() {

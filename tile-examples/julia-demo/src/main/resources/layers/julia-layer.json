@@ -2,22 +2,16 @@
 	{
 		"id": "julia-set",
 		"public" :{
-			"name": "Julia Set",
-			"pyramid": {
-				"type": "AreaOfInterest",
-				"minX": -2,
-				"maxX": 2,
-				"minY": -2,
-				"maxY": 2
-			}
+			"name": "Julia Set"
 		},
 		"private": {
 			"data" : {
-				"id": "julia.x.y.v",
+				"id": "isil-twitter-heatmap-v5",
 	            "pyramidio" : {
-	                "type" : "file",
-	                "root.path" : "res:///julia.x.y.v.zip",
-	                "extension" : "avro"
+					"type" : "hbase",
+                    "hbase.zookeeper.quorum" : "hadoop-s1.oculus.local",
+                    "hbase.zookeeper.port" : "2181",
+                    "hbase.master" : "hadoop-s1.oculus.local:60000"
 	            }
 	        }
 	    }

@@ -112,7 +112,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
             LEVEL_MINIMUMS
         )));
 
-	private ValueTransformerFactory _transformFactory;
 	private TileIndex _tileCoordinate;
 	private String _levelMinimum;
 	private String _levelMaximum;
@@ -190,7 +189,8 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 			TileDataImageRenderer<?> renderer = produce(TileDataImageRenderer.class);
 			if (null != renderer) {
 				Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
-				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+				ValueTransformerFactory transformFactory = (ValueTransformerFactory)getFactoryByPath( Arrays.asList("public","valueTransform") );
+				transformFactory.setExtrema( extrema.getFirst(), extrema.getSecond() );
 			}
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(LAYER_ID));

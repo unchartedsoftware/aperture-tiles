@@ -25,6 +25,7 @@ package com.oculusinfo.tile.rest.layer;
 
 import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.FileBasedPyramidIO;
 import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.providers.FactoryProvider;
@@ -93,6 +94,8 @@ public class LayerServiceTests {
 		LayerConfiguration layerConfig1 = _layerService.getLayerConfiguration( "test-layer1", null );
 		try {
 			PyramidIO io = layerConfig1.produce( PyramidIO.class );
+			assert( io instanceof FileBasedPyramidIO );
+
 		} catch ( Exception e ) {
 
 		}
@@ -101,6 +104,7 @@ public class LayerServiceTests {
 		System.out.println( layerConfig1.getPropertyValue( LayerConfiguration.LAYER_ID ) );
 		assert( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ).equals( "test-layer0" ) );
 		assert( layerConfig1.getPropertyValue( LayerConfiguration.LAYER_ID ).equals( "test-layer1" ) );
+		assert( layerConfig0.getPropertyValue( LayerConfiguration.DATA_ID ).equals( "test-layer0-data" ) );
 	}
 
 	@Test

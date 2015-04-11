@@ -41,6 +41,8 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.SerializationTypeChecker;
 import com.oculusinfo.binning.util.JsonUtilities;
+import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.EmptyFactory;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.properties.JSONArrayProperty;
@@ -60,7 +62,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class AnnotationServiceImpl implements AnnotationService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationServiceImpl.class);
 
-	//public static final List<String> GROUPS_PATH = Collections.unmodifiableList( Arrays.asList( "public" ) );
 	public static final JSONArrayProperty GROUPS = new JSONArrayProperty("groups",
         "The identifiers that annotations are grouped by",
         "[\"Urgent\",\"High\",\"Medium\",\"Low\"]");
@@ -127,9 +128,11 @@ public class AnnotationServiceImpl implements AnnotationService {
 
     public LayerConfiguration getLayerConfiguration( String layer, JSONObject query ) {
         LayerConfiguration config = _layerService.getLayerConfiguration( layer, query );
-        //config.addProperty( GROUPS, GROUPS_PATH );
-		config.addChildFactory( _annotationIOFactoryProvider.createFactory(config, LayerConfiguration.PYRAMID_IO_PATH) );
-        config.addChildFactory( _annotationFilterFactoryProvider.createFactory(config, LayerConfiguration.FILTER_PATH) );
+		config.getFactoryByPath( Arrays.asList( "public" ) )
+			.addProperty( GROUPS )
+			.addChildFactory( _annotationFilterFactoryProvider.createFactory( config, LayerConfiguration.FILTER_PATH ) );
+		config.getFactoryByPath( Arrays.asList("private", "data") )
+			.addChildFactory( _annotationIOFactoryProvider.createFactory(config, LayerConfiguration.PYRAMID_IO_PATH) );
         JSONObject layerConfig = _layerService.getLayerJSON( layer );
         try {
             config.readConfiguration( mergeQueryConfigOptions( layerConfig, query ) );

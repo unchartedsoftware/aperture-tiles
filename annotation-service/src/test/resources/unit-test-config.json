@@ -1,6 +1,6 @@
 [
 	{
-        "id": "test-layer0",
+		"id": "test-layer0",
         "public": {
         	"pyramid" : {
 	            "type" : "WebMercator"
@@ -14,13 +14,13 @@
 					"Low" : 100
 				}
 			},
-			"groups": [ 
-				"Urgent", 
-				"High", 
-				"Medium", 
+			"groups": [
+				"Urgent",
+				"High",
+				"Medium",
 				"Low"
 			]
-        },       
+        },
         "private": {
         	"data": {
         		"id": "test-layer0-data",
@@ -33,6 +33,6 @@
 					"type": "string->[(string, long)]-j"
 				}
 			}
-        }		
+        }
     }
 ]

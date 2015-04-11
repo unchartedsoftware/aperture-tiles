@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,15 +40,15 @@ import java.util.List;
  * availables in the system.<br>
  * <br>
  * To create one use the create method for the desired type. Example:<br>
- * 
+ *
  * <pre>
  * <code>
  * DefaultAnnotationFilterFactoryProvider.N_MOST_RECENT_BY_GROUP.create();
  * </code>
  * </pre>
- * 
+ *
  * @author cregnier
- * 
+ *
  */
 public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<AnnotationFilter> {
 	EMPTY(new Constructor() {
@@ -89,14 +89,14 @@ public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<An
 	@Override
 	public ConfigurableFactory<AnnotationFilter> createFactory (ConfigurableFactory<?> parent,
 	                                                            String path) {
-	    return createFactory(null, parent, path);
+	    return createFactory(null, parent, null);
 	}
 
 	@Override
     public ConfigurableFactory<AnnotationFilter> createFactory (String name,
                                                                 ConfigurableFactory<?> parent,
                                                                 String path) {
-		return _constructor.create(parent, path);
+		return _constructor.create(parent, null);
 	}
 
 
