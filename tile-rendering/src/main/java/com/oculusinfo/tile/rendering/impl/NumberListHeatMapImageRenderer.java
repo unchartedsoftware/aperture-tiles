@@ -102,6 +102,7 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+			String rangeMode = config.getPropertyValue(LayerConfiguration.RANGE_MODE);
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
@@ -141,10 +142,18 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
                     }
 
                     //log/linear
-                    Number transformedValue = t.transform(binCount);
+                    double transformedValue = t.transform(binCount).doubleValue();
                     int rgb;
                     if (binCount > 0) {
-                        rgb = colorRamp.getRGB( ( transformedValue.doubleValue() - scaledMin ) * oneOverScaledRange );
+						if ( rangeMode.equals("cull") ) {
+							if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
+								rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+							} else {
+								rgb = COLOR_BLANK.getRGB();
+							}
+						}  else {
+							rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+						}
                     } else {
                         rgb = COLOR_BLANK.getRGB();
                     }
