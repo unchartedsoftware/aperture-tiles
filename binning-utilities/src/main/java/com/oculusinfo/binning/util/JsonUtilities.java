@@ -88,15 +88,17 @@ public class JsonUtilities {
 		try {
 			JSONArray clone = new JSONArray();
 			for (int i=0; i<source.length(); ++i) {
-				Object value = source.get(i);
-				if (value instanceof JSONObject) {
-					JSONObject valueClone = deepClone((JSONObject) value);
-					clone.put(i, valueClone);
-				} else if (value instanceof JSONArray) {
-					JSONArray valueClone = deepClone((JSONArray) value);
-					clone.put(i, valueClone);
-				} else {
-					clone.put(i, value);
+				if (!source.isNull(i)) {
+					Object value = source.get(i);
+					if (value instanceof JSONObject) {
+						JSONObject valueClone = deepClone((JSONObject) value);
+						clone.put(i, valueClone);
+					} else if (value instanceof JSONArray) {
+						JSONArray valueClone = deepClone((JSONArray) value);
+						clone.put(i, valueClone);
+					} else {
+						clone.put(i, value);
+					}
 				}
 			}
 			return clone;
@@ -675,7 +677,6 @@ public class JsonUtilities {
 			new JSONObject(str);
 			return true;
 		} catch (JSONException e) {
-			e.printStackTrace();
 			return false;
 		}
 	}

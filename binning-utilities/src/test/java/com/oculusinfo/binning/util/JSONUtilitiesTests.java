@@ -219,7 +219,7 @@ public class JSONUtilitiesTests {
 	@Test
 	public void testIsJson() throws Exception {
 		Assert.assertFalse(JsonUtilities.isJSON("{343493043 }"));
-		Assert.assertTrue(JsonUtilities.isJSON("\"a\": { \"b\": [1,2,3]}"));
+		Assert.assertTrue(JsonUtilities.isJSON("{\"a\": { \"b\": [{\"c\":1},{\"d\":2}] } }"));
 	}
 
 	public static void assertJsonEqual (JSONObject expected, JSONObject actual) {
