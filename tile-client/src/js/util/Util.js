@@ -163,7 +163,7 @@
          * @returns {number} The value from [minMax.min, minMax.max].
          */
         denormalizeValue: function( percentage, minMax, transform ) {
-            var range = minMax.max- minMax.min,
+            var range = minMax.maximum- minMax.minimum,
                 val;
             function log10(val) {
                 return Math.log(val) / Math.LN10;
@@ -173,9 +173,9 @@
             }
             //iterate over the inner labels
             if ( transform === "log10" ) {
-                val = checkLogInput( minMax.max );
+                val = checkLogInput( minMax.maximum );
             } else {
-                val = percentage * range + minMax.min;
+                val = percentage * range + minMax.minimum;
             }
             return val;
         },
@@ -191,7 +191,7 @@
          * @returns {number} The value percentage from [0, 1].
          */
         normalizeValue: function( value, minMax, transform ) {
-            var range = minMax.max - minMax.min,
+            var range = minMax.maximum - minMax.minimum,
                 val;
             function log10(val) {
                 return Math.log(val) / Math.LN10;
@@ -201,9 +201,9 @@
             }
             //iterate over the inner labels
             if ( transform === "log10" ) {
-                val = checkLogInput( minMax.ax );
+                val = checkLogInput( minMax.maximum );
             } else {
-                val = ( ( value - minMax.min ) / range );
+                val = ( ( value - minMax.minimum ) / range );
             }
             return val;
         },

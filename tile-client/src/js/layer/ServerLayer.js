@@ -66,8 +66,8 @@
             meta =  layer.source.meta,
             levelMinMax = meta.meta[ adjustedZoom ],
             minMax = levelMinMax ? levelMinMax : {
-                min: null,
-                max: null
+                minimum: null,
+                maximum: null
             };
         layer.levelMinMax = minMax;
         PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: minMax });
@@ -283,12 +283,12 @@
                 max = 0,
                 i;
             for ( i=start; i<stop; i++ ) {
-                min += this.levelMinMax[i].min;
-                max += this.levelMinMax[i].max;
+                minimum += this.levelMinMax[i].minimum;
+                maximum += this.levelMinMax[i].maximum;
             }
             return {
-                min: min,
-                max: max
+                minimum: minimum,
+                maximum: maximum
             };
         }
         return this.levelMinMax;
