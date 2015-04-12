@@ -216,7 +216,11 @@ public class JSONUtilitiesTests {
 		assertJsonEqual(target, JsonUtilities.expandKeysInPlace(source));
 	}
 
-
+	@Test
+	public void testIsJson() throws Exception {
+		Assert.assertFalse(JsonUtilities.isJSON("{343493043 }"));
+		Assert.assertTrue(JsonUtilities.isJSON("\"a\": { \"b\": [1,2,3]}"));
+	}
 
 	public static void assertJsonEqual (JSONObject expected, JSONObject actual) {
 		Map<String, Object> mapE = JsonUtilities.jsonObjToMap(expected);

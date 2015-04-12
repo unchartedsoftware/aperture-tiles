@@ -78,7 +78,7 @@ public class JsonUtilities {
 			return null;
 		}
 	}
-    
+
 	/**
 	 * Clone a JSON array and all its child objects
 	 */
@@ -108,7 +108,7 @@ public class JsonUtilities {
 
 	/**
 	 * Overlays one JSON object, in place, over another, deeply.
-	 * 
+	 *
 	 * @param base The object to alter
 	 * @param overlay The object defining how the base will be altered.
 	 * @return The base object, with the overlay now overlaid upon it.
@@ -144,29 +144,34 @@ public class JsonUtilities {
 	}
 
 	/**
-	 * Takes a JSON object, looks for any keys that have periods in them, and expands those into 
+	 * Takes a JSON object, looks for any keys that have periods in them, and expands those into
 	 * multi-level objects.
-	 * 
+	 *
 	 * So:
-	 * 
+	 *
 	 * <pre>
 	 * { "name.first": "Alice", "name.middle": "Barbara", "name.last": "Cavendish" }
 	 * </pre>
-	 * 
+	 *
 	 * becomes:
-	 * 
+	 *
 	 * <pre>
 	 * { "name": { "first": "Alice", "middle": "Barbara", "last": "Cavendish" } }
 	 * </pre>
-	 * 
+	 *
 	 * @param base The JSON object to expand
 	 * @return The same JSON object, with keys expanded.
-	 * @throws JSONException 
+	 * @throws JSONException
 	 */
 	public static JSONObject expandKeysInPlace (JSONObject base) throws JSONException {
 		for (String key: JSONObject.getNames(base)) {
 			Object value = base.get(key);
 			// If our value is a JSON object or array, expend recursively
+
+			if (value == null) {
+				System.out.println("Key: " + key + "Base: " + base);
+			}
+
 			if (value instanceof JSONObject) expandKeysInPlace((JSONObject) value);
 			if (value instanceof JSONArray) expandKeysInPlace((JSONArray) value);
 			// If this key is expandable, expand it
@@ -190,37 +195,40 @@ public class JsonUtilities {
 	}
 
 	/**
-	 * Takes a JSON array, looks for any internal keys that have periods in them, and expands 
+	 * Takes a JSON array, looks for any internal keys that have periods in them, and expands
 	 * those into multi-level objects.
-	 * 
+	 *
 	 * So:
-	 * 
+	 *
 	 * <pre>
 	 * [
 	 *   { "name.first": "Alice", "name.middle": "Barbara", "name.last": "Cavendish" },
 	 *   { "name.first": "Dave", "name.middle": "Ezekiel", "name.last": "Filmore" }
 	 * ]
 	 * </pre>
-	 * 
+	 *
 	 * becomes:
-	 * 
+	 *
 	 * <pre>
 	 * [
 	 *   { "name": { "first": "Alice", "middle": "Barbara", "last": "Cavendish" } },
 	 *   { "name": { "first": "Dave", "middle": "Ezekiel", "last": "Filmore" } }
 	 * ]
 	 * </pre>
-	 * 
+	 *
 	 * @param base The JSON object to expand
 	 * @return The same JSON object, with keys expanded.
-	 * @throws JSONException 
+	 * @throws JSONException
 	 */
 	public static JSONArray expandKeysInPlace (JSONArray base) throws JSONException {
 		for (int i=0; i<base.length(); ++i) {
-			Object value = base.get(i);
-			// If our value is a JSON object or array, expend recursively
-			if (value instanceof JSONObject) expandKeysInPlace((JSONObject) value);
-			if (value instanceof JSONArray) expandKeysInPlace((JSONArray) value);
+			if (!base.isNull(i)) {
+				Object value = base.get(i);
+				// If our value is a JSON object or array, expend recursively
+				if (value instanceof JSONObject) expandKeysInPlace((JSONObject) value);
+				if (value instanceof JSONArray) expandKeysInPlace((JSONArray) value);
+			}
+
 		}
 		return base;
 	}
@@ -228,7 +236,7 @@ public class JsonUtilities {
 	/**
 	 * Overlays one JSON array over another, deeply. This does not work in
 	 * place, but passes back a new array
-	 * 
+	 *
 	 * @param base
 	 *            The array to alter
 	 * @param overlay
@@ -238,10 +246,10 @@ public class JsonUtilities {
 	public static JSONArray overlay (JSONArray base, JSONArray overlay) {
 		if (null == overlay) return base;
 		if (null == base) return deepClone(overlay);
-        
+
 		try {
 			JSONArray result = new JSONArray();
-            
+
 			// Overlay elements in both or just in the overlay
 			for (int i=0; i<overlay.length(); ++i) {
 				Object value = overlay.get(i);
@@ -253,8 +261,8 @@ public class JsonUtilities {
 					} else if (baseValue instanceof JSONArray) {
 						result.put(i, deepClone((JSONArray) baseValue));
 					} else {
-						result.put(i, baseValue);	
-					}                	
+						result.put(i, baseValue);
+					}
 				} else if (value instanceof JSONObject) {
 					if (base.length() > i && base.get(i) instanceof JSONObject) {
 						result.put(i, overlayInPlace((JSONObject) base.get(i), (JSONObject) value));
@@ -442,7 +450,7 @@ public class JsonUtilities {
 	/**
 	 * Transform a JSON object into a properties object, concatenating levels
 	 * into keys using a period.
-	 * 
+	 *
 	 * @param jsonObj
 	 *            The JSON object to translate
 	 * @return The same data, in properties form
@@ -492,7 +500,7 @@ public class JsonUtilities {
 	/**
 	 * Transform a JSON object into a properties object, concatenating levels
 	 * into keys using a period.
-	 * 
+	 *
 	 * @param properties The properties object to translate
 	 *
 	 * @return The same data, in properties form
@@ -654,6 +662,21 @@ public class JsonUtilities {
 					addKey(elt, keyCDR, value);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Checks to see if supplied string is valid JSON
+	 * @param str candiate JSON string
+	 * @return <code>true</code> if valid JSON, <code>false</code> otherwise.
+	 */
+	public static boolean isJSON(String str) {
+		try {
+			new JSONObject(str);
+			return true;
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 }

@@ -530,8 +530,12 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 	// Global metadata needs no accumulators - it doesn't actually have any data.
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {}
 	def accumulatedResults: JSONObject = {
-		val result = new JSONObject
-		customData.map(p => result.put(p._1, p._2))
-		result
+		customData.foldLeft(new JSONObject()) { (res, curr) =>
+			curr match {
+				case (key: String, value: JSONObject) => res.put(key, value)
+				case (key: String, value: Object) if JsonUtilities.isJSON(value.toString) => res.put(key, new JSONObject(value.toString))
+				case _ => res.put(curr._1, curr._2.toString)
+			}
+		}
 	}
 }
