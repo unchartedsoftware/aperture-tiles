@@ -534,7 +534,7 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 			curr match {
 				case (key: String, value: JSONObject) => res.put(key, value)
 				case (key: String, value: Object) if JsonUtilities.isJSON(value.toString) => res.put(key, new JSONObject(value.toString))
-				case _ => res.put(curr._1, curr._2.toString)
+				case _ => res.put(curr._1, curr._2)
 			}
 		}
 	}
