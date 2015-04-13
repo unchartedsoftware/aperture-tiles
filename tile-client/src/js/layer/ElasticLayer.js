@@ -130,21 +130,6 @@
 
     }
 
-    function createPopup(feature) {
-        feature.popup = new OpenLayers.Popup("pop",
-            feature.geometry.getBounds().getCenterLonLat(),
-            null,
-            '<div class="markerContent">' + feature.cluster[0].attributes.key + '</div>',
-            null,
-            true,
-            function() {
-                controls['selector'].unselectAll();
-            }
-        );
-        //feature.popup.closeOnMove = true;
-        feature.layer.map.addPopup(feature.popup);
-    }
-
     function createPopover(feature) {
         console.log(feature);
 
