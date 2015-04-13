@@ -58,15 +58,7 @@
         this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
         this.domain = "elastic";
         this.source = spec.source;
-        if (spec.renderer) {
-            this.renderer = spec.renderer;
-        }
-        if (spec.html) {
-            this.html = spec.html;
-        }
-        var size = new OpenLayers.Size(21, 25);
-        var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
-        this.icon = new OpenLayers.Icon('http://dev.openlayers.org/img/marker.png', size, offset);
+
         this.styleMap = spec.styleMap;
         this.eventListeners = spec.eventListeners;
         this.strategies = spec.strategies;
@@ -113,23 +105,6 @@
         );
     }
 
-    /*
-     * Transforms a list of latlon coordinates into OpenLayers lonlat objects
-     * */
-    ElasticLayer.prototype.buildMarkers = function(coordinates) {
-
-        var marker;
-        var that = this;
-        this.markers = [];
-
-        _.each(coordinates, function(coordinate) {
-            marker = new OpenLayers.Marker(new OpenLayers.LonLat(coordinate.lon, coordinate.lat)
-                .transform(new OpenLayers.Projection("EPSG:4326"), that.map.olMap.getProjectionObject()), that.icon.clone());
-            that.markers.push(marker);
-        });
-
-    }
-
     function createPopover(feature) {
         console.log(feature);
 
@@ -171,8 +146,6 @@
 
         this.olLayer.addFeatures(this.buildFeatureVectors());
 
-
-
         // var controls = {
         //   selector: new OpenLayers.Control.SelectFeature( this.olLayer,
         //     { onSelect: createPopover,
@@ -191,11 +164,6 @@
         this.setEnabled(this.enabled);
         this.setTheme(this.map.getTheme());
 
-        if (this.renderer) {
-            this.renderer.meta = this.source.meta.meta;
-            this.renderer.map = this.map;
-            this.renderer.parent = this;
-        }
     };
 
     /**
