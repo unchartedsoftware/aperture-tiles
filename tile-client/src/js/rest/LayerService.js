@@ -50,17 +50,19 @@
             var layers = {};
 
             this.getLayers(function(tileLayers){
-                layers["tileLayers"] = tileLayers;
+                layers.tileLayers = tileLayers;
                 d1.resolve();
             });
 
             this.getVectorLayers(function(vectorLayers){
-                layers["vectorLayers"] = JSON.parse(vectorLayers);
+                layers.vectorLayers = JSON.parse(vectorLayers);
                 d2.resolve();
             });
 
             return $.when(d1,d2).then(
-                function(){_success(layers)},
+                function(){
+                	_success(layers);
+                },
                 Util.handleHTTPError
             );
         },

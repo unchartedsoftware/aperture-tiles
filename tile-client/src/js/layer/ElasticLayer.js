@@ -28,10 +28,7 @@
     "use strict";
 
     var Layer = require('./Layer'),
-        LayerUtil = require('./LayerUtil'),
-        HtmlTileLayer = require('./HtmlTileLayer'),
-        PubSub = require('../util/PubSub'),
-        popover = require('../ui/popover');
+        PubSub = require('../util/PubSub');
 
     /**
      * Instantiate an ElasticLayer object.
@@ -57,74 +54,14 @@
         // set reasonable defaults
         this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
         this.domain = "elastic";
-        this.source = spec.source;
 
         this.styleMap = spec.styleMap;
         this.eventListeners = spec.eventListeners;
         this.strategies = spec.strategies;
+        this.vectors = spec.vectors;
     }
 
     ElasticLayer.prototype = Object.create(Layer.prototype);
-
-    ElasticLayer.prototype.buildFeatureVectors = function() {
-        var that = this;
-        return _.map(this.source.data, function(data) {
-            return that.buildFeatureVector(data, that)
-        });
-    }
-
-    /*
-     * Take in an Elasticsearch hit and return an OpenLayers point */
-    var parseHitIntoPoint = function parseHitIntoPoint(hit, that) {
-
-        var epsg4326 = new OpenLayers.Projection("EPSG:4326");
-        var projectTo = that.map.olMap.getProjectionObject();
-
-        var locality = null;
-        if (hit.lat_long.hits.hits[0]._source.locality) {
-            locality = hit.lat_long.hits.hits[0]._source.locality[0];
-            if (typeof locality === 'undefined') {
-                locality = hit.lat_long.hits.hits[0]._source.locality;
-            }
-        }
-
-        if (locality) {
-            var coordinate = locality.location.split(",");
-            return new OpenLayers.Geometry.Point(Number(coordinate[1]), Number(coordinate[0])).transform(epsg4326, projectTo);
-        } else {
-            return null;
-        }
-    }
-
-    ElasticLayer.prototype.buildFeatureVector = function(ad, that) {
-        var loc = parseHitIntoPoint(ad, that);
-        return new OpenLayers.Feature.Vector(
-            loc,
-            ad,
-            null
-        );
-    }
-
-    function createPopover(feature) {
-        console.log(feature);
-
-        var pt = feature.geometry.clone().transform(feature.layer.map.projection, feature.layer.map.displayProjection)
-        var coord = new OpenLayers.LonLat(pt.x, pt.y).transform(feature.layer.map.displayProjection, feature.layer.map.projection);
-        feature.popup = new OpenLayers.Popup.Popover(
-            "popup-" + feature.id,
-            coord,
-            "content",
-            "title",
-            null,
-            feature.cluster
-        )
-        feature.layer.map.addPopup(feature.popup, true);
-    }
-
-    function destroyPopup(feature) {
-        feature.popup.destroy();
-        feature.popup = null;
-    }
 
     /**
      * Activates the layer object. This should never be called manually.
@@ -133,31 +70,22 @@
      */
     ElasticLayer.prototype.activate = function() {
 
-        var that = this;
-
         var layerSpec = {};
-        if (this.strategies) layerSpec.strategies = this.strategies;
-        if (this.styleMap) layerSpec.styleMap = this.styleMap;
-        if (this.eventListeners) layerSpec.eventListeners = this.eventListeners;
+        if (this.strategies) {
+        	layerSpec.strategies = this.strategies;
+        }
+        if (this.styleMap) {
+        	layerSpec.styleMap = this.styleMap;
+        }
+        if (this.eventListeners) {
+        	layerSpec.eventListeners = this.eventListeners;
+        }
 
         this.olLayer = new OpenLayers.Layer.Vector("Overlay", layerSpec);
 
         this.map.olMap.addLayer(this.olLayer);
 
-        this.olLayer.addFeatures(this.buildFeatureVectors());
-
-        // var controls = {
-        //   selector: new OpenLayers.Control.SelectFeature( this.olLayer,
-        //     { onSelect: createPopover,
-        //       onUnselect: destroyPopup,
-        //       clickout:true
-        //     })
-        // };
-
-        // this.map.olMap.addControl(controls['selector']);
-
-        // controls['selector'].activate();
-
+        this.olLayer.addFeatures(this.vectors);
 
         this.setZIndex(this.zIndex);
         this.setOpacity(this.opacity);
@@ -174,6 +102,7 @@
     ElasticLayer.prototype.deactivate = function() {
         if (this.olLayer) {
             this.map.olMap.removeLayer(this.olLayer);
+            this.olLayer.destroyFeatures();
             this.olLayer.destroy();
         }
     };

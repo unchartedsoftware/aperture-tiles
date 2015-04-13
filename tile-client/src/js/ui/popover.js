@@ -100,21 +100,21 @@
           var clustercounter = {};
 
           for(var i = 0; i<this.data.length; i++){
-            var cluster = this.data[i]['data'].key;
+            var cluster = this.data[i].data.key;
             if( typeof clustercounter[cluster.id] !== "undefined" && clustercounter[cluster.id] !== null){
-              clustercounter[cluster.id]['count'] += 1;
+              clustercounter[cluster.id].count += 1;
             }
             else {
               clustercounter[cluster.id] = {};
-              clustercounter[cluster.id]['count'] = 0;
-              clustercounter[cluster.id]['name'] = cluster.name;
+              clustercounter[cluster.id].count = 0;
+              clustercounter[cluster.id].name = cluster.name;
             }
           }
 
           var that = this;
           var buildHTML = function(clust, key){
             that.contentHTML = that.contentHTML.concat("<p>" + "Cluster ID: " + key + "</p>" + "<p>" + "Cluster Name: " + clust.name + "</p>"+ "<p>" + "Cluster Ads: " + clust.count + "</p>");
-          }
+          };
           _.each(clustercounter,buildHTML);
 
 
@@ -122,8 +122,8 @@
         draw: function(px) {
           this.formatData();
           this.map.paddingForPopups.bottom = 100;
-          if (px == null) {
-            if ((this.lonlat != null) && (this.map != null)) {
+          if (px === null) {
+            if ((this.lonlat !== null) && (this.map !== null)) {
               px = this.map.getLayerPxFromLonLat(this.lonlat);
             }
           }
@@ -169,7 +169,7 @@
         this.events.destroy();
         this.events = null;
 
-        if (this.map != null) {
+        if (this.map !== null) {
           this.map.removePopup(this);
         }
 
