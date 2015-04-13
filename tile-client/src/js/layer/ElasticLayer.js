@@ -55,6 +55,7 @@
         this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
         this.domain = "elastic";
 
+        this.source = spec.source;
         this.styleMap = spec.styleMap;
         this.eventListeners = spec.eventListeners;
         this.strategies = spec.strategies;
