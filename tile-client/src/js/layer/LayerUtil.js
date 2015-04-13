@@ -71,7 +71,7 @@
             return {
                 maximum: ( max instanceof Array ) ? max[0] : max, // legacy support
                 minimum: ( min instanceof Array ) ? min[0] : min // legacy support
-            }
+            };
         }
         // multi-bucket entries
         minMax = [];

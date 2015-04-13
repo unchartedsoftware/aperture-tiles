@@ -279,8 +279,8 @@
             var data = this.tileTransform.data,
                 start = data.startBucket !== undefined ? data.startBucket : 0,
                 stop = data.endBucket || this.levelMinMax.length,
-                min = 0,
-                max = 0,
+                minimum = 0,
+                maximum = 0,
                 i;
             for ( i=start; i<stop; i++ ) {
                 minimum += this.levelMinMax[i].minimum;
