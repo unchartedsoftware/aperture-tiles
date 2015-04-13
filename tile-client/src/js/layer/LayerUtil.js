@@ -66,8 +66,16 @@
         // potential attribute paths:
         if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum ) ) {
             // single bucket entries
-            max = parseMalformedJson( meta.maximum || meta.max.maxmium || meta.max );
-            min = parseMalformedJson( meta.minimum || meta.min.minimum || meta.min );
+			var max_string = meta.maximum || meta.max.maxmium || meta.max;
+			if ( typeof max_string !== 'string' ) {
+				max_string = max_string.toString();
+			}
+			var min_string = meta.minimum || meta.min.minimum || meta.min;
+			if ( typeof min_string !== 'string' ) {
+				min_string = min_string.toString();
+			}
+            max = parseMalformedJson( max_string );
+            min = parseMalformedJson( min_string );
             return {
                 maximum: ( max instanceof Array ) ? max[0] : max, // legacy support
                 minimum: ( min instanceof Array ) ? min[0] : min // legacy support

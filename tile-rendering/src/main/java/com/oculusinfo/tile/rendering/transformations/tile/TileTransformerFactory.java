@@ -83,6 +83,9 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 		} else if ("filterbucket".equals(transformerTypes)) {
 			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
 			return new FilterByBucketTileTransformer<Object>(arguments);
+		} else if ("filtertopicbucket".equals(transformerTypes)) {
+			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
+			return new FilterTopicByBucketTileTransformer<Object>(arguments);
 		} else {  // 'identity' or none passed in will give the default transformer
 			return new IdentityTileTransformer<Object>();
 		}

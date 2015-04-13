@@ -59,6 +59,8 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 			_startBucket = arguments.optInt("startBucket");
 			_endBucket = arguments.optInt("endBucket");
 			_bucketCount = arguments.optInt("bucketCount");
+		} else {
+			LOGGER.warn("No arguements passed in to filterbucket transformer");
 		}
 	}
 
@@ -77,7 +79,6 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 	 */
     @Override
     public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
-
     	TileData<List<T>> resultTile = null;
 
         if ( _startBucket != null &&
