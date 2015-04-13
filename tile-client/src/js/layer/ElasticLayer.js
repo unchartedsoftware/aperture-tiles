@@ -72,23 +72,6 @@
         this.strategies = spec.strategies;
     }
 
-    var parser = function(hits) {
-        return _.map(hits, function(hit) {
-            if (hit._source.locality[0]) {
-                var latlon = hit._source.locality[0].location.split(",");
-                return {
-                    lat: Number(latlon[0]),
-                    lon: Number(latlon[1])
-                };
-            } else {
-                return {
-                    lat: null,
-                    lon: null
-                };
-            }
-        })
-    }
-
     ElasticLayer.prototype = Object.create(Layer.prototype);
 
     ElasticLayer.prototype.buildFeatureVectors = function() {
