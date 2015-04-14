@@ -137,7 +137,7 @@
     /**
      * Returns the word cloud words containing font size and x and y coordinates
      */
-    createWordCloud = function( wordCounts, maxCount ) {
+    createWordCloud = function( wordCounts, min, max ) {
         var minFontSize = 10,
             maxFontSize = 28,
             boundingBox = {
@@ -159,10 +159,10 @@
             word = wordCounts[i].word;
             count = wordCounts[i].count;
             // get font size based on font size function
-            fontSize = RendererUtil.getFontSize( count, maxCount, {
+            fontSize = RendererUtil.getFontSize( count, min, max, {
                 maxFontSize: maxFontSize,
                 minFontSize: minFontSize,
-                bias: -i/2
+                type: 'log'
             });
             // frequency percent
             percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
@@ -244,14 +244,10 @@
             html = '',
             wordCounts = [],
             entries = [],
-            maxCount,
             value,
             word,
             i,
             cloud;
-
-        // get maximum count for layer if it exists in meta data
-        maxCount = meta.max[ countKey ] / 4;
 
         for (i=0; i<numEntries; i++) {
             value = values[i];
@@ -262,7 +258,7 @@
             });
         }
 
-        cloud = createWordCloud( wordCounts, maxCount );
+        cloud = createWordCloud( wordCounts, meta.minimum[ countKey ], meta.maximum[ countKey ] );
 
         for ( i=0; i<cloud.length; i++ ) {
 

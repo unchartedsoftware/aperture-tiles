@@ -172,18 +172,21 @@
 	position:absolute;
 	cursor:pointer;
 	z-index:2;
+	pointer-events: all;
 }
 
 .community-critical-node {
 	position:absolute;
 	cursor:pointer;
 	z-index:3;
+	pointer-events: all;
 }
 
 .community-parent-node {
 	position:absolute;
 	cursor:pointer;
 	z-index:1;
+	pointer-events: none;
 }
 
 /********************************************/
@@ -200,6 +203,7 @@
 	vertical-align: middle;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	pointer-events: none;
 }
 
 /********************************************/

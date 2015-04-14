@@ -31,6 +31,10 @@
 
     "use strict";
 
+    function log10(val) {
+        return Math.log(val) / Math.LN10;
+    }
+
     module.exports = {
 
         /**
@@ -49,25 +53,45 @@
         },
 
         /**
+         * Transforms a value into the range [0:1] based on a min and max value
+         * according to a linear or log transform.
+         *
+         * @param {number} value - The value to transform.
+         * @param {number} min -The value to transform.
+         * @param {number} max - The value to transform.
+         * @param {String} type - The type of transformation ('log' or 'linear').
+         *
+         * @returns {number} The value between 0 and 1.
+         */
+        transformValue: function( value, min, max, type ) {
+            var clamped = Math.max( Math.min( value, max ), min );
+            if ( type === "log" ) {
+                var logMin = Math.log10( min );
+        		var logMax = Math.log10( max );
+        		var oneOverLogRange = 1 / (logMax - logMin);
+                return ( Math.log10( clamped ) - logMin ) * oneOverLogRange;
+            } else {
+                var range = max - min;
+                return ( clamped - min ) / range;
+            }
+        },
+
+        /**
          * Returns a font size based on the percentage of tweets relative to the total count
          * @memberof RenderUtil
          *
          * @param {integer} count - The local count.
-         * @param {integer}totalCount - The global count.
-         * @param {Object} options - The options object to set min and max font size and bias (optional).
+         * @param {integer} totalCount - The global count.
+         * @param {Object} options - The options object to set min and max font size and type (optional).
          *
          * @returns {integer} The interpolated font size.
          */
-        getFontSize: function( count, totalCount, options ) {
+        getFontSize: function( value, min, max, options ) {
             options = options || {};
             var MAX_FONT_SIZE = options.maxFontSize || 22,
                 MIN_FONT_SIZE = options.minFontSize || 12,
-                BIAS = options.bias || 0,
-                FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                percentage = ( count / totalCount ) || 0,
-                size = ( percentage * FONT_RANGE ) + MIN_FONT_SIZE;
-            size = Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
-            return Math.min( Math.max( size+BIAS, MIN_FONT_SIZE), MAX_FONT_SIZE );
+                transformed = this.transformValue( value, min, max, options.type );
+            return MIN_FONT_SIZE + transformed*( MAX_FONT_SIZE - MIN_FONT_SIZE );
         },
 
         /**

@@ -116,6 +116,8 @@
      * </pre>
      */
     function ServerLayer( spec ) {
+        var that = this,
+            getURL = spec.getURL || LayerUtil.getURL;
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
@@ -128,7 +130,9 @@
         this.tileTransform = spec.tileTransform || {};
         this.domain = "server";
         this.source = spec.source;
-        this.getURL = spec.getURL || LayerUtil.getURL;
+        this.getURL = function( bounds ) {
+            return getURL.call( this, bounds ) + that.getQueryParamString();
+        };
     }
 
     ServerLayer.prototype = Object.create( Layer.prototype );
@@ -139,17 +143,10 @@
      * @private
      */
     ServerLayer.prototype.activate = function() {
-
-        var that = this;
         // set callback here so it can be removed later
         this.zoomCallback = zoomCallback( this );
         // set callback to update ramp min/max on zoom
         this.map.on( "zoomend", this.zoomCallback );
-
-        function getURL( bounds ) {
-            return that.getURL.call( this, bounds ) + that.getQueryParamString();
-        }
-
         // add the new layer
         this.olLayer = new OpenLayers.Layer.TMS(
             'Server Rendered Tile Layer',
@@ -161,7 +158,7 @@
                     20037500,  20037500),
                 transparent: true,
                 isBaseLayer: false,
-                getURL: getURL
+                getURL: this.getURL
             });
         this.map.olMap.addLayer( this.olLayer );
 

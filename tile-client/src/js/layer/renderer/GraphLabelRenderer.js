@@ -85,16 +85,15 @@
             scale = Math.pow( 2, this.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             labelIndex = ( text.labelIndex !== undefined ) ? text.labelIndex : 0,
-            metaCommunities = meta.max.communities[0],
-            sizeMultiplier,
             community,
             html = "",
-            fontScale,
+            count,
             fontSize,
             split,
             label,
-            countNorm,
-            percent,
+            minimumCount,
+            maximumCount,
+            opacity,
             hierLevel,
             parentIDarray = [],
             entries = [],
@@ -105,21 +104,20 @@
                 return a.toUpperCase();
             });
         }
-        // get labelSizeMultiplier value -- value between 0.001 and 1 that controls label font size scaling.
-        // (Lower value caps font size for very large communities, and is better for graphs with many small communities and a few very large ones)
-        sizeMultiplier = ( text.sizeMultiplier )
-            ? Math.min( Math.max( text.sizeMultiplier, 0.001 ), 1.0 )
-            : 0.5;
 
         // get graph hierarchy level for this zoom level
         // assumes same hierarchy level for all tiles at a given zoom level
-        hierLevel = metaCommunities.hierLevel;
+        hierLevel = meta.maximum.communities[0].hierLevel;
 
         // if hierLevel = 0, normalize label attributes by community degree
         // else normalize label attributes by num internal nodes
-        countNorm = ( hierLevel === 0 )
-            ? metaCommunities.degree * sizeMultiplier
-            : metaCommunities.numNodes * sizeMultiplier;
+        if ( hierLevel === 0 ) {
+            minimumCount =  meta.minimum.communities[0].degree;
+            maximumCount =  meta.maximum.communities[0].degree;
+        } else {
+            minimumCount =  meta.minimum.communities[0].numNodes;
+            maximumCount =  meta.maximum.communities[0].numNodes;
+        }
 
         for ( i=0; i<communities.length; i++ ) {
 
@@ -152,11 +150,13 @@
             label = capitalize( split[ labelIndex ].toLowerCase() );
 
             // get font scale based on hierarchy level
-            fontScale = ( hierLevel === 0 ) ? community.degree : community.numNodes;
-            fontSize = RendererUtil.getFontSize( fontScale, countNorm );
+            count = ( hierLevel === 0 ) ? community.degree : community.numNodes;
+            fontSize = RendererUtil.getFontSize(
+                count, minimumCount, maximumCount, { type:'log'} );
 
             //
-            percent = Math.min( 1, fontScale / countNorm ) + 0.5;
+            opacity = RendererUtil.transformValue(
+                count, minimumCount, maximumCount, 'log' ) + 0.5;
 
             html += '<div class="node-label" style="'
                   + 'left:'+x+'px;'
@@ -165,7 +165,7 @@
                   + 'line-height:' + fontSize + 'px;'
                   + 'margin-top:' + (-fontSize/2) + 'px;'
                   + 'height:' + fontSize + 'px;'
-                  + 'opacity:' + percent + ';'
+                  + 'opacity:' + opacity + ';'
                   + 'z-index:' + Math.floor( fontSize ) + ';'
                   + '">'+label+'</div>';
         }
