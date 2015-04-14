@@ -66,10 +66,10 @@
         transformValue: function( value, min, max, type ) {
             var clamped = Math.max( Math.min( value, max ), min );
             if ( type === "log" ) {
-                var logMin = Math.log10( min );
-        		var logMax = Math.log10( max );
+                var logMin = log10( min );
+        		var logMax = log10( max );
         		var oneOverLogRange = 1 / (logMax - logMin);
-                return ( Math.log10( clamped ) - logMin ) * oneOverLogRange;
+                return ( log10( clamped ) - logMin ) * oneOverLogRange;
             } else {
                 var range = max - min;
                 return ( clamped - min ) / range;
