@@ -94,6 +94,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 		try {
 			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
 			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+			String rangeMode = config.getPropertyValue(LayerConfiguration.RANGE_MODE);
 
 			// This is the best we can do; supress the warning and move on.
 			@SuppressWarnings("unchecked")
@@ -103,7 +104,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
 			ColorRamp colorRamp = config.produce(ColorRamp.class);
 
-			bi = renderImage(data, t, scaledMin, scaledMax, colorRamp, bi);
+			bi = renderImage(data, t, scaledMin, scaledMax, rangeMode, colorRamp, bi);
 		} catch (Exception e) {
 			LOGGER.warn("Configuration error: ", e);
 			return null;
@@ -114,7 +115,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
 	protected BufferedImage renderImage(TileData<Number> data,
 								   ValueTransformer<Number> t, double valueMin, double valueMax,
-								   ColorRamp colorRamp, BufferedImage bi) {
+								   String mode, ColorRamp colorRamp, BufferedImage bi) {
 
 		int outWidth = bi.getWidth();
 		int outHeight = bi.getHeight();
@@ -137,11 +138,19 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 				int maxY = (int) Math.round((ty+1)*yScale);
 
 				double binCount = data.getBin(tx, ty).doubleValue();
-				Number transformedValue = t.transform(binCount).doubleValue();
+				double transformedValue = t.transform(binCount).doubleValue();
 				int rgb;
 
 				if (binCount > 0) {
-					rgb = colorRamp.getRGB( ( transformedValue.doubleValue() - valueMin ) * oneOverScaledRange );
+					if ( mode.equals("cull") ) {
+						if ( transformedValue >= valueMin && transformedValue <= valueMax ) {
+							rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
+						} else {
+							rgb = COLOR_BLANK.getRGB();
+						}
+					} else {
+						rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
+					}
 				} else {
 					rgb = COLOR_BLANK.getRGB();
 				}
