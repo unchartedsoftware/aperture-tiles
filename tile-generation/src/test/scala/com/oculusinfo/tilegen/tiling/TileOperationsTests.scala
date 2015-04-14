@@ -290,7 +290,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 				"ops.tileHeight" -> "4",
 				"ops.valueColumn" -> "data",
 				"ops.valueType" -> "double",
-			  "ops.aggregationType" -> "sum")
+				"ops.aggregationType" -> "sum")
 
 			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
 			rootStage.addChild(PipelineStage("geo_heatmap_op", parseGeoHeatMapOp(args)))
@@ -302,13 +302,16 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 			val tileIO = new LocalTileIO("avro")
 			val metaData = tileIO.readMetaData("test.x.y.data").getOrElse(fail("Metadata not created"))
 
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":218}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("0").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":218}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("global").toString))
+
 			val customMeta = metaData.getAllCustomMetaData
-
-			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":218}"""),
-			                                   new JSONObject(customMeta.get("0").toString))
-			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":218}"""),
-			                                   new JSONObject(customMeta.get("global").toString))
-
+			assert(0 === customMeta.get("0.minimum"))
+			assert(218 === customMeta.get("0.maximum"))
+			assert(0 === customMeta.get("global.minimum"))
+			assert(218 === customMeta.get("global.maximum"))
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {
@@ -369,11 +372,16 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 			assertResult(7.0)(bounds.getMaxX)
 			assertResult(6.0)(bounds.getMaxY)
 
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("0").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("global").toString))
+
 			val customMeta = metaData.getAllCustomMetaData
-			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
-			                                   new JSONObject(customMeta.get("0").toString))
-			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
-			                                   new JSONObject(customMeta.get("global").toString))
+			assert(0 === customMeta.get("0.minimum"))
+			assert(84 === customMeta.get("0.maximum"))
+			assert(0 === customMeta.get("global.minimum"))
+			assert(84 === customMeta.get("global.maximum"))
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {

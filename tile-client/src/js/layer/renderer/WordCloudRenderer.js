@@ -42,7 +42,7 @@
         getWordDimensions,
         createWordCloud,
         injectCss;
-        
+
     injectCss = function( spec ) {
         var i;
         if ( spec.text.themes ) {
@@ -251,7 +251,7 @@
             cloud;
 
         // get maximum count for layer if it exists in meta data
-        maxCount = meta.maximum[ countKey ] / 4;
+        maxCount = meta.max[ countKey ] / 4;
 
         for (i=0; i<numEntries; i++) {
             value = values[i];

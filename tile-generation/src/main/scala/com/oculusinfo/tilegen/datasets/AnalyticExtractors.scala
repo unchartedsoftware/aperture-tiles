@@ -140,12 +140,12 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 			(0 until tileAnalyticConfig.length()).map(n =>
 				{
 					// Get the name of a provider of the factory type we need
-          val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
+					val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
 					typeSource.readConfiguration(tileAnalyticConfig.getJSONObject(n))
 					val providerType = typeSource.getPropertyValue(ANALYTIC_FACTORY_PROPERTY)
 
 					// Create our analytic factory
-          val provider = Class.forName(providerType).newInstance().asInstanceOf[FactoryProvider[AnalysisDescription[_, _]]]
+					val provider = Class.forName(providerType).newInstance().asInstanceOf[FactoryProvider[AnalysisDescription[_, _]]]
 					val factory = provider.createFactory(null, List[String]().asJava)
 					factory.readConfiguration(tileAnalyticConfig.getJSONObject(n))
 
@@ -160,7 +160,7 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 			(0 until dataAnalyticConfig.length()).map(n =>
 				{
 					// Get the name of a provider of the factory type we need
-          val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
+					val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
 					typeSource.readConfiguration(dataAnalyticConfig.getJSONObject(n))
 					val providerType = typeSource.getPropertyValue(ANALYTIC_FACTORY_PROPERTY)
 
@@ -171,10 +171,10 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 
 					// Create our analytic
 					val analytic = factory.produce(classOf[AnalysisDescription[_, _]]).asInstanceOf[AnalysisDescription[Seq[Any], _]]
-          // Find the fields it needs
+					// Find the fields it needs
 					val fields = factory.produce(classOf[FieldList]).fields
-          // return them both
-          (analytic, fields)
+					// return them both
+					(analytic, fields)
 				}
 			)
 		}
@@ -204,7 +204,7 @@ class DataAnalyticWrapper[AT: ClassTag] (private[datasets] var base: AnalysisDes
 	def accumulate (tile: TileIndex, data: AT): Unit = base.accumulate(tile, data)
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
 		base.addAccumulator(sc, name, test)
-	def accumulatorValues = base.accumulatorValues
+	def accumulatedResults = base.accumulatedResults
 }
 class AnalyticExtractor (_tileAnalytics: Seq[AnalysisDescription[TileData[_], _]],
                          _dataAnalytics: Seq[(AnalysisDescription[Seq[Any], _], Seq[String])]) {

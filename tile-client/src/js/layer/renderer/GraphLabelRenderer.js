@@ -85,7 +85,7 @@
             scale = Math.pow( 2, this.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             labelIndex = ( text.labelIndex !== undefined ) ? text.labelIndex : 0,
-            metaCommunities = meta.maximum.communities[0],
+            metaCommunities = meta.max.communities[0],
             sizeMultiplier,
             community,
             html = "",
