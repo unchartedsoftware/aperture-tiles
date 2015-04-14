@@ -168,12 +168,8 @@ public class JsonUtilities {
 	public static JSONObject expandKeysInPlace (JSONObject base) throws JSONException {
 		for (String key: JSONObject.getNames(base)) {
 			Object value = base.get(key);
+
 			// If our value is a JSON object or array, expend recursively
-
-			if (value == null) {
-				System.out.println("Key: " + key + "Base: " + base);
-			}
-
 			if (value instanceof JSONObject) expandKeysInPlace((JSONObject) value);
 			if (value instanceof JSONArray) expandKeysInPlace((JSONArray) value);
 			// If this key is expandable, expand it
