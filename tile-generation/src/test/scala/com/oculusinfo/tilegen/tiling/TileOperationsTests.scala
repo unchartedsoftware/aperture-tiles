@@ -33,6 +33,9 @@ import org.scalatest.FunSuite
 import scala.collection.mutable.ListBuffer
 import com.oculusinfo.binning.util.JSONUtilitiesTests
 import org.json.JSONObject
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning.TileIndex
+import org.apache.spark.sql.SchemaRDD
 
 class TileOperationsTests extends FunSuite with SharedSparkContext {
 	import com.oculusinfo.tilegen.tiling.TileOperations._
@@ -126,6 +129,33 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		TilePipelines.execute(rootStage, sqlc)
 
 		assertResult(List("2015-01-02 8:15:30"))(resultList.toList)
+	}
+
+	test("Test mercator filter parse and operation") {
+		val resultList = ListBuffer[Any]()
+		val pyramid = new WebMercatorTilePyramid
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		// Mercator projection is ok for all X; just bad for Y out of range.
+		val rawData = List(SchemaTypeUtilities.row("a", 0.0, 0.0),
+		                   SchemaTypeUtilities.row("b", 0.0, bounds.getMinY),
+		                   SchemaTypeUtilities.row("c", 0.0, bounds.getMinY-1E-12),
+		                   SchemaTypeUtilities.row("d", 0.0, bounds.getMaxY),
+		                   SchemaTypeUtilities.row("e", 0.0, bounds.getMaxY-1E-12),
+		                   SchemaTypeUtilities.row("f", -181.0, 0.0),
+		                   SchemaTypeUtilities.row("g", 181.0, 0.0))
+		val data = sqlc.applySchema(
+			sc.parallelize(rawData),
+			SchemaTypeUtilities.structSchema(SchemaTypeUtilities.schemaField("id", classOf[String]),
+			                                 SchemaTypeUtilities.schemaField("lon", classOf[Double]),
+			                                 SchemaTypeUtilities.schemaField("lat", classOf[Double])))
+
+		val rootStage = PipelineStage("load", loadRDDOp(data))
+		rootStage.addChild(PipelineStage("mercator filter", parseMercatorFilterOp(Map("ops.latitude" -> "lat"))))
+			.addChild(PipelineStage("output", outputOp("id", resultList)(_)))
+
+		TilePipelines.execute(rootStage, sqlc)
+
+		assertResult(List("a", "b", "e", "f", "g"))(resultList.toList)
 	}
 
 	test("Test integral range filter parse and operation") {

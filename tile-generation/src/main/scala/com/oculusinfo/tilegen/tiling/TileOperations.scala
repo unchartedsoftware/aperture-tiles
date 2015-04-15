@@ -33,6 +33,9 @@ import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescriptionTileWrapper, 
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning.TileIndex
+import org.apache.spark.sql.SchemaRDD
 
 /**
  * Provides operations and companion argument parsers that can be bound into a TilePipeline
@@ -69,6 +72,7 @@ object TileOperations {
 		tilePipeline.registerPipelineOp("json_load", parseLoadJsonDataOp)
 		tilePipeline.registerPipelineOp("cache", parseCacheDataOp)
 		tilePipeline.registerPipelineOp("date_filter", parseDateFilterOp)
+		tilePipeline.registerPipelineOp("mercator_filter", parseMercatorFilterOp)
 		tilePipeline.registerPipelineOp("integral_range_filter", parseIntegralRangeFilterOp)
 		tilePipeline.registerPipelineOp("fractional_range_filter", parseFractionalRangeFilterOp)
 		tilePipeline.registerPipelineOp("regex_filter", parseRegexFilterOp)
@@ -78,6 +82,16 @@ object TileOperations {
 		logger.debug(s"Registered tile operations: ${tilePipeline.pipelineOps.keys}")
 
 		tilePipeline
+	}
+
+	/**
+	 * Load data into the pipeline directly from a schema rdd
+	 * 
+	 * @param rdd The SchemaRDD containing the data
+	 * @param tableName The name of the table the rdd has been assigned in the SQLContext, if any.
+	 */
+	def loadRDDOp (rdd: SchemaRDD, tableName: Option[String] = None)(data: PipelineData): PipelineData = {
+		PipelineData(rdd.sqlContext, rdd, tableName)
 	}
 
 	/**
@@ -195,6 +209,34 @@ object TileOperations {
 		val tableName = getOrGenTableName(input, "cached_table_")
 		input.sqlContext.cacheTable(tableName)
 		PipelineData(input.sqlContext, input.srdd, Some(tableName))
+	}
+
+	/**
+	 * Parses args for a filter to the valid range of a mercator geographic projection.
+	 * 
+	 * Arguments:
+	 *  ops.latitude - the column containing the latitude value
+	 */
+	def parseMercatorFilterOp (args: Map[String, String]) = {
+		logger.debug(s"Parsing mercatorFilterOp with args $args")
+		val argParser = KeyValuePassthrough(args)
+		val latCol = argParser.getString("ops.latitude", "The column containing the latitude value")
+		mercatorFilterOp(latCol)(_)
+	}
+
+	/**
+	 * A very specific filter to filter geographic data to only that data that projects into the 
+	 * standard tile set under a mercator projection
+	 * 
+	 * @param latCol The column of data containing the longitude value
+	 */
+	def mercatorFilterOp (latCol: String)(input: PipelineData): PipelineData = {
+		val inputTable = getOrGenTableName(input, "mercator_filter_op")
+		val pyramid = new WebMercatorTilePyramid
+		val area = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val selectStatement = "SELECT * FROM "+inputTable+" WHERE "+latCol+" >= "+area.getMinY+" AND "+latCol+" < "+area.getMaxY
+		val outputTable = input.sqlContext.sql(selectStatement)
+		PipelineData(input.sqlContext, outputTable)
 	}
 
 	/**
@@ -414,7 +456,7 @@ object TileOperations {
 			None
 		}
 		crossplotHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
-			heatmapParams._6, heatmapParams._7, aoiBounds)(_)
+		                   heatmapParams._6, heatmapParams._7, aoiBounds)(_)
 	}
 
 	private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -425,8 +467,8 @@ object TileOperations {
 		val valueColType = argParser.getStringOption("ops.valueType", "", None)
 
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
-			argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
-			argParser.getStringOption("hbase.master", "HBase master address", None))
+		                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+		                      argParser.getStringOption("hbase.master", "HBase master address", None))
 		val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
 			Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
 		} else {
@@ -488,7 +530,7 @@ object TileOperations {
 	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
 	 *                     if the default type of Count is used.
 	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default type
-	                       count is used for the operation.
+	 count is used for the operation.
 	 * @param bounds The bounds for the crossplot.  None indicates that bounds will be auto-generated based on input data.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
@@ -510,12 +552,12 @@ object TileOperations {
 
 		val properties = Map("oculus.binning.projection.type" -> "areaofinterest")
 		val boundsProps = bounds match {
-				case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
-				                    "oculus.binning.projection.minX" -> b.minX.toString,
-				                    "oculus.binning.projection.minY" -> b.minY.toString,
-				                    "oculus.binning.projection.maxX" -> b.maxX.toString,
-				                    "oculus.binning.projection.maxY" -> b.maxY.toString)
-				case None => Map("oculus.binning.projection.autobounds" -> "true")
+			case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
+			                    "oculus.binning.projection.minX" -> b.minX.toString,
+			                    "oculus.binning.projection.minY" -> b.minY.toString,
+			                    "oculus.binning.projection.maxX" -> b.maxX.toString,
+			                    "oculus.binning.projection.maxY" -> b.maxY.toString)
+			case None => Map("oculus.binning.projection.autobounds" -> "true")
 		}
 
 		heatMapOpImpl(xColSpec, yColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO,
@@ -544,14 +586,14 @@ object TileOperations {
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
 				Map("oculus.binning.value.type" -> "field",
-					"oculus.binning.value.field" -> valueColSpec.get,
-					"oculus.binning.value.valueType" -> valueColType.get,
-					"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
-					"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+				    "oculus.binning.value.field" -> valueColSpec.get,
+				    "oculus.binning.value.valueType" -> valueColType.get,
+				    "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+				    "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
 			case _ =>
 				Map("oculus.binning.value.type" -> "count",
-					"oculus.binning.value.valueType" -> "int",
-					"oculus.binning.value.serializer" -> "[int]-a")
+				    "oculus.binning.value.valueType" -> "int",
+				    "oculus.binning.value.serializer" -> "[int]-a")
 		}
 
 		// Parse bounds and level args
