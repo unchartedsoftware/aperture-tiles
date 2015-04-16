@@ -191,6 +191,10 @@
         }
 
         if ( renderer ) {
+            // hide standard tile hover interaction
+            if ( renderer.spec.hideTile ) {
+                div.className = div.className + " hideTile";
+            }
             // inject selected entry classes
             renderer.injectEntries( div.children, this.entries );
             // if renderer is attached, call hook function

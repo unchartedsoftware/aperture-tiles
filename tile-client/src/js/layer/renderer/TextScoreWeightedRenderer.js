@@ -135,7 +135,6 @@
             weightPercent,
             weight,
             barWidth,
-            totalCount,
             yOffset,
             value,
             textEntry,
@@ -144,8 +143,6 @@
             i,
             j;
 
-        // get maximum count for layer if it exists in meta data
-        totalCount = meta.maximum[ countKey ];
         yOffset = RendererUtil.getYOffset( numEntries, 36, 122 );
 
         for (i=0; i<numEntries; i++) {
@@ -155,9 +152,14 @@
             textEntry = RendererUtil.getAttributeValue( value, textKey );
             textCount = RendererUtil.getAttributeValue( value, countKey );
             desaturate = ( textCount < threshold ) ? "de-saturate" : "";
-            fontSize = RendererUtil.getFontSize( textCount, totalCount, {
-                minFontSize: minFontSize,
-                maxFontSize: maxFontSize
+            fontSize = RendererUtil.getFontSize(
+                textCount,
+                meta.minimum[ countKey ],
+                meta.maximum[ countKey ],
+                {
+                    minFontSize: minFontSize,
+                    maxFontSize: maxFontSize,
+                    type: "log"
             });
             weightPercent = (fontSize-minFontSize) / (maxFontSize-minFontSize);
 

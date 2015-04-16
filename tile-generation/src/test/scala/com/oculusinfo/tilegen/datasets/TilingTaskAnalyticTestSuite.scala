@@ -123,9 +123,9 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		val tile600: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i600).asJava).get(0)
 		assert(tile600.getDefinition === i600)
 		assertTileContents(List[Double](3.0, 4.0, 5.0, 6.0,
-			                            2.0, 3.0, 4.0, 5.0,
-			                            1.0, 2.0, 3.0, 4.0,
-			                            0.0, 1.0, 2.0, 3.0),
+		                                2.0, 3.0, 4.0, 5.0,
+		                                1.0, 2.0, 3.0, 4.0,
+		                                0.0, 1.0, 2.0, 3.0),
 		                   tile600)
 
 		// Now test one and two levels up to make sure that averaging works properly
@@ -133,18 +133,18 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 		val tile500: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i500).asJava).get(0)
 		assert(tile500.getDefinition === i500)
 		assertTileContents(List[Double]( 7.0,  9.0, 11.0, 13.0,
-			                             5.0,  7.0,  9.0, 11.0,
-			                             3.0,  5.0,  7.0,  9.0,
-			                             1.0,  3.0,  5.0,  7.0),
+		                                 5.0,  7.0,  9.0, 11.0,
+		                                 3.0,  5.0,  7.0,  9.0,
+		                                 1.0,  3.0,  5.0,  7.0),
 		                   tile500)
 
 		val i400 = new TileIndex(4, 0, 0, 4, 4)
 		val tile400: TileData[_] = pyramidIo.readTiles(pyramidId, null, List(i400).asJava).get(0)
 		assert(tile400.getDefinition === i400)
 		assertTileContents(List[Double](15.0, 19.0, 23.0, 27.0,
-			                            11.0, 15.0, 19.0, 23.0,
-			                             7.0, 11.0, 15.0, 19.0,
-			                             3.0,  7.0, 11.0, 15.0),
+		                                11.0, 15.0, 19.0, 23.0,
+		                                7.0, 11.0, 15.0, 19.0,
+		                                3.0,  7.0, 11.0, 15.0),
 		                   tile400)
 
 	}
@@ -177,7 +177,7 @@ class DatasetAnalyticTestSuite extends FunSuite with SharedSparkContext with Bef
 class TestTileAnalytic
 		extends AnalysisDescriptionTileWrapper[Double, Double] (
 	v => v*v,
-	new NumericMaxTileAnalytic[Double]("tile test"))
+	new NumericMaxTileAnalytic[Double](Some("tile test")))
 {}
 
 class TestDataAnalytic
@@ -187,5 +187,5 @@ class TestDataAnalytic
 		val result = num*num
 		result
 	},
-	new NumericMinTileAnalytic[Double]("data test"))
+	new NumericMinTileAnalytic[Double](Some("data test")))
 {}

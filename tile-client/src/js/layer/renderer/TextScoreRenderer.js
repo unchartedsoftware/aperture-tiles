@@ -103,7 +103,6 @@
             entries = [],
             html = '',
             percentLabel,
-            totalCount,
             yOffset,
             value,
             textEntry,
@@ -111,8 +110,6 @@
             textCount,
             i;
 
-        // get maximum count for layer if it exists in meta data
-        totalCount = meta.maximum[ countKey ];
         yOffset = RendererUtil.getYOffset( numEntries, 36, 122 );
 
         for (i=0; i<numEntries; i++) {
@@ -121,9 +118,14 @@
             entries.push( value );
             textEntry = RendererUtil.getAttributeValue( value, textKey );
             textCount = RendererUtil.getAttributeValue( value, countKey );
-            fontSize = RendererUtil.getFontSize( textCount, totalCount, {
-                minFontSize: minFontSize,
-                maxFontSize: maxFontSize
+            fontSize = RendererUtil.getFontSize(
+                textCount,
+                meta.minimum[ countKey ],
+                meta.maximum[ countKey ],
+                {
+                    minFontSize: minFontSize,
+                    maxFontSize: maxFontSize,
+                    type: "log"
             });
 
             // parent

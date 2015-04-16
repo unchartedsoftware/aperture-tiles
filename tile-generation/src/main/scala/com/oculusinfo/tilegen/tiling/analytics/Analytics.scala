@@ -260,13 +260,7 @@ object AnalysisDescription {
 
 	// Apply accumulated metadata info to actual global metadata for a pyramid
 	def record[T] (analysis: AnalysisDescription[_, T], metaData: PyramidMetaData): Unit = {
-		analysis.accumulatorValues.foreach{case (key, value) =>
-			analysis.analytic.storableValue(value, TileAnalytic.Locations.Pyramid).foreach{json =>
-				val keys = key.split("\\.")
-				metaData.setCustomMetaData(combineMetaData(metaData.getCustomMetaData(keys:_*), json).toString,
-				                           keys:_*)
-			}
-		}
+		metaData.setCustomMetaData(analysis.accumulatedResults);
 	}
 
 	// Apply accumulated metadata info to an actual tile
@@ -307,7 +301,7 @@ trait AnalysisDescription[RT, AT] extends Serializable {
 
 	// Deal with accumulators
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit
-	def accumulatorValues: Map[String, AT]
+	def accumulatedResults: JSONObject
 
 	// Standard accumulators
 	def addLevelAccumulator (sc: SparkContext, level: Int): Unit =
@@ -360,8 +354,15 @@ class MonolithicAnalysisDescription[RT, AT: ClassTag]
 				new MetaDataAccumulatorInfo(name, test, accumulator)
 		}
 
-	def accumulatorValues: Map[String, AT] =
-		accumulatorInfos.map{case (key, accum) => (key, accum.accumulator.value)}.toMap
+	def accumulatedResults: JSONObject = {
+		val result = new JSONObject
+		accumulatorInfos.map{case (key, accum) =>
+			analytic.storableValue(accum.accumulator.value, TileAnalytic.Locations.Pyramid).foreach(value =>
+				result.put(key, value)
+			)
+		}
+		result
+	}
 
 	override def toString = analyticParam.toString
 }
@@ -380,7 +381,7 @@ class TileOnlyMonolithicAnalysisDescription[RT, AT: ClassTag]
 	// Ignores requests to add standard accumulators
 	override def addLevelAccumulator (sc: SparkContext, level: Int): Unit = {}
 	override def addGlobalAccumulator (sc: SparkContext): Unit = {}
-	override def accumulatorValues: Map[String, AT] = Map[String, AT]()
+	override def accumulatedResults: JSONObject = new JSONObject
 }
 
 /**
@@ -417,13 +418,10 @@ class CompositeAnalysisDescription[RT, AT1: ClassTag, AT2: ClassTag]
 		analysis2.addAccumulator(sc, name, test)
 	}
 
-	def accumulatorValues: Map[String, (AT1, AT2)] = {
-		def zipMaps[A, B, C] (b: Map[A, B], c: Map[A, C]) =
-			(b.keySet ++ c.keySet).map(key => (key, (b.get(key), c.get(key)))).toMap
-
-		zipMaps(analysis1.accumulatorValues, analysis2.accumulatorValues)
-			.filter(p => p._2._1.isDefined && p._2._2.isDefined)
-			.map(p => (p._1, (p._2._1.get, p._2._2.get)))
+	def accumulatedResults: JSONObject = {
+		val res1 = analysis1.accumulatedResults
+		val res2 = analysis2.accumulatedResults
+		JsonUtilities.overlayInPlace(res1, res2)
 	}
 
 
@@ -531,5 +529,13 @@ class CustomGlobalMetadata[T] (customData: Map[String, Object])
 
 	// Global metadata needs no accumulators - it doesn't actually have any data.
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit = {}
-	def accumulatorValues: Map[String, String] = customData.map(p => (p._1, p._2.toString))
+	def accumulatedResults: JSONObject = {
+		customData.foldLeft(new JSONObject()) { (res, curr) =>
+			curr match {
+				case (key: String, value: JSONObject) => res.put(key, value)
+				case (key: String, value: Object) if JsonUtilities.isJSON(value.toString) => res.put(key, new JSONObject(value.toString))
+				case _ => res.put(curr._1, curr._2)
+			}
+		}
+	}
 }

@@ -148,8 +148,11 @@ public class JSONUtilitiesTests {
 		p.setProperty("c.a", "cvala");
 		p.setProperty("c.b.a", "cbaval");
 		p.setProperty("c.b.b", "cbbval");
+		p.setProperty("d", "{\"x\":\"xval\", \"y\": 10}");
 
-		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
+		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], " +
+			"\"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}, " +
+			"\"d\" : { \"x\" : \"xval\", \"y\" : 10 }}");
 		JSONObject actual = JsonUtilities.propertiesObjToJSON(p);
 		assertJsonEqual(expected, actual);
 	}
@@ -168,6 +171,55 @@ public class JSONUtilitiesTests {
 		JSONObject expected = new JSONObject("{\"a\": \"aval\", \"b\": [\"bval0\", null, \"bval2\"], \"c\": {\"1\": \"cval1\", \"a\": \"cvala\", \"b\": {\"a\": \"cbaval\", \"b\": \"cbbval\"}}}");
 		JSONObject actual = JsonUtilities.mapToJSON(p);
 		assertJsonEqual(expected, actual);
+	}
+
+	@Test
+	public void testJSONObjectKeyExpansion () throws Exception {
+		JSONObject source = new JSONObject("{\n"+
+		                                   "  \"person.name.first\": \"Alice\",\n"+
+		                                   "  \"person.name.middle\": \"Barbara\",\n"+
+		                                   "  \"person.name.last\": \"Cavendish\",\n"+
+		                                   "  \"person.school.location.state\": \"Delaware\",\n"+
+		                                   "  \"person\": {\n"+
+		                                   "    \"school.location.country\": \"US\",\n"+
+		                                   "    \"school.grades\": [\n"+
+		                                   "      {\"year\": \"freshman\",\n"+
+		                                   "       \"bySemester.semester1\": \"A\",\n"+
+		                                   "       \"bySemester.semester2\": \"B\"},\n"+
+		                                   "      {\"year\":\"sophomore\",\n"+
+		                                   "       \"bySemester.semester1\": \"C\",\n"+
+		                                   "       \"bySemester\": {\"semester2\": \"D\", \"semester3\": \"E\"}}\n"+
+		                                   "    ]\n"+
+		                                   "  }\n"+
+		                                   "}");
+		JSONObject target = new JSONObject("{\n"+
+		                                   "  \"person\": {\n"+
+		                                   "    \"name\": { \"first\": \"Alice\",\n"+
+		                                   "                \"middle\": \"Barbara\",\n"+
+		                                   "                \"last\": \"Cavendish\" },\n"+
+		                                   "    \"school\": {\n"+
+		                                   "      \"location\": { \"state\": \"Delaware\",\n"+
+		                                   "                      \"country\": \"US\" },\n"+
+		                                   "      \"grades\": [\n"+
+		                                   "        { \"year\": \"freshman\",\n"+
+		                                   "          \"bySemester\": { \"semester1\": \"A\",\n"+
+		                                   "                            \"semester2\": \"B\" } },\n"+
+		                                   "        { \"year\": \"sophomore\",\n"+
+		                                   "          \"bySemester\": { \"semester1\": \"C\",\n"+
+		                                   "                            \"semester2\": \"D\",\n"+
+		                                   "                            \"semester3\": \"E\" } }\n"+
+		                                   "      ]\n"+
+		                                   "    }\n"+
+		                                   "  }\n"+
+		                                   "}");
+
+		assertJsonEqual(target, JsonUtilities.expandKeysInPlace(source));
+	}
+
+	@Test
+	public void testIsJson() throws Exception {
+		Assert.assertFalse(JsonUtilities.isJSON("{343493043 }"));
+		Assert.assertTrue(JsonUtilities.isJSON("{\"a\": { \"b\": [{\"c\":1},{\"d\":2}] } }"));
 	}
 
 	public static void assertJsonEqual (JSONObject expected, JSONObject actual) {
