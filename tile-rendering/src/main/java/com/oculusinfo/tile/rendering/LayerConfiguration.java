@@ -89,6 +89,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final IntegerProperty COARSENESS = new IntegerProperty("coarseness",
 	    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
 	    1);
+	public static final StringProperty PIXEL_SHAPE = new StringProperty("pixelShape",
+		    "Used by the standard heatmap renderer to allow either circular or square 'pixels' if coarseness > 2x2. Valid settings are 'circle' (default) or 'square'.",
+		    "circle");	
 	public static final IntegerProperty OUTPUT_WIDTH = new IntegerProperty("outputWidth",
 	    "The output image width, defaults to the standard 256",
 	    256);
@@ -155,6 +158,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(OUTPUT_HEIGHT);
         addProperty(DATA_ID, DATA_PATH);
 		addProperty(COARSENESS, RENDERER_PATH);
+		addProperty(PIXEL_SHAPE, RENDERER_PATH);
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
 		addProperty(RANGE_MODE, RENDERER_PATH);
