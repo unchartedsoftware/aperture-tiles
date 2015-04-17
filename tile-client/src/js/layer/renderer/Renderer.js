@@ -61,7 +61,10 @@
      */
     function Renderer( spec ) {
         this.spec = spec || {};
-        this.uuid = Util.generateUuid();
+        this.uuid = Util.generateUuid();    
+        if ( spec.aggregator ) {
+            this.aggregator = spec.aggregator;
+        }
     }
 
     /**

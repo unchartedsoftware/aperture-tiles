@@ -169,6 +169,9 @@
             if ( typeof renderer === "function" ) {
                 renderer = renderer.call( this.layer, this.bounds );
             }
+            if ( renderer.aggregator ) {
+                data = renderer.aggregator.aggregate( data );
+            }
             render = renderer.render( data );
             html = render.html;
             this.entries = render.entries;

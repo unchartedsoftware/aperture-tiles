@@ -66,8 +66,14 @@
         // potential attribute paths:
         if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum ) ) {
             // single bucket entries
-            max = parseMalformedJson( meta.maximum || meta.max.maxmium || meta.max );
-            min = parseMalformedJson( meta.minimum || meta.min.minimum || meta.min );
+			max = meta.maximum || meta.max.maxmium || meta.max;
+            if ( typeof max === 'string' ) {
+                max = parseMalformedJson( max );
+            }
+			min = meta.minimum || meta.min.minimum || meta.min;
+            if ( typeof min === 'string' ) {
+                min = parseMalformedJson( min );
+            }
             return {
                 maximum: ( max instanceof Array ) ? max[0] : max, // legacy support
                 minimum: ( min instanceof Array ) ? min[0] : min // legacy support
@@ -100,7 +106,9 @@
             if ( meta.hasOwnProperty( key ) ) {
                 if ( key !== "bucketCount" &&
                     key !== "rangeMin" &&
-                    key !== "rangeMax" ) {
+                    key !== "rangeMax" &&
+                    key !== "topicType" &&
+                    key !== "translatedTopics" ) {
                     meta[ key ] = parseMetaMinMaxJson( meta[key] );
                 }
             }
