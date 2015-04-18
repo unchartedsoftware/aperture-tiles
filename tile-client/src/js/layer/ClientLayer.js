@@ -63,8 +63,7 @@
             this.tileClass = spec.tileClass;
         }
         if ( spec.renderer ) {
-            this.renderer = spec.renderer;
-            this.renderer.attach( this );
+            this.setRenderer( spec.renderer );
         }
         if ( spec.html ) {
             this.html = spec.html;

@@ -117,7 +117,7 @@
             BORDER_WIDTH = 2,
             spec = this.spec,
             communities = RendererUtil.getAttributeValue( data, spec.rootKey ),
-            scale = Math.pow( 2, this.map.getZoom() ),
+            scale = Math.pow( 2, this.parent.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             className,
             community,
