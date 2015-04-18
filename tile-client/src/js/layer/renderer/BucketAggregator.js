@@ -242,7 +242,7 @@
     }
 
     BucketAggregator.prototype.aggregate = function( data ) {
-        var buckets = JSON.parse( data.tile.meta.map.bins ),
+        var buckets = data.tile.meta.map.bins,
             paths = this.paths,
             idPath = this.idPath,
             bucketsById = {},

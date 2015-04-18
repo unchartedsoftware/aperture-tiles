@@ -64,6 +64,7 @@
         }
         if ( spec.renderer ) {
             this.renderer = spec.renderer;
+            this.renderer.attach( this );
         }
         if ( spec.html ) {
             this.html = spec.html;
@@ -102,9 +103,6 @@
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
 
-        if ( this.renderer ) {
-            this.renderer.attach( this );
-        }
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
@@ -120,6 +118,17 @@
             this.olLayer = null;
         }
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+    /**
+     * Sets the current renderer of the layer.
+     * @memberof ClientLayer
+     *
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+    ClientLayer.prototype.setRenderer = function( renderer ) {
+        this.renderer = renderer;
+        this.renderer.attach( this );
     };
 
     /**
@@ -168,6 +177,58 @@
      */
     ClientLayer.prototype.getZIndex = function () {
         return this.zIndex;
+    };
+
+    /**
+     * Set the layers tile transform function type.
+     * @memberof ClientLayer
+     *
+     * @param {String} transformType - The tile transformer type.
+     */
+    ClientLayer.prototype.setTileTransformType = function ( transformType ) {
+        if ( this.tileTransform.type !== transformType ) {
+            this.tileTransform.type = transformType;
+            if ( this.olLayer ) {
+                this.olLayer.redraw();
+            }
+            PubSub.publish( this.getChannel(), {field: 'tileTransformType', value: transformType} );
+        }
+    };
+
+    /**
+     * Get the layers transformer type.
+     * @memberof ClientLayer
+     *
+     * @return {String} The tile transform type.
+     */
+    ClientLayer.prototype.getTileTransformType = function () {
+        return this.tileTransform.type;
+    };
+
+    /**
+     * Set the tile transform data attribute
+     * @memberof ClientLayer
+     *
+     * @param {Object} transformData - The tile transform data attribute.
+     */
+    ClientLayer.prototype.setTileTransformData = function ( transformData ) {
+        if ( this.tileTransform.data !== transformData ) {
+            this.tileTransform.data = transformData;
+            if ( this.olLayer ) {
+                this.olLayer.redraw();
+            }
+            PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
+        }
+    };
+
+    /**
+     * Get the transformer data attribute.
+     * @memberof ClientLayer
+     *
+     * @returns {Object} The tile transform data attribute.
+     */
+    ClientLayer.prototype.getTileTransformData = function () {
+        return this.tileTransform.data;
     };
 
     /**
