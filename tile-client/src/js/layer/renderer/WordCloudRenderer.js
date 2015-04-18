@@ -239,7 +239,7 @@
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
-            meta = this.meta[ this.map.getZoom() ],
+            meta = this.meta[ this.parent.map.getZoom() ],
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
             html = '',
             wordCounts = [],
