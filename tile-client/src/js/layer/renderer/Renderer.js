@@ -218,7 +218,9 @@
                         key !== "rangeMax" &&
                         key !== "topicType" &&
                         key !== "translatedTopics" ) {
-                        this.meta[ key ].bins = this.aggregator.aggregate( this.meta[ key ].bins );
+                        if ( this.meta[ key ].bins ) {
+                            this.meta[ key ].bins = this.aggregator.aggregate( this.meta[ key ].bins );
+                        }
                     }
                 }
             }

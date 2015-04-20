@@ -693,13 +693,48 @@
                 if( this.olMap.getProjection() !== projection.projCode ) {
                     lonlat.transform( projection, this.olMap.projection );
                 }
-                this.olMap.setCenter( lonlat, zoom );
             } else {
                 // linear bi-variate map
-                viewportPx = this.getViewportPixelFromCoord( x, y );
+                viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y );
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-                this.olMap.setCenter( lonlat, zoom );
             }
+            this.olMap.setCenter( lonlat, zoom );
+        },
+
+        /**
+         * Zooms the map to a particular bounding box. The transition is
+         * instantaneous.
+         * @memberof Map.prototype
+         *
+         * @param {Object} bounds - The bounding box to zoom to.
+         */
+        zoomToExtent: function( bounds ) {
+            var projection,
+                minViewportPx,
+                maxViewportPx,
+                minLonLat,
+                maxLonLat,
+                olBounds;
+            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
+                // geo-spatial map
+                projection = new OpenLayers.Projection('EPSG:4326');
+                minLonLat = new OpenLayers.LonLat( bounds.minX, bounds.minY );
+                maxLonLat = new OpenLayers.LonLat( bounds.maxX, bounds.maxY );
+                if( this.olMap.getProjection() !== projection.projCode ) {
+                    minLonLat.transform( projection, this.olMap.projection );
+                    maxLonLat.transform( projection, this.olMap.projection );
+                }
+            } else {
+                // linear bi-variate map
+                minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY );
+                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY );
+                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx );
+                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx );
+            }
+            olBounds = new OpenLayers.Bounds();
+            olBounds.extend( minLonLat );
+            olBounds.extend( maxLonLat );
+            this.olMap.zoomToExtent( olBounds );
         },
 
         /**
@@ -725,7 +760,7 @@
                 this.olMap.panTo( lonlat );
             } else {
                 // linear bi-variate map
-                viewportPx = this.getViewportPixelFromCoord( x, y );
+                viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y );
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
                 this.olMap.panTo( lonlat );
             }

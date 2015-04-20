@@ -246,10 +246,12 @@
             entries = [],
             value,
             word,
+            min,
+            max,
             i,
             cloud;
 
-        for (i=0; i<numEntries; i++) {
+        for ( i=0; i<numEntries; i++ ) {
             value = values[i];
             wordCounts.push({
                 word: RendererUtil.getAttributeValue( value, textKey ),
@@ -258,7 +260,17 @@
             });
         }
 
-        cloud = createWordCloud( wordCounts, meta.minimum[ countKey ], meta.maximum[ countKey ] );
+        if ( meta.bins ) {
+            // bucketed tiles
+            min = RendererUtil.getAttributeValue( meta.bins[ meta.bins.length - 1], countKey );
+            max = RendererUtil.getAttributeValue( meta.bins[0], countKey );
+        } else {
+            // single value tiles
+            min = RendererUtil.getAttributeValue( meta.maximum, countKey );
+            max = RendererUtil.getAttributeValue( meta.minimum, countKey );
+        }
+
+        cloud = createWordCloud( wordCounts, min, max );
 
         for ( i=0; i<cloud.length; i++ ) {
 
