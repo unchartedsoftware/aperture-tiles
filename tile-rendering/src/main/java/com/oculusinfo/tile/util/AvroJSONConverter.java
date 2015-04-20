@@ -65,11 +65,11 @@ public class AvroJSONConverter {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 		// Conversion code taken from org.apache.avro.tool.DataFileReadTool
-		GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+		GenericDatumReader<Object> reader = new GenericDatumReader<>();
 		FileReader<Object> fileReader = DataFileReader.openReader(input, reader);
 		try {
 			Schema schema = fileReader.getSchema();
-			DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+			DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
 			JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, output);
 			for (Object datum: fileReader) {
 				encoder.configure(output);
@@ -93,7 +93,7 @@ public class AvroJSONConverter {
 		if ( meta != null ) {
 			JSONObject map = meta.optJSONObject("map");
 			if ( map != null ) {
-				String bins = map.optString("bins");
+				String bins = map.optString("bins", null);
 				if ( bins != null ) {
 					map.put( "bins", new JSONArray( bins ) );
 				}
