@@ -31,7 +31,6 @@ import java.util.List;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,10 +113,6 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             double scaledMin = (double)rangeMin/100;
             double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
 
-            @SuppressWarnings("unchecked")
-            TileTransformer<List<Number>> tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Number>> transformedContents = tileTransformer.transform( data );
-
             int xBins = data.getDefinition().getXBins();
             int yBins = data.getDefinition().getYBins();
 
@@ -133,7 +128,7 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
                     int minY = (int) Math.round(ty*yScale);
                     int maxY = (int) Math.round((ty+1)*yScale);
 
-                    List<Number> binContents = transformedContents.getBin(tx, ty);
+                    List<Number> binContents = data.getBin(tx, ty);
                     double binCount = 0;
                     for(int i = 0; i < binContents.size(); i++) {
                     	if ( binContents.get(i) != null ) {
