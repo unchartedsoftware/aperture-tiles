@@ -65,10 +65,12 @@
         // old meta data was crafted in the fiery pits of hades and manifests
         // as malformed json sometimes wrapped in an array, in one of six
         // potential formats
-        if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum ) ) {
+        if ( meta &&
+            ( meta.max !== undefined || meta.maximum !== undefined ) &&
+            ( meta.min !== undefined || meta.minimum !== undefined ) ) {
             // single bucket entries, in one of three attributes
-			max = meta.maximum || meta.max.maxmium || meta.max;
-			min = meta.minimum || meta.min.minimum || meta.min;
+			max = meta.maximum !== undefined ? meta.maximum : meta.max.maxmium || meta.max || 0;
+			min = meta.minimum !== undefined ? meta.minimum : meta.min.minimum || meta.min || 0;
             // sometimes the meta data is wraped in an array
             max = ( max instanceof Array ) ? max[0] : max;
             min = ( min instanceof Array ) ? min[0] : min;
