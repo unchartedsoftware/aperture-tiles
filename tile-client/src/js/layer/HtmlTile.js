@@ -170,7 +170,7 @@
                 renderer = renderer.call( this.layer, this.bounds );
             }
             if ( renderer.aggregator ) {
-                data = renderer.aggregator.aggregate( data );
+                data.tile.meta.map.bins = renderer.aggregator.aggregate( data.tile.meta.map.bins );
             }
             render = renderer.render( data );
             html = render.html;

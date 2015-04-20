@@ -241,9 +241,8 @@
         this.idPath = getIdPath( this.paths );
     }
 
-    BucketAggregator.prototype.aggregate = function( data ) {
-        var buckets = data.tile.meta.map.bins,
-            paths = this.paths,
+    BucketAggregator.prototype.aggregate = function( buckets ) {
+        var paths = this.paths,
             idPath = this.idPath,
             bucketsById = {},
             aggBuckets = [],
@@ -272,8 +271,7 @@
                 aggBuckets.push( applyToBuckets( paths, bucketsById[ key ] ) );
             }
         }
-        data.tile = aggBuckets;
-        return data;
+        return aggBuckets;
     };
 
     module.exports = BucketAggregator;
