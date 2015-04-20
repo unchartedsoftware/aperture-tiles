@@ -92,10 +92,10 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 				throw new IllegalArgumentException("Filter by keyword bucket transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
         	}
 		}
-		JSONObject metadataJSON = new JSONObject(inputMetadata);
-		JSONObject filteredMetadata = new JSONObject();
+    	
+		JSONObject map = inputMetadata.getJSONObject("map");		
+		JSONArray bins = map.getJSONArray("bins");
 		
-		JSONArray bins = metadataJSON.getJSONArray("bins");
 		JSONArray filteredBins = new JSONArray();
 		
 		int binSize = bins.length();
@@ -104,10 +104,14 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 		
 		for ( int i=0; i<binSize; i++ ) {
 			if ( i >= start && i <= end ) {
-				filteredBins.put(bins.optJSONArray(i));
+				filteredBins.put(i, bins.optJSONArray(i));
+			} else {
+				filteredBins.put(i, (JSONArray)null);
 			}
 		}
-		filteredMetadata.put("bins", filteredBins);
-		return filteredMetadata;  	
+		map.put("bins", filteredBins);
+		inputMetadata.put("map", map);
+		
+		return inputMetadata;  	
     }
 }
