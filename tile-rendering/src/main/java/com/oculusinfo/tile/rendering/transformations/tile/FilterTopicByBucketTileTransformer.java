@@ -37,16 +37,16 @@ import org.json.JSONObject;
 
 /**
  * 	This transformer is specifically designed for twitter data.  The information to be transformed
- *  	will be stored in the tile's metadata and represent time buckets of twitter keywords that 
- *  	will include the number of times referenced within the time bucket it is found in as well 
+ *  	will be stored in the tile's metadata and represent time buckets of twitter keywords that
+ *  	will include the number of times referenced within the time bucket it is found in as well
  *  	as the ten most recent tweets for that bucketed time frame.
  *
  */
 public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<List<T>> {
 	private static final Logger LOGGER = LoggerFactory.getLogger( FilterTopicByBucketTileTransformer.class );
 
-	private Integer _startBucket = 0;
-	private Integer _endBucket = 0;
+	private Integer _startBucket = null;
+	private Integer _endBucket = null;
 
 	public FilterTopicByBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
@@ -85,23 +85,23 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 
         return resultTile;
     }
-    
-    public JSONObject filterKeywordMetadata( JSONObject inputMetadata) throws JSONException { 	
+
+    public JSONObject filterKeywordMetadata(JSONObject inputMetadata) throws JSONException {
     	if ( _startBucket != null && _endBucket != null ) {
 			if ( _startBucket < 0 || _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Filter by keyword bucket transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
         	}
 		}
-    	
-		JSONObject map = inputMetadata.getJSONObject("map");		
+
+		JSONObject map = inputMetadata.getJSONObject("map");
 		JSONArray bins = map.getJSONArray("bins");
-		
+
 		JSONArray filteredBins = new JSONArray();
-		
+
 		int binSize = bins.length();
 		int start = ( _startBucket != null ) ? _startBucket : 0;
 		int end = ( _endBucket != null ) ? _endBucket : (binSize-1);
-		
+
 		for ( int i=0; i<binSize; i++ ) {
 			if ( i >= start && i <= end ) {
 				filteredBins.put(i, bins.optJSONArray(i));
@@ -110,8 +110,7 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 			}
 		}
 		map.put("bins", filteredBins);
-		inputMetadata.put("map", map);
-		
-		return inputMetadata;  	
+
+		return inputMetadata;
     }
 }

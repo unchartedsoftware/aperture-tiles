@@ -29,6 +29,7 @@
 
     var Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
+        Util = require('../util/Util'),
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
@@ -52,13 +53,18 @@
      * </pre>
      */
     function ClientLayer( spec ) {
+        var that = this,
+            getURL = spec.getURL || LayerUtil.getURL;
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+        this.tileTransform = spec.tileTransform || {};
         this.domain = "client";
         this.source = spec.source;
-        this.getURL = spec.getURL || LayerUtil.getURL;
+        this.getURL = function( bounds ) {
+            return getURL.call( this, bounds ) + that.getQueryParamString();
+        };
         if ( spec.tileClass ) {
             this.tileClass = spec.tileClass;
         }
@@ -228,6 +234,19 @@
      */
     ClientLayer.prototype.getTileTransformData = function () {
         return this.tileTransform.data;
+    };
+
+    /**
+     * Generate query parameters based on state of layer
+     * @memberof ClientLayer
+     *
+     * @returns {String} The query parameter string based on the attributes of this layer.
+     */
+     ClientLayer.prototype.getQueryParamString = function() {
+        var query = {
+            tileTransform: this.tileTransform
+        };
+        return Util.encodeQueryParams( query );
     };
 
     /**

@@ -196,7 +196,7 @@
         var that = this;
         this.renderer.theme = theme;
         setRampImageUrl( that );
-        this.olLayer.redraw();
+        this.redraw();
     };
 
     /**
@@ -248,9 +248,7 @@
         if ( this.renderer.ramp !== rampType ) {
             this.renderer.ramp = rampType;
             setRampImageUrl( this, callback );
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'rampType', value: rampType} );
         }
     };
@@ -275,11 +273,11 @@
         if ( this.levelMinMax instanceof Array ) {
             var data = this.tileTransform.data,
                 start = data.startBucket !== undefined ? data.startBucket : 0,
-                stop = data.endBucket || this.levelMinMax.length,
+                stop = data.endBucket !== undefined ? data.endBucket : this.levelMinMax.length-1,
                 minimum = 0,
                 maximum = 0,
                 i;
-            for ( i=start; i<stop; i++ ) {
+            for ( i=start; i<=stop; i++ ) {
                 minimum += this.levelMinMax[i].minimum;
                 maximum += this.levelMinMax[i].maximum;
             }
@@ -312,9 +310,7 @@
         min = Math.max( Math.min( min, 1 ), 0 ) * 100;
         if ( this.renderer.rangeMin !== min ) {
             this.renderer.rangeMin = min;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), { field: 'rangeMin', value: min });
         }
     };
@@ -341,9 +337,7 @@
         max = Math.max( Math.min( max, 1 ), 0 ) * 100;
         if ( this.renderer.rangeMax !== max ) {
             this.renderer.rangeMax = max;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'rangeMax', value: max} );
         }
     };
@@ -427,9 +421,7 @@
     ServerLayer.prototype.setValueTransformType = function ( transformType ) {
         if ( this.valueTransform.type !== transformType ) {
             this.valueTransform.type = transformType;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: transformType });
         }
     };
@@ -453,9 +445,7 @@
     ServerLayer.prototype.setTileTransformType = function ( transformType ) {
         if ( this.tileTransform.type !== transformType ) {
             this.tileTransform.type = transformType;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformType', value: transformType} );
         }
     };
@@ -479,9 +469,7 @@
     ServerLayer.prototype.setTileTransformData = function ( transformData ) {
         if ( this.tileTransform.data !== transformData ) {
             this.tileTransform.data = transformData;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
         }
     };
@@ -506,9 +494,7 @@
         if ( this.renderer.coarseness !== coarseness ) {
             this.renderer.coarseness = coarseness;
             setLevelMinMax( this ); // coarseness modifies the min/max
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         }
     };

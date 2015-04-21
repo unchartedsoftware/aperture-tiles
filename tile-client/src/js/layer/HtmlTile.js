@@ -126,8 +126,8 @@
 
     OpenLayers.Tile.HTML.prototype.clear = function() {
         OpenLayers.Tile.prototype.clear.apply( this, arguments );
-        //this.tileData = null;
-        //this.url = null;
+        this.tileData = null;
+        this.url = null;
         if ( this.div ) {
             this.layer.div.removeChild( this.div );
             this.div = null;

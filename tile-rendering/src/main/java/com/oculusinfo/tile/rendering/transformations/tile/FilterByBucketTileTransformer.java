@@ -51,14 +51,12 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 
 	private Integer _startBucket = null;
 	private Integer _endBucket = null;
-	private Integer _bucketCount = null;
 
 	public FilterByBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
 			_startBucket = arguments.optInt("startBucket");
 			_endBucket = arguments.optInt("endBucket");
-			_bucketCount = arguments.optInt("bucketCount");
 		} else {
 			LOGGER.warn("No arguements passed in to filterbucket transformer");
 		}
@@ -81,10 +79,8 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
     public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
     	TileData<List<T>> resultTile = null;
 
-        if ( _startBucket != null &&
-			_endBucket != null &&
-			_bucketCount != null ) {
-			if ( _startBucket < 0 || _startBucket > _endBucket || _endBucket > _bucketCount ) {
+		if ( _startBucket != null && _endBucket != null ) {
+			if ( _startBucket < 0 || _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
         	}
 		}
@@ -101,10 +97,9 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
                 int binSize = binContents.size();
 				int start = ( _startBucket != null ) ? _startBucket : 0;
 				int end = ( _endBucket != null ) ? _endBucket : binSize;
-				int count = ( _bucketCount != null ) ? _bucketCount : 32;
 
                 // make sure we have a full array to add into the tile for dense tile creation
-                List<T> transformedBin = new ArrayList<>( count );
+                List<T> transformedBin = new ArrayList<>();
                 for(int i = 0; i < binSize; i++) {
                     if ( i >= start && i <= end ) {
                     	transformedBin.add(i, binContents.get(i));

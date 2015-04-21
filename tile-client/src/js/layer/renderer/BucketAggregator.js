@@ -27,60 +27,6 @@
 
     "use strict";
 
-    /*
-    {
-        "score": {
-            "total": 6,
-            "texts": [
-                {
-                    "score": 4,
-                    "text": "I'd hammer in the morning"
-                },
-                {
-                    "score": 4,
-                    "text": "Never odd or even"
-                },
-                {
-                    "score": 4,
-                    "text": "(But the fought like the devil when his temper got stirred)"
-                }
-            ]
-        },
-        "topic": "a"
-    }
-    */
-
-    /*
-    {
-        "score": {
-            "total": "$sum",
-            "texts": "$append"
-        },
-        "topic": "$id"
-    }
-    {
-        "$id": "topic",
-        "$sort": "score.total",
-        "$append": ["score.texts"],
-        "$sum":  ["score.total"]
-    }
-    {
-        group: {
-            topic: "$id"
-        },
-        aggregate: {
-            score: {
-                total: "$sum",
-                texts: "$append"
-            },
-        },
-        sort: {
-        score: {
-            total: "$asc"
-        }
-    }
-    */
-
     // build the operation paths, depth first
     function buildPathsRecursive( paths, path, obj ) {
         var key;
@@ -184,7 +130,15 @@
         return a;
     }
 
-    // iterate over spec, and then for
+    /**
+     * Iterates over each bucket, and for each path, performs the
+     * specified type of aggregation.
+     *
+     * @param {Array} paths - The array of paths.
+     * @param {Array} buckets - The array of buckets.
+     *
+     * @param {Array} The aggregated buckets.
+     */
     function applyToBuckets( paths, buckets ) {
         var agg = JSON.parse( JSON.stringify( buckets[0] ) ), // copy
             operator,
@@ -232,8 +186,8 @@
     }
 
     /**
-     * Instantiate a BucketOperation object.
-     * @class BucketOperation
+     * Instantiate a BucketAggregator object.
+     * @class BucketAggregator
      * @classdesc
      */
     function BucketAggregator( spec ) {
@@ -241,6 +195,14 @@
         this.idPath = getIdPath( this.paths );
     }
 
+    /**
+     * Given an array of buckets, will execute the provided aggregation
+     * specification against all relevant entries.
+     *
+     * @param {Array} buckets - The array of buckets.
+     *
+     * @returns {Array} The aggregated buckets.
+     */
     BucketAggregator.prototype.aggregate = function( buckets ) {
         var paths = this.paths,
             idPath = this.idPath,
@@ -252,6 +214,7 @@
             i,
             j,
             k;
+        // first iterate over all buckets and organize them by $id
         for ( i=0; i<buckets.length; i++ ) {
             bucket = buckets[i];
             if ( bucket ) {
@@ -266,6 +229,7 @@
                 }
             }
         }
+        // then, for each $id, aggregate the buckets
         for ( key in bucketsById ) {
             if ( bucketsById.hasOwnProperty( key ) ) {
                 aggBuckets.push( applyToBuckets( paths, bucketsById[ key ] ) );
