@@ -22,20 +22,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tilegen.tiling
-
+package com.oculusinfo.tilegen.pipeline
 
 import java.io.File
+
+import com.oculusinfo.binning.util.JSONUtilitiesTests
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
+import com.oculusinfo.tilegen.tiling.LocalTileIO
 import org.apache.spark.SharedSparkContext
 import org.apache.spark.sql.catalyst.types.StructType
-import org.scalatest.FunSuite
-import scala.collection.mutable.ListBuffer
-import com.oculusinfo.binning.util.JSONUtilitiesTests
 import org.json.JSONObject
+import org.scalatest.FunSuite
 
-class TileOperationsTests extends FunSuite with SharedSparkContext {
-	import com.oculusinfo.tilegen.tiling.TileOperations._
+import scala.collection.mutable.ListBuffer
+
+class PipelineOperationsTests extends FunSuite with SharedSparkContext {
+
+	import PipelineOperationsParsing._
 
 	def outputOps(colSpecs: List[String], output: ListBuffer[Any])(input: PipelineData) = {
 		val extractors = colSpecs.map(SchemaTypeUtilities.calculateExtractor(_, input.srdd.schema))
@@ -56,7 +59,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 
 		val loadStage = new PipelineStage("load", parseLoadJsonDataOp(argsMap))
 		loadStage.addChild(new PipelineStage("output", outputOps(List("val", "time"), resultList)(_)))
-		TilePipelines.execute(loadStage, sqlc)
+		PipelineTree.execute(loadStage, sqlc)
 
 		assertResult(List(
 			             "one", "2015-01-01 10:15:30",
@@ -85,7 +88,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 
 		val loadStage = PipelineStage("load", parseLoadCsvDataOp(argsMap))
 		loadStage.addChild(PipelineStage("output", outputOps(List("vAl", "time"), resultList)(_)))
-		TilePipelines.execute(loadStage, sqlc)
+		PipelineTree.execute(loadStage, sqlc)
 
 		assertResult(List(
 			             "one", "2015-01-01 10:15:30",
@@ -107,7 +110,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 			.addChild(PipelineStage("check_cache_op_2", checkTableName(1, false)(_)))
 			.addChild(PipelineStage("cache_op_3", parseCacheDataOp(Map.empty)(_)))
 			.addChild(PipelineStage("check_cache_op_3", checkTableName(1, false)(_)))
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 	}
 
 	test("Test date filter parse and operation") {
@@ -123,7 +126,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("date_filter", parseDateFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("time", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List("2015-01-02 8:15:30"))(resultList.toList)
 	}
@@ -140,7 +143,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List(2, 3))(resultList.toList)
 	}
@@ -158,7 +161,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List(1))(resultList.toList)
 	}
@@ -177,7 +180,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List(2, 3))(resultList.toList)
 	}
@@ -197,7 +200,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List(1))(resultList.toList)
 	}
@@ -216,7 +219,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("regex_filter", parseRegexFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("desc", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List("aabb.?cc", "ab99.?xx"))(resultList.toList)
 	}
@@ -235,7 +238,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("regex_filter", parseRegexFilterOp(argMap)))
 			.addChild(PipelineStage("output", outputOp("desc", resultList)(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List("aabcc.?"))(resultList.toList)
 	}
@@ -256,7 +259,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 		rootStage.addChild(PipelineStage("column_select", parseColumnSelectOp(argMap)))
 			.addChild(PipelineStage("output", schemaOp()(_)))
 
-		TilePipelines.execute(rootStage, sqlc)
+		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(schema.fields.size)(2)
 		assert(schema.fieldNames.contains("val"))
@@ -264,7 +267,6 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test geo heatmap parse and operation") {
-		import scala.collection.JavaConversions._
 
 		try {
 			// pipeline stage to create test data
@@ -294,7 +296,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 
 			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
 			rootStage.addChild(PipelineStage("geo_heatmap_op", parseGeoHeatMapOp(args)))
-			TilePipelines.execute(rootStage, sqlc)
+			PipelineTree.execute(rootStage, sqlc)
 
 			// Load the metadata and validate its contents - gives us an indication of whether or not the
 			// job completed successfully, and if performed the expected operation.  There are more detailed
@@ -326,7 +328,6 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test crossplot heatmap parse and operation") {
-		import scala.collection.JavaConversions._
 
 		try {
 			// pipeline stage to create test data
@@ -358,7 +359,7 @@ class TileOperationsTests extends FunSuite with SharedSparkContext {
 
 			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
 			rootStage.addChild(PipelineStage("crossplot_heatmap_op", parseCrossplotHeatmapOp(args)))
-			TilePipelines.execute(rootStage, sqlc)
+			PipelineTree.execute(rootStage, sqlc)
 
 			// Load the metadata and validate its contents - gives us an indication of whether or not the
 			// job completed successfully, and if performed the expected operation.  There are more detailed
