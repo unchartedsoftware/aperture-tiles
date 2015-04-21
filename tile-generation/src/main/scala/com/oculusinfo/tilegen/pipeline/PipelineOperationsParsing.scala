@@ -43,17 +43,6 @@ import grizzled.slf4j.Logging
 object PipelineOperationsParsing extends Logging {
 	import scala.collection.JavaConversions._
 
-	protected var tableIdCount = new AtomicInteger(0)
-
-	/**
-	 * KeyValueArgumentSource implementation that passes the supplied map through.
-	 *
-	 * @param args Wrapped argument map.
-	 */
-	case class KeyValuePassthrough(args: Map[String, String]) extends KeyValueArgumentSource {
-		def properties = args.map(entry => entry._1 -> entry._2)
-	}
-
 	/**
 	 * Registers a standard set of operations against a pipeline.
 	 *
