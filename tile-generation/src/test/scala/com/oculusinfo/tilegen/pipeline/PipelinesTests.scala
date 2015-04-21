@@ -22,12 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tilegen.tiling
+package com.oculusinfo.tilegen.pipeline
 
 import org.apache.spark.SharedSparkContext
 import org.scalatest.FunSuite
 
-class TilePipelineTests extends FunSuite with SharedSparkContext {
+class PipelinesTests extends FunSuite with SharedSparkContext {
 
 	case class TestData(x: Int, y: String)
 
@@ -58,20 +58,20 @@ class TilePipelineTests extends FunSuite with SharedSparkContext {
 		child0.addChild(grandchild0)
 		child1.addChild(grandchild1)
 
-		TilePipelines.execute(parent, sqlc)
+		PipelineTree.execute(parent, sqlc)
 
 		assertResult(List("p", "c0", "g0", "c1", "g1"))(data)
 	}
 
 	test("Test symbolic pipeline creation") {
-		val pipelines = TilePipelines()
+		val pipelines = Pipelines()
 			.createPipeline("pipeline")
 
 		assert(pipelines.pipelineRoots.contains("pipeline"))
 	}
 
 	test("Test symbolic pipeline op registration") {
-		val pipelines = TilePipelines()
+		val pipelines = Pipelines()
 			.registerPipelineOp("some_op_one", parseTestOp)
 			.registerPipelineOp("some_op_two", parseTestOp)
 			.registerPipelineOp("some_op_three", parseTestOp)
@@ -82,7 +82,7 @@ class TilePipelineTests extends FunSuite with SharedSparkContext {
 	}
 
 	test("Test symbolic pipeline stage add") {
-		val pipelines = TilePipelines()
+		val pipelines = Pipelines()
 			.registerPipelineOp("operation", parseTestOp)
 			.createPipeline("pipeline")
 			.addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)
@@ -111,7 +111,7 @@ class TilePipelineTests extends FunSuite with SharedSparkContext {
 			input
 		}
 
-		TilePipelines()
+		Pipelines()
 			.registerPipelineOp("operation", parseTestOp)
 			.createPipeline("pipeline")
 			.addPipelineStage("stage-0", "operation", Map("name" -> "foo-0"), "pipeline", "root", sqlc)

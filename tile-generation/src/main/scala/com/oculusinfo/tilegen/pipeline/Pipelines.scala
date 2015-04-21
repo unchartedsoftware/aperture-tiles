@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
- * http://www.oculusinfo.com/
+ * Copyright © 2013-2015 Uncharted Software Inc.
+ *
+ * Property of Uncharted™, formerly Oculus Info Inc.
+ * http://uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -10,10 +12,10 @@
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,58 +24,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tilegen.tiling
+package com.oculusinfo.tilegen.pipeline
 
-import com.oculusinfo.tilegen.tiling.TilePipelines.PipelineOpBinding
+import com.oculusinfo.tilegen.pipeline.Pipelines.PipelineOpBinding
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.{SQLContext, SchemaRDD, StructType}
 
-/**
- * Data that is passed from stage to stage of the tile pipeline.
- *
- * @param sqlContext The spark SQL context
- * @param srdd Valid SchemaRDD
- * @param tableName Optional associated temporary table name
- */
-case class PipelineData(sqlContext: SQLContext, srdd: SchemaRDD, tableName: Option[String] = None)
-
-/**
- * Tile pipeline tree node that transforms PipelineData
- *
- * @param name The name of the pipeline stage
- * @param op The transformation operation applied by this stage
- * @param children The children of this stage
- */
-case class PipelineStage(name: String, op: PipelineData => PipelineData, var children: List[PipelineStage] = List()) {
-	def addChild(child: PipelineStage): PipelineStage = {
-		children = children :+ child
-		child
-	}
-}
-
-/**
- * Functions for executing tile pipelines.  A tile pipeline is created by building a tree of PipelineStage
- * objects and passing them to the execute function. Example:
- *
- * {{{
- * def foo(opName: String)(input: PipelineData) = {
- *   PipelineData(input.sqlContext, input.srdd.map(_ * 2))
- * }
- *
- * val parent = PipelineStage("parent", foo("p")(_))
- * val child0 = PipelineStage("child0", foo("c0")(_))
- * val child1 = PipelineStage("child1", foo("c1")(_))
- * val grandchild0 = PipelineStage("grandchild0", foo("g0")(_))
- *
- * parent.addChild(child0)
- * parent.addChild(child1)
- * child0.addChild(grandchild0)
- *
- * TilePipelines.execute(parent, sqlc)
- * }}}
- *
- */
-object TilePipelines {
+object Pipelines {
 
 	protected val logger = Logger[this.type]
 
@@ -84,35 +41,11 @@ object TilePipelines {
 	type PipelineOpBinding = Map[String, String] => (PipelineData => PipelineData)
 
 	def apply(pipelineRoots: Map[String, PipelineStage] = Map.empty,
-	          pipelineOps: Map[String, PipelineOpBinding] = Map.empty) = new TilePipelines(pipelineRoots, pipelineOps)
-
-	/**
-	 * Executes the pipeline via depth first tree traversal.
-	 *
-	 * @param start PipelineStage to start the traversal from
-	 * @param sqlContext Spark SQL context to run the jobs under
-	 * @param input Optional start data.  Data based on an empty SchemaRDD will be used if not set.
-	 */
-	def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
-		// TODO: Should run a check for cycles here (tsort?)
-		def ex(stage: PipelineStage, result: PipelineData): Unit = {
-			logger.info(s"Executing pipeline stage [${stage.name}]")
-			val stageResult = stage.op(result)
-			stage.children.foreach(ex(_, stageResult))
-		}
-
-		input match {
-			case Some(i) => ex(start, i)
-			case None =>
-				val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
-				ex(start, PipelineData(sqlContext, emptySchema))
-		}
-
-	}
+	          pipelineOps: Map[String, PipelineOpBinding] = Map.empty) = new Pipelines(pipelineRoots, pipelineOps)
 }
 
 /**
- * Symbolic tile pipeline interface - allows pipelines to be constructed and manipulated using strings, making it 
+ * Symbolic tile pipeline interface - allows pipelines to be constructed and manipulated using strings, making it
  * suitable for calls via a rest interface or a config file.  Direct programmatic creation and execution should be
  * done by instancing PipelineStage objects and using the execute function directly.
  *
@@ -121,7 +54,7 @@ object TilePipelines {
  * {{{
  * def testOp(name: String)(input: PipelineData) = input
  * def parseTestOp(args: Map[String, String]) = testOp(args("name"))(_)
- * val pipelines = new TilePipelines()
+ * val pipelines = Pipelines()
  *    .registerPipelineOp("some-operation", parseTestOp)
  *    .createPipeline("some-pipeline")
  *    .addPipelineStage("stage-0", "some-operation", Map("name" -> "foo-0"), "some-pipeline", "root", sqlc)
@@ -134,7 +67,7 @@ object TilePipelines {
  * @param pipelineOps Map of [pipeline stage type ID, PipelineArgParser] tuples that define available pipeline
  *                    operation types.  Defaults to empty.
  */
-class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
+class Pipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
                     val pipelineOps: Map[String, PipelineOpBinding] = Map.empty) {
 
 	/**
@@ -146,7 +79,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
 	 * @return Updated instance of this object.
 	 */
 	def registerPipelineOp(pipelineOpId: String, pipelineOpBinding: PipelineOpBinding) = {
-		TilePipelines(pipelineRoots, pipelineOps + (pipelineOpId -> pipelineOpBinding))
+		Pipelines(pipelineRoots, pipelineOps + (pipelineOpId -> pipelineOpBinding))
 	}
 
 	/**
@@ -156,7 +89,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
 	 * @return Updated instance of this object.
 	 */
 	def createPipeline(pipelineId: String) = {
-		TilePipelines(pipelineRoots + (pipelineId -> PipelineStage("root", input => input)), pipelineOps)
+		Pipelines(pipelineRoots + (pipelineId -> PipelineStage("root", input => input)), pipelineOps)
 	}
 
 	/**
@@ -199,7 +132,7 @@ class TilePipelines(val pipelineRoots: Map[String, PipelineStage] = Map.empty,
 	 * @param sqlContext Spark SQL context to run the job under.
 	 */
 	def runPipeline(pipelineId: String, sqlContext: SQLContext) = {
-		TilePipelines.execute(pipelineRoots(pipelineId), sqlContext)
+		PipelineTree.execute(pipelineRoots(pipelineId), sqlContext)
 	}
 
 	private def findNode(nodeId: String, toVisit: List[PipelineStage]): Option[PipelineStage] = {
