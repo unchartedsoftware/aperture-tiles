@@ -81,9 +81,9 @@ object PipelineOperations {
 	/**
 	 * Pipeline op to filter records to a specific date range.
 	 *
-	 * @param minDate Start date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
-	 * @param maxDate End date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
-	 * @param format Date parsing string, expressed according to [[java.text.SimpleDateFormat]].
+	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
 	 * @param timeCol Column spec denoting name of time column in input schema RDD.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.

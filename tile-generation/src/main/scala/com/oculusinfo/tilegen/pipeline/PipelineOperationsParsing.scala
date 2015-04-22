@@ -105,7 +105,7 @@ object PipelineOperationsParsing extends Logging {
 	 *    ops.column - Column spec denoting the time field in input data
 	 *    ops.start - Start date string
 	 *    ops.end - End date string
-	 *    ops.format - Date format string (based on [[java.text.SimpleDateFormat]])
+	 *    ops.format - Date format string (based on java.text.SimpleDateFormat)
 	 */
 	def parseDateFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing dateFilterOp with args $args")
