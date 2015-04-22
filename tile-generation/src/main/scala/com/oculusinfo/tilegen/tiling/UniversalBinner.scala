@@ -26,7 +26,9 @@ package com.oculusinfo.tilegen.tiling
 
 
 
+import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
+import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
@@ -34,6 +36,8 @@ import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 
 
 object UniversalBinner {
@@ -56,22 +60,35 @@ object UniversalBinner {
 			.min(maxPartitions.getOrElse(Int.MaxValue))
 
 	/**
-     * Optionally aggregate two optional values
-     * 
-     * @param aggFcn An aggregation function for combining two Ts
-     * @param value1 The first value to aggregate
-     * @param value2 The second value to aggregate
-     * @tparam T The type of value to aggregate
-     */
+	 * Optionally aggregate two optional values
+	 * 
+	 * @param aggFcn An aggregation function for combining two Ts
+	 * @param value1 The first value to aggregate
+	 * @param value2 The second value to aggregate
+	 * @tparam T The type of value to aggregate
+	 */
 	def optAggregate[T] (aggFcn: Option[(T, T) => T],
 	                     value1: Option[T], value2: Option[T]): Option[T] =
 		aggFcn.map(fcn => (value1 ++ value2).reduceLeftOption(fcn)).getOrElse(None)
+
+	/**
+	 * Add two maps together, aggregating entries with the same key in the two maps according to 
+	 * a given aggregator function.
+	 * 
+	 * @param aggFcn The aggregation function for adding values together
+	 * @param map1 The first of the two maps
+	 * @param map2 The second of the two maps
+	 * @tparam K The class type of the map keys
+	 * @tparam V The class type of the map values
+	 */
+	def aggregateMaps[K, V] (aggFcn: (V, V) => V, map1: Map[K, V], map2: Map[K, V]): Map[K, V] =
+		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map{case (k, v) => (k, v.map(_._2).reduce(aggFcn))}
 }
 
 
 
 class UniversalBinner {
-	import UniveralBinner._
+	import UniversalBinner._
 
 
 
@@ -84,11 +101,12 @@ class UniversalBinner {
 	 * @param locateIndexFcn: A function that takes in input index, and indicates which tile(s) it 
 	 *                        is on.  The array of bin indices indicates precisely where on the 
 	 *                        tiles is indicated, in universal bin coordinates.
-	 * @param populateTileFcn A function that takes the precise specification of where an input 
-	 *                        record specified a tile, and indicates which bins on that tile are 
-	 *                        needed.  The input bins are in universal bin coordinates, as in 
+	 * @param populateTileFcn A function that takes the precise specification of the input location 
+	 *                        and value in a single tile, and outputs all the located values in 
+	 *                        that tile.  The input bins are in universal bin coordinates, as in 
 	 *                        locateIndexFcn, while the output bins are bins for the specific tile
-	 *                        in question
+	 *                        in question.  Note that this function should return an empty map if 
+	 *                        given empty inputs.
 	 * @param parameters General binning parameters affecting how this tiling will be done.
 	 */
 	def processData[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
@@ -97,7 +115,7 @@ class UniversalBinner {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 locateIndexFcn: IT => Traversable[(TileIndex, Array[BinIndex])],
-		 populateTileFcn: (TileIndex, Array[BinIndex]) => Array[BinIndex],
+		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => Map[BinIndex, PT],
 		 parameters: BinningParameters = new BinningParameters()): RDD[TileData[BT]] =
 	{
 		// If asked to run in debug mode, keep some stats on how much aggregation is going on in
@@ -105,21 +123,111 @@ class UniversalBinner {
 		val aggregationTracker = if (parameters.debug) Some(data.context.accumulator(0)) else None
 
 		// First, within each partition, group data by tile
-		val consolidatedByPartition = data.mapPartition{iter =>
-			val partitionResults = MutableMap[(TileIndex, Array[BinIndex]), (PT, Option[DT])]()
+		val consolidatedByPartition: RDD[(TileIndex, Array[BinIndex], PT, Option[DT])] =
+			data.mapPartitions{iter =>
+				val partitionResults = MutableMap[(TileIndex, Array[BinIndex]), (PT, Option[DT])]()
 
-			// Map each input record in this partition into tile coordinates, ...
-			iter.flatMap(record => locateIndexFcn(record._1).map(index => (index, (record._2, record._3))))
-			// ... and consolidate identical input records in this partition.
-				.foreach{case (key, newValue) =>
-					if (partitionResults.contains(key)) {
-						val oldValue = partitionResults(key)
-						partitionResults(key) = (binAnalytic.aggregate(newValue._1, oldValue._1),
-						                         optAggregate(dataAnalytics.map(_.analytic.aggregate), newValue._2, oldValue._2))
-					} else {
-						partitionResults(key) = (vb, vd)
-					}
+				// Map each input record in this partition into tile coordinates, ...
+				iter.flatMap(record =>
+					locateIndexFcn(record._1).map(index => (index, (record._2, record._3)))
+				).foreach{case (key, newValue) =>
+						// ... and consolidate identical input records in this partition.
+						if (partitionResults.contains(key)) {
+							val oldValue = partitionResults(key)
+							val analyticAggregator =
+								dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
+							partitionResults(key) = (binAnalytic.aggregate(newValue._1, oldValue._1),
+							                         optAggregate(analyticAggregator,
+							                                      newValue._2, oldValue._2))
+							aggregationTracker.foreach(_ += 1)
+						} else {
+							partitionResults(key) = newValue
+						}
+				}
+				partitionResults.iterator.map(results => (results._1._1, results._1._2, results._2._1, results._2._2))
+			}
 
+		// TODO: If this works, look at using MutableMaps instead of Maps as the first output
+		// value, and adding in place.
+		// TODO: If that works, look into getting rid of the mutable map in the previous step
+		// Combine all information from a single tile
+		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+			c => {
+				val (tile, bins, value, analyticValue) = c
+				(populateTileFcn(tile, bins, value), analyticValue)
+			}
+		val mergeValue: ((Map[BinIndex, PT], Option[DT]),
+		                 (TileIndex, Array[BinIndex], PT, Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+			(aggregateValue, recordValue) => {
+				val (binValues, curAnalyticValue) = aggregateValue
+				val (tile, bins, value, newAnalyticValue) = recordValue
+				val binAggregator = binAnalytic.aggregate(_, _)
+				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
+				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
+				 optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
+			}
+		val mergeCombiners: ((Map[BinIndex, PT], Option[DT]),
+		                     (Map[BinIndex, PT], Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+			(tileValues1, tileValues2) => {
+				val (binValues1, analyticValue1) = tileValues1
+				val (binValues2, analyticValue2) = tileValues2
+				val binAggregator = binAnalytic.aggregate(_, _)
+				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
+				(aggregateMaps(binAggregator, binValues1, binValues2),
+				 optAggregate(analyticAggregator, analyticValue1, analyticValue2))
+			}
+		val a = consolidatedByPartition.map{case (tile, bins, value, analyticValue) =>
+			(tile, (tile, bins, value, analyticValue))
+		}
+		val tileInfos = a.combineByKey[(Map[BinIndex, PT], Option[DT])](createCombiner, mergeValue, mergeCombiners)
+
+		// Now, go through those results and convert to tiles.
+		tileInfos.map{tileInfo =>
+			val index = tileInfo._1
+			val binValues = tileInfo._2._1
+			val analyticValue = tileInfo._2._2
+
+			// Determine if we need a dense or sparse tile
+			val numValues = binValues.size
+			val xLimit = index.getXBins
+			val yLimit = index.getYBins
+			val typeToUse = parameters.tileType.getOrElse(
+				if (numValues > xLimit*yLimit/2) StorageType.Dense
+				else StorageType.Sparse
+			)
+
+			// Create our tile
+			val defaultBinValue = binAnalytic.finish(binAnalytic.defaultProcessedValue)
+			val tile: TileData[BT] = typeToUse match {
+				case StorageType.Dense => new DenseTileData[BT](index, defaultBinValue)
+				case StorageType.Sparse => new SparseTileData[BT](index, defaultBinValue)
+			}
+
+			// Populate our tile with basic bin data
+			binValues.foreach{case (bin, value) =>
+				tile.setBin(bin.getX, bin.getY, binAnalytic.finish(value))
+			}
+
+			// Add in data analytics
+			dataAnalytics.foreach(da =>
+				analyticValue.foreach(a =>
+					AnalysisDescription.record(a, da, tile)
+				)
+			)
+
+			// Add in tile analytics
+			tileAnalytics.map(ta =>
+				{
+					// Figure out the value for this tile
+					val analyticValue = ta.convert(tile)
+					// Add it into any appropriate accumulators
+					ta.accumulate(tile.getDefinition(), analyticValue)
+					// And store it in the tile's metadata
+					AnalysisDescription.record(analyticValue, ta, tile)
+				}
+			)
+
+			tile
 		}
 	}
 }
