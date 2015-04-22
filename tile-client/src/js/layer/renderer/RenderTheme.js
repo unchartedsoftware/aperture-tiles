@@ -212,7 +212,7 @@
         }
 
         css += '</style>';
-        $( document.body ).prepend( css );
+        $( document.head ).prepend( css );
     };
 
     module.exports = RenderTheme;
