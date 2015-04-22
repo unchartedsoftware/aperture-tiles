@@ -62,6 +62,9 @@
     function Renderer( spec ) {
         this.spec = spec || {};
         this.uuid = Util.generateUuid();
+        if ( spec.aggregator ) {
+            this.aggregator = spec.aggregator;
+        }
     }
 
     /**
@@ -206,7 +209,22 @@
             return;
         }
         this.meta = layer.source.meta ? layer.source.meta.meta : null;
-        this.map = layer.map;
+        // apply the aggregator to the metadata
+        if ( this.aggregator ) {
+            for ( var key in this.meta ) {
+                if ( this.meta.hasOwnProperty( key ) ) {
+                    if ( key !== "bucketCount" &&
+                        key !== "rangeMin" &&
+                        key !== "rangeMax" &&
+                        key !== "topicType" &&
+                        key !== "translatedTopics" ) {
+                        if ( this.meta[ key ].bins ) {
+                            this.meta[ key ].bins = this.aggregator.aggregate( this.meta[ key ].bins );
+                        }
+                    }
+                }
+            }
+        }
         this.parent = layer;
     };
 

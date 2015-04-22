@@ -249,7 +249,6 @@
             layerSpec.renderer = layer.renderer;
             layerSpec.renderer.meta = layer.source.meta.meta;
             layerSpec.renderer.parent = this;
-            layerSpec.renderer.map = this.map;
         }
         layer.carousel = this;
         // store the layer and its specification

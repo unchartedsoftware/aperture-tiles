@@ -100,7 +100,7 @@
             this.tileClass = spec.tileClass;
         }
         if ( spec.renderer ) {
-            this.renderer = spec.renderer;
+            this.setRenderer( spec.renderer );
         }
         if ( spec.html ) {
             this.html = spec.html;
@@ -139,9 +139,6 @@
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
 
-        if ( this.renderer ) {
-            this.renderer.attach( this );
-        }
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
@@ -157,6 +154,17 @@
             this.olLayer = null;
         }
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+    /**
+     * Sets the current renderer of the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+     AnnotationLayer.prototype.setRenderer = function( renderer ) {
+        this.renderer = renderer;
+        this.renderer.attach( this );
     };
 
     /**

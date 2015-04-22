@@ -96,6 +96,7 @@
     PointAggregateRenderer.prototype.render = function( data ) {
 
         var spec = this.spec,
+            map = this.parent.map,
             values = RendererUtil.getAttributeValue( data, spec.rootKey ),
             point = spec.point,
             entries = [],
@@ -112,7 +113,7 @@
         // get tilekey
         tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
         // get tile pos
-        tilePos = MapUtil.getTopLeftViewportPixelForTile( this.map, tilekey );
+        tilePos = MapUtil.getTopLeftViewportPixelForTile( map, tilekey );
 
         // for each bin
         for ( i=0; i<values.length; i++ ) {
@@ -129,7 +130,7 @@
             for ( j=0; j<value.length; j++ ) {
 
                 // get position in viewport space
-                position = MapUtil.getViewportPixelFromCoord( this.map, value[j][point.xKey], value[j][point.yKey] );
+                position = MapUtil.getViewportPixelFromCoord( map, value[j][point.xKey], value[j][point.yKey] );
                 // get relative position from tile top left
                 offset = {
                     x: position.x - tilePos.x,

@@ -55,25 +55,40 @@
      */
     function parseMetaMinMaxJson( meta ) {
         var minMax,
-            min, max,
+            min,
+            max,
             key;
         if ( typeof meta === 'string' ) {
             // new meta data is valid json, hurray!
             return JSON.parse( meta );
         }
         // old meta data was crafted in the fiery pits of hades and manifests
-        // as malformed json sometimes wrapped in an array, in one of four
-        // potential attribute paths:
-        if ( meta && ( meta.max || meta.maximum ) && ( meta.min || meta.minimum ) ) {
-            // single bucket entries
-            max = parseMalformedJson( meta.maximum || meta.max.maxmium || meta.max );
-            min = parseMalformedJson( meta.minimum || meta.min.minimum || meta.min );
+        // as malformed json sometimes wrapped in an array, in one of six
+        // potential formats
+        if ( meta &&
+            ( meta.max !== undefined || meta.maximum !== undefined ) &&
+            ( meta.min !== undefined || meta.minimum !== undefined ) ) {
+            // single bucket entries, in one of three attributes
+			max = meta.maximum !== undefined ? meta.maximum : meta.max.maxmium || meta.max || 0;
+			min = meta.minimum !== undefined ? meta.minimum : meta.min.minimum || meta.min || 0;
+            // sometimes the meta data is wraped in an array
+            max = ( max instanceof Array ) ? max[0] : max;
+            min = ( min instanceof Array ) ? min[0] : min;
+            // sometimes its a string
+            if ( typeof max === 'string' ) {
+                max = parseMalformedJson( max );
+            }
+            if ( typeof min === 'string' ) {
+                min = parseMalformedJson( min );
+            }
+            // sometimes the parsed value is also wrapped in an array
             return {
-                maximum: ( max instanceof Array ) ? max[0] : max, // legacy support
-                minimum: ( min instanceof Array ) ? min[0] : min // legacy support
+                maximum: ( max instanceof Array ) ? max[0] : max,
+                minimum: ( min instanceof Array ) ? min[0] : min,
+                bins: meta.bins
             };
         }
-        // multi-bucket entries
+        // some multi-bucket entries come as arrays
         minMax = [];
         for ( key in meta ) {
             if ( meta.hasOwnProperty( key ) ) {
@@ -100,7 +115,9 @@
             if ( meta.hasOwnProperty( key ) ) {
                 if ( key !== "bucketCount" &&
                     key !== "rangeMin" &&
-                    key !== "rangeMax" ) {
+                    key !== "rangeMax" &&
+                    key !== "topicType" &&
+                    key !== "translatedTopics" ) {
                     meta[ key ] = parseMetaMinMaxJson( meta[key] );
                 }
             }

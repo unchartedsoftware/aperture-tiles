@@ -29,6 +29,7 @@
 
     var Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
+        Util = require('../util/Util'),
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
 
@@ -52,18 +53,23 @@
      * </pre>
      */
     function ClientLayer( spec ) {
+        var that = this,
+            getURL = spec.getURL || LayerUtil.getURL;
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+        this.tileTransform = spec.tileTransform || {};
         this.domain = "client";
         this.source = spec.source;
-        this.getURL = spec.getURL || LayerUtil.getURL;
+        this.getURL = function( bounds ) {
+            return getURL.call( this, bounds ) + that.getQueryParamString();
+        };
         if ( spec.tileClass ) {
             this.tileClass = spec.tileClass;
         }
         if ( spec.renderer ) {
-            this.renderer = spec.renderer;
+            this.setRenderer( spec.renderer );
         }
         if ( spec.html ) {
             this.html = spec.html;
@@ -102,9 +108,6 @@
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
 
-        if ( this.renderer ) {
-            this.renderer.attach( this );
-        }
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
@@ -120,6 +123,17 @@
             this.olLayer = null;
         }
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+    /**
+     * Sets the current renderer of the layer.
+     * @memberof ClientLayer
+     *
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+    ClientLayer.prototype.setRenderer = function( renderer ) {
+        this.renderer = renderer;
+        this.renderer.attach( this );
     };
 
     /**
@@ -168,6 +182,71 @@
      */
     ClientLayer.prototype.getZIndex = function () {
         return this.zIndex;
+    };
+
+    /**
+     * Set the layers tile transform function type.
+     * @memberof ClientLayer
+     *
+     * @param {String} transformType - The tile transformer type.
+     */
+    ClientLayer.prototype.setTileTransformType = function ( transformType ) {
+        if ( this.tileTransform.type !== transformType ) {
+            this.tileTransform.type = transformType;
+            if ( this.olLayer ) {
+                this.olLayer.redraw();
+            }
+            PubSub.publish( this.getChannel(), {field: 'tileTransformType', value: transformType} );
+        }
+    };
+
+    /**
+     * Get the layers transformer type.
+     * @memberof ClientLayer
+     *
+     * @return {String} The tile transform type.
+     */
+    ClientLayer.prototype.getTileTransformType = function () {
+        return this.tileTransform.type;
+    };
+
+    /**
+     * Set the tile transform data attribute
+     * @memberof ClientLayer
+     *
+     * @param {Object} transformData - The tile transform data attribute.
+     */
+    ClientLayer.prototype.setTileTransformData = function ( transformData ) {
+        if ( this.tileTransform.data !== transformData ) {
+            this.tileTransform.data = transformData;
+            if ( this.olLayer ) {
+                this.olLayer.redraw();
+            }
+            PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
+        }
+    };
+
+    /**
+     * Get the transformer data attribute.
+     * @memberof ClientLayer
+     *
+     * @returns {Object} The tile transform data attribute.
+     */
+    ClientLayer.prototype.getTileTransformData = function () {
+        return this.tileTransform.data;
+    };
+
+    /**
+     * Generate query parameters based on state of layer
+     * @memberof ClientLayer
+     *
+     * @returns {String} The query parameter string based on the attributes of this layer.
+     */
+     ClientLayer.prototype.getQueryParamString = function() {
+        var query = {
+            tileTransform: this.tileTransform
+        };
+        return Util.encodeQueryParams( query );
     };
 
     /**

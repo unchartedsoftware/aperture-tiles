@@ -41,6 +41,7 @@ import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.util.AvroJSONConverter;
 
 
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
 
 
 @Singleton
@@ -153,7 +155,7 @@ public class TileServiceImpl implements TileService {
 
 	private <T> BufferedImage renderTileImage (LayerConfiguration config, String layer,
 	                                           TileIndex index, Iterable<TileIndex> tileSet,
-	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException {
+	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException, Exception {
         // prepare for rendering
 		config.prepareForRendering(layer, index, tileSet);
 
@@ -165,6 +167,10 @@ public class TileServiceImpl implements TileService {
 
 		int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
+
+        @SuppressWarnings("unchecked")
+        TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
+        data = tileTransformer.transform( data );
 
 		if (data != null) {
 			return renderer.render(data, config);
@@ -192,7 +198,8 @@ public class TileServiceImpl implements TileService {
             // produce transformer, return transformed de-serialized data
 			TileTransformer<?> transformer = config.produce(TileTransformer.class);
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
-            return transformer.transform(deserializedJSON);
+			
+			return transformer.transform(deserializedJSON);
 		} catch (IOException | JSONException | ConfigurationException e) {
 			LOGGER.warn("Exception getting tile for {}", index, e);
 		}  catch (IllegalArgumentException e) {

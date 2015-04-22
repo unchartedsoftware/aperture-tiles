@@ -38,6 +38,7 @@ import org.apache.avro.io.JsonEncoder;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,13 +48,13 @@ import java.io.InputStream;
 
 /**
  * Simple utility class to convert Avro files to JSON (and, maybe, vice versa)
- * 
+ *
  * @author nkronenfeld
  */
 public class AvroJSONConverter {
 	/**
 	 * Convert an Avro input stream into a JSON object
-	 * 
+	 *
 	 * @param stream The input data
 	 * @return A JSON representation of the input data
 	 * @throws IOException
@@ -64,18 +65,18 @@ public class AvroJSONConverter {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 
 		// Conversion code taken from org.apache.avro.tool.DataFileReadTool
-		GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+		GenericDatumReader<Object> reader = new GenericDatumReader<>();
 		FileReader<Object> fileReader = DataFileReader.openReader(input, reader);
 		try {
 			Schema schema = fileReader.getSchema();
-			DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+			DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
 			JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, output);
 			for (Object datum: fileReader) {
 				encoder.configure(output);
 				writer.write(datum, encoder);
 				encoder.flush();
-				// For some reason, we only contain one record, but the 
-				// decoding thinks we contain more and fails; so just break 
+				// For some reason, we only contain one record, but the
+				// decoding thinks we contain more and fails; so just break
 				// after our first one.
 				break;
 			}
@@ -84,6 +85,20 @@ public class AvroJSONConverter {
 			fileReader.close();
 		}
 		String jsonString = output.toString("UTF-8");
-		return new JSONObject(jsonString);
+		JSONObject json = new JSONObject(jsonString);
+
+		// check meta data node of tile, typically it is serialized as a string
+		// however this string will be valid JSON and can thus be parsed further
+		JSONObject meta = json.optJSONObject("meta");
+		if ( meta != null ) {
+			JSONObject map = meta.optJSONObject("map");
+			if ( map != null ) {
+				String bins = map.optString("bins", null);
+				if ( bins != null ) {
+					map.put( "bins", new JSONArray( bins ) );
+				}
+			}
+		}
+		return json;
 	}
 }

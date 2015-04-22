@@ -209,6 +209,29 @@
         },
 
         /**
+         * Registers a click handler that only fires if the click isn't part of
+         * a double click.
+         *
+         * @param element  {HTMLElement} The DOM element to attach the event.
+         * @param callback {Function}    The callback function.
+         * @param [timout] {int}            The timeout in ms (optional).
+         */
+        timeSensitiveClick: function( element, callback, timeout ) {
+            var clicks = 0;
+            element.addEventListener( "click", function( event ) {
+		    	clicks++;
+		    	if ( clicks === 1 ) {
+		        	setTimeout( function() {
+		        		if ( clicks === 1 ) {
+							callback.call( element, event );
+				        }
+		        		clicks = 0;
+		        	}, timeout || 300);
+			    }
+		    });
+        },
+
+        /**
          * Registers a click handler that only fires if the click didn't
          * involve a map drag. Since the map is moving under the mouse cursor
          * the browser will still register a click despite mouse movement. This
@@ -220,20 +243,39 @@
          */
         dragSensitiveClick: function( element, callback, threshold ) {
             var dragStart = {x: null, y: null};
-
             threshold = threshold || 10;
-
-            element.onmousedown = function( evt ) {
+            element.addEventListener( "mousedown", function( evt ) {
                 dragStart.x = evt.pageX;
                 dragStart.y = evt.pageY;
-            };
-
-            element.onclick = function( evt ) {
+            });
+            element.addEventListener( "click", function( evt ) {
                 if (Math.abs( dragStart.x - evt.pageX ) < threshold &&
                     Math.abs( dragStart.y - evt.pageY ) < threshold ) {
                     callback.call( this, evt );
                 }
-            };
+            });
+        },
+
+        /**
+         * Registers a click handler that only fires if the click didn't
+         * involve a map drag and was not part of a double click.
+         *
+         * @param element     {HTMLElement} The DOM element to attach the event.
+         * @param callback    {Function}    The callback function.
+         */
+        dragAndTimeSensitiveClick: function( element, callback ) {
+            var dragStart = {x: null, y: null},
+                threshold = threshold || 10;
+            element.addEventListener( "mousedown", function( evt ) {
+                dragStart.x = evt.pageX;
+                dragStart.y = evt.pageY;
+            });
+            this.timeSensitiveClick( element, function( evt ) {
+                if (Math.abs( dragStart.x - evt.pageX ) < threshold &&
+                    Math.abs( dragStart.y - evt.pageY ) < threshold ) {
+                    callback.call( this, evt );
+                }
+            });
         },
 
         /**

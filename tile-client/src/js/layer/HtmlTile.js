@@ -126,8 +126,8 @@
 
     OpenLayers.Tile.HTML.prototype.clear = function() {
         OpenLayers.Tile.prototype.clear.apply( this, arguments );
-        //this.tileData = null;
-        //this.url = null;
+        this.tileData = null;
+        this.url = null;
         if ( this.div ) {
             this.layer.div.removeChild( this.div );
             this.div = null;
@@ -168,6 +168,9 @@
             // if renderer is attached, use it
             if ( typeof renderer === "function" ) {
                 renderer = renderer.call( this.layer, this.bounds );
+            }
+            if ( renderer.aggregator ) {
+                data.tile.meta.map.bins = renderer.aggregator.aggregate( data.tile.meta.map.bins );
             }
             render = renderer.render( data );
             html = render.html;

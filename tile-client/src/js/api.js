@@ -46,6 +46,7 @@
 
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),
+        BucketAggregator: require('./layer/renderer/BucketAggregator'),
         RendererUtil: require('./layer/renderer/RendererUtil'),
         GraphLabelRenderer: require('./layer/renderer/GraphLabelRenderer'),
         GraphNodeRenderer: require('./layer/renderer/GraphNodeRenderer'),
