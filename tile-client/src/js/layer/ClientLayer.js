@@ -259,7 +259,6 @@
     ClientLayer.prototype.setTileTransformData = function ( transformData ) {
         if ( this.tileTransform.data !== transformData ) {
             this.tileTransform.data = transformData;
-            setLevelMinMax( this ); // changing start / stop buckets affects this
             this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
         }
@@ -304,7 +303,8 @@
      */
     ClientLayer.prototype.redraw = function () {
         if ( this.olLayer ) {
-             this.olLayer.redraw();
+            setLevelMinMax( this );
+            this.olLayer.redraw();
         }
     };
 

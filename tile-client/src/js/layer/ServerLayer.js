@@ -527,7 +527,8 @@
      */
     ServerLayer.prototype.redraw = function () {
         if ( this.olLayer ) {
-             this.olLayer.redraw();
+            setLevelMinMax( this );
+            this.olLayer.redraw();
         }
     };
 
