@@ -70,7 +70,7 @@ object SchemaTypeUtilities {
 
 	// Convenience functions for easy row construction
 	/** Construct a row */
-	def row (values: Any*) = new GenericRow(values.toArray)
+	def row (values: Any*): Row = new GenericRow(values.toArray)
 	/** Construct an array for use as a value in a row */
 	def array (values: Any*) = ArrayBuffer[Any](values:_*)
 
