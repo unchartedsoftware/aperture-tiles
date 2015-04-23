@@ -374,6 +374,17 @@ object StandardBinningFunctions {
 		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
 }
 
+/**
+ * A simple parameter class to encapsulate the various parameters used by a binning job
+ * 
+ * @param debug Whether or not to output debug information about the job
+ * @param xBins The number of bins per generated tile in the horizontal direction
+ * @param yBins the number of bins per generated tile in the vertical direction
+ * @param minPartitions The minimum number of partitions to use during reduce operations
+ * @param maxPartitions The maximum number of partitions to use during reduce operations
+ * @param tileType The type of tile to generate (dense or sparse); None for a fairly good 
+ *                 heuristic to decide on a tile-by-tile basis.
+ */
 case class BinningParameters (debug: Boolean = true,
                               xBins: Int = 256, yBins: Int = 256,
                               minPartitions: Option[Int] = None,
