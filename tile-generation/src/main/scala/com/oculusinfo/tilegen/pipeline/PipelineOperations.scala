@@ -26,12 +26,22 @@
  */
 package com.oculusinfo.tilegen.pipeline
 
+
+
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
+
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+import org.apache.spark.sql.SchemaRDD
+
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+
 import com.oculusinfo.tilegen.datasets.{TilingTask, TilingTaskParameters, CSVReader}
 import com.oculusinfo.tilegen.tiling.{TileIO, LocalTileIO, HBaseTileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+
+
 
 /**
  * Provides operations that can be bound into a TilePipeline
@@ -50,6 +60,16 @@ object PipelineOperations {
 	 */
 	case class KeyValuePassthrough(args: Map[String, String]) extends KeyValueArgumentSource {
 		def properties = args.map(entry => entry._1 -> entry._2)
+	}
+
+	/**
+	 * Load data into the pipeline directly from a schema rdd
+	 * 
+	 * @param rdd The SchemaRDD containing the data
+	 * @param tableName The name of the table the rdd has been assigned in the SQLContext, if any.
+	 */
+	def loadRDDOp (rdd: SchemaRDD, tableName: Option[String] = None)(data: PipelineData): PipelineData = {
+		PipelineData(rdd.sqlContext, rdd, tableName)
 	}
 
 	/**
@@ -108,6 +128,21 @@ object PipelineOperations {
 		val tableName = getOrGenTableName(input, "cached_table_")
 		input.sqlContext.cacheTable(tableName)
 		PipelineData(input.sqlContext, input.srdd, Some(tableName))
+	}
+
+	/**
+	 * A very specific filter to filter geographic data to only that data that projects into the 
+	 * standard tile set under a mercator projection
+	 * 
+	 * @param latCol The column of data containing the longitude value
+	 */
+	def mercatorFilterOp (latCol: String)(input: PipelineData): PipelineData = {
+		val inputTable = getOrGenTableName(input, "mercator_filter_op")
+		val pyramid = new WebMercatorTilePyramid
+		val area = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val selectStatement = "SELECT * FROM "+inputTable+" WHERE "+latCol+" >= "+area.getMinY+" AND "+latCol+" < "+area.getMaxY
+		val outputTable = input.sqlContext.sql(selectStatement)
+		PipelineData(input.sqlContext, outputTable)
 	}
 
 	/**
@@ -230,7 +265,7 @@ object PipelineOperations {
 	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
 	 *                     if the default type of Count is used.
 	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default type
-	                       count is used for the operation.
+	 count is used for the operation.
 	 * @param bounds The bounds for the crossplot.  None indicates that bounds will be auto-generated based on input data.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
@@ -252,12 +287,12 @@ object PipelineOperations {
 
 		val properties = Map("oculus.binning.projection.type" -> "areaofinterest")
 		val boundsProps = bounds match {
-				case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
-				                    "oculus.binning.projection.minX" -> b.minX.toString,
-				                    "oculus.binning.projection.minY" -> b.minY.toString,
-				                    "oculus.binning.projection.maxX" -> b.maxX.toString,
-				                    "oculus.binning.projection.maxY" -> b.maxY.toString)
-				case None => Map("oculus.binning.projection.autobounds" -> "true")
+			case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
+			                    "oculus.binning.projection.minX" -> b.minX.toString,
+			                    "oculus.binning.projection.minY" -> b.minY.toString,
+			                    "oculus.binning.projection.maxX" -> b.maxX.toString,
+			                    "oculus.binning.projection.maxY" -> b.maxY.toString)
+			case None => Map("oculus.binning.projection.autobounds" -> "true")
 		}
 
 		heatMapOpImpl(xColSpec, yColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO,
@@ -286,14 +321,14 @@ object PipelineOperations {
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
 				Map("oculus.binning.value.type" -> "field",
-					"oculus.binning.value.field" -> valueColSpec.get,
-					"oculus.binning.value.valueType" -> valueColType.get,
-					"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
-					"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+				    "oculus.binning.value.field" -> valueColSpec.get,
+				    "oculus.binning.value.valueType" -> valueColType.get,
+				    "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+				    "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
 			case _ =>
 				Map("oculus.binning.value.type" -> "count",
-					"oculus.binning.value.valueType" -> "int",
-					"oculus.binning.value.serializer" -> "[int]-a")
+				    "oculus.binning.value.valueType" -> "int",
+				    "oculus.binning.value.serializer" -> "[int]-a")
 		}
 
 		// Parse bounds and level args
