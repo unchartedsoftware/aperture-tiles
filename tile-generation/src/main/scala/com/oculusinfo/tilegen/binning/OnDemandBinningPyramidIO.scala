@@ -59,9 +59,11 @@ import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.util.Pair
 
 import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
-import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.UniversalBinner
 import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.StandardBinningFunctions
+import com.oculusinfo.tilegen.tiling.BinningParameters
 
 
 
@@ -222,16 +224,15 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
 				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)
-				val spreaderFcn: Seq[Any] => TraversableOnce[(TileIndex, BinIndex)] =
+				val locaterFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])] =
 					index => {
 						val cartesianIndex = indexScheme.toCartesian(index)
 
 						val spread = cartesianSpreaderFcn(cartesianIndex._1, cartesianIndex._2)
-						spread
+						spread.map(r => (r._1, Array(r._2)))
 					}
 
-				val binner = new RDDBinner
-				binner.debug = true
+				val binner = new UniversalBinner
 
 				val results: Array[TileData[BT]] = task.transformRDD[TileData[BT]](
 					rdd => {
@@ -239,9 +240,10 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						                                             binningAnalytic,
 						                                             task.getTileAnalytics,
 						                                             task.getDataAnalytics,
-						                                             spreaderFcn,
-						                                             consolidationPartitions,
-						                                             task.getTileType)
+						                                             locaterFcn,
+						                                             StandardBinningFunctions.populateTileIdentity,
+						                                             new BinningParameters(tileType = task.getTileType,
+						                                                                   maxPartitions = consolidationPartitions))
 					}
 				).collect
 

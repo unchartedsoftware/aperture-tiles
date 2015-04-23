@@ -27,17 +27,24 @@ package com.oculusinfo.tilegen.tiling
 
 
 import scala.collection.mutable.{Map => MutableMap}
-import scala.reflect.ClassTag
+import scala.util.Try
+	import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
+
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
+import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
-import com.oculusinfo.binning.impl.DenseTileData
-import com.oculusinfo.binning.impl.SparseTileData
+
 
 
 object UniversalBinner {
@@ -91,6 +98,114 @@ class UniversalBinner {
 	import UniversalBinner._
 
 
+
+	/** Helper function to mimic RDDBinner interface */
+	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
+	                    AT: ClassTag, DT: ClassTag, BT] (
+		data: RDD[RT],
+		indexFcn: RT => Try[IT],
+		valueFcn: RT => Try[PT],
+		indexScheme: IndexScheme[IT],
+		binAnalytic: BinningAnalytic[PT, BT],
+		tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		dataAnalytics: Option[AnalysisDescription[RT, DT]],
+		serializer: TileSerializer[BT],
+		tileScheme: TilePyramid,
+		consolidationPartitions: Option[Int],
+		tileType: Option[StorageType],
+		writeLocation: String,
+		tileIO: TileIO,
+		levelSets: Seq[Seq[Int]],
+		xBins: Int = 256,
+		yBins: Int = 256,
+		name: String = "unknown",
+		description: String = "unknown") =
+	{
+		println("Binning data")
+		println("\tConsolidation partitions: "+consolidationPartitions)
+		println("\tWrite location: "+writeLocation)
+		println("\tTile io type: "+tileIO.getClass.getName)
+		println("\tlevel sets: "+levelSets.map(_.mkString("[", ", ", "]"))
+			        .mkString("[", ", ", "]"))
+		println("\tX Bins: "+xBins)
+		println("\tY Bins: "+yBins)
+		println("\tName: "+name)
+		println("\tDescription: "+description)
+
+		val startTime = System.currentTimeMillis()
+
+		def transformData[RT: ClassTag, IT: ClassTag, PT: ClassTag, DT: ClassTag]
+			(data: RDD[RT],
+			 indexFcn: RT => Try[IT],
+			 valueFcn: RT => Try[PT],
+			 dataAnalytics: Option[AnalysisDescription[RT, DT]] = None):
+				RDD[(IT, PT, Option[DT])] =
+		{
+			// Process the data to remove all but the minimal portion we need for
+			// tiling - index, value, and analytics
+			data.mapPartitions(iter =>
+				iter.map(i => (indexFcn(i), valueFcn(i), dataAnalytics.map(_.convert(i))))
+			).filter(record => record._1.isSuccess && record._2.isSuccess)
+				.map(record =>(record._1.get, record._2.get, record._3))
+		}
+		val bareData = transformData(data, indexFcn, valueFcn, dataAnalytics)
+
+		// Cache this, we'll use it at least once for each level set
+		bareData.persist(StorageLevel.MEMORY_AND_DISK)
+
+		levelSets.foreach(levels =>
+			{
+				val levelStartTime = System.currentTimeMillis()
+				// For each level set, process the bare data into tiles...
+				var tiles = processDataByLevel(bareData,
+				                               indexScheme,
+				                               binAnalytic,
+				                               tileAnalytics,
+				                               dataAnalytics,
+				                               tileScheme,
+				                               levels,
+				                               xBins,
+				                               yBins,
+				                               consolidationPartitions,
+				                               tileType)
+				// ... and write them out.
+				tileIO.writeTileSet(tileScheme, writeLocation, tiles,
+				                    serializer, tileAnalytics, dataAnalytics,
+				                    name, description)
+				val levelEndTime = System.currentTimeMillis()
+				println("Finished binning levels ["+levels.mkString(", ")+"] of data set "
+					        + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
+			}
+		)
+
+		bareData.unpersist(false)
+
+		val endTime = System.currentTimeMillis()
+		println("Finished binning data set " + name + " into "
+			        + levelSets.map(_.size).reduce(_+_)
+			        + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
+			        + ((endTime-startTime)/60000.0) + " minutes")
+	}
+
+	/** Helper function to mimic RDDBinner interface */
+	def processDataByLevel[IT: ClassTag, PT: ClassTag, AT: ClassTag, DT: ClassTag, BT]
+		(data: RDD[(IT, PT, Option[DT])],
+		 indexScheme: IndexScheme[IT],
+		 binAnalytic: BinningAnalytic[PT, BT],
+		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
+		 dataAnalytics: Option[AnalysisDescription[_, DT]],
+		 tileScheme: TilePyramid,
+		 levels: Seq[Int],
+		 xBins: Int = 256,
+		 yBins: Int = 256,
+		 consolidationPartitions: Option[Int] = None,
+		 tileType: Option[StorageType] = None): RDD[TileData[BT]] =
+	{
+		processData[IT, PT, AT, DT, BT](data, binAnalytic, tileAnalytics, dataAnalytics,
+		                                StandardBinningFunctions.locateIndexIdentity(indexScheme, tileScheme, levels, xBins, yBins),
+		                                StandardBinningFunctions.populateTileIdentity,
+		                                BinningParameters(true, xBins, yBins, consolidationPartitions, consolidationPartitions, tileType))
+	}
 
 	/**
 	 * @param data The data to tile
@@ -230,6 +345,33 @@ class UniversalBinner {
 			tile
 		}
 	}
+}
+
+/**
+ * A repository of standard index location and tile population functions, for use with the 
+ * UniversalBinner
+ */
+object StandardBinningFunctions {
+	/**
+	 * Simple function to spread an input point over several levels of tile pyramid.
+	 */
+	def locateIndexIdentity[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	                           xBins: Int = 256, yBins: Int = 256): T => Traversable[(TileIndex, Array[BinIndex])] =
+		index => {
+			val (x, y) = indexScheme.toCartesian(index)
+			levels.map{level =>
+				val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+				val bin = pyramid.rootToBin(x, y, tile)
+				(tile, Array(bin))
+			}
+		}
+
+	/**
+	 * Simple population function that just takes input points and outputs them, as is, in the 
+	 * correct coordinate system.
+	 */
+	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
+		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
 }
 
 case class BinningParameters (debug: Boolean = true,
