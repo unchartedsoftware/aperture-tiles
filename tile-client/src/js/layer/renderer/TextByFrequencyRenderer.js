@@ -105,7 +105,7 @@
      * </pre>
      */
     function TextByFrequencyRenderer( spec ) {
-        spec.rootKey = spec.rootKey || "tile.values[0].value";
+        spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         spec.frequency.invertOrder = spec.frequency.invertOrder || false;
         Renderer.call( this, spec );
         injectCss( this.spec );

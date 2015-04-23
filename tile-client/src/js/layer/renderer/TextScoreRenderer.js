@@ -96,7 +96,7 @@
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
-            meta = this.meta[ this.parent.map.getZoom() ],
+            levelMinMax = this.parent.getLevelMinMax(),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             minFontSize = 12,
             maxFontSize = 22,
@@ -120,8 +120,8 @@
             textCount = RendererUtil.getAttributeValue( value, countKey );
             fontSize = RendererUtil.getFontSize(
                 textCount,
-                meta.minimum[ countKey ],
-                meta.maximum[ countKey ],
+                RendererUtil.getAttributeValue( levelMinMax.bins[ levelMinMax.bins.length - 1], countKey ),
+                RendererUtil.getAttributeValue( levelMinMax.bins[0], countKey ),
                 {
                     minFontSize: minFontSize,
                     maxFontSize: maxFontSize,

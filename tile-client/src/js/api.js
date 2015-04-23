@@ -45,7 +45,11 @@
 
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),
-        BucketAggregator: require('./layer/renderer/BucketAggregator'),
+        Aggregator: require('./layer/renderer/aggregator/Aggregator'),
+        TopicCountAggregator: require('./layer/renderer/aggregator/TopicCountAggregator'),
+        TopicFrequencyAggregator: require('./layer/renderer/aggregator/TopicFrequencyAggregator'),
+        TweetsByTopicAggregator: require('./layer/renderer/aggregator/TweetsByTopicAggregator'),
+        FrequenciesByTopicAggregator: require('./layer/renderer/aggregator/FrequenciesByTopicAggregator'),
         RendererUtil: require('./layer/renderer/RendererUtil'),
         GraphLabelRenderer: require('./layer/renderer/GraphLabelRenderer'),
         GraphNodeRenderer: require('./layer/renderer/GraphNodeRenderer'),

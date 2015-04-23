@@ -117,7 +117,9 @@
                 arraySplit = attribs[i].replace(/ /g, '' ).split(/[\[\]]/);
                 if ( arraySplit.length === 1 ) {
                     // normal attribute
-                    attrib = attrib[ attribs[i] ];
+                    if ( attribs[i].length > 0 ) {
+                        attrib = attrib[ attribs[i] ];
+                    }
                 } else if ( arraySplit.length === 3 ) {
                     // array index expressed, use it
                     attrib = attrib[ arraySplit[0] ][ arraySplit[1] ];

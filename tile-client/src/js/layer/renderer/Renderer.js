@@ -208,23 +208,6 @@
                          "to a different layer, please use another instance." );
             return;
         }
-        this.meta = layer.source.meta ? layer.source.meta.meta : null;
-        // apply the aggregator to the metadata
-        if ( this.aggregator ) {
-            for ( var key in this.meta ) {
-                if ( this.meta.hasOwnProperty( key ) ) {
-                    if ( key !== "bucketCount" &&
-                        key !== "rangeMin" &&
-                        key !== "rangeMax" &&
-                        key !== "topicType" &&
-                        key !== "translatedTopics" ) {
-                        if ( this.meta[ key ].bins ) {
-                            this.meta[ key ].bins = this.aggregator.aggregate( this.meta[ key ].bins );
-                        }
-                    }
-                }
-            }
-        }
         this.parent = layer;
     };
 
