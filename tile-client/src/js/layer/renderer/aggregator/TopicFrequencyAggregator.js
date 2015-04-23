@@ -27,7 +27,8 @@
 
     "use strict";
 
-    var Aggregator = require('./Aggregator');
+    var Aggregator = require('./Aggregator'),
+        Util = require('../../../util/Util');
 
     /**
      * Instantiate a TopicFrequencyAggregator object.
@@ -44,18 +45,16 @@
      * specification against all relevant entries.
      *
      * @param {Array} buckets - The array of buckets.
-     * @param {number} startBucket - The start bucket. Optional.
-     * @param {number} endBucket - The end bucket. Optional.
      *
      * @returns {Array} The aggregated buckets.
      */
-    TopicFrequencyAggregator.prototype.aggregate = function( buckets, startBucket, endBucket ) {
+    TopicFrequencyAggregator.prototype.aggregate = function( buckets ) {
         var indexByTopic = {},
+            range = this.getBucketRange( buckets ),
+            bucketCount = range.end - range.start + 1,
             topics = [];
         this.forEach(
             buckets,
-            startBucket,
-            endBucket,
             function( bucket, index ) {
                 var topicIndex,
                     topic,
@@ -70,7 +69,7 @@
                             topics.push({
                                 topic: topic,
                                 count: 0,
-                                frequencies: []
+                                frequencies: Util.fillArray( bucketCount )
                             });
                         }
                         total =  bucket[i].score.total;

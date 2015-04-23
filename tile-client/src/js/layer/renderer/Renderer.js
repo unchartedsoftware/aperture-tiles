@@ -209,6 +209,9 @@
             return;
         }
         this.parent = layer;
+        if ( this.aggregator ) {
+            this.aggregator.attach( layer );
+        }
     };
 
     /**
@@ -228,7 +231,6 @@
             select = this.spec.select,
             uuid = this.uuid,
             selectKey;
-
         if ( !select || !select.selectKey ) {
             return;
         }

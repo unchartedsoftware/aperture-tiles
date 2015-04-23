@@ -79,14 +79,12 @@
      *
      * @returns {Array} The aggregated buckets.
      */
-    TweetsByTopicAggregator.prototype.aggregate = function( buckets, startBucket, endBucket ) {
+    TweetsByTopicAggregator.prototype.aggregate = function( buckets ) {
         var bucketsByTopic = {},
             tweetsByTopic = {},
             topic;
         this.forEach(
             buckets,
-            startBucket,
-            endBucket,
             function( bucket ) {
                 var topic,
                     i;

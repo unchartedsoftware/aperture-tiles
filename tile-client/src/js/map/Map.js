@@ -236,18 +236,15 @@
             axis.min = map.pyramid.minY;
             axis.max = map.pyramid.maxY;
         }
-
         // activate and attach to map
         axis.map = map;
         axis.activate();
         map.axes = map.axes || {};
         map.axes[ axis.position ] = axis;
-
         // update dimensions
         _.forIn( map.axes, function( value ) {
             value.updateDimension();
         });
-
         // redraw
         _.forIn( map.axes, function( value ) {
             value.redraw();
@@ -266,7 +263,8 @@
         var index;
         // if only 1 baselayer available, ignore
         if ( map.baselayers.length === 1 ) {
-            console.error( 'Error: attempting to remove only baselayer from map, this destroys the map, use destroy() instead' );
+            console.error( 'Error: attempting to remove only baselayer from ' +
+                'map, this destroys the map, use destroy() instead' );
             return;
         }
         // get index of baselayer

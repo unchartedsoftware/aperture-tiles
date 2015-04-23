@@ -38,7 +38,7 @@
     /**
      * Given an array of buckets, will execute the provided aggregation
      * specification against all relevant entries.
-     * @memberof Renderer
+     * @memberof Aggregator
      *
      * @param {Array} buckets - The array of buckets.
      *
@@ -48,14 +48,57 @@
         return buckets;
     };
 
-    Aggregator.prototype.forEach = function( buckets, start, end, func ) {
-        var i;
-        // set start and end buckets
-        start = start !== undefined ? start : 0;
-        end = end !== undefined ? end : buckets.length - 1;
+    /**
+     * Attaches the aggregator to its respective layer. This method should not be called
+     * manually.
+     * @memberof Aggregator
+     * @private
+     *
+     * @param {Layer} layer - The layer to attach to the renderer.
+     */
+     Aggregator.prototype.attach = function( layer ) {
+        if ( this.parent && this.parent !== layer ) {
+            console.log( "This renderer has already been attached " +
+                         "to a different layer, please use another instance." );
+            return;
+        }
+        this.parent = layer;
+    };
+
+    /**
+     * Returns the start and end indices for the set of buckets.
+     * @memberof Aggregator
+     *
+     * @param {Array} buckets - The array of buckets.
+     *
+     * @returns {Object} The range object.
+     */
+    Aggregator.prototype.getBucketRange = function( buckets ) {
+        var tileTransformData = this.parent.getTileTransformData(),
+            start = tileTransformData.startBucket,
+            end = tileTransformData.endBucket;
+        return {
+            start: start !== undefined ? start : 0,
+            end: end !== undefined ? end : buckets.length - 1
+        };
+    };
+
+    /**
+     * Executes a function for each bucket, passing the bucket and offset
+     * reduced index arguments.
+     * @memberof Aggregator
+     *
+     * @param {Array} buckets - The array of buckets.
+     * @param {Function} func - The function to execute.
+     */
+    Aggregator.prototype.forEach = function( buckets, func ) {
+        var range = this.getBucketRange( buckets ),
+            start = range.start,
+            end = range.end,
+            i;
         // first iterate over all buckets and organize them by id
         for ( i=start; i<=end; i++ ) {
-            func( buckets[i], i-start ); // subtract 1 to always have index 0 based
+            func( buckets[i], i-start ); // subtract start to always have index 0 based
         }
     };
 

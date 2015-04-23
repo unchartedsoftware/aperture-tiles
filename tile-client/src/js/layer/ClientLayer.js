@@ -112,6 +112,11 @@
         if ( spec.renderer ) {
             this.setRenderer( spec.renderer );
         }
+        if ( spec.aggregators ) {
+            _.forIn( spec.aggregators, function( agg, key ) {
+                this.addAggregator( key, agg );
+            });
+        }
     }
 
     ClientLayer.prototype = Object.create( Layer.prototype );
@@ -176,6 +181,29 @@
     ClientLayer.prototype.setRenderer = function( renderer ) {
         this.renderer = renderer;
         this.renderer.attach( this );
+    };
+
+    /**
+     * Adds an aggregator to the layer.
+     * @memberof ClientLayer
+     *
+     * @param {String} id - The aggregator id.
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+    ClientLayer.prototype.addAggregator = function( id, aggregator ) {
+        this.aggregators = this.aggregators || {};
+        this.aggregators[ id ] = aggregator;
+        this.aggregators[ id ].attach( this );
+    };
+
+    /**
+     * Gets an aggregator by id.
+     * @memberof ClientLayer
+     *
+     * @param {String} id - The aggregator id.
+     */
+    ClientLayer.prototype.getAggregator = function( id ) {
+        return this.aggregators[ id ];
     };
 
     /**

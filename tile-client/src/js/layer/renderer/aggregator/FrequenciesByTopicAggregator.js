@@ -27,16 +27,8 @@
 
     "use strict";
 
-    var Aggregator = require('./Aggregator');
-
-    function fixedSizeArray( length ) {
-        var arr = [],
-            i;
-        for ( i=0; i<length; i++ ) {
-            arr.push( 0 );
-        }
-        return arr;
-    }
+    var Aggregator = require('./Aggregator'),
+        Util = require('../../../util/Util');
 
     /**
      * Instantiate a TweetsByTopicAggregator object.
@@ -53,27 +45,22 @@
      * specification against all relevant entries.
      *
      * @param {Array} buckets - The array of buckets.
-     * @param {number} startBucket - The start bucket. Optional.
-     * @param {number} endBucket - The end bucket. Optional.
      *
      * @returns {Array} The aggregated buckets.
      */
-    FrequenciesByTopicAggregator.prototype.aggregate = function( buckets, startBucket, endBucket ) {
+    FrequenciesByTopicAggregator.prototype.aggregate = function( buckets ) {
         var frequenciesByTopic = {},
-            start = startBucket !== undefined ? startBucket : 0,
-            end = endBucket !== undefined ? endBucket : buckets.length - 1,
-            bucketCount = end - start + 1;
+            range = this.getBucketRange( buckets ),
+            bucketCount = range.end - range.start + 1;
         this.forEach(
             buckets,
-            startBucket,
-            endBucket,
             function( bucket, index ) {
                 var topic,
                     i;
                 if ( bucket ) {
                     for ( i=0; i<bucket.length; i++ ) {
                         topic = bucket[i].topic;
-                        frequenciesByTopic[ topic ] = frequenciesByTopic[ topic ] || fixedSizeArray( bucketCount );
+                        frequenciesByTopic[ topic ] = frequenciesByTopic[ topic ] || Util.fillArray( bucketCount );
                         frequenciesByTopic[ topic ][ index ] = bucket[i].score.total;
                     }
                 }

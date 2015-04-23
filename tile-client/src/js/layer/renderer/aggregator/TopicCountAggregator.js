@@ -68,19 +68,15 @@
      * specification against all relevant entries.
      *
      * @param {Array} buckets - The array of buckets.
-     * @param {number} startBucket - The start bucket. Optional.
-     * @param {number} endBucket - The end bucket. Optional.
      *
      * @returns {Array} The aggregated buckets.
      */
-    TopicCountAggregator.prototype.aggregate = function( buckets, startBucket, endBucket ) {
+    TopicCountAggregator.prototype.aggregate = function( buckets ) {
         var bucketsByTopic = {},
             aggBuckets = [],
             topic;
         this.forEach(
             buckets,
-            startBucket,
-            endBucket,
             function( bucket ) {
                 var topic,
                     i;
