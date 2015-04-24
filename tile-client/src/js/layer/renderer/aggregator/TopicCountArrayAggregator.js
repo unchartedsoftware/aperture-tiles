@@ -27,26 +27,8 @@
 
     "use strict";
 
-    var Aggregator = require('./Aggregator');
-
-    /**
-     * Returns the sentiment id string based on the numerical value.
-     *
-     * @param {number} value - The sentiment value.
-     *
-     * @returns {String} The sentiment id.
-     */
-    function parseSentiment( value ) {
-        if ( value === undefined ) {
-            return undefined;
-        }
-        if ( value === -1 ) {
-            return 'negative';
-        } else if ( value === 1 ) {
-            return 'position';
-        }
-        return 'neutral';
-    }
+    var Aggregator = require('./Aggregator'),
+        Util = require('../../../util/Util');
 
     /**
      * Iterates over each bucket, and perform the aggregation.
@@ -57,50 +39,48 @@
      * @param {Array} The aggregated buckets.
      */
     function aggregateBucket( buckets ) {
-        var tweets = [],
-            parsed,
-            texts,
-            bucket,
+        var aggregation,
+            total,
             i, j;
+        // set base aggregator
+        aggregation = {
+            topic: buckets[0].topic,
+            counts: Util.fillArray( buckets[0].score['total array'].length ),
+            total: 0
+        };
+        // for each bucket of data
         for ( i=0; i<buckets.length; i++ ) {
-            bucket = buckets[i];
-            texts = bucket.score.texts;
-            for ( j=0; j<texts.length; j++ ) {
-                parsed = JSON.parse( texts[j].text );
-                tweets.push({
-                    user: parsed[0],
-                    text: parsed[1],
-                    sentiment: parseSentiment( parsed[2] ),
-                    timestamp: texts[j].score
-                });
+            total = buckets[i].score['total array'];
+            // add to total count
+            for ( j=0; j<total.length; j++ ) {
+                aggregation.counts[j] += total[j];
+                aggregation.total += total[j];
             }
         }
-        return tweets;
+        return aggregation;
     }
 
     /**
-     * Instantiate a TweetsByTopicAggregator object.
-     * @class TweetsByTopicAggregator
+     * Instantiate a TopicCountAggregator object.
+     * @class TopicCountAggregator
      * @classdesc
      */
-    function TweetsByTopicAggregator() {
+    function TopicCountArrayAggregator() {
     }
 
-    TweetsByTopicAggregator.prototype = Object.create( Aggregator.prototype );
+    TopicCountArrayAggregator.prototype = Object.create( Aggregator.prototype );
 
     /**
      * Given an array of buckets, will execute the provided aggregation
      * specification against all relevant entries.
      *
      * @param {Array} buckets - The array of buckets.
-     * @param {number} startBucket - The start bucket. Optional.
-     * @param {number} endBucket - The end bucket. Optional.
      *
      * @returns {Array} The aggregated buckets.
      */
-    TweetsByTopicAggregator.prototype.aggregate = function( buckets ) {
+    TopicCountArrayAggregator.prototype.aggregate = function( buckets ) {
         var bucketsByTopic = {},
-            tweetsByTopic = {},
+            aggBuckets = [],
             topic;
         this.forEach(
             buckets,
@@ -118,12 +98,16 @@
         // then, for each id, aggregate the buckets
         for ( topic in bucketsByTopic ) {
             if ( bucketsByTopic.hasOwnProperty( topic ) ) {
-                tweetsByTopic[ topic ] = aggregateBucket( bucketsByTopic[ topic ] );
+                aggBuckets.push( aggregateBucket( bucketsByTopic[ topic ] ) );
             }
         }
-        return tweetsByTopic;
+        // finally, sort them based on count
+        aggBuckets.sort( function( a, b ) {
+            return b.total - a.total;
+        });
+        return aggBuckets;
     };
 
-    module.exports = TweetsByTopicAggregator;
+    module.exports = TopicCountArrayAggregator;
 
 }());

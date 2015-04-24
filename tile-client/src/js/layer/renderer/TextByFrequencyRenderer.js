@@ -132,7 +132,7 @@
             html = '',
             entries = [],
             value,
-            entryText,
+            text,
             highestCount,
             counts,
             relativePercent,
@@ -149,7 +149,7 @@
             value = values[i];
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
-            entryText = RendererUtil.getAttributeValue( value, textKey );
+            text = RendererUtil.getAttributeValue( value, textKey );
             chartSize = counts.length;
 
             html += '<div class="text-by-frequency-entry" style="'
@@ -179,7 +179,7 @@
 
             // create tag label
             html += '<div class="text-by-frequency-right">';
-            html += '<div class="text-by-frequency-label">'+entryText+'</div>';
+            html += '<div class="text-by-frequency-label">'+text+'</div>';
             html += '</div>';
             html += '</div>';
         }
