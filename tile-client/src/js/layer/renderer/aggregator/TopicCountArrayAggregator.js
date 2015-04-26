@@ -45,12 +45,12 @@
         // set base aggregator
         aggregation = {
             topic: buckets[0].topic,
-            counts: Util.fillArray( buckets[0].score['total array'].length ),
+            counts: Util.fillArray( buckets[0].score.total.length ),
             total: 0
         };
         // for each bucket of data
         for ( i=0; i<buckets.length; i++ ) {
-            total = buckets[i].score['total array'];
+            total = buckets[i].score.total;
             // add to total count
             for ( j=0; j<total.length; j++ ) {
                 aggregation.counts[j] += total[j];

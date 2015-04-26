@@ -61,9 +61,9 @@
                 if ( bucket ) {
                     for ( i=0; i<bucket.length; i++ ) {
                         topic = bucket[i].topic;
-                        length = bucket[i].score['total array'].length;
+                        length = bucket[i].score.total.length;
                         frequenciesByTopic[ topic ] = frequenciesByTopic[ topic ] || Util.fillArray( bucketCount, Util.fillArray( length ) );
-                        frequenciesByTopic[ topic ][ index ] = bucket[i].score['total array'].slice( 0 ); // copy
+                        frequenciesByTopic[ topic ][ index ] = bucket[i].score.total.slice( 0 ); // copy
                     }
                 }
         });
