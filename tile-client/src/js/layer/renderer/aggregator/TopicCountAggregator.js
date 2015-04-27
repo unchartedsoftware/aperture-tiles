@@ -32,17 +32,18 @@
     /**
      * Iterates over each bucket, and perform the aggregation.
      *
-     * @param {Array} paths - The array of paths.
+     * @param {Aggregator} aggregator - The aggregator object.
      * @param {Array} buckets - The array of buckets.
      *
      * @param {Array} The aggregated buckets.
      */
-    function aggregateBucket( buckets ) {
+    function aggregateBucket( aggregator, buckets ) {
         var aggregation,
             i;
         // set base aggregator
         aggregation = {
             topic: buckets[0].topic,
+            topicEnglish: aggregator.translateTopic( buckets[0].topic ),
             count: 0
         };
         // for each bucket of data
@@ -91,7 +92,7 @@
         // then, for each id, aggregate the buckets
         for ( topic in bucketsByTopic ) {
             if ( bucketsByTopic.hasOwnProperty( topic ) ) {
-                aggBuckets.push( aggregateBucket( bucketsByTopic[ topic ] ) );
+                aggBuckets.push( aggregateBucket( this, bucketsByTopic[ topic ] ) );
             }
         }
         // finally, sort them based on count

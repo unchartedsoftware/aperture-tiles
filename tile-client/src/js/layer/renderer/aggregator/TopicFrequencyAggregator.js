@@ -49,7 +49,8 @@
      * @returns {Array} The aggregated buckets.
      */
     TopicFrequencyAggregator.prototype.aggregate = function( buckets ) {
-        var indexByTopic = {},
+        var that = this,
+            indexByTopic = {},
             range = this.getBucketRange( buckets ),
             bucketCount = range.end - range.start + 1,
             topics = [];
@@ -68,6 +69,7 @@
                             indexByTopic[ topic ] = topics.length;
                             topics.push({
                                 topic: topic,
+                                topicEnglish: that.translateTopic( topic ),
                                 count: 0,
                                 frequencies: Util.fillArray( bucketCount )
                             });

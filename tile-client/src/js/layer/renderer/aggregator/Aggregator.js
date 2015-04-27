@@ -84,6 +84,22 @@
     };
 
     /**
+     * Checks the layer metadata for a translation map. If it exists, returns
+     * the translated entry for the provided topic.
+     *
+     * @param {String} topic - The topic to translate.
+     *
+     * @returns {String} The translated topic.
+     */
+    Aggregator.prototype.translateTopic = function( topic ) {
+        var meta = this.parent.source.meta.meta;
+        if ( meta.translatedTopics ) {
+            return meta.translatedTopics[ topic ];
+        }
+        return undefined;
+    };
+
+    /**
      * Executes a function for each bucket, passing the bucket and offset
      * reduced index arguments.
      * @memberof Aggregator
