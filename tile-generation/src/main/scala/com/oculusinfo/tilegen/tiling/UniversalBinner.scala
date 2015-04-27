@@ -29,11 +29,9 @@ package com.oculusinfo.tilegen.tiling
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.Try
 	import scala.reflect.ClassTag
-
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
-
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileData
@@ -44,6 +42,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
+import com.oculusinfo.binning.TileAndBinIndices
 
 
 
@@ -355,8 +354,9 @@ object StandardBinningFunctions {
 	/**
 	 * Simple function to spread an input point over several levels of tile pyramid.
 	 */
-	def locateIndexIdentity[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-	                           xBins: Int = 256, yBins: Int = 256): T => Traversable[(TileIndex, Array[BinIndex])] =
+	def locateIndexIdentity[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                           levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] =
 		index => {
 			val (x, y) = indexScheme.toCartesian(index)
 			levels.map{level =>
@@ -365,6 +365,211 @@ object StandardBinningFunctions {
 				(tile, Array(bin))
 			}
 		}
+
+	/**
+	 * Simple function to spread an input point over several levels of tile pyramid, ignoring 
+	 * points that are out of bounds
+	 */
+	def locateBoundedIndex[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                          levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
+		                                bounds.getMaxX, bounds.getMaxY)
+
+		index => {
+			val (x, y) = indexScheme.toCartesian(index)
+			if (minX <= x && x < maxX && minY <= y && y < maxY) {
+				levels.map{level =>
+					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+					val bin = pyramid.rootToBin(x, y, tile)
+					(tile, Array(bin))
+				}
+			} else {
+				Traversable()
+			}
+		}
+	}
+
+
+
+	/**
+	 * Re-order coords of two endpoints for efficient implementation of Bresenham's line algorithm  
+	 */	
+	private def  initializeBresenham (start: BinIndex, end: BinIndex)
+			: (Boolean, Int, Int, Int, Int) = {
+		val xs = start.getX()
+		val xe = end.getX()
+		val ys = start.getY()
+		val ye = end.getY()
+		val steep = (math.abs(ye - ys) > math.abs(xe - xs))
+
+		if (steep) {
+			if (ys > ye) {
+				(steep, ye, xe, ys, xs)
+			} else {
+				(steep, ys, xs, ye, xe)
+			}
+		} else {
+			if (xs > xe) {
+				(steep, xe, ye, xs, ys)
+			} else {
+				(steep, xs, ys, xe, ye)
+			}
+		}
+	}
+
+	/**
+	 * Compute the intermediate points between two endpoints using Bresneham's algorithm
+	 * 
+	 * @param start The start bin, in unviersal bin coordinates, of the segment
+	 * @param end The end bin, in universal bin coordinates, of the segment
+	 * @return Each bin in the segment, in universal bin coordinates
+	 */
+	def computeBresnehamBins (start: BinIndex, end: BinIndex): Traversable[BinIndex] = {
+		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
+
+		val deltax = x1-x0
+		val deltay = math.abs(y1-y0)
+		var error = deltax>>1
+		var y = y0
+		val ystep = if (y0 < y1) 1 else -1
+
+		// x1+1 needed here so that "end" bin is included in Sequence
+		val sample = new TileIndex(9, 0, 0)
+		Iterable.range(x0, x1+1).map{x =>
+			val ourY = y
+			val thisError = error
+			error = error - deltay
+			if (error < 0) {
+				y = y + ystep
+				error = error + deltax
+			}
+
+			if (steep) new BinIndex(ourY, x)
+			else new BinIndex(x, ourY)
+		}
+	}
+
+	/**
+	 * Compute the tiles between two endpoints, using a modified version of Bresneham's 
+	 * algorithm
+	 * 
+	 * @param start The start bin, in unviersal bin coordinates, of the segment
+	 * @param end The end bin, in universal bin coordinates, of the segment
+	 * @param sample A sample tile, indicating the level and tile size of the desired output tiles
+	 * @return Each tile in the segment, in universal bin coordinates
+	 */
+	def computeMultistepBresneham (start: BinIndex, end: BinIndex, sample: TileIndex)
+			: Traversable[TileIndex] = {
+		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
+		val (xSize, ySize) =
+			if (steep) (sample.getYBins, sample.getXBins)
+			else (sample.getXBins, sample.getYBins)
+		val level = sample.getLevel
+
+		val deltax = x1-x0.toLong
+		val deltay = math.abs(y1-y0).toLong
+		val baseError = deltax.toLong>>1
+		val ystep = if (y0 < y1) 1 else -1
+
+		// Function to convert from universal bin to tile quickly and easily
+		def binToTile (x: Int, y: Int) =
+			if (steep) TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(y, x)).getTile
+			else TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(x, y)).getTile
+
+		// Find nth bin from scratch
+		def tileX (x: Int) = {
+			val dx = x-x0
+			val e = baseError - deltay.toLong*dx.toLong
+			val y = if (e < 0) {
+				val factor = math.ceil(-e.toDouble/deltax).toInt
+				y0+factor*ystep
+			} else {
+				y0
+			}
+			binToTile(x, y)
+		}
+		
+		// Determine the start of the range of internal tiles
+		val t0 = (x0 + xSize - (x0 % xSize))/xSize
+		val tn = (x1 - (x1 %xSize))/xSize
+
+		// Determine the end of the range of internal tiles
+		val x11 = x1 - (x1%xSize)
+		val t1 = x11/xSize
+
+		// Determine first and last tiles
+		val tile0 = binToTile(x0, y0)
+		val tile0a = tileX(t0*xSize-1)
+		val tile1a = tileX(t1*xSize)
+		val tile1 = binToTile(x1, y1)
+		val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
+		val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
+
+
+		initialTiles ++ Iterable.range(t0, tn).flatMap{t =>
+			val startTile = tileX(t*xSize)
+			val endTile = tileX((t+1)*xSize-1)
+
+			if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+		} ++ finalTiles
+	}
+
+	/**
+	 * Simple function to spread an input lines over several levels of tile pyramid.
+	 * 
+	 * @param indexScheme The scheme for interpretting input indices
+	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
+	 * @param levels The levels at which to tile
+	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None 
+	 *                to have no minimum segment length
+	 * @param maxBins The maximum length of a segment, in bins, above which it is not drawn, or None 
+	 *                to have no minimum segment length
+	 * @param xBins The number of bins into which each tile is broken in the horizontal direction
+	 * @param yBins the number of bins into which each tile is broken in the vertical direction
+	 * @return a traversable over the tiles this line crosses, each associated with the overall 
+	 *         endpoints of this line, in universal bin coordinates.
+	 */
+	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	                  minBins: Option[Int], maxBins: Option[Int],
+	                  xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
+		                                bounds.getMaxX, bounds.getMaxY)
+
+		index => {
+			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
+			if (minX <= x1 && x1 < maxX &&
+				    minY <= y1 && y1 < maxY &&
+				    minX <= x2 && x2 < maxX &&
+				    minY < y2 && y2 < maxY) {
+				levels.flatMap{level =>
+					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
+					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
+					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+
+					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
+					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
+					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+
+					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
+						              math.abs(uniBin1.getY - uniBin2.getY))
+
+					if (minBins.map(_ <= length).getOrElse(true) &&
+						    maxBins.map(_ > length).getOrElse(true)) {
+						// Fill in somewhere around here.
+						Traversable()
+					} else {
+						Traversable()
+					}
+				}
+			} else {
+				Traversable()
+			}
+		}
+	}
 
 	/**
 	 * Simple population function that just takes input points and outputs them, as is, in the 
