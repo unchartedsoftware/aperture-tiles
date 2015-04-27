@@ -10,7 +10,7 @@ layout: submenu
 Understanding the Tile Pyramid
 ==============================
 
-Using a distributed framework built on the Apache Spark engine, Aperture Tiles enables you to create a set of data tiles that can be used summarize and aggregate your large-scale data at various levels in a interactive, pyramid-style visualization.
+Using a distributed framework built on the [Apache Spark](https://spark.apache.org/) engine, Aperture Tiles enables you to create a set of data tiles that summarize and aggregate your large-scale data at various levels in a interactive, pyramid-style visualization.
 
 ## <a name="pyramid-hierarchy"></a> Tile Pyramid Hierarchy ##
 
@@ -26,8 +26,7 @@ The process of generating a set of Avro tiles from your raw source data is calle
 
 As shown in the following diagram, the tile generation process has five main stages:
 
-1. **Raw Data Parsing**: Pass in your raw data and parse its structure. For standard tiling jobs, this is the main task; the rest of the applicable stages are kicked off automatically.
-	<p></p>
+1. **Raw Data Parsing**: Pass in your raw data and parse its structure. <p>For standard tiling jobs, this is the main task; the rest of the applicable stages are kicked off automatically.</p>
 2. **Bin Analytics**: Create summaries per tile that are partitioned into bins.
 	<ol type="a">
 		<li><em>Extract</em> intermediate values from the records in your data (e.g., a count of values and their sum).</li>
