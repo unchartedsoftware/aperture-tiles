@@ -43,7 +43,7 @@
         if ( value === -1 ) {
             return 'negative';
         } else if ( value === 1 ) {
-            return 'position';
+            return 'positive';
         }
         return 'neutral';
     }
