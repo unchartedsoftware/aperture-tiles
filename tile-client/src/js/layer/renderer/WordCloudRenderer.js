@@ -218,7 +218,7 @@
      * </pre>
      */
     function WordCloudRenderer( spec ) {
-        spec.rootKey = spec.rootKey || "tile.values[0].value";
+        spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -239,7 +239,7 @@
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
-            meta = this.meta[ this.parent.map.getZoom() ],
+            levelMinMax = this.parent.getLevelMinMax(),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
             html = '',
             wordCounts = [],
@@ -260,15 +260,8 @@
             });
         }
 
-        if ( meta.bins ) {
-            // bucketed tiles
-            min = RendererUtil.getAttributeValue( meta.bins[ meta.bins.length - 1], countKey );
-            max = RendererUtil.getAttributeValue( meta.bins[0], countKey );
-        } else {
-            // single value tiles
-            min = RendererUtil.getAttributeValue( meta.maximum, countKey );
-            max = RendererUtil.getAttributeValue( meta.minimum, countKey );
-        }
+        min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
+        max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
 
         cloud = createWordCloud( wordCounts, min, max );
 

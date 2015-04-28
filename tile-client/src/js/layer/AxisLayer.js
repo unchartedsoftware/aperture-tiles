@@ -45,8 +45,7 @@
      *     opacity  {float}    - The opacity of the layer. Default = 1.0
      *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
      *     zIndex   {integer}  - The z index of the layer. Default = 1000
-     *     renderer {Renderer} - The tile renderer object. (optional)
-     *     html {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     *     renderer {Renderer} - The tile renderer object.
      * }
      * </pre>
      */
@@ -64,9 +63,6 @@
         }
         if ( spec.renderer ) {
             this.setRenderer( spec.renderer );
-        }
-        if ( spec.html ) {
-            this.html = spec.html;
         }
     }
 
@@ -89,7 +85,6 @@
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: this.getURL,
-                html: this.html,
                 tileClass: this.tileClass,
                 renderer: this.renderer,
                 dimension: this.dimension

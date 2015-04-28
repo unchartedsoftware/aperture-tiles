@@ -80,7 +80,7 @@
 
         var GRAPH_COORD_RANGE = 256,
             text = this.spec.text,
-            meta = this.meta[ this.parent.map.getZoom() ],
+            levelMinMax = this.parent.getLevelMinMax(),
             communities = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             scale = Math.pow( 2, this.parent.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
@@ -107,16 +107,16 @@
 
         // get graph hierarchy level for this zoom level
         // assumes same hierarchy level for all tiles at a given zoom level
-        hierLevel = meta.maximum.communities[0].hierLevel;
+        hierLevel = levelMinMax.maximum.communities[0].hierLevel;
 
         // if hierLevel = 0, normalize label attributes by community degree
         // else normalize label attributes by num internal nodes
         if ( hierLevel === 0 ) {
-            minimumCount =  meta.minimum.communities[0].degree;
-            maximumCount =  meta.maximum.communities[0].degree;
+            minimumCount =  levelMinMax.minimum.communities[0].degree;
+            maximumCount =  levelMinMax.maximum.communities[0].degree;
         } else {
-            minimumCount =  meta.minimum.communities[0].numNodes;
-            maximumCount =  meta.maximum.communities[0].numNodes;
+            minimumCount =  levelMinMax.minimum.communities[0].numNodes;
+            maximumCount =  levelMinMax.maximum.communities[0].numNodes;
         }
 
         for ( i=0; i<communities.length; i++ ) {

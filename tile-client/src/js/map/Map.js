@@ -236,18 +236,15 @@
             axis.min = map.pyramid.minY;
             axis.max = map.pyramid.maxY;
         }
-
         // activate and attach to map
         axis.map = map;
         axis.activate();
         map.axes = map.axes || {};
         map.axes[ axis.position ] = axis;
-
         // update dimensions
         _.forIn( map.axes, function( value ) {
             value.updateDimension();
         });
-
         // redraw
         _.forIn( map.axes, function( value ) {
             value.redraw();
@@ -266,7 +263,8 @@
         var index;
         // if only 1 baselayer available, ignore
         if ( map.baselayers.length === 1 ) {
-            console.error( 'Error: attempting to remove only baselayer from map, this destroys the map, use destroy() instead' );
+            console.error( 'Error: attempting to remove only baselayer from ' +
+                'map, this destroys the map, use destroy() instead' );
             return;
         }
         // get index of baselayer
@@ -498,6 +496,9 @@
                     this.layers[i].setZIndex( this.layers[i].getZIndex() );
                 }
             }
+            if ( this._markerLayer ) {
+                $( this._markerLayer.div ).css( 'z-index', 5000 );
+            }
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -683,21 +684,8 @@
          * @param {integer} zoom - The zoom level.
          */
         zoomTo: function( x, y, zoom ) {
-            var projection,
-                viewportPx,
-                lonlat;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                lonlat = new OpenLayers.LonLat( x, y );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    lonlat.transform( projection, this.olMap.projection );
-                }
-            } else {
-                // linear bi-variate map
-                viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y );
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-            }
             this.olMap.setCenter( lonlat, zoom );
         },
 
@@ -709,29 +697,11 @@
          * @param {Object} bounds - The bounding box to zoom to.
          */
         zoomToExtent: function( bounds ) {
-            var projection,
-                minViewportPx,
-                maxViewportPx,
-                minLonLat,
-                maxLonLat,
-                olBounds;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                minLonLat = new OpenLayers.LonLat( bounds.minX, bounds.minY );
-                maxLonLat = new OpenLayers.LonLat( bounds.maxX, bounds.maxY );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    minLonLat.transform( projection, this.olMap.projection );
-                    maxLonLat.transform( projection, this.olMap.projection );
-                }
-            } else {
-                // linear bi-variate map
-                minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY );
-                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY );
-                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx );
-                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx );
-            }
-            olBounds = new OpenLayers.Bounds();
+            var minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY ),
+                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY ),
+                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx ),
+                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx ),
+                olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
             this.olMap.zoomToExtent( olBounds );
@@ -747,22 +717,58 @@
          * @param {number} y - The y coordinate (latitude for geospatial).
          */
         panTo: function( x, y ) {
-            var projection,
-                viewportPx,
-                lonlat;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                lonlat = new OpenLayers.LonLat( x, y );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    lonlat.transform( projection, this.olMap.projection );
-                }
-                this.olMap.panTo( lonlat );
-            } else {
-                // linear bi-variate map
-                viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y );
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-                this.olMap.panTo( lonlat );
+            this.olMap.panTo( lonlat );
+        },
+
+
+        /**
+         * Creates a marker at the specified position of the map.
+         * @memberof Map.prototype
+         *
+         * @param {number} x - The x coordinate (longitude for geospatial).
+         * @param {number} y - The y coordinate (latitude for geospatial).
+         * @param {String} imgUrl - The URL to the image.
+         * @param {number} imageWidth - The width to scale the image to.
+         * @param {number} imageHeight - The height to scale the image to.
+         *
+         * @returns {OpenLayers.Marker}
+         */
+        addMarker: function( x, y, imgUrl, imageWidth, imageHeight ) {
+            if ( !this._markerLayer ) {
+                this._markerLayer = new OpenLayers.Layer.Markers( "Markers" );
+                this.olMap.addLayer( this._markerLayer );
+                $( this._markerLayer.div ).css( 'z-index', 5000 );
+            }
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
+                lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
+            var icon = new OpenLayers.Icon(
+                    imgUrl,
+                    new OpenLayers.Size( imageWidth, imageHeight ),
+                    new OpenLayers.Pixel( -imageWidth/2, -imageHeight ) ),
+                marker = new OpenLayers.Marker( lonlat, icon );
+            this._markerLayer.addMarker( marker );
+            return marker;
+        },
+
+        /**
+         * Removes a marker from the map.
+         *
+         * @param {OpenLayers.Marker} marker - The marker object.
+         */
+        removeMarker: function( marker ) {
+            if ( this._markerLayer ) {
+                this._markerLayer.removeMarker( marker );
+            }
+        },
+
+        /**
+         * Removes all markers from the map.
+         */
+        clearMarkers: function() {
+            if ( this._markerLayer ) {
+                this._markerLayer.clearMarkers();
             }
         },
 

@@ -68,12 +68,10 @@
     getHighestCount = function( numEntries, values, countKey ) {
         // get the highest single count
         var highestCount = 0,
-            value,
             counts,
             i, j;
         for ( i=0; i<numEntries; i++ ) {
-            value = values[i];
-            counts = value[countKey];
+            counts = RendererUtil.getAttributeValue( values[i], countKey );
             for ( j=0; j<counts.length; j++ ) {
                 // get highest count
                 highestCount = Math.max( highestCount, counts[j] );
@@ -105,7 +103,7 @@
      * </pre>
      */
     function TextByFrequencyRenderer( spec ) {
-        spec.rootKey = spec.rootKey || "tile.values[0].value";
+        spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         spec.frequency.invertOrder = spec.frequency.invertOrder || false;
         Renderer.call( this, spec );
         injectCss( this.spec );
@@ -134,31 +132,32 @@
             html = '',
             entries = [],
             value,
-            entryText,
+            text,
             highestCount,
             counts,
             relativePercent,
-            visibility,
             chartSize,
+            visibility,
             index,
             i, j;
 
+        // find the highest count of any topic
         highestCount = getHighestCount( numEntries, values, countKey );
 
         for ( i=0; i<numEntries; i++ ) {
 
             value = values[i];
             entries.push( value );
-            counts = value[ countKey ];
+            counts = RendererUtil.getAttributeValue( value, countKey );
+            text = RendererUtil.getAttributeValue( value, textKey );
             chartSize = counts.length;
-            entryText = RendererUtil.getAttributeValue( value, textKey );
 
             html += '<div class="text-by-frequency-entry" style="'
                   + 'top:' + getYOffset( i, numEntries ) + 'px;">';
 
             // create chart
             html += '<div class="text-by-frequency-left">';
-            for (j=0; j<chartSize; j++) {
+            for ( j=0; j<chartSize; j++ ) {
                 // if invertOrder is true, invert the order of iteration
                 index = ( invertOrder ) ? chartSize - j - 1 : j;
                 // get the percent relative to the highest count in the tile
@@ -180,7 +179,7 @@
 
             // create tag label
             html += '<div class="text-by-frequency-right">';
-            html += '<div class="text-by-frequency-label">'+entryText+'</div>';
+            html += '<div class="text-by-frequency-label">'+text+'</div>';
             html += '</div>';
             html += '</div>';
         }
