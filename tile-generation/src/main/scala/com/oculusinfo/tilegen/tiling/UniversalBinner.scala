@@ -426,7 +426,7 @@ object StandardBinningFunctions {
 	 * @param end The end bin, in universal bin coordinates, of the segment
 	 * @return Each bin in the segment, in universal bin coordinates
 	 */
-	def computeBresnehamBins (start: BinIndex, end: BinIndex): Traversable[BinIndex] = {
+	def linearUniversalBins (start: BinIndex, end: BinIndex): Traversable[BinIndex] = {
 		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
 
 		val deltax = x1-x0
@@ -436,10 +436,8 @@ object StandardBinningFunctions {
 		val ystep = if (y0 < y1) 1 else -1
 
 		// x1+1 needed here so that "end" bin is included in Sequence
-		val sample = new TileIndex(9, 0, 0)
 		Iterable.range(x0, x1+1).map{x =>
 			val ourY = y
-			val thisError = error
 			error = error - deltay
 			if (error < 0) {
 				y = y + ystep
@@ -453,14 +451,15 @@ object StandardBinningFunctions {
 
 	/**
 	 * Compute the tiles between two endpoints, using a modified version of Bresneham's 
-	 * algorithm
+	 * algorithm, in a way that should be completely self-consistent with a Bresneham-based bin
+	 * extraction function.
 	 * 
 	 * @param start The start bin, in unviersal bin coordinates, of the segment
 	 * @param end The end bin, in universal bin coordinates, of the segment
 	 * @param sample A sample tile, indicating the level and tile size of the desired output tiles
 	 * @return Each tile in the segment, in universal bin coordinates
 	 */
-	def computeMultistepBresneham (start: BinIndex, end: BinIndex, sample: TileIndex)
+	def linearTiles (start: BinIndex, end: BinIndex, sample: TileIndex)
 			: Traversable[TileIndex] = {
 		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
 		val (xSize, ySize) =
@@ -468,9 +467,9 @@ object StandardBinningFunctions {
 			else (sample.getXBins, sample.getYBins)
 		val level = sample.getLevel
 
-		val deltax = x1-x0.toLong
-		val deltay = math.abs(y1-y0).toLong
-		val baseError = deltax.toLong>>1
+		val deltax: Long = x1 - x0
+		val deltay: Long = math.abs(y1 - y0)
+		val baseError: Long = deltax >> 1
 		val ystep = if (y0 < y1) 1 else -1
 
 		// Function to convert from universal bin to tile quickly and easily
@@ -480,11 +479,11 @@ object StandardBinningFunctions {
 
 		// Find nth bin from scratch
 		def tileX (x: Int) = {
-			val dx = x-x0
-			val e = baseError - deltay.toLong*dx.toLong
+			val dx = x - x0
+			val e = baseError - deltay * dx
 			val y = if (e < 0) {
-				val factor = math.ceil(-e.toDouble/deltax).toInt
-				y0+factor*ystep
+				val factor = math.ceil(-e.toDouble / deltax).toInt
+				y0 + factor * ystep
 			} else {
 				y0
 			}
@@ -497,23 +496,81 @@ object StandardBinningFunctions {
 
 		// Determine the end of the range of internal tiles
 		val x11 = x1 - (x1%xSize)
-		val t1 = x11/xSize
+		val t1 = x11 / xSize
 
 		// Determine first and last tiles
 		val tile0 = binToTile(x0, y0)
-		val tile0a = tileX(t0*xSize-1)
-		val tile1a = tileX(t1*xSize)
+		val tile0a = tileX(t0 * xSize - 1)
+		val tile1a = tileX(t1 * xSize)
 		val tile1 = binToTile(x1, y1)
 		val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
 		val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
 
 
 		initialTiles ++ Iterable.range(t0, tn).flatMap{t =>
-			val startTile = tileX(t*xSize)
-			val endTile = tileX((t+1)*xSize-1)
+			val startTile = tileX(t * xSize)
+			val endTile = tileX((t + 1) * xSize - 1)
 
 			if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
 		} ++ finalTiles
+	}
+
+	/**
+	 * Compute all the bins on a single tile that are on the line between two given endpoints, 
+	 * using a modified version of Bresneham's algorithm, and in a way that guarantees 
+	 * consistency between this and a total-line Bresneham-based line-drawing function.
+	 * 
+	 * @param start The start bin, in unviersal bin coordinates, of the segment
+	 * @param end The end bin, in universal bin coordinates, of the segment
+	 * @param tile The tile whose bins are desired
+	 * @return Each bin in the given tile on this line, in tile coordinates.
+	 */
+	def linearBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex): Traversable[BinIndex] = {
+		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
+
+		val deltax: Long = x1 - x0
+		val deltay: Long = math.abs(y1 - y0)
+		var error: Long = deltax >> 1
+		var y = y0
+		val ystep = if (y0 < y1) 1 else -1
+
+		// Figure out the bounds of this tile in our x direction
+		val tileMin = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(0, 0))
+		val tileMax = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(tile.getXBins-1, tile.getYBins-1))
+		val (minX, maxX, minY, maxY) =
+			if (steep) (tileMin.getY, tileMax.getY, tileMin.getX, tileMax.getX)
+			else (tileMin.getX, tileMax.getX, tileMin.getY, tileMax.getY)
+
+		val xx0 = x0 max minX
+		val xx1 = (x1 min maxX) + 1
+
+		// Offset to our start location
+		val startOffset = xx0 - x0
+		error = error - startOffset * deltay
+		if (error < 0) {
+			val factor = math.ceil(-error.toDouble / deltax).toInt
+			error = error + factor * deltax
+			y = y + factor*ystep
+		}
+
+		// Get the universal bin of our lower left corner (for offsets)
+		var baseX = if (steep) tileMax.getY else tileMin.getX
+		var baseY = if (steep) tileMin.getX else tileMax.getY
+
+		// And iterate over our range
+		Iterable.range(xx0, xx1).flatMap{x =>
+			val curY = y
+			error = error - deltay
+			if (error < 0) {
+				y = y + ystep
+				error = error + deltax
+			}
+
+			if (minY <= curY && curY <= maxY)
+				Some(if (steep) TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(curY, x)).getBin
+				     else TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(x, curY)).getBin)
+			else None
+		}
 	}
 
 	/**

@@ -27,40 +27,37 @@ package com.oculusinfo.tilegen.tiling
 import org.scalatest.FunSuite
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.TileAndBinIndices
 
 /**
  * @author nkronenfeld
  */
 class StandardBinningFunctionsTestSuite extends FunSuite {
-	test("Test standard Bresneham vs. tile Bresneham") {
-		val sortFcn: (TileIndex, TileIndex) => Boolean = (a, b) =>
-		a.getX < b.getX || (a.getX == b.getX && a.getY < b.getY)
+	test("Test various Bresneham line functions against each other") {
+		val sortTiles: (TileIndex, TileIndex) => Boolean = (a, b) => {
+			a.getX < b.getX || (a.getX == b.getX && a.getY < b.getY)
+		}
+
+		val sortBins: (BinIndex, BinIndex) => Boolean = (a, b) => {
+			a.getX < b.getX || (a.getX == b.getX && a.getY < b.getY)
+		}
+
 
 		// Test a set of endpoints to make see if the calculation of tiles through simple
 		// Bresneham and tiled Bresneham match
 		def testEndpoints (start: BinIndex, end: BinIndex, sample: TileIndex) = {
-			val bins = StandardBinningFunctions.computeBresnehamBins(start, end)
-			val lBins = bins.toList
-			val lbTiles = lBins.map(TileIndex.universalBinIndexToTileBinIndex(sample, _))
-			val binTiles = lbTiles.map(_.getTile).toSet.toList.sortWith(sortFcn)
+			val bins = StandardBinningFunctions.linearUniversalBins(start, end).map(TileIndex.universalBinIndexToTileBinIndex(sample, _))
+			val binTiles = bins.map(_.getTile).toSet.toList.sortWith(sortTiles)
 
-			val tTiles = StandardBinningFunctions.computeMultistepBresneham(start, end, sample)
-			val tileTiles = tTiles.toSet.toList.sortWith(sortFcn)
+      val tiles = StandardBinningFunctions.linearTiles(start, end, sample).toSet.toList.sortWith(sortTiles)
 
-			if (binTiles != tileTiles) {
-				var msg = "Test from "+start+" to "+end+" differed.\n"
-				if (binTiles.size != tileTiles.size && binTiles.zip(tileTiles).map(p => p._1 == p._2).reduce(_ && _)) {
-					if (binTiles.size > tileTiles.size)
-						msg = msg + "bins had extra element "+binTiles(binTiles.size-1)+"\n"
-					else
-						msg = msg + "tiles had extra element "+tileTiles(tileTiles.size-1)+"\n"
-				} else {
-					binTiles.zip(tileTiles).zipWithIndex.foreach(entry =>
-						if (entry._1._1 != entry._1._2)
-							msg = msg + "entry "+entry._2+" differed: bin: "+entry._1._1+", tile: "+entry._1._2+"\n"
-					)
-				}
-				assert(false, msg)
+			assert(binTiles == tiles)
+
+			tiles.map{tile =>
+				val subsetBins = bins.filter(_.getTile == tile).map(_.getBin).toList.sortWith(sortBins)
+				val tileBins = StandardBinningFunctions.linearBinsForTile(start, end, tile).toList.sortWith(sortBins)
+
+				assert(subsetBins == tileBins)
 			}
 		}
 
@@ -69,8 +66,8 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 		Range(0, 256).foreach{offset =>
 			// Long lines
-			testEndpoints(new BinIndex(23309+offset, 55902), new BinIndex(87674+offset, 116576), sample)
-			testEndpoints(new BinIndex(23309, 55902+offset), new BinIndex(87674, 116576+offset), sample)
+			testEndpoints(new BinIndex(23309+offset, 55902), new BinIndex(24326+offset, 56447), sample)
+			testEndpoints(new BinIndex(23309, 55902+offset), new BinIndex(24326, 56447+offset), sample)
 			// Short, but multi-tile lines
 			testEndpoints(new BinIndex(23309+offset, 55902), new BinIndex(23701+offset, 55793), sample)
 			testEndpoints(new BinIndex(23309, 55902+offset), new BinIndex(23701, 55793+offset), sample)
