@@ -134,7 +134,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 	 */
 	test("Basic line binning") {
 		val pyramidId = "basic line binning"
-		val tileIO = runLineBinning(pyramidId, 512, true)
+		val tileIO = runNewLineBinning(pyramidId, 512, true)
 		
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 256, 256))
 		assert(tile00.isDefined)
@@ -241,5 +241,37 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		tileIO
 	}
 	
+	def runNewLineBinning (pyramidId: String, maxLength: Int, showEnds: Boolean) = {
+		// First row of data has value at the start and end.  Segment binner
+		// should create a line between the two.
+		val rawdata = sc.parallelize(List(new SegmentData(new Segment(-180.0, -10.0, 180.0, -10.0), 1.0)))
+		
+		val binner = new UniversalBinner
+		val tileIO = new TestTileIO
+		val pyramid = new WebMercatorTilePyramid
+		
+		val coordFcn: SegmentData => Try[Segment] = segmentData => Try(segmentData.segment)
+		val valueFcn: SegmentData => Try[Double] = segmentData => Try(segmentData.count)
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Double]] = None
+		val dataAnalytics: Option[AnalysisDescription[SegmentData, Double]] = None
+		
+		val lineDrawer = new EndPointsToLine(maxLength, 256, 256)
+
+		val noDouble: Option[Double] = None
+		val data: RDD[(Segment, Double, Option[Double])] =
+			rawdata.map(segData => (coordFcn(segData), valueFcn(segData), noDouble))
+				.filter(seg => seg._1.isSuccess && seg._2.isSuccess).map(seg => (seg._1.get, seg._2.get, seg._3))
+
+		val tiles = binner.processData[Segment, Double, Double, Double, JavaDouble](data,
+			      new NumericSumBinningAnalytic[Double, JavaDouble](), tileAnalytics, dataAnalytics,
+			      StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, List(1), None, None),
+			      StandardBinningFunctions.populateTileWithLineSegments)
+
+		tileIO.writeTileSet(pyramid, pyramidId, tiles,
+		                    new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
+		                    tileAnalytics, dataAnalytics, "name", "description")
+
+		tileIO
+	}
 }
 
