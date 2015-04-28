@@ -28,10 +28,13 @@ package com.oculusinfo.tilegen.tiling
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.Try
-	import scala.reflect.ClassTag
+
+import scala.reflect.ClassTag
+
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
+
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileData
@@ -42,7 +45,6 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
-import com.oculusinfo.binning.TileAndBinIndices
 
 
 
@@ -97,6 +99,8 @@ class UniversalBinner {
 	import UniversalBinner._
 
 
+	private def log (msg: String) =
+		println(msg)
 
 	/** Helper function to mimic RDDBinner interface */
 	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
@@ -120,16 +124,16 @@ class UniversalBinner {
 		name: String = "unknown",
 		description: String = "unknown") =
 	{
-		println("Binning data")
-		println("\tConsolidation partitions: "+consolidationPartitions)
-		println("\tWrite location: "+writeLocation)
-		println("\tTile io type: "+tileIO.getClass.getName)
-		println("\tlevel sets: "+levelSets.map(_.mkString("[", ", ", "]"))
-			        .mkString("[", ", ", "]"))
-		println("\tX Bins: "+xBins)
-		println("\tY Bins: "+yBins)
-		println("\tName: "+name)
-		println("\tDescription: "+description)
+		log("Binning data")
+		log("\tConsolidation partitions: "+consolidationPartitions)
+		log("\tWrite location: "+writeLocation)
+		log("\tTile io type: "+tileIO.getClass.getName)
+		log("\tlevel sets: "+levelSets.map(_.mkString("[", ", ", "]"))
+			    .mkString("[", ", ", "]"))
+		log("\tX Bins: "+xBins)
+		log("\tY Bins: "+yBins)
+		log("\tName: "+name)
+		log("\tDescription: "+description)
 
 		val startTime = System.currentTimeMillis()
 
@@ -172,18 +176,18 @@ class UniversalBinner {
 				                    serializer, tileAnalytics, dataAnalytics,
 				                    name, description)
 				val levelEndTime = System.currentTimeMillis()
-				println("Finished binning levels ["+levels.mkString(", ")+"] of data set "
-					        + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
+				log("Finished binning levels ["+levels.mkString(", ")+"] of data set "
+					    + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
 			}
 		)
 
 		bareData.unpersist(false)
 
 		val endTime = System.currentTimeMillis()
-		println("Finished binning data set " + name + " into "
-			        + levelSets.map(_.size).reduce(_+_)
-			        + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
-			        + ((endTime-startTime)/60000.0) + " minutes")
+		log("Finished binning data set " + name + " into "
+			    + levelSets.map(_.size).reduce(_+_)
+			    + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
+			    + ((endTime-startTime)/60000.0) + " minutes")
 	}
 
 	/** Helper function to mimic RDDBinner interface */
@@ -393,9 +397,96 @@ object StandardBinningFunctions {
 
 
 
+
 	/**
+	 * Simple function to spread an input lines over several levels of tile pyramid.
+	 * 
+	 * @param indexScheme The scheme for interpretting input indices
+	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
+	 * @param levels The levels at which to tile
+	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None 
+	 *                to have no minimum segment length
+	 * @param maxBins The maximum length of a segment, in bins, above which it is not drawn, or None 
+	 *                to have no minimum segment length
+	 * @param xBins The number of bins into which each tile is broken in the horizontal direction
+	 * @param yBins the number of bins into which each tile is broken in the vertical direction
+	 * @return a traversable over the tiles this line crosses, each associated with the overall 
+	 *         endpoints of this line, in universal bin coordinates.
+	 */
+	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	                  minBins: Option[Int], maxBins: Option[Int],
+	                  xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
+		                                bounds.getMaxX, bounds.getMaxY)
+
+		index => {
+			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
+			if (minX <= x1 && x1 <= maxX &&
+				    minY <= y1 && y1 <= maxY &&
+				    minX <= x2 && x2 <= maxX &&
+				    minY < y2 && y2 <= maxY) {
+				levels.flatMap{level =>
+					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
+					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
+					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+
+					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
+					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
+					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+
+					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
+						              math.abs(uniBin1.getY - uniBin2.getY))
+
+					if (minBins.map(_ <= length).getOrElse(true) &&
+						    maxBins.map(_ > length).getOrElse(true)) {
+						// Fill in somewhere around here.
+						linearTiles(uniBin1, uniBin2, tile1).map(tile => (tile, Array(uniBin1, uniBin2)))
+					} else {
+						Traversable()
+					}
+				}
+			} else {
+				println(minX)
+				println(x1)
+				println(x2)
+				println(maxX)
+				println(minY)
+				println(y1)
+				println(y2)
+				println(maxY)
+				println((minX <= x1 && x1 < maxX))
+				println((minY <= y1 && y1 < maxY))
+				println((minX <= x2 && x2 < maxX))
+				println((minY < y2 && y2 < maxY))
+				Traversable()
+			}
+		}
+	}
+
+	/**
+	 * Simple population function that just takes input points and outputs them, as is, in the 
+	 * correct coordinate system.
+	 */
+	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
+		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
+
+	/**
+	 * Line segment population function
+	 * 
+	 * Takes endpoints of line segments, and populates the tiles with the points appropriate to that tile
+	 */
+	def populateTileWithLineSegments[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
+		(tile, bins, value) => {
+			linearBinsForTile(bins(0), bins(1), tile).map(bin => (bin, value)).toMap
+		}
+
+
+
+	/*
 	 * Re-order coords of two endpoints for efficient implementation of Bresenham's line algorithm  
-	 */	
+	 */ 
 	private def  initializeBresenham (start: BinIndex, end: BinIndex)
 			: (Boolean, Int, Int, Int, Int) = {
 		val xs = start.getX()
@@ -572,68 +663,6 @@ object StandardBinningFunctions {
 			else None
 		}
 	}
-
-	/**
-	 * Simple function to spread an input lines over several levels of tile pyramid.
-	 * 
-	 * @param indexScheme The scheme for interpretting input indices
-	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
-	 * @param levels The levels at which to tile
-	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None 
-	 *                to have no minimum segment length
-	 * @param maxBins The maximum length of a segment, in bins, above which it is not drawn, or None 
-	 *                to have no minimum segment length
-	 * @param xBins The number of bins into which each tile is broken in the horizontal direction
-	 * @param yBins the number of bins into which each tile is broken in the vertical direction
-	 * @return a traversable over the tiles this line crosses, each associated with the overall 
-	 *         endpoints of this line, in universal bin coordinates.
-	 */
-	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-	                  minBins: Option[Int], maxBins: Option[Int],
-	                  xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] = {
-		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
-		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
-		                                bounds.getMaxX, bounds.getMaxY)
-
-		index => {
-			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
-			if (minX <= x1 && x1 < maxX &&
-				    minY <= y1 && y1 < maxY &&
-				    minX <= x2 && x2 < maxX &&
-				    minY < y2 && y2 < maxY) {
-				levels.flatMap{level =>
-					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
-					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
-					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
-
-					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
-					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
-					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
-
-					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
-						              math.abs(uniBin1.getY - uniBin2.getY))
-
-					if (minBins.map(_ <= length).getOrElse(true) &&
-						    maxBins.map(_ > length).getOrElse(true)) {
-						// Fill in somewhere around here.
-						Traversable()
-					} else {
-						Traversable()
-					}
-				}
-			} else {
-				Traversable()
-			}
-		}
-	}
-
-	/**
-	 * Simple population function that just takes input points and outputs them, as is, in the 
-	 * correct coordinate system.
-	 */
-	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
-		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
 }
 
 /**
