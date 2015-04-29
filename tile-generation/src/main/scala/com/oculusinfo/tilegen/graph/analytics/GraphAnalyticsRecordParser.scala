@@ -58,7 +58,7 @@ class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: KeyValueArgum
 	val i_pr = properties.getInt("oculus.binning.graph.parentR.index", "")
 	val maxCommunities = properties.getInt("oculus.binning.graph.maxcommunities", "", Some(25))	
 	val i_stats = properties.getInt("oculus.binning.graph.stats.index", "", Some(-1))
-	val maxStats = properties.getInt("oculus.binning.graph.maxstats", "", Some(10))
+	val maxStats = properties.getInt("oculus.binning.graph.maxstats", "", Some(32))
 	
 	val i_edgeSrcID = properties.getInt("oculus.binning.graph.edges.srcID.index", "", Some(-1))
 	val i_edgeDstID = properties.getInt("oculus.binning.graph.edges.dstID.index", "", Some(-1))

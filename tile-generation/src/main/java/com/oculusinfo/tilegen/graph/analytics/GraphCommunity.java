@@ -91,7 +91,7 @@ public class GraphCommunity implements Serializable {
 	 */
 	private static final long serialVersionUID = 2127685671353087035L;
 	
-	private static int MAX_STATS = 10;		// max allowable size of _communityStats list
+	private static int MAX_STATS = 32;		// max allowable size of _communityStats list
 
 	private static int MAX_EDGES = 10;		// max number of both inter and intra community 
 											//	edges to keep per record.	
@@ -180,8 +180,8 @@ public class GraphCommunity implements Serializable {
 		}
 	}
 	
-	public static void setMaxStats(int max) {
-		MAX_STATS = max;
+	public static void setMaxStats(int max) {		//TODO -- This is not the best way to set this static objects for a serializable java class.
+		MAX_STATS = max;							// Perhaps set them from within GraphAnalyticsRecordParser object and access them from within the this class constructor instead
 	}		
 	
 	public static void setMaxEdges(int max) {
