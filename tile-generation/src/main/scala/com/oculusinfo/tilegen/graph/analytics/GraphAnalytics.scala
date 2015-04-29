@@ -65,6 +65,14 @@ class GraphMinRecordAnalytic extends TileAnalytic[List[GraphAnalyticsRecord]] {
 	def aggregate (a: List[GraphAnalyticsRecord],
 	               b: List[GraphAnalyticsRecord]): List[GraphAnalyticsRecord] =
 		List(GraphAnalyticsRecord.minOfRecords((a ++ b).toArray :_*))
+		
+	override def storableValue (value: List[GraphAnalyticsRecord], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val result = new JSONObject()
+		val subRes = new JSONArray()
+		value.foreach(gar => subRes.put(gar.toString))
+		result.put(name, subRes)
+		Some(result)
+	}		
 
 	def defaultProcessedValue: List[GraphAnalyticsRecord] = List[GraphAnalyticsRecord]()
 	def defaultUnprocessedValue: List[GraphAnalyticsRecord] = List[GraphAnalyticsRecord]()

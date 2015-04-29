@@ -22,6 +22,9 @@
                        {"name": "parentX", "type": "double"},
                        {"name": "parentY", "type": "double"},
                        {"name": "parentR", "type": "double"},
+                       {"name": "statsList","type": 
+                       		{"type": "array", "items": "double" }
+                 	   },                       
                        {"name": "interEdges","type": 
                        		{"type": "array", "items":
 								{"name": "interEdgeEntry",
