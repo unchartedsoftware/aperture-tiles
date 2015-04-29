@@ -280,11 +280,23 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
 				.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
+		if (bounds.map(_ == null).reduce(_ || _))
+			throw new Exception("No parsable data found")
 		val minBounds = bounds.grouped(2).map(_(0)).toSeq
 		val maxBounds = bounds.grouped(2).map(_(1)).toSeq
 		val (minX, minY) = indexer.indexScheme.toCartesian(minBounds)
 		val (maxX, maxY) = indexer.indexScheme.toCartesian(maxBounds)
-		(minX, maxX, minY, maxY)
+		val (rangeX, rangeY) = (maxX-minX, maxY-minY)
+
+		val maxLevel = {
+			if (config.levels.isEmpty) 18
+			else config.levels.flatten.reduce(_ max _)
+		}
+		val maxBins = (config.tileHeight max config.tileWidth)
+		
+		// An epsilon of around 2% of a single bin
+		val epsilon = ((1.0/(1L << (maxLevel+6))))/maxBins
+		(minX, maxX+epsilon*rangeX, minY, maxY+epsilon*rangeY)
 	}
 
 
