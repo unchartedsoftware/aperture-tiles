@@ -496,8 +496,8 @@
                     this.layers[i].setZIndex( this.layers[i].getZIndex() );
                 }
             }
-            if ( this._markerLayer ) {
-                $( this._markerLayer.div ).css( 'z-index', 5000 );
+            if ( this.olMarkers ) {
+                $( this.olMarkers.div ).css( 'z-index', 5000 );
             }
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
@@ -729,26 +729,18 @@
          *
          * @param {number} x - The x coordinate (longitude for geospatial).
          * @param {number} y - The y coordinate (latitude for geospatial).
-         * @param {String} imgUrl - The URL to the image.
-         * @param {number} imageWidth - The width to scale the image to.
-         * @param {number} imageHeight - The height to scale the image to.
+         * @param {Marker} marker - The Marker object to add.
          *
-         * @returns {OpenLayers.Marker}
+         * @returns {Marker} The added marker.
          */
-        addMarker: function( x, y, imgUrl, imageWidth, imageHeight ) {
-            if ( !this._markerLayer ) {
-                this._markerLayer = new OpenLayers.Layer.Markers( "Markers" );
-                this.olMap.addLayer( this._markerLayer );
-                $( this._markerLayer.div ).css( 'z-index', 5000 );
+        addMarker: function( x, y, marker ) {
+            if ( !this.olMarkers ) {
+                this.olMarkers = new OpenLayers.Layer.Markers( "Markers" );
+                this.olMap.addLayer( this.olMarkers );
+                $( this.olMarkers.div ).css( 'z-index', 5000 );
             }
-            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
-                lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-            var icon = new OpenLayers.Icon(
-                    imgUrl,
-                    new OpenLayers.Size( imageWidth, imageHeight ),
-                    new OpenLayers.Pixel( -imageWidth/2, -imageHeight ) ),
-                marker = new OpenLayers.Marker( lonlat, icon );
-            this._markerLayer.addMarker( marker );
+            marker.map = this;
+            marker.activate( x, y );
             return marker;
         },
 
@@ -758,8 +750,9 @@
          * @param {OpenLayers.Marker} marker - The marker object.
          */
         removeMarker: function( marker ) {
-            if ( this._markerLayer ) {
-                this._markerLayer.removeMarker( marker );
+            if ( this.olMarkers ) {
+                marker.deactivate();
+                marker.map = null;
             }
         },
 
@@ -767,8 +760,8 @@
          * Removes all markers from the map.
          */
         clearMarkers: function() {
-            if ( this._markerLayer ) {
-                this._markerLayer.clearMarkers();
+            if ( this.olMarkers ) {
+                this.olMarkers.clearMarkers();
             }
         },
 

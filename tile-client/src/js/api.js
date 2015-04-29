@@ -65,6 +65,7 @@
         // Map
         Map: require('./map/Map'),
         MapUtil: require('./map/MapUtil'),
+        Marker: require('./map/Marker'),
         Axis: require('./map/Axis'),
         AxisUtil: require('./map/AxisUtil'),
 
