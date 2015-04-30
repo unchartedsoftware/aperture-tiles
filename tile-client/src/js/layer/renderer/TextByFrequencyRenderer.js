@@ -57,21 +57,17 @@
     /**
      * Utility function for positioning the labels
      */
-    getYOffset = function( index, heights, totalHeight ) {
-				var i,offset = 118 - (totalHeight / 2);
-        for ( i=0; i < index; i++) {
-					offset += heights[i];
-				}
-        return offset;
+    getYOffset = function( index, numEntries, spacing ) {
+        return 118 - ( (( numEntries - 1) / 2 ) - index ) * spacing;
     };
 
     /**
      * Utility function to get the highest count for a topic in the tile
      */
-    getHighestCount = function( numEntries, values, index, countKey ) {
+    getHighestCount = function( values, countKey ) {
         // get the highest single count
         var highestCount = 0,
-            counts = RendererUtil.getAttributeValue( values[index], countKey ),
+            counts = RendererUtil.getAttributeValue( values, countKey ),
             j;
         for ( j=0; j<counts.length; j++ ) {
             // get highest count
@@ -122,55 +118,53 @@
      */
     TextByFrequencyRenderer.prototype.render = function( data ) {
 
-        var textKey = this.spec.text.textKey,
+        var minFontSize = 10,
+            maxFontSize = 24,
+            spacing = 20,
+            textKey = this.spec.text.textKey,
             frequency = this.spec.frequency,
             countKey = frequency.countKey,
             invertOrder = frequency.invertOrder,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
+            levelMinMax = this.parent.getLevelMinMax(),
             percentLabel,
             html = '',
             entries = [],
             value,
             text,
-            highestCounts = [],
+            highestCount,
             counts,
             relativePercent,
             chartSize,
             visibility,
             index,
-            heights = [],
-            height = 0,
-            totalHeight = 0,
+            height,
             i, j;
 
-
-        // compute topic row heights weighted by topic count
         for ( i=0; i<numEntries; i++ ) {
-            height = 0;
-            highestCounts.push( getHighestCount( numEntries, values, i, countKey ) );
-            counts = RendererUtil.getAttributeValue( values[i], countKey );
-
-            for ( j=0; j < counts.length; j++ ) {
-                  height += counts[j];
-            }
-
-            // bind topic row height to [12,22] pixels
-            height = 12 + (Math.min( Math.log(height) * 5, 20 ) / 20) * 8;
-            heights.push( height );
-            totalHeight += height;
-        }
-
-            for ( i=0; i<numEntries; i++ ) {
             value = values[i];
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
             text = RendererUtil.getAttributeValue( value, textKey );
             chartSize = counts.length;
+            // highest count for the topic
+            highestCount = getHighestCount( values[i], countKey );
+            // scale the height based on level min / max
+            height = RendererUtil.getFontSize(
+                highestCount,
+                getHighestCount( levelMinMax.minimum, countKey ),
+                getHighestCount( levelMinMax.maximum, countKey ),
+                {
+                    minFontSize: minFontSize,
+                    maxFontSize: maxFontSize,
+                    type: "log"
+                });
 
             html += '<div class="text-by-frequency-entry" style="'
-                  + 'top:' + getYOffset( i, heights, totalHeight ) + 'px;'
-                  + 'height:' + heights[i] + 'px">';
+                // ensure constant spacing independent of height
+                  + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
+                  + 'height:' + height + 'px">';
 
             // create chart
             html += '<div class="text-by-frequency-left">';
@@ -178,7 +172,7 @@
                 // if invertOrder is true, invert the order of iteration
                 index = ( invertOrder ) ? chartSize - j - 1 : j;
                 // get the percent relative to the highest count in the tile
-                relativePercent = ( counts[index] / highestCounts[i] ) * 100;
+                relativePercent = ( counts[index] / highestCount ) * 100;
                 // if percent === 0, hide bar
                 visibility = ( relativePercent > 0 ) ? '' : 'hidden';
                 // class percent in increments of 10
@@ -196,7 +190,8 @@
 
             // create tag label
             html += '<div class="text-by-frequency-right">';
-            html += '<div class="text-by-frequency-label" style="font-size:'+heights[i]+'px;line-height:'+heights[i]+'px">'+text+'</div>';
+            html += '<div class="text-by-frequency-label" style="' +
+                'font-size:'+height+'px;line-height:'+height+'px">'+text+'</div>';
             html += '</div>';
             html += '</div>';
         }
