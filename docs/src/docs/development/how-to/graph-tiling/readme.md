@@ -7,10 +7,12 @@ permalink: docs/development/how-to/graph-tiling/
 layout: submenu
 ---
 
-Graph Tiling
-============
+Run Graph Tiling Jobs
+=====================
 
-In addition to plotting individual data points, Aperture Tiles supports visualizations of graph datasets. Utilities in the Aperture Tiles source code parse CSV or GraphML data formats containing edge and node data and generate a tile pyramid that illustrates the relationships between communities are multiple zoom levels.
+In addition to [heatmap layers](../standard-tiling/) of individual data points, Aperture Tiles supports visualizations of graph datasets that contain edge and node information. Graph visualizations illustrate the relationships between nodes and communities across multiple zoom levels. The process of generating the [tile pyramid](../tile-pyramid/) that represents this type of layer is a graph tiling job.
+
+Graph tiling jobs comprise several configuration and generation phases as described in the [Graph Tiling Process](#process) section.
 
 **NOTE**: The graph tiling capabilities of Aperture Tiles are under ongoing development and considered experimental.
 
@@ -34,51 +36,62 @@ Aperture Tiles requires graph data to be in comma- or tab-delimited format (CSV)
 
 ### GraphParseApp ###
 
-[GraphParseApp](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/java/com/oculusinfo/tilegen/graph/util/GraphParseApp.java) is an example Java application for converting GraphML data to CSV. GraphParseApp has the following command line arguments:
+[GraphParseApp](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/java/com/oculusinfo/tilegen/graph/util/GraphParseApp.java) is an example Java application for converting GraphML data to CSV. 
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="20%">Argument</th>
-				<th scope="col" width="10%">Required?</th>
-				<th scope="col" width="70%">Description</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="property">-in</td>
-					<td class="description">Yes</td>
-					<td class="description">Path and filename of GraphML input file.</td>
-				</tr>
-				<tr>
-					<td class="property">-out</td>
-					<td class="description">Yes</td>
-					<td class="description">Path and filename of tab-delimited output file.</td>
-				</tr>
-				<tr>
-					<td class="property">-longIDs</td>
-					<td class="description">No</td>
-					<td class="description">Indicates whether nodes should be assigned a unique long ID (<em>true</em>) regardless of the ID format in the original file. This ID convention is needed for data processing with Spark's GraphX library. Defaults to <em>false</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-nAttr</td>
-					<td class="description">No</td>
-					<td class="description">List of node attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> node attributes.</td>
-				</tr>
-				<tr>
-					<td class="property">-eAttr</td>
-					<td class="description">No</td>
-					<td class="description">List of edge attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> edge attributes.</td>
-				</tr>
-				<tr>
-					<td class="property">-nCoordAttr</td>
-					<td class="description">No</td>
-					<td class="description">Node attributes to use for node co-ordinates. Enter as a list of attribute ID tags separated by commas. Defaults to <em>NO</em>, which indicates no co-ordinate data should be associated with nodes.</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<h6 class="procedure">To execute the GraphParseApp and convert your GraphML data to a CSV file</h6>
+
+- Use the following command line syntax:
+
+	```bash
+	GraphParseApp –in source.graphml -out output.csv -longIDs true 
+	–nAttr nAttr1, nAttr2 -eAttr eAttr1, eAttr2 -nCoordAttr NO
+	```
+
+	Where:
+
+	<div class="props">
+		<nav>
+			<table class="summaryTable" width="100%">
+				<thead>
+					<th scope="col" width="20%">Argument</th>
+					<th scope="col" width="10%">Required?</th>
+					<th scope="col" width="70%">Description</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="property">-in</td>
+						<td class="description">Yes</td>
+						<td class="description">Path and filename of GraphML input file.</td>
+					</tr>
+					<tr>
+						<td class="property">-out</td>
+						<td class="description">Yes</td>
+						<td class="description">Path and filename of tab-delimited output file.</td>
+					</tr>
+					<tr>
+						<td class="property">-longIDs</td>
+						<td class="description">No</td>
+						<td class="description">Indicates whether nodes should be assigned a unique long ID (<em>true</em>) regardless of the ID format in the original file. This ID convention is needed for data processing with Spark's GraphX library. Defaults to <em>false</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-nAttr</td>
+						<td class="description">No</td>
+						<td class="description">List of node attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> node attributes.</td>
+					</tr>
+					<tr>
+						<td class="property">-eAttr</td>
+						<td class="description">No</td>
+						<td class="description">List of edge attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> edge attributes.</td>
+					</tr>
+					<tr>
+						<td class="property">-nCoordAttr</td>
+						<td class="description">No</td>
+						<td class="description">Node attributes to use for node co-ordinates. Enter as a list of attribute ID tags separated by commas. Defaults to <em>NO</em>, which indicates no co-ordinate data should be associated with nodes.</td>
+					</tr>
+				</tbody>
+			</table>
+		</nav>
+	</div>
 
 #### Output ####
 
@@ -189,101 +202,111 @@ IDs and labels for parent communities are automatically chosen as the underlying
 
 GraphClusterApp's implementation of the Louvain clustering algorithm uses Sotera’s [distributed Louvain modularity algorithm](https://github.com/Sotera/distributed-louvain-modularity) in conjunction with Spark’s [GraphX graph processing library](https://github.com/Sotera/spark-distributed-louvain-modularity).
 
-GraphClusterApp requires that node IDs and edge weights are of type *long*. It has the following command line arguments:
+<h6 class="procedure">To execute the GraphCluserApp and hierarchically cluster your data</h6>
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="20%">Argument</th>
-				<th scope="col" width="14%">Required?</th>
-				<th scope="col" width="66%">Description</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="property">-source</td>
-					<td class="description">Yes</td>
-					<td class="description">HDFS location of the input data.</td>
-				</tr>
-				<tr>
-					<td class="property">-output</td>
-					<td class="description">Yes</td>
-					<td class="description">HDFS location to which to save clustered results.</td>
-				</tr>
-				<tr>
-					<td class="property">-onlyEdges</td>
-					<td class="description">No</td>
-					<td class="description">Indicates whether the source data contains only edges (*true*). Defaults to *false*.</td>
-				</tr>
-				<tr>
-					<td class="property">-parts</td>
-					<td class="description">No</td>
-					<td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
-				</tr>
-				<tr>
-					<td class="property">-p</td>
-					<td class="description">No</td>
-					<td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
-				</tr>
-				<tr>
-					<td class="property">-d</td>
-					<td class="description">No</td>
-					<td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
-				</tr>
-				<tr>
-					<td class="property">-progMin</td>
-					<td class="description">No</td>
-					<td class="description">Percent of nodes that must change communities for the algorithm to consider progress relative to total vertices in a level. Defaults to <em>0.15</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-progCount</td>
-					<td class="description">No</td>
-					<td class="description">Number of times the algorithm can fail to make progress before exiting. Defaults to <em>1</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-nID</td>
-					<td class="description">When <strong>&#8209;onlyEdges</strong> = <em>false</em></td>
-					<td class="description">Number of the column in the raw data that contains the node IDs. Note that IDs must be of type <em>long</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-nAttr</td>
-					<td class="description">No</td>
-					<td class="description">Column numbers in the raw data that contain additional node metadata that should be parsed and saved with cluster results. Individual attribute tags should be separated by commas.</td>
-				</tr>
-				<tr>
-					<td class="property">-eSrcID</td>
-					<td class="description">Yes</td>
-					<td class="description">Number of the column in the raw data that contains the edge source IDs. Note that IDs must be of type <em>long</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-eDstID</td>
-					<td class="description">Yes</td>
-					<td class="description">Number of the column in the raw data that contains the edge destination IDs. Note that IDs must be of type <em>long</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-eWeight</td>
-					<td class="description">No</td>
-					<td class="description">Number of the column in the raw data that contains the edge weights. Defaults to <em>-1</em>, meaning that no edge weighting is used.</td>
-				</tr>
-				<tr>
-					<td class="property">-spark</td>
-					<td class="description">Yes</td>
-					<td class="description">Spark master location.</td>
-				</tr>
-				<tr>
-					<td class="property">-sparkhome</td>
-					<td class="description">Yes</td>
-					<td class="description">Spark HOME location.</td>
-				</tr>
-				<tr>
-					<td class="property">-user</td>
-					<td class="description">No</td>
-					<td class="description">Spark/Hadoop username associated with the Spark job.</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+- Use the following command line syntax:
+
+	```bash
+	GraphClusterApp -source <hdfs source location> -output <hdfs output location> 
+	-onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 -eWeight 3 -spark local 
+	-sparkhome /opt/spark -user <username>
+	```
+
+	Where: 
+
+	<div class="props">
+		<nav>
+			<table class="summaryTable" width="100%">
+				<thead>
+					<th scope="col" width="20%">Argument</th>
+					<th scope="col" width="14%">Required?</th>
+					<th scope="col" width="66%">Description</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="property">-source</td>
+						<td class="description">Yes</td>
+						<td class="description">HDFS location of the input data.</td>
+					</tr>
+					<tr>
+						<td class="property">-output</td>
+						<td class="description">Yes</td>
+						<td class="description">HDFS location to which to save clustered results.</td>
+					</tr>
+					<tr>
+						<td class="property">-onlyEdges</td>
+						<td class="description">No</td>
+						<td class="description">Indicates whether the source data contains only edges (*true*). Defaults to *false*.</td>
+					</tr>
+					<tr>
+						<td class="property">-parts</td>
+						<td class="description">No</td>
+						<td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
+					</tr>
+					<tr>
+						<td class="property">-p</td>
+						<td class="description">No</td>
+						<td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
+					</tr>
+					<tr>
+						<td class="property">-d</td>
+						<td class="description">No</td>
+						<td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
+					</tr>
+					<tr>
+						<td class="property">-progMin</td>
+						<td class="description">No</td>
+						<td class="description">Percent of nodes that must change communities for the algorithm to consider progress relative to total vertices in a level. Defaults to <em>0.15</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-progCount</td>
+						<td class="description">No</td>
+						<td class="description">Number of times the algorithm can fail to make progress before exiting. Defaults to <em>1</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-nID</td>
+						<td class="description">When <strong>&#8209;onlyEdges</strong> = <em>false</em></td>
+						<td class="description">Number of the column in the raw data that contains the node IDs. Note that IDs must be of type <em>long</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-nAttr</td>
+						<td class="description">No</td>
+						<td class="description">Column numbers in the raw data that contain additional node metadata that should be parsed and saved with cluster results. Individual attribute tags should be separated by commas.</td>
+					</tr>
+					<tr>
+						<td class="property">-eSrcID</td>
+						<td class="description">Yes</td>
+						<td class="description">Number of the column in the raw data that contains the edge source IDs. Note that IDs must be of type <em>long</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-eDstID</td>
+						<td class="description">Yes</td>
+						<td class="description">Number of the column in the raw data that contains the edge destination IDs. Note that IDs must be of type <em>long</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-eWeight</td>
+						<td class="description">No</td>
+						<td class="description">Number of the column in the raw data that contains the edge weights. Defaults to <em>-1</em>, meaning that no edge weighting is used.</td>
+					</tr>
+					<tr>
+						<td class="property">-spark</td>
+						<td class="description">Yes</td>
+						<td class="description">Spark master location.</td>
+					</tr>
+					<tr>
+						<td class="property">-sparkhome</td>
+						<td class="description">Yes</td>
+						<td class="description">Spark HOME location.</td>
+					</tr>
+					<tr>
+						<td class="property">-user</td>
+						<td class="description">No</td>
+						<td class="description">Spark/Hadoop username associated with the Spark job.</td>
+					</tr>
+				</tbody>
+			</table>
+		</nav>
+	</div>
 
 #### Input ####
 
@@ -291,6 +314,8 @@ GraphClusterApp accepts two types of graph data formats:
 
 - **Node and edge tab-delimited data**, where the first column contains the keyword *node* or *edge*
 - **Edge-only tab-delimited data** with different columns for source ID, destination ID and edge weight (*optional*). <p class="list-paragraph">In this case, all nodes will be inferred internally from the parsed edges, but no node attributes or metadata will be associated with the clustered nodes or communities.</p>
+
+**NOTE**: GraphClusterApp requires that node IDs and edge weights are of type *long*.
 
 #### Output ####
 
@@ -367,96 +392,109 @@ The hierarchic force-directed algorithm runs in a distributed manner using Spark
 
 ### ClusterGraphLayoutApp ###
 
-The ClusterGraphLayoutApp has the following command line arguments:
+[ClusteredGraphLayoutApp](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util/ClusteredGraphLayoutApp.scala)
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="20%">Argument</th>
-				<th scope="col" width="10%">Required?</th>
-				<th scope="col" width="70%">Description</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="property">-source</td>
-					<td class="description">Yes</td>
-					<td class="description">HDFS location of the clustered input graph data.</td>
-				</tr>
-				<tr>
-					<td class="property">-output</td>
-					<td class="description">Yes</td>
-					<td class="description">HDFS location to which to save graph layout results.</td>
-				</tr>
-				<tr>
-					<td class="property">-parts</td>
-					<td class="description">No</td>
-					<td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
-				</tr>
-				<tr>
-					<td class="property">-p</td>
-					<td class="description">No</td>
-					<td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
-				</tr>
-				<tr>
-					<td class="property">-d</td>
-					<td class="description">No</td>
-					<td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
-				</tr>
-				<tr>
-					<td class="property">-i</td>
-					<td class="description">No</td>
-					<td class="description">Maximum number of iterations for the force-directed algorithm. Defaults to <em>500</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-maxLevel</td>
-					<td class="description">No</td>
-					<td class="description">Highest cluster hierarchic level to use for determining the graph layout. Defaults to <em>0</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-border</td>
-					<td class="description">No</td>
-					<td class="description">Percent of the parent bounding box to leave as whitespace between neighbouring communities during initial layout. Defaults to <em>2</em> percent.</td>
-				</tr>
-				<tr>
-					<td class="property">-layoutLength</td>
-					<td class="description">No</td>
-					<td class="description">Desired width/height of the total graph layout region. Defaults to <em>256.0</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-nArea</td>
-					<td class="description">No</td>
-					<td class="description">Area of all node circles with a given parent community. Controls the amount of whitespace in the graph layout. Defaults to <em>30</em> percent.</td>
-				</tr>
-				<tr>
-					<td class="property">-eWeight</td>
-					<td class="description">No</td>
-					<td class="description">Indicates whether to use edge weights to scale force-directed attraction forces (<em>true</em>). Defaults to <em>false</em>.</td>
-				</tr>
-				<tr>
-					<td class="property">-g</td>
-					<td class="description">No</td>
-					<td class="description">Amount of gravitational force to use for force-directed layout to prevent outer nodes from spreading out too far. Defaults to <em>0</em> (no gravity).</td>
-				</tr>
-				<tr>
-					<td class="property">-spark</td>
-					<td class="description">Yes</td>
-					<td class="description">Spark master location.</td>
-				</tr>
-				<tr>
-					<td class="property">-sparkhome</td>
-					<td class="description">Yes</td>
-					<td class="description">Spark HOME location.</td>
-				</tr>
-				<tr>
-					<td class="property">-user</td>
-					<td class="description">No</td>
-					<td class="description">Spark/Hadoop username associated with the Spark job.</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<h6 class="procedure">To execute the ClusterGraphLayoutApp and position your node/community data</h6>
+
+- User the following command line syntax:
+
+	```bash
+	ClusteredGraphLayoutApp -source <hdfs source location> 
+	-output <hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 
+	-border 2 -eWeight true -g 0 -spark local -sparkhome /opt/spark 
+	-user <username>
+	```
+
+	Where:
+
+	<div class="props">
+		<nav>
+			<table class="summaryTable" width="100%">
+				<thead>
+					<th scope="col" width="21%">Argument</th>
+					<th scope="col" width="10%">Required?</th>
+					<th scope="col" width="69%">Description</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="property">-source</td>
+						<td class="description">Yes</td>
+						<td class="description">HDFS location of the clustered input graph data.</td>
+					</tr>
+					<tr>
+						<td class="property">-output</td>
+						<td class="description">Yes</td>
+						<td class="description">HDFS location to which to save graph layout results.</td>
+					</tr>
+					<tr>
+						<td class="property">-parts</td>
+						<td class="description">No</td>
+						<td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
+					</tr>
+					<tr>
+						<td class="property">-p</td>
+						<td class="description">No</td>
+						<td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
+					</tr>
+					<tr>
+						<td class="property">-d</td>
+						<td class="description">No</td>
+						<td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
+					</tr>
+					<tr>
+						<td class="property">-i</td>
+						<td class="description">No</td>
+						<td class="description">Maximum number of iterations for the force-directed algorithm. Defaults to <em>500</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-maxLevel</td>
+						<td class="description">No</td>
+						<td class="description">Highest cluster hierarchic level to use for determining the graph layout. Defaults to <em>0</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-border</td>
+						<td class="description">No</td>
+						<td class="description">Percent of the parent bounding box to leave as whitespace between neighbouring communities during initial layout. Defaults to <em>2</em> percent.</td>
+					</tr>
+					<tr>
+						<td class="property">-layoutLength</td>
+						<td class="description">No</td>
+						<td class="description">Desired width/height of the total graph layout region. Defaults to <em>256.0</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-nArea</td>
+						<td class="description">No</td>
+						<td class="description">Area of all node circles with a given parent community. Controls the amount of whitespace in the graph layout. Defaults to <em>30</em> percent.</td>
+					</tr>
+					<tr>
+						<td class="property">-eWeight</td>
+						<td class="description">No</td>
+						<td class="description">Indicates whether to use edge weights to scale force-directed attraction forces (<em>true</em>). Defaults to <em>false</em>.</td>
+					</tr>
+					<tr>
+						<td class="property">-g</td>
+						<td class="description">No</td>
+						<td class="description">Amount of gravitational force to use for force-directed layout to prevent outer nodes from spreading out too far. Defaults to <em>0</em> (no gravity).</td>
+					</tr>
+					<tr>
+						<td class="property">-spark</td>
+						<td class="description">Yes</td>
+						<td class="description">Spark master location.</td>
+					</tr>
+					<tr>
+						<td class="property">-sparkhome</td>
+						<td class="description">Yes</td>
+						<td class="description">Spark HOME location.</td>
+					</tr>
+					<tr>
+						<td class="property">-user</td>
+						<td class="description">No</td>
+						<td class="description">Spark/Hadoop username associated with the Spark job.</td>
+					</tr>
+				</tbody>
+			</table>
+		</nav>
+	</div>
 
 #### Input ####
 
@@ -591,7 +629,7 @@ In general, the CSVGraphBinner application works similarly to the standard Apert
 
 The following BD file parameters are used to configure CSVGraphBinner to generate tiles of graph nodes. For additional information on BD file parameters, see the [CSVBinner](../standard-tiling/#csvbinner) section of the [Standard Tiling Jobs](../standard-tiling/) topic.
 
-```text
+```properties
 # Indicate that you want to create a tile set of node elements
 oculus.binning.graph.data=nodes
 
@@ -622,7 +660,7 @@ Given these parameters, the application parses columns 2 and 3 of each node obje
 
 The following BD file parameters are used to configure CSVGraphBinner to generate tiles of graph edges. For additional information on BD file parameters, see the [CSVBinner](../standard-tiling/#csvbinner) section of the [Standard Tiling Jobs](../standard-tiling/) topic.
 
-```text
+```properties
 # Indicate that you want to create a tile set of edge elements
 oculus.binning.graph.data=edges
 
@@ -680,14 +718,14 @@ Given these parameters, the application parses two endpoints representing the so
 
 On a zoom level, any edges longer than 1024 bins (4 tiles) or shorter than 2 bins are excluded. This is done for visualization purposes (it is not possible to discern two discrete endpoints on the screen for very short or long lines), as well as to optimize processing time for high zoom levels. These thresholds can be modified using the following BD file parameters:
 
-```text
+```properties
 oculus.binning.line.max.bins=1024
 oculus.binning.line.min.bins=2 
 ```
 
 Alternatively, long line segments can be included in the tiling job by setting:
 
-```text
+```properties
 oculus.binning.line.drawends=true
 ```
 
@@ -699,7 +737,7 @@ By default, tiles for a nodes and edges are generated using one hierarchy level 
 
 For example, even though hierarchical info of a graph’s nodes may be available if the data has been Louvain clustered, it may be preferable to only use the raw nodes (hierarchy level 0) for tile generation. However, for a dense graph with many edges, it may be worthwhile to assign different hierarchy levels to different zooms. This can be accomplished using the following parameters:
 
-```text
+```properties
 oculus.binning.hierarchical.clusters=true
 oculus.binning.source.levels.0=hdfs://hadoop/graphdata /level_3
 oculus.binning.source.levels.1=hdfs://hadoop/graphdata /level_2
@@ -727,7 +765,7 @@ For example, if intra-community edges are tiled for hierarchy L for a given zoom
 
 Sample configuration for intra-community edges for hierarchy level 2 at zoom levels 4-6:
 
-```text
+```properties
 oculus.binning.hierarchical.clusters=true
 oculus.binning.source.levels.0=hdfs://hadoop/graphdata /level_2
 oculus.binning.levels.1=4-6
@@ -737,7 +775,7 @@ oculus.binning.graph.edges.type=intra
 
 Sample configuration for inter-community edges between parent communities (i.e., tiling all edges for hierarchy level 3 (L+1) at zoom levels 4-6):
 
-```text
+```properties
 oculus.binning.hierarchical.clusters=true
 oculus.binning.source.levels.0=hdfs://hadoop/graphdata /level_3
 oculus.binning.levels.1=4-6
@@ -869,4 +907,4 @@ It is possible to save stats on the 10 highest weighted edges incident on a give
 
 The number of communities to store per record can be tuned using the **oculus.<wbr>binning.<wbr>graph.<wbr>maxcommunities** parameter (set to 25 by default).
 
-Similarly, the number of edges to store per graph community can be tuned using the **oculus.<wbr>binning.<wbr>graph.<wbr>maxedges** parameter (set to 10 by default). 
+Similarly, the number of edges to store per graph community can be tuned using the **oculus.<wbr>binning.<wbr>graph.<wbr>maxedges** parameter (set to 10 by default).
