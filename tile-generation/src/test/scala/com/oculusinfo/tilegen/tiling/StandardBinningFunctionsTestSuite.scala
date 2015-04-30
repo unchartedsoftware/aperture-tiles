@@ -46,10 +46,12 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 		// Test a set of endpoints to make see if the calculation of tiles through simple
 		// Bresneham and tiled Bresneham match
 		def testEndpoints (start: BinIndex, end: BinIndex, sample: TileIndex) = {
-			val bins = StandardBinningFunctions.linearUniversalBins(start, end).map(TileIndex.universalBinIndexToTileBinIndex(sample, _))
+			val bins = StandardBinningFunctions
+				.linearUniversalBins(start, end)
+				.map(TileIndex.universalBinIndexToTileBinIndex(sample, _))
 			val binTiles = bins.map(_.getTile).toSet.toList.sortWith(sortTiles)
 
-      val tiles = StandardBinningFunctions.linearTiles(start, end, sample).toSet.toList.sortWith(sortTiles)
+			val tiles = StandardBinningFunctions.linearTiles(start, end, sample).toSet.toList.sortWith(sortTiles)
 
 			assert(binTiles == tiles)
 
@@ -74,6 +76,112 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			// Very short lines
 			testEndpoints(new BinIndex(23309+offset, 55902), new BinIndex(23325+offset, 55912), sample)
 			testEndpoints(new BinIndex(23309, 55902+offset), new BinIndex(23325, 55912+offset), sample)
+		}
+	}
+
+
+	test("Test arc initialization") {
+		class Functions extends StandardArcBinningFunctions
+		val functions = new Functions
+		val s2 = math.sqrt(2)
+		val s3 = math.sqrt(3)
+
+		def assertArcInfo (expected: (Double, Double, Double, Double, Double, Seq[Int]),
+		                   actual: (Double, Double, Double, Double, Double, Seq[Int])) {
+			assert(expected._1 === actual._1)
+			assert(expected._2 === actual._2)
+			assert(expected._3 === actual._3)
+			assert(expected._4 === actual._4)
+			assert(expected._5 === actual._5)
+			assert(expected._6.toList === actual._6.toList)
+		}
+		var arcInfo: (Double, Double, Double, Double, Double, Seq[Int]) = null
+
+		// Test the 4 basic axis-crossing chords
+		arcInfo = functions.initializeArc(new BinIndex(10, 10), new BinIndex(10, -10))
+		assertArcInfo((10-10*s3, 0.0, 20.0, 1.0/s3, -1.0/s3, List(7, 0)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(-10, 10), new BinIndex(10, 10))
+		assertArcInfo((0.0, 10-10*s3, 20.0, -s3, s3, List(1, 2)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(-10, -10), new BinIndex(-10, 10))
+		assertArcInfo((10.0*s3-10.0, 0.0, 20.0, 1.0/s3, -1.0/s3, List(3, 4)), arcInfo)
+		
+		arcInfo = functions.initializeArc(new BinIndex(10, -10), new BinIndex(-10, -10))
+		assertArcInfo((0.0, 10*s3-10.0, 20.0, -s3, s3, List(5, 6)), arcInfo)
+
+		// Same thing, with reversed coordinate order
+		arcInfo = functions.initializeArc(new BinIndex(10, -10), new BinIndex(10, 10))
+		assertArcInfo(( 10.0 + 10.0*s3, 0.0, 20.0, 1.0/s3, -1.0/s3, List(3, 4)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(10, 10), new BinIndex(-10, 10))
+		assertArcInfo((0.0,  10.0 + 10.0*s3, 20.0, -s3, s3, List(5, 6)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(-10, 10), new BinIndex(-10, -10))
+		assertArcInfo((-10.0 - 10.0*s3, 0.0, 20.0, 1.0/s3, -1.0/s3, List(7, 0)), arcInfo)
+		
+		arcInfo = functions.initializeArc(new BinIndex(-10, -10), new BinIndex(10, -10))
+		assertArcInfo((0.0, -10.0 - 10.0*s3, 20.0, -s3, s3, List(1, 2)), arcInfo)
+
+		// Test the 4 basic diagonals
+		val cp = 5.0 * s3 + 5.0
+		val cm = 5.0 * s3 - 5.0
+		arcInfo = functions.initializeArc(new BinIndex(0, 10), new BinIndex(10, 0))
+		assertArcInfo((-cm, -cm, 10.0*s2, cp / cm, cm / cp, List(0, 1)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(-10, 0), new BinIndex(0, 10))
+		assertArcInfo((cm, -cm, 10.0*s2, - cm / cp, - cp / cm, List(2, 3)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(0, -10), new BinIndex(-10, 0))
+		assertArcInfo((cm, cm, 10.0*s2, cp / cm, cm / cp, List(4, 5)), arcInfo)
+
+		arcInfo = functions.initializeArc(new BinIndex(10, 0), new BinIndex(0, -10))
+		assertArcInfo((-cm, cm, 10.0*s2, - cm / cp, - cp / cm, List(6, 7)), arcInfo)
+
+
+		// test all 0-centerd arcs in a circle
+		val slopeEpsilon = 0.1
+		// Our basic maximum point offset
+		val epsilon = math.sqrt(2)/2
+
+		(0 to 359).foreach{theta2 =>
+			val theta1 = theta2+60
+			val t1 = math.toRadians(theta1)
+			val t2 = math.toRadians(theta2)
+			val arcInfo = functions.initializeArc(new BinIndex(math.round(100*math.cos(t1)).toInt,
+			                                                   math.round(100*math.sin(t1)).toInt),
+			                                      new BinIndex(math.round(100*math.cos(t2)).toInt,
+			                                                   math.round(100*math.sin(t2)).toInt))
+
+			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
+			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
+			assert(ApproximateDouble(100.0, epsilon*2) === arcInfo._3, "(Radius differed)")
+			// Tiny perturbations in rounding can cause huge perturbations in the slope (like
+			// changing 1E6 to -1E3), so we really can't test slopes.
+			val o1 = theta1/45
+			val o2 = theta2/45
+			val o1s = if (theta1%45 == 0) List(o1, (o1+1)%8) else List(o1)
+			val o2s = if (theta2%45 == 0) List(o2, (o2+7)%8) else List(o2)
+
+			val possibleOctants = for (oct1 <- o1s; oct2 <- o2s) yield
+				if (oct2 < oct1) (oct2 to oct1).map(_ % 8).toList
+				else (oct2 to (oct1 + 8)).map(_ % 8).toList
+			val anyEqual = possibleOctants.map(_ == arcInfo._6.toList).reduce(_ || _)
+			assert(possibleOctants.map(_ == arcInfo._6.toList).reduce(_ || _),
+			       "Octants differed, got "+arcInfo._6.toList+", expected one of "+possibleOctants)
+		}
+	}
+}
+
+case class ApproximateDouble (d: Double, epsilon: Double) {
+	override def toString = d+"+/-"+epsilon
+	override def equals (that: Any): Boolean = {
+		that match {
+			case approx: ApproximateDouble =>
+				if (approx.epsilon > epsilon) approx.equals(d)
+				else this.equals(approx.d)
+				
+			case exact: Double => d-epsilon <= exact && exact <= d+epsilon
 		}
 	}
 }
