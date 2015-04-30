@@ -73,12 +73,14 @@ object PipelineOperationsParsing extends Logging {
 	 *
 	 * Arguments:
 	 *    ops.path - Valid HDFS path to data.
+	 *    ops.partitions - Number of partitions
 	 */
 	def parseLoadJsonDataOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing loadJsonDataOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val path = argParser.getString("ops.path", "HDFS path to data")
-		loadJsonDataOp(path)(_)
+		val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
+		loadJsonDataOp(path, partitions)(_)
 	}
 
 	/**
@@ -87,6 +89,7 @@ object PipelineOperationsParsing extends Logging {
 	 *
 	 * Arguments:
 	 *    ops.path - Valid HDFS path to data.
+	 *    ops.partitions - Number of partitions
 	 *
 	 * @see com.oculusinfo.tilegen.datasets.CSVReader for arguments passed into the CSV reader.
 	 *
@@ -95,7 +98,8 @@ object PipelineOperationsParsing extends Logging {
 		logger.debug(s"Parsing loadCSVDataOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val path = argParser.getString("ops.path", "HDFS path to data")
-		loadCsvDataOp(path, argParser)(_)
+		val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
+		loadCsvDataOp(path, argParser, partitions)(_)
 	}
 
 	/**

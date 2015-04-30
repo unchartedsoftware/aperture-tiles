@@ -76,11 +76,14 @@ object PipelineOperations {
 	 * Load data from a JSON file.  The schema is derived from the first json record.
 	 *
 	 * @param path Valid HDFS path to the data.
+	 * @param partitions Number of partitions to load data into.
 	 * @param data Not used.
 	 * @return PipelineData with a schema RDD populated from the JSON file.
 	 */
-	def loadJsonDataOp(path: String)(data: PipelineData): PipelineData = {
-		PipelineData(data.sqlContext, data.sqlContext.jsonFile(path))
+	def loadJsonDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
+		val srdd = data.sqlContext.jsonFile(path)
+		val partitioned = partitions.map(srdd.repartition(_)).getOrElse(srdd)
+		PipelineData(data.sqlContext, partitioned)
 	}
 
 	/**
@@ -90,12 +93,16 @@ object PipelineOperations {
 	 *
 	 * @param path HDSF path to the data object.
 	 * @param argumentSource Arguments to forward to the CSVReader.
+	 * @param partitions Number of partitions to load data into.
 	 * @param data Not used.
 	 * @return PipelineData with a schema RDD populated from the CSV file.
 	 */
-	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource)(data: PipelineData): PipelineData = {
+	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
+	                 (data: PipelineData): PipelineData = {
 		val reader = new CSVReader(data.sqlContext, path, argumentSource)
-		PipelineData(reader.sqlc, reader.asSchemaRDD)
+		val srdd = reader.asSchemaRDD
+		val partitioned = partitions.map(srdd.repartition(_)).getOrElse(srdd)
+		PipelineData(reader.sqlc, partitioned)
 	}
 
 	/**
@@ -131,9 +138,9 @@ object PipelineOperations {
 	}
 
 	/**
-	 * A very specific filter to filter geographic data to only that data that projects into the 
+	 * A very specific filter to filter geographic data to only that data that projects into the
 	 * standard tile set under a mercator projection
-	 * 
+	 *
 	 * @param latCol The column of data containing the longitude value
 	 */
 	def mercatorFilterOp (latCol: String)(input: PipelineData): PipelineData = {
