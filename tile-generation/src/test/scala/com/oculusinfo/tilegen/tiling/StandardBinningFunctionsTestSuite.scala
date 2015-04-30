@@ -33,6 +33,30 @@ import com.oculusinfo.binning.TileAndBinIndices
  * @author nkronenfeld
  */
 class StandardBinningFunctionsTestSuite extends FunSuite {
+	test("for vs while") {
+		def time (f: () => Unit): Double = {
+			val start = System.nanoTime()
+			f()
+			val end = System.nanoTime()
+			                         (end-start)/1000000.0
+		}
+		val n = 100000000
+		println("For comprehension: %.4fms".format(time(() => for (x <- 1 to n){})))
+		println("While loop: %.4fms".format(time(() => {
+			                                         var x=0
+			                                         while (x < n) {x += 1}
+		                                         })))
+		println("While iterator: %.4fms".format(time(() => {
+			                                             var x = 0
+			                                             new WhileIterator(() => (x < n), () => x = x + 1).foreach(x => {})
+		                                             })))
+		var x = 0
+		val wi = new WhileIterator(() => (x < n), () => x = x + 1)
+		println("While iterator internals: %.4fms".format(time(() => wi.foreach(x => {}))))
+	}
+
+
+
 	test("Test various Bresneham line functions against each other") {
 		val sortTiles: (TileIndex, TileIndex) => Boolean = (a, b) => {
 			a.getX < b.getX || (a.getX == b.getX && a.getY < b.getY)
@@ -87,15 +111,15 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 		val s3 = math.sqrt(3)
 
 		def assertArcInfo (expected: (Double, Double, Double, Double, Double, Seq[Int]),
-		                   actual: (Double, Double, Double, Double, Double, Seq[Int])) {
-			assert(expected._1 === actual._1)
-			assert(expected._2 === actual._2)
-			assert(expected._3 === actual._3)
+		                   actual: (Int, Int, Int, Double, Double, Seq[Int])) {
+			assert(math.round(expected._1).toInt === actual._1)
+			assert(math.round(expected._2).toInt === actual._2)
+			assert(math.round(expected._3).toInt === actual._3)
 			assert(expected._4 === actual._4)
 			assert(expected._5 === actual._5)
 			assert(expected._6.toList === actual._6.toList)
 		}
-		var arcInfo: (Double, Double, Double, Double, Double, Seq[Int]) = null
+		var arcInfo: (Int, Int, Int, Double, Double, Seq[Int]) = null
 
 		// Test the 4 basic axis-crossing chords
 		arcInfo = functions.initializeArc(new BinIndex(10, 10), new BinIndex(10, -10))
@@ -153,9 +177,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			                                      new BinIndex(math.round(100*math.cos(t2)).toInt,
 			                                                   math.round(100*math.sin(t2)).toInt))
 
-			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
-			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
-			assert(ApproximateDouble(100.0, epsilon*2) === arcInfo._3, "(Radius differed)")
+			assert(ApproximateInt(0, math.ceil(epsilon*3).toInt) === arcInfo._1, "(X center coordinate differed)")
+			assert(ApproximateInt(0, math.ceil(epsilon*3).toInt) === arcInfo._2, "(Y center coordinate differed)")
+			assert(ApproximateInt(100, math.ceil(epsilon*2).toInt) === arcInfo._3, "(Radius differed)")
 			// Tiny perturbations in rounding can cause huge perturbations in the slope (like
 			// changing 1E6 to -1E3), so we really can't test slopes.
 			val o1 = theta1/45
@@ -171,8 +195,33 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			       "Octants differed, got "+arcInfo._6.toList+", expected one of "+possibleOctants)
 		}
 	}
+
+
+
+	test("Test simple arc") {
+		class Functions extends StandardArcBinningFunctions
+		val functions = new Functions
+		val allBins = functions.arcUniversalBins(new BinIndex(-7, 12), new BinIndex(7, 12))
+		val binList = allBins.toList
+		val sortedBinList = binList.sortBy(_.getX)
+		assert(15 === sortedBinList.size)
+	}
 }
 
+case class ApproximateInt (i: Int, epsilon: Int) {
+	override def toString = i+"+/-"+epsilon
+	override def equals (that: Any): Boolean = {
+		that match {
+			case approx: ApproximateInt =>
+				if (approx.epsilon > epsilon) approx.equals(i)
+				else this.equals(approx.i)
+				
+			case exact: Int => i-epsilon <= exact && exact <= i+epsilon
+
+			case _ => false
+		}
+	}
+}
 case class ApproximateDouble (d: Double, epsilon: Double) {
 	override def toString = d+"+/-"+epsilon
 	override def equals (that: Any): Boolean = {
@@ -182,6 +231,8 @@ case class ApproximateDouble (d: Double, epsilon: Double) {
 				else this.equals(approx.d)
 				
 			case exact: Double => d-epsilon <= exact && exact <= d+epsilon
+
+			case _ => false
 		}
 	}
 }

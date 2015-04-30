@@ -205,7 +205,7 @@ class UniversalBinner {
 		 tileType: Option[StorageType] = None): RDD[TileData[BT]] =
 	{
 		processData[IT, PT, AT, DT, BT](data, binAnalytic, tileAnalytics, dataAnalytics,
-		                                StandardBinningFunctions.locateIndexIdentity(indexScheme, tileScheme, levels, xBins, yBins),
+		                                StandardBinningFunctions.locateIndexOverLevels(indexScheme, tileScheme, levels, xBins, yBins),
 		                                StandardBinningFunctions.populateTileIdentity,
 		                                BinningParameters(true, xBins, yBins, consolidationPartitions, consolidationPartitions, tileType))
 	}

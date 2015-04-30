@@ -31,22 +31,25 @@ import com.oculusinfo.binning.TileIndex
 
 
 
-object StandardBinningFunctions extends StandardLinearBinningFunctions {
-	
+object StandardBinningFunctions
+		extends StandardPointBinningFunctions
+		with StandardLinearBinningFunctions
+		with StandardArcBinningFunctions
+{
 }
 
 
 
 /**
- * A repository of standard index location and tile population functions, for use with the 
- * UniversalBinner
+ * A repository of standard index location and tile population functions for point inputs, 
+ * for use with the UniversalBinner
  */
-trait StandardLinearBinningFunctions {
+trait StandardPointBinningFunctions {
 	/**
 	 * Simple function to spread an input point over several levels of tile pyramid.
 	 */
-	def locateIndexIdentity[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
-	                           levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+	def locateIndexOverLevels[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                             levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
 			: T => Traversable[(TileIndex, Array[BinIndex])] =
 		index => {
 			val (x, y) = indexScheme.toCartesian(index)
@@ -63,8 +66,8 @@ trait StandardLinearBinningFunctions {
 	 * Simple function to spread an input point over several levels of tile pyramid, ignoring 
 	 * points that are out of bounds
 	 */
-	def locateBoundedIndex[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
-	                          levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+	def locateBoundedIndexOverLevels[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                                    levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
 			: T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
@@ -84,9 +87,24 @@ trait StandardLinearBinningFunctions {
 		}
 	}
 
+	
+	
+	/**
+	 * Simple population function that just takes input points and outputs them, as is, in the 
+	 * correct coordinate system.
+	 */
+	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
+		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
+
+}
 
 
 
+/**
+ * A repository of standard index location and tile population functions for line inputs, 
+ * generating linear segment output, for use with the UniversalBinner
+ */
+trait StandardLinearBinningFunctions {
 	/**
 	 * Simple function to spread an input lines over several levels of tile pyramid.
 	 * 
@@ -143,13 +161,6 @@ trait StandardLinearBinningFunctions {
 	}
 
 
-
-	/**
-	 * Simple population function that just takes input points and outputs them, as is, in the 
-	 * correct coordinate system.
-	 */
-	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
-		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
 
 	/**
 	 * Line segment population function
@@ -363,7 +374,7 @@ trait StandardArcBinningFunctions {
 	 * With 0deg being due east, octant 0 is from 0-45 degrees, octant 1 from 45-90 degrees, etc.  
 	 */
 	private[tiling] def initializeArc (start: BinIndex, end: BinIndex)
-			: (Double, Double, Double, Double, Double, Seq[Int]) = {
+			: (Int, Int, Int, Double, Double, Seq[Int]) = {
 		val x1 = start.getX
 		val y1 = start.getY
 		val x2 = end.getX
@@ -403,6 +414,69 @@ trait StandardArcBinningFunctions {
 			(if (endOctant < startOctant) (endOctant to startOctant)
 			 else (endOctant to (startOctant+8)).map(_ % 8))
 
-		(xc, yc, radius, (y1-yc)/(x1-xc), (y2-yc)/(x2-xc), octants)
+		(math.round(xc).toInt, math.round(yc).toInt, math.round(radius).toInt,
+		 (y1-yc)/(x1-xc), (y2-yc)/(x2-xc), octants)
 	}
+
+
+
+	def arcUniversalBins (start: BinIndex, end: BinIndex): Traversable[BinIndex] = {
+		def octantTransform (x: Int, y: Int, octant: Int): (Int, Int) =
+			octant match {
+				case 0 => (x, y)
+				case 1 => (y, x)
+				case 2 => (-y, x)
+				case 3 => (-x, y)
+				case 4 => (-x, -y)
+				case 5 => (-y, -x)
+				case 6 => (y, -x)
+				case 7 => (x, -y)
+			}
+
+		val x0 = start.getX
+		val y0 = start.getY
+		val x1 = end.getX
+		val y1 = end.getY
+		val (xc, yc, radius, startSlope, endSlope, octants) = initializeArc(start, end)
+		val lowSlope = startSlope min endSlope
+		val highSlope = startSlope max endSlope
+
+		var x = radius
+		var y = 0
+		var radiusError = 1 - x
+		new WhileIterator(() => x >= y,
+		                  () => {
+			                  val curX = x
+			                  val curY = y
+
+			                  if (radiusError < 0) radiusError = radiusError + 2 * y + 1
+			                  else {
+				                  x = x - 1
+				                  radiusError = radiusError + 2 * (y - x) + 1
+			                  }
+                        y = y + 1
+			                  (x, y)
+		                  }
+		).flatMap{case (x, y) =>
+				octants.flatMap{octant =>
+					val (xr, yr) = octantTransform(x, y, octant)
+					val slope = yr.toDouble/xr
+//					if (lowSlope <= slope && slope <= highSlope)
+						Some(new BinIndex(xc+xr, yc+yr))
+//					else
+//						None
+				}
+		}.toTraversable
+	}
+}
+
+class WhileIterator[T] (more: () => Boolean, fcn: () => T) extends Iterator[T] {
+	def hasNext: Boolean = {
+    val res = more()
+    res
+  }
+	def next(): T = {
+   val res = fcn()
+   res
+  }
 }
