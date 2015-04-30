@@ -57,25 +57,25 @@
     /**
      * Utility function for positioning the labels
      */
-    getYOffset = function( index, numEntries ) {
-        var SPACING = 20;
-        return 118 - ( (( numEntries - 1) / 2 ) - index ) * SPACING;
+    getYOffset = function( index, heights, totalHeight ) {
+				var i,offset = 118 - (totalHeight / 2);
+        for ( i=0; i < index; i++) {
+					offset += heights[i];
+				}
+        return offset;
     };
 
     /**
-     * Utility function to get the highest count in the tile
+     * Utility function to get the highest count for a topic in the tile
      */
-    getHighestCount = function( numEntries, values, countKey ) {
+    getHighestCount = function( numEntries, values, index, countKey ) {
         // get the highest single count
         var highestCount = 0,
-            counts,
-            i, j;
-        for ( i=0; i<numEntries; i++ ) {
-            counts = RendererUtil.getAttributeValue( values[i], countKey );
-            for ( j=0; j<counts.length; j++ ) {
-                // get highest count
-                highestCount = Math.max( highestCount, counts[j] );
-            }
+            counts = RendererUtil.getAttributeValue( values[index], countKey ),
+            j;
+        for ( j=0; j<counts.length; j++ ) {
+            // get highest count
+            highestCount = Math.max( highestCount, counts[j] );
         }
         return highestCount;
     };
@@ -133,19 +133,35 @@
             entries = [],
             value,
             text,
-            highestCount,
+            highestCounts = [],
             counts,
             relativePercent,
             chartSize,
             visibility,
             index,
+            heights = [],
+            height = 0,
+            totalHeight = 0,
             i, j;
 
-        // find the highest count of any topic
-        highestCount = getHighestCount( numEntries, values, countKey );
 
+        // compute topic row heights weighted by topic count
         for ( i=0; i<numEntries; i++ ) {
+            height = 0;
+            highestCounts.push( getHighestCount( numEntries, values, i, countKey ) );
+            counts = RendererUtil.getAttributeValue( values[i], countKey );
 
+            for ( j=0; j < counts.length; j++ ) {
+                  height += counts[j];
+            }
+
+            // bind topic row height to [12,22] pixels
+            height = 12 + (Math.min( Math.log(height) * 5, 20 ) / 20) * 8;
+            heights.push( height );
+            totalHeight += height;
+        }
+
+            for ( i=0; i<numEntries; i++ ) {
             value = values[i];
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
@@ -153,7 +169,8 @@
             chartSize = counts.length;
 
             html += '<div class="text-by-frequency-entry" style="'
-                  + 'top:' + getYOffset( i, numEntries ) + 'px;">';
+                  + 'top:' + getYOffset( i, heights, totalHeight ) + 'px;'
+                  + 'height:' + heights[i] + 'px">';
 
             // create chart
             html += '<div class="text-by-frequency-left">';
@@ -161,7 +178,7 @@
                 // if invertOrder is true, invert the order of iteration
                 index = ( invertOrder ) ? chartSize - j - 1 : j;
                 // get the percent relative to the highest count in the tile
-                relativePercent = ( counts[index] / highestCount ) * 100;
+                relativePercent = ( counts[index] / highestCounts[i] ) * 100;
                 // if percent === 0, hide bar
                 visibility = ( relativePercent > 0 ) ? '' : 'hidden';
                 // class percent in increments of 10
@@ -179,7 +196,7 @@
 
             // create tag label
             html += '<div class="text-by-frequency-right">';
-            html += '<div class="text-by-frequency-label">'+text+'</div>';
+            html += '<div class="text-by-frequency-label" style="font-size:'+heights[i]+'px;line-height:'+heights[i]+'px">'+text+'</div>';
             html += '</div>';
             html += '</div>';
         }

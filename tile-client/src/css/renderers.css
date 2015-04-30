@@ -119,8 +119,6 @@
 	position:relative;
 	bottom: -2px;
 	padding: 3px;
-	font-size : 16px;
-	line-height: 16px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
