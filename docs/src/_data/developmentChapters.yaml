@@ -78,6 +78,24 @@
         - label: Bin Data
           anchor: binning-your-data
 
+    - label: Run Graph Tiling Jobs
+      path: graph-tiling
+      bookmarks:
+        - label: Convert GraphML to CSV
+          anchor: convert-graphml
+
+        - label: Hierarchical Clustering
+          anchor: clustering
+
+        - label: Graph Layout
+          anchor: graph-layout
+
+        - label: Tile Generation
+          anchor: tile-generation
+
+        - label: Graph Analytics
+          anchor: graph-analytics
+
     - label: Test Tiling Job Output
       path: test-output
       bookmarks:
