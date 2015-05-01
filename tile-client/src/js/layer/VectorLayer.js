@@ -52,7 +52,6 @@
 		// set reasonable defaults
 		this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
 		this.domain = "elastic";
-
 		this.source = spec.source;
 		this.styleMap = spec.styleMap;
 		this.eventListeners = spec.eventListeners;
@@ -68,7 +67,6 @@
 	 * @private
 	 */
 	VectorLayer.prototype.activate = function() {
-
 		var layerSpec = {};
 		if (this.strategies) {
 			layerSpec.strategies = this.strategies;
@@ -79,13 +77,9 @@
 		if (this.eventListeners) {
 			layerSpec.eventListeners = this.eventListeners;
 		}
-
 		this.olLayer = new OpenLayers.Layer.Vector("Overlay", layerSpec);
-
 		this.map.olMap.addLayer(this.olLayer);
-
 		this.olLayer.addFeatures(this.vectors);
-
 		this.setZIndex(this.zIndex);
 		this.setOpacity(this.opacity);
 		this.setEnabled(this.enabled);
@@ -95,7 +89,7 @@
 
 	/**
 	 * Dectivates the layer object. This should never be called manually.
-	 * @memberof ClientLayer
+	 * @memberof VectorLayer
 	 * @private
 	 */
 	VectorLayer.prototype.deactivate = function() {
@@ -106,12 +100,11 @@
 		}
 	};
 
-
 	/**
 	 * Remove all features from the layer and add the new features
 	 * passed in
 	 *
-	 * @param {Array{Vector}} featuresToAdd - Array of OpenLayers Features
+	 * @param {Array} featuresToAdd - Array of OpenLayers Features
 	 */
 	VectorLayer.prototype.setFeatures = function(featuresToAdd) {
 		if ( this.olLayer ) {
@@ -119,11 +112,11 @@
 			this.vectors = featuresToAdd;
 			this.olLayer.addFeatures( featuresToAdd );
 		}
-	}
+	};
 
 	/**
 	 * Updates the theme associated with the layer.
-	 * @memberof ClientLayer
+	 * @memberof VectorLayer
 	 *
 	 * @param {String} theme - The theme identifier string.
 	 */
@@ -133,7 +126,7 @@
 
 	/**
 	 * Get the current theme for the layer.
-	 * @memberof ClientLayer
+	 * @memberof VectorLayer
 	 *
 	 * @returns {String} The theme identifier string.
 	 */
@@ -143,7 +136,7 @@
 
 	/**
 	 * Set the z index of the layer.
-	 * @memberof ClientLayer
+	 * @memberof VectorLayer
 	 *
 	 * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
 	 */
@@ -153,19 +146,18 @@
 		// index based on current map layers, which then sets a z-index. This
 		// caused issues with async layer loading.
 		this.zIndex = zIndex;
-		if (this.olLayer) {
+		if ( this.olLayer ) {
 			$(this.olLayer.div).css('z-index', zIndex);
 			PubSub.publish(this.getChannel(), {
 				field: 'zIndex',
 				value: zIndex
 			});
 		}
-
 	};
 
 	/**
 	 * Get the layers zIndex.
-	 * @memberof ClientLayer
+	 * @memberof VectorLayer
 	 *
 	 * @returns {integer} The zIndex for the layer.
 	 */

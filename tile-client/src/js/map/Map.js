@@ -816,41 +816,35 @@
             return this.olMap.getZoom();
         },
 
-        
         /**
-         * Returns the Openlayers LonLat object for the center point of the viewport
-         * projected into EPSG:4326.
-         * 
+         * Returns the x and y coordinates at the centre of the map.
+         *
          * @return {OpenLayers.LonLat}
          */
-        getCenterProjected: function () {
-            var projectTo,
-                lonlat;
-
-            lonlat = this.olMap.getCenter();
-            projectTo = new OpenLayers.Projection('EPSG:4326');
-
-            return lonlat.transform(this.olMap.getProjectionObject(),projectTo);
+        getCenterProjected: function() {
+            return MapUtil.getCoordFromViewportPixel(
+                this,
+                this.getViewportWidth() / 2,
+                this.getViewportHeight() / 2 );
         },
 
         /**
          * Get the top-left and bottom-right extents of the visible map.
-         * 
+         *
          * @return {Object}
          */
-        getMapExtents: function () {
-
-            var extents = this.olMap.getExtent();
-
-            var projectFrom = this.olMap.getProjectionObject();
-            var projectTo = new OpenLayers.Projection('EPSG:4326');
-
-            var topLeft = new OpenLayers.LonLat(extents.left,extents.top).transform(projectFrom,projectTo);
-            var bottomRight = new OpenLayers.LonLat(extents.right, extents.bottom).transform(projectFrom,projectTo);
-
-            return {'topLeft' : topLeft, 'bottomRight' : bottomRight};
+        getMapExtents: function() {
+            return {
+                topLeft: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    0,
+                    0 ),
+                bottomRight: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    this.getViewportWidth(),
+                    this.getViewportHeight() )
+            };
         },
-
 
         /**
          * Set a map event callback. Supports all of the following OpenLayers.Map events:
