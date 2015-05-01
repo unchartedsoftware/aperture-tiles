@@ -29,7 +29,9 @@
 
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
-        injectCss;
+        injectCss,
+        getLabelWidth,
+        capitalize;
 
     injectCss = function( spec ) {
         var i;
@@ -40,6 +42,28 @@
                 });
             }
         }
+    };
+
+    /**
+     * Returns the pixel width of the label
+     */
+     getLabelWidth = function( str, fontSize ) {
+        var $temp,
+            width;
+        $temp = $('<div class="node-label" style="font-size:'+fontSize+'px; padding-left:5px; padding-right:5px;">'+str+'</div>');
+        $('body').append( $temp );
+        width = $temp.outerWidth();
+        $temp.remove();
+        return width;
+    };
+
+    /**
+     * Capitalizes the given word.
+     */
+    capitalize = function( str ) {
+        return str.replace(/(?:^|,|\s)\S/g, function( a ) {
+            return a.toUpperCase();
+        });
     };
 
     /**
@@ -91,19 +115,17 @@
             fontSize,
             split,
             label,
+            width,
             minimumCount,
             maximumCount,
-            opacity,
+            percent,
+            percentLabel,
             hierLevel,
             parentIDarray = [],
             entries = [],
             x, y, i;
 
-        function capitalize( str ) {
-            return str.replace(/(?:^|,|\s)\S/g, function( a ) {
-                return a.toUpperCase();
-            });
-        }
+
 
         // get graph hierarchy level for this zoom level
         // assumes same hierarchy level for all tiles at a given zoom level
@@ -122,7 +144,6 @@
         for ( i=0; i<communities.length; i++ ) {
 
             community = communities[i];
-            entries.push( community );
 
             // capitalize label array, split by comma
             split = community.metadata.split(",");
@@ -142,6 +163,9 @@
                 parentIDarray.push( community.parentID );
             }
 
+            // add to entries only if there is a legible label
+            entries.push( community );
+
             // get label position
             x = ( community[ text.xKey ] % range ) * scale;
             y = ( community[ text.yKey ] % range ) * scale;
@@ -152,22 +176,28 @@
             // get font scale based on hierarchy level
             count = ( hierLevel === 0 ) ? community.degree : community.numNodes;
             fontSize = RendererUtil.getFontSize(
-                count, minimumCount, maximumCount, { type:'log'} );
+                count, minimumCount, maximumCount, { type:'log' } );
 
-            //
-            opacity = RendererUtil.transformValue(
-                count, minimumCount, maximumCount, 'log' ) + 0.5;
+            // calc percent label
+            percent = RendererUtil.transformValue( count, minimumCount, maximumCount, 'log' );
+            percentLabel = Math.round( ( percent*100 ) / 10 ) * 10;
 
-            html += '<div class="node-label" style="'
-                  + 'left:'+x+'px;'
-                  + 'bottom:'+y+'px;'
-                  + 'font-size:' + fontSize + 'px;'
-                  + 'line-height:' + fontSize + 'px;'
-                  + 'margin-top:' + (-fontSize/2) + 'px;'
-                  + 'height:' + fontSize + 'px;'
-                  + 'opacity:' + opacity + ';'
-                  + 'z-index:' + Math.floor( fontSize ) + ';'
-                  + '">'+label+'</div>';
+            // calc width for centering
+            width = getLabelWidth( label, fontSize );
+            width = Math.min( width, 200 );
+
+            html += '<div class="node-label node-label-'+percentLabel+'" style="'
+                + 'left:'+x+'px;'
+                + 'bottom:'+y+'px;'
+                + 'font-size:' + fontSize + 'px;'
+                + 'line-height:' + fontSize + 'px;'
+                + 'width:' + width + 'px;'
+                + 'margin-left:' + (-width/2) + 'px;'
+                + 'margin-top:' + (-fontSize/2) + 'px;'
+                + 'height:' + fontSize + 'px;'
+                + 'z-index:' + Math.floor( fontSize ) + ';'
+                + '">'+label+'</div>';
+
         }
         return {
             html: html,

@@ -29,6 +29,14 @@
 
     var RendererUtil = require('./RendererUtil');
 
+    function isColor( val ) {
+        var split = val.replace(/\s+/g, '').split(/[\(\)]/);
+        if ( split[0] === "rgb" || split[0] === "rgba" ) {
+            return val;
+        }
+        return val[0] === "#" && ( val.length === 4 || val.length === 7 );
+    }
+
     function injectSingleTheme( renderTheme, spec, options, percent ) {
         var theme = renderTheme.selector,
             selector = ( percent !== undefined ) ? options.selector + "-" + percent : options.selector,
@@ -42,6 +50,9 @@
         if ( spec.color ) {
             css += theme + ' ' + selector + '{color:' + spec.color + ';}';
         }
+        if ( spec.opacity ) {
+            css += theme + ' ' + selector + '{opacity:' + spec.opacity + ';}';
+        }
 
         // set :hover color
         if ( parentSelector ) {
@@ -51,12 +62,18 @@
             if ( spec['color:hover'] ) {
                 css += theme + ' '+parentSelector+':hover '+selector+' {color:'+spec['color:hover']+';}';
             }
+            if ( spec['opacity:hover'] ) {
+                css += theme + ' '+parentSelector+':hover '+selector+' {opacity:'+spec['opacity:hover']+';}';
+            }
         } else {
             if ( spec['background-color:hover'] ) {
                 css += theme + ' '+selector+':hover {background-color:'+spec['background-color:hover']+';}';
             }
             if ( spec['color:hover'] ) {
                 css += theme + ' '+selector+':hover {color:'+spec['color:hover']+';}';
+            }
+            if ( spec['opacity:hover'] ) {
+                css += theme + ' '+selector+':hover {opacity:'+spec['opacity:hover']+';}';
             }
         }
 
@@ -73,13 +90,7 @@
     }
 
     function getOutlineCss( type, value ) {
-        function isColor( val ) {
-            var split = val.replace(/\s+/g, '').split(/[\(\)]/);
-            if ( split[0] === "rgb" || split[0] === "rgba" ) {
-                return val;
-            }
-            return val[0] === "#" && ( val.length === 4 || val.length === 7 );
-        }
+
 
         if ( !value ) {
             return "";
@@ -176,6 +187,9 @@
                          from.color,
                          i/10 );
                 }
+                if ( from.opacity && to.opacity ) {
+                    blendSpec.opacity = from.opacity + ((( to.opacity - from.opacity ) / 10)*i);
+                }
                 if ( from['background-color:hover'] && to['background-color:hover'] ) {
                      blendSpec['background-color:hover'] = RendererUtil.hexBlend(
                          to['background-color:hover'],
@@ -187,6 +201,9 @@
                          to['color:hover'],
                          from['color:hover'],
                          i/10 );
+                }
+                if ( from['opacity:hover'] && to['opacity:hover'] ) {
+                    blendSpec['opacity:hover'] = from['opacity:hover'] + ((( to['opacity:hover'] - from['opacity:hover'] ) / 10)*i);
                 }
                 if ( from['text-shadow'] && to['text-shadow'] ) {
                      blendSpec['text-shadow'] = RendererUtil.hexBlend(

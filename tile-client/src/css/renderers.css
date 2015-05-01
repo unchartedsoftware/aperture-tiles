@@ -191,9 +191,6 @@
 
 .node-label {
 	position:absolute;
-	width: 256px;
-	padding: 5px 0 5px 0;
-	margin-left: -128px;
 	white-space: nowrap;
 	text-align: center;
 	vertical-align: middle;
@@ -201,10 +198,6 @@
 	cursor:pointer;
 	text-overflow: ellipsis;
 	pointer-events: all;
-}
-
-.node-label:hover {
-	opacity: 1.0;
 }
 
 /********************************************/
