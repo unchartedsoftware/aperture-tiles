@@ -33,6 +33,10 @@ import com.oculusinfo.binning.TileAndBinIndices
  * @author nkronenfeld
  */
 class StandardBinningFunctionsTestSuite extends FunSuite {
+	class Functions extends StandardArcBinningFunctions
+
+
+
 	test("for vs while") {
 		def time (f: () => Unit): Double = {
 			val start = System.nanoTime()
@@ -105,21 +109,20 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	test("Test arc initialization") {
-		class Functions extends StandardArcBinningFunctions
 		val functions = new Functions
 		val s2 = math.sqrt(2)
 		val s3 = math.sqrt(3)
 
 		def assertArcInfo (expected: (Double, Double, Double, Double, Double, Seq[Int]),
-		                   actual: (Int, Int, Int, Double, Double, Seq[Int])) {
-			assert(math.round(expected._1).toInt === actual._1)
-			assert(math.round(expected._2).toInt === actual._2)
-			assert(math.round(expected._3).toInt === actual._3)
+		                   actual: (Double, Double, Double, Double, Double, Seq[(Int, Boolean, Boolean)])) {
+			assert(expected._1 === actual._1)
+			assert(expected._2 === actual._2)
+			assert(expected._3 === actual._3)
 			assert(expected._4 === actual._4)
 			assert(expected._5 === actual._5)
-			assert(expected._6.toList === actual._6.toList)
+			assert(expected._6.toList === actual._6.map(_._1).toList)
 		}
-		var arcInfo: (Int, Int, Int, Double, Double, Seq[Int]) = null
+		var arcInfo: (Double, Double, Double, Double, Double, Seq[(Int, Boolean, Boolean)]) = null
 
 		// Test the 4 basic axis-crossing chords
 		arcInfo = functions.initializeArc(new BinIndex(10, 10), new BinIndex(10, -10))
@@ -177,9 +180,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			                                      new BinIndex(math.round(100*math.cos(t2)).toInt,
 			                                                   math.round(100*math.sin(t2)).toInt))
 
-			assert(ApproximateInt(0, math.ceil(epsilon*3).toInt) === arcInfo._1, "(X center coordinate differed)")
-			assert(ApproximateInt(0, math.ceil(epsilon*3).toInt) === arcInfo._2, "(Y center coordinate differed)")
-			assert(ApproximateInt(100, math.ceil(epsilon*2).toInt) === arcInfo._3, "(Radius differed)")
+			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
+			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
+			assert(ApproximateDouble(100.0, epsilon*2) === arcInfo._3, "(Radius differed)")
 			// Tiny perturbations in rounding can cause huge perturbations in the slope (like
 			// changing 1E6 to -1E3), so we really can't test slopes.
 			val o1 = theta1/45
@@ -190,21 +193,90 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val possibleOctants = for (oct1 <- o1s; oct2 <- o2s) yield
 				if (oct2 < oct1) (oct2 to oct1).map(_ % 8).toList
 				else (oct2 to (oct1 + 8)).map(_ % 8).toList
-			val anyEqual = possibleOctants.map(_ == arcInfo._6.toList).reduce(_ || _)
-			assert(possibleOctants.map(_ == arcInfo._6.toList).reduce(_ || _),
+			assert(possibleOctants.map(_ == arcInfo._6.map(_._1).toList).reduce(_ || _),
 			       "Octants differed, got "+arcInfo._6.toList+", expected one of "+possibleOctants)
 		}
 	}
 
 
 
-	test("Test simple arc") {
-		class Functions extends StandardArcBinningFunctions
+	private def bi (x: Int, y: Int): BinIndex = new BinIndex(x, y)
+	private val binSorter: (BinIndex, BinIndex) => Boolean = (a, b) => {
+		val angleA = math.atan2(a.getY, a.getX)
+		val angleB = math.atan2(b.getY, b.getX)
+		angleA < angleB
+	}
+
+
+
+	test("Test simple arcs - symetrical across axis") {
 		val functions = new Functions
-		val allBins = functions.arcUniversalBins(new BinIndex(-7, 12), new BinIndex(7, 12))
-		val binList = allBins.toList
-		val sortedBinList = binList.sortBy(_.getX)
-		assert(15 === sortedBinList.size)
+		val bins = functions.arcUniversalBins2(bi(-7, 12), bi(7, 12)).toList.sortWith(binSorter)
+
+		// Make sure our arc bounds are correct
+		assert(12 === bins.map(_.getY).reduce(_ min _))
+		assert(14 === bins.map(_.getY).reduce(_ max _))
+		assert(-7 === bins.map(_.getX).reduce(_ min _))
+		assert(7 === bins.map(_.getX).reduce(_ max _))
+
+		// Make sure the results are symetrical around the X axis
+		bins.foreach(bin => bins.contains(new BinIndex(-bin.getX, bin.getY)))
+
+		// Make sure there are no gaps
+		bins.sliding(2).foreach{pair =>
+			assert(math.abs(pair(1).getX-pair(0).getX) < 2, "Gap between "+pair(0)+" and "+pair(1))
+			assert(math.abs(pair(1).getY-pair(0).getY) < 2, "Gap between "+pair(0)+" and "+pair(1))
+		}
+
+		// Make sure there are no duplicate points
+		assert(bins.size === bins.toSet.size)
+
+		// Make sure the results are all approximately 14 from (0, 12 - 7 sqrt(3)) (i.e., the real center)
+		val idealY = 12.0 - 7.0 * math.sqrt(3)
+		bins.foreach{bin =>
+			val x = bin.getX
+			val y = bin.getY - idealY
+			val r = math.sqrt((x * x) + (y * y))
+			assert(new ApproximateDouble(14.0, 0.75) === r)
+		}
+	}
+	
+	
+	
+	test("Test simple arcs - symetrical across diagonal") {
+		val functions = new Functions
+		val bins = functions.arcUniversalBins2(bi(7, 27), bi(27, 7)).toList.sortWith(binSorter)
+
+		// Make sure our arc bounds are correct
+		assert(7 === bins.map(_.getY).reduce(_ min _))
+		assert(27 === bins.map(_.getY).reduce(_ max _))
+		assert(7 === bins.map(_.getX).reduce(_ min _))
+		assert(27 === bins.map(_.getX).reduce(_ max _))
+
+		// Make sure the results are symetrical around the diagonal
+		bins.foreach(bin => bins.contains(new BinIndex(bin.getY, bin.getX)))
+
+		// Make sure there are no gaps
+		bins.sliding(2).foreach{pair =>
+			assert(math.abs(pair(1).getX-pair(0).getX) < 2, "Gap between "+pair(0)+" and "+pair(1))
+			assert(math.abs(pair(1).getY-pair(0).getY) < 2, "Gap between "+pair(0)+" and "+pair(1))
+		}
+
+		// Make sure there are no duplicates
+		assert(bins.size == bins.toSet.size)
+
+		// Make sure the results are all the right distance from the true center.
+		// The chord is 20 sqrt(2) long
+		// so the distance from the chord to the center is 10 sqrt(6)
+		// so the distance along each axis from the chord center to the center is 10 sqrt(3)
+		val idealR = 20 * math.sqrt(2)
+		val idealC = 17.0 - 10.0 * math.sqrt(3)
+		bins.foreach{bin =>
+			val x = bin.getX - idealC
+			val y = bin.getY - idealC
+			val r = math.sqrt((x * x) + (y * y))
+			assert(new ApproximateDouble(idealR, 0.75) === r)
+		}
 	}
 }
 

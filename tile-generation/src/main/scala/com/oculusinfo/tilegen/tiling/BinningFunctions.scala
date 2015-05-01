@@ -371,10 +371,12 @@ trait StandardArcBinningFunctions {
 	 * We assume a 60 degree arc. with the center on the RHS of the line, when travelling from the 
 	 * first to the second point (which means the arc goes counter-clockwise).
 	 * 
-	 * With 0deg being due east, octant 0 is from 0-45 degrees, octant 1 from 45-90 degrees, etc.  
+	 * With 0deg being due east, octant 0 is from 0-45 degrees, octant 1 from 45-90 degrees, etc. 
+	 *  
+	 * Each octant is annotated with whether it is the initial and whether it is the final octant.
 	 */
 	private[tiling] def initializeArc (start: BinIndex, end: BinIndex)
-			: (Int, Int, Int, Double, Double, Seq[Int]) = {
+			: (Double, Double, Double, Double, Double, Seq[(Int, Boolean, Boolean)]) = {
 		val x1 = start.getX
 		val y1 = start.getY
 		val x2 = end.getX
@@ -413,9 +415,15 @@ trait StandardArcBinningFunctions {
 		val octants =
 			(if (endOctant < startOctant) (endOctant to startOctant)
 			 else (endOctant to (startOctant+8)).map(_ % 8))
+				.map(octant =>
+				(octant, octant == startOctant, octant == endOctant))
 
-		(math.round(xc).toInt, math.round(yc).toInt, math.round(radius).toInt,
-		 (y1-yc)/(x1-xc), (y2-yc)/(x2-xc), octants)
+		(xc,
+		 yc,
+		 radius,
+		 (y1-yc)/(x1-xc),
+		 (y2-yc)/(x2-xc),
+		 octants)
 	}
 
 
@@ -438,45 +446,135 @@ trait StandardArcBinningFunctions {
 		val x1 = end.getX
 		val y1 = end.getY
 		val (xc, yc, radius, startSlope, endSlope, octants) = initializeArc(start, end)
-		val lowSlope = startSlope min endSlope
-		val highSlope = startSlope max endSlope
 
-		var x = radius
-		var y = 0
-		var radiusError = 1 - x
-		new WhileIterator(() => x >= y,
-		                  () => {
-			                  val curX = x
-			                  val curY = y
+		// Offset from y from 0 so the y coordinate is the center of its column.
+		var yOffset = math.round(yc) - yc
+		var y = yOffset
+		// x1^2 = x0^2 - 2 y0 dy - dy^2, and y0 = 0
+		var x2 = radius*radius - yOffset*yOffset
+		var x = math.sqrt(x2)
 
-			                  if (radiusError < 0) radiusError = radiusError + 2 * y + 1
-			                  else {
-				                  x = x - 1
-				                  radiusError = radiusError + 2 * (y - x) + 1
-			                  }
-                        y = y + 1
-			                  (x, y)
-		                  }
+		new WhileIterator(
+			() => x >= y,
+			() => {
+				val curX = x
+				val curY = y
+
+				x2 = x2 - 2 * y - 1
+				y = y + 1
+				var nextX = math.round(x)-0.5
+				if (x2 <= nextX*nextX) x = x - 1
+
+				(math.round(curX).toInt, math.round(curY).toInt)
+			}
 		).flatMap{case (x, y) =>
 				octants.flatMap{octant =>
-					val (xr, yr) = octantTransform(x, y, octant)
+					val (xr, yr) = octantTransform(x, y, octant._1)
 					val slope = yr.toDouble/xr
-//					if (lowSlope <= slope && slope <= highSlope)
-						Some(new BinIndex(xc+xr, yc+yr))
-//					else
-//						None
+					if ((octant._2 && slope <= startSlope) ||
+						    (octant._3 && slope >= endSlope) ||
+						    (!(octant._2 || octant._3))) {
+						Some(new BinIndex(math.round(xc+xr).toInt, math.round(yc+yr).toInt))
+					} else {
+						None
+					}
 				}
 		}.toTraversable
+	}
+
+
+
+
+	def arcUniversalBins2 (start: BinIndex, end: BinIndex): TraversableOnce[BinIndex] = {
+		def octantTransform (x: Int, y: Int, octant: Int): (Int, Int) =
+			octant match {
+				case 0 => (x, y)
+				case 1 => (y, x)
+				case 2 => (-y, x)
+				case 3 => (-x, y)
+				case 4 => (-x, -y)
+				case 5 => (-y, -x)
+				case 6 => (y, -x)
+				case 7 => (x, -y)
+			}
+
+		val x0 = start.getX
+		val y0 = start.getY
+		val x1 = end.getX
+		val y1 = end.getY
+		val (xc, yc, radius, startSlope, endSlope, octants) = initializeArc(start, end)
+
+		// Rotate so everything is E of the Y axis
+		//
+		// 60 degree arcs should never inhabit more than three quadrants, so we can rotate them
+		// so they are on the right side.
+		val rotation: Int = {
+			def isGoodRotation (r: Int): Boolean = {
+				val min = octants.map(oct => (oct._1 + r) % 8).reduce(_ min _)
+				val max = octants.map(oct => (oct._1 + r) % 8).reduce(_ max _)
+				((6 == min && 7 == max) || (0 == min && 1 == max) || (0 == min && 7 == max))
+			}
+			var tmpRot = 0
+			while (!isGoodRotation(tmpRot)) tmpRot = tmpRot + 2
+			tmpRot
+		}
+
+		def rotate [@specialized(Double, Int) N: Numeric] (x: N, y: N, rotation: Int): (N, N) = {
+			val num: Numeric[N] = implicitly[Numeric[N]]
+			import num.mkNumericOps
+
+			rotation match {
+				case -6 => (-y, x)
+				case -4 => (-x, -y)
+				case -2 => (y, -x)
+				case 0 => (x, y)
+				case 2 => (-y, x)
+				case 4 => (-x, -y)
+				case 6 => (y, -x)
+				case _ => throw new IllegalArgumentException("Bad rotation "+rotation)
+			}
+		}
+
+		// Get the endpoint coordinates relative to the center, rotated into the correct position
+		val (x0r, y0r) = rotate(x0 - xc, y0 - yc, rotation)
+		val (x1r, y1r) = rotate(x1 - xc, y1 - yc, rotation)
+		val (xcr, ycr) = rotate(xc, yc, rotation)
+
+		var y = math.round(y1r+ycr)-0.5-ycr
+		val yEnd = math.round(y0r+ycr)-0.5-ycr
+		val r2 = radius*radius
+		new WhileIterator(
+			() => y <= yEnd,
+			() => {
+				val yCur = y
+				y = y + 1
+				yCur
+			}
+		).flatMap{y =>
+			val ypr = math.round(ycr+y).toInt
+			// x range from the start of the bin to the end of the bin
+			val ya = y max y1r
+			val x2ad = math.sqrt(r2 - (ya * ya)) + xcr
+			val yb = (y+1) min y0r
+			val x2bd = math.sqrt(r2 - (yb * yb)) + xcr
+			val x2a = math.round(math.sqrt(r2 - (ya * ya)) + xcr).toInt
+			val x2b = math.round(math.sqrt(r2 - (yb * yb)) + xcr).toInt
+
+			((x2a min x2b) to (x2a max x2b)).map{xpr =>
+				val (xp, yp) = rotate(xpr, ypr, -rotation)
+				new BinIndex(xp, yp)
+			}
+		}
 	}
 }
 
 class WhileIterator[T] (more: () => Boolean, fcn: () => T) extends Iterator[T] {
 	def hasNext: Boolean = {
-    val res = more()
-    res
-  }
+		val res = more()
+		res
+	}
 	def next(): T = {
-   val res = fcn()
-   res
-  }
+		val res = fcn()
+		res
+	}
 }
