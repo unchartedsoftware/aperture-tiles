@@ -57,25 +57,21 @@
     /**
      * Utility function for positioning the labels
      */
-    getYOffset = function( index, numEntries ) {
-        var SPACING = 20;
-        return 118 - ( (( numEntries - 1) / 2 ) - index ) * SPACING;
+    getYOffset = function( index, numEntries, spacing ) {
+        return 118 - ( (( numEntries - 1) / 2 ) - index ) * spacing;
     };
 
     /**
-     * Utility function to get the highest count in the tile
+     * Utility function to get the highest count for a topic in the tile
      */
-    getHighestCount = function( numEntries, values, countKey ) {
+    getHighestCount = function( values, countKey ) {
         // get the highest single count
         var highestCount = 0,
-            counts,
-            i, j;
-        for ( i=0; i<numEntries; i++ ) {
-            counts = RendererUtil.getAttributeValue( values[i], countKey );
-            for ( j=0; j<counts.length; j++ ) {
-                // get highest count
-                highestCount = Math.max( highestCount, counts[j] );
-            }
+            counts = RendererUtil.getAttributeValue( values, countKey ),
+            j;
+        for ( j=0; j<counts.length; j++ ) {
+            // get highest count
+            highestCount = Math.max( highestCount, counts[j] );
         }
         return highestCount;
     };
@@ -122,12 +118,16 @@
      */
     TextByFrequencyRenderer.prototype.render = function( data ) {
 
-        var textKey = this.spec.text.textKey,
+        var minFontSize = 10,
+            maxFontSize = 24,
+            spacing = 20,
+            textKey = this.spec.text.textKey,
             frequency = this.spec.frequency,
             countKey = frequency.countKey,
             invertOrder = frequency.invertOrder,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
+            levelMinMax = this.parent.getLevelMinMax(),
             percentLabel,
             html = '',
             entries = [],
@@ -139,21 +139,32 @@
             chartSize,
             visibility,
             index,
+            height,
             i, j;
 
-        // find the highest count of any topic
-        highestCount = getHighestCount( numEntries, values, countKey );
-
         for ( i=0; i<numEntries; i++ ) {
-
             value = values[i];
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
             text = RendererUtil.getAttributeValue( value, textKey );
             chartSize = counts.length;
+            // highest count for the topic
+            highestCount = getHighestCount( values[i], countKey );
+            // scale the height based on level min / max
+            height = RendererUtil.getFontSize(
+                highestCount,
+                getHighestCount( levelMinMax.minimum, countKey ),
+                getHighestCount( levelMinMax.maximum, countKey ),
+                {
+                    minFontSize: minFontSize,
+                    maxFontSize: maxFontSize,
+                    type: "log"
+                });
 
             html += '<div class="text-by-frequency-entry" style="'
-                  + 'top:' + getYOffset( i, numEntries ) + 'px;">';
+                // ensure constant spacing independent of height
+                  + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
+                  + 'height:' + height + 'px">';
 
             // create chart
             html += '<div class="text-by-frequency-left">';
@@ -179,7 +190,8 @@
 
             // create tag label
             html += '<div class="text-by-frequency-right">';
-            html += '<div class="text-by-frequency-label">'+text+'</div>';
+            html += '<div class="text-by-frequency-label" style="' +
+                'font-size:'+height+'px;line-height:'+height+'px">'+text+'</div>';
             html += '</div>';
             html += '</div>';
         }
