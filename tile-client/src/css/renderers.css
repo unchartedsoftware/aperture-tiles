@@ -117,10 +117,6 @@
 .text-by-frequency-label {
 	cursor: pointer;
 	position:relative;
-	bottom: -2px;
-	padding: 3px;
-	font-size : 16px;
-	line-height: 16px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -202,8 +198,13 @@
 	text-align: center;
 	vertical-align: middle;
 	overflow: hidden;
+	cursor:pointer;
 	text-overflow: ellipsis;
-	pointer-events: none;
+	pointer-events: all;
+}
+
+.node-label:hover {
+	opacity: 1.0;
 }
 
 /********************************************/
