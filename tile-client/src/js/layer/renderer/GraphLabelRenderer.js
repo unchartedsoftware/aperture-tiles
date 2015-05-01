@@ -50,7 +50,7 @@
      getLabelWidth = function( str, fontSize ) {
         var $temp,
             width;
-        $temp = $('<div class="node-label" style="font-size:'+fontSize+'px;">'+str+'</div>');
+        $temp = $('<div class="node-label" style="font-size:'+fontSize+'px; padding-left:5px; padding-right:5px;">'+str+'</div>');
         $('body').append( $temp );
         width = $temp.outerWidth();
         $temp.remove();
