@@ -48,7 +48,7 @@
 	 * }
 	 * </pre>
 	 */
-	function ElasticLayer(spec) {
+	function VectorLayer(spec) {
 		// call base constructor
 		Layer.call(this, spec);
 		// set reasonable defaults
@@ -62,14 +62,14 @@
 		this.vectors = spec.vectors || [];
 	}
 
-	ElasticLayer.prototype = Object.create(Layer.prototype);
+	VectorLayer.prototype = Object.create(Layer.prototype);
 
 	/**
 	 * Activates the layer object. This should never be called manually.
-	 * @memberof ElasticLayer
+	 * @memberof VectorLayer
 	 * @private
 	 */
-	ElasticLayer.prototype.activate = function() {
+	VectorLayer.prototype.activate = function() {
 
 		var layerSpec = {};
 		if (this.strategies) {
@@ -100,7 +100,7 @@
 	 * @memberof ClientLayer
 	 * @private
 	 */
-	ElasticLayer.prototype.deactivate = function() {
+	VectorLayer.prototype.deactivate = function() {
 		if (this.olLayer) {
 			this.map.olMap.removeLayer(this.olLayer);
 			this.olLayer.destroyFeatures();
@@ -108,7 +108,7 @@
 		}
 	};
 
-	ElasticLayer.prototype.setFeatures = function(featuresToAdd) {
+	VectorLayer.prototype.setFeatures = function(featuresToAdd) {
 		if ( this.olLayer ) {
 			this.olLayer.destroyFeatures();
 			this.vectors = featuresToAdd;
@@ -122,7 +122,7 @@
 	 *
 	 * @param {String} theme - The theme identifier string.
 	 */
-	ElasticLayer.prototype.setTheme = function(theme) {
+	VectorLayer.prototype.setTheme = function(theme) {
 		this.theme = theme;
 	};
 
@@ -132,7 +132,7 @@
 	 *
 	 * @returns {String} The theme identifier string.
 	 */
-	ElasticLayer.prototype.getTheme = function() {
+	VectorLayer.prototype.getTheme = function() {
 		return this.theme;
 	};
 
@@ -142,7 +142,7 @@
 	 *
 	 * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
 	 */
-	ElasticLayer.prototype.setZIndex = function(zIndex) {
+	VectorLayer.prototype.setZIndex = function(zIndex) {
 		// we by-pass the OpenLayers.Map.setLayerIndex() method and manually
 		// set the z-index of the layer dev. setLayerIndex sets a relative
 		// index based on current map layers, which then sets a z-index. This
@@ -164,9 +164,9 @@
 	 *
 	 * @returns {integer} The zIndex for the layer.
 	 */
-	ElasticLayer.prototype.getZIndex = function() {
+	VectorLayer.prototype.getZIndex = function() {
 		return this.zIndex;
 	};
 
-	module.exports = ElasticLayer;
+	module.exports = VectorLayer;
 }());

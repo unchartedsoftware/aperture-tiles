@@ -42,7 +42,7 @@
         ClientLayer: require('./layer/ClientLayer'),
         Carousel: require('./layer/Carousel'),
         LayerUtil: require('./layer/LayerUtil'),
-        ElasticLayer: require('./layer/ElasticLayer'),
+        VectorLayer: require('./layer/VectorLayer'),
 
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),
