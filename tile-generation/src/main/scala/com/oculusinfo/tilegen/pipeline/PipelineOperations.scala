@@ -64,7 +64,7 @@ object PipelineOperations {
 
 	/**
 	 * Load data into the pipeline directly from a schema rdd
-	 * 
+	 *
 	 * @param rdd The SchemaRDD containing the data
 	 * @param tableName The name of the table the rdd has been assigned in the SQLContext, if any.
 	 */
@@ -82,7 +82,7 @@ object PipelineOperations {
 	 */
 	def loadJsonDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
 		val srdd = data.sqlContext.jsonFile(path)
-		val partitioned = partitions.map(srdd.repartition(_)).getOrElse(srdd)
+		val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
 		PipelineData(data.sqlContext, partitioned)
 	}
 
@@ -101,7 +101,7 @@ object PipelineOperations {
 	                 (data: PipelineData): PipelineData = {
 		val reader = new CSVReader(data.sqlContext, path, argumentSource)
 		val srdd = reader.asSchemaRDD
-		val partitioned = partitions.map(srdd.repartition(_)).getOrElse(srdd)
+		val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
 		PipelineData(reader.sqlc, partitioned)
 	}
 
