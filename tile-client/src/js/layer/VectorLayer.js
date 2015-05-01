@@ -31,11 +31,10 @@
 		PubSub = require('../util/PubSub');
 
 	/**
-	 * Instantiate an ElasticLayer object.
-	 * @class ElasticLayer
+	 * Instantiate a VectorLayer object.
+	 * @class VectorLayer
 	 * @augments Layer
-	 * @classdesc A client rendered layer object. Uses ElasticSearch queries to draw
-	 * geospatial data on a map.
+	 * @classdesc A client rendered layer object.
 	 *
 	 * @param {Object} spec - The specification object.
 	 * <pre>
@@ -43,8 +42,7 @@
 	 *     opacity  {float}    - The opacity of the layer. Default = 1.0
 	 *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
 	 *     zIndex   {integer}  - The z index of the layer. Default = 1000
-	 *     renderer {Renderer} - The tile renderer object. (optional)
-	 *     html {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+	 *     vectors {Array} 	   - Array of OpenLayers Vector objects to add to the map
 	 * }
 	 * </pre>
 	 */
@@ -108,6 +106,13 @@
 		}
 	};
 
+
+	/**
+	 * Remove all features from the layer and add the new features
+	 * passed in
+	 *
+	 * @param {Array{Vector}} featuresToAdd - Array of OpenLayers Features
+	 */
 	VectorLayer.prototype.setFeatures = function(featuresToAdd) {
 		if ( this.olLayer ) {
 			this.olLayer.destroyFeatures();
