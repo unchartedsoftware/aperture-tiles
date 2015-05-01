@@ -25,8 +25,7 @@ ext.clientServerProjects = [
 		'tile-examples:julia-demo',
 		'tile-examples:julia-demo-live',
 		'tile-examples:twitter-topics:twitter-topics-utilities',
-		'tile-examples:twitter-topics:twitter-topics-client',
-		'tile-examples:elastic:elastic-client'
+		'tile-examples:twitter-topics:twitter-topics-client'
 ] as Set
 
 // Projects used for live tiling
