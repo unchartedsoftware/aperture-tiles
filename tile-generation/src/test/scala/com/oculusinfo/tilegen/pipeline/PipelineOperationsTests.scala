@@ -62,7 +62,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 		val resultList = ListBuffer[Any]()
 
 		val resPath = getClass.getResource("/json_test.data").toURI.getPath
-		val argsMap = Map("ops.path" -> resPath)
+		val argsMap = Map("ops.path" -> resPath, "ops.partitions" -> "1")
 
 		val loadStage = new PipelineStage("load", parseLoadJsonDataOp(argsMap))
 		loadStage.addChild(new PipelineStage("output", outputOps(List("val", "time"), resultList)(_)))
@@ -80,6 +80,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 		val resPath = getClass.getResource("/csv_test.data").toURI.getPath
 		val argsMap = Map(
 			"ops.path" -> resPath,
+			"ops.partitions" -> "1",
 			"oculus.binning.parsing.separator" -> " *, *",
 			"oculus.binning.parsing.vAl.index" -> "0",
 			"oculus.binning.parsing.vAl.fieldType" -> "string", // use mixed case fieldname to test case sensitivity
