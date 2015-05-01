@@ -24,10 +24,18 @@
  */
 package com.oculusinfo.tilegen.tiling
 
+
+
+import scala.util.Try
+
 import org.scalatest.FunSuite
+
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileAndBinIndices
+import com.oculusinfo.tilegen.util.ExtendedNumeric
+
+
 
 /**
  * @author nkronenfeld
@@ -180,9 +188,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			                                      new BinIndex(math.round(100*math.cos(t2)).toInt,
 			                                                   math.round(100*math.sin(t2)).toInt))
 
-			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
-			assert(ApproximateDouble(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
-			assert(ApproximateDouble(100.0, epsilon*2) === arcInfo._3, "(Radius differed)")
+			assert(ApproximateNumber(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
+			assert(ApproximateNumber(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
+			assert(ApproximateNumber(100.0, epsilon*2) === arcInfo._3, "(Radius differed)")
 			// Tiny perturbations in rounding can cause huge perturbations in the slope (like
 			// changing 1E6 to -1E3), so we really can't test slopes.
 			val o1 = theta1/45
@@ -237,7 +245,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val x = bin.getX
 			val y = bin.getY - idealY
 			val r = math.sqrt((x * x) + (y * y))
-			assert(new ApproximateDouble(14.0, 0.75) === r)
+			assert(new ApproximateNumber(14.0, 0.75) === r)
 		}
 	}
 	
@@ -275,36 +283,32 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val x = bin.getX - idealC
 			val y = bin.getY - idealC
 			val r = math.sqrt((x * x) + (y * y))
-			assert(new ApproximateDouble(idealR, 0.75) === r)
+			assert(new ApproximateNumber(idealR, 0.75) === r)
 		}
 	}
 }
 
-case class ApproximateInt (i: Int, epsilon: Int) {
-	override def toString = i+"+/-"+epsilon
-	override def equals (that: Any): Boolean = {
-		that match {
-			case approx: ApproximateInt =>
-				if (approx.epsilon > epsilon) approx.equals(i)
-				else this.equals(approx.i)
-				
-			case exact: Int => i-epsilon <= exact && exact <= i+epsilon
-
-			case _ => false
-		}
-	}
+object ApproximateNumber {
+	def apply[T: ExtendedNumeric] (target: T, epsilon: T) = new ApproximateNumber[T](target, epsilon)
 }
-case class ApproximateDouble (d: Double, epsilon: Double) {
-	override def toString = d+"+/-"+epsilon
+class ApproximateNumber [T: ExtendedNumeric] (val target: T, val epsilon: T) {
+	override def toString = target+"+/-"+epsilon
 	override def equals (that: Any): Boolean = {
-		that match {
-			case approx: ApproximateDouble =>
-				if (approx.epsilon > epsilon) approx.equals(d)
-				else this.equals(approx.d)
-				
-			case exact: Double => d-epsilon <= exact && exact <= d+epsilon
+		val numeric = implicitly[ExtendedNumeric[T]]
+		import numeric.mkNumericOps
+		import numeric.mkOrderingOps
 
-			case _ => false
+		that match {
+			case approx: ApproximateNumber[T] =>
+				if (approx.epsilon > epsilon) approx.equals(target)
+				else this.equals(approx.target)
+
+			case other => {
+				Try({
+					    val exact = numeric.fromAny(other)
+					    (target-epsilon <= exact && exact <= target+epsilon)
+				    }).getOrElse(false)
+			}
 		}
 	}
 }
