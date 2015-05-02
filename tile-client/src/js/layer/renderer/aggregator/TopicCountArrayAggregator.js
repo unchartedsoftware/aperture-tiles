@@ -40,6 +40,7 @@
      */
     function aggregateBucket( aggregator, buckets ) {
         var aggregation,
+            score,
             total,
             i, j;
         // set base aggregator
@@ -51,7 +52,8 @@
         };
         // for each bucket of data
         for ( i=0; i<buckets.length; i++ ) {
-            total = buckets[i].score.total;
+            score = buckets[i].score;
+            total = ( score instanceof Array ) ? score : score.total;
             // add to total count
             for ( j=0; j<total.length; j++ ) {
                 aggregation.counts[j] += total[j];
