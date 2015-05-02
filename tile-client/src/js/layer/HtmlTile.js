@@ -49,51 +49,98 @@
             this.positionTile();
             dataUrl = this.layer.getURL( this.bounds );
 
-            if ( dataUrl !== this.url ) {
+	          if (typeof dataUrl === "string") {
+		          if ( dataUrl !== this.url ) {
 
-                this.url = dataUrl;
-                this.tileData = null;
-                this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
-                this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
+			          this.url = dataUrl;
+			          this.tileData = null;
+			          this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
+			          this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
-                // new url to render
-                if ( this.isLoading ) {
-                    this.dataRequest.abort();
-                    this.dataRequest = null;
-                    this.isLoading = false;
-                }
+			          // new url to render
+			          if ( this.isLoading ) {
+				          this.dataRequest.abort();
+				          this.dataRequest = null;
+				          this.isLoading = false;
+			          }
 
-                if ( !this.url ) {
-                    this.unload();
-                    return;
-                }
+			          if ( !this.url ) {
+				          this.unload();
+				          return;
+			          }
 
-                // hide tile contents until have data
-                this.div.style.visibility = 'hidden';
-                this.isLoading = true;
-                this.dataRequest = $.ajax({
-                    url: this.url
-                }).then(
-                    function( data ) {
-                        if ( dataUrl === this.url ) {
-                            that.tileData = data;
-                            that.renderTile( that.div, that.tileData );
-                        }
-                    },
-                    function( xhr ) {
-                        console.error( xhr.responseText );
-                        console.error( xhr );
-                    }
-                ).always( function() {
-                    that.isLoading = false;
-                    that.dataRequest = null;
-                });
+			          // hide tile contents until have data
+			          this.div.style.visibility = 'hidden';
+			          this.isLoading = true;
+			          this.dataRequest = $.ajax({
+				          url: this.url
+			          }).then(
+				          function( data ) {
+					          if (dataUrl === this.url) {
+						          that.tileData = data;
+						          that.renderTile( that.div, that.tileData );
+					          }
+				          },
+				          function( xhr ) {
+					          console.error( xhr.responseText );
+					          console.error( xhr );
+				          }
+			          ).always( function() {
+					          that.isLoading = false;
+					          that.dataRequest = null;
+				          });
 
-            } else {
-                // already have right data, just render
-                this.renderTile( this.div, this.tileData );
+		          } else {
+			          // already have right data, just render
+			          this.renderTile( this.div, this.tileData );
+		          }
+	          } else if (dataUrl instanceof Array) {
+		          if (!_.isEqual(dataUrl, this.url)) {
+			          // format request
+			          this.url = dataUrl;
+			          this.tileData = null;
+			          this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
+			          this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
+
+			          // new url to render
+			          if ( this.isLoading ) {
+				          this.dataRequest.abort();
+				          this.dataRequest = null;
+				          this.isLoading = false;
+			          }
+
+			          if ( !this.url ) {
+				          this.unload();
+				          return;
+			          }
+
+			          // hide tile contents until have data
+			          this.div.style.visibility = 'hidden';
+			          this.isLoading = true;
+
+			          $.when.apply($, _.map(dataUrl, function(currUrl) {
+					          return $.ajax({url: currUrl})
+				          })
+			          ).then(
+				          function(data) {
+					          that.tileData = data;
+					          that.renderTile( that.div, that.tileData );
+				          },
+				          function( xhr ) {
+					          console.error( xhr.responseText );
+					          console.error( xhr );
+				          }
+			          ).always(
+				          function() {
+					          that.isLoading = false;
+					          that.dataRequest = null;
+				          }
+			          );
+		          }
+	          } else {
+	            // already have right data, just render
+	            this.renderTile( this.div, this.tileData );
             }
-
         } else if ( shouldDraw === false ) {
             this.unload();
         }
