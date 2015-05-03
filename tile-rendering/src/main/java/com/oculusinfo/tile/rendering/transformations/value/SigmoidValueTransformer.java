@@ -24,27 +24,25 @@
  */
 package com.oculusinfo.tile.rendering.transformations.value;
 
-
 /**
  * A value transformer that transforms two-tailed infinite range into a finite
- * range
- * 
+ * range.  The range assumes a center of zero, and min/max defined as
+ * +/-(max(abs(expectedMin),abs(expectedMax)), with the extrema mapped to +/-10
+ * of the sigmoid curve.
+ *
  * @author nkronenfeld
  */
 public class SigmoidValueTransformer implements ValueTransformer<Double> {
-    private double _center;
-    private double _scale;
+	private double _scale;
 
     public SigmoidValueTransformer (double expectedMin, double expectedMax) {
-        _center = (expectedMax+expectedMin)/2.0;
-        _scale = (expectedMax-expectedMin)/2.0;
+        _scale = Math.max(Math.abs(expectedMin), Math.abs(expectedMax));
     }
 
     @Override
     public Double transform (Double value) {
-        double scaledInput = (value-_center) / (_scale - _center);
-
-        return (1/(1+Math.exp(-scaledInput)));
+		double scaledInput = value / _scale * 10.0;
+		return (1/(1+Math.exp(-scaledInput)));
     }
 
     @Override

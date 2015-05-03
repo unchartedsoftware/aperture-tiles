@@ -48,8 +48,8 @@ import java.awt.image.DataBufferInt;
 public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NumberImageRenderer.class);
-	private static final Color COLOR_BLANK = new Color(255,255,255,0);	
-	private static final double pow2(double x) { return x*x; }	//in-line func for squaring a number (instead of calling Math.pow(x, 2.0) 
+	private static final Color COLOR_BLANK = new Color(255,255,255,0);
+	private static final double pow2(double x) { return x*x; }	//in-line func for squaring a number (instead of calling Math.pow(x, 2.0)
 
 	@Override
 	public Class<Number> getAcceptedBinClass () {
@@ -130,9 +130,9 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
 		double oneOverScaledRange = 1.0 / (valueMax - valueMin);
 		boolean bCoarseCircles = pixelShape.equals("circle");	// render 'coarse' bins as circles or squares?
-		
+
 		int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
-		
+
 		if ((xScale==1.0) && (yScale==1.0)) {
 			// no bin scaling needed
 
@@ -143,7 +143,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 					double transformedValue = t.transform(binCount).doubleValue();
 					int rgb;
 
-					if (binCount > 0) {
+					if ((mode.equals("dropZero") && binCount != 0) || binCount > 0) {
 						if ( mode.equals("cull") ) {
 							if ( transformedValue >= valueMin && transformedValue <= valueMax ) {
 								rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
@@ -156,32 +156,32 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 					} else {
 						rgb = COLOR_BLANK.getRGB();
 					}
-					
+
 					//'draw' out the scaled 'pixel'
 					int i = ty*outWidth + tx;
 					rgbArray[i] = rgb;
 				}
-			}						
+			}
 		}
 		else {
 			// perform bin scaling (i.e. if bin coarseness != 1.0)
-			
+
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 					//calculate the scaled dimensions of this 'pixel' within the image
 					int minX = (int) Math.round(tx*xScale);
 					int maxX = (int) Math.round((tx+1)*xScale);
 					int minY = (int) Math.round(ty*yScale);
-					int maxY = (int) Math.round((ty+1)*yScale);					
+					int maxY = (int) Math.round((ty+1)*yScale);
 					double centreX = (maxX + minX) * 0.5;
 					double centreY = (maxY + minY) * 0.5;
-					//double radius2 = (maxX - centreX)*(maxX - centreX);	// squared radius 
+					//double radius2 = (maxX - centreX)*(maxX - centreX);	// squared radius
 
 					double binCount = data.getBin(tx, ty).doubleValue();
 					double transformedValue = t.transform(binCount).doubleValue();
 					int rgb;
 
-					if (binCount > 0) {
+					if ((mode.equals("dropZero") && binCount != 0) || binCount > 0) {
 						if ( mode.equals("cull") ) {
 							if ( transformedValue >= valueMin && transformedValue <= valueMax ) {
 								rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
@@ -199,7 +199,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 					if (bCoarseCircles && radius2 > 1.0) {
 						// draw scaled (coarse) bin as a circle (Note: need radius to be > 1.0 pixels in order to render a circle)
 						for (int ix = minX; ix < maxX; ++ix) {
-							for (int iy = minY; iy < maxY; ++iy) {							
+							for (int iy = minY; iy < maxY; ++iy) {
 								int i = iy*outWidth + ix;
 								double dist = (pow2(ix+0.5-centreX) + pow2(iy+0.5-centreY));
 								if (dist <= radius2) {
@@ -208,7 +208,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 									rgbArray[i] = COLOR_BLANK.getRGB();	// scaled bin is outside bin's valid radius, so force to be blank
 								}
 							}
-						}										
+						}
 					}
 					else {
 						// draw scaled bin simply as a square
@@ -220,7 +220,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 						}
 					}
 				}
-			}			
+			}
 		}
 
 		return bi;
