@@ -47,7 +47,8 @@
         aggregation = {
             topic: buckets[0].topic,
             topicEnglish: aggregator.translateTopic( buckets[0].topic ),
-            counts: Util.fillArray( buckets[0].score.total.length ),
+            counts: Util.fillArray(buckets[0].score instanceof Array ?
+	            buckets[0].score.length : buckets[0].score.total.length ),
             total: 0
         };
         // for each bucket of data
