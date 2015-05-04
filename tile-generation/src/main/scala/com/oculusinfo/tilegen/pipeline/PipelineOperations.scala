@@ -30,16 +30,16 @@ package com.oculusinfo.tilegen.pipeline
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 import org.apache.spark.sql.SchemaRDD
-
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-
+import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
+import com.oculusinfo.tilegen.binning.OnDemandBinningPyramidIO
 import com.oculusinfo.tilegen.datasets.{TilingTask, TilingTaskParameters, CSVReader}
 import com.oculusinfo.tilegen.tiling.{TileIO, LocalTileIO, HBaseTileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import java.util.Properties
 
 
 
@@ -346,10 +346,29 @@ object PipelineOperations {
 		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
 		tilingTask.doTiling(tileIO)
 
-		PipelineData(input.sqlContext, input.srdd, Option(tableName))
+		PipelineData(input.sqlContext, input.srdd, Some(tableName))
 	}
 
-	/**
+  def OnDemandTilingOp (pyramidIo: Either[OnDemandAccumulatorPyramidIO, OnDemandBinningPyramidIO],
+      pyramidId: String,
+      configuration: Properties)(input: PipelineData) = {
+    val tableName = PipelineOperations.getOrGenTableName(input, "on_demand_tiling")
+    val task = TilingTask(input.sqlContext, tableName, configuration)
+
+    pyramidIo match {
+      case Left(pio) => {
+        // Accumulator
+        pio.initializeDirectly(pyramidId, task)
+      }
+      case Right(pio) => {
+        // Binning        
+        pio.initializeDirectly(pyramidId, task)
+      }
+    }
+    PipelineData(input.sqlContext, input.srdd, Some(tableName))
+  }
+
+  /**
 	 * Gets a table name out of the input if one exists, otherwise creates a new name
 	 * using a base and an internally incremented counter.
 	 *
