@@ -108,7 +108,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		assert(("double", DoubleType)          === (fields( 6).name, fields( 6).dataType))
 		assert(("str",    StringType)          === (fields( 7).name, fields( 7).dataType))
 		assert(("ip",     ArrayType(ByteType)) === (fields( 8).name, fields( 8).dataType))
-		assert(("date",   LongType)       === (fields( 9).name, fields( 9).dataType))
+		assert(("date",   TimestampType)       === (fields( 9).name, fields( 9).dataType))
 		assert(("prop",   IntegerType)         === (fields(10).name, fields(10).dataType))
 	}
 
@@ -152,12 +152,11 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			}
 		)
 
-		val dates = reader.asSchemaRDD.select('date).map(_(0).asInstanceOf[Long]).collect.toList
+		val dates = reader.asSchemaRDD.select('date).map(_(0).asInstanceOf[java.util.Date]).collect.toList
 		dates.zipWithIndex.foreach(values =>
 			{
-				// val date: Timestamp = values._1
 				val date = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-				date.setTimeInMillis(values._1)
+				date.setTime(values._1)
 
 				val n = values._2+1
 				assert((n%12) === date.get(Calendar.HOUR_OF_DAY))
