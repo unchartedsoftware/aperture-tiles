@@ -403,7 +403,7 @@ Submits a new annotation to be written to the server. Upon success, a certificat
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 ```
 
@@ -552,7 +552,7 @@ Submits a modify request to the server. If the certificate in the annotation sta
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 ```
 
@@ -705,7 +705,7 @@ Submits a removal request to the server. If the certificate is valid, the operat
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 ```
 

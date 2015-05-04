@@ -174,7 +174,7 @@ Returns the requested layer information. Layer information returned is the **pub
 
 Example request:
 
-```html
+```http
 GET http://localhost:8080/instagram/rest/v1.0/layers/instagram-heatmap
 ```
 
@@ -242,7 +242,7 @@ Store a configuration state on the server that can be accessed at a later time. 
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
 ```
 
@@ -308,7 +308,7 @@ Returns a specified configured state stored on the server for a particular layer
 
 Example request:
 
-```html
+```http
 GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states/e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031
 ```
 
@@ -402,7 +402,7 @@ Returns all configured states stored on the server for a particular layer, inclu
 
 Example request:
 
-```html
+```http
 GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
 ```
 

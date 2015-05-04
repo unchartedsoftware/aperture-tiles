@@ -57,6 +57,6 @@ GET http://localhost:8080/instagram/rest/v1.0/tiles/twitter-heatmap4/2/3.png?ren
 
 Example response:
 
-```
+```http
 3.png
 ```

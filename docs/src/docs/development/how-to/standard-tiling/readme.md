@@ -94,7 +94,7 @@ Indicate where your source data is stored.
 
 	For example:
 
-	```
+	```properties
 	# Index Fields
 	oculus.binning.parsing.longitude.index=0
 	oculus.binning.parsing.longitude.fieldType=double
@@ -454,7 +454,7 @@ The value properties specify the field used as the binning value.
 
 The **oculus.binning.levels.&lt;order&gt;** array property describes how the tiling job executes the generation of the various zoom levels. For example, if you want to generate levels in three groups, you should include:
 
-```
+```properties
 oculus.binning.levels.0
 oculus.binning.levels.1
 oculus.binning.levels.2
@@ -475,11 +475,10 @@ Each binning job has two costs:
 
 Therefore, our typical use case has:
 
-```
+```properties
 binning.level.0=0-8
 binning.level.1=9
 binning.level.2=10
-...
 ```
 
 ## Next Steps ##
