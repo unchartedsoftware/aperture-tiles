@@ -45,11 +45,12 @@ object ClusteredGraphLayoutApp {
 		val maxHierarchyLevel = argParser.getInt("maxLevel","Max cluster hierarchy level to use for determining graph layout", Some(0))
 		val borderPercent = argParser.getDouble("border","Percent of parent bounding box to leave as whitespace between neighbouring communities during initial layout. Default is 2 percent", Some(2.0))
 		val layoutLength = argParser.getDouble("layoutLength", "Desired width/height length of the total node layout region. Default = 256.0", Some(256.0))
-		val numNodesThres = argParser.getInt("nThres", "Community size threshold to use for grouping sub-communities together into one force-directed layout task", Some(1000))
 		val nodeAreaPercent = argParser.getInt("nArea", "Used for Hierarchical Force-directed layout ONLY. Sets the area of all node 'circles' within the boundingBox vs whitespace.  Default is 30 percent", Some(30))
 		val bUseEdgeWeights = argParser.getBoolean("eWeight", "Use edge weights, if present, to scale force-directed attraction forces.  Default is false", Some(false))
 		val gravity = argParser.getDouble("g", "Amount of gravitational force to use for Force-Directed layout to prevent outer nodes from spreading out too far. Default = 0 (no gravity)", Some(0.0))
-		
+		val isolatedDegreeThres = argParser.getInt("degreeThres", "Degree threshold used to define 'leaf communities'. Such leaf communities are automatically laid out in an outer radial/spiral pattern. Default = 0", Some(0))
+		val communitySizeThres = argParser.getInt("commSizeThres", "Community size threshold used to exclude communities with < communitySizeThres nodes from layout. Default = 0", Some(0))
+ 		
 		val fileStartTime = System.currentTimeMillis()
 		
 		// Hierarchical Force-Directed layout scheme
@@ -67,6 +68,8 @@ object ClusteredGraphLayoutApp {
 		                         nodeAreaPercent,
 		                         bUseEdgeWeights,
 		                         gravity,
+		                         isolatedDegreeThres,
+		                         communitySizeThres,
 		                         outputDir)
 		
 		val fileEndTime = System.currentTimeMillis()
