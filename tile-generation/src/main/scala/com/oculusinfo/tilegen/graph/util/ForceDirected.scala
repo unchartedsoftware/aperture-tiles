@@ -48,7 +48,8 @@ import com.oculusinfo.geometry.quadtree.QuadNode
  *  - nodeAreaPercent = if bUseNodeSizes = true, then this parameter is used to determine the area of all node
  *  	'circles' within the boundingBox vs whitespace
  *  - gravity = strength gravity force to use to prevent outer nodes from spreading out too far.  Default = 0.0 (no gravity),
- *  			whereas gravity = 1.0 gives gravitational force on a similar scale to edge attraction forces  
+ *  			whereas gravity = 1.0 gives gravitational force on a similar scale to edge attraction forces
+ *  - isolatedDegreeThres = threshold to determine whether or not a community/node is considered 'isolated'.  Isolated nodes are laid out in an outer radial/spiral pattern   
  * 
  *  - Format of output array is (node ID, x, y, radius, numInternalNodes, metaData)
  **/ 
@@ -64,12 +65,14 @@ class ForceDirected extends Serializable {
 	        edges: Iterable[(Long, Long, Long)],
 	        parentID: Long,
 	        boundingBox: (Double, Double, Double, Double),
+	        hierLevel: Int,
 	        borderPercent: Double = 2.0,
 	        maxIterations: Int = 1000,
 	        bUseEdgeWeights: Boolean = false,
 	        bUseNodeSizes: Boolean = false,
 	        nodeAreaPercent: Int = 30,
-	        gravity: Double = 0.0): Array[(Long, Double, Double, Double, Long, Int, String)] = {
+	        gravity: Double = 0.0,
+	        isolatedDegreeThres: Int = 0): Array[(Long, Double, Double, Double, Long, Int, String)] = {
 
 		var numNodes = nodes.size
 		if (numNodes == 0) throw new IllegalArgumentException("number of nodes must be > 0")
@@ -92,25 +95,33 @@ class ForceDirected extends Serializable {
 			return nodeResults
 		}
 		
-		//---- Manually layout any isolated communities (if some communities have degree == 0)	//TODO -- should we only check for this at the highest hier level?
-		val isolatedNodeCoords = if ((bUseNodeSizes) && (nodeData.map(n => n._3).min == 0)) {
-			val isolatedNodeData = nodeData.filter(n => n._3 == 0)	// list of isolated communities (degree=0)
-			nodeData = nodeData.filter(n => n._3 > 0)	// list of connected communities (degree>0)
-			val totalConnectedNodes = nodeData.map(n => n._2).reduce(_+_)	// sum of internal nodes for all connected communities
+		//---- Manually layout any isolated communities (if some communities have degree <= isolatedDegreeThres)	//TODO -- ideally, we should check degree of intra-community edges here, instead of total degree
+		val isolatedNodeCoords = if ((bUseNodeSizes) && (nodeData.map(n => n._3).min <= isolatedDegreeThres)) {
+			val isolatedNodeData = nodeData.filter(n => n._3 <= isolatedDegreeThres)	// list of isolated communities (degree<=isolatedDegreeThres)
+			nodeData = nodeData.filter(n => n._3 > isolatedDegreeThres)	// list of connected communities (degree>isolatedDegreeThres)
+			numNodes = nodeData.size	// and re-calc numNodes and invTotalInternalNodes too
+			
+			val totalConnectedNodes = if (numNodes == 0) 0 else nodeData.map(n => n._2).reduce(_+_)	// sum of internal nodes for all connected communities
+			
 			val connectedArea = nodeAreaFactor * boundingBoxArea * totalConnectedNodes * invTotalInternalNodes	// area for layout of connected communities
 			
 			// layout isolated communities in a spiral shape
 			val isolatedNodeLayouter = new IsolatedNodeLayout()
-			val (spiralCoords, connectedAreaOut) = isolatedNodeLayouter.calcSpiralCoords(isolatedNodeData, boundingBoxFinal, nodeAreaFactor*invTotalInternalNodes, connectedArea, borderPercent)
+			val (spiralCoords, connectedAreaOut) = isolatedNodeLayouter.calcSpiralCoords(isolatedNodeData, boundingBoxFinal, nodeAreaFactor*invTotalInternalNodes, connectedArea, borderPercent, hierLevel==0)
 
 			// re-calc coords of bounding box to correspond to only the central connected communities (width = height = sqrt(2)*r)
 			val rSqrt2 = Math.sqrt(connectedAreaOut * 0.31831)*0.70711		//0.31831 = 1/pi; 0.70711 = 1/sqrt(2)
 				boundingBoxFinal = (boundingBoxFinal._1 + boundingBoxFinal._3/2 - rSqrt2, boundingBoxFinal._2 + boundingBoxFinal._4/2 - rSqrt2, 2*rSqrt2, 2*rSqrt2)
 			boundingBoxArea = boundingBoxFinal._3 * boundingBoxFinal._4
-			
-			numNodes = nodeData.size	// and re-calc numNodes and invTotalInternalNodes too
-			if (numNodes == 0) throw new IllegalArgumentException("number of connected nodes must be > 0")	//TODO -- put in support for this situation
-			invTotalInternalNodes = 1.0 / (nodeData.map(_._2).reduce(_ + _))
+						
+			if (numNodes == 0) {
+				// number of remaining 'connected' nodes == 0, so simply return isolated nodes' layout results
+				return spiralCoords
+			}
+			else {
+				// recalc invTotalInternalNodes and continue with FD layout
+				invTotalInternalNodes = 1.0 / (nodeData.map(_._2).reduce(_ + _))
+			}
 			
 			spiralCoords
 		}
