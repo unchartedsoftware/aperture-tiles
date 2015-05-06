@@ -78,12 +78,6 @@ map = new tiles.Map( "map" );
 map.add( clientLayer );
 ```
 
-## <a name="deployment"></a> Deployment ##
-
-Once you have finished configuring the map and layer properties, copy the *new-project/* folder to your Apache Tomcat or Jetty server.
-
-Access the *new-project/* directory on the server from any web browser to to view your custom Aperture Tiles visual analytic.
-
 ## Next Steps ##
 
 For details on using your Aperture Tiles visual analytic, see the [User Guide](../../../user-guide/) topic.

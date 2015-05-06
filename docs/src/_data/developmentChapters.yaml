@@ -88,6 +88,9 @@
         - label: Client-Side Rendering
           anchor: clientside
 
+    - label: Deploy the Application
+      path: deploy
+      bookmarks:
         - label: Deployment
           anchor: deployment
 
