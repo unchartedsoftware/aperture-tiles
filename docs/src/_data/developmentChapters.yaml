@@ -50,6 +50,10 @@
         - label: spark-submit
           anchor: spark-submit
 
+- label: How-To
+  path: how-to
+  listType: ol
+  topics:
     - label: Run Standard Tiling Jobs
       path: standard-tiling
       bookmarks:

@@ -226,4 +226,4 @@ map.add( clientLayer );
 
 ## Next Steps ##
 
-For details on using your Aperture Tiles visual analytic, see the [User Guide](../../../user-guide/) topic.
+For details on building and deploying your Aperture Tiles application, see the [Deploy the Application](../deploy/) topic.

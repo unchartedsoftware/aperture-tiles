@@ -14,7 +14,7 @@ A typical Aperture Tiles application contains a heatmap layer that illustrates t
 
 Standard tiling jobs can be executed with the [CSVBinner](#csvbinner), which is available in the Aperture Tiles source code.
 
-For information on creating custom tiling jobs that ingest data that is not character delimited or contains non-numeric fields, see the [Run Custom Tiling Jobs](../custom-tiling/) topic.
+For information on creating custom tiling jobs that ingest data that is not character delimited or contains non-numeric fields, see the [Run Custom Tiling Jobs](../../advanced/custom-tiling/) topic.
 
 ## <a name="csvbinner"></a> CSVBinner ##
 
@@ -46,28 +46,27 @@ The base properties file describes the tiling job, the systems on which it will 
 - [Source Data Manipulation](#source-data-manipulation)
 - [Tile Storage](#tile-storage)
 
-Advanced properties are described in the [Tile Generation](../../reference/generation/) reference topic.
+Additional properties are described in the advanced [Standard Tiling](../../advanced/standard-tiling/) topic.
 
 ### <a name="connection-details"></a> Connection Details ###
 
-Indicate where your source data is stored.
-
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<tr>
-				<th scope="col" width="32%">Property</th>
-				<th scope="col" width="68%">Description</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="property">oculus.binning.source.location</td>
-				<td class="description">Path (local file system or HDFS) to the source data files.</td>
-			</tr>
-		</tbody>
-	</table>
-</div>
+- Indicate where your source data is stored:
+	<div class="props">
+		<table class="summaryTable" width="100%">
+			<thead>
+				<tr>
+					<th scope="col" width="32%">Property</th>
+					<th scope="col" width="68%">Description</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="property">oculus.binning.source.location</td>
+					<td class="description">Path (local file system or HDFS) to the source data files.</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
 ### <a name="source-data-format"></a> Source Data Format ###
 
@@ -119,7 +118,10 @@ Indicate where your source data is stored.
 			<tbody>
 				<tr>
 					<td class="property">oculus.binning.parsing.&lt;field&gt;.index</td>
-					<td class="description">Column number of the described field in the source data files. This property is mandatory for every field type to be used.</td>
+					<td class="description">
+						Column number of the described field in the source data files. This property is mandatory for every field type to be used.
+						<p><strong>NOTE</strong>: The <a href="#index">oculus.binning.index.type</a> you select in your Tiling properties file determines the number of index files you must include.</p>
+					</td>
 				</tr>
 				<tr>
 					<td class="property">oculus.binning.parsing.&lt;field&gt;.fieldType</td>
@@ -136,7 +138,7 @@ Indicate where your source data is stored.
 											<li>zero</li>
 											<li>int</li>
 											<li>long</li>
-											<li><a href="../../reference/generation/">date</a></li>
+											<li><a href="../../advanced/standard-tiling/#dateformat">date</a></li>
 											<li>boolean</li>
 										</ul>
 									</td>
@@ -147,13 +149,13 @@ Indicate where your source data is stored.
 											<li>float<lit>
 											<li>ipv4</li>
 											<li>string</li>
-											<li><a href="../../reference/generation/">propertyMap</a></li>
+											<li><a href="../../advanced/standard-tiling/#propertymap">propertyMap</a></li>
 										</ul>
 									</td>
 								</tr>
 							</tbody>
 						</table>
-						<br>For more information on the supported field types, see the <a href="../../reference/generation/">Generation</a> reference topic.
+						<br>For more information on the supported field types, see the advanced <a href="../../advanced/standard-tiling/#source-data-format">Standard Tiling</a> topic.
 					</td>
 				</tr>
 			</tbody>
@@ -162,7 +164,7 @@ Indicate where your source data is stored.
 
 ### <a name="source-data-manipulation"></a> Source Data Manipulation ###
 
-Additional properties are available for scaling fields logarithmically before they are used in the tile generation job. For more information, see the <a href="../../reference/generation/">Generation</a> reference topic.
+Additional properties are available for scaling fields logarithmically before they are used in the tile generation job. For more information, see the advanced <a href="../../advanced/standard-tiling/#field-scaling">Standard Tiling</a> topic.
 
 ### <a name="tile-storage"></a> Tile Storage ###
 
@@ -251,7 +253,7 @@ The tiling properties files define the tiling job parameters for each layer in y
 - [Value](#value)
 - [Levels](#levels)
 
-Advanced properties are described in the [Tile Generation](../../reference/generation/) reference topic.
+Additional properties are described in the advanced [Standard Tiling](../../advanced/standard-tiling/) topic.
 
 ### <a name="projection"></a> Projection ###
 
@@ -355,7 +357,6 @@ The index properties specify the fields used to locate the binning value on the 
 							<li><em>cartesian</em> (default) - Cartesian (x/y) coordinates</li>
 							<li><em>ipv4</em> - IP address (v4)</li>
 							<li><em>timerange</em> - Standard time range and cartesian point index</li>
-							<li><em>segment</em> - Line segment with two cartesian end points</li>
 						</ul>
 						<br>The scheme also determines the number of index fields you must specify.
 					</td>
@@ -393,20 +394,14 @@ The index properties specify the fields used to locate the binning value on the 
 								oculus.binning.index.field.1=<em>&lt;x_Field&gt;</em>
 								oculus.binning.index.field.2=<em>&lt;y_Field&gt;</em>
 							</dd>
-
-							<dt><em>segment</em>:</dt>
-							<dd>
-								oculus.binning.index.field.0=<em>&lt;x1_Field&gt;</em>
-								oculus.binning.index.field.1=<em>&lt;y1_Field&gt;</em>
-								oculus.binning.index.field.2=<em>&lt;x2_Field&gt;</em>
-								oculus.binning.index.field.3=<em>&lt;y2_Field&gt;</em>
-							</dd>
 						</dl>
 					</td>
 				</tr>
 			</tbody>
 		</table>
 	</div>
+
+**NOTE**: An additional index scheme (*segment*) is available for tiling node and edge graph data. See the [Graph Tiling](../../advanced/graph-tiling/) topic for more information.
 
 ### <a name="value"></a> Value ###
 
@@ -423,7 +418,7 @@ The value properties specify the field used as the binning value.
 		<tbody>
 			<tr>
 				<td class="property">oculus.binning.value.field</td>
-				<td class="description">Field to use as the bin value. Default counts entries only.</td>
+				<td class="description">Field to use as the bin value. Default counts entries only. Optional. Defaults to count.</td>
 			</tr>
 			<tr>
 				<td class="property">oculus.binning.value.type</td>
@@ -483,4 +478,4 @@ binning.level.2=10
 
 ## Next Steps ##
 
-For details on running custom tiling jobs, see the [Run Custom Tiling Jobs](../custom-tiling) topic.
+For details on testing the output of your tiling job, see the [Testing Tiling Job Output](../test-output/) topic.
