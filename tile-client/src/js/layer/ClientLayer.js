@@ -45,23 +45,24 @@
             levelMinMax = meta,
             renderer = layer.renderer,
             aggregated;
-        if ( !meta ) {
+        // aggregate the data if there is an aggregator attached
+        if ( meta ) {
+            if ( renderer && renderer.aggregator ) {
+                // aggregate the meta data buckets
+                aggregated = renderer.aggregator.aggregate(
+                    meta.bins || [],
+                    transformData.startBucket,
+                    transformData.endBucket );
+                // take the first and last index, which correspond to max / min
+                levelMinMax = {
+                    minimum: aggregated[aggregated.length - 1],
+                    maximum: aggregated[0]
+                };
+            }
+        } else {
             levelMinMax = {
                 minimum: null,
                 maximum: null
-            };
-        }
-        // aggregate the data if there is an aggregator attached
-        if ( renderer && renderer.aggregator ) {
-            // aggregate the meta data buckets
-            aggregated = renderer.aggregator.aggregate(
-                meta.bins || [],
-                transformData.startBucket,
-                transformData.endBucket );
-            // take the first and last index, which correspond to max / min
-            levelMinMax = {
-                minimum: aggregated[aggregated.length - 1],
-                maximum: aggregated[0]
             };
         }
         layer.levelMinMax = levelMinMax;
