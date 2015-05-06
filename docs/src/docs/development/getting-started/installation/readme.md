@@ -1,16 +1,16 @@
 ---
 section: Docs
 subsection: Development
-chapter: Quick Start
+chapter: Getting Started
 topic: Installation
-permalink: docs/development/quick-start/installation/
+permalink: docs/development/getting-started/installation/
 layout: submenu
 ---
 
 Installation and Compilation
 ============================
 
-The following installation instructions are intended for developers who want to use Aperture Tiles to build their own custom projects. The [complete installation](#complete-install) process requires several third-party tools and access to the Aperture Tiles source code.
+The following installation instructions are intended for developers who want to use Aperture Tiles to build their own custom applications. The [complete installation](#complete-install) process requires several third-party tools and access to the Aperture Tiles source code.
 
 For developers who want to quickly install a pre-configured example Aperture Tiles application with minimal modification, a set of [packaged distributions](#packaged-distributions) are available as an alternative.
 
@@ -251,7 +251,7 @@ Aperture Tiles is made up of the following sub-projects:
 		</tr>
 		<tr>
 			<td class="property">tile-packaging</td>
-			<td class="description">Packaged assembly of the tile generation service for the <a href="../quickstart/">Quick Start</a> example on this site.</td>
+			<td class="description">Packaged assembly of the tile generation service for the <a href="../quick-start/">Quick Start</a> example on this site.</td>
 		</tr>
 		<tr>
 			<td class="property">tile-examples</td>
@@ -295,8 +295,8 @@ The Aperture Tiles packaged distributions enable you to create a sample Aperture
 	- [Tile Generator](../../../../download/#tile-generator): Creates the Julia set data and generates a set of tiles
 	- [Tile Quick Start Application](../../../../download/#tile-quick-start-application): Serves as an example application that you can quickly deploy after minimal modification
 2. Extract the contents of each file to your local machine.
-3. See the [Quick Start](../quickstart/) topic for information on configuring each packaged distribution.
+3. See the [Quick Start](../quick-start/) topic for information on configuring each packaged distribution.
 
 ## <a name="next-steps"></a> Next Steps ##
 
-For details on generating tile sets from raw data, see the [Tile Generation](../generation) topic.
+For a guide on quickly configuring and deploying an example Aperture application, see the [Quick Start](../quick-start) topic.

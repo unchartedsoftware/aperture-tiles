@@ -10,7 +10,7 @@ layout: submenu
 Run Standard Tiling Jobs
 ========================
 
-A typical Aperture Tiles application contains a heatmap layer that illustrates the density of numeric data at several levels over a map or plot. The process of generating the [tile pyramid](../tile-pyramid/) that represents this type of layer is a standard tiling job.
+A typical Aperture Tiles application contains a heatmap layer that illustrates the density of numeric data at several levels over a map or plot. The process of generating the [tile pyramid](../../getting-started/tile-pyramid/) that represents this type of layer is a standard tiling job.
 
 Standard tiling jobs can be executed with the [CSVBinner](#csvbinner), which is available in the Aperture Tiles source code.
 

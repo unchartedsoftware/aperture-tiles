@@ -1,9 +1,9 @@
 ---
 section: Docs
 subsection: Development
-chapter: How-To
-topic: Understand the Tile Pyramid
-permalink: docs/development/how-to/tile-pyramid/
+chapter: Getting Started
+topic: Understanding the Tile Pyramid
+permalink: docs/development/getting-started/tile-pyramid/
 layout: submenu
 ---
 
@@ -68,15 +68,21 @@ As shown in the following diagram, the tile generation process has five main sta
 		</thead>
 		<tbody>
 			<tr>
-				<td class="description"><a href="../standard-tiling">Standard</a></td>
+				<td class="description"><a href="../../how-to/standard-tiling">Standard</a></td>
 				<td class="description">Uses the built-in CSVBinner tool, which automates generation of tiles that aggregate numeric data by summation or take the minimum or maximum value.</td>
 				<td class="description">A set of properties files that describe the source data to analyze and the job options to pass in.</td>
 			</tr>
 
 			<tr>
-				<td class="description"><a href="../custom-tiling">Custom</a></td>
+				<td class="description"><a href="../../advanced/custom-tiling">Custom</a></td>
 				<td class="description">Uses a set of RDDBinner APIs for creating custom tile-based analytics on non-numeric or non-delimited data.</td>
 				<td class="description">Create custom code for some or all of the tile generation stages. See the Twitter Topics demo (<a href="https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics">tile-examples/<wbr>twitter-topics/</a>) for an example implementation of custom tiling.</td>
+			</tr>
+
+			<tr>
+				<td class="description"><a href="../../advanced/graph-tiling">Graph</a></td>
+				<td class="description">Uses the built-in CSVGraphBinner tool, which automates generation of tiles that aggregate node and edge data.</td>
+				<td class="description">A set of properties files that describe the source data to analyze and the job options to pass in.</td>
 			</tr>
 
 			<tr>
@@ -104,7 +110,7 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 - [MapR](http://www.mapr.com/products/apache-hadoop)
 - [HortonWorks](http://hortonworks.com/)
 
-For detailed information on Aperture Tiles prerequisites, see the [Installation](../../quick-start/installation/) topic.
+For detailed information on Aperture Tiles prerequisites, see the [Installation](../../getting-started/installation/) topic.
 
 <h6 class="procedure">To configure Apache Spark for your installed version of Hadoop</h6>
 
@@ -119,4 +125,4 @@ The Aperture Tiles source code relies on the standard [spark-submit](http://spar
 
 ## Next Steps ##
 
-For details on running standard tiling jobs, see the [Run Standard Tiling Jobs](../standard-tiling) topic.
+For details on running standard tiling jobs, see the [Run Standard Tiling Jobs](../../how-to/standard-tiling) topic.

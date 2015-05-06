@@ -3,7 +3,7 @@ main:
     path: tour/
 
   - label: Docs
-    path: docs/development/quick-start/installation/
+    path: docs/development/getting-started/installation/
 
   - label: Demos
     path: demos/
@@ -16,7 +16,7 @@ main:
 
 docs:
   - label: Development
-    path: docs/development/quick-start/installation/
+    path: docs/development/getting-started/installation/
 
   - label: User Guide
     path: docs/user-guide/

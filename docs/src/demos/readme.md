@@ -73,7 +73,7 @@ A heat map is applied to the data points to summarize frequency distribution, ef
 Julia Set Example
 -----------------
 
-This demo is used in the [Quick Start guide](../docs/development/how-to/quickstart/) to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
+This demo is used in the [Quick Start guide](../docs/development/getting-started/quick-start/) to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
 
 &gt; Explore the [Julia Set demo](http://aperturetiles.com/julia-demo/)
 <br>&gt; Access the source code in the [tile-examples](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples) directory of the project

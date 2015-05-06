@@ -1,13 +1,13 @@
 ---
 section: Docs
 subsection: Development
-chapter: Quick Start
-topic: Quick Start
-permalink: docs/development/quick-start/quickstart/
+chapter: Getting Started
+topic: Quick Start Example Workflow
+permalink: docs/development/getting-started/quick-start/
 layout: submenu
 ---
 
-# Quick Start Guide #
+# Quick Start Example Workflow #
 
 This guide, which provides a short tutorial on the process of creating and configuring an Aperture Tiles project, covers the following topics:
 
@@ -56,7 +56,7 @@ For delimited numeric data sources like the Julia set, we use the CSVBinner tool
 
 A preconfigured base properties file is available in the Tile Generator utility. You only need to edit this file if you intend to save your Avro tiles to HBase. Otherwise, you can skip ahead to the [execution](#execution) of the tile generation job.
 
-**NOTE**: For a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Tile Generation](../generation/) topic.
+**NOTE**: For a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Standard Tiling Jobs](../../how-to/standard-tiling/) topic.
 
 <h6 class="procedure">To edit the base properties file</h6>
 
@@ -112,7 +112,7 @@ A preconfigured base properties file is available in the Tile Generator utility.
 
 The Tile Generator utility also contains a tiling properties file (**julia-tiling.bd** in *examples/*). This file should not need to be edited.
 
-**NOTE**: For a typical Aperture Tiles project, you will need to edit this file to define the layout of the map/plot on which to project your data. For more information on these properties, see the [Tile Generation](../generation/) topic.
+**NOTE**: For a typical Aperture Tiles project, you will need to edit this file to define the layout of the map/plot on which to project your data. For more information on these properties, see the [Standard Tiling Jobs](../../how-to/standard-tiling/) topic..
 
 ### <a name="execution"></a> Execution ###
 
@@ -138,7 +138,7 @@ The Tile Server renders your generated tiles as layers in your Aperture Tiles vi
 1. Zip the *julia.x.y.v* directory produced during the Tile Generation stage.
 2. Copy the ZIP file to the *WEB-INF/classes/* directory of the Tile Quick Start Application.
 
-**NOTE**: For typical Aperture Tiles projects, you will need to edit the */WEB-INF/***web.xml** and *WEB-INF/classes/***tile.properties** files in the Tile Server. For more information on editing these files, see the [App Configuration](../configuration/) topic.
+**NOTE**: For typical Aperture Tiles projects, you will need to edit the */WEB-INF/***web.xml** and *WEB-INF/classes/***tile.properties** files in the Tile Server. For more information on editing these files, see the [Tile Server](../../how-to/tile-server/) topic.
 
 ### Layer Properties ###
 
@@ -185,13 +185,13 @@ For this example, you only need to edit the layer properties file if you saved y
     </div>
 4. Save the file.
 
-For information on additional layer properties, see the *Layers* section of the [Configuration](../configuration/#layers) topic.
+For information on additional layer properties, see the *Layers* section of the [Tile Server](../../how-to/tile-server/#layers) topic.
 
 ## <a name="tile-client-application"></a> Tile Client Application ##
 
 For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
-For information on map properties (e.g., for boundaries and axes), see the *Maps* section of the [Configuration](../configuration/#maps) topic. 
+For information on map properties (e.g., for boundaries and axes), see the *Maps* section of the [Tile Client](../../how-to/tile-client/#maps) topic. 
 
 ## <a name="deployment"></a> Deployment ##
 
@@ -205,4 +205,4 @@ The Julia set application data is plotted on an X/Y chart with six layers of zoo
 
 ## Next Steps ##
 
-For a detailed description of the prerequisites and installation procedures for Aperture Tiles, see the [Installation](../installation/) topic.
+For information on the structure of tile pyramids and the processes required to create them, see the [Understanding the Tile Pyramid](../tile-pyramid/) topic.

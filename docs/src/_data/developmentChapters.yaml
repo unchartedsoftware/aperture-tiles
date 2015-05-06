@@ -1,5 +1,5 @@
-- label: Quick Start
-  path: quick-start
+- label: Getting Started
+  path: getting-started
   listType: ul
   topics:
     - label: Installation
@@ -17,8 +17,8 @@
         - label: Packaged Distributions
           anchor: packaged-distributions
 
-    - label: Quick Start
-      path: quickstart
+    - label: Quick Start Example Workflow
+      path: quick-start
       bookmarks:
         - label: Prerequisites
           anchor: prerequisites
@@ -35,11 +35,7 @@
         - label: Deployment
           anchor: deployment
 
-- label: How-To
-  path: how-to
-  listType: ol
-  topics:
-    - label: Understand the Tile Pyramid
+    - label: Understanding the Tile Pyramid
       path: tile-pyramid
       bookmarks:
         - label: Tile Pyramid Hierarchy
