@@ -52,6 +52,7 @@ public class GraphAnalyticsTests {
 	Pair<Double, Double>_parentCoords = new Pair<Double, Double>(3.3, 4.4);
 	double _parentRadius = 10.2;
 	
+	List<Double> _statsList = Arrays.asList(1.0, 2.0, 33.0, -23.0);
 	List<GraphEdge> _interEdges = Arrays.asList(new GraphEdge(0L, 4.3, 2.1, 5L),
 	                                new GraphEdge(43L, 5.6, 7.8, 3L));
 	List<GraphEdge> _intraEdges = Arrays.asList(new GraphEdge(2L, 4.2, 2.0, 6L),
@@ -68,6 +69,7 @@ public class GraphAnalyticsTests {
 																_parentID,
 																_parentCoords,
 																_parentRadius,
+																_statsList,
 																_interEdges,
 																_intraEdges);
 	
@@ -97,6 +99,7 @@ public class GraphAnalyticsTests {
 														_parentID,
 														_parentCoords,
 														_parentRadius,
+														_statsList,
 														_interEdges,
 														_intraEdges);
 
@@ -129,6 +132,7 @@ public class GraphAnalyticsTests {
 											_parentID,
 											_parentCoords,
 											_parentRadius,
+											_statsList,
 											edges,
 											_intraEdges);
 
@@ -158,6 +162,7 @@ public class GraphAnalyticsTests {
 											_parentID,
 											_parentCoords,
 											_parentRadius,
+											_statsList,
 											_interEdges,
 											edges);
 
@@ -251,6 +256,7 @@ public class GraphAnalyticsTests {
 														_parentID,
 														_parentCoords,
 														_parentRadius,
+														_statsList,
 														_interEdges,
 														_intraEdges);
 
@@ -276,6 +282,7 @@ public class GraphAnalyticsTests {
 														_parentID,
 														_parentCoords,
 														_parentRadius,
+														_statsList,
 														_interEdges,
 														_intraEdges);
 
@@ -392,6 +399,7 @@ public class GraphAnalyticsTests {
 														567L,
 														new Pair<Double, Double>(7.2, 0.1),
 														10.1,
+														Arrays.asList(99.0),
 														Arrays.asList(new GraphEdge(1L, 4.3, 2.1, 5L)),
 														Arrays.asList(new GraphEdge(1L, 4.3, 2.1, 5L)));
 		GraphAnalyticsRecord b = new GraphAnalyticsRecord(1, Arrays.asList(community_b));
@@ -407,6 +415,7 @@ public class GraphAnalyticsTests {
 				456L,
 				new Pair<Double, Double>(3.3, 0.1),
 				10.1,
+				Arrays.asList(-23.0),
 				Arrays.asList(new GraphEdge(0L, 4.3, 2.1, 3L)),
 				Arrays.asList(new GraphEdge(1L, 4.2, 2.0, 4L)));		
 
@@ -430,6 +439,7 @@ public class GraphAnalyticsTests {
 														567L,
 														new Pair<Double, Double>(7.2, 0.1),
 														10.1,
+														Arrays.asList(-23.0),
 														Arrays.asList(new GraphEdge(1L, 4.3, 2.1, 5L)),
 														Arrays.asList(new GraphEdge(1L, 4.3, 2.1, 5L)));
 		GraphAnalyticsRecord b = new GraphAnalyticsRecord(1, Arrays.asList(community_b));
@@ -445,6 +455,7 @@ public class GraphAnalyticsTests {
 				567L,
 				new Pair<Double, Double>(7.2, 4.4),
 				10.2,
+				Arrays.asList(33.0),
 				Arrays.asList(new GraphEdge(43L, 5.6, 7.8, 5L)),
 				Arrays.asList(new GraphEdge(44L, 5.5, 7.7, 6L)));		
 
