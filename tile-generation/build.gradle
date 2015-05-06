@@ -122,8 +122,9 @@ dependencies {
 	compile project(":binning-utilities")
 	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
+	testCompile project(path: ':binning-utilities', configuration: 'tests')
 
-	// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
+// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
 	// the impl of the servlet api, which ends up generating a security exception.  We force include
 	// the unsigned api jar here, and force include the unsigned api jar above.
 	compile "javax.servlet:javax.servlet-api:3.0.1"
@@ -138,5 +139,6 @@ dependencies {
 	assemblyJarReq project (":binning-utilities")
 	assemblyJarReq project (":factory-utilities")
 	assemblyJarReq "org.json:json:20090211"
+	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
 	addHBaseDependencies("assemblyJarReq")
 }

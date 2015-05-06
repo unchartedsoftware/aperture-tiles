@@ -42,16 +42,23 @@
         ClientLayer: require('./layer/ClientLayer'),
         Carousel: require('./layer/Carousel'),
         LayerUtil: require('./layer/LayerUtil'),
+        VectorLayer: require('./layer/VectorLayer'),
 
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),
+        Aggregator: require('./layer/renderer/aggregator/Aggregator'),
+        TopicCountAggregator: require('./layer/renderer/aggregator/TopicCountAggregator'),
+        TopicCountArrayAggregator: require('./layer/renderer/aggregator/TopicCountArrayAggregator'),
+        TopicFrequencyAggregator: require('./layer/renderer/aggregator/TopicFrequencyAggregator'),
+        TweetsByTopicAggregator: require('./layer/renderer/aggregator/TweetsByTopicAggregator'),
+        FrequenciesByTopicAggregator: require('./layer/renderer/aggregator/FrequenciesByTopicAggregator'),
+        FrequencyArraysByTopicAggregator: require('./layer/renderer/aggregator/FrequencyArraysByTopicAggregator'),
         RendererUtil: require('./layer/renderer/RendererUtil'),
         GraphLabelRenderer: require('./layer/renderer/GraphLabelRenderer'),
         GraphNodeRenderer: require('./layer/renderer/GraphNodeRenderer'),
         PointAggregateRenderer: require('./layer/renderer/PointAggregateRenderer'),
         PointRenderer: require('./layer/renderer/PointRenderer'),
         TextByFrequencyRenderer: require('./layer/renderer/TextByFrequencyRenderer'),
-        TextScoreRenderer: require('./layer/renderer/TextScoreRenderer'),
         TextScoreWeightedRenderer: require('./layer/renderer/TextScoreWeightedRenderer'),
         WordCloudRenderer: require('./layer/renderer/WordCloudRenderer'),
         RenderTheme: require('./layer/renderer/RenderTheme'),
@@ -59,6 +66,7 @@
         // Map
         Map: require('./map/Map'),
         MapUtil: require('./map/MapUtil'),
+        Marker: require('./map/Marker'),
         Axis: require('./map/Axis'),
         AxisUtil: require('./map/AxisUtil'),
 

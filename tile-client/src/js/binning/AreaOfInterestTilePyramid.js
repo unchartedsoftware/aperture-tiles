@@ -63,28 +63,6 @@
     };
 
     /**
-     * Maps a point from the root coordinate system to a fractional tile coordinate.
-     * @memberof AreaOfInterestTilePyramid
-     *
-     * @param {number} x - The x root coordinate value.
-     * @param {number} y - The y root coordinate value.
-     * @param {integer} level - The zoom level.
-     *
-     * @returns {Object} The fractional tile coordinate.
-     */
-	AreaOfInterestTilePyramid.prototype.rootToFractionalTile = function( x, y, level ) {
-        var numDivs, tileX, tileY;
-        numDivs = 1 << level;
-        tileX = numDivs * (x - this.minX) / (this.maxX - this.minX);
-        tileY = numDivs * (y - this.minY) / (this.maxY - this.minY);
-        return {
-            'level': level,
-            'xIndex': tileX,
-            'yIndex': tileY
-        };
-    };
-
-    /**
      * Maps a fractional tile coordinate to a point in the root coordinate system.
      * @memberof AreaOfInterestTilePyramid
      *
@@ -104,6 +82,32 @@
     };
 
     /**
+     * Maps a point from the root coordinate system to a fractional tile coordinate.
+     * @memberof AreaOfInterestTilePyramid
+     *
+     * @param {number} x - The x root coordinate value.
+     * @param {number} y - The y root coordinate value.
+     * @param {integer} level - The zoom level.
+     * @param {integer} bins - The number of bins per dimension in a tile.
+     *
+     * @returns {Object} The fractional tile coordinate.
+     */
+	AreaOfInterestTilePyramid.prototype.rootToFractionalTile = function( x, y, level, bins ) {
+		bins = bins || 256;
+        var numDivs, tileX, tileY;
+        numDivs = 1 << level;
+        tileX = numDivs * (x - this.minX) / (this.maxX - this.minX);
+        tileY = numDivs * (y - this.minY) / (this.maxY - this.minY);
+        return {
+            'level': level,
+            'xIndex': tileX,
+            'yIndex': tileY,
+            xBinCount: bins,
+            yBinCount: bins
+        };
+    };
+
+    /**
      * Maps a point from the root coordinate system to a tile coordinate.
      * @memberof AreaOfInterestTilePyramid
      *
@@ -115,20 +119,53 @@
      * @returns {Object} The tile coordinate.
      */
     AreaOfInterestTilePyramid.prototype.rootToTile = function( x, y, level, bins ) {
-        var numDivs, tileX, tileY;
-        numDivs = 1 << level;
-        tileX = Math.floor(numDivs * (x - this.minX) / (this.maxX - this.minX));
-        tileY = Math.floor(numDivs * (y - this.minY) / (this.maxY - this.minY));
-        if (!bins) {
-            bins = 256;
-        }
+		var result = this.rootToFractionalTile( x, y, level, bins );
+		result.xIndex = Math.floor( result.xIndex );
+		result.yIndex = Math.floor( result.yIndex );
+		return result;
+    };
+
+	/**
+     * Maps a point from the root coordinate system to a specific bin fractional
+	 * coordinate.
+     * @memberof AreaOfInterestTilePyramid
+     *
+     * @param {number} x - The x root coordinate value.
+     * @param {number} y - The y root coordinate value.
+     * @param {Object} tile - The tile coordinate that holds the target bin.
+     *
+     * @returns {Object} The bin coordinate.
+     */
+    AreaOfInterestTilePyramid.prototype.rootToFractionalBin = function( x, y, tile ) {
+        var pow2, tileXSize, tileYSize, xInTile, yInTile, binX, binY;
+        pow2 = 1 << tile.level;
+        tileXSize = (this.maxX - this.minX) / pow2;
+        tileYSize = (this.maxY - this.minY) / pow2;
+        xInTile = x - this.minX - tile.xIndex * tileXSize;
+        yInTile = y - this.minY - tile.yIndex * tileYSize;
+        binX = xInTile * tile.xBinCount / tileXSize;
+        binY = yInTile * tile.yBinCount / tileYSize;
         return {
-            level: level,
-            xIndex: tileX,
-            yIndex: tileY,
-            xBinCount: bins,
-            yBinCount: bins
+            x: binX,
+            y: tile.yBinCount - 1 - binY
         };
+    };
+
+	/**
+     * Maps a point from the root coordinate system to a specific bin coordinate.
+     * @memberof AreaOfInterestTilePyramid
+     *
+     * @param {number} x - The x root coordinate value.
+     * @param {number} y - The y root coordinate value.
+     * @param {Object} tile - The tile coordinate that holds the target bin.
+     *
+     * @returns {Object} The bin coordinate.
+     */
+    AreaOfInterestTilePyramid.prototype.rootToBin = function( x, y, tile ) {
+		var result = this.rootToFractionalBin( x, y, tile );
+		result.x = Math.floor( result.x );
+		result.y = Math.floor( result.y );
+        return result;
     };
 
     /**

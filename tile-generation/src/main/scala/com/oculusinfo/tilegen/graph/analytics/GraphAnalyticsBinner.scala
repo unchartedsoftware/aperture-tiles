@@ -362,25 +362,25 @@ object GraphAnalyticsBinner {
 		}
 		//TODO -- add in autobounds checking to this application (ie when/if we modify the app to use 'proper' tile-gen Data Analytics features)
 		
-		val projection = properties.getString("oculus.binning.projection",
+		val projection = properties.getString("oculus.binning.projection.type",
 		                                      "The type of tile pyramid to use",
-		                                      Some("EPSG:4326"))
-		if ("EPSG:900913" == projection) {
+		                                      Some("areaofinterest"))
+		if ("webmercator" == projection) {
 			new WebMercatorTilePyramid()
 		} else {
 			//		if (autoBounds) {
 			//			new AOITilePyramid(minX, minY, maxX, maxY)
 			//		} else {
-			val minXp = properties.getDoubleOption("oculus.binning.projection.minx",
+			val minXp = properties.getDoubleOption("oculus.binning.projection.minX",
 			                                       "The minimum x value to use for "+
 				                                       "the tile pyramid").get
-			val maxXp = properties.getDoubleOption("oculus.binning.projection.maxx",
+			val maxXp = properties.getDoubleOption("oculus.binning.projection.maxX",
 			                                       "The maximum x value to use for "+
 				                                       "the tile pyramid").get
-			val minYp = properties.getDoubleOption("oculus.binning.projection.miny",
+			val minYp = properties.getDoubleOption("oculus.binning.projection.minY",
 			                                       "The minimum y value to use for "+
 				                                       "the tile pyramid").get
-			val maxYp = properties.getDoubleOption("oculus.binning.projection.maxy",
+			val maxYp = properties.getDoubleOption("oculus.binning.projection.maxY",
 			                                       "The maximum y value to use for "+
 				                                       "the tile pyramid").get
 			new AOITilePyramid(minXp, minYp, maxXp, maxYp)
@@ -407,7 +407,7 @@ object GraphAnalyticsBinner {
 			stream.close()
 			argIdx = argIdx + 1
 		}
-		defProps.setProperty("oculus.binning.index.type", "graph")
+		//defProps.setProperty("oculus.binning.index.type", "graph")
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()

@@ -137,7 +137,7 @@
     /**
      * Returns the word cloud words containing font size and x and y coordinates
      */
-    createWordCloud = function( wordCounts, maxCount ) {
+    createWordCloud = function( wordCounts, min, max ) {
         var minFontSize = 10,
             maxFontSize = 28,
             boundingBox = {
@@ -159,10 +159,10 @@
             word = wordCounts[i].word;
             count = wordCounts[i].count;
             // get font size based on font size function
-            fontSize = RendererUtil.getFontSize( count, maxCount, {
+            fontSize = RendererUtil.getFontSize( count, min, max, {
                 maxFontSize: maxFontSize,
                 minFontSize: minFontSize,
-                bias: -i/2
+                type: 'log'
             });
             // frequency percent
             percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
@@ -218,7 +218,7 @@
      * </pre>
      */
     function WordCloudRenderer( spec ) {
-        spec.rootKey = spec.rootKey || "tile.values[0].value";
+        spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -239,21 +239,19 @@
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
-            meta = this.meta[ this.map.getZoom() ],
+            levelMinMax = this.parent.getLevelMinMax(),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
             html = '',
             wordCounts = [],
             entries = [],
-            maxCount,
             value,
             word,
+            min,
+            max,
             i,
             cloud;
 
-        // get maximum count for layer if it exists in meta data
-        maxCount = meta.minMax.max[ countKey ] / 4;
-
-        for (i=0; i<numEntries; i++) {
+        for ( i=0; i<numEntries; i++ ) {
             value = values[i];
             wordCounts.push({
                 word: RendererUtil.getAttributeValue( value, textKey ),
@@ -262,7 +260,10 @@
             });
         }
 
-        cloud = createWordCloud( wordCounts, maxCount );
+        min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
+        max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
+
+        cloud = createWordCloud( wordCounts, min, max );
 
         for ( i=0; i<cloud.length; i++ ) {
 

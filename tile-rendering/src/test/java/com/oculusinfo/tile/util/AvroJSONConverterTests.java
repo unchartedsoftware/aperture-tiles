@@ -50,6 +50,7 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializer;
+import com.oculusinfo.binning.util.AvroJSONConverter;
 import com.oculusinfo.factory.util.Pair;
 
 

@@ -95,8 +95,13 @@
             i = Util.mod( startingMarkerTypeIndex, MARKER_TYPE_ORDER.length ),
             value;
         // reduce sub increment by epsilon to prevent precision errors culling max point
-        subIncrement -= EPSILON;
-
+        if ( axis.units.type !== 'time' &&
+            axis.units.type !== 'date' &&
+            axis.units.type !== 'i' &&
+            axis.units.type !== 'int' &&
+            axis.units.type !== 'integer' ) {
+            subIncrement -= EPSILON;
+        }
         for ( value=start; value<=end; value+=subIncrement ) {
             markers[ MARKER_TYPE_ORDER[i] ].push({
                 label: getMarkerRollover( axis, value ),
@@ -129,7 +134,7 @@
             minCull = axis.min;
         }
         // determine how many sub increments from the pivot to the minimum culling point
-        incrementCount = Math.floor( ( minCull - intervals.pivot ) / intervals.subIncrement );
+        incrementCount = Math.ceil( ( minCull - intervals.pivot ) / intervals.subIncrement, minCull );
         intervals.startingMarkerTypeIndex = incrementCount;
         // return the minimum increment that is still in view
         return intervals.pivot + intervals.subIncrement * incrementCount;
@@ -155,7 +160,7 @@
             maxCull = axis.max;
         }
         // determine how many sub increments from the pivot to the maximum culling point
-        incrementCount = Math.floor( ( maxCull - intervals.pivot ) / intervals.subIncrement );
+        incrementCount = Math.floor( ( maxCull - intervals.pivot ) / intervals.subIncrement, maxCull );
         // return the maximum increment that is still in view
         return intervals.pivot + intervals.subIncrement * incrementCount;
     }
@@ -233,15 +238,91 @@
     }
 
     /**
+     * Maps a number returns from Date.getMonth() to is full string name.
+     *
+     * @param {number} num - The month number.
+     *
+     * @returns {String} The month string.
+     */
+    function numToMonth( num ) {
+        switch( num ) {
+            case 0: return "January";
+            case 1: return "February";
+            case 2: return "March";
+            case 3: return "April";
+            case 4: return "May";
+            case 5: return "June";
+            case 6: return "July";
+            case 7: return "August";
+            case 8: return "September";
+            case 9: return "October";
+            case 10: return "November";
+            case 11: return "December";
+        }
+        return null;
+    }
+
+    /**
+     * Returns a string of the format "Month DD, YYYY:" from a unix timestamp.
+     *
+     * @param {number} timestamp - A unix timestamp.
+     *
+     * @returns {String} The day string in the form: "Month DD, YYYY"
+     */
+     function getDayString( timestamp ) {
+        var date = new Date( timestamp ),
+            month = numToMonth( date.getUTCMonth() ),
+            day = date.getUTCDate();
+        return month + " " + day;
+    }
+
+    /**
+     * Returns a string of the format "HH:MM:SS xm" from a unix timestamp.
+     *
+     * @param {number} timestamp - A unix timestamp.
+     *
+     * @returns {String} The day string in the form: "HH:MM:SS xm"
+     */
+    function getTimeString( timestamp ) {
+        function padZero( num ) {
+            return ("0" + num).slice(-2);
+        }
+        var date = new Date( timestamp ),
+            hours = date.getUTCHours(),
+            minutes = padZero( date.getUTCMinutes() ),
+            seconds = padZero( date.getUTCSeconds() ),
+            suffix = (hours >= 12) ? 'pm' : 'am';
+        // ensure hour is correct
+        hours = ( hours === 0 || hours === 12 ) ? 12 : hours % 12;
+        return hours + ':' + minutes + ':' + seconds + " " + suffix;
+    }
+
+    /**
+     * From a timestamp returns the format YYYY-MM-DD.
+     *
+     * @param {number} timestamp - A unix timestamp.
+     *
+     * @returns {String} The day string in the form: "YYYY-MM-DD"
+     */
+     function getYYYYMMDD( timestamp ) {
+        var date = new Date( timestamp );
+        return date.getUTCFullYear() + "-" +
+            ("0" + (date.getUTCMonth()+1) ).slice(-2) + "-" +
+            ("0" + date.getUTCDate() ).slice(-2);
+    }
+
+    /**
      * Private: Formats a timestamp into a date.
      *
      * @param value {int} unix timestamp.
+     * @param verbose {boolean} format to a longer more human readable date
      * @returns {string}
      */
-    function formatTime( value ) {
-        var d = new Date( 0 ); // The 0 there is the key, which sets the date to the epoch
-        d.setUTCSeconds( value / 1000 ); // Assume default of milliseconds
-        return ( d.getMonth() + 1 ) + '/' + d.getDate() + '/' + ( d.getFullYear() );
+    function formatTime( value, verbose ) {
+        if ( verbose ) {
+            return getDayString( value ) + ", " + getTimeString( value );
+        }
+        return getYYYYMMDD( value );
     }
 
     /**
@@ -255,6 +336,26 @@
         return formatNumber( value, decimals ) + "\u00b0";
     }
 
+    /**
+     * Private: Returns a sub increment for the axis. This is scaled base on a
+     * the 'minPixelWidth' interval property.
+     * @param axis      {Axis}   axis object.
+     * @param increment {number} increment for the axis.
+     * @returns {number} sub increment value.
+     */
+    function getSubIncrement( axis, increment ) {
+        var powerOfTwo = 1,
+            subIncrement = increment / MARKER_TYPE_ORDER.length;
+        if ( axis.intervals.minPixelWidth ) {
+            // ensure increment is of minimum width
+            while ( Math.abs( getPixelPosition( axis, increment*powerOfTwo ) -
+                getPixelPosition( axis, 0 ) ) < axis.intervals.minPixelWidth ) {
+                powerOfTwo *= 2;
+            }
+        }
+        return subIncrement * powerOfTwo;
+    }
+
     module.exports = {
 
         /**
@@ -262,8 +363,9 @@
          *
          * @param value {number} value of the label
          * @param units {Object} unit specification of the axis.
+         * @param verbose {boolean} format to a more verbose format, if available.
          */
-        formatText: function( value, units ) {
+        formatText: function( value, units, verbose ) {
 
             if ( !units ) {
                 return formatNumber( value, 2 );
@@ -280,7 +382,7 @@
                 case 'time':
                 case 'date':
 
-                    return formatTime( value );
+                    return formatTime( value, verbose );
 
                 case 'k':
                 case 'thousand':
@@ -304,7 +406,7 @@
                 case 'int':
                 case 'integer':
 
-                    return formatInteger(value);
+                    return formatInteger( value );
 
                 default:
 
@@ -324,6 +426,7 @@
                 pixel = ( axis.isXAxis ) ? vx : vy,
                 value = MapUtil.getCoordFromViewportPixel( axis.map, vx, vy )[ xOrY ];
             return {
+                value: value,
                 label: getMarkerRollover(axis, value),
                 pixel: pixel
             };
@@ -349,7 +452,7 @@
                     // use fixed interval
                     increment = axis.intervals.increment;
                     // set pivot by value
-                    intervals.pivot = axis.intervals.pivot;
+                    intervals.pivot = ( axis.intervals.pivot !== undefined ) ? axis.intervals.pivot : axis.min;
                     break;
 
                 default:
@@ -357,12 +460,13 @@
                     increment = axis.intervals.increment;
                     increment = ( increment > 1 ) ? increment * 0.01 : increment;
                     increment = ( axis.max - axis.min ) * increment;
+                    intervals.pivot = ( axis.intervals.pivot !== undefined ) ? axis.intervals.pivot : 0;
                     // normalize percentages to [0-1] not [0-100]
-                    if ( axis.intervals.pivot > 1 ) {
-                        axis.intervals.pivot = axis.intervals.pivot / 100;
+                    if ( intervals.pivot > 1 ) {
+                        intervals.pivot = intervals.pivot / 100;
                     }
                     // calc pivot value by percentage
-                    intervals.pivot = axis.min + ( axis.intervals.pivot * ( axis.max - axis.min ) );
+                    intervals.pivot = axis.min + ( intervals.pivot * ( axis.max - axis.min ) );
                     break;
             }
 
@@ -372,8 +476,8 @@
                 increment = increment / Math.pow(2, Math.max( axis.map.getZoom() - 1, 0) );
             }
 
-            // get sub increment for small / medium label-less ticks
-            intervals.subIncrement = increment / MARKER_TYPE_ORDER.length;
+            //intervals.increment = increment;
+            intervals.subIncrement = getSubIncrement( axis, increment );
 
             // get minimum and maximum visible increments on the axis
             minIncrement = getMinIncrement( axis, intervals );

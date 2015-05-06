@@ -70,13 +70,15 @@
 
                 // hide tile contents until have data
                 this.div.style.visibility = 'hidden';
-
+                this.isLoading = true;
                 this.dataRequest = $.ajax({
                     url: this.url
                 }).then(
                     function( data ) {
-                        that.tileData = data;
-                        that.renderTile( that.div, that.tileData );
+                        if ( dataUrl === this.url ) {
+                            that.tileData = data;
+                            that.renderTile( that.div, that.tileData );
+                        }
                     },
                     function( xhr ) {
                         console.error( xhr.responseText );
@@ -124,8 +126,8 @@
 
     OpenLayers.Tile.HTML.prototype.clear = function() {
         OpenLayers.Tile.prototype.clear.apply( this, arguments );
-        //this.tileData = null;
-        //this.url = null;
+        this.tileData = null;
+        this.url = null;
         if ( this.div ) {
             this.layer.div.removeChild( this.div );
             this.div = null;
@@ -141,13 +143,14 @@
 
         var div = this.div,
             renderer,
+            aggregator,
             html,
-            render,
-            entries;
+            render;
 
         // always style the opacity and visibility of the tile
         div.style.opacity = this.layer.opacity;
         div.style.visibility = 'inherit';
+        div.innerHTML = "";
 
         if ( !data || ( !data.tile && !data.hits ) ) {
             // exit early if not data to render
@@ -160,20 +163,22 @@
         }
 
         renderer = this.layer.renderer;
-        html = this.layer.html;
+        aggregator = renderer.aggregator;
 
-        if ( renderer ) {
-            renderer = ( typeof renderer === "function" ) ? renderer.call( this.layer, this.bounds ) : renderer;
-            // if renderer is attached, use it
-            render = renderer.render( data );
-            html = render.html;
-            entries = render.entries;
-        } else {
-            // else execute html
-            if ( typeof html === "function" ) {
-                html = html( data );
-            }
+        // if renderer is attached, use it
+        if ( typeof renderer === "function" ) {
+            renderer = renderer.call( this.layer, this.bounds );
         }
+        // if aggregator, aggregate the data
+        if ( aggregator ) {
+            data.tile.meta = {
+                raw: data.tile.meta.map.bins,
+                aggregated: aggregator.aggregate( data.tile.meta.map.bins )
+            };
+        }
+        render = renderer.render( data );
+        html = render.html;
+        this.entries = render.entries;
 
         if ( html instanceof $ ) {
             // if generated a jquery object, append it
@@ -186,12 +191,14 @@
             div.innerHTML = html;
         }
 
-        if ( renderer ) {
-            // inject selected entry classes
-            renderer.injectEntries( div.children, entries );
-            // if renderer is attached, call hook function
-            renderer.executeHooks( div.children, entries, data );
+        // hide standard tile hover interaction
+        if ( renderer.spec.hideTile ) {
+            div.className = div.className + " hideTile";
         }
+        // inject selected entry classes
+        renderer.injectEntries( div.children, this.entries );
+        // call renderer hook function
+        renderer.executeHooks( div.children, this.entries, data );
     };
 
     module.exports = OpenLayers.Tile.HTML;

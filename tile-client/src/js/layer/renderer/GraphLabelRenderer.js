@@ -29,7 +29,9 @@
 
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
-        injectCss;
+        injectCss,
+        getLabelWidth,
+        capitalize;
 
     injectCss = function( spec ) {
         var i;
@@ -40,6 +42,28 @@
                 });
             }
         }
+    };
+
+    /**
+     * Returns the pixel width of the label
+     */
+     getLabelWidth = function( str, fontSize ) {
+        var $temp,
+            width;
+        $temp = $('<div class="node-label" style="font-size:'+fontSize+'px; padding-left:5px; padding-right:5px;">'+str+'</div>');
+        $('body').append( $temp );
+        width = $temp.outerWidth();
+        $temp.remove();
+        return width;
+    };
+
+    /**
+     * Capitalizes the given word.
+     */
+    capitalize = function( str ) {
+        return str.replace(/(?:^|,|\s)\S/g, function( a ) {
+            return a.toUpperCase();
+        });
     };
 
     /**
@@ -80,51 +104,46 @@
 
         var GRAPH_COORD_RANGE = 256,
             text = this.spec.text,
-            meta = this.meta[ this.map.getZoom() ],
+            levelMinMax = this.parent.getLevelMinMax(),
             communities = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
-            scale = Math.pow( 2, this.map.getZoom() ),
+            scale = Math.pow( 2, this.parent.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             labelIndex = ( text.labelIndex !== undefined ) ? text.labelIndex : 0,
-            metaCommunities = meta.minMax.max.communities[0],
-            sizeMultiplier,
             community,
             html = "",
-            fontScale,
+            count,
             fontSize,
             split,
             label,
-            countNorm,
+            width,
+            minimumCount,
+            maximumCount,
             percent,
+            percentLabel,
             hierLevel,
             parentIDarray = [],
             entries = [],
             x, y, i;
 
-        function capitalize( str ) {
-            return str.replace(/(?:^|,|\s)\S/g, function( a ) {
-                return a.toUpperCase();
-            });
-        }
-        // get labelSizeMultiplier value -- value between 0.001 and 1 that controls label font size scaling.
-        // (Lower value caps font size for very large communities, and is better for graphs with many small communities and a few very large ones)
-        sizeMultiplier = ( text.sizeMultiplier )
-            ? Math.min( Math.max( text.sizeMultiplier, 0.001 ), 1.0 )
-            : 0.5;
+
 
         // get graph hierarchy level for this zoom level
         // assumes same hierarchy level for all tiles at a given zoom level
-        hierLevel = metaCommunities.hierLevel;
+        hierLevel = levelMinMax.maximum.communities[0].hierLevel;
 
         // if hierLevel = 0, normalize label attributes by community degree
         // else normalize label attributes by num internal nodes
-        countNorm = ( hierLevel === 0 )
-            ? metaCommunities.degree * sizeMultiplier
-            : metaCommunities.numNodes * sizeMultiplier;
+        if ( hierLevel === 0 ) {
+            minimumCount =  levelMinMax.minimum.communities[0].degree;
+            maximumCount =  levelMinMax.maximum.communities[0].degree;
+        } else {
+            minimumCount =  levelMinMax.minimum.communities[0].numNodes;
+            maximumCount =  levelMinMax.maximum.communities[0].numNodes;
+        }
 
         for ( i=0; i<communities.length; i++ ) {
 
             community = communities[i];
-            entries.push( community );
 
             // capitalize label array, split by comma
             split = community.metadata.split(",");
@@ -144,6 +163,9 @@
                 parentIDarray.push( community.parentID );
             }
 
+            // add to entries only if there is a legible label
+            entries.push( community );
+
             // get label position
             x = ( community[ text.xKey ] % range ) * scale;
             y = ( community[ text.yKey ] % range ) * scale;
@@ -152,22 +174,30 @@
             label = capitalize( split[ labelIndex ].toLowerCase() );
 
             // get font scale based on hierarchy level
-            fontScale = ( hierLevel === 0 ) ? community.degree : community.numNodes;
-            fontSize = RendererUtil.getFontSize( fontScale, countNorm );
+            count = ( hierLevel === 0 ) ? community.degree : community.numNodes;
+            fontSize = RendererUtil.getFontSize(
+                count, minimumCount, maximumCount, { type:'log' } );
 
-            //
-            percent = Math.min( 1, fontScale / countNorm ) + 0.5;
+            // calc percent label
+            percent = RendererUtil.transformValue( count, minimumCount, maximumCount, 'log' );
+            percentLabel = Math.round( ( percent*100 ) / 10 ) * 10;
 
-            html += '<div class="node-label" style="'
-                  + 'left:'+x+'px;'
-                  + 'bottom:'+y+'px;'
-                  + 'font-size:' + fontSize + 'px;'
-                  + 'line-height:' + fontSize + 'px;'
-                  + 'margin-top:' + (-fontSize/2) + 'px;'
-                  + 'height:' + fontSize + 'px;'
-                  + 'opacity:' + percent + ';'
-                  + 'z-index:' + Math.floor( fontSize ) + ';'
-                  + '">'+label+'</div>';
+            // calc width for centering
+            width = getLabelWidth( label, fontSize );
+            width = Math.min( width, 200 );
+
+            html += '<div class="node-label node-label-'+percentLabel+'" style="'
+                + 'left:'+x+'px;'
+                + 'bottom:'+y+'px;'
+                + 'font-size:' + fontSize + 'px;'
+                + 'line-height:' + fontSize + 'px;'
+                + 'width:' + width + 'px;'
+                + 'margin-left:' + (-width/2) + 'px;'
+                + 'margin-top:' + (-fontSize/2) + 'px;'
+                + 'height:' + fontSize + 'px;'
+                + 'z-index:' + Math.floor( fontSize ) + ';'
+                + '">'+label+'</div>';
+
         }
         return {
             html: html,

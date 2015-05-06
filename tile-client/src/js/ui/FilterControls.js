@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,11 +47,11 @@
             i;
         for( i = 0; i<numMarkers; i++ ) {
             if ( isMajor ) {
-                $container.append( '<div class="filter-axis-marker filter-major-marker" style="margin-right:calc('+margin+'% - 1px);"></div>' );  
+                $container.append( '<div class="filter-axis-marker filter-major-marker" style="margin-right:calc('+margin+'% - 1px);"></div>' );
             } else {
                 $container.append( '<div class="filter-axis-marker filter-minor-marker" style="margin-right:calc('+margin+'% - 1px);"></div>' );
             }
-            isMajor = !isMajor;  
+            isMajor = !isMajor;
         }
         $container.append( '<div class="filter-axis-marker filter-major-marker" style="margin-left:-1px;"></div>' );
         return $container;
@@ -69,10 +69,10 @@
             i;
         for ( i = 0; i<numMajorMarkers; i++ ) {
             val = Util.denormalizeValue( i / (numMajorMarkers-1), minMax, transform );
-            $container.append( 
-                $( '<div class="filter-axis-label" style="position:absolute; left:'+(margin*i)+'%; width:'+margin+'%; margin-left:-'+(margin/2)+'%;">'+ 
+            $container.append(
+                $( '<div class="filter-axis-label" style="position:absolute; left:'+(margin*i)+'%; width:'+margin+'%; margin-left:-'+(margin/2)+'%;">'+
                       AxisUtil.formatText( val, options ) +
-                  '</div>' ) 
+                  '</div>' )
             );
         }
         return $container;
@@ -98,11 +98,11 @@
                 range: true,
                 min: MIN_VAL,
                 max: MAX_VAL,
-                values: [ 
-                    layer.getRangeMinPercentage() * MAX_VAL, 
-                    layer.getRangeMaxPercentage() * MAX_VAL 
+                values: [
+                    layer.getRangeMinPercentage() * MAX_VAL,
+                    layer.getRangeMaxPercentage() * MAX_VAL
                 ],
-                change: function () {                   
+                change: function () {
                     var result = $( this ).slider( "option", "values" );
                     // set by percentage
                     layer.setRangeMinPercentage( result[0] / MAX_VAL );
@@ -111,16 +111,16 @@
                 slide: function( event, ui ) {
                     var handleIndex = $( ui.handle ).index() - 1,
                         values = ui.values,
-                        value = Util.denormalizeValue( 
+                        value = Util.denormalizeValue(
                             values[ handleIndex ] / MAX_VAL,
                             layer.getLevelMinMax(),
-                            layer.getValueTransformType() );    
+                            layer.getValueTransformType() );
                     SliderUtil.createLabel( $( $filterSlider[0].children[ 1 + handleIndex ] ), value );
                 },
                 start: function( event, ui ) {
                     var handleIndex = $(ui.handle).index() - 1,
                         values = ui.values,
-                        value = Util.denormalizeValue( 
+                        value = Util.denormalizeValue(
                             values[ handleIndex ] / MAX_VAL,
                             layer.getLevelMinMax(),
                             layer.getValueTransformType() );
@@ -177,7 +177,7 @@
 
                         $filterSlider.find( ".filter-axis" ).replaceWith(
                             createFilterAxis( layer.getLevelMinMax(), layer.getValueTransformType() )
-                        );         
+                        );
                         break;
                 }
             });

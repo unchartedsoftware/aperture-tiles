@@ -26,7 +26,7 @@
 package com.oculusinfo.tilegen.util
 
 
-import java.util.{List => JavaList}
+import java.util.{List => JavaList, Date}
 import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.lang.{Float => JavaFloat}
@@ -43,9 +43,9 @@ import scala.reflect.ClassTag
 
 
 /**
- * This class attempts to extend the standard scala Numerics class with a few 
+ * This class attempts to extend the standard scala Numerics class with a few
  * extra useful functions - like division, validity, max and min values, etc.
- * 
+ *
  * @tparam T The numeric value type represented
  */
 trait ExtendedNumeric[T] extends Numeric[T] {
@@ -59,6 +59,9 @@ trait ExtendedNumeric[T] extends Numeric[T] {
 	def fromDouble (x: Double): T
 	def fromNumber (x: Number): T
 	def fromString (s: String): T
+	// Attempt to turn anything into the current numeric type, throwing an exception if the type of the input is
+	// inconvertable
+	def fromAny (a: Any): T
 
 	// Extended numeric methods
 	def div (x: T, y: T): T
@@ -90,6 +93,18 @@ object ExtendedNumeric {
 		def fromDouble (n: Double): Int = n.toInt
 		def fromNumber (n: Number): Int = n.intValue()
 		def fromString (s: String): Int = s.toInt
+		def fromAny (a: Any): Int =
+			a match {
+				case null => throw new IllegalArgumentException
+				case c: Byte => c.toInt
+				case c: Short => c.toInt
+				case c: Int => c
+				case c: Long => c.toInt
+				case c: Float => c.toInt
+				case c: Double => c.toInt
+				case c: Date => c.getTime.toInt
+				case c: String => c.toInt
+			}
 
 		def isNaN (n: Int): Boolean = false
 		def minValue: Int = Int.MinValue
@@ -102,13 +117,25 @@ object ExtendedNumeric {
 		def name = "long"
 
 		def div (n: Long, m: Long): Long = n / m
-		
+
 		def fromLong (n: Long): Long = n
 		def fromFloat (n: Float): Long = n.toLong
 		def fromDouble (n: Double): Long = n.toLong
 		def fromNumber (n: Number): Long = n.longValue()
 		def fromString (s: String): Long = s.toLong
-		
+		def fromAny (a: Any): Long =
+			a match {
+				case null => throw new IllegalArgumentException
+				case c: Byte => c.toLong
+				case c: Short => c.toLong
+				case c: Int => c.toLong
+				case c: Long => c
+				case c: Float => c.toLong
+				case c: Double => c.toLong
+				case c: Date => c.getTime
+				case c: String => c.toLong
+			}
+
 		def isNaN (n: Long): Boolean = false
 		def minValue: Long = Long.MinValue
 		def maxValue: Long = Long.MaxValue
@@ -124,6 +151,18 @@ object ExtendedNumeric {
 		def fromDouble (x: Double): Float = x.toFloat
 		def fromNumber (x: Number): Float = x.floatValue()
 		def fromString (s: String): Float = s.toFloat
+		def fromAny (a: Any): Float =
+			a match {
+				case null => throw new IllegalArgumentException
+				case c: Byte => c.toFloat
+				case c: Short => c.toFloat
+				case c: Int => c.toFloat
+				case c: Long => c.toFloat
+				case c: Float => c
+				case c: Double => c.toFloat
+				case c: Date => c.getTime.toFloat
+				case c: String => c.toFloat
+			}
 
 		def isNaN (x: Float): Boolean = x.isNaN
 		def minValue: Float = Float.MinValue
@@ -140,6 +179,18 @@ object ExtendedNumeric {
 		def fromDouble (x: Double): Double = x
 		def fromNumber (x: Number): Double = x.doubleValue()
 		def fromString (s: String): Double = s.toDouble
+		def fromAny (a: Any): Double =
+			a match {
+				case null => throw new IllegalArgumentException
+				case c: Byte => c.toDouble
+				case c: Short => c.toDouble
+				case c: Int => c.toDouble
+				case c: Long => c.toDouble
+				case c: Float => c.toDouble
+				case c: Double => c
+				case c: Date => c.getTime.toDouble
+				case c: String => c.toDouble
+			}
 
 		def isNaN (x: Double): Boolean = x.isNaN
 		def minValue: Double = Double.MinValue

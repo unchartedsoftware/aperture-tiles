@@ -31,7 +31,6 @@ import java.util.List;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.color.ColorRamp;
-import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,7 @@ import com.oculusinfo.factory.properties.StringProperty;
  * @author mkielo
  */
 
-public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<List<Double>> {
+public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<List<Number>> {
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
@@ -61,12 +60,12 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
     // This is the only way to get a generified class; because of type erasure,
     // it is definitionally accurate.
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Class<List<Double>> getAcceptedBinClass () {
+    public Class<List<Number>> getAcceptedBinClass () {
         return (Class) List.class;
     }
 
     public TypeDescriptor getAcceptedTypeDescriptor () {
-        return new TypeDescriptor(List.class, new TypeDescriptor(Double.class));
+        return new TypeDescriptor(List.class, new TypeDescriptor(Number.class));
     }
 
 
@@ -93,7 +92,7 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
-    public BufferedImage render (TileData<List<Double>> data, LayerConfiguration config) {
+    public BufferedImage render (TileData<List<Number>> data, LayerConfiguration config) {
         BufferedImage bi;
         String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
         TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
@@ -102,20 +101,17 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
+			String rangeMode = config.getPropertyValue(LayerConfiguration.RANGE_MODE);
 
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
             @SuppressWarnings("unchecked")
-            ValueTransformer<Double> t = config.produce(ValueTransformer.class);
+            ValueTransformer<Number> t = config.produce(ValueTransformer.class);
             int[] rgbArray = new int[outputWidth*outputHeight];
 
             double scaledMax = (double)rangeMax/100;
             double scaledMin = (double)rangeMin/100;
             double oneOverScaledRange = 1.0 / (scaledMax - scaledMin);
-
-            @SuppressWarnings("unchecked")
-            TileTransformer<List<Double>> tileTransformer = config.produce(TileTransformer.class);
-            TileData<List<Double>> transformedContents = tileTransformer.transform( data );
 
             int xBins = data.getDefinition().getXBins();
             int yBins = data.getDefinition().getYBins();
@@ -132,17 +128,27 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
                     int minY = (int) Math.round(ty*yScale);
                     int maxY = (int) Math.round((ty+1)*yScale);
 
-                    List<Double> binContents = transformedContents.getBin(tx, ty);
+                    List<Number> binContents = data.getBin(tx, ty);
                     double binCount = 0;
-                    for(int i = 0; i < binContents.size(); i++){
-                        binCount = binCount + binContents.get(i);
+                    for(int i = 0; i < binContents.size(); i++) {
+                    	if ( binContents.get(i) != null ) {
+                    		binCount = binCount + binContents.get(i).doubleValue();
+                    	}
                     }
 
                     //log/linear
-                    double transformedValue = t.transform(binCount);
+                    double transformedValue = t.transform(binCount).doubleValue();
                     int rgb;
-                    if (binCount > 0) {
-                        rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+                    if ((rangeMode.equals("dropZero") && binCount != 0) || binCount > 0) {
+						if ( rangeMode.equals("cull") ) {
+							if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
+								rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+							} else {
+								rgb = COLOR_BLANK.getRGB();
+							}
+						}  else {
+							rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+						}
                     } else {
                         rgb = COLOR_BLANK.getRGB();
                     }
@@ -155,7 +161,6 @@ public class DoubleListHeatMapImageRenderer implements TileDataImageRenderer<Lis
                         }
                     }
                 }
-
             }
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);

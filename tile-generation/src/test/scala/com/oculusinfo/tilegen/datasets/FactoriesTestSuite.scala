@@ -49,14 +49,14 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		rawProps.setProperty("oculus.binning.source.partitions", "13")
 		rawProps.setProperty("oculus.binning.name", "sample name")
 		rawProps.setProperty("oculus.binning.parsing.a.index", "0")
-		rawProps.setProperty("oculus.binning.parsing.a.fieldType", "Int")
+		rawProps.setProperty("oculus.binning.parsing.a.fieldType", "int")
 		rawProps.setProperty("oculus.binning.parsing.e.index", "3")
-		rawProps.setProperty("oculus.binning.parsing.e.fieldType", "Double")
+		rawProps.setProperty("oculus.binning.parsing.e.fieldType", "double")
 		rawProps.setProperty("oculus.binning.parsing.d.index", "7")
-		rawProps.setProperty("oculus.binning.parsing.d.fieldType", "Date")
+		rawProps.setProperty("oculus.binning.parsing.d.fieldType", "date")
 		rawProps.setProperty("oculus.binning.parsing.d.dateFormat", "yyyy-MM-dd HH:mm:ss")
 		rawProps.setProperty("oculus.binning.parsing.c.index", "5")
-		rawProps.setProperty("oculus.binning.parsing.c.fieldType", "Long")
+		rawProps.setProperty("oculus.binning.parsing.c.fieldType", "long")
 		rawProps.setProperty("oculus.binning.parsing.separator", "\t")
 
 		val data = sc.parallelize(List("1\ta\tb\t1.1\tc\t1\td\t2001-01-01 01:01:01\te",
@@ -75,14 +75,14 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		assert("c" === srdd.schema.fields(2).name)
 		assert(LongType === srdd.schema.fields(2).dataType)
 		assert("d" === srdd.schema.fields(3).name)
-		assert(TimestampType === srdd.schema.fields(3).dataType)
+		assert(LongType === srdd.schema.fields(3).dataType)
 
 		val sLocal = srdd.map(row => {
 			                      val r = row
 			                      val res = (row(0).asInstanceOf[Int],
 			                                 row(1).asInstanceOf[Double],
 			                                 row(2).asInstanceOf[Long],
-			                                 row(3).asInstanceOf[Timestamp])
+			                                 row(3).asInstanceOf[Long])
 			                      res
 		                      }).collect
 	}

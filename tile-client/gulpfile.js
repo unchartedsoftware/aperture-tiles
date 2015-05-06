@@ -2,7 +2,7 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     browserify = require('browserify'),
     source = require('vinyl-source-stream');
-    
+
 function bundle( b, output ) {
     return b.bundle()
         .on( 'error', function( e ) {
@@ -26,7 +26,7 @@ function bundleMin( b, output ) {
 }
 
 function build( root, output ) {
-    var b = browserify( root, { 
+    var b = browserify( root, {
             debug: true,
             standalone: 'tiles'
         })
@@ -34,7 +34,7 @@ function build( root, output ) {
 }
 
 function buildMin( root, output ) {
-    var b = browserify( root, { 
+    var b = browserify( root, {
             standalone: 'tiles'
         })
     return bundleMin( b, output );
@@ -64,6 +64,7 @@ gulp.task('test', function() {
         mocha = require('gulp-mocha');
     return gulp.src( [ 'src/js/**/*.js' ] )
        .pipe( istanbul( { includeUntested: false } ) ) // Covering files
+       .pipe( istanbul.hookRequire() )
        .on( 'finish', function () {
             gulp.src( [ 'test/**/*.js' ] )
                 .pipe( mocha( { reporter: 'spec' } )
@@ -100,8 +101,8 @@ gulp.task('generate-docs', function () {
 })
 
 gulp.task('build', [ 'clean' ], function() {
-    gulp.start( 'build-js' );   
-    gulp.start( 'build-css' );   
+    gulp.start( 'build-js' );
+    gulp.start( 'build-css' );
     gulp.start( 'build-min-js' );
     gulp.start( 'build-min-css' );
     gulp.start( 'generate-docs' );

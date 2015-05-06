@@ -33,12 +33,14 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.SerializationTypeChecker;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
+import com.oculusinfo.binning.util.AvroJSONConverter;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.util.AvroJSONConverter;
+
+
 
 
 import org.json.JSONException;
@@ -51,6 +53,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
 
 
 @Singleton
@@ -153,7 +156,7 @@ public class TileServiceImpl implements TileService {
 
 	private <T> BufferedImage renderTileImage (LayerConfiguration config, String layer,
 	                                           TileIndex index, Iterable<TileIndex> tileSet,
-	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException {
+	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException, Exception {
         // prepare for rendering
 		config.prepareForRendering(layer, index, tileSet);
 
@@ -165,6 +168,10 @@ public class TileServiceImpl implements TileService {
 
 		int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
+
+        @SuppressWarnings("unchecked")
+        TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
+        data = tileTransformer.transform( data );
 
 		if (data != null) {
 			return renderer.render(data, config);
@@ -192,7 +199,8 @@ public class TileServiceImpl implements TileService {
             // produce transformer, return transformed de-serialized data
 			TileTransformer<?> transformer = config.produce(TileTransformer.class);
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
-            return transformer.transform(deserializedJSON);
+			
+			return transformer.transform(deserializedJSON);
 		} catch (IOException | JSONException | ConfigurationException e) {
 			LOGGER.warn("Exception getting tile for {}", index, e);
 		}  catch (IllegalArgumentException e) {

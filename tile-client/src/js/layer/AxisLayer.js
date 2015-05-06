@@ -45,8 +45,7 @@
      *     opacity  {float}    - The opacity of the layer. Default = 1.0
      *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
      *     zIndex   {integer}  - The z index of the layer. Default = 1000
-     *     renderer {Renderer} - The tile renderer object. (optional)
-     *     html {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     *     renderer {Renderer} - The tile renderer object.
      * }
      * </pre>
      */
@@ -63,10 +62,7 @@
             this.tileClass = spec.tileClass;
         }
         if ( spec.renderer ) {
-            this.renderer = spec.renderer;
-        }
-        if ( spec.html ) {
-            this.html = spec.html;
+            this.setRenderer( spec.renderer );
         }
     }
 
@@ -89,7 +85,6 @@
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: this.getURL,
-                html: this.html,
                 tileClass: this.tileClass,
                 renderer: this.renderer,
                 dimension: this.dimension
@@ -102,9 +97,7 @@
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
 
-        if ( this.renderer ) {
-            this.renderer.attach( this );
-        }
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
     /**
@@ -118,6 +111,18 @@
             this.olLayer.destroy();
             this.olLayer = null;
         }
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+    /**
+     * Sets the current renderer of the layer.
+     * @memberof AxisLayer
+     *
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+     AxisLayer.prototype.setRenderer = function( renderer ) {
+        this.renderer = renderer;
+        this.renderer.attach( this );
     };
 
     /**
@@ -152,7 +157,9 @@
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
         this.zIndex = zIndex;
-        $( this.olLayer.div ).css( 'z-index', zIndex );
+        if ( this.olLayer ) {
+            $( this.olLayer.div ).css( 'z-index', zIndex );
+        }
         PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
 

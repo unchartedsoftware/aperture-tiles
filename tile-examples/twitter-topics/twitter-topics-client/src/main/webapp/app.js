@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -144,10 +144,10 @@ var appStart = function() {
          *     countKey {String} - The attribute for the count in the data entry.
          *     themes   {Array}  - The array of RenderThemes to be attached to this component.
          * }
-         * hook {Function} - The hook function that is executed on every rendered entry. 
-         * 
+         * hook {Function} - The hook function that is executed on every rendered entry.
+         *
          *     Arguments:
-         *         elem    {HTMLElement} - The html element for the entry. 
+         *         elem    {HTMLElement} - The html element for the entry.
          *         entry   {Object}      - The data entry.
          *         entries {Array}       - All entries for the tile.
          *         data    {Object}      - The raw data object for the tile.
@@ -168,11 +168,11 @@ var appStart = function() {
         });
 
         /*
-         * Instantiate a client renderer layer, passing the "top-tweets" laye as its source. 
+         * Instantiate a client renderer layer, passing the "top-tweets" laye as its source.
          *
          * opacity {float}   - The opacity of the layer. Default = 1.0
          * enabled {boolean} - Whether the layer is visible or not. Default = true
-         * zIndex  {integer} - The z index of the layer. Default = 1000 
+         * zIndex  {integer} - The z index of the layer. Default = 1000
          *
          * Rendering options:
          *
@@ -255,4 +255,4 @@ var appStart = function() {
          */
         $( '.controls' ).append( tiles.LayerControls.create( [ clientLayer, serverLayer ] ) );
     });
-}
+};

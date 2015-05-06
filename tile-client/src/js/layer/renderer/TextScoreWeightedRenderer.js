@@ -30,7 +30,7 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 5,
-        WEIGHT_BARS_WIDTH = 125,
+        MAX_BAR_WIDTH = 110,
         injectCss;
 
     injectCss = function( spec ) {
@@ -41,8 +41,11 @@
                     selector: ".text-score-label",
                     parentSelector: ".text-score-entry"
                 });
+                spec.text.themes[i].injectTheme({
+                    selector: ".text-score-entry-count",
+                    parentSelector: ".text-score-entry"
+                });
             }
-
             for ( i=0; i<spec.weights.length; i++ ) {
                 for ( j=0; j<spec.weights[i].themes.length; j++ ) {
                     spec.weights[i].themes[j].injectTheme( {
@@ -51,7 +54,6 @@
                     });
                 }
             }
-
         }
     };
 
@@ -73,12 +75,13 @@
      *     weights: [{
      *         weightKey {Array|Function} - The attributes for the weights in the data entry
      *         themes    {Array}  - The array of RenderThemes to be attached to this component.
-     *     }]
+     *     }],
+     *     threshold: {number} - The count threshold at which to de-saturate the colors.
      * }
      * </pre>
      */
     function TextScoreWeightedRenderer( spec ) {
-        spec.rootKey = spec.rootKey || "tile.values[0].value";
+        spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -107,87 +110,106 @@
      */
     TextScoreWeightedRenderer.prototype.render = function( data ) {
 
-        var text = this.spec.text,
-            weights = this.spec.weights,
-            textKey = text.textKey,
-            countKey = text.countKey,
-            values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
-            meta = this.meta[ this.map.getZoom() ],
+        var ENTRY_HEIGHT = 30,
+            BAR_HEIGHT = 6,
+            BOTTOM_OFFSET = ENTRY_HEIGHT - BAR_HEIGHT - 2,
+            spec = this.spec,
+            weights = spec.weights,
+            threshold = spec.threshold || 5,
+            textKey = spec.text.textKey,
+            countKey = spec.text.countKey,
+            values = RendererUtil.getAttributeValue( data, spec.rootKey ),
+            levelMinMax = this.parent.getLevelMinMax(),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             minFontSize = 12,
-            maxFontSize = 22,
+            maxFontSize = 18,
             entries = [],
             html = '',
+            desaturate,
             percentLabel,
             middleWeightIndex,
             middleWeight,
             weightCounts,
-            weightTotal,
+            weightPercent,
             weight,
-            totalCount,
+            barWidth,
             yOffset,
             value,
-            textEntry,
+            text,
+            count,
             fontSize,
-            textCount,
             i,
             j;
 
-        // get maximum count for layer if it exists in meta data
-        totalCount = meta.minMax.max[ countKey ];
-        yOffset = RendererUtil.getYOffset( numEntries, 36, 122 );
+        yOffset = RendererUtil.getYOffset( numEntries, ENTRY_HEIGHT+BAR_HEIGHT, 122 );
 
         for (i=0; i<numEntries; i++) {
 
             value = values[i];
             entries.push( value );
-            textEntry = RendererUtil.getAttributeValue( value, textKey );
-            textCount = RendererUtil.getAttributeValue( value, countKey );
-            fontSize = RendererUtil.getFontSize( textCount, totalCount, {
-                minFontSize: minFontSize,
-                maxFontSize: maxFontSize
+            text = RendererUtil.getAttributeValue( value, textKey );
+            count = RendererUtil.getAttributeValue( value, countKey );
+            desaturate = ( count < threshold ) ? "de-saturate" : "";
+            fontSize = RendererUtil.getFontSize(
+                count,
+                RendererUtil.getAttributeValue( levelMinMax.minimum, countKey ),
+                RendererUtil.getAttributeValue( levelMinMax.maximum, countKey ),
+                {
+                    minFontSize: minFontSize,
+                    maxFontSize: maxFontSize,
+                    type: "log"
             });
+            weightPercent = (fontSize-minFontSize) / (maxFontSize-minFontSize);
 
             // parent
             html += '<div class="text-score-entry-parent" style="top:' + yOffset + 'px;">';
 
             // create entry
-            html += '<div class="text-score-entry">';
+            html += '<div class="text-score-entry" style="height:'+ENTRY_HEIGHT+'px;">';
+
+            html += '<div class="text-score-entry-count">'+ count +'</div>';
+
             // create label
-            percentLabel = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
-            percentLabel = Math.round( percentLabel / 10 ) * 10;
-            html += '<div class="text-score-label text-score-label-'+percentLabel+'" style="'
-                  + 'font-size:'+ fontSize +'px;'
-                  + 'line-height:'+ fontSize +'px;'
-                  + 'bottom:'+-(maxFontSize-fontSize)+'px;">'+textEntry+'</div>';
-            // create weights
-            weightCounts = [];
-            weightTotal = 0;
-            for ( j=0; j<weights.length; j++ ) {
-                weight = RendererUtil.getAttributeValue( value, weights[j].weightKey );
-                weightTotal += weight;
-                weightCounts.push( weight );
+            percentLabel = Math.round( (weightPercent*100) / 10 ) * 10;
+            html += '<div class="text-score-label text-score-label-'
+                + percentLabel+' '+desaturate+'" style="'
+                + 'font-size:'+ fontSize +'px;'
+                + 'line-height:'+ fontSize +'px;'
+                + 'bottom:'+-(BOTTOM_OFFSET-fontSize)+'px;">'+text+'</div>';
+
+            if ( count > 0 ) {
+                // create weights
+                weightCounts = [];
+                for ( j=0; j<weights.length; j++ ) {
+                    weight = RendererUtil.getAttributeValue( value, weights[j].weightKey );
+                    weightCounts.push( weight );
+                }
+                // get the index of the middle weight
+                middleWeightIndex = Math.floor( (weights.length-1) / 2 );
+                // sum the amount of weight to centre the bar on the middle weight
+                if ( weights.length % 2 === 0 ) {
+                    middleWeight = weightCounts[ middleWeightIndex ];
+                } else {
+                    middleWeight = weightCounts[ middleWeightIndex ] / 2;
+                }
+                for ( j=middleWeightIndex-1; j>=0; j-- ) {
+                    middleWeight += weightCounts[j];
+                }
+                barWidth = MAX_BAR_WIDTH;
+                // create bar container
+                html += '<div class="text-score-weight-bar" style="'
+                    + 'width:' + barWidth + 'px;'
+                    + 'height:' + BAR_HEIGHT + 'px;'
+                    + 'left:' + (-barWidth*(middleWeight/count)) + 'px;">';
+                for ( j=0; j<weights.length; j++ ) {
+                    // create bar
+                    html += '<div class="text-score-weight text-score-weight-'
+                        + j +' '+desaturate+'" style="'
+                        + 'width:'+((weightCounts[j]/count)*100)+'%;"></div>';
+                }
+                html += '</div>';
             }
-            // get the index of the middle weight
-            middleWeightIndex = Math.floor( (weights.length-1) / 2 );
-            // sum the amount of weight to centre the bar on the middle weight
-            if ( weights.length % 2 === 0 ) {
-                middleWeight = weightCounts[ middleWeightIndex ];
-            } else {
-                middleWeight = weightCounts[ middleWeightIndex ] / 2;
-            }
-            for ( j=middleWeightIndex-1; j>=0; j-- ) {
-                middleWeight += weightCounts[j];
-            }
-            // create bar container
-            html += '<div class="text-score-weight-bar" style="'
-                  + 'left:'+ (-WEIGHT_BARS_WIDTH*(middleWeight/weightTotal)) + 'px;">';
-            for ( j=0; j<weights.length; j++ ) {
-                // create bar
-                html += '<div class="text-score-weight text-score-weight-'+ j +'" style="'
-                      + 'width:'+((weightCounts[j]/weightTotal)*100)+'%;"></div>';
-            }
-            html += '</div>';
+
             html += '</div>';
             html += '</div>';
             html += '<div class="clear"></div>';

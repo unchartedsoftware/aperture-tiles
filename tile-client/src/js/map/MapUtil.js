@@ -45,12 +45,12 @@
         var olMap = map.olMap;
         return {
             min : {
-                x: Math.round( olMap.minPx.x ),
-                y: Math.round( olMap.maxPx.y )
+                x: olMap.minPx.x,
+                y: olMap.maxPx.y
             },
             max : {
-                x: Math.round( olMap.maxPx.x ),
-                y: Math.round( olMap.minPx.y )
+                x: olMap.maxPx.x,
+                y: olMap.minPx.y
             }
         };
     };
@@ -97,8 +97,8 @@
 		 * NOTE:    data and map [0,0] are both BOTTOM-LEFT
 		 */
 		getMapPixelFromCoord: function( map, x, y ) {
-			var tile = map.pyramid.rootToTile( x, y, map.getZoom(), TILESIZE ),
-			    bin = map.pyramid.rootToBin( x, y, tile);
+			var tile = map.pyramid.rootToFractionalTile( x, y, map.getZoom(), TILESIZE ),
+			    bin = map.pyramid.rootToFractionalBin( x, y, tile);
 			return {
 				x: tile.xIndex * TILESIZE + bin.x,
 				y: tile.yIndex * TILESIZE + TILESIZE - 1 - bin.y

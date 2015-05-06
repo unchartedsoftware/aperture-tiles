@@ -144,6 +144,7 @@ object CSVGraphBinner {
 	private var _lineMaxBins = 1024		// [bins] max line segment length for a given level.
 	private var _bDrawLineEnds = false	// [Boolean] switch to draw just the ends of very long line segments
 	private var _bLinesAsArcs = false	// [Boolean] switch to draw line segments as straight lines (default) or as clock-wise arcs.
+	private var _bDrawDirectedArcs = false	// [Boolean] switch to draw directed arcs (direction is inferred by clock-wise curve of arc)
 
 	def processTask[PT: ClassTag,
 	                   DT: ClassTag,
@@ -213,7 +214,8 @@ object CSVGraphBinner {
 						                                      task.getTileType,
 						                                      calcLinePixels,
 						                                      bUsePointBinner,
-						                                      _bLinesAsArcs)
+						                                      _bLinesAsArcs,
+										 					  _bDrawDirectedArcs)
 						tileIO.writeTileSet(task.getTilePyramid,
 						                    task.getName,
 						                    tiles,
@@ -306,7 +308,6 @@ object CSVGraphBinner {
 			readFile(args(argIdx), defProps)
 			argIdx = argIdx + 1
 		}
-		defProps.setProperty("oculus.binning.index.type", "graph")
 
 		val defaultProperties = new PropertiesWrapper(defProps)
 		val connector = defaultProperties.getSparkConnector()
@@ -324,6 +325,13 @@ object CSVGraphBinner {
 			_graphDataType = Try(props.getProperty("oculus.binning.graph.data",
 			                                       "The type of graph data to tile (nodes or edges). "+
 				                                       "Default is nodes.")).getOrElse("nodes")
+			// Set binning index type accordingly
+		    if (_graphDataType == "edges") {
+		    	props.setProperty("oculus.binning.index.type", "segment")
+		    }
+		    else { //_graphDataType="nodes"
+		    	props.setProperty("oculus.binning.index.type", "cartesian")
+		    }
 
 			// init parameters for binning graph edges (note, not used for
 			// binning graph's nodes)
@@ -345,6 +353,9 @@ object CSVGraphBinner {
 			
 			// Draw line segments as straight lines (default) or as clock-wise arcs.
 			_bLinesAsArcs = Try(props.getProperty("oculus.binning.line.style.arcs").toBoolean).getOrElse(false)
+
+			// Draw directed arcs instead of undirected (direction is inferred by clockwise curve of arc)
+			_bDrawDirectedArcs = Try(props.getProperty("oculus.binning.line.directed.arcs").toBoolean).getOrElse(false)
 
 			// check if hierarchical mode is enabled
 			var valTemp = props.getProperty("oculus.binning.hierarchical.clusters","false");

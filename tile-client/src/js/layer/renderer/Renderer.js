@@ -62,6 +62,9 @@
     function Renderer( spec ) {
         this.spec = spec || {};
         this.uuid = Util.generateUuid();
+        if ( spec.aggregator ) {
+            this.aggregator = spec.aggregator;
+        }
     }
 
     /**
@@ -205,9 +208,10 @@
                          "to a different layer, please use another instance." );
             return;
         }
-        this.meta = layer.source.meta ? layer.source.meta.meta : null;
-        this.map = layer.map;
         this.parent = layer;
+        if ( this.aggregator ) {
+            this.aggregator.attach( layer );
+        }
     };
 
     /**
@@ -227,7 +231,6 @@
             select = this.spec.select,
             uuid = this.uuid,
             selectKey;
-
         if ( !select || !select.selectKey ) {
             return;
         }

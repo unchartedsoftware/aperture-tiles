@@ -28,24 +28,29 @@ package com.oculusinfo.twitter.tilegen
 
 
 import java.util.{List => JavaList}
-
 import scala.collection.JavaConverters._
-
 import org.apache.spark.SparkContext
-
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.twitter.binning.TwitterDemoTopicRecord
-
 import com.oculusinfo.tilegen.tiling.analytics.TileAnalytic
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
+import org.json.JSONArray
+import org.json.JSONObject
 
 
 
 class TwitterMaxRecordAnalytic extends TileAnalytic[List[TwitterDemoTopicRecord]] {
 	def name: String = "maximum"
 
-	override def valueToString (value: List[TwitterDemoTopicRecord]): String =
-		value.mkString(":")
+	override def storableValue (value: List[TwitterDemoTopicRecord], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val subRes = new JSONArray()
+		value.foreach(v => if (null != v) subRes.put("\""+v.toString()+"\""))
+		if (subRes.length() > 0) {
+			val result = new JSONObject()
+			result.put(name, subRes)
+			Some(result)
+		} else None
+	}
 
 	def aggregate (a: List[TwitterDemoTopicRecord],
 	               b: List[TwitterDemoTopicRecord]): List[TwitterDemoTopicRecord] =
@@ -58,8 +63,15 @@ class TwitterMaxRecordAnalytic extends TileAnalytic[List[TwitterDemoTopicRecord]
 class TwitterMinRecordAnalytic extends TileAnalytic[List[TwitterDemoTopicRecord]] {
 	def name: String = "minimum"
 
-	override def valueToString (value: List[TwitterDemoTopicRecord]): String =
-		value.mkString(":")
+	override def storableValue (value: List[TwitterDemoTopicRecord], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val subRes = new JSONArray()
+		value.foreach(v => if (null != v) subRes.put("\""+v.toString()+"\""))
+		if (subRes.length() > 0) {
+			val result = new JSONObject()
+			result.put(name, subRes)
+			Some(result)
+		} else None
+	}
 
 	def aggregate (a: List[TwitterDemoTopicRecord],
 	               b: List[TwitterDemoTopicRecord]): List[TwitterDemoTopicRecord] =

@@ -35,6 +35,8 @@ import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
 
+import org.json.JSONArray
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
@@ -107,7 +109,7 @@ object ValueExtractorFactory {
 	 */
 	val defaultFactory = "count"
 	/**
-	 * A set of providers for value extractor factories, to be used when constructing tile tasks 
+	 * A set of providers for value extractor factories, to be used when constructing tile tasks
 	 * to construct the relevant value extractor for the current task.
 	 */
 	val subFactoryProviders = MutableMap[Any, FactoryProvider[ValueExtractor[_, _]]]()
@@ -121,7 +123,7 @@ object ValueExtractorFactory {
 
 	/**
 	 * Add a ValueExtractor sub-factory provider to the list of all possible such providers.
-	 * 
+	 *
 	 * This will replace a previous provider of the same key
 	 */
 	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[ValueExtractor[_, _]]): Unit =
@@ -200,7 +202,7 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 	/**
 	 * All this method does is check the return type of a serializer
 	 * programatically, As such, it supercedes the warnings hidden here.
-	 * 
+	 *
 	 * It will only work, of course, if the serializer is set up correctly
 	 * (i.e., without lying about its type_, and if the pass-ed class and
 	 * expandedClass actually match; mis-use will, of course, cause errors.
@@ -372,10 +374,10 @@ class StatsValueExtractor[T: ClassTag] (field: String, analytic: NumericStatsBin
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[Pair[JavaDouble, JavaDouble]], _]] = {
 		val convertMean:  Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getFirst.doubleValue())
 		val convertSigma: Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getSecond.doubleValue())
-		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T]("minMean")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T]("maxMean")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T]("minStdDev")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T]("maxStdDev")))
+		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T](Some("minMean"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T](Some("maxMean"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T](Some("minStdDev"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T](Some("maxStdDev"))))
 	}
 	override def serializer: TileSerializer[Pair[JavaDouble, JavaDouble]] = _serializer
 }
@@ -429,9 +431,14 @@ class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnal
 		new ArrayBinningAnalytic[T, JT](elementAnalytic)
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
 		val convertFcn: JavaList[JT] => Seq[T] = bt => bt.asScala.map(conversion.backwards(_))
+		val fieldNames = {
+			val names = new JSONArray()
+			fields.foreach(names.put(_))
+			names
+		}
 		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
 		    new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMaxTileAnalytic())),
-		    new CustomGlobalMetadata(Map[String, Object]("variables" -> fields.toSeq.asJava)))
+		    new CustomGlobalMetadata(Map[String, String]("variables" -> fieldNames.toString)))
 	}
 	override def serializer: TileSerializer[JavaList[JT]] = _serializer
 }
