@@ -39,6 +39,8 @@
      */
     function aggregateBucket( aggregator, buckets ) {
         var aggregation,
+            score,
+            total,
             i;
         // set base aggregator
         aggregation = {
@@ -49,7 +51,9 @@
         // for each bucket of data
         for ( i=0; i<buckets.length; i++ ) {
             // add to total count
-            aggregation.count += buckets[i].score.total;
+            score = buckets[i].score;
+            total = ( typeof score === "number" ) ? score : score.total;
+            aggregation.count += total;
         }
         return aggregation;
     }

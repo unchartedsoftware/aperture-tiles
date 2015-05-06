@@ -59,6 +59,7 @@
             function( bucket, index ) {
                 var topicIndex,
                     topic,
+                    score,
                     total,
                     i;
                 if ( bucket ) {
@@ -74,7 +75,8 @@
                                 frequencies: Util.fillArray( bucketCount )
                             });
                         }
-                        total =  bucket[i].score.total;
+                        score = bucket[i].score;
+                        total = ( typeof score === "number" ) ? score : score.total;
                         topicIndex = indexByTopic[ topic ];
                         topics[ topicIndex ].count += total;
                         topics[ topicIndex ].frequencies[ index ] = total;

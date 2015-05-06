@@ -817,6 +817,36 @@
         },
 
         /**
+         * Returns the x and y coordinates at the centre of the map.
+         *
+         * @return {OpenLayers.LonLat}
+         */
+        getCenterProjected: function() {
+            return MapUtil.getCoordFromViewportPixel(
+                this,
+                this.getViewportWidth() / 2,
+                this.getViewportHeight() / 2 );
+        },
+
+        /**
+         * Get the top-left and bottom-right extents of the visible map.
+         *
+         * @return {Object}
+         */
+        getMapExtents: function() {
+            return {
+                topLeft: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    0,
+                    0 ),
+                bottomRight: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    this.getViewportWidth(),
+                    this.getViewportHeight() )
+            };
+        },
+
+        /**
          * Set a map event callback. Supports all of the following OpenLayers.Map events:
          * <pre>
          *     movestart - triggered after the start of a drag, pan, or zoom.  The event object may include a zoomChanged property that tells whether the zoom has changed.

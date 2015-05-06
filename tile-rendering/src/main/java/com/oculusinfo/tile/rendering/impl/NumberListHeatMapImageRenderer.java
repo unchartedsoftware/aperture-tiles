@@ -141,7 +141,7 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 	                    //log/linear
 	                    double transformedValue = t.transform(binCount).doubleValue();
 	                    int rgb;
-	                    if (binCount > 0) {
+	                    if ((rangeMode.equals("dropZero") && binCount != 0) || binCount > 0) {
 							if ( rangeMode.equals("cull") ) {
 								if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
 									rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
@@ -185,7 +185,7 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 	                    //log/linear
 	                    double transformedValue = t.transform(binCount).doubleValue();
 	                    int rgb;
-	                    if (binCount > 0) {
+	                    if ((rangeMode.equals("dropZero") && binCount != 0) || binCount > 0) {
 							if ( rangeMode.equals("cull") ) {
 								if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
 									rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );

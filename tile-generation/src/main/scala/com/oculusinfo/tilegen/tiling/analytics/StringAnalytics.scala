@@ -118,34 +118,39 @@ class StringScoreBinningAnalytic[T, JT]
  * @param order See StringScoreAnalytic
  * @tparam T See StringScoreAnalytic
  */
+import TileAnalytic.Locations
 class StringScoreTileAnalytic[T] (analyticName: Option[String],
                                   baseAnalytic: TileAnalytic[T],
                                   stringName: String = "string",
                                   scoreName: String = "score",
+                                  writeLocations: Set[TileAnalytic.Locations.Value] = TileAnalytic.Locations.values,
                                   aggregationLimit: Option[Int] = None,
                                   order: Option[((String, T), (String, T)) => Boolean] = None)
 		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
 		with TileAnalytic[Map[String, T]]
 {
+	def foo = TileAnalytic.Locations.values
 	def name = analyticName.getOrElse(baseAnalytic.name)
 	override def storableValue (value: Map[String, T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
-		val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
-		val subRes = new JSONArray()
-		values.foreach { case (key, value) =>
-			baseAnalytic.storableValue(value, location).foreach{bsv =>
-				val entry = new JSONObject()
-				if (bsv.length() > 1) entry.put(scoreName, bsv)
-				else if (bsv.length == 1) entry.put(scoreName, bsv.get(JSONObject.getNames(bsv)(0)))
-				if (entry.length() > 0) {
-					entry.put(stringName, key)
-					subRes.put(entry)
+		if (writeLocations.contains(location)) {
+			val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
+			val subRes = new JSONArray()
+			values.foreach { case (key, value) =>
+				baseAnalytic.storableValue(value, location).foreach{bsv =>
+					val entry = new JSONObject()
+					if (bsv.length() > 1) entry.put(scoreName, bsv)
+					else if (bsv.length == 1) entry.put(scoreName, bsv.get(JSONObject.getNames(bsv)(0)))
+					if (entry.length() > 0) {
+						entry.put(stringName, key)
+						subRes.put(entry)
+					}
 				}
 			}
-		}
-		if (subRes.length() > 0) {
-			val result = new JSONObject()
-			result.put(name, subRes)
-			Some(result)
+			if (subRes.length() > 0) {
+				val result = new JSONObject()
+				result.put(name, subRes)
+				Some(result)
+			} else None
 		} else None
 	}
 }
