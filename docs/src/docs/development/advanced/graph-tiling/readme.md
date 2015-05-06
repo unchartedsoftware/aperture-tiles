@@ -1,16 +1,16 @@
 ---
 section: Docs
 subsection: Development
-chapter: How-To
-topic: Run Graph Tiling Jobs
-permalink: docs/development/how-to/graph-tiling/
+chapter: Advanced
+topic: Graph Tiling Jobs
+permalink: docs/development/advanced/graph-tiling/
 layout: submenu
 ---
 
-Run Graph Tiling Jobs
-=====================
+Graph Tiling Jobs
+=================
 
-In addition to [heatmap layers](../standard-tiling/) of individual data points, Aperture Tiles supports visualizations of graph datasets that contain edge and node information. Graph visualizations illustrate the relationships between nodes and communities across multiple zoom levels. The process of generating the [tile pyramid](../tile-pyramid/) that represents this type of layer is a graph tiling job.
+In addition to [heatmap layers](../../how-to/standard-tiling/) of individual data points, Aperture Tiles supports visualizations of graph datasets that contain edge and node information. Graph visualizations illustrate the relationships between nodes and communities across multiple zoom levels. The process of generating the [tile pyramid](../../getting-started/tile-pyramid/) that represents this type of layer is a graph tiling job.
 
 Graph tiling jobs comprise several configuration and generation phases as described in the [Graph Tiling Process](#process) section.
 
@@ -202,7 +202,7 @@ IDs and labels for parent communities are automatically chosen as the underlying
 
 GraphClusterApp's implementation of the Louvain clustering algorithm uses Sotera’s [distributed Louvain modularity algorithm](https://github.com/Sotera/distributed-louvain-modularity) in conjunction with Spark’s [GraphX graph processing library](https://github.com/Sotera/spark-distributed-louvain-modularity).
 
-<h6 class="procedure">To execute the GraphCluserApp and hierarchically cluster your data</h6>
+<h6 class="procedure">To execute the GraphClusterApp and hierarchically cluster your data</h6>
 
 - Use the following command line syntax:
 
@@ -383,7 +383,7 @@ Using the brain connectomics dataset as an example:
 
 ## <a name="graph-layout"></a> Graph Layout ##
 
-Node positions can be computed using a hierarchical force-directed algorithm with the following tools in [com.oculusinfo.tilegen.graph.util](com.oculusinfo.tilegen.graph.util):
+Node positions can be computed using a hierarchical force-directed algorithm with the following tools in [com.oculusinfo.tilegen.graph.util](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util):
 
 - The [HierarchicFDLayout](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util/HierarchicFDLayout.scala) class.
 - The [ClusteredGraphLayoutApp](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util/ClusteredGraphLayoutApp.scala) Scala application.

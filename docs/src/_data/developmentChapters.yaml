@@ -62,36 +62,6 @@
         - label: Tiling Properties Files
           anchor: tiling-properties
 
-    - label: Run Custom Tiling Jobs
-      path: custom-tiling
-      bookmarks:
-        - label: Custom Tiling Jobs
-          anchor: custom-tiling
-
-        - label: Define Data Structure
-          anchor: define-data-structure
-
-        - label: Bin Data
-          anchor: binning-your-data
-
-    - label: Run Graph Tiling Jobs
-      path: graph-tiling
-      bookmarks:
-        - label: Convert GraphML to CSV
-          anchor: convert-graphml
-
-        - label: Hierarchical Clustering
-          anchor: clustering
-
-        - label: Graph Layout
-          anchor: graph-layout
-
-        - label: Tile Generation
-          anchor: tile-generation
-
-        - label: Graph Analytics
-          anchor: graph-analytics
-
     - label: Test Tiling Job Output
       path: test-output
       bookmarks:
@@ -116,6 +86,52 @@
 
         - label: Deployment
           anchor: deployment
+
+- label: Advanced
+  path: advanced
+  listType: ul
+  topics:
+    - label: Standard Tiling Jobs
+      path: standard-tiling
+      bookmarks:
+        - label: Source Data Format
+          anchor: source-data-format
+
+        - label: Field Scaling
+          anchor: field-scaling
+
+        - label: Consolidation Partitions
+          anchor: consolidation-partitions
+
+    - label: Graph Tiling Jobs
+      path: graph-tiling
+      bookmarks:
+        - label: Convert GraphML to CSV
+          anchor: convert-graphml
+
+        - label: Hierarchical Clustering
+          anchor: clustering
+
+        - label: Graph Layout
+          anchor: graph-layout
+
+        - label: Tile Generation
+          anchor: tile-generation
+
+        - label: Graph Analytics
+          anchor: graph-analytics
+
+    - label: Custom Tiling Jobs
+      path: custom-tiling
+      bookmarks:
+        - label: Custom Tiling Jobs
+          anchor: custom-tiling
+
+        - label: Define Data Structure
+          anchor: define-data-structure
+
+        - label: Bin Data
+          anchor: binning-your-data
 
 - label: API
   path: api
