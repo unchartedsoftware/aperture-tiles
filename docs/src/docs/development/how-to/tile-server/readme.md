@@ -10,26 +10,9 @@ layout: submenu
 Configure the Tile Server
 =========================
 
-Once you have generated a tile set from your source data, you should configure a Tile Server, which can render your tiles as image files and passes them on to the Client.
+Once you have copied an existing Aperture Tiles application as a template, you should customize the Tile Server, which passes your tile data to the Client.
 
-## <a name="template-setup"></a> Template Setup ##
-
-The fastest way to create a Tile Server is to modify an existing example application, which are available in the source code ([tile-examples/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples)).
-
-To begin configuring your Tile Server and Tile Client:
-
-1. Choose the one of the following demos to use as a template:
-	- Julia demo ([tile-examples/julia-demo/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/julia-demo)), which displays a server-rendered heatmap on a blank cross-plot baselayer.
-	- Twitter Topics demo ([tile-examples/twitter-topics/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics)), which displays a server-rendered heatmap and client-rendered word clouds on a geographic Google Maps baselayer.
-2. Copy the appropriate demo and give it a unique name (e.g., *new-project*).
-3. Update the Gradle build file (*new-project/build.gradle*) to add or change the following fields:
-	- `description`: Enter an appropriate project description. 
-	- `group`: Enter an appropriate group ID.
-	- `version`: Enter an appropriate project version number.
-
-## <a name="server-config"></a> Tile Server Configuration ##
-
-The Tiler Server in your new template relies on the following configuration files:
+The Tile Server in your new template relies on the following configuration files:
 
 - [Web XML](#webxml), which defines which modules Guice will use.
 - [Tile Properties](#tileproperties), which specifies constants used by Guice during initialization, including the location of your Spark installation, and the location of some server configuration files.

@@ -66,6 +66,10 @@
       path: test-output
       bookmarks:
 
+    - label: Set Up the Application
+      path: app-setup
+      bookmarks:
+
     - label: Configure the Tile Server
       path: tile-server
       bookmarks:
