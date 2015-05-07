@@ -137,7 +137,7 @@ subprojects {
 		}
 		// Needed for our org.restlet dependencies
 		maven {
-			url "https://repository.sonatype.org/content/groups/forge"
+			url = "https://maven.restlet.com/"
 		}
 	}
 
