@@ -405,19 +405,19 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			val bounds = metaData.getBounds
 			assertResult(0.0)(bounds.getMinX)
 			assertResult(0.0)(bounds.getMinY)
-			assertResult(7.0)(bounds.getMaxX)
-			assertResult(6.0)(bounds.getMaxY)
+			assertResult(7.0)(round(bounds.getMaxX, 1))
+			assertResult(6.0)(round(bounds.getMaxY, 1))
 
-			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":8, "maximum":116}"""),
 			                                   new JSONObject(metaData.getCustomMetaData("0").toString))
-			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":84}"""),
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":8, "maximum":116}"""),
 			                                   new JSONObject(metaData.getCustomMetaData("global").toString))
 
 			val customMeta = metaData.getAllCustomMetaData
-			assert(0 === customMeta.get("0.minimum"))
-			assert(84 === customMeta.get("0.maximum"))
-			assert(0 === customMeta.get("global.minimum"))
-			assert(84 === customMeta.get("global.maximum"))
+			assert(8 === customMeta.get("0.minimum"))
+			assert(116 === customMeta.get("0.maximum"))
+			assert(8 === customMeta.get("global.minimum"))
+			assert(116 === customMeta.get("global.maximum"))
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {
@@ -429,5 +429,9 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			// If you want to look at the tile set (not remove it) comment out this line.
 			removeRecursively(new File("test.x.y.data"))
 		}
+	}
+
+	def round(d: Any, places: Int) = {
+		BigDecimal(d.asInstanceOf[Double]).setScale(places, BigDecimal.RoundingMode.HALF_UP).toDouble
 	}
 }
