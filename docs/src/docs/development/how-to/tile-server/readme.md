@@ -71,7 +71,7 @@ Parameters in the **public** node section of the **layers.json** file are access
 
 The pyramid parameters describe the extent of the data in the layer. The values that you provide in this section must match the values in your data source and in your map configuration.
 
-For cross plot maps, the `type` should always be set to *AreaOfInterest*. Also include the minimum and maximum values on the X and Y axes in your cross plot. 
+For cross-plot maps, the `type` should always be set to *AreaOfInterest*. Also include the minimum and maximum values on the X and Y axes in your cross-plot. 
 
 ```json
 pyramid: {

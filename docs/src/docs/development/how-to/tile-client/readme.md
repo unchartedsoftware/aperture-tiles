@@ -98,7 +98,7 @@ The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS)
 
 ### <a name="cross-axisconfig"></a> Axes ###
 
-The AxisConfig parameters determine how the X and Y axes are drawn in your cross plot map.
+The AxisConfig parameters determine how the X and Y axes are drawn in your cross-plot map.
 
 <div class="props">
 	<dl class="detailList">

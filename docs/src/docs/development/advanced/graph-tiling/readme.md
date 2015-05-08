@@ -644,7 +644,7 @@ oculus.binning.parsing.y.index=3
 oculus.binning.index.field.0=x
 oculus.binning.index.field.1=y
 
-# Define the projection (x/y crossplot) over which to draw the nodes and 
+# Define the projection (x/y cross-plot) over which to draw the nodes and 
 # manually specify the min/max bounds
 oculus.binning.projection.type=areaofinterest
 oculus.binning.projection.autobounds=false
@@ -702,7 +702,7 @@ oculus.binning.yField2=y2
 # Set the edge weights as the binning value
 oculus.binning.value.field=v
 
-# Define the projection (x/y crossplot) over which to draw the nodes and 
+# Define the projection (x/y cross-plot) over which to draw the nodes and 
 # manually specify the min/max bounds
 oculus.binning.projection.type=areaofinterest
 oculus.binning.projection.autobounds=false

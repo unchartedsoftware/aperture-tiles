@@ -8,7 +8,7 @@ layout: submenu
 
 # Navigation #
 
-The Aperture Tiles user interface works much like a modern web-based map system. Your source data is projected on a set of tiles in an x/y cross plot or a geographic map. In either case, your data is aggregated at several zoom levels so you can view the data at a high level or drill down to see more detailed distribution.
+The Aperture Tiles user interface works much like a modern web-based map system. Your source data is projected on a set of tiles in an x/y cross-plot or a geographic map. In either case, your data is aggregated at several zoom levels so you can view the data at a high level or drill down to see more detailed distribution.
 
 ## <a name="zoom"></a> Zoom ##
 
