@@ -1,15 +1,21 @@
 <div class="toc right">
-	<div class="toc-header">Contents</div>
-	<ul class="toc-body">
-		{% for topic in site.data.userGuideTopics %}
-			<li>
-				<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/#{{topic.anchor}}">{{topic.label}}</a>
-				<ul>
-					{% for bookmark in topic.bookmarks %}
-						<li><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
-						{% endfor %}
-				</ul>
-			</li>
-		{% endfor %}
-	</ul>
+	{% for chapter in site.data.userGuideTopics %}
+		<div class="toc-header">{{ chapter.label }}</div>
+		<{{ chapter.listType }} class="toc-body">
+			{% for topic in chapter.topics %}
+				<li>
+					{% if topic.label != page.topic %}
+						<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}">{{topic.label}}</a>
+					{% else %}
+						{{topic.label}}
+						<ul>
+							{% for bookmark in topic.bookmarks %}
+								<li><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+				</li>
+			{% endfor %}
+		</{{ chapter.listType }}>
+	{% endfor %}
 </div>
