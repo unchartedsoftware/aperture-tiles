@@ -25,7 +25,7 @@
 package com.oculusinfo.tilegen.datasets
 
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 import java.util
 import java.util.Properties
 import com.oculusinfo.binning.util.JsonUtilities
@@ -75,14 +75,14 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		assert("c" === srdd.schema.fields(2).name)
 		assert(LongType === srdd.schema.fields(2).dataType)
 		assert("d" === srdd.schema.fields(3).name)
-		assert(LongType === srdd.schema.fields(3).dataType)
+		assert(TimestampType === srdd.schema.fields(3).dataType)
 
 		val sLocal = srdd.map(row => {
 			                      val r = row
 			                      val res = (row(0).asInstanceOf[Int],
 			                                 row(1).asInstanceOf[Double],
 			                                 row(2).asInstanceOf[Long],
-			                                 row(3).asInstanceOf[Long])
+			                                 row(3).asInstanceOf[java.util.Date])
 			                      res
 		                      }).collect
 	}

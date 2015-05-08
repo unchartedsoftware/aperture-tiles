@@ -174,7 +174,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 						                        "The date format of the "+fieldName+" field",
 						                        Some("yyMMddHHmm")))
 					format.setTimeZone(TimeZone.getTimeZone("GMT"))
-					(LongType, s => format.parse(s.trim).getTime())
+					(TimestampType, s => new java.sql.Timestamp(format.parse(s.trim).getTime()) )
 				}
 				case "propertymap" => {
 					val property = configuration.getString(
