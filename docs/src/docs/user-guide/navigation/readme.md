@@ -51,7 +51,7 @@ The map is redrawn to show the selected city with a zoom factor of five.
 		<li><a href="../../../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.
 		<li><a href="../../docs/development/getting-started/quick-start/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
 		<ul>
-			<li><a href="../../docs/development/getting-started/quick-start/">Quick Start</a>: Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+			<li><a href="../../docs/development/getting-started/quick-start/">Quick Start</a>: Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
 		</ul>
 		<li><a href="../../../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.
 		<li><a href="../../../download/">Download</a>: For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.

@@ -11,8 +11,8 @@ layout: submenu
 
 This guide, which provides a short tutorial on the process of creating and configuring an Aperture Tiles project, covers the following topics:
 
-1. Generating a sample data set to analyze
-2. Tiling and storing the sample data set
+1. Generating a sample dataset to analyze
+2. Tiling and storing the sample dataset
 3. Configuring a client to serve and display the tiles in a web browser
 
 At the end of this guide, you will have an example Aperture Tiles application that displays the points in an Julia set fractal dataset on an X/Y plot with five zoom levels.
@@ -41,7 +41,7 @@ Once you have installed all the prerequisites, you can generate the [Julia set d
 
 2. Check your output location for 5 part files (**part-00000** to **part-00004**) of roughly equal size (2M records and ~88 MB). These files contain the tab-delimited points in the Julia set.
 
-**NOTE**: For typical Aperture Tiles projects, these steps are unnecessary. You will instead begin with your own custom data set.
+**NOTE**: For typical Aperture Tiles projects, these steps are unnecessary. You will instead begin with your own custom dataset.
 
 ## <a name="tile-generation"></a> Tile Generation ##
 

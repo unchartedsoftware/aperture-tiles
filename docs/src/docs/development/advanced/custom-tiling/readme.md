@@ -306,7 +306,7 @@ val tiles = binner.processDataByLevel(data,
 			<tr>
 				<td class="property">consolidationPartitions</td>
 				<td class="description">No</td>
-				<td class="description">Number of reducers to use when aggregating data records into bins and tiles. Alter if you encounter problems with the tiling job due to lack of resources. Defaults to the same number of partitions as the original data set.</dd>
+				<td class="description">Number of reducers to use when aggregating data records into bins and tiles. Alter if you encounter problems with the tiling job due to lack of resources. Defaults to the same number of partitions as the original dataset.</dd>
 			</tr>
 			<tr>
 				<td class="property">tileType</td>
@@ -365,7 +365,7 @@ It accepts the following properties:
 			<tr>
 				<td class="property">tiles</td>
 				<td class="description">Yes</td>
-				<td class="description">Binned data set produced by binner.processDataByLevel.</td>
+				<td class="description">Binned dataset produced by binner.processDataByLevel.</td>
 			</tr>
 			<tr>
 				<td class="property">serializer</td>

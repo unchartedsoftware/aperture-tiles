@@ -21,7 +21,7 @@ For information on full installations of Aperture Tiles (along with Aperture JS)
 
 ## Packaged Distribution ##
 
-The following pre-built distribution can be used to quickly generate and display tiles without having to build the software. See the [Quick Start](../docs/development/getting-started/quick-start/) documentation to help you quickly learn how to process a data set, transform it and create an Aperture Tiles project that allows you to visualize it in a web browser.
+The following pre-built distribution can be used to quickly generate and display tiles without having to build the software. See the [Quick Start](../docs/development/getting-started/quick-start/) documentation to help you quickly learn how to process a dataset, transform it and create an Aperture Tiles project that allows you to visualize it in a web browser.
 
 - <a name="tile-generator"></a>**Tile Generator**: Enables you to generate a set of tiles that can be viewed using the Tile Client Application available below. This version was built for Apache Spark 1.1.1 and CDH 4.6.
 	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-generator-0.5-cdh4.6.0.zip" class="download-link">Tile Generator</a><br/><br/>
@@ -35,7 +35,7 @@ The following pre-built distribution can be used to quickly generate and display
 		<li><a href="../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.
 		<li><a href="../docs/development/getting-started/quick-start/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
 		<ul>
-			<li><a href="../docs/development/getting-started/quick-start/">Quick Start</a>: Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+			<li><a href="../docs/development/getting-started/quick-start/">Quick Start</a>: Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
 		</ul>
 		<li><a href="../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.
 	</ul>
