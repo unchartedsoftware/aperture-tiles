@@ -28,7 +28,8 @@ package com.oculusinfo.tile.rendering.transformations.tile;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.impl.FilterTileBucketView;
+import com.oculusinfo.binning.impl.AverageTileBucketView;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,17 +45,26 @@ import org.json.JSONObject;
  *
  */
 
-public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger( FilterByBucketTileTransformer.class );
+public class AverageFilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
+	private static final Logger LOGGER = LoggerFactory.getLogger( AverageFilterByBucketTileTransformer.class );
 
-	private Integer _startBucket = null;
-	private Integer _endBucket = null;
+	private Integer _startAverage 	= 0;
+	private Integer _endAverage 	= 0;
+	private Integer _startBucket 	= 0;
+	private Integer _endBucket 		= 0;
+	private String  _operator 		= "";
 
-	public FilterByBucketTileTransformer(JSONObject arguments){
+
+	public AverageFilterByBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
-			_startBucket = arguments.optInt("startBucket");
-			_endBucket = arguments.optInt("endBucket");
+			_startAverage 	= arguments.optInt("startAverage");
+			_endAverage 	= arguments.optInt("endAverage");
+			_startBucket 	= arguments.optInt("startBucket");
+			_endBucket 		= arguments.optInt("endBucket");
+			
+			// get the operator
+			_operator = arguments.optString("operator");
 		} else {
 			LOGGER.warn("No arguements passed in to filterbucket transformer");
 		}
@@ -75,12 +85,12 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 	 */
     @Override
     public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
- 		if ( _startBucket != null && _endBucket != null ) {
-			if ( _startBucket < 0 || _startBucket > _endBucket ) {
-				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
+		if ( _startBucket != null && _endBucket != null && _startAverage != null && _endAverage != null) {
+			if ( _startBucket < 0 || _startBucket > _endBucket || _startAverage < 0 || _startAverage > _endAverage ) {
+				throw new IllegalArgumentException("Average filter by time transformer arguments are invalid");
         	}
 		}
-		return new FilterTileBucketView<>(inputData, _startBucket, _endBucket);
+		return new AverageTileBucketView<>(inputData, _startAverage, _endAverage, _operator, _startBucket, _endBucket);
     }
 
 }
