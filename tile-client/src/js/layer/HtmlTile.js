@@ -31,222 +31,239 @@
  */
 ( function() {
 
-    "use strict";
+	"use strict";
 
-    var LayerUtil = require('./LayerUtil');
+	var LayerUtil = require('./LayerUtil');
 
-    OpenLayers.Tile.HTML = function() {
-        OpenLayers.Tile.apply( this, arguments );
-    };
+	OpenLayers.Tile.HTML = function() {
+		OpenLayers.Tile.apply( this, arguments );
+	};
 
-    OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
+	OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
 
-    OpenLayers.Tile.HTML.prototype.draw = function() {
-        var that = this,
-            shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments ),
-            dataUrl;
-        if ( shouldDraw ) {
-            this.positionTile();
-            dataUrl = this.layer.getURL( this.bounds );
+	OpenLayers.Tile.HTML.prototype.draw = function() {
+		var that = this,
+			shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments ),
+			dataUrl;
+		if ( shouldDraw ) {
+			this.positionTile();
+			dataUrl = this.layer.getURL( this.bounds );
 
-	          if (typeof dataUrl === "string") {
-		          if ( dataUrl !== this.url ) {
+			if (typeof dataUrl === "string") {
+				if ( dataUrl !== this.url ) {
 
-			          this.url = dataUrl;
-			          this.tileData = null;
-			          this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
-			          this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
+					this.url = dataUrl;
+					this.tileData = null;
+					this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
+					this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
-			          // new url to render
-			          if ( this.isLoading ) {
-				          this.dataRequest.abort();
-				          this.dataRequest = null;
-				          this.isLoading = false;
-			          }
+					// new url to render
+					if ( this.isLoading ) {
+						this.dataRequest.abort();
+						this.dataRequest = null;
+						this.isLoading = false;
+					}
 
-			          if ( !this.url ) {
-				          this.unload();
-				          return;
-			          }
+					if ( !this.url ) {
+						this.unload();
+						return;
+					}
 
-			          // hide tile contents until have data
-			          this.div.style.visibility = 'hidden';
-			          this.isLoading = true;
-			          this.dataRequest = $.ajax({
-				          url: this.url
-			          }).then(
-				          function( data ) {
-					          if (dataUrl === this.url) {
-						          that.tileData = data;
-						          that.renderTile( that.div, that.tileData );
-					          }
-				          },
-				          function( xhr ) {
-					          console.error( xhr.responseText );
-					          console.error( xhr );
-				          }
-			          ).always( function() {
-					          that.isLoading = false;
-					          that.dataRequest = null;
-				          });
+					// hide tile contents until have data
+					this.div.style.visibility = 'hidden';
+					this.isLoading = true;
+					this.dataRequest = $.ajax({
+						url: this.url
+					}).then(
+						function( data ) {
+							if (dataUrl === this.url) {
+								that.tileData = data;
+								that.renderTile( that.div, that.tileData );
+							}
+						},
+						function( xhr ) {
+							console.error( xhr.responseText );
+							console.error( xhr );
+						}
+					).always( function() {
+							that.isLoading = false;
+							that.dataRequest = null;
+						});
 
-		          } else {
-			          // already have right data, just render
-			          this.renderTile( this.div, this.tileData );
-		          }
-	          } else if (dataUrl instanceof Array) {
-		          if (!_.isEqual(dataUrl, this.url)) {
-			          // format request
-			          this.url = dataUrl;
-			          this.tileData = null;
-			          this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
-			          this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
+				} else {
+					// already have right data, just render
+					this.renderTile( this.div, this.tileData );
+				}
+			} else if (dataUrl instanceof Array) {
+				if (!_.isEqual(dataUrl, this.url)) {
+					// format request
+					this.url = dataUrl;
+					this.tileData = null;
+					this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
+					this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
-			          // new url to render
-			          if ( this.isLoading ) {
-				          this.dataRequest.abort();
-				          this.dataRequest = null;
-				          this.isLoading = false;
-			          }
+					// new url to render
+					if ( this.isLoading ) {
+						this.dataRequest.abort();
+						this.dataRequest = null;
+						this.isLoading = false;
+					}
 
-			          if ( !this.url ) {
-				          this.unload();
-				          return;
-			          }
+					if ( !this.url ) {
+						this.unload();
+						return;
+					}
 
-			          // hide tile contents until have data
-			          this.div.style.visibility = 'hidden';
-			          this.isLoading = true;
+					// hide tile contents until have data
+					this.div.style.visibility = 'hidden';
+					this.isLoading = true;
 
-			          $.when.apply($, _.map(dataUrl, function(currUrl) {
-					          return $.ajax({url: currUrl})
-				          })
-			          ).then(
-				          function(data) {
-					          that.tileData = data;
-					          that.renderTile( that.div, that.tileData );
-				          },
-				          function( xhr ) {
-					          console.error( xhr.responseText );
-					          console.error( xhr );
-				          }
-			          ).always(
-				          function() {
-					          that.isLoading = false;
-					          that.dataRequest = null;
-				          }
-			          );
-		          }
-	          } else {
-	            // already have right data, just render
-	            this.renderTile( this.div, this.tileData );
-            }
-        } else if ( shouldDraw === false ) {
-            this.unload();
-        }
-        return shouldDraw;
-    };
+					var requestList = _.map(dataUrl, function(currUrl) {
+						return $.ajax({url: currUrl})
+					});
+					$.when.apply($, requestList
+					).then(
+						function() {
+							var results = _.map(arguments, function(result){ return result[0]; });
+							that.tileData = results;
+							that.renderTile( that.div, results);
+						},
+						function( xhr ) {
+							console.error( xhr.responseText );
+							console.error( xhr );
+						}
+					).always(
+						function() {
+							that.isLoading = false;
+							that.dataRequest = null;
+						}
+					);
+				}
+			} else {
+				// already have right data, just render
+				this.renderTile( this.div, this.tileData );
+			}
+		} else if ( shouldDraw === false ) {
+			this.unload();
+		}
+		return shouldDraw;
+	};
 
-    OpenLayers.Tile.HTML.prototype.createBackBuffer = function() {
-        return null;
-    };
+	OpenLayers.Tile.HTML.prototype.createBackBuffer = function() {
+		return null;
+	};
 
-    OpenLayers.Tile.HTML.prototype.positionTile = function() {
+	OpenLayers.Tile.HTML.prototype.positionTile = function() {
 
-        if ( !this.div ) {
-            this.div = document.createElement( 'div' );
-            this.div.style.position = 'absolute';
-            this.div.style.opacity = 0;
-            this.div.className = 'olTileHtml';
-            this.layer.div.appendChild( this.div );
-        }
+		if ( !this.div ) {
+			this.div = document.createElement( 'div' );
+			this.div.style.position = 'absolute';
+			this.div.style.opacity = 0;
+			this.div.className = 'olTileHtml';
+			this.layer.div.appendChild( this.div );
+		}
 
-        var style = this.div.style,
-            size = this.layer.getImageSize( this.bounds ),
-            ratio = this.layer.getServerResolution() / this.layer.map.getResolution();
+		var style = this.div.style,
+			size = this.layer.getImageSize( this.bounds ),
+			ratio = this.layer.getServerResolution() / this.layer.map.getResolution();
 
-        style.left = this.position.x + 'px';
-        style.top = this.position.y + 'px';
-        style.width = Math.round( ratio * size.w ) + 'px';
-        style.height = Math.round( ratio * size.h ) + 'px';
-    };
+		style.left = this.position.x + 'px';
+		style.top = this.position.y + 'px';
+		style.width = Math.round( ratio * size.w ) + 'px';
+		style.height = Math.round( ratio * size.h ) + 'px';
+	};
 
-    OpenLayers.Tile.HTML.prototype.clear = function() {
-        OpenLayers.Tile.prototype.clear.apply( this, arguments );
-        this.tileData = null;
-        this.url = null;
-        if ( this.div ) {
-            this.layer.div.removeChild( this.div );
-            this.div = null;
-        }
-    };
+	OpenLayers.Tile.HTML.prototype.clear = function() {
+		OpenLayers.Tile.prototype.clear.apply( this, arguments );
+		this.tileData = null;
+		this.url = null;
+		if ( this.div ) {
+			this.layer.div.removeChild( this.div );
+			this.div = null;
+		}
+	};
 
-    OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
+	OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
 
-        if ( !this.layer || !this.div ) {
-            // if the div or layer is no longer available, exit gracefully
-            return;
-        }
+		if ( !this.layer || !this.div ) {
+			// if the div or layer is no longer available, exit gracefully
+			return;
+		}
 
-        var div = this.div,
-            renderer,
-            aggregator,
-            html,
-            render;
+		var div = this.div,
+			renderer,
+			aggregator,
+			html,
+			render;
 
-        // always style the opacity and visibility of the tile
-        div.style.opacity = this.layer.opacity;
-        div.style.visibility = 'inherit';
-        div.innerHTML = "";
+		// always style the opacity and visibility of the tile
+		div.style.opacity = this.layer.opacity;
+		div.style.visibility = 'inherit';
+		div.innerHTML = "";
 
-        if ( !data || ( !data.tile && !data.hits ) ) {
-            // exit early if not data to render
-            return;
-        }
+		var hasTile = false;
+		if (data instanceof Array) {
+			hasTile = _.reduce(data, function(result, datum) {
+					return (datum.tile || datum.hits) && result;
+				}, true) && data;
+			if (!hasTile) return;
+		} else if ( !data || ( !data.tile && !data.hits ) ) {
+			// exit early if not data to render
+			return;
+		}
 
-        if ( data.hits ) {
-            // add tile index to elastic search result
-            data.index = this.tileIndex;
-        }
+		if ( data.hits ) {
+			// add tile index to elastic search result
+			data.index = this.tileIndex;
+		}
 
-        renderer = this.layer.renderer;
-        aggregator = renderer.aggregator;
+		renderer = this.layer.renderer;
+		aggregator = renderer.aggregator;
 
-        // if renderer is attached, use it
-        if ( typeof renderer === "function" ) {
-            renderer = renderer.call( this.layer, this.bounds );
-        }
-        // if aggregator, aggregate the data
-        if ( aggregator ) {
-            data.tile.meta = {
-                raw: data.tile.meta.map.bins,
-                aggregated: aggregator.aggregate( data.tile.meta.map.bins )
-            };
-        }
-        render = renderer.render( data );
-        html = render.html;
-        this.entries = render.entries;
+		// if renderer is attached, use it
+		if ( typeof renderer === "function" ) {
+			renderer = renderer.call( this.layer, this.bounds );
+		}
+		// if aggregator, aggregate the data
+		if ( aggregator ) {
+			if (data instanceof Array) {
+				_.forEach(data, function(datum) {
+					datum.tile.meta = {
+						raw: datum.tile.meta.map.bins,
+						aggregated: aggregator.aggregate( datum.tile.meta.map.bins )
+					}
+				});
+			} else {
+				data.tile.meta = {
+					raw: data.tile.meta.map.bins,
+					aggregated: aggregator.aggregate( data.tile.meta.map.bins )
+				};
+			}
+		}
+		render = renderer.render( data );
+		html = render.html;
+		this.entries = render.entries;
 
-        if ( html instanceof $ ) {
-            // if generated a jquery object, append it
-            $( div ).append( html );
-        } else if ( html instanceof HTMLElement ) {
-            // if generated an HTMLElement, get html text
-            div.appendChild( html );
-        } else {
-            // if generated string, set inner html
-            div.innerHTML = html;
-        }
+		if ( html instanceof $ ) {
+			// if generated a jquery object, append it
+			$( div ).append( html );
+		} else if ( html instanceof HTMLElement ) {
+			// if generated an HTMLElement, get html text
+			div.appendChild( html );
+		} else {
+			// if generated string, set inner html
+			div.innerHTML = html;
+		}
 
-        // hide standard tile hover interaction
-        if ( renderer.spec.hideTile ) {
-            div.className = div.className + " hideTile";
-        }
-        // inject selected entry classes
-        renderer.injectEntries( div.children, this.entries );
-        // call renderer hook function
-        renderer.executeHooks( div.children, this.entries, data );
-    };
+		// hide standard tile hover interaction
+		if ( renderer.spec.hideTile ) {
+			div.className = div.className + " hideTile";
+		}
+		// inject selected entry classes
+		renderer.injectEntries( div.children, this.entries );
+		// call renderer hook function
+		renderer.executeHooks( div.children, this.entries, data );
+	};
 
-    module.exports = OpenLayers.Tile.HTML;
+	module.exports = OpenLayers.Tile.HTML;
 }());
