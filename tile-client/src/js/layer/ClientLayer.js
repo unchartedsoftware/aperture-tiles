@@ -40,7 +40,7 @@
      */
     function setLevelMinMax( layer ) {
         var zoomLevel = layer.map.getZoom(),
-            meta = layer.source.meta.meta[ zoomLevel ],
+            meta = layer.source.meta && layer.source.meta.meta ? layer.source.meta.meta[ zoomLevel ] : null,
             transformData = layer.tileTransform.data || {},
             levelMinMax = meta,
             renderer = layer.renderer,
