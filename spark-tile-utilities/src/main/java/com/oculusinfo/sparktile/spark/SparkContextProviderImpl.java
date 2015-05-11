@@ -1,18 +1,18 @@
 /**
  * Copyright (c) 2013 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,11 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.servlet.ServletContextEvent;
 
+import com.oculusinfo.binning.util.JsonUtilities;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
@@ -54,35 +56,36 @@ import com.oculusinfo.tile.TileServiceConfiguration;
  * <p>
  * Simple implementation of a {@link SparkContextProvider}.
  * </p>
- * 
+ *
  * <p>
  * This class provides a spark context based on four properties in the global properties file (tile.properties):
  * <dl>
  * <dt>org.apache.spark.master</dt>
  * <dd>The location of the spark master node.  This can be found at the top of the Spark web UI page</dd>
- * 
+ *
  * <dt>org.apache.spark.jobName</dt>
  * <dd>The name with which the web server spark connection should be labeled on the Spark web UI page</dd>
- * 
+ *
  * <dt>org.apache.spark.home</dt>
  * <dd>The home directory of spark on the cluster machines.</dd>
- * 
+ *
  * <dt>org.apache.spark.jars</dt>
- * <dd>A :-separated list of jars to add to the spark job.  Binning-utilities, tile-generation, and hbase 
+ * <dd>A :-separated list of jars to add to the spark job.  Binning-utilities, tile-generation, and hbase
  * are automatically added; anything else (such as custom tiling jars) must be added here.</dd>
  * </dl>
  * </p>
- * 
+ *
  * @author nkronenfeld
  */
 @Singleton
 public class SparkContextProviderImpl implements SparkContextProvider {
 	private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SparkContextProviderImpl.class);
 
-	private String   _master;
-	private String   _jobName;
-	private String   _sparkHome;
-	private String[] _jars;
+	private String     _master;
+	private String     _jobName;
+	private String     _sparkHome;
+	private String[]   _jars;
+	private Properties _connectionProperties;
 
 	private JavaSparkContext _context;
 	private JavaSQLContext _sqlContext;
@@ -92,6 +95,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	                                 @Named("org.apache.spark.jobName") String jobName,
 	                                 @Named("org.apache.spark.home") String sparkHome,
 	                                 @Named("org.apache.spark.jars") String extraJars,
+									 @Named("org.apache.spark.properties") String connectionProperties,
 	                                 TileServiceConfiguration config) {
 		_master = master;
 		_jobName = jobName;
@@ -116,11 +120,18 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 		}
 		_jars = jarList.toArray(new String[jarList.size()]);
 
+		try {
+			_connectionProperties = JsonUtilities.jsonObjToProperties(new JSONObject(connectionProperties));
+		} catch (JSONException e) {
+			LOGGER.warn("Error reading spark connection configuration", e);
+			_connectionProperties = new Properties();
+		}
+
 		config.addLifecycleListener(new ServletLifecycleListener() {
 				@Override
 				public void onServletInitialized (ServletContextEvent event) {
 				}
-            
+
 				@Override
 				public void onServletDestroyed (ServletContextEvent event) {
 					shutdownSparkContext();
@@ -130,10 +141,10 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 
 	private String getJarPathForClass (Class<?> type) {
 	    String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
-	    // This whole "classes" case is to account for when we're trying to 
-	    // run from an IDE, which automatically adds projects to the class 
-	    // path.  we need class directories replaced with jars.  Note that 
-	    // this means the program won't work unless the project as been 
+	    // This whole "classes" case is to account for when we're trying to
+	    // run from an IDE, which automatically adds projects to the class
+	    // path.  we need class directories replaced with jars.  Note that
+	    // this means the program won't work unless the project as been
 	    // packaged; this was always the case, but is more explicitly so now.
 	    if (location.endsWith("classes/")) {
 	        File target = new File(location).getParentFile();
@@ -150,12 +161,12 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	}
 
 	@Override
-	public SparkContext getSparkContext (JSONObject configuration) {
-		return JavaSparkContext.toSparkContext(getJavaSparkContext(configuration));
+	public SparkContext getSparkContext () {
+		return JavaSparkContext.toSparkContext(getJavaSparkContext());
 	}
 
 	@Override
-	synchronized public JavaSparkContext getJavaSparkContext (JSONObject configuration) {
+	synchronized public JavaSparkContext getJavaSparkContext () {
 		if (null == _context) {
 			// Thin out the log of spark spam
 			Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
@@ -172,16 +183,11 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 			config.set("spark.logConf", "true");
 
 			// Copy in configuration properties that begin with "akka." and "spark."
-			if (null != configuration) {
-				for (String key: JSONObject.getNames(configuration)) {
-					if (key.toLowerCase().startsWith("akka.") || key.toLowerCase().startsWith("spark.")) {
-						try {
-							String value = configuration.getString(key);
-							config.set(key, value);
-						} catch (JSONException e) {
-							LOGGER.warn("Error getting value for key {}", key, e);
-						}
-					}
+			for (Object keyObj: _connectionProperties.keySet()) {
+				String key = keyObj.toString();
+				if (key.toLowerCase().startsWith("akka.") || key.toLowerCase().startsWith("spark.")) {
+					String value = _connectionProperties.get(key).toString();
+					config.set(key, value);
 				}
 			}
 			_context = new JavaSparkContext(config);
@@ -190,14 +196,14 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	}
 
 	@Override
-	public SQLContext getSQLContext (JSONObject configuration) {
-		return getJavaSQLContext(configuration).sqlContext();
+	public SQLContext getSQLContext () {
+		return getJavaSQLContext().sqlContext();
 	}
 
 	@Override
-	public JavaSQLContext getJavaSQLContext (JSONObject configuration) {
+	public JavaSQLContext getJavaSQLContext () {
 		if (null == _sqlContext) {
-			JavaSparkContext sc = getJavaSparkContext(configuration);
+			JavaSparkContext sc = getJavaSparkContext();
 			_sqlContext = new JavaSQLContext(sc);
 		}
 		return _sqlContext;

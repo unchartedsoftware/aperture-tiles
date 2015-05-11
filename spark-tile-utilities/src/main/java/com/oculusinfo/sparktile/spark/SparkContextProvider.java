@@ -32,29 +32,29 @@ import org.json.JSONObject;
 
 /**
  * Very simple interface to provide a consistent spark context to anyone who needs it.
- * 
+ *
  * @author nkronenfeld
  */
 public interface SparkContextProvider {
 	/**
 	 * Get a usable spark context
 	 */
-	public SparkContext getSparkContext (JSONObject configuration);
+	public SparkContext getSparkContext ();
 
 	/**
 	 * Get a usable spark context, in Java API form
 	 */
-	public JavaSparkContext getJavaSparkContext (JSONObject configuration);
+	public JavaSparkContext getJavaSparkContext ();
 
 	/**
 	 * Get a usable spark SQL context
 	 */
-	public SQLContext getSQLContext (JSONObject configuration);
+	public SQLContext getSQLContext ();
 
 	/**
 	 * Get a usable spark SQL context, in Java API form
 	 */
-	public JavaSQLContext getJavaSQLContext (JSONObject configuration);
+	public JavaSQLContext getJavaSQLContext ();
 
 	/**
 	 * Shut down the web server's spark context.
