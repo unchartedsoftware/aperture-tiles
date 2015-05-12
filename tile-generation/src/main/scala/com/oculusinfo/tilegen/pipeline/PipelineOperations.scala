@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.pipeline
 
 
 import java.text.SimpleDateFormat
+import java.sql.Date
 import java.util.concurrent.atomic.AtomicInteger
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 import org.apache.spark.sql.SchemaRDD
@@ -103,6 +104,28 @@ object PipelineOperations {
 		val srdd = reader.asSchemaRDD
 		val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
 		PipelineData(reader.sqlc, partitioned)
+	}
+
+	/**
+	 * Pipeline op to filter records to a specific date range.
+	 *
+	 * @param minDate Start date for the range.
+	 * @param maxDate End date for the range.
+	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
+	 * @param timeCol Column spec denoting name of time column in input schema RDD.
+	 * @param input Input pipeline data to filter.
+	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
+	 */
+	def dateFilterOp(minDate: Date, maxDate: Date, format: String, timeCol: String)(input: PipelineData) = {
+		val formatter = new SimpleDateFormat(format)
+		val minTime = minDate.getTime
+		val maxTime = maxDate.getTime
+		val timeExtractor = calculateExtractor(timeCol, input.srdd.schema)
+		val filtered = input.srdd.filter { row =>
+			val time = formatter.parse(timeExtractor(row).toString).getTime
+			minTime <= time && time <= maxTime
+		}
+		PipelineData(input.sqlContext, filtered)
 	}
 
 	/**

@@ -40,22 +40,29 @@
      */
     function setLevelMinMax( layer ) {
         var zoomLevel = layer.map.getZoom(),
-            meta =  layer.source.meta.meta[ zoomLevel ],
+            meta = layer.source.meta && layer.source.meta.meta ? layer.source.meta.meta[ zoomLevel ] : null,
             transformData = layer.tileTransform.data || {},
             levelMinMax = meta,
             renderer = layer.renderer,
             aggregated;
         // aggregate the data if there is an aggregator attached
-        if ( renderer && renderer.aggregator ) {
-            // aggregate the meta data buckets
-            aggregated = renderer.aggregator.aggregate(
-                meta.bins,
-                transformData.startBucket,
-                transformData.endBucket );
-            // take the first and last index, which correspond to max / min
+        if ( meta ) {
+            if ( renderer && renderer.aggregator ) {
+                // aggregate the meta data buckets
+                aggregated = renderer.aggregator.aggregate(
+                    meta.bins || [],
+                    transformData.startBucket,
+                    transformData.endBucket );
+                // take the first and last index, which correspond to max / min
+                levelMinMax = {
+                    minimum: aggregated[aggregated.length - 1],
+                    maximum: aggregated[0]
+                };
+            }
+        } else {
             levelMinMax = {
-                minimum: aggregated[aggregated.length - 1],
-                maximum: aggregated[0]
+                minimum: null,
+                maximum: null
             };
         }
         layer.levelMinMax = levelMinMax;

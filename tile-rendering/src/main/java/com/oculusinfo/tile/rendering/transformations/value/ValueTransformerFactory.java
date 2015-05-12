@@ -33,7 +33,7 @@ import java.util.List;
 
 /**
  * A factory for creating {@link ValueTransformer} objects.
- * 
+ *
  * @author cregnier
  *
  */
@@ -60,6 +60,10 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 			"The minimum value used for the log transform when the input data minimum is <= 0",
 			1);
 
+	public static final DoubleProperty TRANSFORM_SCALE = new DoubleProperty("scale",
+		"A scaling factor to apply to a transform",
+		1.0);
+
 
 
 	// One cannot produce a Class<ValueTransformer<?>> directly, one can only use erasure to fake it.
@@ -82,6 +86,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		addProperty(LAYER_MAXIMUM);
 		addProperty(LAYER_MINIMUM);
 		addProperty(LOG_MINIMUM);
+		addProperty(TRANSFORM_SCALE);
 	}
 
 	private double _layerMaximum;
@@ -130,9 +135,13 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 
 			return new LinearValueTransformer(min, max);
 		} else if ("half-sigmoid".equals(name)) {
-		    return new HalfSigmoidValueTransformer(layerMin, layerMax);
+			return new HalfSigmoidValueTransformer(layerMin, layerMax);
 		} else if ("sigmoid".equals(name)) {
-            return new SigmoidValueTransformer(layerMin, layerMax);
+			if (hasPropertyValue(TRANSFORM_SCALE)) {
+				return new SigmoidValueTransformer(layerMin, layerMax, getPropertyValue(TRANSFORM_SCALE));
+			} else {
+				return new SigmoidValueTransformer(layerMin, layerMax);
+			}
 		} else {
 			// Linear is default, even if passed an unknown type.
 			return new LinearValueTransformer(layerMin, layerMax);
