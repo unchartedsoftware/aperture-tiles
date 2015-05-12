@@ -112,10 +112,18 @@ sourceSets {
 // Jars / projects this project depends on.
 dependencies {
 	// Compile config - needed to build
-	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
-	compile "org.apache.spark:spark-sql_$dependencyScalaVersion:$sparkVersion"
-	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
-	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
+	compile("org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion") {
+		exclude module: 'hadoop-client'
+	}
+	compile("org.apache.spark:spark-sql_$dependencyScalaVersion:$sparkVersion") {
+		exclude module: 'hadoop-client'
+	}
+	compile("org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion") {
+		exclude module: 'hadoop-client'
+	}
+	compile("org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion") {
+		exclude module: 'hadoop-client'
+	}
 	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
 	compile "org.scala-lang:scala-library:$scalaVersion"
 	compile "org.clapper:grizzled-slf4j_2.10:1.0.2"

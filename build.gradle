@@ -90,7 +90,7 @@ init.dependsOn setBuildVersions
 // This only needs to be run when a new version of gradle is used, and the produced files should be checked into
 // source control when its done.
 task wrapper(type: Wrapper) {
-	gradleVersion = '2.1'
+	gradleVersion = '2.4'
 }
 
 // If we don't explicitly tell modules to inherit from the project settings, those without scala/java code will
