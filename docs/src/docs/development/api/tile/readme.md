@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Tile
 permalink: docs/development/api/tile/
-layout: submenu
+layout: chapter
 ---
 
 # Tile Service #

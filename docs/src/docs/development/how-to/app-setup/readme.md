@@ -4,7 +4,7 @@ subsection: Development
 chapter: How-To
 topic: Set Up the Application
 permalink: docs/development/how-to/app-setup/
-layout: submenu
+layout: chapter
 ---
 
 Set Up the Application

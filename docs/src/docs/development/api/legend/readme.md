@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Legend
 permalink: docs/development/api/legend/
-layout: submenu
+layout: chapter
 ---
 
 # Legend Service #

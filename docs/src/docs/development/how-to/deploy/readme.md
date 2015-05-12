@@ -4,7 +4,7 @@ subsection: Development
 chapter: How-To
 topic: Deploy the Application
 permalink: docs/development/how-to/deploy/
-layout: submenu
+layout: chapter
 ---
 
 Deploy the Application

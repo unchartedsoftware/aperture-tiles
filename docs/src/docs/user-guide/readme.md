@@ -3,7 +3,7 @@ section: Docs
 subsection: User Guide
 topic: Overview
 permalink: docs/user-guide/
-layout: submenu
+layout: chapter
 ---
 
 # User Guide #

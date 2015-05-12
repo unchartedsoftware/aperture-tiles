@@ -4,7 +4,7 @@ subsection: Development
 chapter: Advanced
 topic: Custom Tiling Jobs
 permalink: docs/development/advanced/custom-tiling/
-layout: submenu
+layout: chapter
 ---
 
 Custom Tiling Jobs

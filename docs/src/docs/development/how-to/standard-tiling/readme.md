@@ -4,7 +4,7 @@ subsection: Development
 chapter: How-To
 topic: Run Standard Tiling Jobs
 permalink: docs/development/how-to/standard-tiling/
-layout: submenu
+layout: chapter
 ---
 
 Run Standard Tiling Jobs

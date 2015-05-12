@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Annotation
 permalink: docs/development/api/annotation/
-layout: submenu
+layout: chapter
 ---
 
 # Annotation Service #

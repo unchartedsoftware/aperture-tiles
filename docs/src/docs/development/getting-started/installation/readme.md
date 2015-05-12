@@ -4,7 +4,7 @@ subsection: Development
 chapter: Getting Started
 topic: Installation
 permalink: docs/development/getting-started/installation/
-layout: submenu
+layout: chapter
 ---
 
 Installation and Compilation

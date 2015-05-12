@@ -4,7 +4,7 @@ subsection: Development
 chapter: Advanced
 topic: Standard Tiling Jobs
 permalink: docs/development/advanced/standard-tiling/
-layout: submenu
+layout: chapter
 ---
 
 Standard Tiling Jobs

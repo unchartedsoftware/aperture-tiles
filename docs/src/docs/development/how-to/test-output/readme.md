@@ -4,7 +4,7 @@ subsection: Development
 chapter: How-To
 topic: Test Tiling Job Output
 permalink: docs/development/how-to/test-output/
-layout: submenu
+layout: chapter
 ---
 
 Testing Tiling Job Output

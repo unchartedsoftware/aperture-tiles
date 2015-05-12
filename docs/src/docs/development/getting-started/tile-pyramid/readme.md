@@ -4,7 +4,7 @@ subsection: Development
 chapter: Getting Started
 topic: Understanding the Tile Pyramid
 permalink: docs/development/getting-started/tile-pyramid/
-layout: submenu
+layout: chapter
 ---
 
 Understanding the Tile Pyramid

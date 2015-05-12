@@ -4,7 +4,7 @@ subsection: Development
 chapter: How-To
 topic: Configure the Tile Client
 permalink: docs/development/how-to/tile-client/
-layout: submenu
+layout: chapter
 ---
 
 Configure the Tile Client

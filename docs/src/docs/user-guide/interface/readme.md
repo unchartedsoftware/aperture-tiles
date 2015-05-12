@@ -3,7 +3,7 @@ section: Docs
 subsection: User Guide
 topic: Interface
 permalink: docs/user-guide/interface/
-layout: submenu
+layout: chapter
 ---
 
 # Interface #

@@ -4,7 +4,7 @@ subsection: Development
 chapter: Getting Started
 topic: Quick Start Example Workflow
 permalink: docs/development/getting-started/quick-start/
-layout: submenu
+layout: chapter
 ---
 
 # Quick Start Example Workflow #

@@ -4,7 +4,7 @@ subsection: Development
 chapter: Advanced
 topic: Graph Tiling Jobs
 permalink: docs/development/advanced/graph-tiling/
-layout: submenu
+layout: chapter
 ---
 
 Graph Tiling Jobs

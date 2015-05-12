@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Overview
 permalink: docs/development/api/
-layout: submenu
+layout: chapter
 ---
 
 # Overview #

@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Layer
 permalink: docs/development/api/layer/
-layout: submenu
+layout: chapter
 ---
 
 # Layer Service #

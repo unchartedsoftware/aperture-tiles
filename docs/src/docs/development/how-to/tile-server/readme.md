@@ -4,7 +4,7 @@ subsection: Development
 chapter: How-To
 topic: Configure the Tile Server
 permalink: docs/development/how-to/tile-server/
-layout: submenu
+layout: chapter
 ---
 
 Configure the Tile Server
