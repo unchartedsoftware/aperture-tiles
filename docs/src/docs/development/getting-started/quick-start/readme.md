@@ -15,7 +15,7 @@ This guide, which provides a short tutorial on the process of creating and confi
 2. Tiling and storing the sample dataset
 3. Configuring a client to serve and display the tiles in a web browser
 
-At the end of this guide, you will have an example Aperture Tiles application that displays the points in an Julia set fractal dataset on an X/Y plot with five zoom levels.
+At the end of this guide, you will have an example Aperture Tiles application that displays the points in a Julia set fractal dataset on an X/Y plot with five zoom levels.
 
 <img src="../../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
