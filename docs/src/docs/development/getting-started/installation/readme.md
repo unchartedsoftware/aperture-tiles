@@ -55,7 +55,7 @@ Aperture Tiles requires the following third-party tools:
 		<tr>
 			<td style="vertical-align: text-top" class="description">Build Automation</td>
 			<td style="vertical-align: text-top" class="description">
-				<a href="http://www.eclipse.org/jetty/">Gradle</a>
+				<a href="https://gradle.org/">Gradle</a>
 				<br>(requires <a href="http://nodejs.org/">Node.js</a>)
 			</td>
 			<td style="vertical-align: text-top" class="description">
