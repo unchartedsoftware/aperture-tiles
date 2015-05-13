@@ -41,7 +41,7 @@ object StandardBinningFunctions
 
 
 /**
- * A repository of standard index location and tile population functions for point inputs, 
+ * A repository of standard index location and tile population functions for point inputs,
  * for use with the UniversalBinner
  */
 trait StandardPointBinningFunctions {
@@ -63,7 +63,7 @@ trait StandardPointBinningFunctions {
 
 
 	/**
-	 * Simple function to spread an input point over several levels of tile pyramid, ignoring 
+	 * Simple function to spread an input point over several levels of tile pyramid, ignoring
 	 * points that are out of bounds
 	 */
 	def locateBoundedIndexOverLevels[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
@@ -87,10 +87,10 @@ trait StandardPointBinningFunctions {
 		}
 	}
 
-	
-	
+
+
 	/**
-	 * Simple population function that just takes input points and outputs them, as is, in the 
+	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
 	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
@@ -101,23 +101,23 @@ trait StandardPointBinningFunctions {
 
 
 /**
- * A repository of standard index location and tile population functions for line inputs, 
+ * A repository of standard index location and tile population functions for line inputs,
  * generating linear segment output, for use with the UniversalBinner
  */
 trait StandardLinearBinningFunctions {
 	/**
 	 * Simple function to spread an input lines over several levels of tile pyramid.
-	 * 
+	 *
 	 * @param indexScheme The scheme for interpretting input indices
 	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
 	 * @param levels The levels at which to tile
-	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None 
+	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None
 	 *                to have no minimum segment length
-	 * @param maxBins The maximum length of a segment, in bins, above which it is not drawn, or None 
+	 * @param maxBins The maximum length of a segment, in bins, above which it is not drawn, or None
 	 *                to have no minimum segment length
 	 * @param xBins The number of bins into which each tile is broken in the horizontal direction
 	 * @param yBins the number of bins into which each tile is broken in the vertical direction
-	 * @return a traversable over the tiles this line crosses, each associated with the overall 
+	 * @return a traversable over the tiles this line crosses, each associated with the overall
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
 	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
@@ -164,7 +164,7 @@ trait StandardLinearBinningFunctions {
 
 	/**
 	 * Line segment population function
-	 * 
+	 *
 	 * Takes endpoints of line segments, and populates the tiles with the points appropriate to that tile
 	 */
 	def populateTileWithLineSegments[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
@@ -175,8 +175,8 @@ trait StandardLinearBinningFunctions {
 
 
 	/*
-	 * Re-order coords of two endpoints for efficient implementation of Bresenham's line algorithm  
-	 */ 
+	 * Re-order coords of two endpoints for efficient implementation of Bresenham's line algorithm
+	 */
 	private def  initializeBresenham (start: BinIndex, end: BinIndex)
 			: (Boolean, Int, Int, Int, Int) = {
 		val xs = start.getX()
@@ -204,7 +204,7 @@ trait StandardLinearBinningFunctions {
 
 	/**
 	 * Compute the intermediate points between two endpoints using Bresneham's algorithm
-	 * 
+	 *
 	 * @param start The start bin, in unviersal bin coordinates, of the segment
 	 * @param end The end bin, in universal bin coordinates, of the segment
 	 * @return Each bin in the segment, in universal bin coordinates
@@ -235,10 +235,10 @@ trait StandardLinearBinningFunctions {
 
 
 	/**
-	 * Compute the tiles between two endpoints, using a modified version of Bresneham's 
+	 * Compute the tiles between two endpoints, using a modified version of Bresneham's
 	 * algorithm, in a way that should be completely self-consistent with a Bresneham-based bin
 	 * extraction function.
-	 * 
+	 *
 	 * @param start The start bin, in unviersal bin coordinates, of the segment
 	 * @param end The end bin, in universal bin coordinates, of the segment
 	 * @param sample A sample tile, indicating the level and tile size of the desired output tiles
@@ -274,7 +274,7 @@ trait StandardLinearBinningFunctions {
 			}
 			binToTile(x, y)
 		}
-		
+
 		// Determine the start of the range of internal tiles
 		val t0 = (x0 + xSize - (x0 % xSize))/xSize
 		val tn = (x1 - (x1 %xSize))/xSize
@@ -303,10 +303,10 @@ trait StandardLinearBinningFunctions {
 
 
 	/**
-	 * Compute all the bins on a single tile that are on the line between two given endpoints, 
-	 * using a modified version of Bresneham's algorithm, and in a way that guarantees 
+	 * Compute all the bins on a single tile that are on the line between two given endpoints,
+	 * using a modified version of Bresneham's algorithm, and in a way that guarantees
 	 * consistency between this and a total-line Bresneham-based line-drawing function.
-	 * 
+	 *
 	 * @param start The start bin, in unviersal bin coordinates, of the segment
 	 * @param end The end bin, in universal bin coordinates, of the segment
 	 * @param tile The tile whose bins are desired
@@ -359,20 +359,180 @@ trait StandardLinearBinningFunctions {
 			else None
 		}
 	}
+
+
+
+	private def axialDistance (a: BinIndex, b: BinIndex): Int =
+		math.max(math.abs(a.getX-b.getX), math.abs(a.getY-b.getY))
+
+	/**
+	 * Compute the tiles between two endpoints, using a modified version of Bresneham's
+	 * algorithm, in a way that should be completely self-consistent with a Bresneham-based bin
+	 * extraction function, and only returns tiles within D bins of an endpoint.
+	 *
+	 * @param start The start bin, in unviersal bin coordinates, of the segment
+	 * @param end The end bin, in universal bin coordinates, of the segment
+	 * @param sample A sample tile, indicating the level and tile size of the desired output tiles
+	 * @param maxBinDistance The maximum distance D allowed between either endpoint and a returned
+	 *                       tile; any tiles farther than this from an endpoint will not be
+	 *                       returned, even if they are on the line.  Distance is calculated as
+	 *                       minimal axial distance, not euclidean distance.
+	 * @return Each tile in the segment, in universal bin coordinates
+	 */
+	def closeLinearTiles (start: BinIndex, end: BinIndex, sample: TileIndex, maxBinDistance: Int)
+	: Traversable[TileIndex] = {
+		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
+		val singleTileGap = if (steep) sample.getYBins else sample.getXBins
+		if (axialDistance(start, end) <= 2*maxBinDistance + singleTileGap) {
+			// Endpoints are close enough that all tiles in between should be used (though one tile,
+			// the gap, may only have some bins used)
+			linearTiles(start, end, sample)
+		} else {
+			// Endpoints are far enough appart to create a gap; determine the gap, and return stuff in between.
+			val (xSize, ySize) =
+				if (steep) (sample.getYBins, sample.getXBins)
+				else (sample.getXBins, sample.getYBins)
+			val level = sample.getLevel
+
+			val deltax: Long = x1 - x0
+			val deltay: Long = math.abs(y1 - y0)
+			val baseError: Long = deltax >> 1
+			val ystep = if (y0 < y1) 1 else -1
+
+			// Function to convert from universal bin to tile quickly and easily
+			def binToTile(x: Int, y: Int) =
+				if (steep) TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(y, x)).getTile
+				else TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(x, y)).getTile
+
+			// Find nth bin from scratch
+			def tileX(x: Int) = {
+				val dx = x - x0
+				val e = baseError - deltay * dx
+				val y = if (e < 0) {
+					val factor = math.ceil(-e.toDouble / deltax).toInt
+					y0 + factor * ystep
+				} else {
+					y0
+				}
+				binToTile(x, y)
+			}
+
+			// Determine the start of the range of internal tiles
+			val t0 = (x0 + xSize - (x0 % xSize)) / xSize
+			// Determine the end of the lead tiles
+			val x0a = x0 + maxBinDistance
+			val t0a = (x0a + xSize - (x0a % xSize)) / xSize
+			// Determine the end of the range of internal tiles
+			val tn = (x1 - (x1 % xSize)) / xSize
+			// Determine the start of the trailing tiles
+			val x1a = x1 - maxBinDistance
+			val tna = (x1a - (x1a % xSize)) / xSize
+
+			// Determine the end of the range of internal tiles
+			val x11 = x1 - (x1 % xSize)
+			val t1 = x11 / xSize
+
+			// Determine first and last tiles
+			val tile0 = binToTile(x0, y0)
+			val tile0a = tileX(t0 * xSize - 1)
+			val tile1a = tileX(t1 * xSize)
+			val tile1 = binToTile(x1, y1)
+			val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
+			val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
+
+			initialTiles ++ Iterable.range(t0, t0a).flatMap { t =>
+				val startTile = tileX(t * xSize)
+				val endTile = tileX((t + 1) * xSize - 1)
+
+				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+			} ++ Iterable.range(tna, tn).flatMap{t =>
+				val startTile = tileX(t * xSize)
+				val endTile = tileX((t + 1) * xSize - 1)
+
+				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+			} ++ finalTiles
+		}
+	}
+
+	/**
+	 * Compute all the bins on a single tile that are on the line between two given endpoints,
+	 * using a modified version of Bresneham's algorithm, and in a way that guarantees
+	 * consistency between this and a total-line Bresneham-based line-drawing function, and
+	 * only returns bins within D bins of an endpoint
+	 *
+	 * @param start The start bin, in unviersal bin coordinates, of the segment
+	 * @param end The end bin, in universal bin coordinates, of the segment
+	 * @param tile The tile whose bins are desired
+	 * @param maxBinDistance The maximum distance D allowed between either endpoint and a returned
+	 *                       bin.  Distance is calculated as minimum axial distance, not euclidean
+	 *                       distance.
+	 * @return Each bin in the given tile on this line, in tile coordinates.
+	 */
+	def closeLinearBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex, maxBinDistance: Int): Traversable[BinIndex] = {
+		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
+
+		val deltax: Long = x1 - x0
+		val deltay: Long = math.abs(y1 - y0)
+		var error: Long = deltax >> 1
+		var y = y0
+		val ystep = if (y0 < y1) 1 else -1
+
+		// Figure out the bounds of this tile in our x direction
+		val tileMin = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(0, 0))
+		val tileMax = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(tile.getXBins-1, tile.getYBins-1))
+		val (minX, maxX, minY, maxY) =
+			if (steep) (tileMin.getY, tileMax.getY, tileMin.getX, tileMax.getX)
+			else (tileMin.getX, tileMax.getX, tileMin.getY, tileMax.getY)
+
+		val xx0 = x0 max minX
+		val xx1 = (x1 min maxX) + 1
+
+		// Offset to our start location
+		val startOffset = xx0 - x0
+		error = error - startOffset * deltay
+		if (error < 0) {
+			val factor = math.ceil(-error.toDouble / deltax).toInt
+			error = error + factor * deltax
+			y = y + factor*ystep
+		}
+
+		// Get the universal bin of our lower left corner (for offsets)
+		var baseX = if (steep) tileMax.getY else tileMin.getX
+		var baseY = if (steep) tileMin.getX else tileMax.getY
+
+		// And iterate over our range
+		Iterable.range(xx0, xx1).flatMap{x =>
+			val curY = y
+			error = error - deltay
+			if (error < 0) {
+				y = y + ystep
+				error = error + deltax
+			}
+
+			if (minY <= curY && curY <= maxY) {
+				val uBin = if (steep) new BinIndex(curY, x) else new BinIndex(x, curY)
+
+				if (axialDistance(uBin, start) <= maxBinDistance || axialDistance(uBin, end) <= maxBinDistance) {
+					Some(TileIndex.universalBinIndexToTileBinIndex(tile, uBin).getBin)
+				} else None
+			}
+			else None
+		}
+	}
 }
 
 
 
 trait StandardArcBinningFunctions {
 	/**
-	 * Takes the two endpoints of the desired arc, and returns the center, radius, start slope, end 
+	 * Takes the two endpoints of the desired arc, and returns the center, radius, start slope, end
 	 * slope, and a list of the needed octants.
-	 * 
-	 * We assume a 60 degree arc. with the center on the RHS of the line, when travelling from the 
+	 *
+	 * We assume a 60 degree arc. with the center on the RHS of the line, when travelling from the
 	 * first to the second point (which means the arc goes counter-clockwise).
-	 * 
-	 * With 0deg being due east, octant 0 is from 0-45 degrees, octant 1 from 45-90 degrees, etc. 
-	 *  
+	 *
+	 * With 0deg being due east, octant 0 is from 0-45 degrees, octant 1 from 45-90 degrees, etc.
+	 *
 	 * Each octant is annotated with whether it is the initial and whether it is the final octant.
 	 */
 	private[tiling] def initializeArc (start: BinIndex, end: BinIndex)
