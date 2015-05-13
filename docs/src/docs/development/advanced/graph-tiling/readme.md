@@ -43,7 +43,7 @@ Aperture Tiles requires graph data to be in comma- or tab-delimited format (CSV)
 - Use the following command line syntax:
 
 	```bash
-	GraphParseApp –in source.graphml -out output.csv -longIDs true 
+	java GraphParseApp –in source.graphml -out output.csv -longIDs true 
 	–nAttr nAttr1, nAttr2 -eAttr eAttr1, eAttr2 -nCoordAttr NO
 	```
 
@@ -153,7 +153,7 @@ Consider a brain [connectomics](http://en.wikipedia.org/wiki/Connectomics) Graph
 To visualize this data, we are only interested in the **v\_region** and **v\_degree** node attributes and the **e\_weight** edge attribute (i.e., *all* edge attributes). Therefore, the proper GraphParseApp command line syntax is:
 
 ```bash
-GraphParseApp –in <graphML file> -out <output CSV file> -longIDs true 
+java GraphParseApp –in <graphML file> -out <output CSV file> -longIDs true 
 –nAttr v_region, v_degree
 ```
 
@@ -207,9 +207,10 @@ GraphClusterApp's implementation of the Louvain clustering algorithm uses Sotera
 - Use the following command line syntax:
 
 	```bash
-	GraphClusterApp -source <hdfs source location> -output <hdfs output location> 
-	-onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 -eWeight 3 -spark local 
-	-sparkhome /opt/spark -user <username>
+	spark-submit --class com.oculusinfo.tilegen.graph.cluster.GraphClusterApp 
+	<tile-generation-assembly.jar> -source <hdfs source location> -output 
+	<hdfs output location> -onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 
+	-eWeight 3 -spark local -sparkhome /opt/spark -user <username> 
 	```
 
 	Where: 
@@ -361,9 +362,10 @@ The modularity (*q-value*) is also saved for each hierarchical level in a *_qval
 The following example illustrates command line syntax for GraphClusterApp with Spark in local mode:
 
 ```bash
-GraphClusterApp -source <hdfs source location> -output <hdfs output location> 
--onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 -eWeight 3 -spark local 
--sparkhome /opt/spark -user <username>
+spark-submit --class com.oculusinfo.tilegen.graph.cluster.GraphClusterApp 
+<tile-generation-assembly.jar> -source <hdfs source location> -output 
+<hdfs output location> -onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 
+-eWeight 3 -spark local -sparkhome /opt/spark -user <username>
 ```
 
 In this case, the source dataset contains both nodes and edges (**-onlyEdges** *false*) with the following columns:
@@ -399,9 +401,10 @@ The hierarchic force-directed algorithm runs in a distributed manner using Spark
 - User the following command line syntax:
 
 	```bash
-	ClusteredGraphLayoutApp -source <hdfs source location> 
-	-output <hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 
-	-border 2 -eWeight true -g 0 -spark local -sparkhome /opt/spark 
+	spark-submit --class com.oculusinfo.tilegen.graph.util.ClusteredGraphLayoutApp 
+	<tile-generation-assembly.jar> -source <hdfs source location> -output 
+	<hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 
+	-border 2 -eWeight true -g 0 -spark local -sparkhome /opt/spark
 	-user <username>
 	```
 
@@ -608,9 +611,10 @@ The following command line syntax defines a layout for the clustered graph datas
 - No gravity force
 
 ```bash
-ClusteredGraphLayoutApp -source <hdfs source location> 
--output <hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 
--border 2 -eWeight true -g 0 -spark local -sparkhome /opt/spark -user <username>
+spark-submit --class com.oculusinfo.tilegen.graph.util.ClusteredGraphLayoutApp 
+<tile-generation-assembly.jar> -source <hdfs source location> -output 
+<hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 -border 2 
+-eWeight true -g 0 -spark local -sparkhome /opt/spark -user <username>
 ```
 
 ## <a name="tile-generation"></a> Tile Generation ##
