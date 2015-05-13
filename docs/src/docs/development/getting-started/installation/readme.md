@@ -55,8 +55,7 @@ Aperture Tiles requires the following third-party tools:
 		<tr>
 			<td style="vertical-align: text-top" class="description">Build Automation</td>
 			<td style="vertical-align: text-top" class="description">
-				<a href="https://gradle.org/">Gradle</a>
-				<br>(requires <a href="http://nodejs.org/">Node.js</a>)
+				<a href="http://nodejs.org/">Node.js</a>
 			</td>
 			<td style="vertical-align: text-top" class="description">
 				The Node.js Windows installer has a known issue where it fails to install the following directory. To work around this issue, create the directory manually.
@@ -88,7 +87,7 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 				A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
 				<ul class="table">
 					<li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
-					<li><a href="http://hadoop.apache.org/docs/r1.2.1/index.html">Apache</a></li>
+					<li><a href="http://hadoop.apache.org/">Apache</a></li>
 					<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
 					<li><a href="http://hortonworks.com/">HortonWorks</a></li>
 				</ul>
@@ -163,33 +162,37 @@ mvn build
 
 #### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
 
-Build Aperture Tiles by running the following command in your root Aperture Tiles directory:
+Aperture Tiles builds with [Gradle](https://gradle.org/). 
 
-```bash
-gradlew install -PbuildType=<buildType>
-``` 
+<h6 class="procedure">To install Gradle and build Aperture Tiles</h6>
 
-Where:
+- Execute the following command in your root Aperture Tiles directory:
 
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
+	```bash
+	gradlew install -PbuildType=<buildType>
+	``` 
+
+	Where:
+
+	<div class="props">
+		<table class="summaryTable" width="100%">
+			<thead>
+				<tr>
+					<th scope="col" width="25%">Sub-Project</th>
+					<th scope="col" width="75%">Description</th>
+				</tr>
+			</thead>
 			<tr>
-				<th scope="col" width="25%">Sub-Project</th>
-				<th scope="col" width="75%">Description</th>
+				<td class="property">buildType</td>
+				<td class="description">
+					A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).
+					<p>If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+				</td>
 			</tr>
-		</thead>
-		<tr>
-			<td class="property">buildType</td>
-			<td class="description">
-				A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).
-				<p>If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
-			</td>
-		</tr>
-	</table>
-</div>
+		</table>
+	</div>
 
-This will compile all the project components and install .jar files for each project into your local Gradle repository on your build machine.
+This will compile all the project components and install .jar files for each project into a local Gradle repository on your build machine.
 
 ##### <a name="project-structure"></a> Project Structure #####
 

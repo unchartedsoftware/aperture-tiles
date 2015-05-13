@@ -14,10 +14,10 @@ Once you have finished customizing the Tile Server and Tile Client, you can depl
 
 <h6 class="procedure">To build your application</h6>
 
-- Execute the following command in the root of your *new-project/* folder:
+- Execute the following command in the root of your *new-project/* folder, where the path to `gradlew` is relative to your the aperture-tiles directory in your Git project folder:
 
 ```bash
-gradlew install
+../gradlew install
 ```
 
 <h6 class="procedure">To deploy your application</h6>

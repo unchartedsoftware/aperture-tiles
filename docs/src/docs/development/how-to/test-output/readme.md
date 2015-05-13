@@ -16,9 +16,13 @@ The Aperture Tiles source code contains a utility for testing the output of tili
 
 <h6 class="procedure">To use the Bin Visualizer</h6>
 
-1. In an integrated development environment, browse to the [BinVisualizer.java](https://github.com/unchartedsoftware/aperture-tiles/blob/master/binning-utilities/src/main/java/com/oculusinfo/binning/visualization/BinVisualizer.java) file in [binning-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>binning/<wbr>visualization/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/binning-utilities/src/main/java/com/oculusinfo/binning/visualization).
-2. Debug the utility as a Java application.
-3. Use the **I/O** type drop-down list to specify the location (HBase or local file system) of your Avro tiles, then enter the appropriate connection details:
+1. Execute the following command in your root aperture-tiles directory to start the Bin Visualizer:
+
+	```bash
+	gradlew runBinVisualizer
+	```
+
+2. Use the **I/O** type drop-down list to specify the location (HBase or local file system) of your Avro tiles, then enter the appropriate connection details:
 	<div class="props">
 		<table class="summaryTable" width="100%">
 			<thead>
