@@ -246,58 +246,7 @@ trait StandardLinearBinningFunctions {
 	 */
 	def linearTiles (start: BinIndex, end: BinIndex, sample: TileIndex)
 			: Traversable[TileIndex] = {
-		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
-		val (xSize, ySize) =
-			if (steep) (sample.getYBins, sample.getXBins)
-			else (sample.getXBins, sample.getYBins)
-		val level = sample.getLevel
-
-		val deltax: Long = x1 - x0
-		val deltay: Long = math.abs(y1 - y0)
-		val baseError: Long = deltax >> 1
-		val ystep = if (y0 < y1) 1 else -1
-
-		// Function to convert from universal bin to tile quickly and easily
-		def binToTile (x: Int, y: Int) =
-			if (steep) TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(y, x)).getTile
-			else TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(x, y)).getTile
-
-		// Find nth bin from scratch
-		def tileX (x: Int) = {
-			val dx = x - x0
-			val e = baseError - deltay * dx
-			val y = if (e < 0) {
-				val factor = math.ceil(-e.toDouble / deltax).toInt
-				y0 + factor * ystep
-			} else {
-				y0
-			}
-			binToTile(x, y)
-		}
-
-		// Determine the start of the range of internal tiles
-		val t0 = (x0 + xSize - (x0 % xSize))/xSize
-		val tn = (x1 - (x1 %xSize))/xSize
-
-		// Determine the end of the range of internal tiles
-		val x11 = x1 - (x1%xSize)
-		val t1 = x11 / xSize
-
-		// Determine first and last tiles
-		val tile0 = binToTile(x0, y0)
-		val tile0a = tileX(t0 * xSize - 1)
-		val tile1a = tileX(t1 * xSize)
-		val tile1 = binToTile(x1, y1)
-		val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
-		val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
-
-
-		initialTiles ++ Iterable.range(t0, tn).flatMap{t =>
-			val startTile = tileX(t * xSize)
-			val endTile = tileX((t + 1) * xSize - 1)
-
-			if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
-		} ++ finalTiles
+		closeLinearTiles(start, end, sample, Int.MaxValue)
 	}
 
 
@@ -313,51 +262,7 @@ trait StandardLinearBinningFunctions {
 	 * @return Each bin in the given tile on this line, in tile coordinates.
 	 */
 	def linearBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex): Traversable[BinIndex] = {
-		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
-
-		val deltax: Long = x1 - x0
-		val deltay: Long = math.abs(y1 - y0)
-		var error: Long = deltax >> 1
-		var y = y0
-		val ystep = if (y0 < y1) 1 else -1
-
-		// Figure out the bounds of this tile in our x direction
-		val tileMin = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(0, 0))
-		val tileMax = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(tile.getXBins-1, tile.getYBins-1))
-		val (minX, maxX, minY, maxY) =
-			if (steep) (tileMin.getY, tileMax.getY, tileMin.getX, tileMax.getX)
-			else (tileMin.getX, tileMax.getX, tileMin.getY, tileMax.getY)
-
-		val xx0 = x0 max minX
-		val xx1 = (x1 min maxX) + 1
-
-		// Offset to our start location
-		val startOffset = xx0 - x0
-		error = error - startOffset * deltay
-		if (error < 0) {
-			val factor = math.ceil(-error.toDouble / deltax).toInt
-			error = error + factor * deltax
-			y = y + factor*ystep
-		}
-
-		// Get the universal bin of our lower left corner (for offsets)
-		var baseX = if (steep) tileMax.getY else tileMin.getX
-		var baseY = if (steep) tileMin.getX else tileMax.getY
-
-		// And iterate over our range
-		Iterable.range(xx0, xx1).flatMap{x =>
-			val curY = y
-			error = error - deltay
-			if (error < 0) {
-				y = y + ystep
-				error = error + deltax
-			}
-
-			if (minY <= curY && curY <= maxY)
-				Some(if (steep) TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(curY, x)).getBin
-				     else TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(x, curY)).getBin)
-			else None
-		}
+		closeLinearBinsForTile(start, end, tile, Int.MaxValue)
 	}
 
 
@@ -382,76 +287,85 @@ trait StandardLinearBinningFunctions {
 	def closeLinearTiles (start: BinIndex, end: BinIndex, sample: TileIndex, maxBinDistance: Int)
 	: Traversable[TileIndex] = {
 		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
+
 		val singleTileGap = if (steep) sample.getYBins else sample.getXBins
-		if (axialDistance(start, end) <= 2*maxBinDistance + singleTileGap) {
-			// Endpoints are close enough that all tiles in between should be used (though one tile,
-			// the gap, may only have some bins used)
-			linearTiles(start, end, sample)
-		} else {
-			// Endpoints are far enough appart to create a gap; determine the gap, and return stuff in between.
-			val (xSize, ySize) =
-				if (steep) (sample.getYBins, sample.getXBins)
-				else (sample.getXBins, sample.getYBins)
-			val level = sample.getLevel
+		val isTileGap = maxBinDistance != Int.MaxValue && axialDistance(start, end) > 2L*maxBinDistance + singleTileGap
 
-			val deltax: Long = x1 - x0
-			val deltay: Long = math.abs(y1 - y0)
-			val baseError: Long = deltax >> 1
-			val ystep = if (y0 < y1) 1 else -1
+		val (xSize, ySize) =
+			if (steep) (sample.getYBins, sample.getXBins)
+			else (sample.getXBins, sample.getYBins)
+		val level = sample.getLevel
 
-			// Function to convert from universal bin to tile quickly and easily
-			def binToTile(x: Int, y: Int) =
-				if (steep) TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(y, x)).getTile
-				else TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(x, y)).getTile
+		val deltax: Long = x1 - x0
+		val deltay: Long = math.abs(y1 - y0)
+		val baseError: Long = deltax >> 1
+		val ystep = if (y0 < y1) 1 else -1
 
-			// Find nth bin from scratch
-			def tileX(x: Int) = {
-				val dx = x - x0
-				val e = baseError - deltay * dx
-				val y = if (e < 0) {
-					val factor = math.ceil(-e.toDouble / deltax).toInt
-					y0 + factor * ystep
-				} else {
-					y0
-				}
-				binToTile(x, y)
+		// Function to convert from universal bin to tile quickly and easily
+		def binToTile(x: Int, y: Int) =
+			if (steep) TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(y, x)).getTile
+			else TileIndex.universalBinIndexToTileBinIndex(sample, new BinIndex(x, y)).getTile
+
+		// Find nth bin from scratch
+		def tileX(x: Int) = {
+			val dx = x - x0
+			val e = baseError - deltay * dx
+			val y = if (e < 0) {
+				val factor = math.ceil(-e.toDouble / deltax).toInt
+				y0 + factor * ystep
+			} else {
+				y0
 			}
-
-			// Determine the start of the range of internal tiles
-			val t0 = (x0 + xSize - (x0 % xSize)) / xSize
-			// Determine the end of the lead tiles
-			val x0a = x0 + maxBinDistance
-			val t0a = (x0a + xSize - (x0a % xSize)) / xSize
-			// Determine the end of the range of internal tiles
-			val tn = (x1 - (x1 % xSize)) / xSize
-			// Determine the start of the trailing tiles
-			val x1a = x1 - maxBinDistance
-			val tna = (x1a - (x1a % xSize)) / xSize
-
-			// Determine the end of the range of internal tiles
-			val x11 = x1 - (x1 % xSize)
-			val t1 = x11 / xSize
-
-			// Determine first and last tiles
-			val tile0 = binToTile(x0, y0)
-			val tile0a = tileX(t0 * xSize - 1)
-			val tile1a = tileX(t1 * xSize)
-			val tile1 = binToTile(x1, y1)
-			val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
-			val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
-
-			initialTiles ++ Iterable.range(t0, t0a).flatMap { t =>
-				val startTile = tileX(t * xSize)
-				val endTile = tileX((t + 1) * xSize - 1)
-
-				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
-			} ++ Iterable.range(tna, tn).flatMap{t =>
-				val startTile = tileX(t * xSize)
-				val endTile = tileX((t + 1) * xSize - 1)
-
-				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
-			} ++ finalTiles
+			binToTile(x, y)
 		}
+
+		// Determine the start of the range of internal tiles
+		val t0 = (x0 + xSize - (x0 % xSize)) / xSize
+		// Determine the end of the range of internal tiles
+		val tn = (x1 - (x1 % xSize)) / xSize
+
+		// Determine the end of the range of internal tiles
+		val x11 = x1 - (x1 % xSize)
+		val t1 = x11 / xSize
+
+		// Determine first and last tiles
+		val tile0 = binToTile(x0, y0)
+		val tile0a = tileX(t0 * xSize - 1)
+		val tile1a = tileX(t1 * xSize)
+		val tile1 = binToTile(x1, y1)
+		val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
+		val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
+
+		val intermediateTiles =
+		if (isTileGap) {
+			// Determine the end of the lead tiles
+			val x0f = x0 + maxBinDistance
+			val t0f = (x0f + xSize - (x0f % xSize)) / xSize
+			// Determine the start of the trailing tiles
+			val x1s = x1 - maxBinDistance
+			val tns = (x1s - (x1s % xSize)) / xSize
+
+			Iterable.range(t0, t0f).flatMap { t =>
+				val startTile = tileX(t * xSize)
+				val endTile = tileX((t + 1) * xSize - 1)
+
+				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+			} ++ Iterable.range(tns, tn).flatMap{t =>
+				val startTile = tileX(t * xSize)
+				val endTile = tileX((t + 1) * xSize - 1)
+
+				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+			}
+		} else {
+			Iterable.range(t0, tn).flatMap{t =>
+				val startTile = tileX(t * xSize)
+				val endTile = tileX((t + 1) * xSize - 1)
+
+				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+			}
+		}
+
+		initialTiles ++ intermediateTiles ++ finalTiles
 	}
 
 	/**
@@ -512,7 +426,7 @@ trait StandardLinearBinningFunctions {
 			if (minY <= curY && curY <= maxY) {
 				val uBin = if (steep) new BinIndex(curY, x) else new BinIndex(x, curY)
 
-				if (axialDistance(uBin, start) <= maxBinDistance || axialDistance(uBin, end) <= maxBinDistance) {
+				if (maxBinDistance == Int.MaxValue || axialDistance(uBin, start) <= maxBinDistance || axialDistance(uBin, end) <= maxBinDistance) {
 					Some(TileIndex.universalBinIndexToTileBinIndex(tile, uBin).getBin)
 				} else None
 			}
