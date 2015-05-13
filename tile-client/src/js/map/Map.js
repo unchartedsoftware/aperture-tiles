@@ -559,7 +559,9 @@
             // update theme for all attached layers
             if ( this.layers ) {
                 for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[ i ].setTheme( theme );
+                    if ( this.layers[i].setTheme ) {
+                        this.layers[i].setTheme( theme );
+                    }
                 }
             }
         },
