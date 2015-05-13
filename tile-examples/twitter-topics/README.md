@@ -17,13 +17,13 @@ To build the demo:
 1. Build the entire aperture-tiles project by executing the following command in the [root aperture-tiles](../../) directory:
 
 	```bash
-	gradle install
+	../../gradlew install
 	```
 
 2. Subsequent changes to the Twitter Topics demo can be built individually by executing the following command in the [tile-examples/twitter-topics/](.) directory:
 
 	```bash
-	gradle install
+	../../gradlew install
 	```
 
 ## Running ##
@@ -33,7 +33,7 @@ To server the demo on your localhost and test it:
 1. Run the following command in the [tile-examples/twitter-topics/](.) directory:
 
 	```bash
-	gradle jettyrun
+	../../gradlew jettyrun
 	```
 
-2. Navigate to [http://localhost:8080/twitter-topics](http://localhost:8080/twitter-topics) in any modern browser.
+2. Navigate to [http://localhost:8080/twitter-topics-client](http://localhost:8080/twitter-topics-client) in any modern browser.

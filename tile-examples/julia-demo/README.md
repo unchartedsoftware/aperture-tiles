@@ -15,13 +15,13 @@ To build the demo:
 1. Build the entire aperture-tiles project by executing the following command in the [root aperture-tiles](../../) directory:
 
 	```bash
-	gradle install
+	../../gradlew install
 	```
 	
 2. Subsequent changes to the Julia Set demo can be built individually by executing the following command in the [tile-examples/julia-demo/](.) directory:
 
 	```bash
-	gradle install
+	../../gradlew install
 	```
 
 ## Running ##
@@ -31,7 +31,7 @@ To serve the demo on your localhost and test it:
 1. Run the following command in the [tile-examples/julia-demo/](.) directory:
 
 	```bash
-	gradle jettyrun
+	../../gradlew jettyrun
 	```
 
 2. Navigate to [http://localhost:8080/julia-demo](http://localhost:8080/julia-demo) in any modern browser.
