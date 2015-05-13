@@ -45,7 +45,7 @@ Aperture Tiles requires the following third-party tools:
 			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
 			<td style="vertical-align: text-top" class="description">
 				<a href="http://spark.incubator.apache.org/">Apache Spark</a>
-				<br>v1.1.1
+				<br>v1.2
 			</td>
 			<td style="vertical-align: text-top" class="description">
 				Specify the version of Hadoop with which Spark will be working (if applicable).
@@ -93,7 +93,7 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 					<li><a href="http://hortonworks.com/">HortonWorks</a></li>
 				</ul>
 			</td>
-			<td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.1.1 if the installation is older.</td>
+			<td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.2 if the installation is older.</td>
 		</tr>
 	</table>
 </div>
