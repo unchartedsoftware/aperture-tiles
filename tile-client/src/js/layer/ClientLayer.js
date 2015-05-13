@@ -34,35 +34,6 @@
         PubSub = require('../util/PubSub');
 
     /**
-     * Private: Sets the layers min and max values for the given zoom level.
-     *
-     * @param layer {Object} the layer object.
-     */
-    function setLevelMinMax( layer ) {
-        var zoomLevel = layer.map.getZoom(),
-            meta =  layer.source.meta.meta[ zoomLevel ],
-            transformData = layer.tileTransform.data || {},
-            levelMinMax = meta,
-            renderer = layer.renderer,
-            aggregated;
-        // aggregate the data if there is an aggregator attached
-        if ( renderer && renderer.aggregator ) {
-            // aggregate the meta data buckets
-            aggregated = renderer.aggregator.aggregate(
-                meta.bins,
-                transformData.startBucket,
-                transformData.endBucket );
-            // take the first and last index, which correspond to max / min
-            levelMinMax = {
-                minimum: aggregated[aggregated.length - 1],
-                maximum: aggregated[0]
-            };
-        }
-        layer.levelMinMax = levelMinMax;
-        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
-    }
-
-    /**
      * Private: Returns the zoom callback function to update level min and maxes.
      *
      * @param layer {ServerLayer} The layer object.
@@ -70,7 +41,7 @@
     function zoomCallback( layer ) {
         return function() {
             if ( layer.olLayer ) {
-                setLevelMinMax( layer );
+                layer.setLevelMinMax( layer );
             }
         };
     }
@@ -152,7 +123,7 @@
         this.setOpacity( this.opacity );
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
-        setLevelMinMax( this );
+        this.setLevelMinMax( this );
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
@@ -335,6 +306,35 @@
             this.olLayer.redraw();
         }
     };
+
+    /**
+     * Sets the layers min and max values for the given zoom level.
+     *
+     * @param layer {Object} the layer object.
+     */
+    ClientLayer.prototype.setLevelMinMax = function( layer ) {
+        var zoomLevel = layer.map.getZoom(),
+            meta =  layer.source.meta.meta[ zoomLevel ],
+            transformData = layer.tileTransform.data || {},
+            levelMinMax = meta,
+            renderer = layer.renderer,
+            aggregated;
+        // aggregate the data if there is an aggregator attached
+        if ( renderer && renderer.aggregator ) {
+            // aggregate the meta data buckets
+            aggregated = renderer.aggregator.aggregate(
+                meta.bins,
+                transformData.startBucket,
+                transformData.endBucket );
+            // take the first and last index, which correspond to max / min
+            levelMinMax = {
+                minimum: aggregated[aggregated.length - 1],
+                maximum: aggregated[0]
+            };
+        }
+        layer.levelMinMax = levelMinMax;
+        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
+    }
 
     module.exports = ClientLayer;
 }());

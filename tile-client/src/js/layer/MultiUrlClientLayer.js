@@ -29,18 +29,16 @@
 
 	var ClientLayer = require('./ClientLayer'),
 		LayerUtil = require('./LayerUtil'),
-		Util = require('../util/Util'),
-		HtmlTileLayer = require('./HtmlTileLayer'),
 		PubSub = require('../util/PubSub');
 
-	function getURL( bounds, ids ) {
+	function getURL( bounds, layers ) {
 		var tileIndex = LayerUtil.getTileIndex( this, bounds ),
 			x = tileIndex.xIndex,
 			y = tileIndex.yIndex,
 			z = tileIndex.level;
-		var result = _.map(ids, function(id) {
+		var result = _.map(layers, function(layer) {
 				if ( x >= 0 && y >= 0 ) {
-					return this.url + id + "/" + z + "/" + x + "/" + y + "." + this.type;
+					return this.url + layer.id + "/" + z + "/" + x + "/" + y + "." + this.type;
 				}
 		}, this);
 		return result;
@@ -59,23 +57,30 @@
 
 	MultiUrlClientLayer.prototype = Object.create( ClientLayer.prototype );
 
-	/**
-	 * Activates the layer object. This should never be called manually.
-	 * @memberof ClientLayer
-	 * @private
-	 */
-	MultiUrlClientLayer.prototype.activate = function() {
-		ClientLayer.prototype.activate.call(this);
-	};
+	MultiUrlClientLayer.prototype.setLevelMinMax = function(layer) {
+		// Apply the aggregator across each level to get their min max.
+		var zoomLevel = layer.map.getZoom(),
+			meta =  layer.source.meta.meta[ zoomLevel ],
+			transformData = layer.tileTransform.data || {},
+			levelMinMax = meta,
+			renderer = layer.renderer;
 
-	/**
-	 * Dectivates the layer object. This should never be called manually.
-	 * @memberof ClientLayer
-	 * @private
-	 */
-	MultiUrlClientLayer.prototype.deactivate = function() {
-		ClientLayer.prototype.deactivate.call(this);
-	};
+		// aggregate the data if there is an aggregator attached
+		if ( renderer && renderer.aggregator ) {
+			// aggregate the meta data buckets
+			var aggregated = renderer.aggregator.aggregate(
+				meta.bins,
+				transformData.startBucket,
+				transformData.endBucket );
+			// take the first and last index, which correspond to max / min
+			levelMinMax = {
+				minimum: aggregated[aggregated.length - 1],
+				maximum: aggregated[0]
+			};
+		}
+		layer.levelMinMax = levelMinMax;
+		PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
+	}
 
 	module.exports = MultiUrlClientLayer
 }());
