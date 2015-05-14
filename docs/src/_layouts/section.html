@@ -2,18 +2,10 @@
 layout: default
 ---
 
-{% comment %} Get filename containing sidebar content {% endcomment %}
-	{% capture includeContext %}{{ page.section | slugify }}.html{% endcapture %}
-
 <div id="content">
 	<div class="content-context">
-		{% include {{ includeContext }} %}
-		{% if page.section != 'Support' %}
-			{% include footer.html %}
-		{% else %}
-			<br>
-			<a href="http://uncharted.software/" class="copyright">&#169;2013-2015 Uncharted Software Inc.</a>
-		{% endif %}
+		{% include_relative sidebar.html %}
+		{% include footer.html %}
 	</div>
 	<div class="content-body">
 		{{ content }}
