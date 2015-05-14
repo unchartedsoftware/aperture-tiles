@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -78,19 +78,21 @@ public class LayerResource extends ApertureServerResource {
             host = host.substring( 0, host.lastIndexOf("layer") );
             // get layer metadata
             PyramidMetaData metaDataPyramid = _service.getMetaData( layerId );
-            JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
-            // try to add images per tile to meta
-            try {
-                TileDataImageRenderer<?> renderer = config.produce( TileDataImageRenderer.class );
-                if ( null != renderer ) {
-                    metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
+            if ( metaDataPyramid != null ) {
+                JSONObject metaData = JsonUtilities.deepClone( metaDataPyramid.getRawData() );
+                // try to add images per tile to meta
+                try {
+                    TileDataImageRenderer<?> renderer = config.produce( TileDataImageRenderer.class );
+                    if ( null != renderer ) {
+                        metaData.put("imagesPerTile", renderer.getNumberOfImagesPerTile( metaDataPyramid ));
+                    }
+                } catch ( ConfigurationException e ) {
+                    // If we have to skip images per tile, it's not a huge deal
+                    LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
                 }
-            } catch (ConfigurationException e) {
-                // If we have to skip images per tile, it's not a huge deal
-                LOGGER.warn("Couldn't determine images per tile for layer {}", layerId, e);
+                // add meta data
+                layer.put("meta", metaData );
             }
-            // add meta data
-            layer.put("meta", metaData );
             // set tms url with correct endpoint
             layer.put("tms", host + config.getPropertyValue( LayerConfiguration.REST_ENDPOINT ) + "/");
             return layer;

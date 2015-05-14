@@ -28,6 +28,8 @@ package com.oculusinfo.tilegen.graph.analytics
 
 import java.util.{List => JavaList}
 
+import org.json.{JSONArray, JSONObject}
+
 import scala.collection.JavaConverters._
 
 import org.apache.spark.SparkContext
@@ -41,12 +43,17 @@ import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescriptionTileWrapper
 class GraphMaxRecordAnalytic extends TileAnalytic[List[GraphAnalyticsRecord]] {
 	def name: String = "maximum"
 
-	override def valueToString (value: List[GraphAnalyticsRecord]): String =
-		value.mkString(":")
-
 	def aggregate (a: List[GraphAnalyticsRecord],
 	               b: List[GraphAnalyticsRecord]): List[GraphAnalyticsRecord] =
 		List(GraphAnalyticsRecord.maxOfRecords((a ++ b).toArray :_*))
+
+	override def storableValue (value: List[GraphAnalyticsRecord], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val result = new JSONObject()
+		val subRes = new JSONArray()
+		value.foreach(gar => subRes.put(gar.toString))
+		result.put(name, subRes)
+		Some(result)
+	}
 
 	def defaultProcessedValue: List[GraphAnalyticsRecord] = List[GraphAnalyticsRecord]()
 	def defaultUnprocessedValue: List[GraphAnalyticsRecord] = List[GraphAnalyticsRecord]()
@@ -55,12 +62,17 @@ class GraphMaxRecordAnalytic extends TileAnalytic[List[GraphAnalyticsRecord]] {
 class GraphMinRecordAnalytic extends TileAnalytic[List[GraphAnalyticsRecord]] {
 	def name: String = "minimum"
 
-	override def valueToString (value: List[GraphAnalyticsRecord]): String =
-		value.mkString(":")
-
 	def aggregate (a: List[GraphAnalyticsRecord],
 	               b: List[GraphAnalyticsRecord]): List[GraphAnalyticsRecord] =
 		List(GraphAnalyticsRecord.minOfRecords((a ++ b).toArray :_*))
+		
+	override def storableValue (value: List[GraphAnalyticsRecord], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val result = new JSONObject()
+		val subRes = new JSONArray()
+		value.foreach(gar => subRes.put(gar.toString))
+		result.put(name, subRes)
+		Some(result)
+	}		
 
 	def defaultProcessedValue: List[GraphAnalyticsRecord] = List[GraphAnalyticsRecord]()
 	def defaultUnprocessedValue: List[GraphAnalyticsRecord] = List[GraphAnalyticsRecord]()

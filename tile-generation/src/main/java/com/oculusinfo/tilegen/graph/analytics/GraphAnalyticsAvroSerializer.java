@@ -59,6 +59,12 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
 		GenericData.Array<GenericRecord> values = (GenericData.Array<GenericRecord>) entry.get("communities");
 		List<GraphCommunity> results = new ArrayList<>();
 		for (GenericRecord value: values) {
+
+			List<Double> statsList = new ArrayList<>();
+			GenericData.Array<Double> statsValues = (GenericData.Array<Double>) value.get("statsList");
+			for (Double currVal: statsValues) {
+				statsList.add((Double)currVal);
+			}			
 			
 			List<GraphEdge> interEdges = new ArrayList<>();
 			GenericData.Array<GenericRecord> interEvalues = (GenericData.Array<GenericRecord>) value.get("interEdges");			
@@ -89,6 +95,7 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
 	                                        (Long)value.get("parentID"),
 	                                        new Pair<Double, Double>((Double)value.get("parentX"), (Double)value.get("parentY")),
 	                                        (Double)value.get("parentR"),
+	                                        statsList,
 	                                        interEdges,
 	                                        intraEdges));
 		}
@@ -121,6 +128,11 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
             elt.put("parentY", rawElt.getParentCoords().getSecond());
             elt.put("parentR", rawElt.getParentRadius());
             
+            //Schema statsSchema = eltSchema.getField("statsList").schema().getElementType();
+            //List<Double> stats = new ArrayList<>();
+            List<Double> statsList = rawElt.getStatsList();
+            elt.put("statsList", statsList);
+            
             Schema interEschema = eltSchema.getField("interEdges").schema().getElementType();
             List<GenericRecord> interE = new ArrayList<>();
             List<GraphEdge> interEdges = rawElt.getInterEdges();
@@ -134,7 +146,7 @@ extends GenericAvroArraySerializer<GraphAnalyticsRecord> {
             	
             	interE.add(edge);
             }
-            elt.put("interEdges", interE);
+            elt.put("interEdges", interE);            
             
             Schema intraEschema = eltSchema.getField("intraEdges").schema().getElementType();
             List<GenericRecord> intraE = new ArrayList<>();

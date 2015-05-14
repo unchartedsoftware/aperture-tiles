@@ -44,6 +44,8 @@ import org.apache.spark.SharedSparkContext
 
 import com.oculusinfo.binning.impl.AOITilePyramid
 import com.oculusinfo.binning._
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
@@ -156,7 +158,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		// source represents the bins with values
 		// So tile (1, 0, 0) should be exactly half full - and default to sparse
 		//    tile (1, 1, 0) should be one more than half full - and default to dense
-		//    tile (1, 1, 0) should be totally full - and default to dense
+		//    tile (1, 0, 1) should be totally full - and default to dense
 		//    tile (1, 1, 1) should be nearly empty - and default to sparse
 		val source = List(
 			List(t, t, t, t, f, f, f, f),

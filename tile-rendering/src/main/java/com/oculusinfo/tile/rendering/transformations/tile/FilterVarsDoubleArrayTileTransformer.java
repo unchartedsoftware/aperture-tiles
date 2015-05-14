@@ -28,9 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.DenseTileData;
-
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -39,10 +39,10 @@ import org.json.JSONObject;
 
 
 /** 
- * 	This transformer will take in JSON object representing bins of a double array tile and
- * 		will filter out all variables except the variables contained in the variable
+ * 	This transformer will take in JSON or tileData object representing bins of a double array 
+ * 		tile and will filter out all variables except the variables contained in the variable
  * 		array passed in during construction.  The double arrays passed back will be in the 
- * 		order that they are sequenced in the JSON array passed in through the constructor.
+ * 		order that they are sequenced in the JSON or tileData array passed in.
  * 
  */
 

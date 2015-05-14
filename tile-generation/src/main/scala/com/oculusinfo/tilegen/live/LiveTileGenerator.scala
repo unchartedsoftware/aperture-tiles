@@ -26,13 +26,16 @@
 package com.oculusinfo.tilegen.live
 
 
-import com.oculusinfo.binning.{TileIndex, DenseTileData, TileData, TilePyramid}
-
 import scala.reflect.ClassTag
 
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
+
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.TileData
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.DenseTileData
 
 import com.oculusinfo.tilegen.tiling.analytics.BinningAnalytic
 

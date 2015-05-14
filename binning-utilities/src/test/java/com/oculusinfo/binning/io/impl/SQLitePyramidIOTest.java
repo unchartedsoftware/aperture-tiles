@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.oculusinfo.binning.DenseTileData;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,6 +39,7 @@ import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializer;
 import com.oculusinfo.factory.util.Pair;
 

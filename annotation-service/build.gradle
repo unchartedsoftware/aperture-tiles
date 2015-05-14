@@ -3,14 +3,6 @@ description = "Back-end service for tile annotations"
 // Pulls in required plugins
 apply plugin: "java"
 
-// Restlet isn't in maven central for some reason, so we need to add their
-// location to the set from the parent build file.
-repositories {
-	maven {
-		url = "http://maven.restlet.org"
-	}
-}
-
 // Jars / projects this project depends on.
 dependencies {
 	compile "org.restlet.jee:org.restlet:2.1.2"

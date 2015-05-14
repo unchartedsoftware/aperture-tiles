@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.binning.io.serialization.GenericAvroArraySerializer;
-import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
 
 
@@ -52,13 +51,13 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
         return "twitterTopicEntry.avsc";
     }
 
-    private List<Pair<String, Long>> recentListTOJava (GenericRecord entry) {
+    private List<RecentTweet> recentListTOJava(GenericRecord entry) {
         @SuppressWarnings("unchecked")
         GenericData.Array<GenericRecord> values = (GenericData.Array<GenericRecord>) entry.get("recentTweets");
-        List<Pair<String, Long>> results = new ArrayList<>();
+        List<RecentTweet> results = new ArrayList<>();
         for (GenericRecord value: values) {
-            results.add(new Pair<String, Long>(value.get("tweet").toString(),
-                                               (Long) value.get("time")));
+            results.add(new RecentTweet(value.get("tweet").toString(),
+		            (Long) value.get("time"), value.get("user").toString(), value.get("sentiment").toString()));
         }
         return results;
     }
@@ -75,15 +74,17 @@ extends GenericAvroArraySerializer<TwitterDemoTopicRecord> {
         								recentListTOJava(entry),
         								(Long)entry.get("endTimeSecs"));
     }
-    
-    private List<GenericRecord> recentListToAvro (Schema mainSchema, List<Pair<String, Long>> elts) {
+
+    private List<GenericRecord> recentListToAvro (Schema mainSchema, List<RecentTweet> elts) {
         Schema eltSchema = mainSchema.getField("recentTweets").schema().getElementType();
         List<GenericRecord> result = new ArrayList<>();
         for (int i=0; i < elts.size(); ++i) {
             GenericRecord elt = new GenericData.Record(eltSchema);
-            Pair<String, Long> rawElt = elts.get(i);
-            elt.put("tweet", rawElt.getFirst());
-            elt.put("time", rawElt.getSecond());
+            RecentTweet rawElt = elts.get(i);
+            elt.put("tweet", rawElt.getText());
+            elt.put("time", rawElt.getTime());
+	        elt.put("user", rawElt.getUser());
+	        elt.put("sentiment", rawElt.getSentiment());
             result.add(elt);
         }
         return result;

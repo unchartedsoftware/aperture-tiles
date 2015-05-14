@@ -17,3 +17,5 @@ bin
 */**/coverage
 tile-quickstart.war
 out/*
+test.output
+.DS_Store

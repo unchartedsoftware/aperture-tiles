@@ -82,8 +82,8 @@
  * {@link com.oculusinfo.binning.BinIndex}, and 
  * {@link com.oculusinfo.binning.TileAndBinIndices}, which are used to specify
  * which tile and/or bin is meant. </li>
- * <li> {@link com.oculusinfo.binning.TileData}, {@link com.oculusinfo.binning.DenseTileData}, and
- * {@link com.oculusinfo.binning.SparseTileData} which store the data comprising a tile </li>
+ * <li> {@link com.oculusinfo.binning.TileData}, {@link com.oculusinfo.binning.impl.DenseTileData}, and
+ * {@link com.oculusinfo.binning.impl.SparseTileData} which store the data comprising a tile </li>
  * <li> {@link com.oculusinfo.binning.TilePyramid}, which indicates the 
  * mapping, or projection, from the raw data into tile coordinates, </li>
  * <li> {@link com.oculusinfo.binning.PyramidComparator}, which can be used 

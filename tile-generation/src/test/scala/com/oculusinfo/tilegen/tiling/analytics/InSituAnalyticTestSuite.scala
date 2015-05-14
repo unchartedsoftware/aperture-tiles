@@ -42,7 +42,7 @@ import scala.util.Try
 
 class InSituAnalyticTestSuite extends FunSuite with SharedSparkContext {
 	test("Array tile analytic output") {
-		val analytic = new ArrayTileAnalytic[Int](new NumericSumTileAnalytic[Int]("inner"), Some("outer"))
+		val analytic = new ArrayTileAnalytic[Int](new NumericSumTileAnalytic[Int](Some("inner")), Some("outer"))
 		val analyticDesc = new MonolithicAnalysisDescription(((i: Int) => Seq(i)), analytic)
 		
 		analyticDesc.addGlobalAccumulator(sc)
@@ -62,12 +62,12 @@ class InSituAnalyticTestSuite extends FunSuite with SharedSparkContext {
 		                                   Seq(Int.box(0), Int.box(1)).asJava,
 		                                   pyramid.getTileBounds(new TileIndex(0, 0, 0)),
 		                                   null, null)
-		analyticDesc.applyTo(metaData)
+		AnalysisDescription.record(analyticDesc, metaData)
 
 		def getInnerValues (from: String): List[Int] = {
 			val json = new JSONObject(from).getJSONArray("outer")
 			Range(0, json.length()).map(n =>
-				json.getJSONObject(n).getInt("inner")
+				json.getInt(n)
 			).toList
 		}
 		val global = getInnerValues(metaData.getCustomMetaData("global"))

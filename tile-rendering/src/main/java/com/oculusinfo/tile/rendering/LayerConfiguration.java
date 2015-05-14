@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -51,7 +51,7 @@ import java.util.*;
  *
  * Nodes that contain values are represented by ConfigurableProperty objects.
  * Nodes that contain class enumerations and are represented by ConfigurableFactory objects.
- * 
+ *
  * @author nkronenfeld, kbirk
  */
 public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> {
@@ -89,12 +89,18 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final IntegerProperty COARSENESS = new IntegerProperty("coarseness",
 	    "Used by the standard heatmap renderer to allow the client to specify getting coarser tiles than needed, for efficiency (if needed)",
 	    1);
+	public static final StringProperty PIXEL_SHAPE = new StringProperty("pixelShape",
+		    "Used by the standard heatmap renderer to allow either circular or square 'pixels' if coarseness > 2x2. Valid settings are 'circle' (default) or 'square'.",
+		    "circle");	
 	public static final IntegerProperty OUTPUT_WIDTH = new IntegerProperty("outputWidth",
 	    "The output image width, defaults to the standard 256",
 	    256);
 	public static final IntegerProperty OUTPUT_HEIGHT = new IntegerProperty("outputHeight",
 	    "The output image height, defaults to the standard 256",
 	    256);
+	public static final StringProperty RANGE_MODE = new StringProperty("rangeMode",
+		"The mode for handling range extrema",
+		"clamp");
 	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
 	    "The minimum value set to the lower bound of the color ramp spectrum",
 	    0);
@@ -152,9 +158,11 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(OUTPUT_HEIGHT);
         addProperty(DATA_ID, DATA_PATH);
 		addProperty(COARSENESS, RENDERER_PATH);
+		addProperty(PIXEL_SHAPE, RENDERER_PATH);
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
-		addProperty(TILE_COORDINATE);
+		addProperty(RANGE_MODE, RENDERER_PATH);
+		addProperty( TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);
 
@@ -214,11 +222,11 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	/**
 	 * This is a placeholder for the caching configuration to override; it does
 	 * nothing in this version.
-	 * 
+	 *
 	 * Theoretically, it allows for a hook point for extending classes to make
 	 * last-minute preparations before actually rendering a tile, whether to
 	 * JSON or an image.
-	 * 
+	 *
 	 * @param layer The layer to be rendered.
 	 * @param tile The tile to be rendered
 	 * @param tileSet Any other tiles that will need to be rendered along with

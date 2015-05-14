@@ -66,19 +66,19 @@
      * <pre>
      * {
      *     node: {
-     *         xKey      {String} - The attribute for the x coordinate.
-     *         yKey      {String} - The attribute for the y coordinate.
-     *         radiusKey {String} - The attribute for the node radius.
+     *         xKey      {String|Function} - The attribute for the x coordinate.
+     *         yKey      {String|Function} - The attribute for the y coordinate.
+     *         radiusKey {String|Function} - The attribute for the node radius.
      *         themes    {Array}   The array of RenderThemes to be attached to this component.
      *     },
      *     criticalNode: {
-     *         flag     {String} - The boolean attribute to designate critical nodes.
+     *         flag     {String|Function} - The boolean attribute to designate critical nodes.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     },
      *     parentNode: {
-     *         xKey      {String} - The attribute for the parent node x coordinate.
-     *         yKey      {String} - The attribute for the parent node y coordinate.
-     *         radiusKey {String} - The attribute for the node radius.
+     *         xKey      {String|Function} - The attribute for the parent node x coordinate.
+     *         yKey      {String|Function} - The attribute for the parent node y coordinate.
+     *         radiusKey {String|Function} - The attribute for the node radius.
      *         themes    {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
@@ -86,6 +86,16 @@
      */
     function GraphNodeRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.values[0].value[0].communities";
+        spec.node = spec.node || {};
+        spec.node.xKey = spec.node.xKey || 'x';
+        spec.node.yKey = spec.node.yKey || 'y';
+        spec.node.radiusKey = spec.node.radiusKey || 'r';
+        spec.parentNode = spec.parentNode || {};
+        spec.parentNode.xKey = spec.parentNode.xKey || 'parentX';
+        spec.parentNode.yKey = spec.parentNode.yKey || 'parentY';
+        spec.parentNode.radiusKey = spec.parentNode.radiusKey || 'parentR';
+        spec.criticalNode = spec.criticalNode || {};
+        spec.criticalNode.flag = spec.criticalNode.flag || 'isPrimaryNode';
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -107,7 +117,7 @@
             BORDER_WIDTH = 2,
             spec = this.spec,
             communities = RendererUtil.getAttributeValue( data, spec.rootKey ),
-            scale = Math.pow( 2, this.map.getZoom() ),
+            scale = Math.pow( 2, this.parent.map.getZoom() ),
             range =  GRAPH_COORD_RANGE / scale,
             className,
             community,

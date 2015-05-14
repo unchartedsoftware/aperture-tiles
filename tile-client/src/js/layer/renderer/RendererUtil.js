@@ -31,6 +31,10 @@
 
     "use strict";
 
+    function log10(val) {
+        return Math.log(val) / Math.LN10;
+    }
+
     module.exports = {
 
         /**
@@ -49,25 +53,45 @@
         },
 
         /**
+         * Transforms a value into the range [0:1] based on a min and max value
+         * according to a linear or log transform.
+         *
+         * @param {number} value - The value to transform.
+         * @param {number} min -The value to transform.
+         * @param {number} max - The value to transform.
+         * @param {String} type - The type of transformation ('log' or 'linear').
+         *
+         * @returns {number} The value between 0 and 1.
+         */
+        transformValue: function( value, min, max, type ) {
+            var clamped = Math.max( Math.min( value, max ), min );
+            if ( type === "log" ) {
+                var logMin = log10( min || 1);
+        		var logMax = log10( max || 1 );
+        		var oneOverLogRange = 1 / (logMax - logMin);
+                return ( log10( clamped || 1 ) - logMin ) * oneOverLogRange;
+            } else {
+                var range = max - min;
+                return ( clamped - min ) / range;
+            }
+        },
+
+        /**
          * Returns a font size based on the percentage of tweets relative to the total count
          * @memberof RenderUtil
          *
          * @param {integer} count - The local count.
-         * @param {integer}totalCount - The global count.
-         * @param {Object} options - The options object to set min and max font size and bias (optional).
+         * @param {integer} totalCount - The global count.
+         * @param {Object} options - The options object to set min and max font size and type (optional).
          *
          * @returns {integer} The interpolated font size.
          */
-        getFontSize: function( count, totalCount, options ) {
+        getFontSize: function( value, min, max, options ) {
             options = options || {};
             var MAX_FONT_SIZE = options.maxFontSize || 22,
                 MIN_FONT_SIZE = options.minFontSize || 12,
-                BIAS = options.bias || 0,
-                FONT_RANGE = MAX_FONT_SIZE - MIN_FONT_SIZE,
-                percentage = ( count / totalCount ) || 0,
-                size = ( percentage * FONT_RANGE ) + MIN_FONT_SIZE;
-            size = Math.min( Math.max( size, MIN_FONT_SIZE), MAX_FONT_SIZE );
-            return Math.min( Math.max( size+BIAS, MIN_FONT_SIZE), MAX_FONT_SIZE );
+                transformed = this.transformValue( value, min, max, options.type );
+            return MIN_FONT_SIZE + transformed*( MAX_FONT_SIZE - MIN_FONT_SIZE );
         },
 
         /**
@@ -75,21 +99,27 @@
          * @memberof RenderUtil
          *
          * @param {Object} obj - The object to traverse.
-         * @param {String} attribPath - Period delimited attribute path.
+         * @param {String|Function} attribPath - Period delimited attribute path or a function that returns one.
          *
          * @returns {*} The nested value within the object.
          */
         getAttributeValue: function( obj, attribPath ) {
-            var attribs = attribPath.split('.'),
+            var attribs,
                 arraySplit,
                 attrib,
                 i;
+            if ( typeof attribPath === "function" ) {
+                attribPath = attribPath( obj );
+            }
+            attribs = attribPath.split('.');
             attrib = obj;
             for (i=0; i<attribs.length; i++) {
                 arraySplit = attribs[i].replace(/ /g, '' ).split(/[\[\]]/);
                 if ( arraySplit.length === 1 ) {
                     // normal attribute
-                    attrib = attrib[ attribs[i] ];
+                    if ( attribs[i].length > 0 ) {
+                        attrib = attrib[ attribs[i] ];
+                    }
                 } else if ( arraySplit.length === 3 ) {
                     // array index expressed, use it
                     attrib = attrib[ arraySplit[0] ][ arraySplit[1] ];

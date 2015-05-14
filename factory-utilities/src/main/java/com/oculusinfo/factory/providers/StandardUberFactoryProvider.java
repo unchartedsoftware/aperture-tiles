@@ -38,7 +38,7 @@ import com.oculusinfo.factory.ConfigurableFactory;
  * 
  * @author nkronenfeld, pulled out from code by cregnier
  */
-abstract public class StandardUberFactoryProvider<T> implements FactoryProvider<T> {
+abstract public class StandardUberFactoryProvider<T> extends AbstractFactoryProvider<T> {
 	private List<FactoryProvider<T>> _childFactories;
 
 

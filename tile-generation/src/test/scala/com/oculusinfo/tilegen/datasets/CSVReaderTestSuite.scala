@@ -27,20 +27,13 @@ package com.oculusinfo.tilegen.datasets
 
 
 
-import java.io.{FileWriter, File}
-import java.util.{TimeZone, Calendar, Properties}
-import java.sql.Timestamp
+import java.util.{Calendar, Properties, TimeZone}
 
-import org.apache.log4j.{LogManager, Level}
-
-import scala.collection.mutable.ArrayBuffer
-
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import org.apache.spark.{SparkContext, SharedSparkContext}
-import org.apache.spark.sql._
-
-import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
 import com.oculusinfo.tilegen.util.PropertiesWrapper
+import org.apache.log4j.{Level, LogManager}
+import org.apache.spark.SharedSparkContext
+import org.apache.spark.sql._
+import org.scalatest.FunSuite
 
 
 
@@ -159,10 +152,9 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			}
 		)
 
-		val dates = reader.asSchemaRDD.select('date).map(_(0).asInstanceOf[Timestamp]).collect.toList
+		val dates = reader.asSchemaRDD.select('date).map(_(0).asInstanceOf[java.util.Date]).collect.toList
 		dates.zipWithIndex.foreach(values =>
 			{
-				// val date: Timestamp = values._1
 				val date = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
 				date.setTime(values._1)
 
@@ -175,5 +167,62 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 
 		val props = reader.asSchemaRDD.select('prop).map(_(0).asInstanceOf[Int]).collect.toList
 		props.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
+	}
+
+	test("CSV parsing key case sensitivity") {
+		val configuration = new Properties()
+		configuration.setProperty("oculus.binning.parsing.caseSensitiveKey.index",     "0")
+		configuration.setProperty("oculus.binning.parsing.caseSensitiveKey.fieldType", "string")
+		val data = sc.parallelize(List("test result"))
+		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
+		import reader.sqlc._
+
+		val result = reader.asSchemaRDD.select('caseSensitiveKey).map(_(0).asInstanceOf[String]).first()
+		assertResult("test result")(result)
+
+		intercept[Exception] {
+			reader.asSchemaRDD.select('CaseSensitiveKey).map(_(0).asInstanceOf[String]).first()
+		}
+
+		intercept[Exception] {
+			reader.asSchemaRDD.select('casesensitivekey).map(_(0).asInstanceOf[String]).first()
+		}
+	}
+
+	test("CSV parse fieldType case insensitivity") {
+		val configuration = new Properties()
+		configuration.setProperty("oculus.binning.parsing.test.index",     "0")
+		configuration.setProperty("oculus.binning.parsing.test.fieldType", "String")
+		val data = sc.parallelize(List("test result"))
+		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
+		import reader.sqlc._
+
+		val result = reader.asSchemaRDD.select('test).map(_(0).asInstanceOf[String]).first()
+		assertResult("test result")(result)
+	}
+
+	test("CSV parse propertyMap case sensitivity") {
+		val configuration = new Properties()
+		configuration.setProperty("oculus.binning.parsing.testMap.index",                  "0")
+		configuration.setProperty("oculus.binning.parsing.testMap.fieldType",              "proPertymaP")
+		configuration.setProperty("oculus.binning.parsing.testMap.property",               "caseSensitiveKey")
+		configuration.setProperty("oculus.binning.parsing.testMap.propertyType",           "StrIng")
+		configuration.setProperty("oculus.binning.parsing.testMap.propertySeparator",      ";")
+		configuration.setProperty("oculus.binning.parsing.testMap.propertyValueSeparator", "=")
+
+		val data = sc.parallelize(List("caseSensitiveKey=test value"))
+		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
+
+		val failData = sc.parallelize(List("casesensitivekey=test value"))
+		val failReader = new CSVReader(sqlc, failData, new PropertiesWrapper(configuration))
+
+		import reader.sqlc._
+
+		val result = reader.asSchemaRDD.select('testMap).map(_(0).asInstanceOf[String]).first()
+		assertResult("test value")(result)
+
+		intercept[Exception] {
+			failReader.asSchemaRDD.select('testMap).map(_(0).asInstanceOf[String]).first()
+		}
 	}
 }

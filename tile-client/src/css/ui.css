@@ -41,7 +41,7 @@
 .tiles-layer-controls .layer-toggle {
 	float:left;
 	width: 18px;
-    height: 14px;  
+    height: 14px;
 	font-size: 18px;
 	line-height: 14px;
 	vertical-align: middle;
@@ -115,7 +115,7 @@
     border-radius: 4px;
 }
 
-.tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:hover, 
+.tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:hover,
 .tiles-layer-controls .layer-entry-body .filter-slider .filter-min-handle.ui-slider-handle:active {
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFNJREFUeNpiYMAEXEDsA+OwoEnKALETEHOgK2AEYhMgNkQ3DqSAB6pLAot1DExIJmAFzED8C4hvQdnIppyFKYCBp0D8CohloVafxWUqN7I3AQIMAKw6B24pOi8lAAAAAElFTkSuQmCC);
 	background-repeat: no-repeat;
@@ -140,10 +140,10 @@
 }
 
 .tiles-layer-controls .filter-minor-marker {
-    height: 4px; 
+    height: 4px;
 }
 
-.tiles-layer-controls .filter-axis-label-container, 
+.tiles-layer-controls .filter-axis-label-container,
 .tiles-layer-controls .filter-axis-ticks-container {
 	position: relative;
 	top: 14px;
@@ -179,7 +179,7 @@
     background-color: #333;
 }
 
-.tiles-layer-controls .layer-entry-body .ui-slider-horizontal, 
+.tiles-layer-controls .layer-entry-body .ui-slider-horizontal,
 .tiles-layer-controls .layer-entry-body .ui-slider-vertical {
     border: none;
     border-radius:4px;
@@ -198,11 +198,11 @@
     height: 16px;
     width: 16px;
     margin-left: -8px;
-    margin-top: 1px; 
+    margin-top: 1px;
     background: #cccccc;
-}  
+}
 
-.tiles-layer-controls .layer-entry-body .ui-slider-handle:hover, 
+.tiles-layer-controls .layer-entry-body .ui-slider-handle:hover,
 .tiles-layer-controls .layer-entry-body .ui-slider-handle:active {
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFdJREFUeNpiYEAAHyDmYkADzEhsByBWA+K3QPwJmwJjIGYBYlUgZgLi59gUwIAkEEsD8VMmBtyAkQFqJDZwAYjPAPE/dAU/gHg/ED/GpgvkTW50QYAAAwADfwrM5sqplgAAAABJRU5ErkJggg==);
 	background-repeat: no-repeat;
@@ -213,23 +213,23 @@
     outline:none;
 }
 
-.tiles-layer-controls .slider-value-hover {
-    position:absolute;
-    padding: 2px 5px 2px 5px;
-    border-radius:4px;
-    pointer-events:none;
-    z-index: 100;
-    font-weight:normal;
-    background-color: #222;
-    border: 1px solid #333;
+.hover-label {
+	position: absolute;
+	white-space: pre;
+	font-size: 12px;
+	z-index: 2004;
+	padding: 5px 10px 5px 10px;
+	background-color: #222222;
+	border: 1px solid #333333;
+	border-radius: 4px;
+	box-shadow: 0px 5px 15px #000;
+	color: #d3d3d3;
+	pointer-events: none;
 }
 
-.tiles-layer-controls .slider-value-hover-label {
-    position: relative;
-    white-space: pre;
-    font-size: 12px;
-    padding: 2px;
-    color: #d3d3d3;
+.hover-label-text {
+	color: #fff;
+	font-weight: bold;
 }
 
 /********************************************/
@@ -249,18 +249,18 @@
 
 .tiles-layer-controls .dropdown-menu-open {
     border-radius: 4px;
-    background-color: #333;  
+    background-color: #333;
 	border: 1px solid #111;
 }
 
 .tiles-layer-controls .dropdown-menu .menu-item-link {
     display: block;
     height: 18px;
-	line-height: 18px; 
+	line-height: 18px;
     text-align: center;
 	vertical-align: middle;
     text-decoration: none;
-	border: 1px solid transparent;	
+	border: 1px solid transparent;
 	border-radius: 4px;
     cursor: pointer;
     color: #ccc;
@@ -311,16 +311,16 @@
 /****** Carot After Title or Selected *******/
 
 .tiles-layer-controls .dropdown-menu .menu-item.active .menu-item-link:after {
-	width: 0; 
-	height: 0; 
+	width: 0;
+	height: 0;
 	content: "";
 	position: relative;
 	top: -2px;
 	display: inline-block;
-	margin-left: 8px;  	
+	margin-left: 8px;
 	border-left: 4px solid transparent;
 	border-right: 4px solid transparent;
-	border-top: 4px solid  #fff;  
+	border-top: 4px solid  #fff;
 }
 
 /******************* Misc *******************/

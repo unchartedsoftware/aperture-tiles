@@ -24,6 +24,11 @@ div.olLayerDiv {
     -webkit-backface-visibility: hidden;
 }
 
+.olLayerGrid .olTileUnivariate {
+    /*pointer-events: none;*/
+    -webkit-backface-visibility: hidden;
+}
+
 .olLayerGoogleCopyright {
     left: 2px;
     bottom: 2px;
@@ -458,8 +463,8 @@ div.olControlZoom a {
     text-decoration: none;
     text-align: center;
     height: 22px;
-    width:22px;
-    line-height: 19px;
+    width: 22px;
+    line-height: 22px;
     background: #4d4d4d; /* fallback for IE - IE6 requires background shorthand*/
     background: rgba(60, 60, 60, 0.5);
     filter: alpha(opacity=80);
@@ -487,32 +492,38 @@ a.olControlZoomOut {
     box-sizing: border-box;
 }
 
-.light-theme .olTileHtml {
+.light-theme .olTileHtml:not(.hideTile) {
     background-color: rgba( 0, 0, 0, 0.1 );
     border: 1px solid rgba( 255, 255, 255, 0.3 );
 }
 
-.dark-theme .olTileHtml {
+.dark-theme .olTileHtml:not(.hideTile) {
     background-color: rgba( 0, 0, 0, 0.2 );
     border: 1px solid rgba( 150, 150, 150, 0.1 );
 }
 
-.light-theme .olTileHtml:hover {
+.light-theme .olTileHtml:not(.hideTile):hover {
     opacity: 1;
     background-color: rgba( 50, 50, 50, 0.2 );
 }
 
-.dark-theme .olTileHtml:hover {
+.dark-theme .olTileHtml:not(.hideTile):hover {
     opacity: 1;
     background-color: rgba( 0, 0, 0, 0.4 );
+}
+
+.hideTile {
+    z-index: -1;
+    pointer-events: none;
 }
 
 /**
  * Animations
  */
- 
+
 .olTileImage,
-.olTileHtml { 
+.olTileHtml,
+.olTileUnivariate {
     -webkit-transition: opacity 0.2s linear;
     -moz-transition: opacity 0.2s linear;
     -o-transition: opacity 0.2s linear;

@@ -232,16 +232,16 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 		// Don't alter metadata if there was no data added.
 		// Ideally, we'd still alter levels
-		if (tileCount.value > 0) {
-			println("Calculating metadata")
-			val metaData =
-				combineMetaData(pyramider, baseLocation,
-				                levelSet.value.toSet,
-				                tileAnalytics, dataAnalytics,
-				                xbins.value, ybins.value,
-				                name, description)
-			writeMetaData(baseLocation, metaData)
-		}
+
+		println("Calculating metadata")
+		val metaData =
+			combineMetaData(pyramider, baseLocation,
+											levelSet.value.toSet,
+											tileAnalytics, dataAnalytics,
+											xbins.value, ybins.value,
+											name, description)
+		writeMetaData(baseLocation, metaData)
+
 	}
 }
 

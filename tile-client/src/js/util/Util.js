@@ -128,6 +128,18 @@
         },
 
         /**
+         * Rounds a number towards another number.
+         * @param value {number} the value
+         * @returns {number}
+         */
+         roundTowards: function( value, num ) {
+            if ( value < num ) {
+                return Math.ceil( value );
+            }
+            return Math.floor( value );
+        },
+
+        /**
          * Rounds a given value to a set number of decimals. Defaults to 2.
          *
          * @param value    {number} value to round
@@ -151,7 +163,7 @@
          * @returns {number} The value from [minMax.min, minMax.max].
          */
         denormalizeValue: function( percentage, minMax, transform ) {
-            var range = minMax.max- minMax.min,
+            var range = minMax.maximum- minMax.minimum,
                 val;
             function log10(val) {
                 return Math.log(val) / Math.LN10;
@@ -161,9 +173,9 @@
             }
             //iterate over the inner labels
             if ( transform === "log10" ) {
-                val = checkLogInput( minMax.max );
+                val = checkLogInput( minMax.maximum );
             } else {
-                val = percentage * range + minMax.min;
+                val = percentage * range + minMax.minimum;
             }
             return val;
         },
@@ -179,7 +191,7 @@
          * @returns {number} The value percentage from [0, 1].
          */
         normalizeValue: function( value, minMax, transform ) {
-            var range = minMax.max - minMax.min,
+            var range = minMax.maximum - minMax.minimum,
                 val;
             function log10(val) {
                 return Math.log(val) / Math.LN10;
@@ -189,11 +201,34 @@
             }
             //iterate over the inner labels
             if ( transform === "log10" ) {
-                val = checkLogInput( minMax.ax );
+                val = checkLogInput( minMax.maximum );
             } else {
-                val = ( ( value - minMax.min ) / range );
+                val = ( ( value - minMax.minimum ) / range );
             }
             return val;
+        },
+
+        /**
+         * Registers a click handler that only fires if the click isn't part of
+         * a double click.
+         *
+         * @param element  {HTMLElement} The DOM element to attach the event.
+         * @param callback {Function}    The callback function.
+         * @param [timout] {int}            The timeout in ms (optional).
+         */
+        timeSensitiveClick: function( element, callback, timeout ) {
+            var clicks = 0;
+            element.addEventListener( "click", function( event ) {
+		    	clicks++;
+		    	if ( clicks === 1 ) {
+		        	setTimeout( function() {
+		        		if ( clicks === 1 ) {
+							callback.call( element, event );
+				        }
+		        		clicks = 0;
+		        	}, timeout || 300);
+			    }
+		    });
         },
 
         /**
@@ -208,20 +243,39 @@
          */
         dragSensitiveClick: function( element, callback, threshold ) {
             var dragStart = {x: null, y: null};
-
             threshold = threshold || 10;
-
-            element.onmousedown = function( evt ) {
+            element.addEventListener( "mousedown", function( evt ) {
                 dragStart.x = evt.pageX;
                 dragStart.y = evt.pageY;
-            };
-
-            element.onclick = function( evt ) {
+            });
+            element.addEventListener( "click", function( evt ) {
                 if (Math.abs( dragStart.x - evt.pageX ) < threshold &&
                     Math.abs( dragStart.y - evt.pageY ) < threshold ) {
                     callback.call( this, evt );
                 }
-            };
+            });
+        },
+
+        /**
+         * Registers a click handler that only fires if the click didn't
+         * involve a map drag and was not part of a double click.
+         *
+         * @param element     {HTMLElement} The DOM element to attach the event.
+         * @param callback    {Function}    The callback function.
+         */
+        dragAndTimeSensitiveClick: function( element, callback ) {
+            var dragStart = {x: null, y: null},
+                threshold = threshold || 10;
+            element.addEventListener( "mousedown", function( evt ) {
+                dragStart.x = evt.pageX;
+                dragStart.y = evt.pageY;
+            });
+            this.timeSensitiveClick( element, function( evt ) {
+                if (Math.abs( dragStart.x - evt.pageX ) < threshold &&
+                    Math.abs( dragStart.y - evt.pageY ) < threshold ) {
+                    callback.call( this, evt );
+                }
+            });
         },
 
         /**
@@ -287,6 +341,24 @@
             query = "?" + traverseParams( params, '' );
             // remove last '&' character
             return query.slice( 0, query.length - 1 );
+        },
+
+        /**
+         * Creates and fills an array with the provided value.
+         *
+         * @param {number} length - The length of the array.
+         * @param {*} value - The value to fill. Defaults to 0.
+         *
+         * @returns {Array} The filled array.
+         */
+        fillArray: function( length, value ) {
+            value = value !== undefined ? value : 0;
+            var arr = [],
+                i;
+            for ( i=0; i<length; i++ ) {
+                arr.push( value );
+            }
+            return arr;
         },
 
         /**

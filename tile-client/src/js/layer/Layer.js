@@ -38,6 +38,7 @@
      * @param {Object} spec - The specification object.
      */
     function Layer( spec ) {
+        spec = spec || {};
         this.uuid = Util.generateUuid();
         this.name = spec.name || "Unnamed Layer";
         this.domain = spec.domain;
@@ -58,8 +59,8 @@
             this.opacity = opacity;
             if ( this.olLayer ) {
                 this.olLayer.setOpacity( opacity );
-                PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
             }
+            PubSub.publish( this.getChannel(), { field: 'opacity', value: opacity } );
         },
 
         /**
@@ -82,8 +83,8 @@
             this.enabled = enabled;
             if ( this.olLayer ) {
                 this.olLayer.setVisibility( enabled );
-                PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
             }
+            PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
         },
 
         /**

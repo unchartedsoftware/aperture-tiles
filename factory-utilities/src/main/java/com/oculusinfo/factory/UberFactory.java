@@ -55,7 +55,6 @@ public class UberFactory<T> extends ConfigurableFactory<T> {
 
 
 
-	private StringProperty                         _factoryType;
 	private String                                 _defaultType;
 	private List<ConfigurableFactory<? extends T>> _children;
 
@@ -80,42 +79,31 @@ public class UberFactory<T> extends ConfigurableFactory<T> {
 		for (ConfigurableFactory<? extends T> child: children) {
 			addChildFactory(child);
 		}
-		_factoryType = new FactoryTypeProperty();
-		addProperty(_factoryType);
+		addProperty(FACTORY_TYPE);
+		setDefaultValue(FACTORY_TYPE, defaultType);
 
 		_defaultType = defaultType;
 		if (null == _defaultType)
-		    _defaultType = children.get(0).getName();
+			_defaultType = children.get(0).getName();
 	}
 
 	@Override
 	protected T create () {
-		String subType = getPropertyValue(_factoryType);
+		String subType = getPropertyValue(FACTORY_TYPE);
 		try {
-			return produce(subType, getFactoryType());
+			return super.produce(subType, getFactoryType());
 		} catch (ConfigurationException e) {
 			LOGGER.warn("Error creating product {}[{}] for {}", new Object[] {getFactoryType(), getName(), subType});
 			return null;
 		}
 	}
 
+	@Override
+	public <GT> GT produce (String name, Class<GT> goodsType) throws ConfigurationException {
+	    // Uber-factories only produce for exact name matches.
+	    if (null == getName() && null != name) return null;
+	    if (null != getName() && !getName().equals(name)) return null;
 
-
-	private class FactoryTypeProperty extends StringProperty {
-		FactoryTypeProperty () {
-			super(FACTORY_TYPE.getName(), FACTORY_TYPE.getDescription(), null);
-		}
-		@Override
-		public String getDefaultValue () {
-			return _defaultType;
-		}
-		@Override
-		public String[] getPossibleValues () {
-			String[] possibilities = new String[_children.size()];
-			for (int i=0; i<_children.size(); ++i) {
-				possibilities[i] = _children.get(i).getName();
-			}
-			return possibilities;
-		}
+	    return super.produce(name, goodsType);
 	}
 }

@@ -25,7 +25,7 @@ package com.oculusinfo.tile.init.providers;
 
 
 import com.oculusinfo.factory.ConfigurableFactory;
-import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.tile.rendering.ImageRendererFactory;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
 
@@ -33,15 +33,16 @@ import java.util.List;
 
 
 
-public class StandardImageRendererFactoryProvider implements FactoryProvider<TileDataImageRenderer<?>> {
+public class StandardImageRendererFactoryProvider extends AbstractFactoryProvider<TileDataImageRenderer<?>> {
 	@Override
 	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (List<String> path) {
 		return new ImageRendererFactory(null, path);
 	}
 
 	@Override
-	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (ConfigurableFactory<?> parent,
+	public ConfigurableFactory<TileDataImageRenderer<?>> createFactory (String name,
+	                                                                    ConfigurableFactory<?> parent,
 	                                                                    List<String> path) {
-		return new ImageRendererFactory(parent, path);
+		return new ImageRendererFactory(name, parent, path);
 	}
 }

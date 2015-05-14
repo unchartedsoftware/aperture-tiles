@@ -1,6 +1,6 @@
 ---
 section: Tour
-subtitle: System Description
+subsection: System Description
 permalink: tour/components/
 layout: submenu
 ---
@@ -10,13 +10,13 @@ Aperture Tiles Components
 
 Aperture Tiles implements a data flow that breaks the visualization process into three components: tile generation, tile server, and tile client. This flexible framework allows third parties to leverage or augment the pieces of Aperture Tiles as they see fit. For example:
 
-- Using the Aperture Tiles AVRO tile data format, third parties can produce custom tile data using their own analytics.
+- Using the Aperture Tiles Avro tile data format, third parties can produce custom tile data using their own analytics.
 - Using the Aperture Tile Server standards-based [Tile Map Services](http://en.wikipedia.org/wiki/Tile_Map_Service), developers can integrate a third-party tile client.
 
 Distributed Tile Generation
 ---------------------------
 
-The Aperture Tiles generation analytic leverages cluster computing with [Apache Spark](http://spark.incubator.apache.org/) to rapidly compute tiles from terabytes of "big data" (investigations are ongoing to work with petabyte-sized datasets). The tile generation analytic transforms raw data into AVRO data tile files with metadata descriptor files, summarizing all tile content. AVRO data files allow for language neutrality and support multiple summaries per bin, allowing a flexible and extensible analytic. Finished tiles are stored in HBase to allow efficient scalability to billions of tiles.
+The Aperture Tiles generation analytic leverages cluster computing with [Apache Spark](http://spark.incubator.apache.org/) to rapidly compute tiles from terabytes of "big data" (investigations are ongoing to work with petabyte-sized datasets). The tile generation analytic transforms raw data into Avro data tile files with metadata descriptor files, summarizing all tile content. Avro data files allow for language neutrality and support multiple summaries per bin, allowing a flexible and extensible analytic. Finished tiles are stored in HBase to allow efficient scalability to billions of tiles.
 
 ###Tile Set Size and Resolution
 
@@ -25,7 +25,7 @@ The Aperture Tiles generation analytic leverages cluster computing with [Apache 
 Tile Server
 -----------
 
-The Aperture Tile server provides services to serve rendered tiles or raw tile data. The Aperture Tile Server defines a REST API for requesting tiles and rendering properties. The tile server works by retrieving AVRO data tile files and rendering PNG images for display in the tile client or external visualization applications. The Aperture Tile Server also has the ability to directly serve raw tile data via JSON, supporting data services or rich client side rendering capabilities.
+The Aperture Tile server provides services to serve rendered tiles or raw tile data. The Aperture Tile Server defines a REST API for requesting tiles and rendering properties. The tile server works by retrieving Avro data tile files and rendering PNG images for display in the tile client or external visualization applications. The Aperture Tile Server also has the ability to directly serve raw tile data via JSON, supporting data services or rich client side rendering capabilities.
 
 Tile Client
 -----------

@@ -38,27 +38,32 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
-import com.oculusinfo.binning.TileData.StorageType
-import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
-import com.oculusinfo.tilegen.util.PropertiesWrapper
-import org.apache.spark.sql.SQLContext
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable.{Set => MutableSet}
 import scala.collection.mutable.Stack
 import scala.reflect.ClassTag
+import scala.util.Try
 
 import org.apache.spark.Accumulable
 import org.apache.spark.AccumulableParam
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
+
+import grizzled.slf4j.Logging
+
 import com.oculusinfo.binning._
+import com.oculusinfo.binning.TileData.StorageType
+import com.oculusinfo.binning.impl.DenseTileData
+import com.oculusinfo.binning.impl.SparseTileData
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import scala.util.Try
+import com.oculusinfo.tilegen.datasets.{CSVDataSource, CSVReader, TilingTask}
+import com.oculusinfo.tilegen.util.PropertiesWrapper
+import com.oculusinfo.tilegen.tiling.analytics.{TileAnalytic, AnalysisDescription}
 
 
 
@@ -66,7 +71,7 @@ import scala.util.Try
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
+class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Logging {
 	private val sc = sqlc.sparkContext
 	private val tasks = MutableMap[String, TilingTask[_, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
@@ -126,6 +131,11 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 		}
 	}
 
+	/**
+	 * Direct programatic initialization.
+	 *
+	 * Temporary route until we get full pipeline configuration
+	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
 		if (!tasks.contains(pyramidId)) {
 			tasks.synchronized {
@@ -214,8 +224,8 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 							if (tileInfos.contains(tile)) {
 								val bin = pyramid.rootToBin(x, y, tile)
 								// update bin value
-								// Can't recover from an accumulator aggregation exception (we 
-								// don't know what it has added in, and what it hasn't), so just 
+								// Can't recover from an accumulator aggregation exception (we
+								// don't know what it has added in, and what it hasn't), so just
 								// move on if we get one.
 								Try(tileInfos(tile).accumulable += (bin, value))
 								// update data analytic value
@@ -268,26 +278,21 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 							tileData.foreach(analyticValue =>
 								{
 									da.accumulate(index, analyticValue)
-									val tileMetaData = da.analytic.toMap(analyticValue)
-									tileMetaData.map{case (key, value) =>
-										tile.setMetaData(key, value)
-									}
+									AnalysisDescription.record(analyticValue, da, tile)
 								}
 							)
 						}
 					)
 
 					// Apply tile analytics
-					tileAnalytics.map(analytic =>
+					tileAnalytics.map(ta =>
 						{
 							// Figure out the value for this tile
-							val analyticValue = analytic.convert(tile)
+							val analyticValue = ta.convert(tile)
 							// Add it into any appropriate accumulators
-							analytic.accumulate(tile.getDefinition(), analyticValue)
+							ta.accumulate(tile.getDefinition(), analyticValue)
 							// And store it in the tile's metadata
-							analytic.analytic.toMap(analyticValue).map{case (key, value) =>
-								tile.setMetaData(key, value)
-							}
+							AnalysisDescription.record(analyticValue, ta, tile)
 						}
 					)
 
@@ -301,11 +306,11 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 			accStore.release(data)
 		}
 
-		println("Read "+results.size+" tiles.")
-		println("\t"+accStore.inUseCount+" accumulators in use")
-		println("\t"+accStore.inUseData+" bins locked in in-use accumulators")
-		println("\t"+accStore.availableCount+" accumulators available")
-		println("\t"+accStore.availableData+" bins size locked in available accumulators")
+		info("Read "+results.size+" tiles.")
+		info("\t"+accStore.inUseCount+" accumulators in use")
+		info("\t"+accStore.inUseData+" bins locked in in-use accumulators")
+		info("\t"+accStore.availableCount+" accumulators available")
+		info("\t"+accStore.availableData+" bins size locked in available accumulators")
 
 		results
 	}
@@ -325,8 +330,8 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO {
 			                    taskMetaData.getValidZoomLevels(),
 			                    taskMetaData.getBounds(),
 			                    null, null)
-		task.getTileAnalytics.map(_.applyTo(newTaskMetaData))
-		task.getDataAnalytics.map(_.applyTo(newTaskMetaData))
+		task.getTileAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
+		task.getDataAnalytics.map(AnalysisDescription.record(_, newTaskMetaData))
 		newTaskMetaData.addValidZoomLevels(
 			tiles.map(tile =>
 				new JavaInt(tile.getDefinition().getLevel())

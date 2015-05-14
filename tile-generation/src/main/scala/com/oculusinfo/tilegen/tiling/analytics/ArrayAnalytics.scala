@@ -29,25 +29,21 @@ package com.oculusinfo.tilegen.tiling.analytics
 
 import java.util.{List => JavaList}
 import scala.collection.JavaConverters._
-
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.ArrayList
 
 
 
 /**
- * A generalized array analytic.  It takes an element analytic - the analytic 
+ * A generalized array analytic.  It takes an element analytic - the analytic
  * one would use if one were interested in a single element of the same types,
  * rather than an array - and uses it to process an array of the same element
  * types.
- * 
- * @tparam PT The processing type of the analytic, used for intermediate 
+ *
+ * @tparam PT The processing type of the analytic, used for intermediate
  *            processing of the values during binning.  See PROCESSING_TYPE in
  *            {@link BinningAnalytic}
- * @tparam RT The result type of the analytic, the one actually written to 
- *            tiles (if this is used as a binning analytic).  See RESULT_TYPE
- *            in {@link BinningAnalytic}.  Note that for tile analyics, this 
- *            conversion still takes place, it is simply taken further.
  */
 class ArrayAnalytic[PT] (elementAnalytic: Analytic[PT]) extends Analytic[Seq[PT]] {
 	def aggregate (a: Seq[PT], b: Seq[PT]): Seq[PT] = {
@@ -65,12 +61,29 @@ class ArrayAnalytic[PT] (elementAnalytic: Analytic[PT]) extends Analytic[Seq[PT]
 	def defaultProcessedValue: Seq[PT] = Seq[PT]()
 	def defaultUnprocessedValue: Seq[PT] = Seq[PT]()
 }
+/**
+ * A generalized array analytic.  It takes an element analytic - the analytic
+ * one would use if one were interested in a single element of the same types,
+ * rather than an array - and uses it to process an array of the same element
+ * types.
+ *
+ * @tparam PT The processing type of the analytic, used for intermediate
+ *            processing of the values during binning.  See PROCESSING_TYPE in
+ *            {@link BinningAnalytic}
+ * @tparam RT The result type of the analytic, the one actually written to
+ *            tiles (if this is used as a binning analytic).  See RESULT_TYPE
+ *            in {@link BinningAnalytic}.  Note that for tile analyics, this
+ *            conversion still takes place, it is simply taken further.
+ */
 class ArrayBinningAnalytic[PT, RT] (elementAnalytic: BinningAnalytic[PT, RT])
 		extends ArrayAnalytic[PT](elementAnalytic)
 		with BinningAnalytic[Seq[PT], JavaList[RT]]
 {
-	def finish (value: Seq[PT]): JavaList[RT] =
-		value.map(elt => elementAnalytic.finish(elt)).asJava
+	def finish (value: Seq[PT]): JavaList[RT] = {
+		val result = new ArrayList[RT](value.size)
+		value.foreach(elt => result.add(elementAnalytic.finish(elt)))
+		result
+	}
 }
 class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
                              analyticName: Option[String] = None)
@@ -78,18 +91,20 @@ class ArrayTileAnalytic[PT] (elementAnalytic: TileAnalytic[PT],
 		with TileAnalytic[Seq[PT]]
 {
 	def name = analyticName.getOrElse(elementAnalytic.name+" array")
-	override def valueToString (value: Seq[PT]): String = value.mkString("[", ",", "]")
-	override def toMap (value: Seq[PT]): Map[String, Any] = {
-		val result = new JSONArray
-		value.foreach(eltValue =>
-			{
-				val eltResult = new JSONObject
-				elementAnalytic.toMap(eltValue).map(kv =>
-					eltResult.put(kv._1, kv._2)
-				)
-				result.put(eltResult)
-			}
-		)
-		Map(name -> result)
+	override def storableValue (value: Seq[PT], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val outputValues = new JSONArray()
+		value.foreach{p =>
+			val esv = elementAnalytic.storableValue(p, location)
+			if (esv.isEmpty) outputValues.put(null.asInstanceOf[Object])
+			else esv.foreach(e =>
+				if (e.length() > 1) outputValues.put(e)
+				else if (e.length() == 1) outputValues.put(e.get(JSONObject.getNames(e)(0)))
+			)
+		}
+		if (outputValues.length()>0) {
+			val result = new JSONObject()
+			result.put(name, outputValues)
+			Some(result)
+		} else None
 	}
 }

@@ -225,7 +225,7 @@ pre {
 	margin: 0 auto;
 }
 
-#toc-header {
+.toc-header {
 	font-size: 16px;
 	font-weight: bold;
 	margin-left: 30px;
@@ -343,7 +343,7 @@ pre {
 	font-size: 14px;
 	margin-top: -20px;
 }
-.oculus-footer
+.uncharted-footer
 {
 	background-image: url("../img/resources/footer-symbols.png");
 	background-position: left bottom;
@@ -354,7 +354,7 @@ pre {
 	padding-bottom: 20px;
 }
 
-#toc-body {
+.toc-body {
     line-height: 23px;
 	margin: 0 0 5px;
 }​
@@ -538,4 +538,12 @@ div.description {
 
 .list-paragraph {
 	margin-bottom: 0;
+}
+
+hr {
+	border-style: solid;
+	border-top-width: 1px;
+	border-bottom-width: 0;
+	border-color: $txt-block-border;
+	margin: 18px 0 15px 20px;
 }

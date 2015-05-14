@@ -25,27 +25,32 @@
 
 ( function() {
 
-	"use strict";
+    "use strict";
 
-	var Axis = require('./Axis'),
+    var Axis = require('./Axis'),
         MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
+        Carousel = require('../layer/Carousel'),
         BaseLayer = require('../layer/BaseLayer'),
         PubSub = require('../util/PubSub'),
-	    AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
-	    WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
-	    TileIterator = require('../binning/TileIterator'),
-	    TILESIZE = 256,
+        AreaOfInterestTilePyramid = require('../binning/AreaOfInterestTilePyramid'),
+        WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
+        TileIterator = require('../binning/TileIterator'),
+        TILESIZE = 256,
+        MARKER_Z_INDEX = 5000,
         setMapCallbacks,
         activateComponent,
         deactivateComponent,
         activateDeferredComponents,
         addBaseLayer,
         addLayer,
+        addCarousel,
         addAxis,
         removeBaseLayer,
         removeLayer,
-        removeAxis;
+        removeCarousel,
+        removeAxis,
+        resetLayerZIndices;
 
     /**
      * Set callbacks to update the maps tile focus, identifying which tile
@@ -58,7 +63,7 @@
         var previousMouse = {};
         function updateTileFocus( x, y ) {
             var tileAndBin = MapUtil.getTileAndBinFromViewportPixel( map, x, y, 1, 1 ),
-			    tilekey = tileAndBin.tile.level + ","
+                tilekey = tileAndBin.tile.level + ","
                     + tileAndBin.tile.xIndex + ","
                     + tileAndBin.tile.yIndex;
             if ( tilekey !== map.tileFocus ) {
@@ -99,7 +104,15 @@
      * @param component {*}   The component to activate.
      */
     activateComponent = function( map, component ) {
-        if ( component instanceof Layer ) {
+        if ( component instanceof Carousel ) {
+            addCarousel( map, component );
+        } else if ( component instanceof Layer ) {
+            if ( component.carousel ) {
+                console.log(
+                    "You cannot add a layer that is part of a carousel to a map " +
+                    "independently, remove it from the carousel first." );
+                return;
+            }
             addLayer( map, component );
         } else if ( component instanceof Axis ) {
             addAxis( map, component );
@@ -116,6 +129,8 @@
     deactivateComponent = function( map, component ) {
         if ( component instanceof BaseLayer ) {
             removeBaseLayer( map, component );
+        } else if ( component instanceof Carousel ) {
+            removeCarousel( map, component );
         } else if ( component instanceof Layer ) {
             removeLayer( map, component );
         } else if ( component instanceof Axis ) {
@@ -188,6 +203,26 @@
     };
 
     /**
+     * Adds a carousel object to the map and activates it.
+     * @private
+     *
+     * @param map   {Map}   The map object.
+     * @param carousel {Carousel} The carousel object.
+     */
+    addCarousel = function( map, carousel ) {
+        // add map to carousel
+        carousel.map = map;
+        // activate the carousel
+        carousel.activate();
+        // add to carousel array
+        map.carousels = map.carousels || [];
+        map.carousels.push( carousel );
+        // add it to carousel map
+        map.carouselsById = map.carouselsById || {};
+        map.carouselsById[ carousel.getUUID() ] = carousel;
+    };
+
+    /**
      * Adds an Axis object to the map and activates it.
      * @private
      *
@@ -203,18 +238,15 @@
             axis.min = map.pyramid.minY;
             axis.max = map.pyramid.maxY;
         }
-
         // activate and attach to map
         axis.map = map;
         axis.activate();
         map.axes = map.axes || {};
         map.axes[ axis.position ] = axis;
-
         // update dimensions
         _.forIn( map.axes, function( value ) {
-            value.setContentDimension();
+            value.updateDimension();
         });
-
         // redraw
         _.forIn( map.axes, function( value ) {
             value.redraw();
@@ -233,7 +265,8 @@
         var index;
         // if only 1 baselayer available, ignore
         if ( map.baselayers.length === 1 ) {
-            console.error( 'Error: attempting to remove only baselayer from map, this destroys the map, use destroy() instead' );
+            console.error( 'Error: attempting to remove only baselayer from ' +
+                'map, this destroys the map, use destroy() instead' );
             return;
         }
         // get index of baselayer
@@ -272,6 +305,30 @@
             // deactivate it
             layer.deactivate();
             layer.map = null;
+            // reset z-indices
+            resetLayerZIndices( map );
+        }
+    };
+
+    /**
+     * Removes a carousel object from the map and deactivates it.
+     * @private
+     *
+     * @param map   {Map}   The map object.
+     * @param carousel {Carousel} The carousel object.
+     */
+    removeCarousel = function( map, carousel ) {
+        var index = map.carousels.indexOf( carousel );
+        if ( index !== -1 ) {
+             // remove it from layer map
+            delete map.carouselsById[ carousel.getUUID() ];
+            // remove it from layer array
+            map.carousels.splice( index, 1 );
+            // deactivate it
+            carousel.deactivate();
+            carousel.map = null;
+            // reset z-indices
+            resetLayerZIndices( map );
         }
     };
 
@@ -291,6 +348,27 @@
     };
 
     /**
+     * Removing layers causes a z-index reset since we use css z-index rather
+     * than OpenLayers's built in relative indexing (which sucks for dynamic maps).
+     * This is used to reset all z-indices accordingly.
+     * @private
+     *
+     * @param {Map} map - The map object.
+     */
+    resetLayerZIndices = function( map ) {
+        var layers = map.layers,
+            i;
+        if ( map.layers ) {
+            for ( i=0; i<layers.length; i++ ) {
+                layers[i].setZIndex( layers[i].getZIndex() );
+            }
+        }
+        if ( map.olMarkers ) {
+            $( map.olMarkers.div ).css( 'z-index', MARKER_Z_INDEX );
+        }
+    };
+
+    /**
      * Instantiate a Map object.
      * @class Map
      * @classdesc A map object that acts as a central container for all layers and other map
@@ -307,18 +385,23 @@
      * }
      * </pre>
      */
-	function Map( id, spec ) {
-
+    function Map( id, spec ) {
         spec = spec || {};
         spec.options = spec.options || {};
-
+        spec.theme = spec.theme || 'dark';
         // element id
         this.id = id;
         // set map tile pyramid
         this.setPyramid( spec.pyramid );
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
-
+		// navigation controls
+		this.navigationControls = new OpenLayers.Control.Navigation({
+				documentDrag: true,
+				zoomBoxEnabled: false
+		});
+		// zoom controls
+		this.zoomControls = new OpenLayers.Control.Zoom();
         // create map object
         this.olMap = new OpenLayers.Map( this.id, {
             theme: null, // prevent OpenLayers from checking for default css
@@ -326,20 +409,19 @@
             displayProjection: new OpenLayers.Projection( "EPSG:4326" ),
             maxExtent: OpenLayers.Bounds.fromArray([
                 -20037508.342789244,
-				-20037508.342789244,
-				20037508.342789244,
-				20037508.342789244
+                -20037508.342789244,
+                20037508.342789244,
+                20037508.342789244
             ]),
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
-                new OpenLayers.Control.Navigation({ documentDrag: true }),
-                new OpenLayers.Control.Zoom()
+                this.navigationControls,
+                this.zoomControls
             ]
         });
-
-        // set theme default to 'dark' theme
-        this.setTheme( 'dark' );
+        // set theme, default to 'dark' theme
+        this.setTheme( spec.theme );
     }
 
     Map.prototype = {
@@ -386,6 +468,20 @@
         },
 
         /**
+         * Enables the panning controls for the map.
+         */
+        enableNavigation: function() {
+            this.navigationControls.activate();
+        },
+
+        /**
+         * Disables the panning controls for the map.
+         */
+        disableNavigation: function() {
+            this.navigationControls.deactivate();
+        },
+
+        /**
          * Returns the tilekey for the tile currently under the mouse.
          * @memberof Map.prototype
          *
@@ -404,8 +500,7 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index],
-                i;
+                newBaseLayer = this.baselayers[ index];
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -417,16 +512,10 @@
             if ( oldBaseLayer ) {
                 oldBaseLayer.deactivate();
             }
-
             newBaseLayer.activate();
             this.baseLayerIndex = index;
-
             // update z index, since changing baselayer resets them
-            if ( this.layers ) {
-                for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[i].setZIndex( this.layers[i].getZIndex() );
-                }
-            }
+            resetLayerZIndices( this );
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -438,6 +527,19 @@
          */
         getBaseLayerIndex: function() {
             return this.baseLayerIndex;
+        },
+
+        /**
+         * Returns the currently active baselayer, or null if there isn't one.
+         * @memberof Map.prototype
+         *
+         * @returns {BaseLayer} The currently active baselayer.
+         */
+        getActiveBaseLayer: function() {
+            if ( this.baseLayerIndex === -1 ) {
+                return null;
+            }
+            return this.baselayers[ this.baseLayerIndex ];
         },
 
         /**
@@ -457,7 +559,9 @@
             // update theme for all attached layers
             if ( this.layers ) {
                 for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[ i ].setTheme( theme );
+                    if ( this.layers[i].setTheme ) {
+                        this.layers[i].setTheme( theme );
+                    }
                 }
             }
         },
@@ -470,7 +574,7 @@
          * @returns {String} The theme of the map.
          */
         getTheme: function() {
-        	return $( 'body' ).hasClass( "light-theme" ) ? 'light' : 'dark';
+            return $( 'body' ).hasClass( "light-theme" ) ? 'light' : 'dark';
         },
 
         /**
@@ -532,9 +636,9 @@
          *
          * @returns {AreaOfInterestTilePyramid|WebMercatorTilePyramid} The TilePyramid object.
          */
-		getPyramid: function() {
-			return this.pyramid;
-		},
+        getPyramid: function() {
+            return this.pyramid;
+        },
 
         /**
          * Returns a TileIterator object. This TileIterator contains all tiles currently
@@ -543,21 +647,21 @@
          *
          * @returns {TileIterator} A TileIterator object containing all visible tiles.
          */
-		getTileIterator: function() {
-			var level = this.olMap.getZoom(),
-			    // Current map bounds, in meters
-			    bounds = this.olMap.getExtent(),
-			    // Total map bounds, in meters
-			    extents = this.olMap.getMaxExtent(),
-			    // Pyramid for the total map bounds
-			    pyramid = new AreaOfInterestTilePyramid({
+        getTileIterator: function() {
+            var level = this.olMap.getZoom(),
+                // Current map bounds, in meters
+                bounds = this.olMap.getExtent(),
+                // Total map bounds, in meters
+                extents = this.olMap.getMaxExtent(),
+                // Pyramid for the total map bounds
+                pyramid = new AreaOfInterestTilePyramid({
                     minX: extents.left,
                     minY: extents.bottom,
                     maxX: extents.right,
                     maxY: extents.top
                 });
-			// determine all tiles in view
-			return new TileIterator({
+            // determine all tiles in view
+            return new TileIterator({
                 pyramid: pyramid,
                 level: level,
                 minX: bounds.left,
@@ -565,7 +669,7 @@
                 maxX: bounds.right,
                 maxY: bounds.top
             });
-		},
+        },
 
         /**
          * Returns an array of all tilekeys currently visible in the map.
@@ -573,7 +677,7 @@
          *
          * @returns {Array} An array of tilekey strings.
          */
-		getTilesInView: function() {
+        getTilesInView: function() {
             var tiles = this.getTileIterator().getRest(),
                 culledTiles = [],
                 maxTileIndex = Math.pow(2, this.getZoom() ),
@@ -587,7 +691,7 @@
                 }
             }
             return culledTiles;
-		},
+        },
 
         /**
          * Zooms the map to a particular coordinate and zoom level. The
@@ -599,23 +703,27 @@
          * @param {integer} zoom - The zoom level.
          */
         zoomTo: function( x, y, zoom ) {
-            var projection,
-                viewportPx,
-                lonlat;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                lonlat = new OpenLayers.LonLat( x, y );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    lonlat.transform( projection, this.olMap.projection );
-                }
-                this.olMap.setCenter( lonlat, zoom );
-            } else {
-                // linear bi-variate map
-                viewportPx = this.getViewportPixelFromCoord( x, y );
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-                this.olMap.setCenter( lonlat, zoom );
-            }
+            this.olMap.setCenter( lonlat, zoom );
+        },
+
+        /**
+         * Zooms the map to a particular bounding box. The transition is
+         * instantaneous.
+         * @memberof Map.prototype
+         *
+         * @param {Object} bounds - The bounding box to zoom to.
+         */
+        zoomToExtent: function( bounds ) {
+            var minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY ),
+                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY ),
+                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx ),
+                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx ),
+                olBounds = new OpenLayers.Bounds();
+            olBounds.extend( minLonLat );
+            olBounds.extend( maxLonLat );
+            this.olMap.zoomToExtent( olBounds );
         },
 
         /**
@@ -628,22 +736,52 @@
          * @param {number} y - The y coordinate (latitude for geospatial).
          */
         panTo: function( x, y ) {
-            var projection,
-                viewportPx,
-                lonlat;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                lonlat = new OpenLayers.LonLat( x, y );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    lonlat.transform( projection, this.olMap.projection );
-                }
-                this.olMap.panTo( lonlat );
-            } else {
-                // linear bi-variate map
-                viewportPx = this.getViewportPixelFromCoord( x, y );
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-                this.olMap.panTo( lonlat );
+            this.olMap.panTo( lonlat );
+        },
+
+
+        /**
+         * Creates a marker at the specified position of the map.
+         * @memberof Map.prototype
+         *
+         * @param {number} x - The x coordinate (longitude for geospatial).
+         * @param {number} y - The y coordinate (latitude for geospatial).
+         * @param {Marker} marker - The Marker object to add.
+         *
+         * @returns {Marker} The added marker.
+         */
+        addMarker: function( x, y, marker ) {
+            if ( !this.olMarkers ) {
+                this.olMarkers = new OpenLayers.Layer.Markers( "Markers" );
+                this.olMap.addLayer( this.olMarkers );
+            }
+            // always update the z-index of this div
+            $( this.olMarkers.div ).css( 'z-index', 5000 );
+            marker.map = this;
+            marker.activate( x, y );
+            return marker;
+        },
+
+        /**
+         * Removes a marker from the map.
+         *
+         * @param {OpenLayers.Marker} marker - The marker object.
+         */
+        removeMarker: function( marker ) {
+            if ( this.olMarkers ) {
+                marker.deactivate();
+                marker.map = null;
+            }
+        },
+
+        /**
+         * Removes all markers from the map.
+         */
+        clearMarkers: function() {
+            if ( this.olMarkers ) {
+                this.olMarkers.clearMarkers();
             }
         },
 
@@ -673,9 +811,9 @@
          *
          * @returns {integer} The width of the viewport in pixels.
          */
-		getViewportWidth: function() {
-			return this.olMap.viewPortDiv.clientWidth;
-		},
+        getViewportWidth: function() {
+            return this.olMap.viewPortDiv.clientWidth;
+        },
 
         /**
          * Returns the height of the viewport in pixels.
@@ -683,8 +821,8 @@
          *
          * @returns {integer} The height of the viewport in pixels.
          */
-		getViewportHeight: function() {
-			return this.olMap.viewPortDiv.clientHeight;
+        getViewportHeight: function() {
+            return this.olMap.viewPortDiv.clientHeight;
         },
 
         /**
@@ -694,9 +832,39 @@
          *
          * @returns {integer} The zoom level.
          */
-		getZoom: function () {
-			return this.olMap.getZoom();
-		},
+        getZoom: function () {
+            return this.olMap.getZoom();
+        },
+
+        /**
+         * Returns the x and y coordinates at the centre of the map.
+         *
+         * @return {OpenLayers.LonLat}
+         */
+        getCenterProjected: function() {
+            return MapUtil.getCoordFromViewportPixel(
+                this,
+                this.getViewportWidth() / 2,
+                this.getViewportHeight() / 2 );
+        },
+
+        /**
+         * Get the top-left and bottom-right extents of the visible map.
+         *
+         * @return {Object}
+         */
+        getMapExtents: function() {
+            return {
+                topLeft: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    0,
+                    0 ),
+                bottomRight: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    this.getViewportWidth(),
+                    this.getViewportHeight() )
+            };
+        },
 
         /**
          * Set a map event callback. Supports all of the following OpenLayers.Map events:
@@ -715,9 +883,9 @@
          * @param {String} eventType - The event type.
          * @param {Function} callback - The callback.
          */
-		on: function( eventType, callback ) {
+        on: function( eventType, callback ) {
             this.olMap.events.register( eventType, this.olMap, callback );
-		},
+        },
 
         /**
          * Remove a map event callback. Supports all of the following OpenLayers.Map events:
@@ -736,9 +904,9 @@
          * @param {String} eventType - The event type.
          * @param {Function} callback - The callback.
          */
-		off: function( eventType, callback ) {
-			this.olMap.events.unregister( eventType, this.olMap, callback );
-		},
+        off: function( eventType, callback ) {
+            this.olMap.events.unregister( eventType, this.olMap, callback );
+        },
 
         /**
          * Trigger a map event. Supports all of the following OpenLayers.Map events:
@@ -757,10 +925,10 @@
          * @param {String} eventType - The event type.
          * @param {Object} event - The event object to be passed to the event.
          */
-		trigger: function( eventType, event ) {
+        trigger: function( eventType, event ) {
             this.olMap.events.triggerEvent( eventType, event );
-		}
-	};
+        }
+    };
 
-	module.exports = Map;
+    module.exports = Map;
 }());

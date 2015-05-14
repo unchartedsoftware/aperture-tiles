@@ -39,8 +39,8 @@ import com.oculusinfo.annotation.util.AnnotationGenerator;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.tile.init.DefaultPyramidIOFactoryProvider;
-import com.oculusinfo.tile.init.DefaultTileSerializerFactoryProvider;
+import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
+import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
@@ -398,8 +398,8 @@ public class AnnotationServiceTests {
 			try {
 
 				LayerConfiguration config = _layerService.getLayerConfiguration( _layerId, null );
-				PyramidIO tileIo = config.produce( PyramidIO.class );
-				AnnotationIO dataIo = config.produce( AnnotationIO.class );
+				config.produce( PyramidIO.class );
+				config.produce( AnnotationIO.class );
                 LOGGER.debug("Deleting temporary file system folders");
                 try {
                     File testDir = new File( ".\\" + _dataId );

@@ -39,7 +39,7 @@
         this.getURL = options.getURL;
         this.layername = options.layername;
         this.type = options.type;
-        this.tileClass = HtmlTile;
+        this.tileClass = options.tileClass || HtmlTile;
         this.html = options.html;
         this.renderer = options.renderer;
         this.CLASS_NAME = 'OpenLayers.Layer.HTML';
@@ -54,8 +54,8 @@
             for( var i = 0, len = childNodes.length; i < len; ++i ) {
                 childNodes[i].style.opacity = this.opacity;
             }
-            if (this.map !== null) {
-                this.map.events.triggerEvent("changelayer", {
+            if ( this.map !== null ) {
+                this.map.events.triggerEvent( "changelayer", {
                     layer: this,
                     property: "opacity"
                 });

@@ -54,14 +54,18 @@
      * <pre>
      * {
      *     point: {
-     *         xKey   {String} - The attribute for the x coordinate.
-     *         yKey   {String} - The attribute for the y coordinate.
+     *         xKey   {String|Function} - The attribute for the x coordinate.
+     *         yKey   {String|Function} - The attribute for the y coordinate.
      *         themes {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
      * </pre>
      */
     function PointRenderer( spec ) {
+        spec.rootKey = spec.rootKey || "tile.values";
+        spec.point = spec.point || {};
+        spec.point.xKey = spec.point.xKey || 'x';
+        spec.point.yKey = spec.point.yKey || 'y';
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -80,6 +84,7 @@
     PointRenderer.prototype.render = function( data ) {
 
         var spec = this.spec,
+            map = this.parent.map,
             values = RendererUtil.getAttributeValue( data, spec.rootKey ),
             point = spec.point,
             entries = [],
@@ -92,6 +97,11 @@
             offset,
             value,
             i, j;
+
+        // get tilekey
+        tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
+        // get tile pos
+        tilePos = MapUtil.getTopLeftViewportPixelForTile( map, tilekey );
 
         // for each bin
         for ( i=0; i<values.length; i++ ) {
@@ -106,10 +116,8 @@
 
                 entries.push( value[j] );
 
-                // get annotations position in viewport space
-                tilekey = data.index.level + "," + data.index.xIndex + "," + data.index.yIndex;
-                tilePos = MapUtil.getTopLeftViewportPixelForTile( this.map, tilekey );
-                position = MapUtil.getViewportPixelFromCoord( this.map, value[j][point.xKey], value[j][point.yKey] );
+                // get position in viewport space
+                position = MapUtil.getViewportPixelFromCoord( map, value[j][point.xKey], value[j][point.yKey] );
                 // get relative position from tile top left
                 offset = {
                     x: position.x - tilePos.x,

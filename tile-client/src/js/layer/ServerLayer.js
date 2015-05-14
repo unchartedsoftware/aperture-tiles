@@ -31,10 +31,7 @@
         Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
         PubSub = require('../util/PubSub'),
-        LegendService = require('../rest/LegendService'),
-        setRampImageUrl,
-        setLevelMinMax,
-        zoomCallback;
+        LegendService = require('../rest/LegendService');
 
     /**
      * Private: Request colour ramp image from server and set layer property when received.
@@ -42,7 +39,7 @@
      * @param {Object} layer - The layer object
      * @param {Function} callback - Optional callback function.
      */
-    setRampImageUrl = function( layer, callback ) {
+    function setRampImageUrl( layer, callback ) {
         LegendService.getEncodedImage( layer.source.id, {
                 renderer: layer.renderer
             }, function ( url ) {
@@ -52,39 +49,39 @@
                     callback( url );
                 }
             });
-    };
+    }
 
     /**
      * Private: Sets the layers min and max values for the given zoom level.
      *
      * @param layer {Object} the layer object.
      */
-    setLevelMinMax = function( layer ) {
+    function setLevelMinMax( layer ) {
         var zoomLevel = layer.map.getZoom(),
             coarseness = layer.renderer.coarseness,
             adjustedZoom = Math.max( zoomLevel - ( coarseness-1 ), 0 ),
             meta =  layer.source.meta,
-            levelMinMax = meta.minMax[ adjustedZoom ],
-            minMax = levelMinMax ? levelMinMax.minMax : {
-                min: null,
-                max: null
+            levelMinMax = meta.meta[ adjustedZoom ],
+            minMax = levelMinMax ? levelMinMax : {
+                minimum: null,
+                maximum: null
             };
         layer.levelMinMax = minMax;
         PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: minMax });
-    };
+    }
 
     /**
      * Private: Returns the zoom callback function to update level min and maxes.
      *
      * @param layer {ServerLayer} The layer object.
      */
-    zoomCallback = function( layer ) {
+    function zoomCallback( layer ) {
         return function() {
             if ( layer.olLayer ) {
                 setLevelMinMax( layer );
             }
         };
-    };
+    }
 
     /**
      * Instantiate a ServerLayer object.
@@ -116,18 +113,23 @@
      * </pre>
      */
     function ServerLayer( spec ) {
+        var that = this,
+            getURL = spec.getURL || LayerUtil.getURL;
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1;
         this.renderer = spec.renderer || {};
-        this.renderer.coarseness = ( this.renderer.coarseness !== undefined ) ? this.renderer.coarseness : 1;
-        this.renderer.rangeMin = ( this.renderer.rangeMin !== undefined ) ? this.renderer.rangeMin : 0;
-        this.renderer.rangeMax = ( this.renderer.rangeMax !== undefined ) ? this.renderer.rangeMax : 100;
+        this.renderer.coarseness = ( this.renderer.coarseness !== undefined ) ? parseInt( this.renderer.coarseness, 10 ) : 1;
+        this.renderer.rangeMin = ( this.renderer.rangeMin !== undefined ) ? parseInt( this.renderer.rangeMin, 10 ) : 0;
+        this.renderer.rangeMax = ( this.renderer.rangeMax !== undefined ) ? parseInt( this.renderer.rangeMax, 10 ) : 100;
         this.valueTransform = spec.valueTransform || {};
         this.tileTransform = spec.tileTransform || {};
         this.domain = "server";
         this.source = spec.source;
+        this.getURL = function( bounds ) {
+            return getURL.call( this, bounds ) + that.getQueryParamString();
+        };
     }
 
     ServerLayer.prototype = Object.create( Layer.prototype );
@@ -138,17 +140,10 @@
      * @private
      */
     ServerLayer.prototype.activate = function() {
-
-        var that = this;
         // set callback here so it can be removed later
         this.zoomCallback = zoomCallback( this );
         // set callback to update ramp min/max on zoom
         this.map.on( "zoomend", this.zoomCallback );
-
-        function getURL( bounds ) {
-            return LayerUtil.getURL.call( this, bounds ) + that.getQueryParamString();
-        }
-
         // add the new layer
         this.olLayer = new OpenLayers.Layer.TMS(
             'Server Rendered Tile Layer',
@@ -160,15 +155,18 @@
                     20037500,  20037500),
                 transparent: true,
                 isBaseLayer: false,
-                getURL: getURL
+                getURL: this.getURL
             });
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
-        setLevelMinMax( this );
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
     /**
@@ -180,9 +178,11 @@
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
+            this.olLayer = null;
         }
         this.map.off( "zoomend", this.zoomCallback );
         this.zoomCallback = null;
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
     /**
@@ -195,7 +195,7 @@
         var that = this;
         this.renderer.theme = theme;
         setRampImageUrl( that );
-        this.olLayer.redraw();
+        this.redraw();
     };
 
     /**
@@ -222,8 +222,8 @@
         this.zIndex = zIndex;
         if ( this.olLayer ) {
             $( this.olLayer.div ).css( 'z-index', zIndex );
-            PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
         }
+        PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
 
     /**
@@ -247,7 +247,7 @@
         if ( this.renderer.ramp !== rampType ) {
             this.renderer.ramp = rampType;
             setRampImageUrl( this, callback );
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'rampType', value: rampType} );
         }
     };
@@ -269,6 +269,22 @@
      * @param {Object} The min and max of the level.
      */
     ServerLayer.prototype.getLevelMinMax = function() {
+        if ( this.levelMinMax instanceof Array ) {
+            var data = this.tileTransform.data,
+                start = data.startBucket !== undefined ? data.startBucket : 0,
+                stop = data.endBucket !== undefined ? data.endBucket : this.levelMinMax.length-1,
+                minimum = 0,
+                maximum = 0,
+                i;
+            for ( i=start; i<=stop; i++ ) {
+                minimum += this.levelMinMax[i].minimum;
+                maximum += this.levelMinMax[i].maximum;
+            }
+            return {
+                minimum: minimum,
+                maximum: maximum
+            };
+        }
         return this.levelMinMax;
     };
 
@@ -293,7 +309,7 @@
         min = Math.max( Math.min( min, 1 ), 0 ) * 100;
         if ( this.renderer.rangeMin !== min ) {
             this.renderer.rangeMin = min;
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), { field: 'rangeMin', value: min });
         }
     };
@@ -320,7 +336,7 @@
         max = Math.max( Math.min( max, 1 ), 0 ) * 100;
         if ( this.renderer.rangeMax !== max ) {
             this.renderer.rangeMax = max;
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'rangeMax', value: max} );
         }
     };
@@ -404,7 +420,7 @@
     ServerLayer.prototype.setValueTransformType = function ( transformType ) {
         if ( this.valueTransform.type !== transformType ) {
             this.valueTransform.type = transformType;
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), { field: 'valueTransformType', value: transformType });
         }
     };
@@ -428,7 +444,7 @@
     ServerLayer.prototype.setTileTransformType = function ( transformType ) {
         if ( this.tileTransform.type !== transformType ) {
             this.tileTransform.type = transformType;
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformType', value: transformType} );
         }
     };
@@ -452,7 +468,7 @@
     ServerLayer.prototype.setTileTransformData = function ( transformData ) {
         if ( this.tileTransform.data !== transformData ) {
             this.tileTransform.data = transformData;
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
         }
     };
@@ -464,7 +480,7 @@
      * @returns {Object} The tile transform data attribute.
      */
     ServerLayer.prototype.getTileTransformData = function () {
-        return this.tileTransform.data;
+        return this.tileTransform.data || {};
     };
 
     /**
@@ -477,7 +493,7 @@
         if ( this.renderer.coarseness !== coarseness ) {
             this.renderer.coarseness = coarseness;
             setLevelMinMax( this ); // coarseness modifies the min/max
-            this.olLayer.redraw();
+            this.redraw();
             PubSub.publish( this.getChannel(), { field: 'coarseness', value: coarseness });
         }
     };
@@ -505,6 +521,17 @@
             valueTransform: this.valueTransform
         };
         return Util.encodeQueryParams( query );
+    };
+
+    /**
+     * Redraws the entire layer.
+     * @memberof ServerLayer
+     */
+    ServerLayer.prototype.redraw = function () {
+        if ( this.olLayer ) {
+            setLevelMinMax( this );
+            this.olLayer.redraw();
+        }
     };
 
     module.exports = ServerLayer;

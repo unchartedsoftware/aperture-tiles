@@ -39,8 +39,11 @@
          * @returns {JQuery} - The JQuery element.
          */
         create: function( layer ) {
-            var $layerHeader = $( '<div class="layer-entry-head"></div>' ),
-                $layerToggleIcon = $( '<i class="fa fa-check-square-o"></i>'),
+            var ENABLED_CLASS = 'fa-check-square-o',
+                DISABLED_CLASS = 'fa-square-o',
+                iconClass = layer.isEnabled() ? ENABLED_CLASS : DISABLED_CLASS,
+                $layerHeader = $( '<div class="layer-entry-head"></div>' ),
+                $layerToggleIcon = $( '<i class="fa '+iconClass+'"></i>'),
                 $layerToggleButton = $('<div class="layer-toggle"></div>'),
                 $layerTitle = $( '<div class="layer-title">'+layer.source.name+'</div>');
 
@@ -54,11 +57,11 @@
             PubSub.subscribe( layer.getChannel(), function( message ) {
                 if ( message.field === "enabled" ) {
                     if ( message.value ) {
-                        $layerToggleIcon.removeClass( 'fa-square-o' );
-                        $layerToggleIcon.addClass( 'fa-check-square-o' );
+                        $layerToggleIcon.removeClass( DISABLED_CLASS );
+                        $layerToggleIcon.addClass( ENABLED_CLASS );
                     } else {
-                        $layerToggleIcon.removeClass( 'fa-check-square-o' );
-                        $layerToggleIcon.addClass( 'fa-square-o' );
+                        $layerToggleIcon.removeClass( ENABLED_CLASS );
+                        $layerToggleIcon.addClass( DISABLED_CLASS );
                     } 
                 }
             });

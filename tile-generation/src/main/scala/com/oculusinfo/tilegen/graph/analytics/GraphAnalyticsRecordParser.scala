@@ -30,7 +30,6 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-
 import scala.collection.JavaConverters._
 import scala.util.parsing.json.JSON
 import com.oculusinfo.factory.util.Pair
@@ -57,7 +56,9 @@ class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: KeyValueArgum
 	val i_px = properties.getInt("oculus.binning.graph.parentX.index", "")
 	val i_py = properties.getInt("oculus.binning.graph.parentY.index", "")
 	val i_pr = properties.getInt("oculus.binning.graph.parentR.index", "")
-	val maxCommunities = properties.getInt("oculus.binning.graph.maxcommunities", "", Some(25))
+	val maxCommunities = properties.getInt("oculus.binning.graph.maxcommunities", "", Some(25))	
+	val i_stats = properties.getInt("oculus.binning.graph.stats.index", "", Some(-1))
+	val maxStats = properties.getInt("oculus.binning.graph.maxstats", "", Some(32))
 	
 	val i_edgeSrcID = properties.getInt("oculus.binning.graph.edges.srcID.index", "", Some(-1))
 	val i_edgeDstID = properties.getInt("oculus.binning.graph.edges.dstID.index", "", Some(-1))
@@ -66,6 +67,7 @@ class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: KeyValueArgum
 	val maxEdges = properties.getInt("oculus.binning.graph.maxedges", "", Some(10))
 	
 	GraphAnalyticsRecord.setMaxCommunities(maxCommunities)	//set max number of graph communities to store per tile
+	GraphCommunity.setMaxStats(maxStats)	//set max size of generic stats list for a given graph community 	
 	GraphCommunity.setMaxEdges(maxEdges)	//set max number of edges to store per graph community
 	
 	def getNodes (line: String): Option[(Long, GraphCommunity)] = {
@@ -94,6 +96,27 @@ class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: KeyValueArgum
 				val py = try fields(i_py).toDouble catch { case _: Throwable => -1.0 }
 				val pr = try fields(i_pr).toDouble catch { case _: Throwable => 0.0 }
 				
+				// parse stats list
+				val statsList = try {
+					var values = new java.util.ArrayList[JavaDouble]()
+					if (i_stats < 0) { 
+					  values 
+					}
+					else {
+						val csvStatsList = fields(i_stats)
+						val statsFields = csvStatsList.split(",")	// assumes that raw stats list are comma-delimited values				
+						val end = Math.min(statsFields.size, maxStats)
+						var i = 0
+						for (i <- 0 until end) {
+							values.add(statsFields(i).trim.toDouble)
+						}					
+						values
+					}
+				}
+				catch {
+				   case _: Throwable => new java.util.ArrayList[JavaDouble]()
+				}
+				
 				val community = new GraphCommunity(hierlevel,
 				                                   id,
 				                                   new Pair[JavaDouble, JavaDouble](x, y),
@@ -105,6 +128,7 @@ class GraphAnalyticsRecordParser (hierarchyLevel: Int, properties: KeyValueArgum
 				                                   pID,
 				                                   new Pair[JavaDouble, JavaDouble](px, py),
 				                                   pr,
+				                                   statsList,
 				                                   null,
 				                                   null);
 				

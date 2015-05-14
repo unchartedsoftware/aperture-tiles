@@ -28,17 +28,21 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.impl.SubTileDataView;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.SerializationTypeChecker;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
+import com.oculusinfo.binning.util.AvroJSONConverter;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.rendering.impl.SerializationTypeChecker;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.util.AvroJSONConverter;
-import com.oculusinfo.tile.util.TileDataView;
+
+
+
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -49,6 +53,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
 
 
 @Singleton
@@ -94,7 +99,7 @@ public class TileServiceImpl implements TileService {
 			}
 
 			// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
-			data = TileDataView.fromSourceAbsolute(tileDatas.get(0), index);
+			data = SubTileDataView.fromSourceAbsolute(tileDatas.get(0), index);
 		} else {
 			// No coarseness - use requested tile
 			java.util.List<TileData<T>> tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton(index));
@@ -151,7 +156,7 @@ public class TileServiceImpl implements TileService {
 
 	private <T> BufferedImage renderTileImage (LayerConfiguration config, String layer,
 	                                           TileIndex index, Iterable<TileIndex> tileSet,
-	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException {
+	                                           TileDataImageRenderer<T> renderer) throws ConfigurationException, IOException, Exception {
         // prepare for rendering
 		config.prepareForRendering(layer, index, tileSet);
 
@@ -163,6 +168,10 @@ public class TileServiceImpl implements TileService {
 
 		int coarseness = config.getPropertyValue(LayerConfiguration.COARSENESS);
 		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
+
+        @SuppressWarnings("unchecked")
+        TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
+        data = tileTransformer.transform( data );
 
 		if (data != null) {
 			return renderer.render(data, config);
@@ -190,7 +199,8 @@ public class TileServiceImpl implements TileService {
             // produce transformer, return transformed de-serialized data
 			TileTransformer<?> transformer = config.produce(TileTransformer.class);
 			JSONObject deserializedJSON = AvroJSONConverter.convert(tile);
-            return transformer.transform(deserializedJSON);
+			
+			return transformer.transform(deserializedJSON);
 		} catch (IOException | JSONException | ConfigurationException e) {
 			LOGGER.warn("Exception getting tile for {}", index, e);
 		}  catch (IllegalArgumentException e) {

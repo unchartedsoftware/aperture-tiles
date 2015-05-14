@@ -35,7 +35,7 @@ Tile-based visual analytics (TBVA) is a technique that divides the data into eve
 
 ### Extensible and Open Source
 
-The Aperture Tiles services and API are designed to be extensible, allowing a broad community to leverage and extend its capabilities in creative ways. The extensible AVRO tile format allows generation of tiles by third parties, which can be served using the Aperture Tiles server. Aperture Tiles leverages open standards such as [Tile Map Services (TMS)](http://en.wikipedia.org/wiki/Tile_Map_Service) that are widely supported by web mapping clients and servers.
+The Aperture Tiles services and API are designed to be extensible, allowing a broad community to leverage and extend its capabilities in creative ways. The extensible Avro tile format allows generation of tiles by third parties, which can be served using the Aperture Tiles server. Aperture Tiles leverages open standards such as [Tile Map Services (TMS)](http://en.wikipedia.org/wiki/Tile_Map_Service) that are widely supported by web mapping clients and servers.
 
 Aperture Tile generation service builds on the [Apache Spark](http://spark.incubator.apache.org/) and [Hadoop](http://hadoop.apache.org/) cluster computing systems, providing the ability to scale up to billions (or more) data points. Tile sets involving billions of tiles are efficiently handled using [Apache HBase](http://hbase.apache.org/) for distributed data storage.
 
@@ -44,7 +44,7 @@ Aperture Tiles is under ongoing development and is freely available for download
 ###Interested in Learning More?
 
 * [Tour](tour/): Take our tour to learn more about Aperture Tiles.
-* [Documentation](docs/development/quickstart/): Learn how to install, implement and test your Aperture Tiles applications.
-	* [Quick Start](docs/development/quickstart/): Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+* [Documentation](docs/development/how-to/quickstart/): Learn how to install, implement and test your Aperture Tiles applications.
+	* [Quick Start](docs/development/how-to/quickstart/): Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
 * [Live Examples](demos/): See our demos page to see live examples of the capabilities of Aperture Tiles.
 * [Download](download/): For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.

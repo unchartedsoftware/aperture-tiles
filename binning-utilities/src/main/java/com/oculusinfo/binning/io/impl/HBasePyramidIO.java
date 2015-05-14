@@ -77,20 +77,21 @@ public class HBasePyramidIO implements PyramidIO {
 
 	private Configuration       _config;
 	private HBaseAdmin          _admin;
-    private HConnection         _connection;
+	private HConnection         _connection;
 
 	public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
 
-        Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
-        Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
+		Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
+		Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN);
 
-        _config = HBaseConfiguration.create();
+		_config = HBaseConfiguration.create();
 		_config.set("hbase.zookeeper.quorum", zookeeperQuorum);
 		_config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
 		_config.set("hbase.master", hbaseMaster);
+		_config.set("hbase.client.keyvalue.maxsize", "0");
 		_admin = new HBaseAdmin(_config);
-        _connection = HConnectionManager.createConnection(_config);
+		_connection = HConnectionManager.createConnection(_config);
 	}
 
 
@@ -115,6 +116,15 @@ public class HBasePyramidIO implements PyramidIO {
 		                     Integer.parseInt(fields[2]));
 	}
 
+
+	/**
+	 * Close down this pyramid IO
+	 */
+	public void close () throws IOException {
+		_admin.close();
+	}
+
+
 	/**
 	 * Get the configuration used to connect to HBase.
 	 */
@@ -128,7 +138,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 */
 	private HTableInterface getTable (String tableName) throws IOException {
 
-        return _connection.getTable( tableName );
+		return _connection.getTable( tableName );
 	}
 
 	/*
@@ -170,7 +180,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 *            The rows to write
 	 */
 	private void writeRows (String tableName, List<Row> rows) throws InterruptedException, IOException {
-        HTableInterface table = getTable(tableName);
+		HTableInterface table = getTable(tableName);
 		table.batch(rows);
 		table.flushCommits();
 		table.close();
@@ -202,7 +212,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 *         map.
 	 */
 	private List<Map<HBaseColumn, byte[]>> readRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
-        HTableInterface table = getTable(tableName);
+		HTableInterface table = getTable(tableName);
 
 		List<Get> gets = new ArrayList<Get>(rows.size());
 		for (String rowId: rows) {
@@ -218,7 +228,7 @@ public class HBasePyramidIO implements PyramidIO {
 		for (Result result: results) {
 			allResults.add(decodeRawResult(result, columns));
 		}
-        table.close();
+		table.close();
 		return allResults;
 	}
 
@@ -235,8 +245,8 @@ public class HBasePyramidIO implements PyramidIO {
 				tableDesc.addFamily(tileFamily);
 				_admin.createTable(tableDesc);
 			} catch (Exception e) {
-                e.printStackTrace();
-            }
+				e.printStackTrace();
+			}
 			
 		}
 	}
@@ -275,10 +285,10 @@ public class HBasePyramidIO implements PyramidIO {
 	@Override
 	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
 		try {
-    		initializeForWrite( pyramidId );
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
+			initializeForWrite( pyramidId );
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -345,33 +355,33 @@ public class HBasePyramidIO implements PyramidIO {
 	}
 	
 	@Override
-    public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
+	public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
     	
-    	List<String> rowIds = new ArrayList<>();
-        for (TileIndex tile: tiles) {
-            rowIds.add( rowIdFromTileIndex( tile ) );
-        }        
-        deleteRows(tableName, rowIds, TILE_COLUMN);
-    }
+		List<String> rowIds = new ArrayList<>();
+		for (TileIndex tile: tiles) {
+			rowIds.add( rowIdFromTileIndex( tile ) );
+		}        
+		deleteRows(tableName, rowIds, TILE_COLUMN);
+	}
 	
 	private void deleteRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
 
-        HTableInterface table = getTable(tableName);
-        List<Delete> deletes = new LinkedList<Delete>();
-        for (String rowId: rows) {
-        	Delete delete = new Delete(rowId.getBytes());
-            deletes.add(delete);
-        }
-        table.delete(deletes);
-        table.close();
-    }
+		HTableInterface table = getTable(tableName);
+		List<Delete> deletes = new LinkedList<Delete>();
+		for (String rowId: rows) {
+			Delete delete = new Delete(rowId.getBytes());
+			deletes.add(delete);
+		}
+		table.delete(deletes);
+		table.close();
+	}
 	
 	public void dropTable( String tableName ) {
     	
-    	try {
-    		_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
-    		_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
-        } catch (Exception e) {}
+		try {
+			_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
+			_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
+		} catch (Exception e) {}
  	
-    }
+	}
 }

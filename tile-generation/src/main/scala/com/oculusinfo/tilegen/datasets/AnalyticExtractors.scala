@@ -31,24 +31,22 @@ import java.lang.{Double => JavaDouble}
 import java.util
 import java.util.{List => JavaList}
 import java.util.ArrayList
-
-
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.properties.{JSONArrayProperty, StringProperty, ListProperty}
-
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.convert.Wrappers.SeqWrapper
 import scala.collection.mutable.Buffer
 import scala.reflect.ClassTag
-
 import org.apache.spark.SparkContext
-
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.tilegen.tiling.analytics._
 import com.oculusinfo.tilegen.util.{TypeConversion, ExtendedNumeric, NumericallyConfigurableFactory, PropertiesWrapper}
+import com.oculusinfo.factory.providers.FactoryProvider
+import com.oculusinfo.factory.providers.AbstractFactoryProvider
+import com.oculusinfo.factory.EmptyFactory
 
 
 /**
@@ -74,28 +72,57 @@ object AnalyticFactory {
 	                                       "Fields relevant to the current analytic")
 
 }
-class AnalyticFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ConfigurableFactory[(AnalysisDescription[_, _], Seq[String])] (
-	classOf[(AnalysisDescription[_, _], Seq[String])], parent, path)
+
+case class FieldList (fields: Seq[String]) {}
+class FieldListFactory (parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ConfigurableFactory[FieldList](classOf[FieldList], parent, path)
 {
 	import AnalyticFactory._
 
-	addProperty(ANALYTIC_TYPE_PROPERTY)
 	addProperty(FIELDS_PROPERTY)
 
-	override protected def create: (AnalysisDescription[_, _], Seq[String]) = {
-		val factoryTypeName = getPropertyValue(ANALYTIC_TYPE_PROPERTY)
-		val analytic = Class.forName(factoryTypeName).newInstance().asInstanceOf[AnalysisDescription[_, _]]
-		val fields = getPropertyValue(FIELDS_PROPERTY)
-
-		(analytic, fields)
+	override protected def create: FieldList = {
+		FieldList(getPropertyValue(FIELDS_PROPERTY))
 	}
 }
+
+abstract class AnalyticFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
+		extends ConfigurableFactory[AnalysisDescription[_, _]] (name, classOf[AnalysisDescription[_, _]], parent, path)
+{
+	addChildFactory(new FieldListFactory(this, List[String]().asJava))
+}
+
+class ParameterlessAnalyticFactory (name: String, parent: ConfigurableFactory[_], path: JavaList[String])
+		extends AnalyticFactory(name, parent, path)
+{
+	import AnalyticFactory._
+	addProperty(ANALYTIC_TYPE_PROPERTY)
+
+	override protected def create: AnalysisDescription[_, _] = {
+		val factoryTypeName = getPropertyValue(ANALYTIC_TYPE_PROPERTY)
+		Class.forName(factoryTypeName).newInstance().asInstanceOf[AnalysisDescription[_, _]]
+	}
+}
+
+abstract class AnalyticFactoryProvider extends AbstractFactoryProvider[AnalysisDescription[_, _]] {}
+
+class DefaultAnalyticFactoryProvider extends AnalyticFactoryProvider {
+	def createFactory(name: String,
+	                  parent: ConfigurableFactory[_],
+	                  path: JavaList[String]): ConfigurableFactory[AnalysisDescription[_, _]] = {
+		new ParameterlessAnalyticFactory(name, parent, path)
+	}
+}
+
 
 /**
  * A factory to produce analytic extractors
  */
 object AnalyticExtractorFactory {
+	val ANALYTIC_FACTORY_PROPERTY = new StringProperty("factory",
+	                                                   "A factory provider type with a no-arg constructor.  The factory "+
+		                                                   "should inherit from AnalyticFactoryProvider.",
+	                                                   classOf[DefaultAnalyticFactoryProvider].getName)
 	val DATA_ANALYTICS_PROPERTY = new JSONArrayProperty("data", "A list of data analytic types", "[]")
 	val TILE_ANALYTIC_PROPERTY = new JSONArrayProperty("tile", "A list of tile analytic types", "[]")
 }
@@ -107,26 +134,50 @@ class AnalyticExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[S
 	addProperty(TILE_ANALYTIC_PROPERTY)
 
 	override protected def create(): AnalyticExtractor = {
-		val tileAnalyticConfig = getPropertyValue(TILE_ANALYTIC_PROPERTY)
-		val tileAnalytics =
+		val tileAnalytics = {
+			val tileAnalyticConfig = getPropertyValue(TILE_ANALYTIC_PROPERTY)
+
 			(0 until tileAnalyticConfig.length()).map(n =>
 				{
-					val factory = new AnalyticFactory(null, new util.ArrayList[String]())
+					// Get the name of a provider of the factory type we need
+					val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
+					typeSource.readConfiguration(tileAnalyticConfig.getJSONObject(n))
+					val providerType = typeSource.getPropertyValue(ANALYTIC_FACTORY_PROPERTY)
+
+					// Create our analytic factory
+					val provider = Class.forName(providerType).newInstance().asInstanceOf[FactoryProvider[AnalysisDescription[_, _]]]
+					val factory = provider.createFactory(null, List[String]().asJava)
 					factory.readConfiguration(tileAnalyticConfig.getJSONObject(n))
-					val (analytic, fields) = factory.produce(classOf[(AnalysisDescription[_, _], Seq[String])])
-					analytic.asInstanceOf[AnalysisDescription[TileData[_], _]]
+
+					// Create our analytic
+					factory.produce(classOf[AnalysisDescription[_, _]]).asInstanceOf[AnalysisDescription[TileData[_], _]]
 				}
 			)
-		val dataAnalyticConfig = getPropertyValue(DATA_ANALYTICS_PROPERTY)
-		val dataAnalytics =
+		}
+		val dataAnalytics = {
+			val dataAnalyticConfig = getPropertyValue(DATA_ANALYTICS_PROPERTY)
+
 			(0 until dataAnalyticConfig.length()).map(n =>
 				{
-					val factory = new AnalyticFactory(null, new util.ArrayList[String]())
+					// Get the name of a provider of the factory type we need
+					val typeSource = new EmptyFactory(null, List[String]().asJava, ANALYTIC_FACTORY_PROPERTY)
+					typeSource.readConfiguration(dataAnalyticConfig.getJSONObject(n))
+					val providerType = typeSource.getPropertyValue(ANALYTIC_FACTORY_PROPERTY)
+
+					// Create our analytic factory
+					val provider = Class.forName(providerType).newInstance().asInstanceOf[FactoryProvider[AnalysisDescription[_, _]]]
+					val factory = provider.createFactory(null, List[String]().asJava)
 					factory.readConfiguration(dataAnalyticConfig.getJSONObject(n))
-					val (analytic, fields) = factory.produce(classOf[(AnalysisDescription[_, _], Seq[String])])
-					(analytic.asInstanceOf[AnalysisDescription[Seq[Any], _]], fields)
+
+					// Create our analytic
+					val analytic = factory.produce(classOf[AnalysisDescription[_, _]]).asInstanceOf[AnalysisDescription[Seq[Any], _]]
+					// Find the fields it needs
+					val fields = factory.produce(classOf[FieldList]).fields
+					// return them both
+					(analytic, fields)
 				}
 			)
+		}
 		new AnalyticExtractor(tileAnalytics, dataAnalytics)
 	}
 }
@@ -151,10 +202,9 @@ class DataAnalyticWrapper[AT: ClassTag] (private[datasets] var base: AnalysisDes
 	// Simple pass-through methods into our base analytic
 	def analytic: TileAnalytic[AT] = base.analytic
 	def accumulate (tile: TileIndex, data: AT): Unit = base.accumulate(tile, data)
-	def toMap: Map[String, Any] = base.toMap
-	def applyTo (metaData: PyramidMetaData): Unit = base.applyTo(metaData)
 	def addAccumulator (sc: SparkContext, name: String, test: (TileIndex) => Boolean): Unit =
 		base.addAccumulator(sc, name, test)
+	def accumulatedResults = base.accumulatedResults
 }
 class AnalyticExtractor (_tileAnalytics: Seq[AnalysisDescription[TileData[_], _]],
                          _dataAnalytics: Seq[(AnalysisDescription[Seq[Any], _], Seq[String])]) {

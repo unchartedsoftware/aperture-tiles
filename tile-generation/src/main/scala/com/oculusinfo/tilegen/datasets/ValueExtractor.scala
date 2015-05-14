@@ -27,26 +27,42 @@ package com.oculusinfo.tilegen.datasets
 
 
 
+import java.util.Arrays
 import java.lang.{Integer => JavaInt}
 import java.lang.{Long => JavaLong}
 import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 
-import com.oculusinfo.factory.providers.{StandardUberFactoryProvider, FactoryProvider}
-import com.oculusinfo.factory.{ConfigurationProperty, UberFactory, ConfigurableFactory}
-import com.oculusinfo.factory.properties._
+
+import org.json.JSONArray
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
 import scala.util.{Try, Success, Failure}
+
 import org.apache.avro.file.CodecFactory
-import com.oculusinfo.binning.{TilePyramid, TileData}
+
+import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.serialization.impl.{PairAvroSerializer, PairArrayAvroSerializer, PrimitiveArrayAvroSerializer, PrimitiveAvroSerializer}
+import com.oculusinfo.binning.io.serialization.TileSerializerFactory
+import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider
+import com.oculusinfo.binning.util.TypeDescriptor
+
 import com.oculusinfo.factory.util.Pair
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.ConfigurationException
+import com.oculusinfo.factory.UberFactory
+import com.oculusinfo.factory.properties._
+import com.oculusinfo.factory.providers.FactoryProvider
+import com.oculusinfo.factory.providers.AbstractFactoryProvider
+import com.oculusinfo.factory.providers.StandardUberFactoryProvider
+
 import com.oculusinfo.tilegen.tiling.analytics._
 import com.oculusinfo.tilegen.util._
+
 
 
 /**
@@ -83,46 +99,83 @@ abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
  */
 object ValueExtractorFactory {
 	private[datasets] val FIELD_PROPERTY =
-		new StringProperty("field", "The field used by this value extractor", "")
+		new StringProperty("field", "The field used by this value extractor", "INVALID FIELD")
 	private[datasets] val FIELDS_PROPERTY =
 		new ListProperty[String](new StringProperty("fields", "The fields used by this value extractor", ""),
 		                         "fields", "The fields used by this value extractor")
 
+	/**
+	 * The default value extractor type to use when tiling - a count.
+	 */
 	val defaultFactory = "count"
-	/** Default child factories */
-	val defaultSubFactories = Set[FactoryProvider[ValueExtractor[_, _]]](CountValueExtractorFactory.provider,
-	                                                                     FieldValueExtractorFactory.provider,
-	                                                                     MultiFieldValueExtractorFactory.provider,
-	                                                                     SeriesValueExtractorFactory.provider,
-	                                                                     IndirectSeriesValueExtractorFactory.provider,
-	                                                                     StringValueExtractorFactory.provider,
-	                                                                     SubstringValueExtractorFactory.provider)
-	/** Create a standard index extractor uber-factory provider */
-	def provider (defaultProvider: String = defaultFactory,
-	              subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
+	/**
+	 * A set of providers for value extractor factories, to be used when constructing tile tasks
+	 * to construct the relevant value extractor for the current task.
+	 */
+	val subFactoryProviders = MutableMap[Any, FactoryProvider[ValueExtractor[_, _]]]()
+	subFactoryProviders(FactoryKey(CountValueExtractorFactory.NAME,          classOf[CountValueExtractorFactory]))          = CountValueExtractorFactory.provider
+	subFactoryProviders(FactoryKey(FieldValueExtractorFactory.NAME,          classOf[FieldValueExtractorFactory]))          = FieldValueExtractorFactory.provider
+	subFactoryProviders(FactoryKey(MultiFieldValueExtractorFactory.NAME,     classOf[MultiFieldValueExtractorFactory]))     = MultiFieldValueExtractorFactory.provider
+	subFactoryProviders(FactoryKey(SeriesValueExtractorFactory.NAME,         classOf[SeriesValueExtractorFactory]))         = SeriesValueExtractorFactory.provider
+	subFactoryProviders(FactoryKey(IndirectSeriesValueExtractorFactory.NAME, classOf[IndirectSeriesValueExtractorFactory])) = IndirectSeriesValueExtractorFactory.provider
+	subFactoryProviders(FactoryKey(StringValueExtractorFactory.NAME,         classOf[StringValueExtractorFactory]))         = StringValueExtractorFactory.provider
+	subFactoryProviders(FactoryKey(SubstringValueExtractorFactory.NAME,      classOf[SubstringValueExtractorFactory]))      = SubstringValueExtractorFactory.provider
+
+	/**
+	 * Add a ValueExtractor sub-factory provider to the list of all possible such providers.
+	 *
+	 * This will replace a previous provider of the same key
+	 */
+	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[ValueExtractor[_, _]]): Unit =
+		subFactoryProviders(identityKey) = provider
+	def getSubFactoryProviders = subFactoryProviders.values.toSet
+
+
+
+
+	/** Create a standard value extractor uber-factory provider */
+	def provider(name: String = null,
+	             defaultProvider: String = defaultFactory,
+	             subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = getSubFactoryProviders) =
 		new StandardUberFactoryProvider[ValueExtractor[_, _]](subFactoryProviders.asJava) {
-			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
-				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], null, path, createChildren(path), defaultProvider)
-			override def createFactory(parent: ConfigurableFactory[_],
-			                           path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
-				new UberFactory[ValueExtractor[_, _]](classOf[ValueExtractor[_, _]], parent, path, createChildren(path), defaultProvider)
+			override def createFactory(name: String, parent: ConfigurableFactory[_], path: JavaList[String]):
+					ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				new UberFactory[ValueExtractor[_, _]](name, classOf[ValueExtractor[_, _]], parent, path,
+				                                      createChildren(parent, path), defaultProvider)
 		}
 
-	/** Short-hand for accessing the standard index extractor uber-factory easily. */
-	def apply (parent: ConfigurableFactory[_],
-	           path: JavaList[String],
-	           defaultProvider: String = defaultFactory,
-	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]] = defaultSubFactories) =
-		provider(defaultProvider, subFactoryProviders).createFactory(parent, path)
+	/** Short-hand for accessing the standard value extractor uber-factory easily. */
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String]) =
+		provider().createFactory(parent, path)
+
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String], defaultProvider: String) =
+		provider(defaultProvider = defaultProvider).createFactory(parent, path)
+
+	def apply (parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String,
+	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]]) =
+		provider(defaultProvider = defaultProvider,
+		         subFactoryProviders = subFactoryProviders).createFactory(parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String]) =
+		provider(name).createFactory(name, parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String) =
+		provider(name, defaultProvider).createFactory(name, parent, path)
+
+	def apply (name: String, parent: ConfigurableFactory[_], path: JavaList[String],
+	           defaultProvider: String,
+	           subFactoryProviders: Set[FactoryProvider[ValueExtractor[_, _]]]) =
+		provider(name, defaultProvider, subFactoryProviders).createFactory(name, parent, path)
 
 	/** Helper method for quick and easy construction of factory providers for sub-factories. */
 	def subFactoryProvider (ctor: (ConfigurableFactory[_], JavaList[String]) => ValueExtractorFactory) =
-		new FactoryProvider[ValueExtractor[_, _]] {
-			override def createFactory(path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
-				ctor(null, path)
-
-			override def createFactory(parent: ConfigurableFactory[_],
+		new AbstractFactoryProvider[ValueExtractor[_, _]] {
+			override def createFactory(name: String,
+			                           parent: ConfigurableFactory[_],
 			                           path: JavaList[String]): ConfigurableFactory[_ <: ValueExtractor[_, _]] =
+				// Name is ignored, since these are sub-factories
 				ctor(parent, path)
 		}
 }
@@ -140,9 +193,38 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 		extends NumericallyConfigurableFactory[ValueExtractor[_,_]](name, classOf[ValueExtractor[_,_]], parent, path)
 		with OptionsFactoryMixin[ValueExtractor[_, _]]
 {
+	protected val serializerFactory: ConfigurableFactory[TileSerializer[_]] = {
+		val path = List("serializer").asJava
+		new TileSerializerFactory(this, path, DefaultTileSerializerFactoryProvider.values.map(_.createFactory(this, path)).toList.asJava)
+	}
+	addChildFactory(serializerFactory)
+
+	/**
+	 * All this method does is check the return type of a serializer
+	 * programatically, As such, it supercedes the warnings hidden here.
+	 *
+	 * It will only work, of course, if the serializer is set up correctly
+	 * (i.e., without lying about its type_, and if the pass-ed class and
+	 * expandedClass actually match; mis-use will, of course, cause errors.
+	 */
+	def checkBinClass[T] (serializer: TileSerializer[_], expectedBinClass: Class[T],
+	                      expandedExpectedBinClass: TypeDescriptor): TileSerializer[T] = {
+		if (null == serializer) {
+			throw new ConfigurationException("No serializer given for renderer")
+		}
+		if (!expandedExpectedBinClass.equals(serializer.getBinTypeDescription())) {
+			throw new ConfigurationException("Serialization type does not match rendering type.  Serialization class was "+serializer.getBinTypeDescription()+", renderer type was "+expandedExpectedBinClass)
+		}
+		serializer.asInstanceOf[TileSerializer[T]]
+	}
+
+	def getDefaultSerializerType (baseType: String, expectedPrimitiveCLass: Class[_]*): String = {
+		baseType.format(expectedPrimitiveCLass.map(_.getSimpleName.toLowerCase()):_*)
+	}
 }
 
 object CountValueExtractorFactory {
+	private[datasets] val NAME = "count"
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new CountValueExtractorFactory(parent, path))
 }
@@ -151,12 +233,14 @@ object CountValueExtractorFactory {
  * @see CountValueExtractor2
  */
 class CountValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("count", parent, path)
+		extends ValueExtractorFactory(CountValueExtractorFactory.NAME, parent, path)
 {
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		new CountValueExtractor[T, JT]()(tag, numeric, conversion)
+		serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("%s-a", conversion.toClass))
+		val serializer: TileSerializer[JT] = checkBinClass(produce(classOf[TileSerializer[_]]), conversion.toClass, new TypeDescriptor(conversion.toClass))
+		new CountValueExtractor[T, JT](serializer)(tag, numeric, conversion)
 	}
 }
 
@@ -165,7 +249,7 @@ class CountValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
  * @tparam T The numeric type to use for the count when processing
  * @tparam JT The numeric type to use for the count when writing tiles (generally a Java version of T)
  */
-class CountValueExtractor[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
+class CountValueExtractor[T: ClassTag, JT] (_serializer: TileSerializer[JT])(implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable
 {
 	def name = "count"
@@ -176,10 +260,11 @@ class CountValueExtractor[T: ClassTag, JT] ()(implicit numeric: ExtendedNumeric[
 		Seq(new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMinTileAnalytic[T]()),
 		    new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMaxTileAnalytic[T]()))
 	}
-	def serializer = new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+	def serializer = _serializer
 }
 
 object FieldValueExtractorFactory {
+	private[datasets] val NAME = "field"
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new FieldValueExtractorFactory(parent, path))
 }
@@ -190,7 +275,7 @@ object FieldValueExtractorFactory {
  * @see FieldValueExtractor2
  */
 class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("field", parent, path)
+		extends ValueExtractorFactory(FieldValueExtractorFactory.NAME, parent, path)
 {
 	import FieldValueExtractorFactory._
 
@@ -206,11 +291,20 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
 		val analytic = produce(classOf[BinningAnalytic[T, JT]])
 
 		if (analytic.isInstanceOf[NumericMeanBinningAnalytic[_]]) {
-			new MeanValueExtractor[T](field, analytic.asInstanceOf[NumericMeanBinningAnalytic[T]])(tag, numeric)
+			serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("%s-a", classOf[JavaDouble]))
+			val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), classOf[JavaDouble], new TypeDescriptor(classOf[JavaDouble]))
+			new MeanValueExtractor[T](field, analytic.asInstanceOf[NumericMeanBinningAnalytic[T]], serializer)(tag, numeric)
 		} else if (analytic.isInstanceOf[NumericStatsBinningAnalytic[_]]) {
-			new StatsValueExtractor[T](field, analytic.asInstanceOf[NumericStatsBinningAnalytic[T]])(tag, numeric)
+			serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("(%s, %s)-a", classOf[JavaDouble], classOf[JavaDouble]))
+			val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
+			                               classOf[Pair[JavaDouble, JavaDouble]], new TypeDescriptor(classOf[Pair[JavaDouble, JavaDouble]],
+			                                                                                         new TypeDescriptor(classOf[JavaDouble]),
+			                                                                                         new TypeDescriptor(classOf[JavaDouble])))
+			new StatsValueExtractor[T](field, analytic.asInstanceOf[NumericStatsBinningAnalytic[T]], serializer)(tag, numeric)
 		} else {
-			new FieldValueExtractor[T, JT](field, analytic)(tag, numeric, conversion)
+			serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("%s-a", conversion.toClass))
+			val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), conversion.toClass, new TypeDescriptor(conversion.toClass))
+			new FieldValueExtractor[T, JT](field, analytic, serializer)(tag, numeric, conversion)
 		}
 	}
 }
@@ -222,7 +316,8 @@ class FieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList
  * @tparam T The numeric type expected for the field in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: BinningAnalytic[T, JT])
+class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: BinningAnalytic[T, JT],
+                                            _serializer: TileSerializer[JT])
                          (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[T, JT] with Serializable {
 	def name = field
@@ -233,8 +328,7 @@ class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: Bin
 		Seq(new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMinTileAnalytic[T]()),
 		    new AnalysisDescriptionTileWrapper[JT, T](conversion.backwards(_), new NumericMaxTileAnalytic[T]()))
 	}
-	override def serializer: TileSerializer[JT] =
-		new PrimitiveAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+	override def serializer: TileSerializer[JT] = _serializer
 }
 
 /**
@@ -243,8 +337,9 @@ class FieldValueExtractor[T: ClassTag, JT] (field: String, _binningAnalytic: Bin
  * @param analytic The mean binning analytic used for aggregation by this extractor
  * @tparam T The numeric type expected for the field in question.  Bins are always written as Java Doubles
  */
-class MeanValueExtractor[T: ClassTag] (field: String, analytic: NumericMeanBinningAnalytic[T])
-                                      (implicit numeric: ExtendedNumeric[T])
+class MeanValueExtractor[T: ClassTag] (field: String, analytic: NumericMeanBinningAnalytic[T],
+                                       _serializer: TileSerializer[JavaDouble])
+                        (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, Int), JavaDouble] with Serializable {
 	def name = field
 	def fields = Seq(field)
@@ -255,8 +350,7 @@ class MeanValueExtractor[T: ClassTag] (field: String, analytic: NumericMeanBinni
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMinTileAnalytic[T]()),
 		    new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMaxTileAnalytic[T]()))
 	}
-	override def serializer: TileSerializer[JavaDouble] =
-		new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec())
+	override def serializer: TileSerializer[JavaDouble] = _serializer
 }
 /**
  * A value extractor that uses the mean and standard deviation of the (numeric) value of a single field
@@ -265,8 +359,9 @@ class MeanValueExtractor[T: ClassTag] (field: String, analytic: NumericMeanBinni
  * @param analytic The stats binning analytic used for aggregation by this extractor
  * @tparam T The numeric type expected for the field in question.  Bins are always written as pairs of Java Doubles
  */
-class StatsValueExtractor[T: ClassTag] (field: String, analytic: NumericStatsBinningAnalytic[T])
-                                       (implicit numeric: ExtendedNumeric[T])
+class StatsValueExtractor[T: ClassTag] (field: String, analytic: NumericStatsBinningAnalytic[T],
+                                        _serializer: TileSerializer[Pair[JavaDouble, JavaDouble]])
+                         (implicit numeric: ExtendedNumeric[T])
 		extends ValueExtractor[(T, T, Int), Pair[JavaDouble, JavaDouble]] with Serializable
 {
 	override def name = field
@@ -279,16 +374,16 @@ class StatsValueExtractor[T: ClassTag] (field: String, analytic: NumericStatsBin
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[Pair[JavaDouble, JavaDouble]], _]] = {
 		val convertMean:  Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getFirst.doubleValue())
 		val convertSigma: Pair[JavaDouble, JavaDouble] => T = bt => numeric.fromDouble(bt.getSecond.doubleValue())
-		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T]("minMean")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T]("maxMean")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T]("minStdDev")),
-		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T]("maxStdDev")))
+		Seq(new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMinTileAnalytic[T](Some("minMean"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertMean, new NumericMaxTileAnalytic[T](Some("maxMean"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMinTileAnalytic[T](Some("minStdDev"))),
+		    new AnalysisDescriptionTileWrapper[Pair[JavaDouble, JavaDouble], T](convertSigma, new NumericMaxTileAnalytic[T](Some("maxStdDev"))))
 	}
-	override def serializer: TileSerializer[Pair[JavaDouble, JavaDouble]] =
-		new PairAvroSerializer(classOf[JavaDouble], classOf[JavaDouble], CodecFactory.bzip2Codec())
+	override def serializer: TileSerializer[Pair[JavaDouble, JavaDouble]] = _serializer
 }
 
 object SeriesValueExtractorFactory {
+	private[datasets] val NAME = "series"
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new SeriesValueExtractorFactory(parent, path))
 }
@@ -299,7 +394,7 @@ object SeriesValueExtractorFactory {
  * @see SeriesValueExtractor2
  */
 class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("series", parent, path)
+		extends ValueExtractorFactory(SeriesValueExtractorFactory.NAME, parent, path)
 {
 	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
 	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
@@ -307,9 +402,12 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 	override protected def typedCreate[T, JT] (tag: ClassTag[T],
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
-		def fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
-		def elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
-		new SeriesValueExtractor[T, JT](fields, elementAnalytic)(tag, numeric, conversion)
+		val fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
+		val elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
+		serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[%s]-a", conversion.toClass))
+		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), classOf[JavaList[JT]],
+		                               new TypeDescriptor(classOf[JavaList[JT]], new TypeDescriptor(conversion.toClass)))
+		new SeriesValueExtractor[T, JT](fields, elementAnalytic, serializer)(tag, numeric, conversion)
 	}
 }
 
@@ -321,7 +419,8 @@ class SeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnalytic: BinningAnalytic[T, JT])
+class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnalytic: BinningAnalytic[T, JT],
+                                             _serializer: TileSerializer[JavaList[JT]])
                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]] with Serializable {
 	def name = "series"
@@ -332,15 +431,20 @@ class SeriesValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnal
 		new ArrayBinningAnalytic[T, JT](elementAnalytic)
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[JT]], _]] = {
 		val convertFcn: JavaList[JT] => Seq[T] = bt => bt.asScala.map(conversion.backwards(_))
+		val fieldNames = {
+			val names = new JSONArray()
+			fields.foreach(names.put(_))
+			names
+		}
 		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
 		    new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMaxTileAnalytic())),
-		    new CustomGlobalMetadata(Map[String, Object]("variables" -> fields.toSeq.asJava)))
+		    new CustomGlobalMetadata(Map[String, String]("variables" -> fieldNames.toString)))
 	}
-	override def serializer: TileSerializer[JavaList[JT]] =
-		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+	override def serializer: TileSerializer[JavaList[JT]] = _serializer
 }
 
 object IndirectSeriesValueExtractorFactory {
+	private[datasets] val NAME = "indirectSeries"
 	val KEY_PROPERTY = new StringProperty("key",
 	                                      "The field in which to find the key of a given record for the indirect series",
 	                                      "")
@@ -362,7 +466,7 @@ object IndirectSeriesValueExtractorFactory {
  * @see IndirectSeriesValueExtractor
  */
 class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("indirectSeries", parent, path)
+		extends ValueExtractorFactory(IndirectSeriesValueExtractorFactory.NAME, parent, path)
 {
 	addProperty(IndirectSeriesValueExtractorFactory.KEY_PROPERTY)
 	addProperty(IndirectSeriesValueExtractorFactory.VALUE_PROPERTY)
@@ -373,11 +477,15 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
 	                                           numeric: ExtendedNumeric[T],
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		import IndirectSeriesValueExtractorFactory._
-		def keyField = getPropertyValue(KEY_PROPERTY)
-		def valueField = getPropertyValue(VALUE_PROPERTY)
-		def validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
-		def elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
-		new IndirectSeriesValueExtractor[T, JT](keyField, valueField, validKeys, elementAnalytic)(tag, numeric, conversion)
+		val keyField = getPropertyValue(KEY_PROPERTY)
+		val valueField = getPropertyValue(VALUE_PROPERTY)
+		val validKeys = getPropertyValue(VALID_KEYS_PROPERTY).asScala.toArray
+		val elementAnalytic = produce(classOf[BinningAnalytic[T, JT]])
+		serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[%s]-a", conversion.toClass))
+		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]), classOf[JavaList[JT]],
+		                               new TypeDescriptor(classOf[JavaList[JT]], new TypeDescriptor(conversion.toClass)))
+
+		new IndirectSeriesValueExtractor[T, JT](keyField, valueField, validKeys, elementAnalytic, serializer)(tag, numeric, conversion)
 	}
 }
 
@@ -393,7 +501,8 @@ class IndirectSeriesValueExtractorFactory (parent: ConfigurableFactory[_], path:
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueField: String, validKeys: Seq[String],
-                                                     elementAnalytic: BinningAnalytic[T, JT])
+                                                     elementAnalytic: BinningAnalytic[T, JT],
+                                                     _serializer: TileSerializer[JavaList[JT]])
                                   (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[JT]]
 {
@@ -413,11 +522,11 @@ class IndirectSeriesValueExtractor[T: ClassTag, JT] (keyField: String, valueFiel
 		Seq(new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMinTileAnalytic())),
 		    new AnalysisDescriptionTileWrapper(convertFcn, new ArrayTileAnalytic[T](new NumericMaxTileAnalytic())))
 	}
-	def serializer: TileSerializer[JavaList[JT]] =
-		new PrimitiveArrayAvroSerializer(conversion.toClass, CodecFactory.bzip2Codec())
+	def serializer: TileSerializer[JavaList[JT]] = _serializer
 }
 
 object MultiFieldValueExtractorFactory {
+	private[datasets] val NAME = "fieldMap"
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new MultiFieldValueExtractorFactory(parent, path))
 }
@@ -428,7 +537,7 @@ object MultiFieldValueExtractorFactory {
  * @see MultiFieldValueExtractor
  */
 class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("fieldMap", parent, path)
+		extends ValueExtractorFactory(MultiFieldValueExtractorFactory.NAME, parent, path)
 {
 	addProperty(ValueExtractorFactory.FIELDS_PROPERTY)
 	addChildFactory(new NumericBinningAnalyticFactory(this, List[String]().asJava))
@@ -438,7 +547,15 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val fields = getPropertyValue(ValueExtractorFactory.FIELDS_PROPERTY).asScala.toArray
 		val analytic = produce(classOf[BinningAnalytic[T, JT]])
-		new MultiFieldValueExtractor[T, JT](fields, analytic)(tag, numeric, conversion)
+		serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[(%s, %s)]-a", classOf[String], conversion.toClass))
+		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
+		                               classOf[JavaList[Pair[String, JT]]],
+		                               new TypeDescriptor(classOf[JavaList[Pair[String, JT]]],
+		                                                  new TypeDescriptor(classOf[Pair[String, JT]],
+		                                                                     new TypeDescriptor(classOf[String]),
+		                                                                     new TypeDescriptor(conversion.toClass))))
+
+		new MultiFieldValueExtractor[T, JT](fields, analytic, serializer)(tag, numeric, conversion)
 	}
 }
 
@@ -450,7 +567,8 @@ class MultiFieldValueExtractorFactory (parent: ConfigurableFactory[_], path: Jav
  * @tparam T The numeric type expected for the fields in question
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
-class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnalytic: BinningAnalytic[T, JT])
+class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String], elementAnalytic: BinningAnalytic[T, JT],
+                                                 _serializer: TileSerializer[JavaList[Pair[String, JT]]])
                               (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Seq[T], JavaList[Pair[String, JT]]] with Serializable {
 	def name = "fieldMap"
@@ -461,8 +579,7 @@ class MultiFieldValueExtractor[T: ClassTag, JT] (_fields: Array[String], element
 		new CategoryValueBinningAnalytic[T, JT](_fields, elementAnalytic)
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
 		Seq()
-	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
-		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
+	def serializer: TileSerializer[JavaList[Pair[String, JT]]] = _serializer
 }
 
 object StringScoreBinningAnalyticFactory {
@@ -518,6 +635,7 @@ object StringScoreBinningAnalyticFactory {
 	}
 }
 object StringValueExtractorFactory {
+	private[datasets] val NAME = "string"
 	def provider = ValueExtractorFactory.subFactoryProvider((parent, path) =>
 		new StringValueExtractorFactory(parent, path))
 }
@@ -528,7 +646,7 @@ object StringValueExtractorFactory {
  * @see SubstringValueExtractor2
  */
 class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("string", parent, path)
+		extends ValueExtractorFactory(StringValueExtractorFactory.NAME, parent, path)
 {
 	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
 	StringScoreBinningAnalyticFactory.addProperties(this)
@@ -538,7 +656,15 @@ class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
 	                                           conversion: TypeConversion[T, JT]): ValueExtractor[_, _] = {
 		val field = getPropertyValue(ValueExtractorFactory.FIELD_PROPERTY)
 		val binningAnalytic = StringScoreBinningAnalyticFactory.getBinningAnalytic[T, JT](this)(numeric, conversion)
-		new StringValueExtractor[T, JT](field, binningAnalytic)(tag, numeric, conversion)
+		serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[(%s, %s)]-a", classOf[String], conversion.toClass))
+		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
+		                               classOf[JavaList[Pair[String, JT]]],
+		                               new TypeDescriptor(classOf[JavaList[Pair[String, JT]]],
+		                                                  new TypeDescriptor(classOf[Pair[String, JT]],
+		                                                                     new TypeDescriptor(classOf[String]),
+		                                                                     new TypeDescriptor(conversion.toClass))))
+
+		new StringValueExtractor[T, JT](field, binningAnalytic, serializer)(tag, numeric, conversion)
 	}
 }
 /**
@@ -550,7 +676,8 @@ class StringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaLis
  * @tparam JT The numeric type to use when writing tiles (generally a Java version of T)
  */
 class StringValueExtractor[T: ClassTag, JT] (field: String,
-                                             _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
+                                             _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]],
+                                             _serializer: TileSerializer[JavaList[Pair[String, JT]]])
                           (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
 {
@@ -561,11 +688,11 @@ class StringValueExtractor[T: ClassTag, JT] (field: String,
 	def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
 		Seq()
-	def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
-		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
+	def serializer: TileSerializer[JavaList[Pair[String, JT]]] = _serializer
 }
 
 object SubstringValueExtractorFactory {
+	private[datasets] val NAME = "substring"
 	val PARSING_DELIMITER_PROPERTY = new StringProperty("parsingDelimiter",
 	                                                    "A delimiter to split the value of the field of interest into parts",
 	                                                    ",")
@@ -590,7 +717,7 @@ object SubstringValueExtractorFactory {
  * @see SubstringValueExtractor2
  */
 class SubstringValueExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends ValueExtractorFactory("string", parent, path)
+		extends ValueExtractorFactory(SubstringValueExtractorFactory.NAME, parent, path)
 {
 	addProperty(ValueExtractorFactory.FIELD_PROPERTY)
 	addProperty(SubstringValueExtractorFactory.PARSING_DELIMITER_PROPERTY)
@@ -609,7 +736,15 @@ class SubstringValueExtractorFactory (parent: ConfigurableFactory[_], path: Java
 			(p.getFirst.intValue, p.getSecond.intValue)
 		)
 		val binningAnalytic = StringScoreBinningAnalyticFactory.getBinningAnalytic[T, JT](this)(numeric, conversion)
-		new SubstringValueExtractor[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic)(tag, numeric, conversion)
+		serializerFactory.setDefaultValue(UberFactory.FACTORY_TYPE, getDefaultSerializerType("[(%s, %s)]-a", classOf[String], conversion.toClass))
+		val serializer = checkBinClass(produce(classOf[TileSerializer[_]]),
+		                               classOf[JavaList[Pair[String, JT]]],
+		                               new TypeDescriptor(classOf[JavaList[Pair[String, JT]]],
+		                                                  new TypeDescriptor(classOf[Pair[String, JT]],
+		                                                                     new TypeDescriptor(classOf[String]),
+		                                                                     new TypeDescriptor(conversion.toClass))))
+
+		new SubstringValueExtractor[T, JT](field, parsingDelimiter, aggregationDelimiter, indices, binningAnalytic, serializer)(tag, numeric, conversion)
 	}
 }
 
@@ -626,7 +761,8 @@ class SubstringValueExtractor[T: ClassTag, JT] (field: String,
                                                 parsingDelimiter: String,
                                                 aggregationDelimiter: String,
                                                 indices: Seq[(Int, Int)],
-                                                _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]])
+                                                _binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]],
+                                                _serializer: TileSerializer[JavaList[Pair[String, JT]]])
                              (implicit numeric: ExtendedNumeric[T], conversion: TypeConversion[T, JT])
 		extends ValueExtractor[Map[String, T], JavaList[Pair[String, JT]]]
 {
@@ -655,6 +791,5 @@ class SubstringValueExtractor[T: ClassTag, JT] (field: String,
 	override def binningAnalytic: BinningAnalytic[Map[String, T], JavaList[Pair[String, JT]]] = _binningAnalytic
 	override def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaList[Pair[String, JT]]], _]] =
 		Seq()
-	override def serializer: TileSerializer[JavaList[Pair[String, JT]]] =
-		new PairArrayAvroSerializer(classOf[String], conversion.toClass, CodecFactory.bzip2Codec())
+	override def serializer: TileSerializer[JavaList[Pair[String, JT]]] = _serializer
 }

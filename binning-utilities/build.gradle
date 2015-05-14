@@ -14,18 +14,41 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	classifier = "javadoc"
 	from javadoc.destinationDir
 }
- 
+
+task testJar(type: Jar) {
+    classifier = 'tests'
+    from sourceSets.test.output
+}
+
+configurations {
+	tests
+}
+
+artifacts {
+	tests testJar
+}
+
+task runBinVisualizer(type:JavaExec) {
+	main = "com.oculusinfo.binning.visualization.BinVisualizer"
+	classpath = sourceSets.main.runtimeClasspath
+}
+
 // Artifacts that will be produced when this project is built
 artifacts {
 	archives sourcesJar
 	archives javadocJar
+	archives testJar
 }
 
 // Jars / projects this project depends on.
 dependencies {
 	compile project(":factory-utilities")
 	compile "org.apache.hadoop:hadoop-common:$hadoopCommonVersion"
-	compile "org.apache.hadoop:hadoop-core:$hadoopCoreVersion"
+	getDependencies().add("compile", "org.apache.hadoop:hadoop-core:$hadoopCoreVersion", {
+		exclude group: "asm", module: "asm"
+		exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+		exclude group: "org.jboss.netty", module: "netty"
+	})
 	compile "org.apache.avro:avro:1.7.4"
 	compile "org.xerial:sqlite-jdbc:3.7.2"
 	compile "com.esotericsoftware.kryo:kryo:2.21"
@@ -37,4 +60,3 @@ dependencies {
 	// definition and explanation.
 	addHBaseDependencies()
 }
-

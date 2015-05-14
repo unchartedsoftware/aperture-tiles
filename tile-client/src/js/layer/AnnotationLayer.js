@@ -83,8 +83,7 @@
      *     opacity  {float}    - The opacity of the layer. Default = 1.0
      *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
      *     zIndex   {integer}  - The z index of the layer. Default = 1000
-     *     renderer {Renderer} - The tile renderer object. (optional)
-     *     html     {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     *     renderer {Renderer} - The tile renderer object.
      * }
      * </pre>
      */
@@ -92,11 +91,16 @@
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 500;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 500;
         this.domain = "annotation";
         this.source = spec.source;
-        this.renderer = spec.renderer || null;
-        this.html = spec.html || null;
+        this.getURL = spec.getURL || LayerUtil.getURL;
+        if ( spec.tileClass) {
+            this.tileClass = spec.tileClass;
+        }
+        if ( spec.renderer ) {
+            this.setRenderer( spec.renderer );
+        }
     }
 
     AnnotationLayer.prototype = Object.create( Layer.prototype );
@@ -107,7 +111,6 @@
      * @private
      */
     AnnotationLayer.prototype.activate = function() {
-
         // add the new layer
         this.olLayer = new HtmlTileLayer(
             'Annotation Tile Layer',
@@ -118,23 +121,20 @@
                 maxExtent: new OpenLayers.Bounds(-20037500, -20037500,
                     20037500,  20037500),
                 isBaseLayer: false,
-                getURL: LayerUtil.getURL,
-                html: this.html,
+                getURL: this.getURL,
+                tileClass: this.tileClass,
                 renderer: this.renderer
             });
-
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
-
-        if ( this.renderer ) {
-            this.renderer.meta = this.source.meta.meta;
-            this.renderer.map = this.map;
-            this.renderer.parent = this;
-        }
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
     /**
@@ -146,7 +146,20 @@
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
+            this.olLayer = null;
         }
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+    /**
+     * Sets the current renderer of the layer.
+     * @memberof AnnotationLayer
+     *
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+     AnnotationLayer.prototype.setRenderer = function( renderer ) {
+        this.renderer = renderer;
+        this.renderer.attach( this );
     };
 
     /**
@@ -181,7 +194,9 @@
         // index based on current map layers, which then sets a z-index. This
         // caused issues with async layer loading.
         this.zIndex = zIndex;
-        $( this.olLayer.div ).css( 'z-index', zIndex );
+        if ( this.olLayer ) {
+            $( this.olLayer.div ).css( 'z-index', zIndex );
+        }
         PubSub.publish( this.getChannel(), { field: 'zIndex', value: zIndex });
     };
 
@@ -250,6 +265,16 @@
                // TODO: refresh tile
                 callback();
             });
+    };
+
+    /**
+     * Redraws the entire layer.
+     * @memberof ServerLayer
+     */
+    AnnotationLayer.prototype.redraw = function () {
+        if ( this.olLayer ) {
+             this.olLayer.redraw();
+        }
     };
 
     module.exports = AnnotationLayer;

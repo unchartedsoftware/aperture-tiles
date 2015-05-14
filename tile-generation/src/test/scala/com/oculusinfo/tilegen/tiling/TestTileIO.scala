@@ -55,8 +55,8 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
  * synchronization issues
  */
 object TestPyramidIO {
-	private val metaDatas = MutableMap[String, String]()
-	private val datas = MutableMap[String, MutableMap[TileIndex, TileData[_]]]()
+	val metaDatas = MutableMap[String, String]()
+	val datas = MutableMap[String, MutableMap[TileIndex, TileData[_]]]()
 }
 class TestPyramidIO extends PyramidIO with Serializable {
 	import TestPyramidIO._
@@ -105,10 +105,10 @@ class TestPyramidIO extends PyramidIO with Serializable {
 	def readMetaData (pyramidId: String): String = {
 		metaDatas.get(pyramidId).getOrElse(null)
 	}
-	
+
 	def removeTiles (id: String, tiles: JavaIterable[TileIndex]  ) : Unit =
 		throw new IOException("removeTiles not currently supported for TestPyramidIO")
-	
+
 }
 
 

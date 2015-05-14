@@ -3,18 +3,38 @@
 // pollute the global namespace.  The 'settings.gradle' file that is also in this directory defines
 // the sub-projects that will be built by this file, and 'properies.gradle' contains default property
 // values.
-apply plugin: "idea"
-
 
 // Task that reads the "buildType" string property from the command line and writes the the cloudera versions
 // versions into the ext namespace (which is where build global vars go).  There is a predefined build
-// type in gradle.properties that will be applied if nothing is specified here. 
+// type in gradle.properties that will be applied if nothing is specified here.
 //
 // ********************************************************
 // ** ANY NEW DEPLOYMENT VARIANTS NEED TO BE ADDED HERE. **
 // ********************************************************
 task setBuildVersions {
 	switch (buildType) {
+		case "cdh5.3.0":
+			logger.info "Valid build type found - using $buildType"
+			project.ext { // apply project scope to vars, otherwise local to task
+				hadoopCommonVersion = "2.5.0-cdh5.3.0"
+				hadoopCoreVersion = "2.5.0-mr1-cdh5.3.0"
+				hbaseVersion = "0.98.6-cdh5.3.0"
+				sparkVersion = "1.2.0-cdh5.3.0"
+				dependencyScalaVersion = "2.10"
+				scalaVersion = "2.10.3"
+			}
+			break
+		case "cdh5.2.0":
+			logger.info "Valid build type found - using $buildType"
+			project.ext { // apply project scope to vars, otherwise local to task
+				hadoopCommonVersion = "2.5.0-cdh5.2.0"
+				hadoopCoreVersion = "2.5.0-mr1-cdh5.2.0"
+				hbaseVersion = "0.98.6-cdh5.2.0"
+				sparkVersion = "1.1.0-cdh5.2.0"
+				dependencyScalaVersion = "2.10"
+				scalaVersion = "2.10.3"
+			}
+			break
 		case "cdh5.1.2":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
@@ -54,7 +74,7 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.0.0-cdh4.6.0"
 				hadoopCoreVersion = "2.0.0-mr1-cdh4.6.0"
 				hbaseVersion = "0.94.15-cdh4.6.0"
-				sparkVersion = "1.1.1" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
+				sparkVersion = "1.2.0" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
@@ -70,13 +90,15 @@ init.dependsOn setBuildVersions
 // This only needs to be run when a new version of gradle is used, and the produced files should be checked into
 // source control when its done.
 task wrapper(type: Wrapper) {
-	gradleVersion = '2.1'
+	gradleVersion = '2.4'
 }
 
-// Scalac will not allow default output directory for source and build to be the same,
-// so point idea at a different location for test output.  This has to be done at every
-// level.
+// If we don't explicitly tell modules to inherit from the project settings, those without scala/java code will
+// get misconfigured by Intellij's Gradle plugin and end up with the main and test output directories set the
+// same.  For some reason, IntelliJ tries to run scalac across all modules, and scalac will fail when the main
+// and test output dirs are the same.
 allprojects {
+	apply plugin: "idea"
 	idea {
 		module {
 			inheritOutputDirs = true
@@ -86,21 +108,20 @@ allprojects {
 
 // General definitions pushed down to all sub-projects - this code is executed within the context
 // of each subproject.
-subprojects {				
-
+subprojects {
 	// Allows for eclipse project files to be generated
 	apply plugin: "eclipse"
 	// Support for reading from / writing to maven repositories
 	apply plugin: "maven"
 
-	// Shared group and version info.  We keep build variant types in the version names so that we get 
+	// Shared group and version info.  We keep build variant types in the version names so that we get
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
-	version = "0.5-$buildType"
+	version = "0.6-SNAPSHOT-$buildType"
 
 	// Aperture JS version - shared between a few places
-	project.ext.apertureJsVersion = "1.0.9"
-	
+	project.ext.apertureJsVersion = "1.1.0-SNAPSHOT"
+
 	// Maven repos to check for artifacts
 	repositories {
 		mavenLocal()
@@ -111,17 +132,21 @@ subprojects {
 		maven {
 			url = "http://maven.oculus.local:8080/archiva/repository/internal/"
 		}
-		maven {			
+		maven {
 			url = "https://repository.cloudera.com/artifactory/cloudera-repos"
+		}
+		// Needed for our org.restlet dependencies
+		maven {
+			url = "https://maven.restlet.com/"
 		}
 	}
 
 	// A shared function to determine whether we use the older unified HBase jar, or the
 	// newer split jars.  Currently just looks for cdh5 vs other build types.
 	ext.checkHBaseSplit = buildType =~ /cdh5\w*/
-		
-	// A shared function that adds hbase dependencies to the supplied project based on the build type.  
-	// We can't use the DSL in this context, so we have to go through the lower level DependencyManager APIs.  
+
+	// A shared function that adds hbase dependencies to the supplied project based on the build type.
+	// We can't use the DSL in this context, so we have to go through the lower level DependencyManager APIs.
 	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
 	// to multiple jars in later.  CDH5.x picks up the new split HBase jar, while CDH4.x needs the
 	// unified jar.
@@ -136,17 +161,20 @@ subprojects {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 		} else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
@@ -155,10 +183,11 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+				exclude group: "org.jboss.netty", module: "netty"
 			})
 		}
-	}	
-	
+	}
+
 	// Function passed down to subprojects that produces calls to add hbase jars
 	// to a spark-run script.
 	ext.getHBaseJarStrings = {
@@ -169,11 +198,11 @@ addSparkJar org.apache.hbase hbase-server $hbaseVersion
 addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 		} else {
 			"addSparkJar org.apache.hbase hbase $hbaseVersion"
-		}		
+		}
 	}
-	
+
 	// Function passed down to subprojects that poduces hbase class path entries
-	// to be used in run scripts. 
+	// to be used in run scripts.
 	ext.getHBaseClasspathEntries = {
 		if (checkHBaseSplit) {
 			"\${LIB}/hbase-client.jar:\${LIB}/hbase-server.jar:\${LIB}/hbase-common.jar"
@@ -181,14 +210,39 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			"\${LIB}/hbase.jar"
 		}
 	}
-	
+
 	// Once evaluation is done (each build file has been loaded and processed, but
 	// the build hasn't started) add behavior specific to web client projects.
 	// Client projects are flagged by a property called 'clientProject' - if that's present,
 	// the client behavior gets injected into the project in question.
 	afterEvaluate {
+		// Gradle/intellij don't work properly together with 1.8 at the moment,
+		// at least not with our code, so we have to modify java and scala
+		// plugins to compile with 1.7 compatibility for now, and turn off
+		// doclint
+		project.plugins.withType(JavaPlugin) {
+			sourceCompatibility = '1.7'
+			if (JavaVersion.current().isJava8Compatible()) {
+				allprojects {
+					tasks.withType(Javadoc) {
+						options.addStringOption('Xdoclint:none', '-quiet')
+					}
+				}
+			}
+		}
+		project.plugins.withType(ScalaPlugin) {
+			sourceCompatibility = '1.7'
+			if (JavaVersion.current().isJava8Compatible()) {
+				allprojects {
+					tasks.withType(Javadoc) {
+						options.addStringOption('Xdoclint:none', '-quiet')
+					}
+				}
+			}
+		}
+
 		if (project.ext.has("clientProject") && project.clientProject) {
-			
+
 			// Directory constants
 			def TILE_CLIENT_SRC = "${rootDir}/tile-client/src"
 			def TILE_CLIENT_BUILD = "${rootDir}/tile-client/build"
@@ -332,8 +386,8 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			dependencies {
 				compile project(path: ":tile-service")
 				compile project(path: ":annotation-service")
-			}		
-		
+			}
+
 			// configure the war task to pick up the tile client build files
 			war {
 				from fileTree(TILE_CLIENT_BUILD).include(["*.js", "*.css"])
@@ -342,7 +396,7 @@ addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
 			war.dependsOn ":tile-client:install"
 
 			task explodeWar() {
-			    doLast { 
+			    doLast {
 			    	ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
 			    }
 			}

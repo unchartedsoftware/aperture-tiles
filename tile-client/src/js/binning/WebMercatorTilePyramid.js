@@ -38,7 +38,7 @@
 		    x = (lon + 180.0) / 360.0 * pow2,
 		    y = (pow2 * (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2);
 		return {
-            x: x, 
+            x: x,
             y: pow2 - y
         };
 	}
@@ -62,9 +62,6 @@
 		function gudermannian( y ) {
 			// converts a y value from -PI(bottom) to PI(top) into the
 			// mercator projection latitude
-			var sinh = function (arg) {
-				return (Math.exp(arg) - Math.exp(-arg)) / 2.0;
-			};
 			return Math.atan(sinh(y)) * RADIANS_TO_DEGREES;
 		}
 		return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
@@ -116,25 +113,6 @@
     };
 
     /**
-     * Maps a point from the root coordinate system to a fractional tile coordinate.
-     * @memberof WebMercatorTilePyramid
-     *
-     * @param {number} lon - The longitude coordinate value.
-     * @param {number} lat - The latitude coordinate value.
-     * @param {integer} level - The zoom level.
-     *
-     * @returns {Object} The fractional tile coordinate.
-     */
-    WebMercatorTilePyramid.prototype.rootToFractionalTile = function( lon, lat, level ) {
-        var tileMercator = rootToTileMercator( lon, lat, level );
-        return {
-            'level': level,
-            'xIndex': tileMercator.x,
-            'yIndex': tileMercator.y
-        };
-    };
-   
-    /**
      * Maps a fractional tile coordinate to a point in the root coordinate system.
      * @memberof WebMercatorTilePyramid
      *
@@ -150,6 +128,29 @@
     };
 
     /**
+     * Maps a point from the root coordinate system to a fractional tile coordinate.
+     * @memberof WebMercatorTilePyramid
+     *
+     * @param {number} lon - The longitude coordinate value.
+     * @param {number} lat - The latitude coordinate value.
+     * @param {integer} level - The zoom level.
+     * @param {integer} bins - The number of bins per dimension in a tile.
+     *
+     * @returns {Object} The fractional tile coordinate.
+     */
+    WebMercatorTilePyramid.prototype.rootToFractionalTile = function( lon, lat, level, bins ) {
+		bins = bins || 256;
+        var tileMercator = rootToTileMercator( lon, lat, level );
+        return {
+            level: level,
+            xIndex: tileMercator.x,
+            yIndex: tileMercator.y,
+            xBinCount: bins,
+            yBinCount: bins
+        };
+    };
+
+    /**
      * Maps a point from the root coordinate system to a tile coordinate.
      * @memberof WebMercatorTilePyramid
      *
@@ -161,16 +162,28 @@
      * @returns {Object} The tile coordinate.
      */
     WebMercatorTilePyramid.prototype.rootToTile = function( lon, lat, level, bins ) {
-        if (!bins) {
-            bins = 256;
-        }
-        var tileMercator = rootToTileMercator( lon, lat, level );
+		var result = this.rootToFractionalTile( lon, lat, level, bins );
+		result.xIndex = Math.floor( result.xIndex );
+		result.yIndex = Math.floor( result.yIndex );
+		return result;
+    };
+
+	/**
+     * Maps a point from the root coordinate system to a specific fractional
+	 * bin coordinate.
+     * @memberof WebMercatorTilePyramid
+     *
+     * @param {number} lon - The longitude coordinate value.
+     * @param {number} lat - The latitude coordinate value.
+     * @param {Object} tile - The tile coordinate that holds the target bin.
+     *
+     * @returns {Object} The bin coordinate.
+     */
+    WebMercatorTilePyramid.prototype.rootToFractionalBin = function( lon, lat, tile ) {
+        var tileMercator = rootToTileMercator( lon, lat, tile.level );
         return {
-            level: level,
-            xIndex: Math.floor( tileMercator.x ),
-            yIndex: Math.floor( tileMercator.y ),
-            xBinCount: bins,
-            yBinCount: bins
+            x: (tileMercator.x - tile.xIndex) * tile.xBinCount,
+            y: tile.yBinCount - 1 - (tileMercator.y - tile.yIndex ) * tile.yBinCount
         };
     };
 
@@ -185,13 +198,12 @@
      * @returns {Object} The bin coordinate.
      */
     WebMercatorTilePyramid.prototype.rootToBin = function( lon, lat, tile ) {
-        var tileMercator = rootToTileMercator( lon, lat, tile.level );
-        return {
-            x: Math.floor( (tileMercator.x - tile.xIndex) * tile.xBinCount ),
-            y: tile.yBinCount - 1 - Math.floor( (tileMercator.y - tile.yIndex ) * tile.yBinCount )
-        };
+		var result = this.rootToFractionalBin( lon, lat, tile );
+		result.x = Math.floor( result.x );
+		result.y = Math.floor( result.y );
+        return result;
     };
-   
+
     /**
      * Returns the bounds of a particular tile in EPSG 900913 meter units.
      * @memberof WebMercatorTilePyramid
@@ -206,11 +218,11 @@
             tileIncrement = 1.0/pow2,
             minX = tile.xIndex * tileIncrement - 0.5,
             minY = tile.yIndex * tileIncrement - 0.5,
-            maxX, 
+            maxX,
             maxY,
             linMinY,
             linMaxY,
-            binXInc, 
+            binXInc,
             binYInc,
             centerY;
 
@@ -328,4 +340,3 @@
 
 	module.exports = WebMercatorTilePyramid;
 }());
-

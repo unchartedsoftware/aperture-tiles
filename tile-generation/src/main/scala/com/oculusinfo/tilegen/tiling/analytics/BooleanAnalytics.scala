@@ -31,6 +31,8 @@ import java.lang.{Boolean => JavaBoolean}
 import java.lang.{Long => JavaLong}
 import java.util.{List => JavaList}
 
+import org.json.{JSONArray, JSONObject}
+
 import scala.collection.JavaConverters._
 import scala.collection.immutable.BitSet
 
@@ -43,7 +45,7 @@ import scala.collection.immutable.BitSet
 
 /**
  * A simple analytic to perform boolean operations
- * 
+ *
  * @param add The boolean operation to perform when aggregating.
  */
 class BooleanAnalytic (add: (Boolean, Boolean) => Boolean) extends Analytic[Option[Boolean]] {
@@ -58,9 +60,9 @@ class BooleanAnalytic (add: (Boolean, Boolean) => Boolean) extends Analytic[Opti
 
 /**
  * A binning version of {@see BooleanAnalytic}.
- * 
+ *
  * Like BooleanAnalytic, it takes the operation to perform as an arguement
- * 
+ *
  * @param add The boolean operation to perform when aggregating.
  * @param defaultValue The value to use in bins where no value was found
  */
@@ -75,8 +77,8 @@ class BooleanBinningAnalytic (add: (Boolean, Boolean) => Boolean,
 
 /**
  * A binning version of {@see BooleanAnalytic}.
- * 
- * @param analyticName The name by which this analytic will be known in 
+ *
+ * @param analyticName The name by which this analytic will be known in
  * metadata.
  */
 class BooleanTileAnalytic (analyticName: String, add: (Boolean, Boolean) => Boolean)
@@ -90,10 +92,10 @@ class BooleanTileAnalytic (analyticName: String, add: (Boolean, Boolean) => Bool
 
 
 /**
- * An analytic to take advantage of Scala's BitSet class - essentially an 
+ * An analytic to take advantage of Scala's BitSet class - essentially an
  * efficient set of booleans
- * 
- * @param add The boolean operation to perform on individual values in the 
+ *
+ * @param add The boolean operation to perform on individual values in the
  * sets when aggregating them
  */
 class BitSetAnalytic (add: (Boolean, Boolean) => Boolean) extends Analytic[BitSet] {
@@ -105,16 +107,16 @@ class BitSetAnalytic (add: (Boolean, Boolean) => Boolean) extends Analytic[BitSe
 
 /**
  * {@see BitSetAnalytic}; a binning analytic based on that
- * 
- * Unlike {@see BooleanBinningAnalytic}, this class doesn't need a default 
- * value - there's no way to use one.  The default is always, essentially, 
+ *
+ * Unlike {@see BooleanBinningAnalytic}, this class doesn't need a default
+ * value - there's no way to use one.  The default is always, essentially,
  * false.
- * 
+ *
  * Values are written to tiles in the same efficient manner they are kept
  * in the BitSet - as an array of Long values, 64 per entry (so a bitset of 320
  * boolean values stores as an array of 5 Longs).
- * 
- * @param add The boolean operation to perform on individual values in the 
+ *
+ * @param add The boolean operation to perform on individual values in the
  * sets when aggregating them
  */
 class BitSetBinningAnalytic (add: (Boolean, Boolean) => Boolean)
@@ -127,8 +129,8 @@ class BitSetBinningAnalytic (add: (Boolean, Boolean) => Boolean)
 
 /**
  * A Tile Analytic version of {@link BitSetAnalytic}.
- * 
- * When writing to metadata, values are written not as booleans, but as an 
+ *
+ * When writing to metadata, values are written not as booleans, but as an
  * array of the positions that are true.
  */
 class BitSetTileAnalytic (analyticName: String, add: (Boolean, Boolean) => Boolean)
@@ -136,8 +138,11 @@ class BitSetTileAnalytic (analyticName: String, add: (Boolean, Boolean) => Boole
 		with TileAnalytic[BitSet]
 {
 	def name = analyticName
-	override def valueToString (value: BitSet): String =
-		value.mkString("[", ", ", "]")
-	override def toMap (value: BitSet): Map[String, Any] =
-		Map(name -> value.toArray.map(Int.box(_)))
+	override def storableValue (value: BitSet, location: TileAnalytic.Locations.Value): Option[JSONObject] = {
+		val result = new JSONObject()
+		val subRes = new JSONArray()
+		value.foreach(v => subRes.put(v))
+		result.put(name, subRes)
+		Some(result)
+	}
 }
