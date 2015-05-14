@@ -43,31 +43,34 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
 /**
- * @author  dgray
+ * @author dgray
  */
 public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(NumberImageRenderer.class);
-	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-	private static final double pow2(double x) { return x*x; }	//in-line func for squaring a number (instead of calling Math.pow(x, 2.0)
+	private static final Logger LOGGER = LoggerFactory.getLogger( NumberImageRenderer.class );
+	private static final Color COLOR_BLANK = new Color( 255, 255, 255, 0 );
+
+	private static final double pow2( double x ) {
+		return x * x;
+	}    //in-line func for squaring a number (instead of calling Math.pow(x, 2.0)
 
 	@Override
-	public Class<Number> getAcceptedBinClass () {
+	public Class<Number> getAcceptedBinClass() {
 		return Number.class;
 	}
 
 	@Override
-	public TypeDescriptor getAcceptedTypeDescriptor () {
-		return new TypeDescriptor(getAcceptedBinClass());
+	public TypeDescriptor getAcceptedTypeDescriptor() {
+		return new TypeDescriptor( getAcceptedBinClass() );
 	}
 
 
-	private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
-		String rawValue = parameter.getPropertyValue(property);
+	private double parseExtremum( LayerConfiguration parameter, StringProperty property, String propName, String layer, double def ) {
+		String rawValue = parameter.getPropertyValue( property );
 		try {
-			return Double.parseDouble(rawValue);
-		} catch (NumberFormatException|NullPointerException e) {
-			LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
+			return Double.parseDouble( rawValue );
+		} catch ( NumberFormatException | NullPointerException e ) {
+			LOGGER.warn( "Bad " + propName + " value " + rawValue + " for " + layer + ", defaulting to " + def );
 			return def;
 		}
 	}
@@ -76,48 +79,47 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 	 * @see TileDataImageRenderer#getLevelExtrema()
 	 */
 	@Override
-	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<>(minimumValue,  maximumValue);
+	public Pair<Double, Double> getLevelExtrema( LayerConfiguration config ) throws ConfigurationException {
+		String layer = config.getPropertyValue( LayerConfiguration.LAYER_ID );
+		double minimumValue = parseExtremum( config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0 );
+		double maximumValue = parseExtremum( config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0 );
+		return new Pair<>( minimumValue, maximumValue );
 	}
 
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render(TileData<Number> data, LayerConfiguration config) {
-		int outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
-		int outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
-		BufferedImage bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
-
+	public BufferedImage render( TileData<Number> data, LayerConfiguration config ) {
+		BufferedImage bi;
 		try {
-			int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
-			int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
-			String rangeMode = config.getPropertyValue(LayerConfiguration.RANGE_MODE);
-			String pixelShape = config.getPropertyValue(LayerConfiguration.PIXEL_SHAPE);
+			int outputWidth = config.getPropertyValue( LayerConfiguration.OUTPUT_WIDTH );
+			int outputHeight = config.getPropertyValue( LayerConfiguration.OUTPUT_HEIGHT );
+			int rangeMax = config.getPropertyValue( LayerConfiguration.RANGE_MAX );
+			int rangeMin = config.getPropertyValue( LayerConfiguration.RANGE_MIN );
+			String rangeMode = config.getPropertyValue( LayerConfiguration.RANGE_MODE );
+			String pixelShape = config.getPropertyValue( LayerConfiguration.PIXEL_SHAPE );
 
-			// This is the best we can do; supress the warning and move on.
-			@SuppressWarnings("unchecked")
-			ValueTransformer<Number> t = config.produce(ValueTransformer.class);
-			double scaledMax = (double)rangeMax/100;
-			double scaledMin = (double)rangeMin/100;
+			bi = new BufferedImage( outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB );
 
-			ColorRamp colorRamp = config.produce(ColorRamp.class);
+			@SuppressWarnings( "unchecked" )
+			ValueTransformer<Number> t = config.produce( ValueTransformer.class );
+			double scaledMax = ( double ) rangeMax / 100;
+			double scaledMin = ( double ) rangeMin / 100;
 
-			bi = renderImage(data, t, scaledMin, scaledMax, rangeMode, colorRamp, bi, pixelShape);
-		} catch (Exception e) {
-			LOGGER.warn("Configuration error: ", e);
+			ColorRamp colorRamp = config.produce( ColorRamp.class );
+
+			bi = renderImage( data, t, scaledMin, scaledMax, rangeMode, colorRamp, bi, pixelShape );
+		} catch ( Exception e ) {
+			LOGGER.warn( "Configuration error: ", e );
 			return null;
 		}
-
 		return bi;
 	}
 
-	protected BufferedImage renderImage(TileData<Number> data,
-								   ValueTransformer<Number> t, double valueMin, double valueMax,
-								   String mode, ColorRamp colorRamp, BufferedImage bi, String pixelShape) {
+	protected BufferedImage renderImage( TileData<Number> data,
+										 ValueTransformer<Number> t, double valueMin, double valueMax,
+										 String mode, ColorRamp colorRamp, BufferedImage bi, String pixelShape ) {
 
 		int outWidth = bi.getWidth();
 		int outHeight = bi.getHeight();
@@ -126,25 +128,26 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 
 		float xScale = outWidth / xBins;
 		float yScale = outHeight / yBins;
-		double radius2 = pow2(Math.min(xScale, yScale)*0.5);	// min squared 'radius' of final scaled bin
+		double radius2 = pow2( Math.min( xScale, yScale ) * 0.5 );    // min squared 'radius' of final scaled bin
 
-		double oneOverScaledRange = 1.0 / (valueMax - valueMin);
-		boolean bCoarseCircles = pixelShape.equals("circle");	// render 'coarse' bins as circles or squares?
+		double oneOverScaledRange = 1.0 / ( valueMax - valueMin );
+		boolean bCoarseCircles = pixelShape.equals( "circle" );    // render 'coarse' bins as circles or squares?
 
-		int[] rgbArray = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData();
+		int[] rgbArray = ( ( DataBufferInt ) bi.getRaster().getDataBuffer() ).getData();
 
-		if ((xScale==1.0) && (yScale==1.0)) {
+		if ( ( xScale == 1.0 ) && ( yScale == 1.0 ) ) {
 			// no bin scaling needed
 
-			for(int ty = 0; ty < yBins; ty++){
-				for(int tx = 0; tx < xBins; tx++){
-
-					double binCount = data.getBin(tx, ty).doubleValue();
-					double transformedValue = t.transform(binCount).doubleValue();
+			for ( int ty = 0; ty < yBins; ty++ ) {
+				for ( int tx = 0; tx < xBins; tx++ ) {
+					// get bin count
+					double binCount = data.getBin( tx, ty ).doubleValue();
+					// transform value
+					double transformedValue = t.transform( binCount ).doubleValue();
+					// set pixel value
 					int rgb;
-
-					if ((mode.equals("dropZero") && binCount != 0) || binCount > 0) {
-						if ( mode.equals("cull") ) {
+					if ( ( mode.equals( "dropZero" ) && binCount != 0 ) || binCount > 0 ) {
+						if ( mode.equals( "cull" ) ) {
 							if ( transformedValue >= valueMin && transformedValue <= valueMax ) {
 								rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
 							} else {
@@ -157,32 +160,31 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 						rgb = COLOR_BLANK.getRGB();
 					}
 
-					//'draw' out the scaled 'pixel'
-					int i = ty*outWidth + tx;
+					// set pixel
+					int i = ty * outWidth + tx;
 					rgbArray[i] = rgb;
 				}
 			}
-		}
-		else {
+		} else {
 			// perform bin scaling (i.e. if bin coarseness != 1.0)
 
-			for(int ty = 0; ty < yBins; ty++){
-				for(int tx = 0; tx < xBins; tx++){
+			for ( int ty = 0; ty < yBins; ty++ ) {
+				for ( int tx = 0; tx < xBins; tx++ ) {
 					//calculate the scaled dimensions of this 'pixel' within the image
-					int minX = (int) Math.round(tx*xScale);
-					int maxX = (int) Math.round((tx+1)*xScale);
-					int minY = (int) Math.round(ty*yScale);
-					int maxY = (int) Math.round((ty+1)*yScale);
-					double centreX = (maxX + minX) * 0.5;
-					double centreY = (maxY + minY) * 0.5;
-					//double radius2 = (maxX - centreX)*(maxX - centreX);	// squared radius
-
-					double binCount = data.getBin(tx, ty).doubleValue();
-					double transformedValue = t.transform(binCount).doubleValue();
+					int minX = Math.round( tx * xScale );
+					int maxX = Math.round( ( tx + 1 ) * xScale );
+					int minY = Math.round( ty * yScale );
+					int maxY = Math.round( ( ty + 1 ) * yScale );
+					double centreX = ( maxX + minX ) * 0.5;
+					double centreY = ( maxY + minY ) * 0.5;
+					// get bin count
+					double binCount = data.getBin( tx, ty ).doubleValue();
+					// transform value
+					double transformedValue = t.transform( binCount ).doubleValue();
+					// set pixel value
 					int rgb;
-
-					if ((mode.equals("dropZero") && binCount != 0) || binCount > 0) {
-						if ( mode.equals("cull") ) {
+					if ( ( mode.equals( "dropZero" ) && binCount != 0 ) || binCount > 0 ) {
+						if ( mode.equals( "cull" ) ) {
 							if ( transformedValue >= valueMin && transformedValue <= valueMax ) {
 								rgb = colorRamp.getRGB( ( transformedValue - valueMin ) * oneOverScaledRange );
 							} else {
@@ -196,25 +198,24 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 					}
 
 					//'draw' out the scaled 'pixel'
-					if (bCoarseCircles && radius2 > 1.0) {
+					if ( bCoarseCircles && radius2 > 1.0 ) {
 						// draw scaled (coarse) bin as a circle (Note: need radius to be > 1.0 pixels in order to render a circle)
-						for (int ix = minX; ix < maxX; ++ix) {
-							for (int iy = minY; iy < maxY; ++iy) {
-								int i = iy*outWidth + ix;
-								double dist = (pow2(ix+0.5-centreX) + pow2(iy+0.5-centreY));
-								if (dist <= radius2) {
-									rgbArray[i] = rgb;		// scaled bin is within bin's valid radius, so render normally
+						for ( int ix = minX; ix < maxX; ++ix ) {
+							for ( int iy = minY; iy < maxY; ++iy ) {
+								int i = iy * outWidth + ix;
+								double dist = ( pow2( ix + 0.5 - centreX ) + pow2( iy + 0.5 - centreY ) );
+								if ( dist <= radius2 ) {
+									rgbArray[i] = rgb;        // scaled bin is within bin's valid radius, so render normally
 								} else {
-									rgbArray[i] = COLOR_BLANK.getRGB();	// scaled bin is outside bin's valid radius, so force to be blank
+									rgbArray[i] = COLOR_BLANK.getRGB();    // scaled bin is outside bin's valid radius, so force to be blank
 								}
 							}
 						}
-					}
-					else {
+					} else {
 						// draw scaled bin simply as a square
-						for (int ix = minX; ix < maxX; ++ix) {
-							for (int iy = minY; iy < maxY; ++iy) {
-								int i = iy*outWidth + ix;
+						for ( int ix = minX; ix < maxX; ++ix ) {
+							for ( int iy = minY; iy < maxY; ++iy ) {
+								int i = iy * outWidth + ix;
 								rgbArray[i] = rgb;
 							}
 						}
@@ -222,7 +223,6 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 				}
 			}
 		}
-
 		return bi;
 	}
 
@@ -231,7 +231,7 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int getNumberOfImagesPerTile (PyramidMetaData metadata) {
+	public int getNumberOfImagesPerTile( PyramidMetaData metadata ) {
 		// Number tile rendering always produces a single image.
 		return 1;
 	}
