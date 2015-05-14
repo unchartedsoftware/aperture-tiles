@@ -86,6 +86,7 @@
     /**
      * Checks the layer metadata for a translation map. If it exists, returns
      * the translated entry for the provided topic.
+     * @memberof Aggregator
      *
      * @param {String} topic - The topic to translate.
      *
