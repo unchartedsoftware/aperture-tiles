@@ -88,7 +88,7 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
     	List<T> binContents = _base.getBin(x, y);   	
         int binSize = binContents.size();
 		int start = ( _startBucket != null ) ? _startBucket : 0;
-		int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
+		int end = ( _endBucket != null && _endBucket < binSize && _endBucket != 0) ? _endBucket : binSize;
 
         for(int i = 0; i < binSize; i++) {
             if ( i >= start && i <= end ) {

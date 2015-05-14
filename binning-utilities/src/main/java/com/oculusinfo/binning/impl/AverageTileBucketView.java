@@ -119,7 +119,7 @@ public class AverageTileBucketView<T> implements TileData<List<T>> {
     	List<T> binContents = _base.getBin(x, y);   	
         int binSize = binContents.size();
 		int start = ( _startCompare != null ) ? _startCompare : 0;
-		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
+		int end = ( _endCompare != null && _endCompare < binSize && _endCompare != 0) ? _endCompare : binSize;
 
         for(int i = 0; i < binSize; i++) {
             if ( i >= start && i <= end ) {
