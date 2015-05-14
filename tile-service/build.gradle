@@ -13,9 +13,6 @@ dependencies {
 	compile "com.google.inject.extensions:guice-multibindings:3.0"
 	compile "net.sf.ehcache:ehcache:2.8.4"
 	compile "net.sf.ehcache:ehcache-web:2.0.4"
-	compile "oculus.aperture:aperture-server-core:$project.apertureJsVersion"
-	compile "oculus.aperture.service:aperture-cms:$project.apertureJsVersion"
-	compile "oculus.aperture.service:aperture-capture-phantom:$project.apertureJsVersion"
 	compile "org.slf4j:slf4j-api:1.7.7"
 	compile "log4j:log4j:1.2.17"
 

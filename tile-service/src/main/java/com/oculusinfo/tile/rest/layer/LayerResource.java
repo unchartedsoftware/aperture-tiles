@@ -30,7 +30,6 @@ import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,13 +38,14 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
+import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
 
 
 
-public class LayerResource extends ApertureServerResource {
+public class LayerResource extends ServerResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerResource.class);
 
     private LayerService _service;
