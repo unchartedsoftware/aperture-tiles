@@ -18,7 +18,13 @@ For developers who want to quickly install a pre-configured example Aperture Til
 
 Aperture Tiles is compatible with Linux and OS X.
 
-Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or the DOS command prompt. Note however, that this platform is not compatible with Hadoop/HBase, which enable Aperture Tiles to work with particularly large datasets.
+Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or the DOS command prompt. Note however, that this platform is not compatible with Hadoop/HBase.
+
+<h6 class="procedure">To use Aperture Tiles with Apache Spark in standalone mode in Windows</h6>
+
+- [Download](https://spark.apache.org/downloads.html) and install a pre-built version of Apache Spark with the following properties:
+	1. **Spark release**: 1.2.0
+	2. **Package type**: Pre-built for CDH4
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
