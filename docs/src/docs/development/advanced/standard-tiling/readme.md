@@ -18,7 +18,7 @@ The following sections describe advanced properties available for [standard tili
 
 ## <a name="source-data-format"></a> Source Data Format ##
 
-The **oculus.<wbr>binning.<wbr>parsing.<wbr>&lt;field&gt;.<wbr>fieldType** property indicates the type of values stored in a column that the CSVBinner will parse. By default columns are treated as containing real, double-precision values. Other possible types are:
+The **oculus.<wbr>binning.<wbr>parsing.<wbr>&lt;field&gt;.<wbr>fieldType** property indicates the type of values stored in a column that the CSVBinner will parse. Possible types include:
 
 <div class="props">
 	<table class="summaryTable" width="100%">
@@ -29,6 +29,10 @@ The **oculus.<wbr>binning.<wbr>parsing.<wbr>&lt;field&gt;.<wbr>fieldType** prope
 			</tr>
 		</thead>
 		<tbody>
+			<tr>
+				<td class="value">double</td>
+				<td class="description">Real, double-precision floating-point numbers. This is the default type.</td>
+			</tr>
 			<tr>
 				<td class="value">constant</td>
 				<td class="description" rowspan="2"><em>0.0</em>. The column does not need to exist.</td>
@@ -66,7 +70,7 @@ The **oculus.<wbr>binning.<wbr>parsing.<wbr>&lt;field&gt;.<wbr>fieldType** prope
 			</tr>
 			<tr>
 				<td class="value">ipv4</td>
-				<td class="description">Contains an IP address treated as a four-digit base 256 number turned into a double</td>
+				<td class="description">Contains an IP address treated as a four-digit base 256 number turned into an array of four bytes</td>
 			</tr>
 			<tr>
 				<td class="value">string</td>
@@ -134,6 +138,17 @@ The following properties are required when you specify a field type to be *prope
 	</table>
 </div>
 
+For example, consider the following propertyMap setup:
+
+```properties
+oculus.binning.parsing.&lt;field&gt;.property=name
+oculus.binning.parsing.&lt;field&gt;.propertyType=double
+oculus.binning.parsing.&lt;field&gt;.propertyTypeSeparator=;
+oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator=,
+```
+
+In this case, a field value of `id=123;name=foo;description=bar` would yield the value *foo*.
+
 ## <a name="field-scaling"></a> Field Scaling ##
 
 The following properties enable you modify the values of a field before it is used for binning:
@@ -152,9 +167,13 @@ The following properties enable you modify the values of a field before it is us
 				<td class="description">
 					How field values should be scaled. The default leaves values as they are. Other possibilities are:
 					<ul>
-						<li><em>log</em>: take the log of the value (<strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong> is used, just as with fieldAggregation)</dd>
+						<li><em>log</em>: take the log of the value. The base of the logarithm is taken from <strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong>.</dd>
 					</ul>
 				</td>
+			</tr>
+			<tr>
+				<td class="property">oculus.binning.parsing.&lt;field&gt;.fieldBase</td>
+				<td class="description">Base of the logarithm used to scale field values.</td>
 			</tr>
 			<tr>
 				<td class="property">oculus.binning.parsing.&lt;field&gt;.fieldAggregation</td>
@@ -168,10 +187,6 @@ The following properties enable you modify the values of a field before it is us
 						<li><em>log</em>: treat the number as a logarithmic value; aggregation of a and b is log_base(base^a+base^b). Base is taken from property <strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong>, and defaults to <em>e</em>.</li>
 					</ul>
 				</td>
-			</tr>
-			<tr>
-				<td class="property">oculus.binning.parsing.&lt;field&gt;.fieldBase</td>
-				<td class="description"></td>
 			</tr>
 		</tbody>
 	</table>

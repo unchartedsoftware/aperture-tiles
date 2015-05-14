@@ -27,7 +27,7 @@ During the tiling job, the CSVBinner writes a set of Avro tile data files to the
 
 <h6 class="procedure">To execute the CSVBinner and run a standard tiling job</h6>
 
-- Use the **spark-run** script and pass in the names of the properties files you want to use. For example:
+- Use the **spark-submit** script and pass in the names of the properties files you want to use. For example:
 
 	```bash
 	spark-submit --class com.oculusinfo.tilegen.examples.apps.CSVBinner 
@@ -41,14 +41,14 @@ During the tiling job, the CSVBinner writes a set of Avro tile data files to the
 
 The base properties file describes the tiling job, the systems on which it will run and the general characteristics of the source data. The following properties must be defined in the file:
 
-- [Connection Details](#connection-details)
+- [Source Location](#source-location)
 - [Source Data Format](#source-data-format)
 - [Source Data Manipulation](#source-data-manipulation)
 - [Tile Storage](#tile-storage)
 
 Additional properties are described in the advanced [Standard Tiling](../../advanced/standard-tiling/) topic.
 
-### <a name="connection-details"></a> Connection Details ###
+### <a name="source-location"></a> Source Location ###
 
 - Indicate where your source data is stored:
 	<div class="props">
@@ -62,7 +62,14 @@ Additional properties are described in the advanced [Standard Tiling](../../adva
 			<tbody>
 				<tr>
 					<td class="property">oculus.binning.source.location</td>
-					<td class="description">Path (local file system or HDFS) to the source data files.</td>
+					<td class="description">
+						Filename or directory containing the source data. If set to a directory, all of its contents will be ingested. Example values:
+						<ul>
+							<li>file://data/test.data</li>
+							<li>hdfs://hadoop-s1/data/julia/500by200</li>
+							<li>datasets/julia</li>
+						<ul>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -126,14 +133,13 @@ Additional properties are described in the advanced [Standard Tiling](../../adva
 				<tr>
 					<td class="property">oculus.binning.parsing.&lt;field&gt;.fieldType</td>
 					<td class="description">
-						Type of value expected in the column specified by <strong>oculus.binning.parsing.&lt;field&gt;.index</strong>
-
-						<br><br>By default, columns are treated as containing real, double-precision values. Other possible types are:
+						Type of value expected in the column specified by <strong>oculus.binning.parsing.&lt;field&gt;.index</strong>:
 						<table width="100%">
 							<tbody>
 								<tr>
 									<td width="50%">
 										<ul>
+											<li>double (*default*)</li>
 											<li>constant</li>
 											<li>zero</li>
 											<li>int</li>
@@ -183,8 +189,8 @@ Additional properties are available for scaling fields logarithmically before th
 					<td class="description">
 						Location to which tiles are written:
 						<ul>
+							<li><em>file</em> (<em>default</em>): Writes .avro files to the local file system. <strong>NOTE</strong>: If this type is used on a distributed cluster, the file is saved to the worker node, not the machine that initiates the tiling job.</li>
 							<li><em>hbase</em>: Writes to HBase. See the <a href="#hbase-connection">HBase Connection</a> section below for further HBase configuration properties</li>
-							<li><em>file</em>: Writes to the local file system. This is the default.</li>
 						</ul>
 					</td>
 				</tr>
@@ -209,7 +215,7 @@ Additional properties are available for scaling fields logarithmically before th
 
 				<tr>
 					<td class="property">hbase.zookeeper.port</td>
-					<td class="description">Port through which to connect to zookeeper.</td>
+					<td class="description">Port through which to connect to zookeeper. Defaults to <em>2181</em>.</td>
 				</tr>
 
 				<tr>
@@ -274,15 +280,15 @@ The projection properties define the area on which your data points are plotted.
 					<td class="description">
 						Type of projection to use when binning data. Possible values are:
 						<ul>
-							<li><em>EPSG:4326</em> (default) - Bin linearly over the whole range of values found.</li>
-							<li><em>EPSG:900913</em> - Web-mercator projection. Used for geographic values only.</li>
+							<li><em>areaofinterest</em> or <em>EPSG:4326</em> (default) - Bin linearly over the whole range of values found.</li>
+							<li><em>webmercator</em>, <em>EPSG:900913</em> or <em>EPSG:3857</em> - Web-mercator projection. Used for geographic values only.</li>
 						</ul>
 					</td>
 				</tr>
 			</tbody>
 		</table>
 	</div>
-2. Decide whether to manually set the bounds of the projection:
+2. If your projection type is *areaofinterest*, decide whether to manually set the bounds of the projection.
 	<div class="props">
 		<table class="summaryTable" width="100%">
 			<thead>
@@ -300,6 +306,7 @@ The projection properties define the area on which your data points are plotted.
 							<li><em>true</em> (default) - Automatically</li>
 							<li><em>false</em> - Manually</li>
 						</ul>
+						Note that this property is not applicable to <em>webmercator</em> projection.
 					</td>
 				</tr>
 			</tbody>
@@ -405,7 +412,7 @@ The index properties specify the fields used to locate the binning value on the 
 
 ### <a name="value"></a> Value ###
 
-The value properties specify the field used as the binning value.
+The value properties specify the field to use as the binning value and how multiple values in the same bin should be combined.
 
 <div class="props">
 	<table class="summaryTable" width="100%">
@@ -417,27 +424,42 @@ The value properties specify the field used as the binning value.
 		</thead>
 		<tbody>
 			<tr>
-				<td class="property">oculus.binning.value.field</td>
-				<td class="description">Field to use as the bin value. Default counts entries only. Optional. Defaults to count.</td>
-			</tr>
-			<tr>
 				<td class="property">oculus.binning.value.type</td>
 				<td class="description">
+					Specifies how to determine the values written to each bin: 
 					<ul>
-						<li>field</li>
-						<li>series</li>
-						<li>count</li>
+						<li><em>count</em> (<em>default</em>) - Count the number of records in a bin. If selected, no value field is required.</li>
+						<li><em>field</em> - Perform an aggregation on the values of all records in a bin to create a single value for the bin</li>
+						<li><em>series</em> - Save the values of all records in a bin to a dense array</li>
+					</ul>
+				</td>
+			</tr>
+			<tr>
+				<td class="property">oculus.binning.value.field</td>
+				<td class="description">Field to use as the bin value. If no value field is provided, the tiling job will write the count of records in each bin as the bin value.</td>
+			</tr>
+			<tr>
+				<td class="property">oculus.binning.value.valueType</td>
+				<td class="description">
+					Type of values stored in the value field:
+					<ul>
+						<li><em>double</em> (<em>default</em>) - Real, double-precision floating-point numbers</li>
+						<li><em>int</em> - Integers</li>
+						<li><em>long</em> - Double-precision integers</li>
+						<li><em>float</em> - Floating-point numbers</li>
 					</ul>
 				</td>
 			</tr>
 			<tr>
 				<td class="property">oculus.binning.value.aggregation</td>
 				<td class="description">
-					Method of aggregation used on the bin values. Describes how values from multiple data points in the same bin should be aggregated together to create a single value for the bin:
+					Method of aggregation used on the values of all records in a bin when <strong>oculus.binning.value.type</strong> = <em>field</em>. Creates a single value for the bin:
 					<ul>
-						<li><em>min</em>: Select the minimum value</li>
-						<li><em>max</em>: Select the maximum value</li>
-						<li><em>log</em>: Treat the number as a logarithmic value. Aggregation of <em>a</em> and <em>b</em> is <em>log_base(base^a+base^b)</em>. Base is taken from property <strong>oculus.binning.parsing.&lt;field&gt;.fieldBase</strong> and defaults to <em>e</em>.</li>
+						<li><em>sum</em> (<em>default</em>)- Sum the numeric values of all records in the bin.</li>
+						<li><em>min</em> - Select the minimum numeric value from the records in the bin.</li>
+						<li><em>max</em> - Select the maximum numeric value from the records in the bin.</li>
+						<li><em>mean</em> - Calculate the mean numeric value of all records in the bin.</li>
+						<li><em>stats</em> - Calculates the mean and standard deviation numeric values of all records in the bin.</li>
 					</ul>
 				</td>
 			</tr>
@@ -463,10 +485,10 @@ This property is mandatory, and has no default.
 
 Which levels you should bin together depends both on the size of your cluster and your data. Note that if you include multiple level sets, the raw data is parsed once and cached for use with each level set.
 
-Each binning job has two costs:
+Each binning job has two costs: **overhead** and **tiling**. In our cluster:
 
-- **Overhead cost** is generally dominant from levels 0-8. Tiling these levels together will reduce job time.
-- **Tiling cost** is dominant above level 8. You risk job failure out of memory errors when simultaneously binning these levels together due to the large number of tiles generated.
+- **Overhead** cost is generally dominant from levels 0-8. Tiling these levels together will reduce job time.
+- **Tiling** cost is dominant above level 8. There is a risk of out of memory job failure errors when simultaneously binning these levels together due to the large number of tiles generated.
 
 Therefore, our typical use case has:
 
