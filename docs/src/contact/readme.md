@@ -1,6 +1,6 @@
 ---
 section: Contact
-layout: section
+layout: contact
 permalink: contact/
 ---
 

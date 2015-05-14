@@ -1,9 +1,24 @@
-- label: How-To
-  path: how-to
-  listType: ol
+- label: Getting Started
+  path: getting-started
+  listType: ul
   topics:
-    - label: Quick Start
-      path: quickstart
+    - label: Installation
+      path: installation
+      bookmarks:
+        - label: Supported Platforms
+          anchor: supported-platforms
+
+        - label: Prerequisites
+          anchor: prerequisites
+
+        - label: Complete Install
+          anchor: complete-install
+
+        - label: Packaged Distributions
+          anchor: packaged-distributions
+
+    - label: Quick Start Example Workflow
+      path: quick-start
       bookmarks:
         - label: Prerequisites
           anchor: prerequisites
@@ -20,17 +35,8 @@
         - label: Deployment
           anchor: deployment
 
-    - label: Installation
-      path: installation
-      bookmarks:
-        - label: Prerequisites
-          anchor: prerequisites
-
-        - label: Source Code
-          anchor: source-code
-
-    - label: Tile Generation
-      path: generation
+    - label: Understanding the Tile Pyramid
+      path: tile-pyramid
       bookmarks:
         - label: Tile Pyramid Hierarchy
           anchor: pyramid-hierarchy
@@ -38,20 +44,38 @@
         - label: Tile Generation Process
           anchor: tile-gen-process
 
-        - label: Prerequisites
+        - label: Tiling Job Prerequisites
           anchor: prerequisites
 
-        - label: Standard Tiling Jobs
+        - label: spark-submit
+          anchor: spark-submit
+
+- label: How-To
+  path: how-to
+  listType: ol
+  topics:
+    - label: Run Standard Tiling Jobs
+      path: standard-tiling
+      bookmarks:
+        - label: CSVBinner
           anchor: csvbinner
 
-        - label: Custom Tiling Jobs
-          anchor: custom-tiling
+        - label: Base Properties File
+          anchor: base-properties
 
-        - label: Testing Tiling Job Output
-          anchor: bin-visualizer
+        - label: Tiling Properties Files
+          anchor: tiling-properties
 
-    - label: App Configuration
-      path: configuration
+    - label: Test Tiling Job Output
+      path: test-output
+      bookmarks:
+
+    - label: Set Up the Application
+      path: app-setup
+      bookmarks:
+
+    - label: Configure the Tile Server
+      path: tile-server
       bookmarks:
         - label: Template Setup
           anchor: template-setup
@@ -59,11 +83,66 @@
         - label: Tile Server Configuration
           anchor: server-config
 
-        - label: Tile Client Configuration
-          anchor: clientconfig
+        - label: Application JavaScript
+          anchor: application-javascript
 
+    - label: Configure the Tile Client
+      path: tile-client
+      bookmarks:
+        - label: Client-Side Rendering
+          anchor: clientside
+
+    - label: Deploy the Application
+      path: deploy
+      bookmarks:
         - label: Deployment
           anchor: deployment
+
+- label: Advanced
+  path: advanced
+  listType: ul
+  topics:
+    - label: Standard Tiling Jobs
+      path: standard-tiling
+      bookmarks:
+        - label: Source Data Format
+          anchor: source-data-format
+
+        - label: Field Scaling
+          anchor: field-scaling
+
+        - label: Consolidation Partitions
+          anchor: consolidation-partitions
+
+    - label: Graph Tiling Jobs
+      path: graph-tiling
+      bookmarks:
+        - label: Convert GraphML to CSV
+          anchor: convert-graphml
+
+        - label: Hierarchical Clustering
+          anchor: clustering
+
+        - label: Graph Layout
+          anchor: graph-layout
+
+        - label: Tile Generation
+          anchor: tile-generation
+
+        - label: Graph Analytics
+          anchor: graph-analytics
+
+    - label: Custom Tiling Jobs
+      path: custom-tiling
+      bookmarks:
+        - label: Custom Tiling Jobs
+          anchor: custom-tiling
+
+        - label: Define Data Structure
+          anchor: define-data-structure
+
+        - label: Bin Data
+          anchor: binning-your-data
 
 - label: API
   path: api
