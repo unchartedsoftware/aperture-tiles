@@ -1,29 +1,37 @@
-# Julia Set Aperture Tiles Sample
+Julia Set Aperture Tiles Sample
+===============================
 
-This demo displays the points in an example Julia set fractal dataset on an X/Y plot with five zoom levels. It is a complete version of the [quick start](https://aperturetiles.com/docs/development/quickstart/) walk-through on http://aperturetiles.com/.
+This demo displays points in an example Julia set fractal dataset on an x/y plot with five zoom levels. It is a complete version of the [quick start](https://aperturetiles.com/docs/development/getting-started/quick-start/) walk-through on <aperturetiles.com>.
 
-## Setup and Building
+## Setup and Building ##
 
-Before running this sample, the tile data needs to be downloaded locally. Download http://assets.oculusinfo.com/tiles/downloads/tilesets/julia.x.y.v.zip and place the file in `src/main/resources`. Ensure the filename is `julia.x.y.v.zip`.
+Before you run this demo: 
 
-To build the demo first ensure that the entire aperture-tiles project is built by running the following from the root aperture-tiles project directory:
+1. Download the [tile data](http://assets.oculusinfo.com/tiles/downloads/tilesets/julia.x.y.v.zip) and save it to the [src/main/resources/](src/main/resources) directory.
+2. Ensure that the filename is **julia.x.y.v.zip**.
 
-```
-mvn clean install
-```
+To build the demo: 
 
-Subsequent changes to the Julia Set demo can be built individually by running the following from the `julia-demo/` directory:
+1. Build the entire aperture-tiles project by executing the following command in the [root aperture-tiles](../../) directory:
 
-```
-mvn package
-```
+	```bash
+	../../gradlew install
+	```
+	
+2. Subsequent changes to the Julia Set demo can be built individually by executing the following command in the [tile-examples/julia-demo/](.) directory:
 
-## Running
+	```bash
+	../../gradlew install
+	```
 
-From the the `julia-demo/` directory, run:
+## Running ##
 
-```
-mvn jetty:run
-```
+To serve the demo on your localhost and test it:
 
-Once the server has started, navigate to [http://localhost:8080/julia-demo](http://localhost:8080/julia-demo) in your favorite modern browser.
+1. Run the following command in the [tile-examples/julia-demo/](.) directory:
+
+	```bash
+	../../gradlew jettyrun
+	```
+
+2. Navigate to [http://localhost:8080/julia-demo](http://localhost:8080/julia-demo) in any modern browser.
