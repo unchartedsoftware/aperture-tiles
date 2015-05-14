@@ -70,7 +70,7 @@ public class DefaultServerConfigModule extends AbstractModule {
 				LOGGER.warn( "Failed to close properties input stream.", ioe );
 			}
 
-			// bind all properties to named annotations (also in guice)
+			// bind all properties to named annotations
 			Names.bindProperties( this.binder(), properties );
 
 			// Output all properties values to log

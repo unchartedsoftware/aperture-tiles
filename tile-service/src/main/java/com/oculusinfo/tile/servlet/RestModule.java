@@ -52,6 +52,7 @@ import net.sf.ehcache.constructs.web.filter.SimplePageCachingFilter;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.engine.header.HeaderConstants;
+import org.restlet.resource.ServerResource;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.slf4j.Logger;
@@ -253,18 +254,16 @@ public class RestModule extends ServletModule implements ServletContextListener 
 	 * resourceBinder.bind("/my/path").toInstance(MyResource.class);
 	 */
 	@Provides
-	Application createApplication( FinderFactory factory, Map<String, ResourceDefinition> routes ) {
+	Application createApplication( FinderFactory factory, Map<String, Class<? extends ServerResource>> routes ) {
 		Context context = new Context();
 		Application application = new Application();
 		application.setContext( context );
 		Router router = new Router( context );
 		// Set binding rules here
-		for ( Entry<String, ResourceDefinition> entry : routes.entrySet() ) {
-			final ResourceDefinition defn = entry.getValue();
-			logger.info( "Binding '" + entry.getKey() + "' to " + defn );
-			TemplateRoute route = router.attach( entry.getKey(), factory.finder( defn.getResource() ) );
-			// add any variable customizations.
-			route.getTemplate().getVariables().putAll( defn.getVariables() );
+		for ( Entry<String, Class<? extends ServerResource>> entry : routes.entrySet() ) {
+			final Class<? extends ServerResource> resource = entry.getValue();
+			logger.info( "Binding '" + entry.getKey() + "' to " + resource );
+			router.attach( entry.getKey(), factory.finder( resource ) );
 		}
 		application.setInboundRoot( router );
 		return application;
