@@ -100,7 +100,7 @@ public class DeltaTileBucketView<T> implements TileData<List<T>> {
     	
         int binSize = sourceData.size();
 		int start = ( _startCompare != null ) ? _startCompare : 0;
-		int end = ( _endCompare != null ) ? _endCompare : binSize;
+		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
 
         for(int i = 0; i < binSize; i++) {
             if ( i >= start && i <= end ) {

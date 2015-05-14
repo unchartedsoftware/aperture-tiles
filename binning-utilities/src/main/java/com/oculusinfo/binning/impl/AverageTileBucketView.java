@@ -25,7 +25,6 @@ package com.oculusinfo.binning.impl;
 
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -67,19 +66,25 @@ public class AverageTileBucketView<T> implements TileData<List<T>> {
         	for ( int ty = 0; ty < getDefinition().getYBins(); ty++ ) {
         		List<T> binContents = _base.getBin(tx, ty);              
         		int binSize = binContents.size();
-                endAv = ( endAv > binSize ) ? endAv : binSize;
+                int end = ( endAv < binSize ) ? endAv : binSize;
 
                 double total = 0;
                 int count = 0;
                 for(int i = 0; i < binSize; i++) {
-                    if ( i >= startAv && i <= endAv ) {
-                    	total = total + (Double)binContents.get(i);
+                    if ( i >= startAv && i <= end ) {
+                    	Number value = (Number) binContents.get(i);
+                    	total = total + value.doubleValue();
                     	count++;
                     } 
                 }
-                _averageBins[tx][ty] = (total/count);
+                if ( count == 0 ) {
+                	// if the count is 0, no values found in the bin
+                	_averageBins[tx][ty] = 0.0;
+                } else {
+                	_averageBins[tx][ty] = (total/count);
+                }
         	}
-        }        
+        } 
     }
 
 
@@ -114,7 +119,7 @@ public class AverageTileBucketView<T> implements TileData<List<T>> {
     	List<T> binContents = _base.getBin(x, y);   	
         int binSize = binContents.size();
 		int start = ( _startCompare != null ) ? _startCompare : 0;
-		int end = ( _endCompare != null ) ? _endCompare : binSize;
+		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
 
         for(int i = 0; i < binSize; i++) {
             if ( i >= start && i <= end ) {
