@@ -71,7 +71,6 @@
     /**
      * Given an array of buckets, will execute the provided aggregation
      * specification against all relevant entries.
-     * @memberof TopicCountAggregator
      *
      * @param {Array} buckets - The array of buckets.
      *

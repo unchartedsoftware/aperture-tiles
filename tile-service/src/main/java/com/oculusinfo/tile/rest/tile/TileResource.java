@@ -29,6 +29,7 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 import com.oculusinfo.tile.rest.QueryParamDecoder;
+import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
@@ -37,18 +38,17 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
 
 import java.awt.image.BufferedImage;
 import java.util.*;
 
-public class TileResource extends ServerResource {
+public class TileResource extends ApertureServerResource {
 
-	public enum ResponseType {
+	public static enum ResponseType {
 		Image,
 		Tile
 	}
-	public enum ExtensionType {
+	public static enum ExtensionType {
 		png(ResponseType.Image, MediaType.IMAGE_PNG),
 		jpg(ResponseType.Image, MediaType.IMAGE_JPEG),
 		jpeg(ResponseType.Image, MediaType.IMAGE_JPEG),
@@ -56,7 +56,7 @@ public class TileResource extends ServerResource {
 
 		private ResponseType _responseType;
 		private MediaType _mediaType;
-		ExtensionType (ResponseType responseType, MediaType mediaType) {
+		private ExtensionType (ResponseType responseType, MediaType mediaType) {
 			_responseType = responseType;
 			_mediaType = mediaType;
 		}
@@ -67,10 +67,10 @@ public class TileResource extends ServerResource {
 			return _mediaType;
 		}
 	}
-
+	
 	private TileService _service;
-
-
+	
+	
 	@Inject
 	public TileResource(TileService service) {
 		this._service = service;
@@ -179,10 +179,10 @@ public class TileResource extends ServerResource {
 				return imageRep;
 
 			} else if (ResponseType.Tile.equals(extType.getResponseType())) {
-				// We return an object including the tile index ("index") and
+				// We return an object including the tile index ("index") and 
 				// the tile data ("data").
 				//
-				// The data should include index information, but it has to be
+				// The data should include index information, but it has to be 
 				// there for tiles with no data too, so we can't count on it.
 				JSONObject result = new JSONObject();
 				JSONObject tileIndex = new JSONObject();

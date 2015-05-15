@@ -31,6 +31,8 @@ import java.net.URLEncoder;
 
 import javax.imageio.ImageIO;
 
+import oculus.aperture.common.rest.ApertureServerResource;
+
 import org.json.JSONObject;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
@@ -43,9 +45,8 @@ import org.restlet.resource.ResourceException;
 import com.google.inject.Inject;
 import com.oculusinfo.tile.rest.ImageOutputRepresentation;
 import com.oculusinfo.tile.rest.QueryParamDecoder;
-import org.restlet.resource.ServerResource;
 
-public class LegendResource extends ServerResource {
+public class LegendResource extends ApertureServerResource {
 
 	private LegendService _service;
 

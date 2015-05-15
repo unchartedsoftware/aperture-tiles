@@ -31,8 +31,8 @@
         Util = require('../../../util/Util');
 
     /**
-     * Instantiate a FrequenciesByTopicAggregator object.
-     * @class FrequenciesByTopicAggregator
+     * Instantiate a TweetsByTopicAggregator object.
+     * @class TweetsByTopicAggregator
      * @classdesc
      */
     function FrequenciesByTopicAggregator() {
@@ -43,7 +43,6 @@
     /**
      * Given an array of buckets, will execute the provided aggregation
      * specification against all relevant entries.
-     * @memberof FrequenciesByTopicAggregator
      *
      * @param {Array} buckets - The array of buckets.
      *

@@ -17,7 +17,7 @@ highlighter: rouge
 # Serving
 destination: ../_site/
 baseurl: ""
-exclude: ["img/resources/SiteComponents.png","sidebar.html","*/sidebar.html"]
+exclude: ["img/resources/SiteComponents.png"]
 
 # Variables
 product: Aperture Tiles

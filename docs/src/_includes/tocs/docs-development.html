@@ -5,7 +5,7 @@
 			{% for topic in chapter.topics %}
 				<li>
 					{% if chapter.label != page.chapter or topic.label != page.topic %}
-						<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{{chapter.path}}/{% if topic.path != null %}{{topic.path}}/{% endif %}">{{topic.label}}</a>
+						<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{{chapter.path}}/{{topic.path}}/">{{topic.label}}</a>
 					{% else %}
 						{{topic.label}}
 						<ul>
