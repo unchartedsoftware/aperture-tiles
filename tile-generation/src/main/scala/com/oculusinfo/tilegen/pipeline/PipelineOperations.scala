@@ -24,6 +24,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.oculusinfo.tilegen.pipeline
 
 
@@ -32,8 +33,16 @@ import java.text.SimpleDateFormat
 import java.sql.Date
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.util.matching.Regex
+
+import grizzled.slf4j.Logger
+
+import org.apache.avro.file.CodecFactory
+
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
-import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.sql.Column
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -66,10 +75,10 @@ object PipelineOperations {
 	/**
 	 * Load data into the pipeline directly from a schema rdd
 	 *
-	 * @param rdd The SchemaRDD containing the data
+	 * @param rdd The DataFrame containing the data
 	 * @param tableName The name of the table the rdd has been assigned in the SQLContext, if any.
 	 */
-	def loadRDDOp (rdd: SchemaRDD, tableName: Option[String] = None)(data: PipelineData): PipelineData = {
+	def loadRDDOp (rdd: DataFrame, tableName: Option[String] = None)(data: PipelineData): PipelineData = {
 		PipelineData(rdd.sqlContext, rdd, tableName)
 	}
 
@@ -101,7 +110,7 @@ object PipelineOperations {
 	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
 	                 (data: PipelineData): PipelineData = {
 		val reader = new CSVReader(data.sqlContext, path, argumentSource)
-		val srdd = reader.asSchemaRDD
+		val srdd = reader.asDataFrame
 		val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
 		PipelineData(reader.sqlc, partitioned)
 	}
@@ -120,12 +129,12 @@ object PipelineOperations {
 		val formatter = new SimpleDateFormat(format)
 		val minTime = minDate.getTime
 		val maxTime = maxDate.getTime
-		val timeExtractor = calculateExtractor(timeCol, input.srdd.schema)
-		val filtered = input.srdd.filter { row =>
-			val time = formatter.parse(timeExtractor(row).toString).getTime
+
+		val filterFcn = udf((value: String) => {
+			val time = formatter.parse(value).getTime
 			minTime <= time && time <= maxTime
-		}
-		PipelineData(input.sqlContext, filtered)
+		})
+		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol)))))
 	}
 
 	/**
@@ -186,13 +195,12 @@ object PipelineOperations {
 	 * @return Transformed pipeline data, where records inside/outside the specified time range have been removed.
 	 */
 	def integralRangeFilterOp(min: Seq[Long], max: Seq[Long], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
-		val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
-		val result = input.srdd.filter { row =>
-			val data = extractors.map(_(row).asInstanceOf[Number].longValue)
-			val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
-			if (exclude) !inRange else inRange
-		}
-		PipelineData(input.sqlContext, result)
+		val test: Column = colSpecs.zip(min.zip(max)).map{case (name, (mn, mx)) =>
+			val col = new Column(name)
+			val result: Column = (col >= mn && col <= mx)
+			if (exclude) result.unary_! else result
+		}.reduce(_ && _)
+		PipelineData(input.sqlContext, input.srdd.filter(test))
 	}
 
 	/**
@@ -206,13 +214,12 @@ object PipelineOperations {
 	 * @return Transformed pipeline data, where records inside/outside the specified time range have been removed.
 	 */
 	def fractionalRangeFilterOp(min: Seq[Double], max: Seq[Double], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
-		val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
-		val result = input.srdd.filter { row =>
-			val data = extractors.map(_(row).asInstanceOf[Number].doubleValue)
-			val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
-			if (exclude) !inRange else inRange
-		}
-		PipelineData(input.sqlContext, result)
+		val test: Column = colSpecs.zip(min.zip(max)).map{case (name, (mn, mx)) =>
+			val col = new Column(name)
+			val result: Column = (col >= mn && col <= mx)
+			if (exclude) result.unary_! else result
+		}.reduce(_ && _)
+		PipelineData(input.sqlContext, input.srdd.filter(test))
 	}
 
 	/**
@@ -226,14 +233,12 @@ object PipelineOperations {
 	 */
 	def regexFilterOp(regexStr: String, colSpec: String, exclude: Boolean = false)(input: PipelineData) = {
 		val regex = regexStr.r
-		val extractor = calculateExtractor(colSpec, input.srdd.schema)
-		val result = input.srdd.filter { row =>
-			extractor(row).toString match {
+		val regexFcn = udf((value: String) =>
+			value match {
 				case regex(_*) => if (exclude) false else true
 				case _ => if (exclude) true else false
-			}
-		}
-		PipelineData(input.sqlContext, result)
+			})
+		PipelineData(input.sqlContext, input.srdd.filter(regexFcn(new Column(colSpec))))
 	}
 
 	/**
@@ -244,9 +249,7 @@ object PipelineOperations {
 	 * @return Pipeline data containing a schema RDD with only the selected columns.
 	 */
 	def columnSelectOp(colSpecs: Seq[String])(input: PipelineData) = {
-		val colExprs = colSpecs.map(UnresolvedAttribute(_))
-		val result = input.srdd.select(colExprs:_*)
-		PipelineData(input.sqlContext, result)
+		PipelineData(input.sqlContext, input.srdd.selectExpr(colSpecs:_*))
 	}
 
 	/**

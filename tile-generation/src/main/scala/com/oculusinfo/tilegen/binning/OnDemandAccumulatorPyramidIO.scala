@@ -118,7 +118,7 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 						Some(true))
 					// Register it as a table
 					val table = TilingTask.rectifyTableName("table "+pyramidId)
-					reader.asSchemaRDD.registerTempTable(table)
+					reader.asDataFrame.registerTempTable(table)
 					if (cache) sqlc.cacheTable(table)
 
 					// Create our tiling task
