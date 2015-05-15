@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2014 Oculus Info Inc.
+/**
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -10,10 +10,10 @@
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,28 +22,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.rest;
+package com.oculusinfo.tile.servlet;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
+import org.restlet.Request;
+import org.restlet.Response;
+import org.restlet.resource.Finder;
 import org.restlet.resource.ServerResource;
 
-public class AnnotationRestConfigModule extends AbstractModule {
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
-	@Override
-	protected void configure() {
+/**
+ * Implementation of the FinderFactory that manually create ServerResources using
+ * Guice DI
+ *
+ * @author rharper
+ *
+ */
+@Singleton
+class GuiceFinderFactory implements FinderFactory {
 
-		// Bind REST end points for clients
-		MapBinder<String, Class<? extends ServerResource>> resourceBinder =
-			MapBinder.newMapBinder( binder(),
-				new TypeLiteral<String>() {},
-				new TypeLiteral<Class<? extends ServerResource>>() {} );
+	@Inject
+	Injector injector;
 
-		resourceBinder.addBinding( "/{version}/annotation" ).toInstance( AnnotationResource.class );
-		resourceBinder.addBinding( "/annotation" ).toInstance( AnnotationResource.class );
+	public Finder finder(Class<? extends ServerResource> cls) {
+		return new MyFinder(cls);
+	}
 
-		resourceBinder.addBinding( "/annotation/{layer}/{level}/{x}/{y}.{ext}" ).toInstance( AnnotationResource.class );
-		resourceBinder.addBinding( "/{version}/annotation/{layer}/{level}/{x}/{y}.{ext}" ).toInstance( AnnotationResource.class );
+	private class MyFinder extends Finder {
+
+		private final Class<? extends ServerResource> key;
+
+		public MyFinder(Class<? extends ServerResource> key) {
+			this.key = key;
+		}
+
+		@Override
+		public ServerResource create(Request request, Response response) {
+			return injector.getInstance( key );
+		}
 	}
 }

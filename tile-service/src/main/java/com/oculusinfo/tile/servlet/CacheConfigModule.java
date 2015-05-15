@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile;
+package com.oculusinfo.tile.servlet;
 
 import com.google.common.io.Closeables;
 import com.google.inject.Singleton;
