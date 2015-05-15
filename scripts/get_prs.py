@@ -32,8 +32,8 @@ import sys
 import pytz
 from dateutil.parser import parse
 
-components = {'build', 'server', 'client', 'tiling', 'examples'}
-types = {'feature', 'bug', 'doc', 'style', 'refactor', 'test', 'maintenance'}
+components = {'a1 - build', 'a2 - maintenance', 'a3 - binning', 'a4 -tiling', 'a5 - server', 'a6 - client','a7 - examples', 'a8 - doc', 'a9 - test'}
+types = {'t1 - bug', 't2 - feature', 't3 - refactor', 't4 - style', 't5 - question'}
 
 prs_by_component = {}
 
