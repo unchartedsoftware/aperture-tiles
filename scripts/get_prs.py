@@ -32,7 +32,7 @@ import sys
 import pytz
 from dateutil.parser import parse
 
-components = {'a1 - build', 'a2 - maintenance', 'a3 - binning', 'a4 -tiling', 'a5 - server', 'a6 - client', 'a7 - examples', 'a8 - doc', 'a9 - test'}
+components = {'a1 - build', 'a2 - maintenance', 'a3 - binning', 'a4 -tiling', 'a5 - server', 'a6 - client','a7 - examples', 'a8 - doc', 'a9 - test'}
 types = {'t1 - bug', 't2 - feature', 't3 - refactor', 't4 - style', 't5 - question'}
 
 prs_by_component = {}
@@ -74,11 +74,11 @@ for pull in pulls:
     component = "other"
     change_type = "other"
     for label in labels:
-        label_name = label['name'].lower()
+        label_name = label['name']
         if label_name in components:
-            component = label_name[:5]
+            component = label_name
         elif label_name in types:
-            change_type = label_name[:5]
+            change_type = label_name
 
     # create an entry
     component_list = []
