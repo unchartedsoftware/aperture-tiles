@@ -109,43 +109,22 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 
 ### <a name="source-code"></a> Source Code ###
 
-Source code repositories for Aperture Tiles and its dependent project, [Aperture JS](http://aperturejs.com/), are available on [GitHub](https://github.com/unchartedsoftware/).
+The source code repository for Aperture Tiles is available on [GitHub](https://github.com/unchartedsoftware/).
 
-<h6 class="procedure">To work with the Uncharted source code</h6>
+<h6 class="procedure">To work with the Aperture Tiles source code</h6>
 
-1. Execute the following command to clone the Aperture Tiles source code to an *aperture-tiles/* directory in your Git project folder:
+- Execute the following command to clone the *master* branch of the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
 
 	```bash
 	git clone https://github.com/unchartedsoftware/aperture-tiles.git
 	```
 
-2. Execute the following command to clone the Aperture JS source code to an *aperturejs/* directory in Git project folder:
-
-	```bash
-	git clone https://github.com/unchartedsoftware/aperturejs.git
-	```
-
-3. Determine which version of Aperture JS you require:
-	<ol type="a">
-		<li>Open the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in the root of your Aperture Tiles working directory.</li>
-		<li>
-			Search for the **project.ext.apertureJsVersion** property, which specifies the required version.
-			<p class="list-paragraph"><strong>NOTE</strong>: While the <em>master</em> branch of Aperture Tiles is generally dependent on the <em>master</em> branch of Aperture JS, you should always perform this check.
-		</li>
-	</ol>
-4. Check out the Aperture JS branch or tag corresponding to the required version:
-
-	```bash
-	git checkout <branch>
-	```
-
 ### <a name="building-project"></a> Building the Project ###
 
-Once you have cloned the Aperture Tiles and Aperture JS repositories, you can build the project.
+Once you have cloned the Aperture Tiles repository, you can build the project.
 
 1. [Specify your Hadoop/HBase version](#hbase-version) (if applicable)
-2. [Build Aperture JS](#aperture-js)
-3. [Compile Aperture Tiles](#compiling)
+2. [Compile Aperture Tiles](#compiling)
 
 #### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
 
@@ -155,16 +134,6 @@ Prior to building the project, you must specify which version of Hadoop and/or H
 
 1. Review the *Deployment Variants* section of the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in [aperture-tiles/](https://github.com/unchartedsoftware/aperture-tiles/tree/master) to check for valid settings for your version.
 2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
-
-#### <a name="aperture-js"></a> Building Aperture JS ####
-
-Build [Aperture JS](https://github.com/unchartedsoftware/aperturejs/tree/master) by running the following command in your root Aperture JS directory:
-
-```bash
-mvn build
-```
-
-**NOTE**: The Aperture JS project requires [Apache Maven](http://maven.apache.org/) for build automation.
 
 #### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
 
