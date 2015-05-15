@@ -77,26 +77,27 @@
     - label: Configure the Tile Server
       path: tile-server
       bookmarks:
-        - label: Template Setup
-          anchor: template-setup
+        - label: Web XML
+          anchor: webxml
 
-        - label: Tile Server Configuration
-          anchor: server-config
+        - label: Tile Properties
+          anchor: tileproperties
 
-        - label: Application JavaScript
-          anchor: application-javascript
+        - label: Layers
+          anchor: layers
 
     - label: Configure the Tile Client
       path: tile-client
       bookmarks:
+        - label: Application JavaScript
+          anchor: application-javascript
+
         - label: Client-Side Rendering
           anchor: clientside
 
     - label: Deploy the Application
       path: deploy
       bookmarks:
-        - label: Deployment
-          anchor: deployment
 
 - label: Advanced
   path: advanced
