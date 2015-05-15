@@ -13,6 +13,17 @@
 // ********************************************************
 task setBuildVersions {
 	switch (buildType) {
+		case "cdh5.4.1":
+			logger.info "Valid build type found - using $buildType"
+            project.ext { // apply project scope to vars, otherwise local to task
+            	hadoopCommonVersion = "2.6.0-cdh5.4.1"
+                hadoopCoreVersion = "2.6.0-mr1-cdh5.4.1"
+                hbaseVersion = "1.0.0-cdh5.4.1"
+                sparkVersion = "1.3.0-cdh5.4.1"
+                dependencyScalaVersion = "2.10"
+                scalaVersion = "2.10.3"
+            }
+            break
 		case "cdh5.3.0":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
