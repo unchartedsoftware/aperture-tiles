@@ -26,8 +26,6 @@ package com.oculusinfo.annotation.rest;
 
 import java.util.List;
 
-import oculus.aperture.common.rest.ApertureServerResource;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,11 +44,12 @@ import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import org.restlet.resource.ServerResource;
 
-public class AnnotationResource extends ApertureServerResource {
+public class AnnotationResource extends ServerResource {
 
 	private AnnotationService _service;
-	
+
 	@Inject
 	public AnnotationResource( AnnotationService service ) {
 		_service = service;
@@ -66,17 +65,17 @@ public class AnnotationResource extends ApertureServerResource {
             }
 			JSONObject json = new JSONObject( jsonData );
 
-			String requestType = json.getString( "type" ).toLowerCase();	
+			String requestType = json.getString( "type" ).toLowerCase();
 			JSONObject jsonResult = new JSONObject();
-			
+
 			if ( requestType.equals("write") ) {
-				
+
 				String layer = json.getString("layer");
 				JSONAnnotation annotation = JSONAnnotation.fromJSON( json.getJSONObject("annotation") );
 				Pair<String, Long> certificate = _service.write( layer, annotation );
 				jsonResult.put("uuid", certificate.getFirst() );
 				jsonResult.put("timestamp", certificate.getSecond().toString() );
-				
+
 			} else if ( requestType.equals("remove") ) {
 
 				String layer = json.getString("layer");
@@ -84,21 +83,21 @@ public class AnnotationResource extends ApertureServerResource {
 				String uuid = certificate.getString("uuid");
 				Long timestamp = certificate.getLong("timestamp");
 				_service.remove(layer, new Pair<>( uuid, timestamp ) );
-				
+
 			} else if ( requestType.equals("modify") ) {
-				
+
 				String layer = json.getString("layer");
 				JSONAnnotation annotation = JSONAnnotation.fromJSON( json.getJSONObject("annotation") );
 				Pair<String, Long> certificate = _service.modify(layer, annotation);
 				jsonResult.put("uuid", certificate.getFirst() );
 				jsonResult.put("timestamp", certificate.getSecond().toString() );
 			}
-			
+
 			setStatus(Status.SUCCESS_CREATED);
 			jsonResult.put("status", "success");
             jsonResult.put("version", version);
 			return new JsonRepresentation(jsonResult);
-			
+
 		} catch (JSONException e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 			                            "Unable to create JSON object from supplied options string", e);
@@ -132,7 +131,7 @@ public class AnnotationResource extends ApertureServerResource {
 			int y = Integer.parseInt(yAttr);
 
 			TileIndex index = new TileIndex( zoomLevel, x, y, AnnotationIndexer.NUM_BINS, AnnotationIndexer.NUM_BINS );
-		    
+
 			List<List<AnnotationData<?>>> data = _service.read( layer, index, decodedQueryParams );
 
             JSONObject result = new JSONObject();

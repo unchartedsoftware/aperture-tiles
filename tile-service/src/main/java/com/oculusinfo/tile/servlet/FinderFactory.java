@@ -1,19 +1,19 @@
-/*
- * Copyright (c) 2014 Oculus Info Inc.
+/**
+ * Copyright (c) 2013-2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- *
+ * <p/>
  * Released under the MIT License.
- *
+ * <p/>
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
-
+ * <p/>
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
-
+ * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,28 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.annotation.rest;
+package com.oculusinfo.tile.servlet;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
+import org.restlet.resource.Finder;
 import org.restlet.resource.ServerResource;
 
-public class AnnotationRestConfigModule extends AbstractModule {
+import com.google.inject.ImplementedBy;
 
-	@Override
-	protected void configure() {
-
-		// Bind REST end points for clients
-		MapBinder<String, Class<? extends ServerResource>> resourceBinder =
-			MapBinder.newMapBinder( binder(),
-				new TypeLiteral<String>() {},
-				new TypeLiteral<Class<? extends ServerResource>>() {} );
-
-		resourceBinder.addBinding( "/{version}/annotation" ).toInstance( AnnotationResource.class );
-		resourceBinder.addBinding( "/annotation" ).toInstance( AnnotationResource.class );
-
-		resourceBinder.addBinding( "/annotation/{layer}/{level}/{x}/{y}.{ext}" ).toInstance( AnnotationResource.class );
-		resourceBinder.addBinding( "/{version}/annotation/{layer}/{level}/{x}/{y}.{ext}" ).toInstance( AnnotationResource.class );
-	}
+/**
+ * Package-protected interface for doing Guice DI into ServerResources.
+ *
+ * Statically implemented by a Guice instantiation
+ *
+ * @author rharper
+ *
+ */
+@ImplementedBy( GuiceFinderFactory.class )
+interface FinderFactory {
+	/**
+	 * Returns a Finder that will obtain a dependency-injected instance of
+	 * the ServerResource subtype bound to the type associated with the given class.
+	 */
+	Finder finder( Class<? extends ServerResource> cls );
 }
