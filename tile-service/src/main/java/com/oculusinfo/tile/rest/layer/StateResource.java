@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,6 @@ package com.oculusinfo.tile.rest.layer;
 
 import com.google.inject.Inject;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
-import oculus.aperture.common.rest.ApertureServerResource;
 import org.json.JSONObject;
 import org.restlet.data.CacheDirective;
 import org.restlet.data.Status;
@@ -34,10 +33,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
+import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StateResource extends ApertureServerResource {
+public class StateResource extends ServerResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(StateResource.class);
 
     private LayerService _service;

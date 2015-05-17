@@ -1,18 +1,18 @@
 /**
  * Copyright (c) 2013 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.tile.ServletLifecycleListener;
+import com.oculusinfo.tile.servlet.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
 
 
@@ -53,25 +53,25 @@ import com.oculusinfo.tile.TileServiceConfiguration;
  * <p>
  * Simple implementation of a {@link SparkContextProvider}.
  * </p>
- * 
+ *
  * <p>
  * This class provides a spark context based on four properties in the global properties file (tile.properties):
  * <dl>
  * <dt>org.apache.spark.master</dt>
  * <dd>The location of the spark master node.  This can be found at the top of the Spark web UI page</dd>
- * 
+ *
  * <dt>org.apache.spark.jobName</dt>
  * <dd>The name with which the web server spark connection should be labeled on the Spark web UI page</dd>
- * 
+ *
  * <dt>org.apache.spark.home</dt>
  * <dd>The home directory of spark on the cluster machines.</dd>
- * 
+ *
  * <dt>org.apache.spark.jars</dt>
- * <dd>A :-separated list of jars to add to the spark job.  Binning-utilities, tile-generation, and hbase 
+ * <dd>A :-separated list of jars to add to the spark job.  Binning-utilities, tile-generation, and hbase
  * are automatically added; anything else (such as custom tiling jars) must be added here.</dd>
  * </dl>
  * </p>
- * 
+ *
  * @author nkronenfeld
  */
 @Singleton
@@ -119,7 +119,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 				@Override
 				public void onServletInitialized (ServletContextEvent event) {
 				}
-            
+
 				@Override
 				public void onServletDestroyed (ServletContextEvent event) {
 					shutdownSparkContext();
@@ -129,10 +129,10 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 
 	private String getJarPathForClass (Class<?> type) {
 	    String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
-	    // This whole "classes" case is to account for when we're trying to 
-	    // run from an IDE, which automatically adds projects to the class 
-	    // path.  we need class directories replaced with jars.  Note that 
-	    // this means the program won't work unless the project as been 
+	    // This whole "classes" case is to account for when we're trying to
+	    // run from an IDE, which automatically adds projects to the class
+	    // path.  we need class directories replaced with jars.  Note that
+	    // this means the program won't work unless the project as been
 	    // packaged; this was always the case, but is more explicitly so now.
 	    if (location.endsWith("classes/")) {
 	        File target = new File(location).getParentFile();
