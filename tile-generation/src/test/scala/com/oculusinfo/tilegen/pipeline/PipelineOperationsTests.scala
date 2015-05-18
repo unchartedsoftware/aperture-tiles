@@ -207,7 +207,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			val stage2 = stage1.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
 			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-			TilePipelines.execute(rootStage, sqlc)
+			PipelineTree.execute(rootStage, sqlc)
 
 			assertResult(List(2, 3))(resultList.toList)
 		}
@@ -219,7 +219,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			val stage2 = stage1.addChild(PipelineStage("range_filter", parseIntegralRangeFilterOp(argMap)))
 			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-			TilePipelines.execute(rootStage, sqlc)
+			PipelineTree.execute(rootStage, sqlc)
 
 			assertResult(List(2, 3))(resultList.toList)
 		}
@@ -276,7 +276,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			val stage2 = stage1.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
 			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-			TilePipelines.execute(rootStage, sqlc)
+			PipelineTree.execute(rootStage, sqlc)
 
 			assertResult(List(2, 3))(resultList.toList)
 		}
@@ -288,7 +288,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			val stage2 = stage1.addChild(PipelineStage("range_filter", parseFractionalRangeFilterOp(argMap)))
 			val stage3 = stage2.addChild(PipelineStage("output", outputOp("num", resultList)(_)))
 
-			TilePipelines.execute(rootStage, sqlc)
+			PipelineTree.execute(rootStage, sqlc)
 
 			assertResult(List(2, 3))(resultList.toList)
 		}

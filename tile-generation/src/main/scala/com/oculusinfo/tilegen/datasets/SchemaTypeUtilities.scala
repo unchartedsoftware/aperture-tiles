@@ -29,7 +29,6 @@ package com.oculusinfo.tilegen.datasets
 import java.sql.Timestamp
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.util.Metadata
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{Map => MutableMap}

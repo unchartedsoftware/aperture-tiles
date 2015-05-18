@@ -40,8 +40,7 @@ import grizzled.slf4j.Logger
 import org.apache.avro.file.CodecFactory
 
 import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{SQLContext, Column, DataFrame}
 import org.apache.spark.sql.functions._
 
 import com.oculusinfo.binning.TileIndex
@@ -82,6 +81,17 @@ object PipelineOperations {
 		PipelineData(rdd.sqlContext, rdd, tableName)
 	}
 
+	private def coalesce (sqlc: SQLContext, dataFrame: DataFrame, partitions: Option[Int]): DataFrame = {
+		partitions.map{n =>
+			val baseRDD = dataFrame.queryExecution.toRdd
+			val curPartitions = baseRDD.partitions.size
+			// if we're increasing the number of partitions, just repartition as per normal
+			// If we're reducing them, copy data and coalesce, so as to avoid a shuffle.
+			if (n > curPartitions) dataFrame.repartition(n)
+			else sqlc.createDataFrame(baseRDD.map(_.copy()).coalesce(n), dataFrame.schema)
+		}.getOrElse(dataFrame)
+	}
+
 	/**
 	 * Load data from a JSON file.  The schema is derived from the first json record.
 	 *
@@ -91,9 +101,9 @@ object PipelineOperations {
 	 * @return PipelineData with a schema RDD populated from the JSON file.
 	 */
 	def loadJsonDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
-		val srdd = data.sqlContext.jsonFile(path)
-		val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
-		PipelineData(data.sqlContext, partitioned)
+		val context = data.sqlContext
+		val srdd = coalesce(context, context.jsonFile(path), partitions)
+		PipelineData(data.sqlContext, srdd)
 	}
 
 	/**
@@ -109,10 +119,10 @@ object PipelineOperations {
 	 */
 	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
 	                 (data: PipelineData): PipelineData = {
-		val reader = new CSVReader(data.sqlContext, path, argumentSource)
-		val srdd = reader.asDataFrame
-		val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
-		PipelineData(reader.sqlc, partitioned)
+		val context = data.sqlContext
+		val reader = new CSVReader(context, path, argumentSource)
+		val dataFrame = coalesce(context, reader.asDataFrame, partitions)
+		PipelineData(reader.sqlc, dataFrame)
 	}
 
 	/**
@@ -125,7 +135,7 @@ object PipelineOperations {
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
 	 */
-	def dateFilterOp(minDate: Date, maxDate: Date, format: String, timeCol: String)(input: PipelineData) = {
+	def dateFilterOp(minDate: Date, maxDate: Date, format: String, timeCol: String)(input: PipelineData): PipelineData = {
 		val formatter = new SimpleDateFormat(format)
 		val minTime = minDate.getTime
 		val maxTime = maxDate.getTime
@@ -134,7 +144,7 @@ object PipelineOperations {
 			val time = formatter.parse(value).getTime
 			minTime <= time && time <= maxTime
 		})
-		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol)))))
+		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
 	/**
@@ -147,16 +157,11 @@ object PipelineOperations {
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
 	 */
-	def dateFilterOp(minDate: String, maxDate: String, format: String, timeCol: String)(input: PipelineData) = {
+	def dateFilterOp(minDate: String, maxDate: String, format: String, timeCol: String)(input: PipelineData): PipelineData = {
 		val formatter = new SimpleDateFormat(format)
 		val minTime = formatter.parse(minDate).getTime
 		val maxTime = formatter.parse(maxDate).getTime
-		val timeExtractor = calculateExtractor(timeCol, input.srdd.schema)
-		val filtered = input.srdd.filter { row =>
-			val time = formatter.parse(timeExtractor(row).toString).getTime
-			minTime <= time && time <= maxTime
-		}
-		PipelineData(input.sqlContext, filtered)
+		dateFilterOp(minDate, maxDate, format, timeCol)(input)
 	}
 
 	/**

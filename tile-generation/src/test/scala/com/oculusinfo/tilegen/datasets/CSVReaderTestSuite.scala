@@ -178,15 +178,15 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 		import reader.sqlc._
 
-		val result = reader.asSchemaRDD.select('caseSensitiveKey).map(_(0).asInstanceOf[String]).first()
+		val result = reader.asDataFrame.select(new Column("caseSensitiveKey")).map(_(0).asInstanceOf[String]).first()
 		assertResult("test result")(result)
 
 		intercept[Exception] {
-			reader.asSchemaRDD.select('CaseSensitiveKey).map(_(0).asInstanceOf[String]).first()
+			reader.asDataFrame.select(new Column("CaseSensitiveKey")).map(_(0).asInstanceOf[String]).first()
 		}
 
 		intercept[Exception] {
-			reader.asSchemaRDD.select('casesensitivekey).map(_(0).asInstanceOf[String]).first()
+			reader.asDataFrame.select(new Column("casesensitivekey")).map(_(0).asInstanceOf[String]).first()
 		}
 	}
 
@@ -198,7 +198,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 		import reader.sqlc._
 
-		val result = reader.asSchemaRDD.select('test).map(_(0).asInstanceOf[String]).first()
+		val result = reader.asDataFrame.select(new Column("test")).map(_(0).asInstanceOf[String]).first()
 		assertResult("test result")(result)
 	}
 
@@ -219,11 +219,11 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 
 		import reader.sqlc._
 
-		val result = reader.asSchemaRDD.select('testMap).map(_(0).asInstanceOf[String]).first()
+		val result = reader.asDataFrame.select(new Column("testMap")).map(_(0).asInstanceOf[String]).first()
 		assertResult("test value")(result)
 
 		intercept[Exception] {
-			failReader.asSchemaRDD.select('testMap).map(_(0).asInstanceOf[String]).first()
+			failReader.asDataFrame.select(new Column("testMap")).map(_(0).asInstanceOf[String]).first()
 		}
 	}
 }

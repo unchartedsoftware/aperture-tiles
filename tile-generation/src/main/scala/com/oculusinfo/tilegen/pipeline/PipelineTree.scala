@@ -27,7 +27,7 @@
 package com.oculusinfo.tilegen.pipeline
 
 import grizzled.slf4j.Logging
-import org.apache.spark.sql.catalyst.types.StructType
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
 /**
