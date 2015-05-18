@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -26,7 +26,7 @@ package com.oculusinfo.binning;
 
 
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -213,8 +213,8 @@ public class MercatorBinningTests {
 
 		tile = new TileIndex(3, 1, 2);
 		bounds = _mercator.getEPSG_900913Bounds(tile, null);
-        
-		Assert.assertEquals(-15028131.257091932, bounds.getMinX(), WORLD_SCALE_EPSILON); 
+
+		Assert.assertEquals(-15028131.257091932, bounds.getMinX(), WORLD_SCALE_EPSILON);
 		Assert.assertEquals(-10018754.171394622, bounds.getMaxX(), WORLD_SCALE_EPSILON);
 		Assert.assertEquals(-10018754.171394622 , bounds.getMinY(), WORLD_SCALE_EPSILON);
 		Assert.assertEquals(-5009377.085697312, bounds.getMaxY(), WORLD_SCALE_EPSILON);

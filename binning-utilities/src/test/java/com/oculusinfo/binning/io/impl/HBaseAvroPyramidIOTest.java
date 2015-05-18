@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -28,9 +28,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
 
 import org.apache.avro.file.CodecFactory;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.oculusinfo.binning.TileData;
@@ -68,7 +68,7 @@ public class HBaseAvroPyramidIOTest {
 		return null;
 	}
 
-	@Test 
+	@Test
 	public void writeReadAvroRoundTripTest () {
 		PyramidIO io = new TestPyramidIO();
 		TileSerializer<Integer> serializer = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.nullCodec());

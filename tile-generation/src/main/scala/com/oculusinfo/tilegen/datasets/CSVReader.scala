@@ -138,7 +138,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 				row(values:_*)
 			}
 		).filter(_.isSuccess).map(_.get)
-		sqlc.applySchema(rowRDD, _schema)
+		sqlc.createDataFrame(rowRDD, _schema)
 	}
 
 	// _schema: the schema of our CSV file, as specified by our configuration

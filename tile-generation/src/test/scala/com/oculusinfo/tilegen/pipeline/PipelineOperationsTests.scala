@@ -159,7 +159,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 		                   SchemaTypeUtilities.row("e", 0.0, bounds.getMaxY-1E-12),
 		                   SchemaTypeUtilities.row("f", -181.0, 0.0),
 		                   SchemaTypeUtilities.row("g", 181.0, 0.0))
-		val data = sqlc.applySchema(
+		val data = sqlc.createDataFrame(
 			sc.parallelize(rawData),
 			SchemaTypeUtilities.structSchema(SchemaTypeUtilities.schemaField("id", classOf[String]),
 			                                 SchemaTypeUtilities.schemaField("lon", classOf[Double]),

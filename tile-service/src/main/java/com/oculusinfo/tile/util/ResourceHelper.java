@@ -34,14 +34,14 @@ import java.io.InputStream;
 
 /**
  * Utility methods for operating on resources (files)
- * 
+ *
  * @author rharper
  *
  */
 public class ResourceHelper {
-	
+
 	static final Logger logger = LoggerFactory.getLogger(ResourceHelper.class);
-	
+
 	/**
 	 * Load a resource give a path and a default (if the path is empty).  The path should
 	 * be in the form res:// if it's a classpath resource, otherwise should be a filename.
@@ -55,9 +55,9 @@ public class ResourceHelper {
 			// If not specified use a JAR-local resource
 			path = defaultPath;
 		}
-		
+
 		// Load properties
-		InputStream inp = null; 
+		InputStream inp = null;
 
 		if (path.startsWith("res://")) {
 			// A resource on the classpath
@@ -69,7 +69,7 @@ public class ResourceHelper {
 			try {
 				File file = new File(path);
 				logger.info("Loading file from: " + file.getAbsolutePath());
-				inp = Files.newInputStreamSupplier(file).getInput();
+				inp = Files.asByteSource(file).getInput();
 			}
 			catch (IOException e){
 				logger.info("Error loading file from: " + path);
@@ -79,5 +79,5 @@ public class ResourceHelper {
 			}
 		}
 		return inp;
-	}	
+	}
 }
