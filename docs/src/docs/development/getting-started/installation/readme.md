@@ -119,13 +119,19 @@ Source code repositories for Aperture Tiles and its dependent project, [Aperture
 	git clone https://github.com/unchartedsoftware/aperture-tiles.git
 	```
 
-2. Execute the following command to clone the Aperture JS source code to an *aperturejs/* directory in Git project folder:
+2. Check out the **master** branch to work with the most recent stable release:
+
+	```bash
+	git checkout master
+	```
+
+3. Execute the following command to clone the Aperture JS source code to an *aperturejs/* directory in Git project folder:
 
 	```bash
 	git clone https://github.com/unchartedsoftware/aperturejs.git
 	```
 
-3. Determine which version of Aperture JS you require:
+4. Determine which version of Aperture JS you require:
 	<ol type="a">
 		<li>Open the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in the root of your Aperture Tiles working directory.</li>
 		<li>
@@ -133,7 +139,7 @@ Source code repositories for Aperture Tiles and its dependent project, [Aperture
 			<p class="list-paragraph"><strong>NOTE</strong>: While the <em>master</em> branch of Aperture Tiles is generally dependent on the <em>master</em> branch of Aperture JS, you should always perform this check.
 		</li>
 	</ol>
-4. Check out the Aperture JS branch or tag corresponding to the required version:
+5. Check out the Aperture JS branch or tag corresponding to the required version:
 
 	```bash
 	git checkout <branch>
