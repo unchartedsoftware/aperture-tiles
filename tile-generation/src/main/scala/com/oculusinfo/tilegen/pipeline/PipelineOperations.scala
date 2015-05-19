@@ -159,9 +159,9 @@ object PipelineOperations {
 	 */
 	def dateFilterOp(minDate: String, maxDate: String, format: String, timeCol: String)(input: PipelineData): PipelineData = {
 		val formatter = new SimpleDateFormat(format)
-		val minTime = formatter.parse(minDate).getTime
-		val maxTime = formatter.parse(maxDate).getTime
-		dateFilterOp(minDate, maxDate, format, timeCol)(input)
+		val minTime = new Date(formatter.parse(minDate).getTime)
+		val maxTime = new Date(formatter.parse(maxDate).getTime)
+		dateFilterOp(minTime, maxTime, format, timeCol)(input)
 	}
 
 	/**
