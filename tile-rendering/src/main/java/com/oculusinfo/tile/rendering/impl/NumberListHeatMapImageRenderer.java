@@ -53,10 +53,11 @@ import com.oculusinfo.factory.properties.StringProperty;
  */
 
 public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<List<Number>> {
+
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-
 	private static final Color COLOR_BLANK = new Color(255,255,255,0);
-
+	private static final double pow2(double x) { return x*x; }	//in-line func for squaring a number (instead of calling Math.pow(x, 2.0) 
+	
     // This is the only way to get a generified class; because of type erasure,
     // it is definitionally accurate.
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -102,7 +103,8 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
             int rangeMax = config.getPropertyValue(LayerConfiguration.RANGE_MAX);
             int rangeMin = config.getPropertyValue(LayerConfiguration.RANGE_MIN);
 			String rangeMode = config.getPropertyValue(LayerConfiguration.RANGE_MODE);
-
+			String pixelShape = config.getPropertyValue(LayerConfiguration.PIXEL_SHAPE);
+			
             bi = new BufferedImage(outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB);
 
             @SuppressWarnings("unchecked")
@@ -118,50 +120,112 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 
             double xScale = ((double) bi.getWidth())/xBins;
             double yScale = ((double) bi.getHeight())/yBins;
+        	double radius2 = pow2(Math.min(xScale, yScale)*0.5);	// min squared 'radius' of final scaled bin
+    		boolean bCoarseCircles = pixelShape.equals("circle");	// render 'coarse' bins as circles or squares?
+    		
             ColorRamp colorRamp = config.produce(ColorRamp.class);
+            
+    		if ((xScale==1.0) && (yScale==1.0)) {
+    			// no bin scaling needed
 
-            for(int ty = 0; ty < yBins; ty++){
-                for(int tx = 0; tx < xBins; tx++){
-                    //calculate the scaled dimensions of this 'pixel' within the image
-                    int minX = (int) Math.round(tx*xScale);
-                    int maxX = (int) Math.round((tx+1)*xScale);
-                    int minY = (int) Math.round(ty*yScale);
-                    int maxY = (int) Math.round((ty+1)*yScale);
-
-                    List<Number> binContents = data.getBin(tx, ty);
-                    double binCount = 0;
-                    for(int i = 0; i < binContents.size(); i++) {
-                    	if ( binContents.get(i) != null ) {
-                    		binCount = binCount + binContents.get(i).doubleValue();
-                    	}
-                    }
-
-                    //log/linear
-                    double transformedValue = t.transform(binCount).doubleValue();
-                    int rgb;
-                    if (binCount > 0) {
-						if ( rangeMode.equals("cull") ) {
-							if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
+	            for(int ty = 0; ty < yBins; ty++){
+	                for(int tx = 0; tx < xBins; tx++){
+	                    List<Number> binContents = data.getBin(tx, ty);
+	                    double binCount = 0;
+	                    for(int i = 0; i < binContents.size(); i++) {
+	                    	if ( binContents.get(i) != null ) {
+	                    		binCount = binCount + binContents.get(i).doubleValue();
+	                    	}
+	                    }
+	
+	                    //log/linear
+	                    double transformedValue = t.transform(binCount).doubleValue();
+	                    int rgb;
+	                    if ((rangeMode.equals("dropZero") && binCount != 0) || binCount > 0) {
+							if ( rangeMode.equals("cull") ) {
+								if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
+									rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+								} else {
+									rgb = COLOR_BLANK.getRGB();
+								}
+							}  else {
 								rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
-							} else {
-								rgb = COLOR_BLANK.getRGB();
 							}
-						}  else {
-							rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
-						}
-                    } else {
-                        rgb = COLOR_BLANK.getRGB();
-                    }
+	                    } else {
+	                        rgb = COLOR_BLANK.getRGB();
+	                    }
+	                    
+						//'draw' out the scaled 'pixel'
+						int i = ty*bi.getWidth() + tx;
+						rgbArray[i] = rgb;       
+	                }
+	            }
+    		}
+    		else {
+    			// perform bin scaling (i.e. if bin coarseness != 1.0)
 
-                    //'draw' out the scaled 'pixel'
-                    for (int ix = minX; ix < maxX; ++ix) {
-                        for (int iy = minY; iy < maxY; ++iy) {
-                            int i = iy*bi.getWidth() + ix;
-                            rgbArray[i] = rgb;
-                        }
-                    }
-                }
-            }
+	            for(int ty = 0; ty < yBins; ty++){
+	                for(int tx = 0; tx < xBins; tx++){
+	                    //calculate the scaled dimensions of this 'pixel' within the image
+	                    int minX = (int) Math.round(tx*xScale);
+	                    int maxX = (int) Math.round((tx+1)*xScale);
+	                    int minY = (int) Math.round(ty*yScale);
+	                    int maxY = (int) Math.round((ty+1)*yScale);
+						double centreX = (maxX + minX) * 0.5;
+						double centreY = (maxY + minY) * 0.5;              
+	
+	                    List<Number> binContents = data.getBin(tx, ty);
+	                    double binCount = 0;
+	                    for(int i = 0; i < binContents.size(); i++) {
+	                    	if ( binContents.get(i) != null ) {
+	                    		binCount = binCount + binContents.get(i).doubleValue();
+	                    	}
+	                    }
+	
+	                    //log/linear
+	                    double transformedValue = t.transform(binCount).doubleValue();
+	                    int rgb;
+	                    if ((rangeMode.equals("dropZero") && binCount != 0) || binCount > 0) {
+							if ( rangeMode.equals("cull") ) {
+								if ( transformedValue >= scaledMin && transformedValue <= scaledMax ) {
+									rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+								} else {
+									rgb = COLOR_BLANK.getRGB();
+								}
+							}  else {
+								rgb = colorRamp.getRGB( ( transformedValue - scaledMin ) * oneOverScaledRange );
+							}
+	                    } else {
+	                        rgb = COLOR_BLANK.getRGB();
+	                    }
+	
+						//'draw' out the scaled 'pixel'
+						if (bCoarseCircles && radius2 > 1.0) {
+							// draw scaled (coarse) bin as a circle (Note: need radius to be > 1.0 pixels in order to render a circle)
+							for (int ix = minX; ix < maxX; ++ix) {
+								for (int iy = minY; iy < maxY; ++iy) {							
+									int i = iy*bi.getWidth() + ix;
+									double dist = (pow2(ix+0.5-centreX) + pow2(iy+0.5-centreY));
+									if (dist <= radius2) {
+										rgbArray[i] = rgb;		// scaled bin is within bin's valid radius, so render normally
+									} else {
+										rgbArray[i] = COLOR_BLANK.getRGB();	// scaled bin is outside bin's valid radius, so force to be blank
+									}
+								}
+							}										
+						}
+						else {
+							// draw scaled bin simply as a square
+							for (int ix = minX; ix < maxX; ++ix) {
+								for (int iy = minY; iy < maxY; ++iy) {
+									int i = iy*bi.getWidth() + ix;
+									rgbArray[i] = rgb;
+								}
+							}
+						}
+	                }
+	            }
+    		}
 
             bi.setRGB(0, 0, outputWidth, outputHeight, rgbArray, 0, outputWidth);
         } catch (Exception e) {

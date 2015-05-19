@@ -143,6 +143,7 @@
 
         var div = this.div,
             renderer,
+            aggregator,
             html,
             render;
 
@@ -162,25 +163,22 @@
         }
 
         renderer = this.layer.renderer;
-        html = this.layer.html;
+        aggregator = renderer.aggregator;
 
-        if ( renderer ) {
-            // if renderer is attached, use it
-            if ( typeof renderer === "function" ) {
-                renderer = renderer.call( this.layer, this.bounds );
-            }
-            if ( renderer.aggregator ) {
-                data.tile.meta.map.bins = renderer.aggregator.aggregate( data.tile.meta.map.bins );
-            }
-            render = renderer.render( data );
-            html = render.html;
-            this.entries = render.entries;
-        } else {
-            // else execute html
-            if ( typeof html === "function" ) {
-                html = html( data );
-            }
+        // if renderer is attached, use it
+        if ( typeof renderer === "function" ) {
+            renderer = renderer.call( this.layer, this.bounds );
         }
+        // if aggregator, aggregate the data
+        if ( aggregator ) {
+            data.tile.meta = {
+                raw: data.tile.meta.map.bins,
+                aggregated: aggregator.aggregate( data.tile.meta.map.bins )
+            };
+        }
+        render = renderer.render( data );
+        html = render.html;
+        this.entries = render.entries;
 
         if ( html instanceof $ ) {
             // if generated a jquery object, append it
@@ -193,16 +191,14 @@
             div.innerHTML = html;
         }
 
-        if ( renderer ) {
-            // hide standard tile hover interaction
-            if ( renderer.spec.hideTile ) {
-                div.className = div.className + " hideTile";
-            }
-            // inject selected entry classes
-            renderer.injectEntries( div.children, this.entries );
-            // if renderer is attached, call hook function
-            renderer.executeHooks( div.children, this.entries, data );
+        // hide standard tile hover interaction
+        if ( renderer.spec.hideTile ) {
+            div.className = div.className + " hideTile";
         }
+        // inject selected entry classes
+        renderer.injectEntries( div.children, this.entries );
+        // call renderer hook function
+        renderer.executeHooks( div.children, this.entries, data );
     };
 
     module.exports = OpenLayers.Tile.HTML;

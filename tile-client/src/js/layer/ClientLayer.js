@@ -34,6 +34,55 @@
         PubSub = require('../util/PubSub');
 
     /**
+     * Private: Sets the layers min and max values for the given zoom level.
+     *
+     * @param layer {Object} the layer object.
+     */
+    function setLevelMinMax( layer ) {
+        var zoomLevel = layer.map.getZoom(),
+            meta = layer.source.meta && layer.source.meta.meta ? layer.source.meta.meta[ zoomLevel ] : null,
+            transformData = layer.tileTransform.data || {},
+            levelMinMax = meta,
+            renderer = layer.renderer,
+            aggregated;
+        // aggregate the data if there is an aggregator attached
+        if ( meta ) {
+            if ( renderer && renderer.aggregator ) {
+                // aggregate the meta data buckets
+                aggregated = renderer.aggregator.aggregate(
+                    meta.bins || [],
+                    transformData.startBucket,
+                    transformData.endBucket );
+                // take the first and last index, which correspond to max / min
+                levelMinMax = {
+                    minimum: aggregated[aggregated.length - 1],
+                    maximum: aggregated[0]
+                };
+            }
+        } else {
+            levelMinMax = {
+                minimum: null,
+                maximum: null
+            };
+        }
+        layer.levelMinMax = levelMinMax;
+        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
+    }
+
+    /**
+     * Private: Returns the zoom callback function to update level min and maxes.
+     *
+     * @param layer {ServerLayer} The layer object.
+     */
+    function zoomCallback( layer ) {
+        return function() {
+            if ( layer.olLayer ) {
+                setLevelMinMax( layer );
+            }
+        };
+    }
+
+    /**
      * Instantiate a ClientLayer object.
      * @class ClientLayer
      * @augments Layer
@@ -47,8 +96,7 @@
      *     opacity  {float}    - The opacity of the layer. Default = 1.0
      *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
      *     zIndex   {integer}  - The z index of the layer. Default = 1000
-     *     renderer {Renderer} - The tile renderer object. (optional)
-     *     html {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     *     renderer {Renderer} - The tile renderer object.
      * }
      * </pre>
      */
@@ -58,7 +106,7 @@
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1000;
         this.tileTransform = spec.tileTransform || {};
         this.domain = "client";
         this.source = spec.source;
@@ -71,8 +119,10 @@
         if ( spec.renderer ) {
             this.setRenderer( spec.renderer );
         }
-        if ( spec.html ) {
-            this.html = spec.html;
+        if ( spec.aggregators ) {
+            _.forIn( spec.aggregators, function( agg, key ) {
+                this.addAggregator( key, agg );
+            });
         }
     }
 
@@ -84,7 +134,10 @@
      * @private
      */
     ClientLayer.prototype.activate = function() {
-
+        // set callback here so it can be removed later
+        this.zoomCallback = zoomCallback( this );
+        // set callback to update ramp min/max on zoom
+        this.map.on( "zoomend", this.zoomCallback );
         // add the new layer
         this.olLayer = new HtmlTileLayer(
             'Client Rendered Tile Layer',
@@ -97,17 +150,18 @@
                 isBaseLayer: false,
                 getURL: this.getURL,
                 tileClass: this.tileClass,
-                html: this.html,
                 renderer: this.renderer
             });
-
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
-
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
+        setLevelMinMax( this ); // set level min / max
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
@@ -122,6 +176,8 @@
             this.olLayer.destroy();
             this.olLayer = null;
         }
+        this.map.off( "zoomend", this.zoomCallback );
+        this.zoomCallback = null;
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
@@ -134,6 +190,29 @@
     ClientLayer.prototype.setRenderer = function( renderer ) {
         this.renderer = renderer;
         this.renderer.attach( this );
+    };
+
+    /**
+     * Adds an aggregator to the layer.
+     * @memberof ClientLayer
+     *
+     * @param {String} id - The aggregator id.
+     * @param {Renderer} renderer - The renderer to attach to the layer.
+     */
+    ClientLayer.prototype.addAggregator = function( id, aggregator ) {
+        this.aggregators = this.aggregators || {};
+        this.aggregators[ id ] = aggregator;
+        this.aggregators[ id ].attach( this );
+    };
+
+    /**
+     * Gets an aggregator by id.
+     * @memberof ClientLayer
+     *
+     * @param {String} id - The aggregator id.
+     */
+    ClientLayer.prototype.getAggregator = function( id ) {
+        return this.aggregators[ id ];
     };
 
     /**
@@ -193,9 +272,7 @@
     ClientLayer.prototype.setTileTransformType = function ( transformType ) {
         if ( this.tileTransform.type !== transformType ) {
             this.tileTransform.type = transformType;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformType', value: transformType} );
         }
     };
@@ -219,9 +296,7 @@
     ClientLayer.prototype.setTileTransformData = function ( transformData ) {
         if ( this.tileTransform.data !== transformData ) {
             this.tileTransform.data = transformData;
-            if ( this.olLayer ) {
-                this.olLayer.redraw();
-            }
+            this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
         }
     };
@@ -233,7 +308,17 @@
      * @returns {Object} The tile transform data attribute.
      */
     ClientLayer.prototype.getTileTransformData = function () {
-        return this.tileTransform.data;
+        return this.tileTransform.data || {};
+    };
+
+    /**
+     * Get the current minimum and maximum values for the current zoom level.
+     * @memberof ClientLayer
+     *
+     * @param {Object} The min and max of the level.
+     */
+    ClientLayer.prototype.getLevelMinMax = function() {
+        return this.levelMinMax;
     };
 
     /**
@@ -255,7 +340,8 @@
      */
     ClientLayer.prototype.redraw = function () {
         if ( this.olLayer ) {
-             this.olLayer.redraw();
+            setLevelMinMax( this );
+            this.olLayer.redraw();
         }
     };
 

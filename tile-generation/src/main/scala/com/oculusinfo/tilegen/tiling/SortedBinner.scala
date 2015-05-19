@@ -452,7 +452,7 @@ object SortedBinnerTest {
 				Some(true))
 			// Register it as a table
 			val table = "table"+argIdx
-			reader.asSchemaRDD.registerTempTable(table)
+			reader.asDataFrame.registerTempTable(table)
 			if (cache) sqlc.cacheTable(table)
 
 			// Process the data

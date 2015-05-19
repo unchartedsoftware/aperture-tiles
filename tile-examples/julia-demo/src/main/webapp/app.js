@@ -64,12 +64,6 @@ var appStart = function() {
             }
         });
 
-        /**
-         * if full marker range is less than X, double it,
-         *
-         *
-         */
-
         axis1 = new tiles.Axis({
             title: 'Y',
             position: 'left',
@@ -99,4 +93,4 @@ var appStart = function() {
 
         $( '.controls' ).append( tiles.LayerControls.create( [ serverLayer ] ) );
     });
-}
+};

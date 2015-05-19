@@ -24,14 +24,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.oculusinfo.tilegen.pipeline
 
+
+
 import java.text.SimpleDateFormat
+import java.sql.Date
 import java.util.concurrent.atomic.AtomicInteger
+
+import scala.util.matching.Regex
+
+import grizzled.slf4j.Logger
+
+import org.apache.avro.file.CodecFactory
+
+import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+import org.apache.spark.sql.{SQLContext, Column, DataFrame}
+import org.apache.spark.sql.functions._
+
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+
 import com.oculusinfo.tilegen.datasets.{TilingTask, TilingTaskParameters, CSVReader}
 import com.oculusinfo.tilegen.tiling.{TileIO, LocalTileIO, HBaseTileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
-import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
+
+
 
 /**
  * Provides operations that can be bound into a TilePipeline
@@ -53,14 +72,38 @@ object PipelineOperations {
 	}
 
 	/**
+	 * Load data into the pipeline directly from a schema rdd
+	 *
+	 * @param rdd The DataFrame containing the data
+	 * @param tableName The name of the table the rdd has been assigned in the SQLContext, if any.
+	 */
+	def loadRDDOp (rdd: DataFrame, tableName: Option[String] = None)(data: PipelineData): PipelineData = {
+		PipelineData(rdd.sqlContext, rdd, tableName)
+	}
+
+	private def coalesce (sqlc: SQLContext, dataFrame: DataFrame, partitions: Option[Int]): DataFrame = {
+		partitions.map{n =>
+			val baseRDD = dataFrame.queryExecution.toRdd
+			val curPartitions = baseRDD.partitions.size
+			// if we're increasing the number of partitions, just repartition as per normal
+			// If we're reducing them, copy data and coalesce, so as to avoid a shuffle.
+			if (n > curPartitions) dataFrame.repartition(n)
+			else sqlc.createDataFrame(baseRDD.map(_.copy()).coalesce(n), dataFrame.schema)
+		}.getOrElse(dataFrame)
+	}
+
+	/**
 	 * Load data from a JSON file.  The schema is derived from the first json record.
 	 *
 	 * @param path Valid HDFS path to the data.
+	 * @param partitions Number of partitions to load data into.
 	 * @param data Not used.
 	 * @return PipelineData with a schema RDD populated from the JSON file.
 	 */
-	def loadJsonDataOp(path: String)(data: PipelineData): PipelineData = {
-		PipelineData(data.sqlContext, data.sqlContext.jsonFile(path))
+	def loadJsonDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
+		val context = data.sqlContext
+		val srdd = coalesce(context, context.jsonFile(path), partitions)
+		PipelineData(data.sqlContext, srdd)
 	}
 
 	/**
@@ -70,34 +113,55 @@ object PipelineOperations {
 	 *
 	 * @param path HDSF path to the data object.
 	 * @param argumentSource Arguments to forward to the CSVReader.
+	 * @param partitions Number of partitions to load data into.
 	 * @param data Not used.
 	 * @return PipelineData with a schema RDD populated from the CSV file.
 	 */
-	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource)(data: PipelineData): PipelineData = {
-		val reader = new CSVReader(data.sqlContext, path, argumentSource)
-		PipelineData(reader.sqlc, reader.asSchemaRDD)
+	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
+	                 (data: PipelineData): PipelineData = {
+		val context = data.sqlContext
+		val reader = new CSVReader(context, path, argumentSource)
+		val dataFrame = coalesce(context, reader.asDataFrame, partitions)
+		PipelineData(reader.sqlc, dataFrame)
 	}
 
 	/**
 	 * Pipeline op to filter records to a specific date range.
 	 *
-	 * @param minDate Start date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
-	 * @param maxDate End date for the range, expressed in a format parsable by [[java.text.SimpleDateFormat]].
-	 * @param format Date parsing string, expressed according to [[java.text.SimpleDateFormat]].
+	 * @param minDate Start date for the range.
+	 * @param maxDate End date for the range.
+	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
 	 * @param timeCol Column spec denoting name of time column in input schema RDD.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
 	 */
-	def dateFilterOp(minDate: String, maxDate: String, format: String, timeCol: String)(input: PipelineData) = {
+	def dateFilterOp(minDate: Date, maxDate: Date, format: String, timeCol: String)(input: PipelineData): PipelineData = {
 		val formatter = new SimpleDateFormat(format)
-		val minTime = formatter.parse(minDate).getTime
-		val maxTime = formatter.parse(maxDate).getTime
-		val timeExtractor = calculateExtractor(timeCol, input.srdd.schema)
-		val filtered = input.srdd.filter { row =>
-			val time = formatter.parse(timeExtractor(row).toString).getTime
+		val minTime = minDate.getTime
+		val maxTime = maxDate.getTime
+
+		val filterFcn = udf((value: String) => {
+			val time = formatter.parse(value).getTime
 			minTime <= time && time <= maxTime
-		}
-		PipelineData(input.sqlContext, filtered)
+		})
+		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
+	}
+
+	/**
+	 * Pipeline op to filter records to a specific date range.
+	 *
+	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
+	 * @param timeCol Column spec denoting name of time column in input schema RDD.
+	 * @param input Input pipeline data to filter.
+	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
+	 */
+	def dateFilterOp(minDate: String, maxDate: String, format: String, timeCol: String)(input: PipelineData): PipelineData = {
+		val formatter = new SimpleDateFormat(format)
+		val minTime = new Date(formatter.parse(minDate).getTime)
+		val maxTime = new Date(formatter.parse(maxDate).getTime)
+		dateFilterOp(minTime, maxTime, format, timeCol)(input)
 	}
 
 	/**
@@ -111,6 +175,21 @@ object PipelineOperations {
 	}
 
 	/**
+	 * A very specific filter to filter geographic data to only that data that projects into the
+	 * standard tile set under a mercator projection
+	 *
+	 * @param latCol The column of data containing the longitude value
+	 */
+	def mercatorFilterOp (latCol: String)(input: PipelineData): PipelineData = {
+		val inputTable = getOrGenTableName(input, "mercator_filter_op")
+		val pyramid = new WebMercatorTilePyramid
+		val area = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val selectStatement = "SELECT * FROM "+inputTable+" WHERE "+latCol+" >= "+area.getMinY+" AND "+latCol+" < "+area.getMaxY
+		val outputTable = input.sqlContext.sql(selectStatement)
+		PipelineData(input.sqlContext, outputTable)
+	}
+
+	/**
 	 * A generalized n-dimensional range filter operation for integral types.
 	 *
 	 * @param min Sequence of min values, 1 for each dimension of the data
@@ -121,13 +200,12 @@ object PipelineOperations {
 	 * @return Transformed pipeline data, where records inside/outside the specified time range have been removed.
 	 */
 	def integralRangeFilterOp(min: Seq[Long], max: Seq[Long], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
-		val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
-		val result = input.srdd.filter { row =>
-			val data = extractors.map(_(row).asInstanceOf[Number].longValue)
-			val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
-			if (exclude) !inRange else inRange
-		}
-		PipelineData(input.sqlContext, result)
+		val test: Column = colSpecs.zip(min.zip(max)).map{case (name, (mn, mx)) =>
+			val col = new Column(name)
+			val result: Column = (col >= mn && col <= mx)
+			if (exclude) result.unary_! else result
+		}.reduce(_ && _)
+		PipelineData(input.sqlContext, input.srdd.filter(test))
 	}
 
 	/**
@@ -141,13 +219,12 @@ object PipelineOperations {
 	 * @return Transformed pipeline data, where records inside/outside the specified time range have been removed.
 	 */
 	def fractionalRangeFilterOp(min: Seq[Double], max: Seq[Double], colSpecs: Seq[String], exclude: Boolean = false)(input: PipelineData) = {
-		val extractors = colSpecs.map(cs => calculateExtractor(cs, input.srdd.schema))
-		val result = input.srdd.filter { row =>
-			val data = extractors.map(_(row).asInstanceOf[Number].doubleValue)
-			val inRange = data.zip(min).forall(x => x._1 >= x._2) && data.zip(max).forall(x => x._1 <= x._2)
-			if (exclude) !inRange else inRange
-		}
-		PipelineData(input.sqlContext, result)
+		val test: Column = colSpecs.zip(min.zip(max)).map{case (name, (mn, mx)) =>
+			val col = new Column(name)
+			val result: Column = (col >= mn && col <= mx)
+			if (exclude) result.unary_! else result
+		}.reduce(_ && _)
+		PipelineData(input.sqlContext, input.srdd.filter(test))
 	}
 
 	/**
@@ -161,14 +238,12 @@ object PipelineOperations {
 	 */
 	def regexFilterOp(regexStr: String, colSpec: String, exclude: Boolean = false)(input: PipelineData) = {
 		val regex = regexStr.r
-		val extractor = calculateExtractor(colSpec, input.srdd.schema)
-		val result = input.srdd.filter { row =>
-			extractor(row).toString match {
+		val regexFcn = udf((value: String) =>
+			value match {
 				case regex(_*) => if (exclude) false else true
 				case _ => if (exclude) true else false
-			}
-		}
-		PipelineData(input.sqlContext, result)
+			})
+		PipelineData(input.sqlContext, input.srdd.filter(regexFcn(new Column(colSpec))))
 	}
 
 	/**
@@ -179,9 +254,7 @@ object PipelineOperations {
 	 * @return Pipeline data containing a schema RDD with only the selected columns.
 	 */
 	def columnSelectOp(colSpecs: Seq[String])(input: PipelineData) = {
-		val colExprs = colSpecs.map(UnresolvedAttribute(_))
-		val result = input.srdd.select(colExprs:_*)
-		PipelineData(input.sqlContext, result)
+		PipelineData(input.sqlContext, input.srdd.selectExpr(colSpecs:_*))
 	}
 
 	/**
@@ -230,7 +303,7 @@ object PipelineOperations {
 	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
 	 *                     if the default type of Count is used.
 	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default type
-	                       count is used for the operation.
+	 count is used for the operation.
 	 * @param bounds The bounds for the crossplot.  None indicates that bounds will be auto-generated based on input data.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
@@ -252,12 +325,12 @@ object PipelineOperations {
 
 		val properties = Map("oculus.binning.projection.type" -> "areaofinterest")
 		val boundsProps = bounds match {
-				case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
-				                    "oculus.binning.projection.minX" -> b.minX.toString,
-				                    "oculus.binning.projection.minY" -> b.minY.toString,
-				                    "oculus.binning.projection.maxX" -> b.maxX.toString,
-				                    "oculus.binning.projection.maxY" -> b.maxY.toString)
-				case None => Map("oculus.binning.projection.autobounds" -> "true")
+			case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
+			                    "oculus.binning.projection.minX" -> b.minX.toString,
+			                    "oculus.binning.projection.minY" -> b.minY.toString,
+			                    "oculus.binning.projection.maxX" -> b.maxX.toString,
+			                    "oculus.binning.projection.maxY" -> b.maxY.toString)
+			case None => Map("oculus.binning.projection.autobounds" -> "true")
 		}
 
 		heatMapOpImpl(xColSpec, yColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO,
@@ -286,14 +359,14 @@ object PipelineOperations {
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
 				Map("oculus.binning.value.type" -> "field",
-					"oculus.binning.value.field" -> valueColSpec.get,
-					"oculus.binning.value.valueType" -> valueColType.get,
-					"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
-					"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+				    "oculus.binning.value.field" -> valueColSpec.get,
+				    "oculus.binning.value.valueType" -> valueColType.get,
+				    "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+				    "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
 			case _ =>
 				Map("oculus.binning.value.type" -> "count",
-					"oculus.binning.value.valueType" -> "int",
-					"oculus.binning.value.serializer" -> "[int]-a")
+				    "oculus.binning.value.valueType" -> "int",
+				    "oculus.binning.value.serializer" -> "[int]-a")
 		}
 
 		// Parse bounds and level args

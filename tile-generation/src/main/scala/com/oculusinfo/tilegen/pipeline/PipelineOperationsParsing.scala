@@ -55,6 +55,7 @@ object PipelineOperationsParsing extends Logging {
 		tilePipeline.registerPipelineOp("json_load", parseLoadJsonDataOp)
 		tilePipeline.registerPipelineOp("cache", parseCacheDataOp)
 		tilePipeline.registerPipelineOp("date_filter", parseDateFilterOp)
+		tilePipeline.registerPipelineOp("mercator_filter", parseMercatorFilterOp)
 		tilePipeline.registerPipelineOp("integral_range_filter", parseIntegralRangeFilterOp)
 		tilePipeline.registerPipelineOp("fractional_range_filter", parseFractionalRangeFilterOp)
 		tilePipeline.registerPipelineOp("regex_filter", parseRegexFilterOp)
@@ -72,12 +73,14 @@ object PipelineOperationsParsing extends Logging {
 	 *
 	 * Arguments:
 	 *    ops.path - Valid HDFS path to data.
+	 *    ops.partitions - Number of partitions
 	 */
 	def parseLoadJsonDataOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing loadJsonDataOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val path = argParser.getString("ops.path", "HDFS path to data")
-		loadJsonDataOp(path)(_)
+		val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
+		loadJsonDataOp(path, partitions)(_)
 	}
 
 	/**
@@ -86,6 +89,7 @@ object PipelineOperationsParsing extends Logging {
 	 *
 	 * Arguments:
 	 *    ops.path - Valid HDFS path to data.
+	 *    ops.partitions - Number of partitions
 	 *
 	 * @see com.oculusinfo.tilegen.datasets.CSVReader for arguments passed into the CSV reader.
 	 *
@@ -94,7 +98,8 @@ object PipelineOperationsParsing extends Logging {
 		logger.debug(s"Parsing loadCSVDataOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val path = argParser.getString("ops.path", "HDFS path to data")
-		loadCsvDataOp(path, argParser)(_)
+		val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
+		loadCsvDataOp(path, argParser, partitions)(_)
 	}
 
 	/**
@@ -105,7 +110,7 @@ object PipelineOperationsParsing extends Logging {
 	 *    ops.column - Column spec denoting the time field in input data
 	 *    ops.start - Start date string
 	 *    ops.end - End date string
-	 *    ops.format - Date format string (based on [[java.text.SimpleDateFormat]])
+	 *    ops.format - Date format string (based on java.text.SimpleDateFormat)
 	 */
 	def parseDateFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing dateFilterOp with args $args")
@@ -123,6 +128,19 @@ object PipelineOperationsParsing extends Logging {
 	def parseCacheDataOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing cacheDataOp with args $args")
 		cacheDataOp()(_)
+	}
+
+	/**
+	 * Parses args for a filter to the valid range of a mercator geographic projection.
+	 * 
+	 * Arguments:
+	 *  ops.latitude - the column containing the latitude value
+	 */
+	def parseMercatorFilterOp (args: Map[String, String]) = {
+		logger.debug(s"Parsing mercatorFilterOp with args $args")
+		val argParser = KeyValuePassthrough(args)
+		val latCol = argParser.getString("ops.latitude", "The column containing the latitude value")
+		mercatorFilterOp(latCol)(_)
 	}
 
 	/**
@@ -222,7 +240,7 @@ object PipelineOperationsParsing extends Logging {
 		val argParser = KeyValuePassthrough(args)
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
 		geoHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
-			heatmapParams._6, heatmapParams._7)(_)
+		             heatmapParams._6, heatmapParams._7)(_)
 	}
 
 	/**
@@ -259,16 +277,16 @@ object PipelineOperationsParsing extends Logging {
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
 
 		val parsedBounds = List(argParser.getDoubleOption("ops.bounds.minX", "Bounds min X", None),
-			argParser.getDoubleOption("ops.bounds.minY", "Bounds min Y", None),
-			argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
-			argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
+		                        argParser.getDoubleOption("ops.bounds.minY", "Bounds min Y", None),
+		                        argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
+		                        argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
 		val aoiBounds = if (parsedBounds.flatten.length == parsedBounds.length) {
 			Some(Bounds(parsedBounds.head.get, parsedBounds(1).get, parsedBounds(1).get, parsedBounds(3).get))
 		} else {
 			None
 		}
 		crossplotHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
-			heatmapParams._6, heatmapParams._7, aoiBounds)(_)
+		                   heatmapParams._6, heatmapParams._7, aoiBounds)(_)
 	}
 
 	private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -279,8 +297,8 @@ object PipelineOperationsParsing extends Logging {
 		val valueColType = argParser.getStringOption("ops.valueType", "", None)
 
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
-			argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
-			argParser.getStringOption("hbase.master", "HBase master address", None))
+		                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+		                      argParser.getStringOption("hbase.master", "HBase master address", None))
 		val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
 			Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
 		} else {

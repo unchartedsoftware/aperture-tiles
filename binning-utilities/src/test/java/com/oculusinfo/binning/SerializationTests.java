@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -32,9 +32,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.Assert;
 
 import org.apache.avro.file.CodecFactory;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.oculusinfo.binning.impl.DenseTileData;
@@ -53,15 +53,15 @@ public class SerializationTests {
 		TestPyramidIO io = new TestPyramidIO();
 		TileSerializer<Double> serializer
                 = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
-		
+
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<Double> tile = new DenseTileData<Double>(index);
 		tile.setBin(0, 0, 5.0);
 		io.initializeForWrite("backwardsCompatibilityTest");
 		io.writeTiles("backwardsCompatibilityTest", serializer, Collections.singleton(tile));
-		
-		
-		
+
+
+
 		List<TileData<Double>> tiles = io.readTiles("backwardsCompatibilityTest", serializer, Collections.singleton(index));
 		TileData<Double> tileOut = tiles.get(0);
 		double dataOut = tileOut.getBin(0, 0);
@@ -100,9 +100,9 @@ public class SerializationTests {
 			Assert.assertEquals(data.get(i), resultBin.get(i));
 		}
 	}
-	
-	
-	
+
+
+
 	@Test
 	public void testDoubleTileSerialization() throws IOException {
 		TileIndex index = new TileIndex(2, 0, 1, 10, 20);
@@ -184,7 +184,7 @@ public class SerializationTests {
 			}
 		}
 	}
-    
+
 	@Test
 	public void testUnicodeStringIntPairTileSerialization() throws IOException {
 		TileSerializer<List<Pair<String, Integer>>> serializer = new StringIntPairArrayJsonSerializer();
@@ -192,7 +192,7 @@ public class SerializationTests {
 		TileIndex index = new TileIndex(0, 0, 0, 1, 1);
 		TileData<List<Pair<String, Integer>>> tile = new DenseTileData<List<Pair<String,Integer>>>(index);
 		List<Pair<String, Integer>> data = new ArrayList<Pair<String,Integer>>();
-        
+
 		String[] unicode_examples = {
 			"a",  		// Basic latin code block
 			"\u00C0",	// Latin-1 Supplement code block
@@ -211,11 +211,11 @@ public class SerializationTests {
 			"\u2728",	// Dingbats code block
 			"\u1F302", 	// Emjoi Extension code block
 		};
-        
+
 		for (int i=0; i < unicode_examples.length; i++) {
 			data.add(new Pair<String, Integer>(unicode_examples[i], 1));
 		}
-        
+
 		tile.setBin(0, 0, data);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();

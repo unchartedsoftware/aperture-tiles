@@ -35,7 +35,7 @@ class IsolatedNodeLayout {
 	/**
 	 * 	calcSpiralCoords
 	 *  
-	 *  Function to layout isolated communities in a spiral pattern
+	 *  Function to layout isolated and/or leaf communities in a spiral pattern
 	 *
 	 *  - nodes = List of isolated nodes to layout (node ID, numInternalNodes, degree, metadata) 
 	 *  - boundingBox = bottem-left corner, width, height of bounding region for layout of nodes
@@ -49,7 +49,8 @@ class IsolatedNodeLayout {
 	                     boundingBox: (Double, Double, Double, Double),
 	                     nodeAreaNorm: Double,
 	                     centralCommunityArea: Double,
-	                     borderPercent: Double = 2.0): (Array[(Long, Double, Double, Double, Long, Int, String)], Double) = {
+	                     borderPercent: Double = 2.0,
+	                     bSortByDegree: Boolean = false): (Array[(Long, Double, Double, Double, Long, Int, String)], Double) = {
 		
 		val (xC, yC) = (0.0, 0.0) //(boundingBox._1 + boundingBox._3/2, boundingBox._2 + boundingBox._4/2)	// centre of bounding box
 		val boundingBoxArea = boundingBox._3 * boundingBox._4
@@ -58,7 +59,7 @@ class IsolatedNodeLayout {
 		val border = borderPercent*0.01*Math.min(boundingBox._3, boundingBox._4)
 		
 		// Store community results in array with initial coords as xc,yc for now.
-		// Array is sorted by community radius. (smallest to largest)
+		// Array is sorted by community radius (or degree) -- smallest to largest
 		var nodeCoords = nodes.map(n =>
 			{
 				val (id, numInternalNodes, degree, metaData) = n
@@ -66,7 +67,7 @@ class IsolatedNodeLayout {
 				val nodeRadius = Math.sqrt(nodeArea * 0.31831)	//0.31831 = 1/pi
 				                          (id, xC, yC, nodeRadius, numInternalNodes, degree, metaData)
 			}
-		).toList.sortBy(row => (row._4)).toArray
+		).toList.sortBy(row => if (bSortByDegree) row._6 else row._4).toArray
 
 		val numNodes = nodeCoords.size
 		

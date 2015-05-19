@@ -66,10 +66,10 @@
         transformValue: function( value, min, max, type ) {
             var clamped = Math.max( Math.min( value, max ), min );
             if ( type === "log" ) {
-                var logMin = log10( min );
-        		var logMax = log10( max );
+                var logMin = log10( min || 1);
+        		var logMax = log10( max || 1 );
         		var oneOverLogRange = 1 / (logMax - logMin);
-                return ( log10( clamped ) - logMin ) * oneOverLogRange;
+                return ( log10( clamped || 1 ) - logMin ) * oneOverLogRange;
             } else {
                 var range = max - min;
                 return ( clamped - min ) / range;
@@ -117,7 +117,9 @@
                 arraySplit = attribs[i].replace(/ /g, '' ).split(/[\[\]]/);
                 if ( arraySplit.length === 1 ) {
                     // normal attribute
-                    attrib = attrib[ attribs[i] ];
+                    if ( attribs[i].length > 0 ) {
+                        attrib = attrib[ attribs[i] ];
+                    }
                 } else if ( arraySplit.length === 3 ) {
                     // array index expressed, use it
                     attrib = attrib[ arraySplit[0] ][ arraySplit[1] ];

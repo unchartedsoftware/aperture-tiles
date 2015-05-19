@@ -344,6 +344,24 @@
         },
 
         /**
+         * Creates and fills an array with the provided value.
+         *
+         * @param {number} length - The length of the array.
+         * @param {*} value - The value to fill. Defaults to 0.
+         *
+         * @returns {Array} The filled array.
+         */
+        fillArray: function( length, value ) {
+            value = value !== undefined ? value : 0;
+            var arr = [],
+                i;
+            for ( i=0; i<length; i++ ) {
+                arr.push( value );
+            }
+            return arr;
+        },
+
+        /**
          * Returns true if an object has no parameters.
          *
          * @param obj {Object} The object.

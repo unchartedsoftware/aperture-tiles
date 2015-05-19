@@ -37,6 +37,7 @@
         WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
         TileIterator = require('../binning/TileIterator'),
         TILESIZE = 256,
+        MARKER_Z_INDEX = 5000,
         setMapCallbacks,
         activateComponent,
         deactivateComponent,
@@ -48,7 +49,8 @@
         removeBaseLayer,
         removeLayer,
         removeCarousel,
-        removeAxis;
+        removeAxis,
+        resetLayerZIndices;
 
     /**
      * Set callbacks to update the maps tile focus, identifying which tile
@@ -236,18 +238,15 @@
             axis.min = map.pyramid.minY;
             axis.max = map.pyramid.maxY;
         }
-
         // activate and attach to map
         axis.map = map;
         axis.activate();
         map.axes = map.axes || {};
         map.axes[ axis.position ] = axis;
-
         // update dimensions
         _.forIn( map.axes, function( value ) {
             value.updateDimension();
         });
-
         // redraw
         _.forIn( map.axes, function( value ) {
             value.redraw();
@@ -266,7 +265,8 @@
         var index;
         // if only 1 baselayer available, ignore
         if ( map.baselayers.length === 1 ) {
-            console.error( 'Error: attempting to remove only baselayer from map, this destroys the map, use destroy() instead' );
+            console.error( 'Error: attempting to remove only baselayer from ' +
+                'map, this destroys the map, use destroy() instead' );
             return;
         }
         // get index of baselayer
@@ -305,6 +305,8 @@
             // deactivate it
             layer.deactivate();
             layer.map = null;
+            // reset z-indices
+            resetLayerZIndices( map );
         }
     };
 
@@ -325,6 +327,8 @@
             // deactivate it
             carousel.deactivate();
             carousel.map = null;
+            // reset z-indices
+            resetLayerZIndices( map );
         }
     };
 
@@ -341,6 +345,27 @@
         // deactivate it
         axis.deactivate();
         axis.map = null;
+    };
+
+    /**
+     * Removing layers causes a z-index reset since we use css z-index rather
+     * than OpenLayers's built in relative indexing (which sucks for dynamic maps).
+     * This is used to reset all z-indices accordingly.
+     * @private
+     *
+     * @param {Map} map - The map object.
+     */
+    resetLayerZIndices = function( map ) {
+        var layers = map.layers,
+            i;
+        if ( map.layers ) {
+            for ( i=0; i<layers.length; i++ ) {
+                layers[i].setZIndex( layers[i].getZIndex() );
+            }
+        }
+        if ( map.olMarkers ) {
+            $( map.olMarkers.div ).css( 'z-index', MARKER_Z_INDEX );
+        }
     };
 
     /**
@@ -475,8 +500,7 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index],
-                i;
+                newBaseLayer = this.baselayers[ index];
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -488,16 +512,10 @@
             if ( oldBaseLayer ) {
                 oldBaseLayer.deactivate();
             }
-
             newBaseLayer.activate();
             this.baseLayerIndex = index;
-
             // update z index, since changing baselayer resets them
-            if ( this.layers ) {
-                for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[i].setZIndex( this.layers[i].getZIndex() );
-                }
-            }
+            resetLayerZIndices( this );
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -541,7 +559,9 @@
             // update theme for all attached layers
             if ( this.layers ) {
                 for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[ i ].setTheme( theme );
+                    if ( this.layers[i].setTheme ) {
+                        this.layers[i].setTheme( theme );
+                    }
                 }
             }
         },
@@ -683,21 +703,8 @@
          * @param {integer} zoom - The zoom level.
          */
         zoomTo: function( x, y, zoom ) {
-            var projection,
-                viewportPx,
-                lonlat;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                lonlat = new OpenLayers.LonLat( x, y );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    lonlat.transform( projection, this.olMap.projection );
-                }
-            } else {
-                // linear bi-variate map
-                viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y );
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-            }
             this.olMap.setCenter( lonlat, zoom );
         },
 
@@ -709,29 +716,11 @@
          * @param {Object} bounds - The bounding box to zoom to.
          */
         zoomToExtent: function( bounds ) {
-            var projection,
-                minViewportPx,
-                maxViewportPx,
-                minLonLat,
-                maxLonLat,
-                olBounds;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                minLonLat = new OpenLayers.LonLat( bounds.minX, bounds.minY );
-                maxLonLat = new OpenLayers.LonLat( bounds.maxX, bounds.maxY );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    minLonLat.transform( projection, this.olMap.projection );
-                    maxLonLat.transform( projection, this.olMap.projection );
-                }
-            } else {
-                // linear bi-variate map
-                minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY );
-                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY );
-                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx );
-                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx );
-            }
-            olBounds = new OpenLayers.Bounds();
+            var minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY ),
+                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY ),
+                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx ),
+                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx ),
+                olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
             this.olMap.zoomToExtent( olBounds );
@@ -747,22 +736,52 @@
          * @param {number} y - The y coordinate (latitude for geospatial).
          */
         panTo: function( x, y ) {
-            var projection,
-                viewportPx,
-                lonlat;
-            if ( this.pyramid instanceof WebMercatorTilePyramid ) {
-                // geo-spatial map
-                projection = new OpenLayers.Projection('EPSG:4326');
-                lonlat = new OpenLayers.LonLat( x, y );
-                if( this.olMap.getProjection() !== projection.projCode ) {
-                    lonlat.transform( projection, this.olMap.projection );
-                }
-                this.olMap.panTo( lonlat );
-            } else {
-                // linear bi-variate map
-                viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y );
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this, x, y ),
                 lonlat = this.olMap.getLonLatFromViewPortPx( viewportPx );
-                this.olMap.panTo( lonlat );
+            this.olMap.panTo( lonlat );
+        },
+
+
+        /**
+         * Creates a marker at the specified position of the map.
+         * @memberof Map.prototype
+         *
+         * @param {number} x - The x coordinate (longitude for geospatial).
+         * @param {number} y - The y coordinate (latitude for geospatial).
+         * @param {Marker} marker - The Marker object to add.
+         *
+         * @returns {Marker} The added marker.
+         */
+        addMarker: function( x, y, marker ) {
+            if ( !this.olMarkers ) {
+                this.olMarkers = new OpenLayers.Layer.Markers( "Markers" );
+                this.olMap.addLayer( this.olMarkers );
+            }
+            // always update the z-index of this div
+            $( this.olMarkers.div ).css( 'z-index', 5000 );
+            marker.map = this;
+            marker.activate( x, y );
+            return marker;
+        },
+
+        /**
+         * Removes a marker from the map.
+         *
+         * @param {OpenLayers.Marker} marker - The marker object.
+         */
+        removeMarker: function( marker ) {
+            if ( this.olMarkers ) {
+                marker.deactivate();
+                marker.map = null;
+            }
+        },
+
+        /**
+         * Removes all markers from the map.
+         */
+        clearMarkers: function() {
+            if ( this.olMarkers ) {
+                this.olMarkers.clearMarkers();
             }
         },
 
@@ -815,6 +834,36 @@
          */
         getZoom: function () {
             return this.olMap.getZoom();
+        },
+
+        /**
+         * Returns the x and y coordinates at the centre of the map.
+         *
+         * @return {OpenLayers.LonLat}
+         */
+        getCenterProjected: function() {
+            return MapUtil.getCoordFromViewportPixel(
+                this,
+                this.getViewportWidth() / 2,
+                this.getViewportHeight() / 2 );
+        },
+
+        /**
+         * Get the top-left and bottom-right extents of the visible map.
+         *
+         * @return {Object}
+         */
+        getMapExtents: function() {
+            return {
+                topLeft: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    0,
+                    0 ),
+                bottomRight: MapUtil.getCoordFromViewportPixel(
+                    this,
+                    this.getViewportWidth(),
+                    this.getViewportHeight() )
+            };
         },
 
         /**

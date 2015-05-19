@@ -45,8 +45,7 @@
      *     opacity  {float}    - The opacity of the layer. Default = 1.0
      *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
      *     zIndex   {integer}  - The z index of the layer. Default = 1000
-     *     renderer {Renderer} - The tile renderer object. (optional)
-     *     html {String|Function|HTMLElement|jQuery} - The html for the tile. (optional)
+     *     renderer {Renderer} - The tile renderer object.
      * }
      * </pre>
      */
@@ -54,7 +53,7 @@
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1500;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1500;
         this.domain = "axis";
         this.source = spec.source;
         this.getURL = spec.getURL || LayerUtil.getURL;
@@ -64,9 +63,6 @@
         }
         if ( spec.renderer ) {
             this.setRenderer( spec.renderer );
-        }
-        if ( spec.html ) {
-            this.html = spec.html;
         }
     }
 
@@ -89,19 +85,19 @@
                     20037500,  20037500),
                 isBaseLayer: false,
                 getURL: this.getURL,
-                html: this.html,
                 tileClass: this.tileClass,
                 renderer: this.renderer,
                 dimension: this.dimension
             });
-
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
-
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 

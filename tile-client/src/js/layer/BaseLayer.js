@@ -76,7 +76,9 @@
             case "blank":
 				// blank layer
                 this.olLayer = new OpenLayers.Layer.Vector( "BaseLayer", {} );
-                this.map.getElement().style['background-color'] = this.options.color;
+				var mapElem = $( this.map.getElement() );
+				mapElem.css( 'background-color', '' );
+				mapElem.attr( 'style', mapElem.attr('style') + "; background-color: " + this.options.color +" !important" );
                 break;
             case "google":
 				// google maps layer
@@ -98,6 +100,10 @@
             styledMapType = new google.maps.StyledMapType( this.options.styles, {name: 'Styled Map'} );
             this.olLayer.mapObject.mapTypes.set( 'styled', styledMapType );
         }
+		if ( this.olLayer.mapObject ) {
+			var gmapContainer = this.olLayer.mapObject.getDiv();
+			$( gmapContainer ).css("background-color", "rgba(0,0,0,0)");
+		}
         // ensure baselayer remains bottom layer
 		$( this.olLayer.div ).css( 'z-index', -1 );
         // reset visibility / opacity

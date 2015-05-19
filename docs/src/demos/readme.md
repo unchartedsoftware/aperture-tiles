@@ -48,9 +48,9 @@ This demo shows the scalability of map-oriented big data plots using heatmaps. T
 Tile-based Topic Tracking in Twitter Messages
 ---------------------------------------------
 
-This demo shows map-oriented tile applications using multiple layers of tile data and tile carousels to flip through multiple per-tile analytics. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region. These aggregate markers summarize and provide interactive visualizations that support analysis and integrate with advanced analytics. Client-side rendering of tile data uses the [Aperture JS visualization framework library](http://aperturejs.com/).  
+This demo shows map-oriented tile applications using multiple layers of tile data and tile carousels to flip through multiple per-tile analytics. The application shows a heatmap layer of Twitter messages by location on a [Google Maps](https://maps.google.com) base layer. An "aggregate marker" layer provides an interactive carousel of visual analytic summaries of each tile region. These aggregate markers summarize and provide interactive visualizations that support analysis and integrate with advanced analytics.
 
-In this demo, topics of interest are extracted from Twitter messages across South America.  Word clouds summarize the frequency of each topic in the tiles, while histograms show trends.  Integrated [machine translation](https://translate.google.com/) converts from the native language in which tweets are written to English.
+In this demo, topics of interest are extracted from Twitter messages across South America. Word clouds summarize the frequency of each topic in the tiles, while histograms show trends. Integrated [machine translation](https://translate.google.com/) converts from the native language in which tweets are written to English.
 
 &gt; Explore the [Twitter Topics demo](http://aperturetiles.com/twitter-topics/)
 <br>&gt; Access the source code in the [tile-examples](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples) directory of the project
@@ -73,7 +73,7 @@ A heat map is applied to the data points to summarize frequency distribution, ef
 Julia Set Example
 -----------------
 
-This demo is used in the [Quick Start guide](../docs/development/how-to/quickstart/) to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
+This demo is used in the [Quick Start guide](../docs/development/getting-started/quick-start/) to illustrate the process of generating tiles and configuring a tile client to display them in a web browser. 
 
 &gt; Explore the [Julia Set demo](http://aperturetiles.com/julia-demo/)
 <br>&gt; Access the source code in the [tile-examples](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples) directory of the project

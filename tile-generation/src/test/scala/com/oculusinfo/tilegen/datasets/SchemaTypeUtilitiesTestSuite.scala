@@ -30,14 +30,14 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Double => JavaDouble}
 
 import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.catalyst.types.ArrayType
+import org.apache.spark.sql.types.ArrayType
 import org.scalatest.FunSuite
 
-import org.apache.spark.sql.{Row, StructField, StructType}
-import org.apache.spark.sql.{BooleanType, StringType, TimestampType}
-import org.apache.spark.sql.{ByteType, ShortType, IntegerType, LongType}
-import org.apache.spark.sql.{FloatType, DoubleType}
-import org.apache.spark.sql.catalyst.expressions.GenericRow
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.sql.types.{BooleanType, StringType, TimestampType}
+import org.apache.spark.sql.types.{ByteType, ShortType, IntegerType, LongType}
+import org.apache.spark.sql.types.{FloatType, DoubleType}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -162,15 +162,15 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		                          schemaField("b", DoubleType),
 		                          schemaField("c", StringType))
 
-		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
-		                new GenericRow(Array(2, 2.2, "2.22")),
-		                new GenericRow(Array(3, 3.3, "3.33")),
-		                new GenericRow(Array(4, 4.4, "4.44")),
-		                new GenericRow(Array(5, 5.5, "5.55")),
-		                new GenericRow(Array(6, 6.6, "6.66")),
-		                new GenericRow(Array(7, 7.7, "7.77")),
-		                new GenericRow(Array(8, 8.8, "8.88")),
-		                new GenericRow(Array(9, 9.9, "9.99")))
+		val data = List(Row(1, 1.1, "1.11"),
+		                Row(2, 2.2, "2.22"),
+		                Row(3, 3.3, "3.33"),
+		                Row(4, 4.4, "4.44"),
+		                Row(5, 5.5, "5.55"),
+		                Row(6, 6.6, "6.66"),
+		                Row(7, 7.7, "7.77"),
+		                Row(8, 8.8, "8.88"),
+		                Row(9, 9.9, "9.99"))
 
 		assert(IntegerType == getColumnType("a", schema))
 		val aExtractor = calculateExtractor("a", schema)
@@ -235,15 +235,15 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		                          schemaField("b", DoubleType),
 		                          schemaField("c", StringType))
 
-		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
-		                new GenericRow(Array(2, 2.2, "2.22")),
-		                new GenericRow(Array(3, 3.3, "3.33")),
-		                new GenericRow(Array(4, 4.4, "4.44")),
-		                new GenericRow(Array(5, 5.5, "5.55")),
-		                new GenericRow(Array(6, 6.6, "6.66")),
-		                new GenericRow(Array(7, 7.7, "7.77")),
-		                new GenericRow(Array(8, 8.8, "8.88")),
-		                new GenericRow(Array(9, 9.9, "9.99")))
+		val data = List(Row(1, 1.1, "1.11"),
+		                Row(2, 2.2, "2.22"),
+		                Row(3, 3.3, "3.33"),
+		                Row(4, 4.4, "4.44"),
+		                Row(5, 5.5, "5.55"),
+		                Row(6, 6.6, "6.66"),
+		                Row(7, 7.7, "7.77"),
+		                Row(8, 8.8, "8.88"),
+		                Row(9, 9.9, "9.99"))
 
 		val aExtractor = calculateExtractor("a", schema)
 		val iToL = calculateConverter(IntegerType, LongType)
@@ -261,15 +261,15 @@ class SchemaTypeUtilitiesTestSuite extends FunSuite {
 		                          schemaField("b", DoubleType),
 		                          schemaField("c", StringType))
 
-		val data = List(new GenericRow(Array(1, 1.1, "1.11")),
-		                new GenericRow(Array(2, 2.2, "2.22")),
-		                new GenericRow(Array(3, 3.3, "3.33")),
-		                new GenericRow(Array(4, 4.4, "4.44")),
-		                new GenericRow(Array(5, 5.5, "5.55")),
-		                new GenericRow(Array(6, 6.6, "6.66")),
-		                new GenericRow(Array(7, 7.7, "7.77")),
-		                new GenericRow(Array(8, 8.8, "8.88")),
-		                new GenericRow(Array(9, 9.9, "9.99")))
+		val data = List(Row(1, 1.1, "1.11"),
+		                Row(2, 2.2, "2.22"),
+		                Row(3, 3.3, "3.33"),
+		                Row(4, 4.4, "4.44"),
+		                Row(5, 5.5, "5.55"),
+		                Row(6, 6.6, "6.66"),
+		                Row(7, 7.7, "7.77"),
+		                Row(8, 8.8, "8.88"),
+		                Row(9, 9.9, "9.99"))
 
 		val aExtractor = calculateExtractor("a", schema)
 		val functionCreator = new FunctionCreator {
@@ -298,13 +298,13 @@ class SchemaTypeUtilitiesSparkTestSuite extends FunSuite with SharedSparkContext
 
 		assert(3 === data.schema.fields.size)
 		assert("a" == data.schema.fields(0).name)
-		assert(IntegerType == data.schema.fields(0).dataType)
+		assert(LongType == data.schema.fields(0).dataType)
 		assert("b" == data.schema.fields(1).name)
-		assert(IntegerType == data.schema.fields(1).dataType)
+		assert(LongType == data.schema.fields(1).dataType)
 		assert("c" == data.schema.fields(2).name)
-		assert(IntegerType == data.schema.fields(2).dataType)
+		assert(LongType == data.schema.fields(2).dataType)
 
-		val converter = calculatePrimitiveConverter(IntegerType, classOf[Double])
+		val converter = calculatePrimitiveConverter(LongType, classOf[Double])
 		val augmentFcn: Array[Any] => Any = row =>
 			{
 				val c = converter(row(0))
@@ -314,11 +314,11 @@ class SchemaTypeUtilitiesSparkTestSuite extends FunSuite with SharedSparkContext
 		val augmentedData = addColumn(data, "d", DoubleType, augmentFcn, "c", "a")
 		assert(4 === augmentedData.schema.fields.size)
 		assert("a" == augmentedData.schema.fields(0).name)
-		assert(IntegerType == augmentedData.schema.fields(0).dataType)
+		assert(LongType == augmentedData.schema.fields(0).dataType)
 		assert("b" == augmentedData.schema.fields(1).name)
-		assert(IntegerType == augmentedData.schema.fields(1).dataType)
+		assert(LongType == augmentedData.schema.fields(1).dataType)
 		assert("c" == augmentedData.schema.fields(2).name)
-		assert(IntegerType == augmentedData.schema.fields(2).dataType)
+		assert(LongType == augmentedData.schema.fields(2).dataType)
 		assert("d" == augmentedData.schema.fields(3).name)
 		assert(DoubleType == augmentedData.schema.fields(3).dataType)
 
@@ -328,9 +328,9 @@ class SchemaTypeUtilitiesSparkTestSuite extends FunSuite with SharedSparkContext
 		for (i <- 1 to 10) {
 			val row = collectedData(i-1)
 			assert(4 === row.size)
-			val a = row(0).asInstanceOf[Int]
-			val b = row(1).asInstanceOf[Int]
-			val c = row(2).asInstanceOf[Int]
+			val a = row(0).asInstanceOf[Long]
+			val b = row(1).asInstanceOf[Long]
+			val c = row(2).asInstanceOf[Long]
 			val d = row(3).asInstanceOf[Double]
 
 			assert(i === a)

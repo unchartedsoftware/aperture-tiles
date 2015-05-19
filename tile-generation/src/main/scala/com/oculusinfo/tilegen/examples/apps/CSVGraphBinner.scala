@@ -45,72 +45,72 @@ import scala.util.Try
 /**
  * This application handles reading in a graph from a CSV file, and generating
  * tiles for the graph's nodes or edges.
- * 
+ *
  * NOTE:  It is expected that the 1st column of the CSV graph data will contain either the keyword "node"
  * for data lines representing a graph's node/vertex, or the keyword "edge" for data lines representing
  * a graph's edge
- * 
- * The following properties control how the application runs: 
+ *
+ * The following properties control how the application runs:
  * (See code comments in TilingTask.scala for more info and settings)
- * 
- * 
+ *
+ *
  *  oculus.binning.graph.data
  *      The type of graph data to use for tile generation.  Set to "nodes" to generate tiles of a graph's
  *      nodes [default], or set to "edges" to generate tiles of a graph's edges.
- *      
+ *
  *  oculus.binning.graph.edges.type.index
  *      The column number of a boolean specifying each edge as an inter-community edge (=1) or an intra-community edge (=0)
- *      
+ *
  *  oculus.binning.graph.edges.type
  *      The type of edges to use for tile generation (for hierarchically clustered data only).  Set to "all"
  *      to generate tiles using all edges in a graph [default].  Set to "inter" to only use inter-community
  *      edges, or set to "intra" use to intra-community edges.  For the "inter" or "intra" switch, the
  *      'edges.type.index' column (above) is used to determine which raw edges to use for tile generation.
- *      
+ *
  *  oculus.binning.line.level.threshold
  *  	Level threshold to determine whether to use 'point' vs 'tile' based line segment binning
  *   	Levels above this thres use tile-based binning. Default = 4.
- *    
+ *
  *  oculus.binning.line.min.bins
  *  	Min line segment length (in bins) for a given level. Shorter line segments will be discarded.
  *   	Default = 2.
- *   
+ *
  *  oculus.binning.line.max.bins
  *  	Max line segment length (in bins) for a given level. Longer line segments will be discarded.
  *   	Default = 1024.
- *  
+ *
  *  oculus.binning.line.drawends
- *  	Boolean = false by default. If = true, then any line segments longer than max.bins will have 
- *   	only pixels within 1 tile-length of an endpoint drawn instead of the whole line segment 
- *    	being discarded.  Also, line segments will be faded out as they get farther away from an endpoint 
- *      
+ *  	Boolean = false by default. If = true, then any line segments longer than max.bins will have
+ *   	only pixels within 1 tile-length of an endpoint drawn instead of the whole line segment
+ *    	being discarded.  Also, line segments will be faded out as they get farther away from an endpoint
+ *
  *  oculus.binning.hierarchical.clusters
  *  	To configure tile generation of hierarchical clustered data.  Set to false [default] for 'regular'
- *   	tile generation (ie non-clustered data).  If set to true then one needs to assign different source 
- *    	'cluster levels' using the oculus.binning.source.levels.<order> property for each desired set of 
+ *   	tile generation (ie non-clustered data).  If set to true then one needs to assign different source
+ *    	'cluster levels' using the oculus.binning.source.levels.<order> property for each desired set of
  *     	tile levels to be generated.  In this case, the property oculus.binning.source.location is not used.
- *     
+ *
  *  oculus.binning.source.levels.<order>
  *  	This is only required if oculus.binning.hierarchical.clusters=true.  This property is used to assign
  *   	A given hierarchy "level" of clustered data to a given set of tile levels.  E.g., clustered data assigned
- *     	to oculus.binning.source.levels.0 will be used to generate tiles for all tiles given in the set 
+ *     	to oculus.binning.source.levels.0 will be used to generate tiles for all tiles given in the set
  *     	oculus.binning.levels.0, and so on for other level 'orders'.
- *      
- *  -----    
- *      
+ *
+ *  -----
+ *
  *  hbase.zookeeper.quorum
  *      If tiles are written to hbase, the zookeeper quorum location needed to
  *      connect to hbase.
- * 
+ *
  *  hbase.zookeeper.port
  *      If tiles are written to hbase, the port through which to connect to
  *      zookeeper.  Defaults to 2181
- * 
+ *
  *  hbase.master
  *      If tiles are written to hbase, the location of the hbase master to
  *      which to write them
  *
- * 
+ *
  *  spark
  *      The location of the spark master.
  *      Defaults to "localhost"
@@ -119,13 +119,13 @@ import scala.util.Try
  *      The file system location of Spark in the remote location (and,
  *      necessarily, on the local machine too)
  *      Defaults to "/srv/software/spark-0.7.2"
- * 
+ *
  *  user
  *      A user name to stick in the job title so people know who is running the
  *      job
  *
  *
- * 
+ *
  *  oculus.tileio.type
  *      The way in which tiles are written - either hbase (to write to hbase,
  *      see hbase. properties above to specify where) or file  to write to the
@@ -161,10 +161,10 @@ object CSVGraphBinner {
 
 		if (_graphDataType == "edges") {
 			val binner = new RDDLineBinner(_lineMinBins, _lineMaxBins, _bDrawLineEnds)
-			
+
 			val lenThres = if (_bDrawLineEnds) _lineMaxBins else Int.MaxValue
 			val lineDrawer = new EndPointsToLine(lenThres, task.getNumXBins, task.getNumYBins)
-			
+
 			binner.debug = true
 			task.getLevels.map(levels =>
 				{
@@ -179,7 +179,7 @@ object CSVGraphBinner {
 					val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 						rdd =>
 					{
-						
+
 						// Assign generic line drawing function for either drawing straight lines or arcs
 						// (to be passed into processDataByLevel func)
 						val calcLinePixels = if (task.binTypeTag == scala.reflect.classTag[Double])	{
@@ -198,9 +198,9 @@ object CSVGraphBinner {
 								}
 							passTroughFcn
 						}
-						
+
 						val bUsePointBinner = (levels.max <= _lineLevelThres)	// use point-based vs tile-based line-segment binning?
-						
+
 						val tiles = binner.processDataByLevel(rdd,
 						                                      task.getIndexScheme,
 						                                      task.getBinningAnalytic,
@@ -350,7 +350,7 @@ object CSVGraphBinner {
 
 			// Boolean to draw just the ends of very long line segments (instead of just discarding the whole line)
 			_bDrawLineEnds = Try(props.getProperty("oculus.binning.line.drawends").toBoolean).getOrElse(false)
-			
+
 			// Draw line segments as straight lines (default) or as clock-wise arcs.
 			_bLinesAsArcs = Try(props.getProperty("oculus.binning.line.style.arcs").toBoolean).getOrElse(false)
 
@@ -369,7 +369,7 @@ object CSVGraphBinner {
 				val reader = new CSVReader(sqlc, source.getData(sc), wrappedProps)
 				// Register it as a table
 				val table = "table"+argIdx
-				reader.asSchemaRDD.registerTempTable(table)
+				reader.asDataFrame.registerTempTable(table)
 
 				val cache = wrappedProps.getBoolean(
 					"oculus.binning.caching.processed",
@@ -391,13 +391,13 @@ object CSVGraphBinner {
 					// (For each set, we will generate tiles based on a
 					// given subset of hierarchically-clustered data)
 					valTemp = props.getProperty("oculus.binning.levels."+nn)
-					
+
 					if (valTemp != null) {
 						levelsList += valTemp	// save tile gen level set in a list
 							// ... and temporarily overwrite tiling levels as empty
 							// in preparation for hierarchical tile gen
 						props.setProperty("oculus.binning.levels."+nn, "")
-						
+
 						// get clustered data for this hierarchical level and save to list
 						var sourceTemp = props.getProperty("oculus.binning.source.levels."+nn)
 						if (sourceTemp == null) {
@@ -408,9 +408,9 @@ object CSVGraphBinner {
 						}
 						nn+=1
 					}
-					
+
 				} while (valTemp != null)
-					
+
 				// Loop through all hierarchical levels, and perform tile generation
 				var m = 0
 				for (m <- 0 until nn) {
@@ -424,9 +424,9 @@ object CSVGraphBinner {
 					val source = new CSVDataSource(wrappedProps)
 					// Read the CSV into a schema file
 					val reader = new CSVReader(sqlc, source.getData(sc), wrappedProps)
-					// Register it as a table
-					val table = "table"+argIdx
-					reader.asSchemaRDD.registerTempTable(table)
+					// Register it as a table (include hierarchy level in table name too)
+					val table = "table"+argIdx+m
+					reader.asDataFrame.registerTempTable(table)
 
 					val cache = wrappedProps.getBoolean(
 						"oculus.binning.caching.processed",
@@ -437,10 +437,12 @@ object CSVGraphBinner {
 					// perform tile generation
 					processTaskGeneric(sc, TilingTask(sqlc, table, props), tileIO)
 
+					if (cache) sqlc.uncacheTable(table)
+					
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
 				}
-				
+
 			}
 
 			val fileEndTime = System.currentTimeMillis()
