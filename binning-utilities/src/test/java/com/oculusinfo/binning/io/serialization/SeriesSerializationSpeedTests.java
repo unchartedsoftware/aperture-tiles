@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -39,11 +39,8 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xerial.snappy.SnappyOutputStream;
@@ -58,10 +55,10 @@ import com.oculusinfo.factory.util.Pair;
 
 
 /*
- * This is a set of tests to determine the relative speeds of various serializers and/or 
+ * This is a set of tests to determine the relative speeds of various serializers and/or
  * compression codecs over tiles with multiple elements per bin.
- * 
- * It is not a general test, and would never be run as part of a test suite, but it's 
+ *
+ * It is not a general test, and would never be run as part of a test suite, but it's
  * useful enough when looking at new serializers and codecs that I want it in the code
  * base for future use and reference.
  */
@@ -116,7 +113,7 @@ public class SeriesSerializationSpeedTests {
 		config.set("hbase.zookeeper.property.clientPort", "2181");
 		config.set("hbase.master", "hadoop-s1.oculus.local:60000");
 		config.set("hbase.client.keyvalue.maxsize", "0");
-		HConnection connection = HConnectionManager.createConnection(config);
+		Connection connection = ConnectionFactory.createConnection(config);
 
 		List<String> rows = new ArrayList<>();
 		for (int x=0; x<n; ++x) {
@@ -140,7 +137,7 @@ public class SeriesSerializationSpeedTests {
 		for (int i=0; i<__tables.size(); ++i) {
 			String tableName = __tables.get(i).getFirst();
 			TileSerializer<List<Double>> serializer = __tables.get(i).getSecond();
-			HTableInterface table = connection.getTable( tableName );
+			Table table = connection.getTable(TableName.valueOf(tableName));
 
 			int tiles = 0;
 			runner.preTest();
@@ -193,7 +190,7 @@ public class SeriesSerializationSpeedTests {
 			ByteArrayInputStream bais = new ByteArrayInputStream(rowValue);
 			serializer.deserialize(deserializationIndex, bais);
 			long et2 = System.currentTimeMillis();
-            
+
 			totalSize += rowValue.length;
 			parseTime += (et2-st2);
 		}
@@ -207,7 +204,7 @@ public class SeriesSerializationSpeedTests {
 			                                 tableName, iterations, totalSize/iterations,
 			                                 time, pTime, fTime, pTime/iterations, fTime/iterations));
 		}
-        
+
 	}
 
 	class SizeTestRunner implements TestRunner {
