@@ -110,8 +110,8 @@ public class TileRegistrator implements KryoRegistrator {
 
 		kryo.register(org.apache.spark.scheduler.CompressedMapStatus.class);
 		kryo.register(org.apache.spark.util.collection.CompactBuffer[].class);
-		kryo.register(org.apache.spark.sql.catalyst.expressions.Row.class);
-		kryo.register(org.apache.spark.sql.catalyst.expressions.Row[].class);
+		kryo.register(org.apache.spark.sql.Row.class);
+		kryo.register(org.apache.spark.sql.Row[].class);
 		kryo.register(org.apache.spark.sql.catalyst.expressions.GenericRow.class);
 		kryo.register(org.apache.spark.sql.catalyst.expressions.GenericMutableRow.class);
 

@@ -37,7 +37,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.api.java.JavaSQLContext;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
@@ -85,7 +84,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	private String[] _jars;
 
 	private JavaSparkContext _context;
-	private JavaSQLContext _sqlContext;
+	private SQLContext _sqlContext;
 
 	@Inject
 	public SparkContextProviderImpl (@Named("org.apache.spark.master") String master,
@@ -191,14 +190,9 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 
 	@Override
 	public SQLContext getSQLContext (JSONObject configuration) {
-		return getJavaSQLContext(configuration).sqlContext();
-	}
-
-	@Override
-	public JavaSQLContext getJavaSQLContext (JSONObject configuration) {
 		if (null == _sqlContext) {
-			JavaSparkContext sc = getJavaSparkContext(configuration);
-			_sqlContext = new JavaSQLContext(sc);
+			SparkContext sc = getSparkContext(configuration);
+			_sqlContext = new SQLContext(sc);
 		}
 		return _sqlContext;
 	}

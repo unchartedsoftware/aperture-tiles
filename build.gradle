@@ -19,7 +19,7 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.6.0-cdh5.4.1"
 				hadoopCoreVersion = "2.6.0-mr1-cdh5.4.1"
 				hbaseVersion = "1.0.0-cdh5.4.1"
-				sparkVersion = "1.2.0" //"1.3.0-cdh5.4.1"
+				sparkVersion = "1.3.0-cdh5.4.1"
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
@@ -173,12 +173,14 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -186,6 +188,7 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
 		} else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
@@ -195,6 +198,7 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
 		}
 	}
