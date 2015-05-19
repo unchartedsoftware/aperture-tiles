@@ -424,8 +424,8 @@ object CSVGraphBinner {
 					val source = new CSVDataSource(wrappedProps)
 					// Read the CSV into a schema file
 					val reader = new CSVReader(sqlc, source.getData(sc), wrappedProps)
-					// Register it as a table
-					val table = "table"+argIdx
+					// Register it as a table (include hierarchy level in table name too)
+					val table = "table"+argIdx+m
 					reader.asDataFrame.registerTempTable(table)
 
 					val cache = wrappedProps.getBoolean(
@@ -437,6 +437,8 @@ object CSVGraphBinner {
 					// perform tile generation
 					processTaskGeneric(sc, TilingTask(sqlc, table, props), tileIO)
 
+					if (cache) sqlc.uncacheTable(table)
+					
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
 				}
