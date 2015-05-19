@@ -459,7 +459,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 				"ops.tileWidth" -> "4",
 				"ops.tileHeight" -> "4",
 				"ops.valueColumn" -> "data",
-				"ops.valueType" -> "int",
+				"ops.valueType" -> "long",
 				"ops.aggregationType" -> "sum",
 				"ops.minX" -> "0.0",
 				"ops.minY" -> "0.0",
@@ -488,13 +488,10 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 			                                   new JSONObject(metaData.getCustomMetaData("global").toString))
 
 			val customMeta = metaData.getAllCustomMetaData
-			assertResult("0")(customMeta.get("global.minimum"))
-			assertResult("0")(customMeta.get("0.minimum"))
-			assertResult("0")(customMeta.get("1.minimum"))
-			assertResult("2")(customMeta.get("global.maximum"))
-			assertResult("2")(customMeta.get("0.maximum"))
-			assertResult("1")(customMeta.get("1.maximum"))
-			assertResult(6)(customMeta.size)
+			assert(8 === customMeta.get("0.minimum"))
+			assert(116 === customMeta.get("0.maximum"))
+			assert(8 === customMeta.get("global.minimum"))
+			assert(116 === customMeta.get("global.maximum"))
 		} finally {
 			// Remove the tile set we created
 			def removeRecursively (file: File): Unit = {
