@@ -29,7 +29,7 @@ Once you have installed all the prerequisites, you can generate the [Julia set d
 
 <h6 class="procedure">To use the Tile Generator utility to create the Julia set data</h6>
 
-1. Execute the standard [spark-submit](http://spark.apache.org/docs/1.2.0/submitting-applications.html) script using the following command, changing the **output** URI to specify where you want to save the data (HDFS or local file system):
+1. Execute the standard [spark-submit](http://spark.apache.org/docs/1.3.0/submitting-applications.html) script using the following command, changing the **output** URI to specify where you want to save the data (HDFS or local file system):
 
     ```bash
     $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen
