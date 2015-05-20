@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Layer
 permalink: docs/development/api/layer/
-layout: submenu
+layout: chapter
 ---
 
 # Layer Service #
@@ -61,40 +61,38 @@ Layer information returned is the **public** node of the server-side configurati
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/layers
-								<br>/layers</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`GET`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Params</td>
-						<td class="nameDescription">
-							<div class="description">None</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/layers
+						<br>/layers</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`GET`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Params</td>
+				<td class="nameDescription">
+					<div class="description">None</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
@@ -140,46 +138,43 @@ Returns the requested layer information. Layer information returned is the **pub
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}
-								<br>/layers/{layerId}</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`GET`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Params</td>
-						<td class="nameDescription">
-							<div class="description">None</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/layers/{layerId}
+						<br>/layers/{layerId}</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`GET`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Params</td>
+				<td class="nameDescription">
+					<div class="description">None</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 GET http://localhost:8080/instagram/rest/v1.0/layers/instagram-heatmap
 ```
 
@@ -211,46 +206,43 @@ Store a configuration state on the server that can be accessed at a later time. 
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}/states
-								<br>layers/{layerId}/states</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`POST`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Params</td>
-						<td class="nameDescription">
-							<div class="description">None</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/layers/{layerId}/states
+						<br>layers/{layerId}/states</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`POST`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Params</td>
+				<td class="nameDescription">
+					<div class="description">None</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
 ```
 
@@ -280,46 +272,43 @@ Returns a specified configured state stored on the server for a particular layer
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}/states/{stateId}
-								<br>layers/{layerId}/states/{stateId}</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">HTTP Method</td>
-						<td class="nameDescription">
-							<div class="description">`GET`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Params</td>
-						<td class="nameDescription">
-							<div class="description">None</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/layers/{layerId}/states/{stateId}
+						<br>layers/{layerId}/states/{stateId}</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">HTTP Method</td>
+				<td class="nameDescription">
+					<div class="description">`GET`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Params</td>
+				<td class="nameDescription">
+					<div class="description">None</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states/e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031
 ```
 
@@ -377,46 +366,43 @@ Returns all configured states stored on the server for a particular layer, inclu
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/layers/{layerId}/states
-								<br>layers/{layerId}/states</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">HTTP Method</td>
-						<td class="nameDescription">
-							<div class="description">`GET`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Params</td>
-						<td class="nameDescription">
-							<div class="description">None</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/layers/{layerId}/states
+						<br>layers/{layerId}/states</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">HTTP Method</td>
+				<td class="nameDescription">
+					<div class="description">`GET`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Params</td>
+				<td class="nameDescription">
+					<div class="description">None</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 GET http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
 ```
 

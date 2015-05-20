@@ -28,7 +28,9 @@ package com.oculusinfo.tilegen.pipeline
 
 import com.oculusinfo.tilegen.pipeline.Pipelines.PipelineOpBinding
 import grizzled.slf4j.Logger
-import org.apache.spark.sql.{SQLContext, SchemaRDD, StructType}
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.types.StructType
 
 object Pipelines {
 

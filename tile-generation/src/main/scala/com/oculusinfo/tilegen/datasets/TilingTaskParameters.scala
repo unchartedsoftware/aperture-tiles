@@ -97,7 +97,7 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 					else Range(extrema(0).trim.toInt, extrema(1).trim.toInt+1).toSeq
 				}
 			).fold(Seq[Int]())(_ ++ _)
-		)
+		).filter(levelSeq => levelSeq != Seq[Int]())	// discard empty entries
 	}
 
 	override protected def create(): TilingTaskParameters = {

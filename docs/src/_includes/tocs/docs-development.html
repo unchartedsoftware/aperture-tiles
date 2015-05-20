@@ -1,0 +1,24 @@
+<div class="toc right">
+	{% for chapter in site.data.developmentChapters %}
+		<div class="toc-header">{{ chapter.label }}</div>
+		<{{ chapter.listType }} class="toc-body">
+			{% for topic in chapter.topics %}
+				<li>
+					{% if chapter.label != page.chapter or topic.label != page.topic %}
+						<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{{chapter.path}}/{% if topic.path != null %}{{topic.path}}/{% endif %}">{{topic.label}}</a>
+					{% else %}
+						{{topic.label}}
+						<ul>
+							{% for bookmark in topic.bookmarks %}
+								<li><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{{chapter.path}}/{{topic.path}}/#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+				</li>
+			{% endfor %}
+		</{{ chapter.listType }}>
+		{% if forloop.last == false %}
+			<hr>
+		{% endif %}
+	{% endfor %}
+</div>

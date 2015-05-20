@@ -106,7 +106,7 @@
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1000;
         this.tileTransform = spec.tileTransform || {};
         this.domain = "client";
         this.source = spec.source;
@@ -152,14 +152,16 @@
                 tileClass: this.tileClass,
                 renderer: this.renderer
             });
-
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
-        setLevelMinMax( this );
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
+        setLevelMinMax( this ); // set level min / max
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 

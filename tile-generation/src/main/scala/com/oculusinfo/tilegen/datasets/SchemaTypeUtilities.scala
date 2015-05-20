@@ -29,13 +29,14 @@ package com.oculusinfo.tilegen.datasets
 import java.sql.Timestamp
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.util.Metadata
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{Map => MutableMap}
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, GenericRow}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 
 
 
@@ -66,11 +67,11 @@ object SchemaTypeUtilities {
 		new ArrayType(elementType, containsNull)
 
 	/** Construct a map schema */
-	def structSchema (fields: StructField*) = new StructType(fields.toSeq)
+	def structSchema (fields: StructField*) = new StructType(fields.toArray)
 
 	// Convenience functions for easy row construction
 	/** Construct a row */
-	def row (values: Any*): Row = new GenericRow(values.toArray)
+	def row (values: Any*) = Row(values:_*)
 	/** Construct an array for use as a value in a row */
 	def array (values: Any*) = ArrayBuffer[Any](values:_*)
 
@@ -218,7 +219,7 @@ object SchemaTypeUtilities {
 	}
 
 	/**
-	 * Calculate a function to extract a single, typed field from a SchemaRDD.  calculateExtractor does not in itself
+	 * Calculate a function to extract a single, typed field from a DataFrame.  calculateExtractor does not in itself
 	 * extract these values, it just returns a function that does.
 	 *
 	 * @param columnSpec A specification of the field of interest
@@ -340,7 +341,7 @@ object SchemaTypeUtilities {
 
 			input: Any => {
 				val row = input.asInstanceOf[Row]
-				val values: Array[Any] = (1 to toSize).map(toIndex =>
+				val values = (1 to toSize).map(toIndex =>
 					{
 						if (fieldConverters.contains(toIndex)) {
 							val (field, fromIndex, converter) = fieldConverters(toIndex)
@@ -349,8 +350,8 @@ object SchemaTypeUtilities {
 							null
 						}
 					}
-				).toArray
-				new GenericRow(values)
+				)
+				Row(values:_*)
 			}
 		} else if (to.isInstanceOf[ArrayType] && from.isInstanceOf[ArrayType]) {
 			val fromArray = from.asInstanceOf[ArrayType]
@@ -379,32 +380,75 @@ object SchemaTypeUtilities {
 	}
 
 	/**
-	 * Take an existing SchemaRDD, and add a new column to it.
-	 * @param base The existing SchemaRDD
+	 * Take an existing DataFrame, and add a new column to it.
+	 * @param base The existing DataFrame
 	 * @param columnName The name of the column to add
 	 * @param columnType the type of the column to add
 	 * @param columnFcn A function mapping the values of the base data specified by inputColumns onto an output value,
 	 *                  which had darn well better be of the right type.
 	 * @param inputColumns The input columns needed to calculate the output column; their extracted values become the
 	 *                     inputs to columnFcn
-	 * @return A new SchemaRDD with the named added value.
+	 * @return A new DataFrame with the named added value.
 	 */
-	def addColumn (base: SchemaRDD, columnName: String, columnType: DataType,
-	               columnFcn: Array[Any] => Any, inputColumns: String*): SchemaRDD = {
-		val baseSchema = base.schema
-		val baseLen = baseSchema.fields.size
-
-		val extractors = inputColumns.map(calculateExtractor(_, base.schema)).toArray
-		val newData: RDD[Row] = base.map(row =>
-			{
-				val selectData = extractors.map(_(row))
-				val newValue = columnFcn(selectData)
-				new GenericRow((row :+ newValue).toArray)
-			}
-		)
-
-		val newSchema = new StructType(baseSchema.fields :+ StructField(columnName, columnType, true))
-		base.sqlContext.applySchema(newData, newSchema)
+	def addColumn (base: DataFrame, columnName: String, columnType: DataType,
+	               columnFcn: Array[Any] => Any, inputColumns: String*): DataFrame = {
+		val columns = inputColumns.map(new Column(_))
+		val newColumn = inputColumns.length match {
+			case  0 =>
+				callUDF(() => columnFcn(Array[Any]()),
+				        columnType)
+			case  1 =>
+				callUDF((a: Any) => columnFcn(Array[Any](a)),
+				        columnType,
+				        columns(0))
+			case  2 =>
+				callUDF((a: Any, b: Any) => columnFcn(Array[Any](a, b)),
+				        columnType,
+				        columns(0), columns(1))
+			case  3 =>
+				callUDF((a: Any, b: Any, c: Any) => columnFcn(Array[Any](a, b, c)),
+				        columnType,
+				        columns(0), columns(1), columns(2))
+			case  4 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any) => columnFcn(Array[Any](a, b, c, d)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3))
+			case  5 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any) => columnFcn(Array[Any](a, b, c, d, e)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3), columns(4))
+			case  6 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any) =>
+					columnFcn(Array[Any](a, b, c, d, e, f)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3), columns(4),
+				        columns(5))
+			case  7 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any) =>
+					columnFcn(Array[Any](a, b, c, d, e, f, g)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3), columns(4),
+				        columns(5), columns(6))
+			case  8 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any, h: Any) =>
+					columnFcn(Array[Any](a, b, c, d, e, f, g, h)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3), columns(4),
+				        columns(5), columns(6), columns(7))
+			case  9 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any, h: Any, i: Any) =>
+					columnFcn(Array[Any](a, b, c, d, e, f, g, h, i)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3), columns(4),
+				        columns(5), columns(6), columns(7), columns(8))
+			case 10 =>
+				callUDF((a: Any, b: Any, c: Any, d: Any, e: Any, f: Any, g: Any, h: Any, i: Any, j: Any) =>
+					columnFcn(Array[Any](a, b, c, d, e, f, g, h, i, j)),
+				        columnType,
+				        columns(0), columns(1), columns(2), columns(3), columns(4),
+				        columns(5), columns(6), columns(7), columns(8), columns(9))
+		}
+		base.withColumn(columnName, newColumn)
 	}
 
 

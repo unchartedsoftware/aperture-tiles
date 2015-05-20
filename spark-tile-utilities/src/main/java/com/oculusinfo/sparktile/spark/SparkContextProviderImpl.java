@@ -39,7 +39,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.api.java.JavaSQLContext;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.oculusinfo.tile.ServletLifecycleListener;
+import com.oculusinfo.tile.servlet.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
 
 
@@ -88,7 +87,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	private Properties _connectionProperties;
 
 	private JavaSparkContext _context;
-	private JavaSQLContext _sqlContext;
+	private SQLContext _sqlContext;
 
 	@Inject
 	public SparkContextProviderImpl (@Named("org.apache.spark.master") String master,
@@ -185,7 +184,9 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 			// Copy in configuration properties that begin with "akka." and "spark."
 			for (Object keyObj: _connectionProperties.keySet()) {
 				String key = keyObj.toString();
-				if (key.toLowerCase().startsWith("akka.") || key.toLowerCase().startsWith("spark.")) {
+				if (key.toLowerCase().startsWith("akka.")
+				    || key.toLowerCase().startsWith("spark.")
+				    || key.toLowerCase().startsWith("yarn.")) {
 					String value = _connectionProperties.get(key).toString();
 					config.set(key, value);
 				}
@@ -197,14 +198,9 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 
 	@Override
 	public SQLContext getSQLContext () {
-		return getJavaSQLContext().sqlContext();
-	}
-
-	@Override
-	public JavaSQLContext getJavaSQLContext () {
 		if (null == _sqlContext) {
-			JavaSparkContext sc = getJavaSparkContext();
-			_sqlContext = new JavaSQLContext(sc);
+			SparkContext sc = getSparkContext();
+			_sqlContext = new SQLContext(sc);
 		}
 		return _sqlContext;
 	}

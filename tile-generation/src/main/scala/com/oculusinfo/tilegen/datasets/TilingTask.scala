@@ -47,7 +47,7 @@ import scala.reflect.ClassTag
 
 object TilingTask {
 	/**
-	 * From a list of name pieces, construct a string that can be used as a table name when registering a SchemaRDD
+	 * From a list of name pieces, construct a string that can be used as a table name when registering a DataFrame
 	 * with a SQLContext.
 	 *
 	 * Basically, this strips out non-alphanumerics, and concatenates the remainder using camel-case.
@@ -60,7 +60,7 @@ object TilingTask {
 
 	/**
 	 * Create a standard tiling task from necessary ingredients
-	 * @param sqlc A SQL context in which the data, in the form of a SchemaRDD, has been registered
+	 * @param sqlc A SQL context in which the data, in the form of a DataFrame, has been registered
 	 * @param table The table name as which the data has been registered
 	 * @param config A configuration object describing how the data is to be tiled
 	 * @return A tiling task that can be used to take the data and produce a tile pyramid
@@ -280,10 +280,11 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
 				.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
-		if (bounds.map(_ == null).reduce(_ || _))
+		if (bounds.toSeq.map(_ == null).reduce(_ || _))
 			throw new Exception("No parsable data found")
-		val minBounds = bounds.grouped(2).map(_(0)).toSeq
-		val maxBounds = bounds.grouped(2).map(_(1)).toSeq
+		val fields = indexer.fields.size
+		val minBounds: Seq[Any] = (1 to fields).map(n => bounds((n-1)*2))
+		val maxBounds: Seq[Any] = (1 to fields).map(n => bounds(n*2-1))
 		val (minX, minY) = indexer.indexScheme.toCartesian(minBounds)
 		val (maxX, maxY) = indexer.indexScheme.toCartesian(maxBounds)
 		val (rangeX, rangeY) = (maxX-minX, maxY-minY)
@@ -293,7 +294,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			else config.levels.flatten.reduce(_ max _)
 		}
 		val maxBins = (config.tileHeight max config.tileWidth)
-		
+
 		// An epsilon of around 2% of a single bin
 		val epsilon = ((1.0/(1L << (maxLevel+6))))/maxBins
 		(minX, maxX+epsilon*rangeX, minY, maxY+epsilon*rangeY)
@@ -381,12 +382,12 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val localValuer = valuer
 			data.map(row =>
 				{
-					val index = row.take(indexFields)
+					val index = (0 until indexFields).map(n => row(n))
 
-					val values = row.drop(indexFields).take(valueFields)
+					val values = (indexFields until (indexFields+valueFields)).map(n => row(n))
 					val value = localValuer.convert(values)
 
-					val analyticInputs = row.drop(indexFields+valueFields)
+					val analyticInputs = ((indexFields+valueFields) until row.length).map(n => row(n))
 					val analysis = localDataAnalytics.map(analytic => analytic.convert(analyticInputs))
 
 					(index, value, analysis)

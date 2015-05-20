@@ -27,7 +27,6 @@ package com.oculusinfo.sparktile.spark;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.api.java.JavaSQLContext;
 import org.json.JSONObject;
 
 /**
@@ -50,11 +49,6 @@ public interface SparkContextProvider {
 	 * Get a usable spark SQL context
 	 */
 	public SQLContext getSQLContext ();
-
-	/**
-	 * Get a usable spark SQL context, in Java API form
-	 */
-	public JavaSQLContext getJavaSQLContext ();
 
 	/**
 	 * Shut down the web server's spark context.
