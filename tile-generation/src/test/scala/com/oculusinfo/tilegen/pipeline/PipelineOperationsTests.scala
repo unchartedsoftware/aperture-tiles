@@ -27,20 +27,21 @@ package com.oculusinfo.tilegen.pipeline
 
 
 import java.io.File
-
-import scala.collection.mutable.ListBuffer
-
-import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.Column
-import org.json.JSONObject
-import org.apache.spark.sql.types._
-import org.scalatest.FunSuite
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.binning.util.JSONUtilitiesTests
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
 import com.oculusinfo.tilegen.tiling.LocalTileIO
+import org.apache.spark.SharedSparkContext
+import org.apache.spark.sql.Column
+import org.apache.spark.sql.types._
+import org.json.JSONObject
+import org.scalatest.FunSuite
+
+import scala.collection.mutable.ListBuffer
 
 
 
@@ -145,6 +146,31 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 		PipelineTree.execute(rootStage, sqlc)
 
 		assertResult(List("2015-01-02 8:15:30"))(resultList.toList)
+	}
+
+	test("Test date filter operation") {
+		val resultList = ListBuffer[Any]()
+		val resPath = getClass.getResource("/csv_test.data").toURI.getPath
+		val argsMap = Map(
+			"ops.path" -> resPath,
+			"ops.partitions" -> "1",
+			"oculus.binning.parsing.separator" -> " *, *",
+			"oculus.binning.parsing.time.index" -> "3",
+			"oculus.binning.parsing.time.fieldType" -> "date",
+			"oculus.binning.parsing.time.dateFormat" -> "yyyy-MM-DD HH:mm:ss"
+		)
+
+		val d = new SimpleDateFormat("yyyy-MM-DD HH:mm:ss")
+		val min = d.parse("2015-01-01 15:15:30")
+		val max = d.parse("2015-01-02 10:15:30")
+
+		val rootStage = PipelineStage("load", parseLoadCsvDataOp(argsMap))
+		rootStage.addChild(PipelineStage("date_filter", dateFilterOp(min, max, "time")(_)))
+			.addChild(PipelineStage("output", outputOp("time", resultList)(_)))
+
+		PipelineTree.execute(rootStage, sqlc)
+
+		assertResult(List(d.parse("2015-01-02 3:15:30").getTime)) (resultList.map(t => t.asInstanceOf[Timestamp].getTime).toList)
 	}
 
 	test("Test mercator filter parse and operation") {

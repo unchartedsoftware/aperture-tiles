@@ -29,26 +29,18 @@ package com.oculusinfo.tilegen.pipeline
 
 
 
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.sql.Date
 import java.util.concurrent.atomic.AtomicInteger
-
-import scala.util.matching.Regex
-
-import grizzled.slf4j.Logger
-
-import org.apache.avro.file.CodecFactory
-
-import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
-import org.apache.spark.sql.{SQLContext, Column, DataFrame}
-import org.apache.spark.sql.functions._
+import java.util.Date
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-
-import com.oculusinfo.tilegen.datasets.{TilingTask, TilingTaskParameters, CSVReader}
-import com.oculusinfo.tilegen.tiling.{TileIO, LocalTileIO, HBaseTileIO}
+import com.oculusinfo.tilegen.datasets.{CSVReader, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 
 
 
@@ -58,7 +50,6 @@ import com.oculusinfo.tilegen.util.KeyValueArgumentSource
  */
 object PipelineOperations {
 	import OperationType._
-	import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 
 	protected var tableIdCount = new AtomicInteger(0)
 
@@ -131,7 +122,8 @@ object PipelineOperations {
 	 * @param minDate Start date for the range.
 	 * @param maxDate End date for the range.
 	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
-	 * @param timeCol Column spec denoting name of time column in input schema RDD.
+	 * @param timeCol Column spec denoting name of time column in input schema RDD.  Column is expected
+	 *                to be a string.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
 	 */
@@ -162,6 +154,25 @@ object PipelineOperations {
 		val minTime = new Date(formatter.parse(minDate).getTime)
 		val maxTime = new Date(formatter.parse(maxDate).getTime)
 		dateFilterOp(minTime, maxTime, format, timeCol)(input)
+	}
+
+	/**
+	 * Pipeline op to filter records to a specific date range.
+	 *
+	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
+	 * @param timeCol Column spec denoting name of time column in input schema RDD.  In this case time column
+	 *                is expected to store a Date.
+	 * @param input Input pipeline data to filter.
+	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
+	 */
+	def dateFilterOp(minDate: Date, maxDate: Date, timeCol: String)(input: PipelineData): PipelineData = {
+		val minTime = minDate.getTime
+		val maxTime = maxDate.getTime
+		val filterFcn = udf((time: Timestamp) => {
+			minTime <= time.getTime && time.getTime <= maxTime
+		})
+		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
 	/**
