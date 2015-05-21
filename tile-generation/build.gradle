@@ -148,3 +148,10 @@ dependencies {
 	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
 	addHBaseDependencies("assemblyJarReq")
 }
+
+afterEvaluate {
+	println "Assembly dependencies"
+	configurations['assemblyJarReq'].allDependencies.each { dep ->
+		println "      ${dep.group}:${dep.name}:${dep.version}"
+	}
+}
