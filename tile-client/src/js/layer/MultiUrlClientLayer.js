@@ -50,9 +50,9 @@
 		ClientLayer.call(this, spec);
 		this.getURL = function(bounds) {
 			return _.map(getURL.call(this, bounds, spec.source.layers), function(url) {
-				return url + that.getQueryParamString()
+				return url + that.getQueryParamString();
 			});
-		}
+		};
 	}
 
 	MultiUrlClientLayer.prototype = Object.create( ClientLayer.prototype );
@@ -80,8 +80,8 @@
 		}
 		layer.levelMinMax = levelMinMax;
 		PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
-	}
+	};
 
-	module.exports = MultiUrlClientLayer
+	module.exports = MultiUrlClientLayer;
 }());
 
