@@ -26,13 +26,24 @@ package com.oculusinfo.sparktile.spark;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.ServletContextEvent;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.oculusinfo.binning.util.JsonUtilities;
+import org.apache.avro.generic.GenericData;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileContext;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
@@ -43,9 +54,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.oculusinfo.tile.servlet.ServletLifecycleListener;
 import com.oculusinfo.tile.TileServiceConfiguration;
 
@@ -83,6 +91,7 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	private String     _master;
 	private String     _jobName;
 	private String     _sparkHome;
+	private String[]   _configurations;
 	private String[]   _jars;
 	private Properties _connectionProperties;
 
@@ -95,29 +104,13 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	                                 @Named("org.apache.spark.home") String sparkHome,
 	                                 @Named("org.apache.spark.jars") String extraJars,
 									 @Named("org.apache.spark.properties") String connectionProperties,
+									 @Named("org.apache.spark.configurations") String configurations,
+									 @Named("org.apache.spark.tmpDir") String tmpDir,
 	                                 TileServiceConfiguration config) {
 		_master = master;
 		_jobName = jobName;
 		_sparkHome = sparkHome;
-
-		// Construct our jarlist
-		List<String> jarList = new ArrayList<>();
-		// First, get our known needed jars from our own classpath
-		// Include binning-utilities
-		jarList.add(getJarPathForClass(com.oculusinfo.binning.TilePyramid.class));
-		// Include tile-generation
-		jarList.add(getJarPathForClass(com.oculusinfo.tilegen.tiling.TileIO.class));
-		// Include the HBase jar
-		jarList.add(getJarPathForClass(org.apache.hadoop.hbase.HBaseConfiguration.class));
-		// Include any additionally configured jars
-		if (null != extraJars && !extraJars.isEmpty()) {
-			for (String extraJar: extraJars.split(":")) {
-				extraJar = extraJar.trim();
-				if (!extraJar.isEmpty())
-					jarList.add(extraJar);
-			}
-		}
-		_jars = jarList.toArray(new String[jarList.size()]);
+		_configurations = configurations.split(",");
 
 		try {
 			_connectionProperties = JsonUtilities.jsonObjToProperties(new JSONObject(connectionProperties));
@@ -125,6 +118,33 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 			LOGGER.warn("Error reading spark connection configuration", e);
 			_connectionProperties = new Properties();
 		}
+
+		// Construct our jarlist
+		List<Class<?>> jarClasses = new ArrayList<>();
+		// First, get our known needed jars from our own classpath
+		// Include binning-utilities
+		jarClasses.add(com.oculusinfo.binning.TilePyramid.class);
+		// Include tile-generation
+		jarClasses.add(com.oculusinfo.tilegen.tiling.TileIO.class);
+		// Include the HBase jar
+		jarClasses.add(org.apache.hadoop.hbase.HBaseConfiguration.class);
+		// INclude the Yarn jar
+		jarClasses.add(org.apache.spark.scheduler.cluster.YarnScheduler.class);
+		// Include any additionally configured jars
+		if (null != extraJars && !extraJars.isEmpty()) {
+			for (String extraJar: extraJars.split(":")) {
+				extraJar = extraJar.trim();
+				if (!extraJar.isEmpty()) {
+					try {
+						Class<?> jarRepresentative = Class.forName(extraJar);
+						jarClasses.add(jarRepresentative);
+					} catch (ClassNotFoundException e) {
+						LOGGER.warn("Couldn't find class "+extraJar, e);
+					}
+				}
+			}
+		}
+		_jars = getJarLocations(jarClasses, tmpDir);
 
 		config.addLifecycleListener(new ServletLifecycleListener() {
 				@Override
@@ -136,6 +156,39 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 					shutdownSparkContext();
 				}
 			});
+	}
+
+	private String[] getJarLocations (List<Class<?>> representativeClasses, String tmpDir) {
+		// Get an hdfs connection
+		Configuration conf = new Configuration();
+		for (String configFile: _configurations) {
+			InputStream configStream = getClass().getResourceAsStream(configFile.trim());
+			conf.addResource(configStream);
+		}
+		String defName = conf.get("fs.default.name");
+
+		List<String> jars = new ArrayList<>();
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			// Create a temporary application directory.
+			Path tmp = new Path(tmpDir);
+			if (!fs.exists(tmp)) {
+				fs.mkdirs(tmp);
+				fs.deleteOnExit(tmp);
+			}
+
+			for (Class<?> repClass: representativeClasses) {
+				Path localJarPath = new Path(getJarPathForClass(repClass));
+				Path hdfsJarPath = new Path(tmp, localJarPath.getName());
+				fs.copyFromLocalFile(false, true, localJarPath, hdfsJarPath);
+				fs.deleteOnExit(hdfsJarPath);
+				jars.add(hdfsJarPath.toString());
+			}
+		} catch (IOException e) {
+			LOGGER.warn("Error copying jars to HDFS", e);
+		}
+
+		return jars.toArray(new String[0]);
 	}
 
 	private String getJarPathForClass (Class<?> type) {
@@ -191,6 +244,19 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 					config.set(key, value);
 				}
 			}
+
+			// Copy in hdfs configuration properties
+			Configuration conf = new Configuration();
+			for (String configFile: _configurations) {
+				InputStream configStream = getClass().getResourceAsStream(configFile.trim());
+				conf.addResource(configStream);
+			}
+			for (Map.Entry<String, String> entry: conf) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				config.set("spark.hadoop."+key, value);
+			}
+
 			_context = new JavaSparkContext(config);
 		}
 		return _context;
