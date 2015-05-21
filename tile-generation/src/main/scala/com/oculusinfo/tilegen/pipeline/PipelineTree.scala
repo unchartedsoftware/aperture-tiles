@@ -27,17 +27,17 @@
 package com.oculusinfo.tilegen.pipeline
 
 import grizzled.slf4j.Logging
-import org.apache.spark.sql.catalyst.types.StructType
-import org.apache.spark.sql.{SchemaRDD, SQLContext}
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{DataFrame, SQLContext}
 
 /**
  * Data that is passed from stage to stage of the tile pipeline.
  *
  * @param sqlContext The spark SQL context
- * @param srdd Valid SchemaRDD
+ * @param srdd Valid DataFrame
  * @param tableName Optional associated temporary table name
  */
-case class PipelineData(sqlContext: SQLContext, srdd: SchemaRDD, tableName: Option[String] = None)
+case class PipelineData(sqlContext: SQLContext, srdd: DataFrame, tableName: Option[String] = None)
 
 /**
  * Tile pipeline tree node that transforms PipelineData
@@ -81,7 +81,7 @@ object PipelineTree extends Logging {
 	 *
 	 * @param start PipelineStage to start the traversal from
 	 * @param sqlContext Spark SQL context to run the jobs under
-	 * @param input Optional start data.  Data based on an empty SchemaRDD will be used if not set.
+	 * @param input Optional start data.  Data based on an empty DataFrame will be used if not set.
 	 */
 	def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
 		// TODO: Should run a check for cycles here (tsort?)
@@ -94,7 +94,7 @@ object PipelineTree extends Logging {
 		input match {
 			case Some(i) => ex(start, i)
 			case None =>
-				val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Seq()))
+				val emptySchema = sqlContext.jsonRDD(sqlContext.sparkContext.emptyRDD[String], new StructType(Array()))
 				ex(start, PipelineData(sqlContext, emptySchema))
 		}
 	}

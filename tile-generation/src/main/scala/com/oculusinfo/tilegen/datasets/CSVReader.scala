@@ -30,11 +30,12 @@ import java.util.TimeZone
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.types._
 
 import scala.util.Try
 
 /**
- * A class that allows reading a schema file and a CSV file as a SchemaRDD.
+ * A class that allows reading a schema file and a CSV file as a DataFrame.
  *
  * This may eventually become obsolete - Spark may be writing a similar thing.
  *
@@ -114,9 +115,9 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 
 	/**
-	 * Get the wrapped CSV RDD as a SchemaRDD, parsed and typed.
+	 * Get the wrapped CSV RDD as a DataFrame, parsed and typed.
 	 */
-	def asSchemaRDD = _parsed
+	def asDataFrame = _parsed
 
 	def schema = _schema
 
@@ -125,7 +126,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 	                                                 "The separator to use between fields in the input data",
 	                                                 Some("\t"))
 
-	private lazy val _parsed: SchemaRDD = {
+	private lazy val _parsed: DataFrame = {
 		val separator = _separator
 		val parsers = _parsers
 		val indices = _indices
@@ -137,7 +138,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 				row(values:_*)
 			}
 		).filter(_.isSuccess).map(_.get)
-		sqlc.applySchema(rowRDD, _schema)
+		sqlc.createDataFrame(rowRDD, _schema)
 	}
 
 	// _schema: the schema of our CSV file, as specified by our configuration
@@ -174,7 +175,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 						                        "The date format of the "+fieldName+" field",
 						                        Some("yyMMddHHmm")))
 					format.setTimeZone(TimeZone.getTimeZone("GMT"))
-					(LongType, s => format.parse(s.trim).getTime())
+					(TimestampType, s => new java.sql.Timestamp(format.parse(s.trim).getTime()) )
 				}
 				case "propertymap" => {
 					val property = configuration.getString(

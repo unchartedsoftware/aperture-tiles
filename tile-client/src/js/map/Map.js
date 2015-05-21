@@ -37,6 +37,7 @@
         WebMercatorTilePyramid = require('../binning/WebMercatorTilePyramid'),
         TileIterator = require('../binning/TileIterator'),
         TILESIZE = 256,
+        MARKER_Z_INDEX = 5000,
         setMapCallbacks,
         activateComponent,
         deactivateComponent,
@@ -48,7 +49,8 @@
         removeBaseLayer,
         removeLayer,
         removeCarousel,
-        removeAxis;
+        removeAxis,
+        resetLayerZIndices;
 
     /**
      * Set callbacks to update the maps tile focus, identifying which tile
@@ -303,6 +305,8 @@
             // deactivate it
             layer.deactivate();
             layer.map = null;
+            // reset z-indices
+            resetLayerZIndices( map );
         }
     };
 
@@ -323,6 +327,8 @@
             // deactivate it
             carousel.deactivate();
             carousel.map = null;
+            // reset z-indices
+            resetLayerZIndices( map );
         }
     };
 
@@ -339,6 +345,27 @@
         // deactivate it
         axis.deactivate();
         axis.map = null;
+    };
+
+    /**
+     * Removing layers causes a z-index reset since we use css z-index rather
+     * than OpenLayers's built in relative indexing (which sucks for dynamic maps).
+     * This is used to reset all z-indices accordingly.
+     * @private
+     *
+     * @param {Map} map - The map object.
+     */
+    resetLayerZIndices = function( map ) {
+        var layers = map.layers,
+            i;
+        if ( map.layers ) {
+            for ( i=0; i<layers.length; i++ ) {
+                layers[i].setZIndex( layers[i].getZIndex() );
+            }
+        }
+        if ( map.olMarkers ) {
+            $( map.olMarkers.div ).css( 'z-index', MARKER_Z_INDEX );
+        }
     };
 
     /**
@@ -473,8 +500,7 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index],
-                i;
+                newBaseLayer = this.baselayers[ index];
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -486,19 +512,10 @@
             if ( oldBaseLayer ) {
                 oldBaseLayer.deactivate();
             }
-
             newBaseLayer.activate();
             this.baseLayerIndex = index;
-
             // update z index, since changing baselayer resets them
-            if ( this.layers ) {
-                for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[i].setZIndex( this.layers[i].getZIndex() );
-                }
-            }
-            if ( this.olMarkers ) {
-                $( this.olMarkers.div ).css( 'z-index', 5000 );
-            }
+            resetLayerZIndices( this );
             PubSub.publish( newBaseLayer.getChannel(), { field: 'baseLayerIndex', value: index });
         },
 
@@ -542,7 +559,9 @@
             // update theme for all attached layers
             if ( this.layers ) {
                 for ( i=0; i<this.layers.length; i++ ) {
-                    this.layers[ i ].setTheme( theme );
+                    if ( this.layers[i].setTheme ) {
+                        this.layers[i].setTheme( theme );
+                    }
                 }
             }
         },
@@ -737,8 +756,9 @@
             if ( !this.olMarkers ) {
                 this.olMarkers = new OpenLayers.Layer.Markers( "Markers" );
                 this.olMap.addLayer( this.olMarkers );
-                $( this.olMarkers.div ).css( 'z-index', 5000 );
             }
+            // always update the z-index of this div
+            $( this.olMarkers.div ).css( 'z-index', 5000 );
             marker.map = this;
             marker.activate( x, y );
             return marker;

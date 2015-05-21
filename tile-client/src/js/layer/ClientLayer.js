@@ -34,6 +34,42 @@
         PubSub = require('../util/PubSub');
 
     /**
+     * Private: Sets the layers min and max values for the given zoom level.
+     *
+     * @param layer {Object} the layer object.
+     */
+    function setLevelMinMax( layer ) {
+        var zoomLevel = layer.map.getZoom(),
+            meta = layer.source.meta && layer.source.meta.meta ? layer.source.meta.meta[ zoomLevel ] : null,
+            transformData = layer.tileTransform.data || {},
+            levelMinMax = meta,
+            renderer = layer.renderer,
+            aggregated;
+        // aggregate the data if there is an aggregator attached
+        if ( meta ) {
+            if ( renderer && renderer.aggregator ) {
+                // aggregate the meta data buckets
+                aggregated = renderer.aggregator.aggregate(
+                    meta.bins || [],
+                    transformData.startBucket,
+                    transformData.endBucket );
+                // take the first and last index, which correspond to max / min
+                levelMinMax = {
+                    minimum: aggregated[aggregated.length - 1],
+                    maximum: aggregated[0]
+                };
+            }
+        } else {
+            levelMinMax = {
+                minimum: null,
+                maximum: null
+            };
+        }
+        layer.levelMinMax = levelMinMax;
+        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
+    }
+
+    /**
      * Private: Returns the zoom callback function to update level min and maxes.
      *
      * @param layer {ServerLayer} The layer object.
@@ -70,7 +106,7 @@
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1000;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1000;
         this.tileTransform = spec.tileTransform || {};
         this.domain = "client";
         this.source = spec.source;
@@ -116,14 +152,17 @@
                 tileClass: this.tileClass,
                 renderer: this.renderer
             });
-
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
-        this.setLevelMinMax( this );
+
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
+        setLevelMinMax( this ); // set level min / max
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 

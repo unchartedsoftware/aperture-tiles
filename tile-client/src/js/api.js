@@ -44,6 +44,7 @@
         Carousel: require('./layer/Carousel'),
         LayerUtil: require('./layer/LayerUtil'),
         VectorLayer: require('./layer/VectorLayer'),
+        Layer: require('./layer/Layer'),
 
         // Renderer
         Renderer: require('./layer/renderer/Renderer'),

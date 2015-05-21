@@ -232,7 +232,16 @@ public class GraphAnalyticsRecord implements Serializable {
 						 + "\"parentCoords\": [" + node.getParentCoords().getFirst() + ", " + node.getParentCoords().getSecond() + "], "
 						 + "\"parentRadius\": " + node.getParentRadius() + ", ";
 			
-			result += "\"interEdges\": [";
+			result += "\"statsList\": [";
+			if (node.getStatsList() != null) {
+				for (int n = 0; n < node.getStatsList().size(); n++) {
+					if (n > 0)
+						result += ", ";
+					result += node.getStatsList().get(n);
+				}				
+			}
+			
+			result += "], \"interEdges\": [";
 			if (node.getInterEdges() != null) {
 				for (int n = 0; n < node.getInterEdges().size(); n++) {
 					GraphEdge edge = node.getInterEdges().get(n);
@@ -321,7 +330,21 @@ public class GraphAnalyticsRecord implements Serializable {
 			end = value.indexOf(", ");
 			double parentRadius = Double.parseDouble(value.substring(0, end));
 			
-			value = eat(value.substring(end), ", \"interEdges\": [");
+			value = eat(value.substring(end), ", \"statsList\": [");
+			List<Double> statsList = new ArrayList<>();
+			
+			while (!value.startsWith("]")) {
+				end = value.indexOf(", ");
+				double currentValue = Double.parseDouble(value.substring(0, end));	
+				
+				statsList.add(currentValue);	// add currentValue to the list
+				
+				value = value.substring(end + 1);
+				if (value.startsWith(", "))
+					value = eat(value, ", ");			
+			}			
+			
+			value = eat(value.substring(end), "], \"interEdges\": [");
 			List<GraphEdge> interEdges = new ArrayList<>();
 			
 			while (value.startsWith("{")) {
@@ -387,6 +410,7 @@ public class GraphAnalyticsRecord implements Serializable {
 						parentID,
 						new Pair<Double, Double>(parentX, parentY),
 						parentRadius,
+						statsList,
 						interEdges,
 						intraEdges
 					);
@@ -526,6 +550,7 @@ public class GraphAnalyticsRecord implements Serializable {
 														Long.MAX_VALUE,
 														new Pair<Double, Double>(Double.MAX_VALUE, Double.MAX_VALUE),
 														Double.MAX_VALUE,
+														Arrays.asList(Double.MAX_VALUE),
 														minEdgeList,
 														minEdgeList);
 
@@ -569,6 +594,7 @@ public class GraphAnalyticsRecord implements Serializable {
 														Long.MIN_VALUE,
 														new Pair<Double, Double>(Double.MIN_VALUE, Double.MIN_VALUE),
 														Double.MIN_VALUE,
+														Arrays.asList(Double.MIN_VALUE),
 														maxEdgeList,
 														maxEdgeList);
 

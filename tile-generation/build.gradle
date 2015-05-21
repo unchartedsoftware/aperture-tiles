@@ -116,7 +116,13 @@ dependencies {
 	compile "org.apache.spark:spark-sql_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
 	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
-	compile "org.apache.hadoop:hadoop-client:$hadoopCoreVersion"
+	compile("org.apache.hadoop:hadoop-client:$hadoopCoreVersion"){
+		// The following are excluded by spark, so we exclude them too.
+		exclude group: "asm", module: "asm"
+		exclude group: "org.jboss.netty", module: "netty"
+		exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+		exclude group: "javax.servlet", module: "servlet-api"
+	}
 	compile "org.scala-lang:scala-library:$scalaVersion"
 	compile "org.clapper:grizzled-slf4j_2.10:1.0.2"
 	compile project(":binning-utilities")
@@ -141,4 +147,11 @@ dependencies {
 	assemblyJarReq "org.json:json:20090211"
 	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
 	addHBaseDependencies("assemblyJarReq")
+}
+
+afterEvaluate {
+	println "Assembly dependencies"
+	configurations['assemblyJarReq'].allDependencies.each { dep ->
+		println "      ${dep.group}:${dep.name}:${dep.version}"
+	}
 }

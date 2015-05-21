@@ -25,17 +25,17 @@
 package com.oculusinfo.tilegen.datasets
 
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 import java.util
 import java.util.Properties
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.tiling.analytics.{NumericMaxBinningAnalytic, NumericSumBinningAnalytic, NumericMinBinningAnalytic}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.SharedSparkContext
-import org.apache.spark.sql.IntegerType
-import org.apache.spark.sql.LongType
-import org.apache.spark.sql.DoubleType
-import org.apache.spark.sql.TimestampType
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.DoubleType
+import org.apache.spark.sql.types.TimestampType
 import org.scalatest.FunSuite
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer
 
@@ -66,7 +66,7 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		                               "5\tu\tv\t5.5\tw\t5\tx\t2005-05-05 05:05:05\ty"))
 		val props = new PropertiesWrapper(rawProps)
 		val reader = new CSVReader(sqlc, data, props)
-		val srdd = reader.asSchemaRDD
+		val srdd = reader.asDataFrame
 		assert(4 === srdd.schema.fields.size)
 		assert("a" === srdd.schema.fields(0).name)
 		assert(IntegerType === srdd.schema.fields(0).dataType);
@@ -75,14 +75,14 @@ class FactoriesTestSuite extends FunSuite with SharedSparkContext {
 		assert("c" === srdd.schema.fields(2).name)
 		assert(LongType === srdd.schema.fields(2).dataType)
 		assert("d" === srdd.schema.fields(3).name)
-		assert(LongType === srdd.schema.fields(3).dataType)
+		assert(TimestampType === srdd.schema.fields(3).dataType)
 
 		val sLocal = srdd.map(row => {
 			                      val r = row
 			                      val res = (row(0).asInstanceOf[Int],
 			                                 row(1).asInstanceOf[Double],
 			                                 row(2).asInstanceOf[Long],
-			                                 row(3).asInstanceOf[Long])
+			                                 row(3).asInstanceOf[java.util.Date])
 			                      res
 		                      }).collect
 	}

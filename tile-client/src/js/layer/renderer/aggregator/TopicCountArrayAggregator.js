@@ -65,8 +65,8 @@
     }
 
     /**
-     * Instantiate a TopicCountAggregator object.
-     * @class TopicCountAggregator
+     * Instantiate a TopicCountArrayAggregator object.
+     * @class TopicCountArrayAggregator
      * @classdesc
      */
     function TopicCountArrayAggregator() {
@@ -77,6 +77,7 @@
     /**
      * Given an array of buckets, will execute the provided aggregation
      * specification against all relevant entries.
+     * @memberof TopicCountArrayAggregator
      *
      * @param {Array} buckets - The array of buckets.
      *

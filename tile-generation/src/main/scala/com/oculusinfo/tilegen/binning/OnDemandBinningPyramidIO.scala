@@ -81,7 +81,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	def getConsolidationPartitions = consolidationPartitions
 
 	def getTask (pyramidId: String) = tasks(pyramidId)
-	
+
 	def initializeForWrite (pyramidId: String): Unit = {
 	}
 
@@ -118,7 +118,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						Some(true))
 					// Register it as a table
 					val table = TilingTask.rectifyTableName("table "+pyramidId)
-					reader.asSchemaRDD.registerTempTable(table)
+					reader.asDataFrame.registerTempTable(table)
 					if (cache) sqlc.cacheTable(table)
 
 					// Create our tiling task
@@ -177,7 +177,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 	/**
 	 * Direct programatic initialization.
-	 * 
+	 *
 	 * Temporary route until we get full pipeline configuration
 	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
@@ -304,5 +304,5 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 	def removeTiles (id: String, tiles: JavaIterable[TileIndex]  ) : Unit =
 		throw new IOException("removeTiles not currently supported for OnDemandBinningPyramidIO")
-	
+
 }

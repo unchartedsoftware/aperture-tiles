@@ -25,24 +25,25 @@
 package com.oculusinfo.annotation.rest;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
-import oculus.aperture.common.rest.ResourceDefinition;
+import org.restlet.resource.ServerResource;
 
 public class AnnotationRestConfigModule extends AbstractModule {
-
 
 	@Override
 	protected void configure() {
 
 		// Bind REST end points for clients
-		MapBinder<String, ResourceDefinition> resourceBinder =
-			MapBinder.newMapBinder(binder(), String.class, ResourceDefinition.class);
+		MapBinder<String, Class<? extends ServerResource>> resourceBinder =
+			MapBinder.newMapBinder( binder(),
+				new TypeLiteral<String>() {},
+				new TypeLiteral<Class<? extends ServerResource>>() {} );
 
-		resourceBinder.addBinding("/{version}/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
-		resourceBinder.addBinding("/annotation").toInstance(new ResourceDefinition( AnnotationResource.class ));
+		resourceBinder.addBinding( "/{version}/annotation" ).toInstance( AnnotationResource.class );
+		resourceBinder.addBinding( "/annotation" ).toInstance( AnnotationResource.class );
 
-		resourceBinder.addBinding("/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));		
-		resourceBinder.addBinding("/{version}/annotation/{layer}/{level}/{x}/{y}.{ext}").toInstance(new ResourceDefinition( AnnotationResource.class ));
-		
+		resourceBinder.addBinding( "/annotation/{layer}/{level}/{x}/{y}.{ext}" ).toInstance( AnnotationResource.class );
+		resourceBinder.addBinding( "/{version}/annotation/{layer}/{level}/{x}/{y}.{ext}" ).toInstance( AnnotationResource.class );
 	}
 }

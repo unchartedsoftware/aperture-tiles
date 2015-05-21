@@ -1,29 +1,39 @@
-# Twitter Topics Aperture Tiles Sample
+Twitter Topics Aperture Tiles Sample
+====================================
 
-This demo displays a Twitter geo-located tweet heatmap and aggregates the top words mentioned in tweets for each tile. A more advanced demo of this dataset can be found at https://aperturetiles.com/demos/.
+This demo displays a heatmap of geo-located Twitter messages with tile-based overlays that aggregate the top words mentioned in tweets. 
 
-## Setup and Building
+**NOTE**: A more advanced version of this dataset can be found at https://aperturetiles.com/demos/.
 
-Before running this sample, the tile data needs to be downloaded locally. Download http://assets.oculusinfo.com/tiles/downloads/tilesets/twitter-heatmap.zip and http://assets.oculusinfo.com/tiles/downloads/tilesets/twitter-curated-topics.zip and place both in `src/main/resources`. Ensure the filenames remain as is.
+## Setup and Building ##
 
-To build the demo first ensure that the entire aperture-tiles project is built by running the following from the root aperture-tiles project directory:
+Before you run this demo:
 
-```
-mvn clean install
-```
+1. Download the [Twitter heatmap](http://assets.oculusinfo.com/tiles/downloads/tilesets/twitter-heatmap.zip) and [Twitter Topics](http://assets.oculusinfo.com/tiles/downloads/tilesets/twitter-curated-topics.zip) tile data and save it to the [src/main/resources/](src/main/resources/) directory.
+2. Ensure that the filenames remain as is.
 
-Subsequent changes to the Twitter demo can be built individually by running the following from the `twitter-topics/` directory:
+To build the demo:
 
-```
-mvn package
-```
+1. Build the entire aperture-tiles project by executing the following command in the [root aperture-tiles](../../) directory:
 
-## Running
+	```bash
+	../../gradlew install
+	```
 
-From the the `twitter-topics/` directory, run:
+2. Subsequent changes to the Twitter Topics demo can be built individually by executing the following command in the [tile-examples/twitter-topics/](.) directory:
 
-```
-mvn jetty:run
-```
+	```bash
+	../../gradlew install
+	```
 
-Once the server has started, navigate to [http://localhost:8080/twitter-topics](http://localhost:8080/twitter-topics) in your favorite modern browser.
+## Running ##
+
+To server the demo on your localhost and test it:
+
+1. Run the following command in the [tile-examples/twitter-topics/](.) directory:
+
+	```bash
+	../../gradlew jettyrun
+	```
+
+2. Navigate to [http://localhost:8080/twitter-topics-client](http://localhost:8080/twitter-topics-client) in any modern browser.

@@ -118,11 +118,11 @@
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
-        this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 1;
+        this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1;
         this.renderer = spec.renderer || {};
-        this.renderer.coarseness = ( this.renderer.coarseness !== undefined ) ? this.renderer.coarseness : 1;
-        this.renderer.rangeMin = ( this.renderer.rangeMin !== undefined ) ? this.renderer.rangeMin : 0;
-        this.renderer.rangeMax = ( this.renderer.rangeMax !== undefined ) ? this.renderer.rangeMax : 100;
+        this.renderer.coarseness = ( this.renderer.coarseness !== undefined ) ? parseInt( this.renderer.coarseness, 10 ) : 1;
+        this.renderer.rangeMin = ( this.renderer.rangeMin !== undefined ) ? parseInt( this.renderer.rangeMin, 10 ) : 0;
+        this.renderer.rangeMax = ( this.renderer.rangeMax !== undefined ) ? parseInt( this.renderer.rangeMax, 10 ) : 100;
         this.valueTransform = spec.valueTransform || {};
         this.tileTransform = spec.tileTransform || {};
         this.domain = "server";
@@ -157,13 +157,15 @@
                 isBaseLayer: false,
                 getURL: this.getURL
             });
-        this.map.olMap.addLayer( this.olLayer );
-
-        this.setZIndex( this.zIndex );
-        this.setOpacity( this.opacity );
+        // set whether it is enabled or not before attaching, to prevent
+        // needless tile reuqestst
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
-        setLevelMinMax( this );
+        this.setOpacity( this.opacity );
+        // attach to map
+        this.map.olMap.addLayer( this.olLayer );
+        // set z-index after
+        this.setZIndex( this.zIndex );
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
