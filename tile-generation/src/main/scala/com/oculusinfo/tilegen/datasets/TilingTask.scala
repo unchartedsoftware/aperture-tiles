@@ -277,7 +277,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 	private def getAxisBounds(): (Double, Double, Double, Double) = {
 		val selectStmt =
-			indexer.fields.flatMap(field => List("min(" + field + ")", "max(" + field + ")"))
+			indexer.fields.flatMap(field => List("min(`" + field + "`)", "max(`" + field + "`)"))
 				.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
 		if (bounds.toSeq.map(_ == null).reduce(_ || _))
@@ -372,7 +372,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
 
 			val selectStmt =
-				allFields.mkString("SELECT ", ", ", " FROM "+table)
+				allFields.mkString("SELECT `", "`, `", "` FROM "+table)
 
 			val data = sqlc.sql(selectStmt)
 
