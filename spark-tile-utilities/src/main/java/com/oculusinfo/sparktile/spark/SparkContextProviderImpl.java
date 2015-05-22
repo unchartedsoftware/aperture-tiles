@@ -39,6 +39,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.oculusinfo.binning.util.JsonUtilities;
+import com.oculusinfo.factory.util.Pair;
 import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
@@ -91,9 +92,10 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	private String     _master;
 	private String     _jobName;
 	private String     _sparkHome;
-	private String[]   _configurations;
-	private String[]   _jars;
 	private Properties _connectionProperties;
+	private String[]   _sparkConfigurations;
+	private String[]   _hadoopConfigurations;
+	private String[]   _jars;
 
 	private JavaSparkContext _context;
 	private SQLContext _sqlContext;
@@ -104,13 +106,15 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 	                                 @Named("org.apache.spark.home") String sparkHome,
 	                                 @Named("org.apache.spark.jars") String extraJars,
 									 @Named("org.apache.spark.properties") String connectionProperties,
-									 @Named("org.apache.spark.configurations") String configurations,
+									 @Named("org.apache.spark.configurations") String sparkConfigurations,
+									 @Named("org.apache.hadoop.configurations") String hadoopConfigurations,
 									 @Named("org.apache.spark.tmpDir") String tmpDir,
 	                                 TileServiceConfiguration config) {
 		_master = master;
 		_jobName = jobName;
 		_sparkHome = sparkHome;
-		_configurations = configurations.split(",");
+		_sparkConfigurations = sparkConfigurations.split(",");
+		_hadoopConfigurations = hadoopConfigurations.split(",");
 
 		try {
 			_connectionProperties = JsonUtilities.jsonObjToProperties(new JSONObject(connectionProperties));
@@ -158,14 +162,29 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 			});
 	}
 
-	private String[] getJarLocations (List<Class<?>> representativeClasses, String tmpDir) {
-		// Get an hdfs connection
-		Configuration conf = new Configuration();
-		for (String configFile: _configurations) {
+	private Configuration readHadoopConfiguration (boolean loadDefaults, String... configurations) {
+		Configuration conf = new Configuration(loadDefaults);
+		for (String configFile : configurations) {
 			InputStream configStream = getClass().getResourceAsStream(configFile.trim());
 			conf.addResource(configStream);
 		}
-		String defName = conf.get("fs.default.name");
+		return conf;
+	}
+
+	private List<Pair<String, String>> configurationProperties (String... configurations) {
+		Configuration conf = readHadoopConfiguration(false, configurations);
+		List<Pair<String, String>> results = new ArrayList<>();
+		for (Map.Entry<String, String> entry: conf) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			results.add(new Pair<>(key, value));
+		}
+		return results;
+	}
+
+	private String[] getJarLocations (List<Class<?>> representativeClasses, String tmpDir) {
+		// Get an hdfs connection
+		Configuration conf = readHadoopConfiguration(true, _hadoopConfigurations);
 
 		List<String> jars = new ArrayList<>();
 		try {
@@ -234,27 +253,26 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 			config.setJars(_jars);
 			config.set("spark.logConf", "true");
 
-			// Copy in configuration properties that begin with "akka." and "spark."
+			// Copy in configuration properties from our spark configuration files
+			for (Pair<String, String> entry: configurationProperties(_sparkConfigurations)) {
+				config.set(entry.getFirst(), entry.getSecond());
+			}
+
+			// Copy in configuration properties from our hadoop configuration files (but with "spark.hadoop." prepended
+			// to them, so that spark will treat them as hadoop configuration properties)
+			for (Pair<String, String> entry: configurationProperties(_hadoopConfigurations)) {
+				config.set("spark.hadoop."+entry.getFirst(), entry.getSecond());
+			}
+
+			// Copy in configuration properties that begin with "akka." and "spark.", overriding those from config files
 			for (Object keyObj: _connectionProperties.keySet()) {
 				String key = keyObj.toString();
 				if (key.toLowerCase().startsWith("akka.")
-				    || key.toLowerCase().startsWith("spark.")
-				    || key.toLowerCase().startsWith("yarn.")) {
+					|| key.toLowerCase().startsWith("spark.")
+					|| key.toLowerCase().startsWith("yarn.")) {
 					String value = _connectionProperties.get(key).toString();
 					config.set(key, value);
 				}
-			}
-
-			// Copy in hdfs configuration properties
-			Configuration conf = new Configuration();
-			for (String configFile: _configurations) {
-				InputStream configStream = getClass().getResourceAsStream(configFile.trim());
-				conf.addResource(configStream);
-			}
-			for (Map.Entry<String, String> entry: conf) {
-				String key = entry.getKey();
-				String value = entry.getValue();
-				config.set("spark.hadoop."+key, value);
 			}
 
 			_context = new JavaSparkContext(config);
