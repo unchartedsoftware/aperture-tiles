@@ -127,9 +127,9 @@ public class SparkContextProviderImpl implements SparkContextProvider {
 		// Include tile-generation
 		jarClasses.add(com.oculusinfo.tilegen.tiling.TileIO.class);
 		// Include the HBase jar
-		jarClasses.add(org.apache.hadoop.hbase.HBaseConfiguration.class);
+		// jarClasses.add(org.apache.hadoop.hbase.HBaseConfiguration.class);
 		// INclude the Yarn jar
-		jarClasses.add(org.apache.spark.scheduler.cluster.YarnScheduler.class);
+		// jarClasses.add(org.apache.spark.scheduler.cluster.YarnScheduler.class);
 		// Include any additionally configured jars
 		if (null != extraJars && !extraJars.isEmpty()) {
 			for (String extraJar: extraJars.split(":")) {
