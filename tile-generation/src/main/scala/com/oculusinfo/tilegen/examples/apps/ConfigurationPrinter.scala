@@ -27,5 +27,12 @@ object ConfigurationPrinter {
 		sc.hadoopConfiguration.iterator().toList.map(entry => (entry.getKey, entry.getValue)).sortBy(_._1).foreach { case (key, value) =>
 			println("\t\"%s\": \"%s\"".format(key, value))
 		}
+
+		println
+		println
+		println("Environment variables:")
+		System.getProperties.entrySet().toList.map(entry => (entry.getKey, entry.getValue)).sortBy(_._1).foreach{case (key, value) =>
+			println("\t\"%s\": \"%s\"".format(key, value))
+		}
 	}
 }
