@@ -192,7 +192,7 @@
             html += '<div class="text-by-frequency-right">';
             html += '<div class="text-by-frequency-label" style="' +
                 'font-size:'+height+'px;' +
-                'line-height:'+height+'px' +
+                'line-height:'+height+'px;' +
                 'height:'+height+'px">'+text+'</div>';
             html += '</div>';
             html += '</div>';
