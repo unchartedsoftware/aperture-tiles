@@ -31,7 +31,7 @@ object ConfigurationPrinter {
 		println
 		println
 		println("Environment variables:")
-		System.getProperties.entrySet().toList.map(entry => (entry.getKey, entry.getValue)).sortBy(_._1).foreach{case (key, value) =>
+		System.getProperties.entrySet().toList.map(entry => (entry.getKey, entry.getValue)).sortBy(_._1.toString).foreach{case (key, value) =>
 			println("\t\"%s\": \"%s\"".format(key, value))
 		}
 	}
