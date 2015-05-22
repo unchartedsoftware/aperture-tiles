@@ -48,86 +48,41 @@
         if ( shouldDraw ) {
             this.positionTile();
             dataUrl = this.layer.getURL( this.bounds );
+            dataUrl = ( dataUrl instanceof Array ) ? dataUrl : [ dataUrl ];
+            if ( !_.isEqual( dataUrl, this.url ) ) {
+                // format request
+                this.url = dataUrl;
+                this.tileData = null;
+                this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
+                this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
-            if (typeof dataUrl === "string") {
-                if ( dataUrl !== this.url ) {
-
-                    this.url = dataUrl;
-                    this.tileData = null;
-                    this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
-                    this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
-
-                    // new url to render
-                    if ( this.isLoading ) {
-                        this.dataRequest.abort();
-                        this.dataRequest = null;
-                        this.isLoading = false;
-                    }
-
-                    if ( !this.url ) {
-                        this.unload();
-                        return;
-                    }
-
-                    // hide tile contents until have data
-                    this.div.style.visibility = 'hidden';
-                    this.isLoading = true;
-                    this.dataRequest = $.ajax({
-                        url: this.url
-                    }).then(
-                        function( data ) {
-                            if (dataUrl === this.url) {
-                                that.tileData = data;
-                                that.renderTile( that.div, that.tileData );
-                            }
-                        },
-                        function( xhr ) {
-                            console.error( xhr.responseText );
-                            console.error( xhr );
-                        }
-                    ).always( function() {
-                            that.isLoading = false;
-                            that.dataRequest = null;
-                        });
-
-                } else {
-                    // already have right data, just render
-                    this.renderTile( this.div, this.tileData );
-                }
-            } else if (dataUrl instanceof Array) { // CDB: Needs cleanup.  Just clone of single case above with minor
-                // logic changes.
-                if (!_.isEqual(dataUrl, this.url)) {
-                    // format request
-                    this.url = dataUrl;
-                    this.tileData = null;
-                    this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
-                    this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
-
-                    // new url to render
-                    if ( this.isLoading ) {
-                        this.dataRequest.abort();
-                        this.dataRequest = null;
-                        this.isLoading = false;
-                    }
-
-                    if ( !this.url ) {
-                        this.unload();
-                        return;
-                    }
-
-                    // hide tile contents until have data
-                    this.div.style.visibility = 'hidden';
-                    this.isLoading = true;
-
-                    var requestList = _.map(dataUrl, function(currUrl) {
-                        return $.ajax({url: currUrl})
+                // new url to render
+                if ( this.isLoading ) {
+                    this.dataRequests.forEach( function( request ) {
+                        request.abort();
                     });
-                    $.when.apply($, requestList
-                    ).then(
-                        function() {
-                            var results = _.map(arguments, function(result){ return result[0]; });
-                            that.tileData = results;
-                            that.renderTile( that.div, results);
+                    this.dataRequests = null;
+                    this.isLoading = false;
+                }
+
+                if ( !this.url ) {
+                    this.unload();
+                    return;
+                }
+
+                // hide tile contents until have data
+                this.div.style.visibility = 'hidden';
+                this.isLoading = true;
+                var deferreds = [];
+
+                this.dataRequests = dataUrl.map( function( url ) {
+                    var deferred = $.Deferred();
+                    deferreds.push( deferred );
+                    return $.ajax({
+                        url: url
+                    }).then(
+                        function( results ) {
+                            deferred.resolve( results );
                         },
                         function( xhr ) {
                             console.error( xhr.responseText );
@@ -137,9 +92,27 @@
                         function() {
                             that.isLoading = false;
                             that.dataRequest = null;
+                    });
+                });
+                $.when.apply( $, deferreds ).then(
+                    function() {
+                        that.tileData = [];
+                        var i;
+                        for ( i=0; i<arguments.length; i++ ) {
+                            that.tileData.push( arguments[i] );
                         }
-                    );
-                }
+                        that.renderTile( that.div, that.tileData );
+                    },
+                    function( xhr ) {
+                        console.error( xhr.responseText );
+                        console.error( xhr );
+                    }
+                ).always(
+                    function() {
+                        that.isLoading = false;
+                        that.dataRequest = null;
+                    }
+                );
             } else {
                 // already have right data, just render
                 this.renderTile( this.div, this.tileData );
@@ -184,7 +157,7 @@
         }
     };
 
-    OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
+    OpenLayers.Tile.HTML.prototype.renderTile = function( container, data ) {
 
         if ( !this.layer || !this.div ) {
             // if the div or layer is no longer available, exit gracefully
@@ -202,45 +175,51 @@
         div.style.visibility = 'inherit';
         div.innerHTML = "";
 
-        var hasTile = false;
-        if (data instanceof Array) {
-            hasTile = _.reduce(data, function(result, datum) {
-                    return (datum.tile || datum.hits) && result;
-                }, true) && data;
-            if (!hasTile) return;
-        } else if ( !data || ( !data.tile && !data.hits ) ) {
-            // exit early if not data to render
+        if ( !data ) {
+            // no data
             return;
         }
 
-        if ( data.hits ) {
-            // add tile index to elastic search result
-            data.index = this.tileIndex;
+        // wrap it in an array for generic handling
+        data = ( data instanceof Array ) ? data : [ data ];
+
+        // ensure there is at least one set of data
+        // tile data is under 'tile', elasticsearch is under 'hits'
+        var hasTileOrHits = false;
+        data.forEach( function( datum ) {
+            if ( datum.tile || datum.hits ) {
+                hasTileOrHits = true;
+            }
+        });
+        if ( !hasTileOrHits ) {
+            return;
         }
 
+        // get renderer
         renderer = this.layer.renderer;
-        aggregator = renderer.aggregator;
-
-        // if renderer is attached, use it
         if ( typeof renderer === "function" ) {
             renderer = renderer.call( this.layer, this.bounds );
         }
+
         // if aggregator, aggregate the data
+        aggregator = renderer.aggregator;
         if ( aggregator ) {
-            if (data instanceof Array) {
-                _.forEach(data, function(datum) {
+            data.forEach( function( datum ) {
+                if ( datum.tile ) {
                     datum.tile.meta = {
                         raw: datum.tile.meta.map.bins,
                         aggregated: aggregator.aggregate( datum.tile.meta.map.bins )
-                    }
-                });
-            } else {
-                data.tile.meta = {
-                    raw: data.tile.meta.map.bins,
-                    aggregated: aggregator.aggregate( data.tile.meta.map.bins )
-                };
-            }
+                    };
+                } else {
+                    datum.tile = null;
+                }
+            });
         }
+
+        // unwrap if only a single entry
+        data = ( data.length === 1 ) ? data[0] : data;
+
+        // render data
         render = renderer.render( data );
         html = render.html;
         this.entries = render.entries;

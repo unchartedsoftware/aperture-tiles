@@ -118,7 +118,7 @@
      */
     TextByFrequencyRenderer.prototype.render = function( data ) {
 
-        var minFontSize = 10,
+        var minFontSize = 14,
             maxFontSize = 24,
             spacing = 20,
             textKey = this.spec.text.textKey,
@@ -153,7 +153,7 @@
             // scale the height based on level min / max
             height = RendererUtil.getFontSize(
                 highestCount,
-                getHighestCount( levelMinMax.minimum, countKey ),
+                0,
                 getHighestCount( levelMinMax.maximum, countKey ),
                 {
                     minFontSize: minFontSize,
@@ -191,7 +191,9 @@
             // create tag label
             html += '<div class="text-by-frequency-right">';
             html += '<div class="text-by-frequency-label" style="' +
-                'font-size:'+height+'px;line-height:'+height+'px">'+text+'</div>';
+                'font-size:'+height+'px;' +
+                'line-height:'+height+'px' +
+                'height:'+height+'px">'+text+'</div>';
             html += '</div>';
             html += '</div>';
         }

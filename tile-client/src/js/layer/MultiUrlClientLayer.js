@@ -29,61 +29,59 @@
     "use strict";
 
     var ClientLayer = require('./ClientLayer'),
-        LayerUtil = require('./LayerUtil'),
         PubSub = require('../util/PubSub');
 
-    function getURL( bounds, layers ) {
-        var tileIndex = LayerUtil.getTileIndex( this, bounds ),
-            x = tileIndex.xIndex,
-            y = tileIndex.yIndex,
-            z = tileIndex.level;
-        var result = _.map(layers, function(layer) {
-            if ( x >= 0 && y >= 0 ) {
-                return this.url + layer.id + "/" + z + "/" + x + "/" + y + "." + this.type;
-            }
-        }, this);
-        return result;
+    function getURLFunc( layers ) {
+        return function( bounds ) {
+            return layers.map( function( layer ) {
+                return layer.olLayer.getURL( bounds );
+            });
+        };
     }
 
     function MultiUrlClientLayer(spec) {
-        var that = this;
-
-        ClientLayer.call(this, spec);
-        this.getURL = function(bounds) {
-            return _.map(getURL.call(this, bounds, spec.source.layers), function(url) {
-                return url + that.getQueryParamString();
-            });
-        };
+        ClientLayer.call( this, spec );
+        this.getURL = getURLFunc( spec.source.layers );
     }
 
     MultiUrlClientLayer.prototype = Object.create( ClientLayer.prototype );
 
     // CDB: Not working properly yet.
-    MultiUrlClientLayer.prototype.setLevelMinMax = function(layer) {
-        // Apply the aggregator across each level to get their min max.
-        var zoomLevel = layer.map.getZoom(),
-            meta =  layer.source.meta.meta[ zoomLevel ],
-            transformData = layer.tileTransform.data || {},
-            levelMinMax = meta,
-            renderer = layer.renderer;
-
-        // aggregate the data if there is an aggregator attached
-        if ( renderer && renderer.aggregator ) {
-            // aggregate the meta data buckets
-            var aggregated = renderer.aggregator.aggregate(
-                meta.bins,
-                transformData.startBucket,
-                transformData.endBucket );
-            // take the first and last index, which correspond to max / min
-            levelMinMax = {
-                minimum: aggregated[aggregated.length - 1],
-                maximum: aggregated[0]
-            };
-        }
-        layer.levelMinMax = levelMinMax;
-        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
+    MultiUrlClientLayer.prototype.setLevelMinMax = function() {
+        var zoomLevel = this.map.getZoom(),
+            renderer = this.renderer;
+        // apply this aggregator to child laeyrs
+        var levelMinMax = this.source.layers.map( function( layer ) {
+            var source = layer.source,
+                meta = source.meta && source.meta.meta ? source.meta.meta[ zoomLevel ] : null,
+                transformData = layer.tileTransform.data || {},
+                levelMinMax = meta,
+                aggregated;
+            if ( meta ) {
+                // aggregate the data if there is an aggregator attached
+                if ( renderer && renderer.aggregator ) {
+                    // aggregate the meta data buckets
+                    aggregated = renderer.aggregator.aggregate(
+                        meta.bins || [],
+                        transformData.startBucket,
+                        transformData.endBucket );
+                    // take the first and last index, which correspond to max / min
+                    levelMinMax = {
+                        minimum: aggregated[aggregated.length - 1],
+                        maximum: aggregated[0]
+                    };
+                }
+            } else {
+                levelMinMax = {
+                    minimum: null,
+                    maximum: null
+                };
+            }
+            return levelMinMax;
+        });
+        this.levelMinMax = levelMinMax;
+        PubSub.publish( this.getChannel(), { field: 'levelMinMax', value: levelMinMax });
     };
 
     module.exports = MultiUrlClientLayer;
 }());
-

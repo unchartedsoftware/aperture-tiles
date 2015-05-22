@@ -34,42 +34,6 @@
         PubSub = require('../util/PubSub');
 
     /**
-     * Private: Sets the layers min and max values for the given zoom level.
-     *
-     * @param layer {Object} the layer object.
-     */
-    function setLevelMinMax( layer ) {
-        var zoomLevel = layer.map.getZoom(),
-            meta = layer.source.meta && layer.source.meta.meta ? layer.source.meta.meta[ zoomLevel ] : null,
-            transformData = layer.tileTransform.data || {},
-            levelMinMax = meta,
-            renderer = layer.renderer,
-            aggregated;
-        // aggregate the data if there is an aggregator attached
-        if ( meta ) {
-            if ( renderer && renderer.aggregator ) {
-                // aggregate the meta data buckets
-                aggregated = renderer.aggregator.aggregate(
-                    meta.bins || [],
-                    transformData.startBucket,
-                    transformData.endBucket );
-                // take the first and last index, which correspond to max / min
-                levelMinMax = {
-                    minimum: aggregated[aggregated.length - 1],
-                    maximum: aggregated[0]
-                };
-            }
-        } else {
-            levelMinMax = {
-                minimum: null,
-                maximum: null
-            };
-        }
-        layer.levelMinMax = levelMinMax;
-        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
-    }
-
-    /**
      * Private: Returns the zoom callback function to update level min and maxes.
      *
      * @param layer {ServerLayer} The layer object.
@@ -77,7 +41,7 @@
     function zoomCallback( layer ) {
         return function() {
             if ( layer.olLayer ) {
-                layer.setLevelMinMax( layer );
+                layer.setLevelMinMax();
             }
         };
     }
@@ -162,7 +126,7 @@
         this.map.olMap.addLayer( this.olLayer );
         // set z-index after
         this.setZIndex( this.zIndex );
-        setLevelMinMax( this ); // set level min / max
+        this.setLevelMinMax(); // set level min / max
         PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 
@@ -341,39 +305,48 @@
      */
     ClientLayer.prototype.redraw = function () {
         if ( this.olLayer ) {
-            setLevelMinMax( this );
+            this.setLevelMinMax();
             this.olLayer.redraw();
         }
     };
 
     /**
      * Sets the layers min and max values for the given zoom level.
-     *
+     * @memberof ClientLayer
+     * @private
      * @param layer {Object} the layer object.
      */
-    ClientLayer.prototype.setLevelMinMax = function( layer ) {
-        var zoomLevel = layer.map.getZoom(),
-            meta =  layer.source.meta.meta[ zoomLevel ],
-            transformData = layer.tileTransform.data || {},
+    ClientLayer.prototype.setLevelMinMax = function() {
+        var zoomLevel = this.map.getZoom(),
+            source = this.source,
+            meta = source.meta && source.meta.meta ? source.meta.meta[ zoomLevel ] : null,
+            transformData = this.tileTransform.data || {},
             levelMinMax = meta,
-            renderer = layer.renderer,
+            renderer = this.renderer,
             aggregated;
-        // aggregate the data if there is an aggregator attached
-        if ( renderer && renderer.aggregator ) {
-            // aggregate the meta data buckets
-            aggregated = renderer.aggregator.aggregate(
-                meta.bins,
-                transformData.startBucket,
-                transformData.endBucket );
-            // take the first and last index, which correspond to max / min
+        if ( meta ) {
+            // aggregate the data if there is an aggregator attached
+            if ( renderer && renderer.aggregator ) {
+                // aggregate the meta data buckets
+                aggregated = renderer.aggregator.aggregate(
+                    meta.bins || [],
+                    transformData.startBucket,
+                    transformData.endBucket );
+                // take the first and last index, which correspond to max / min
+                levelMinMax = {
+                    minimum: aggregated[aggregated.length - 1],
+                    maximum: aggregated[0]
+                };
+            }
+        } else {
             levelMinMax = {
-                minimum: aggregated[aggregated.length - 1],
-                maximum: aggregated[0]
+                minimum: null,
+                maximum: null
             };
         }
-        layer.levelMinMax = levelMinMax;
-        PubSub.publish( layer.getChannel(), { field: 'levelMinMax', value: levelMinMax });
-    }
+        this.levelMinMax = levelMinMax;
+        PubSub.publish( this.getChannel(), { field: 'levelMinMax', value: levelMinMax });
+    };
 
     module.exports = ClientLayer;
 }());
