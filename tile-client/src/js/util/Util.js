@@ -361,6 +361,23 @@
             return arr;
         },
 
+			    /**
+			     * Creates and fills an array with the provided value.
+			     *
+			     * @param {number} length - The length of the array.
+			     * @param {*} value - The value to fill. Defaults to 0.
+			     *
+			     * @returns {Array} The filled array.
+			     */
+			    fillArrayByFunc: function( length, func ) {
+				    var arr = [],
+					    i;
+				    for ( i=0; i<length; i++ ) {
+					    arr.push( func() );
+				    }
+				    return arr;
+			    },
+
         /**
          * Returns true if an object has no parameters.
          *
