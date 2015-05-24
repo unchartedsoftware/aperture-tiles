@@ -332,11 +332,19 @@
                     meta.bins || [],
                     transformData.startBucket,
                     transformData.endBucket );
-                // take the first and last index, which correspond to max / min
-                levelMinMax = {
-                    minimum: aggregated[aggregated.length - 1],
-                    maximum: aggregated[0]
-                };
+                if ( aggregated instanceof Array ) {
+                    // take the first and last index, which correspond to max / min
+                    levelMinMax = {
+                        minimum: aggregated[aggregated.length - 1],
+                        maximum: aggregated[0]
+                    };
+                } else {
+                    //
+                    levelMinMax = {
+                        minimum: aggregated,
+                        maximum: aggregated
+                    };
+                }
             }
         } else {
             levelMinMax = {
