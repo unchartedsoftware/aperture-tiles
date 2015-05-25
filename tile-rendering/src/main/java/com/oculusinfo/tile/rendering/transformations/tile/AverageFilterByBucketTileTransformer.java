@@ -62,7 +62,7 @@ public class AverageFilterByBucketTileTransformer<T> implements TileTransformer<
 			_endAverage 	= arguments.optInt("endAverage");
 			_startBucket 	= arguments.optInt("startBucket");
 			_endBucket 		= arguments.optInt("endBucket");
-			
+
 			// get the operator
 			_operator = arguments.optString("operator");
 		} else {
@@ -83,14 +83,14 @@ public class AverageFilterByBucketTileTransformer<T> implements TileTransformer<
 	 * Note: This transformer explicitly transforms all tiles into a dense tile format.  If a sparse tile is
 	 * 			passed in, the values not explicitly represented will be set to null.
 	 */
-    @Override
-    public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
+	@Override
+	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
 		if ( _startBucket != null && _endBucket != null && _startAverage != null && _endAverage != null) {
 			if ( _startBucket < 0 || _startBucket > _endBucket || _startAverage < 0 || _startAverage > _endAverage ) {
 				throw new IllegalArgumentException("Average filter by time transformer arguments are invalid");
-        	}
+			}
 		}
 		return new AverageTileBucketView<>(inputData, _startAverage, _endAverage, _operator, _startBucket, _endBucket);
-    }
+	}
 
 }

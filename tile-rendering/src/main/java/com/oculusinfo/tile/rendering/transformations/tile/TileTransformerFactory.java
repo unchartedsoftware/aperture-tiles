@@ -42,7 +42,7 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 
 
 	public static StringProperty TILE_TRANSFORMER_TYPE 	= new StringProperty("type",
-	    "The type of Transformer desired.",
+		"The type of Transformer desired.",
 		"identity");
 
 	public static JSONProperty INITIALIZATION_DATA = new JSONProperty("data",
@@ -60,22 +60,22 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 
 
 	public TileTransformerFactory( ConfigurableFactory<?> parent,
-                                   List<String> path ) {
+								   List<String> path ) {
 		this(null, parent, path);
 	}
 
 	public TileTransformerFactory( String name,
-                                   ConfigurableFactory<?> parent,
-	                               List<String> path) {
+								   ConfigurableFactory<?> parent,
+								   List<String> path) {
 		super(name, getFactoryClass(), parent, path);
-        addProperty(TILE_TRANSFORMER_TYPE);
+		addProperty(TILE_TRANSFORMER_TYPE);
 		addProperty(INITIALIZATION_DATA);
 	}
 
 	@Override
 	protected TileTransformer<?> create () {
 
-	    String transformerTypes = getPropertyValue(TILE_TRANSFORMER_TYPE);
+		String transformerTypes = getPropertyValue(TILE_TRANSFORMER_TYPE);
 
 		if ("filtervars".equals(transformerTypes)) {
 			JSONObject variables = getPropertyValue(INITIALIZATION_DATA);

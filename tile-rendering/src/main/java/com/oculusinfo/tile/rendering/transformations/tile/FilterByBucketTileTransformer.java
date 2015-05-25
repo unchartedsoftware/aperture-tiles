@@ -73,14 +73,14 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 	 * Note: This transformer explicitly transforms all tiles into a dense tile format.  If a sparse tile is
 	 * 			passed in, the values not explicitly represented will be set to null.
 	 */
-    @Override
-    public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
- 		if ( _startBucket != null && _endBucket != null ) {
+	@Override
+	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
+		if ( _startBucket != null && _endBucket != null ) {
 			if ( _startBucket < 0 || _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
-        	}
+			}
 		}
 		return new FilterTileBucketView<>(inputData, _startBucket, _endBucket);
-    }
+	}
 
 }

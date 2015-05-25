@@ -30,44 +30,34 @@ package com.oculusinfo.binning.util;
 public class Operator {
 
 	private String _operator = "";
-	
-	public Operator( String operator ) {
+
+	public Operator(String operator) {
 		_operator = operator;
 	}
-	
+
 	/**
 	 * Uses the class member operator to perform the calculation.  More operations can
-	 *  be added here as needed.
-	 * 
-	 * @param operand1 the first value to use in the calculation 
-	 * @param operand2 the second value to use in the calculation 
-	 * 
+	 * be added here as needed.
+	 *
+	 * @param operand1 the first value to use in the calculation
+	 * @param operand2 the second value to use in the calculation
 	 * @return Number represents the result of the calculation
 	 */
 	public Number Calculate(Number operand1, Number operand2) {
-		if (_operator.equals("+"))
-		{
-		    return operand1.doubleValue() + operand2.doubleValue();
-		}
-		else if (_operator.equals("-"))
-		{
-		    return operand1.doubleValue() - operand2.doubleValue();
-		}
-		else if (_operator.equals("*"))
-		{
-		    return operand1.doubleValue() * operand2.doubleValue();
-		}
-		else if (_operator.equals("//"))
-		{
-			if ( operand2.equals(0.0) ) {
+		if (_operator.equals("+")) {
+			return operand1.doubleValue() + operand2.doubleValue();
+		} else if (_operator.equals("-")) {
+			return operand1.doubleValue() - operand2.doubleValue();
+		} else if (_operator.equals("*")) {
+			return operand1.doubleValue() * operand2.doubleValue();
+		} else if (_operator.equals("//")) {
+			if (operand2.equals(0.0)) {
 				return 0.0;
 			} else {
 				return operand1.doubleValue() / operand2.doubleValue();
 			}
-		}
-		else
-		{
-		    throw new ExceptionInInitializerError();
+		} else {
+			throw new ExceptionInInitializerError();
 		}
 	}
 }
