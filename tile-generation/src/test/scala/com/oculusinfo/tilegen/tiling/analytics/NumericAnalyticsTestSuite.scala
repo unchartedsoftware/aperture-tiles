@@ -31,6 +31,8 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Float => JavaFloat}
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
+import com.oculusinfo.tilegen.util.ExtendedNumeric
+
 import scala.collection.JavaConverters._
 import org.scalatest.FunSuite
 import com.oculusinfo.binning.TileIndex
@@ -71,6 +73,21 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		                                   analytic.storableValue(4, Tile).get)
 	}
 
+	test("Standard Integer Analytic with default value") {
+		// check base
+		val numeric = ExtendedNumeric.ExtendedInt
+
+		val analytic = new NumericSumTileAnalytic[Int]()(numeric, Some(ProcessedDefault(10)))
+		assert(10 === analytic.defaultProcessedValue)
+		assert(0 === analytic.defaultUnprocessedValue)
+		assert(3 === analytic.aggregate(1, 2))
+		assert(analytic.aggregate(1, 2).isInstanceOf[Int])
+
+		// Check tile analytic output
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4}"""),
+			analytic.storableValue(4, Tile).get)
+	}
+
 	test("Standard Long Analytic") {
 		// check base
 		val analytic = new NumericSumTileAnalytic[Long]()
@@ -84,10 +101,41 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		                                   analytic.storableValue(4444444444L, Tile).get)
 	}
 
+	test("Standard Long Analytic with default value") {
+		// check base
+		val numeric = ExtendedNumeric.ExtendedLong
+
+		val analytic = new NumericSumTileAnalytic[Long]()(numeric, Some(ProcessedDefault(10l)))
+		assert(10l === analytic.defaultProcessedValue)
+		assert(0l === analytic.defaultUnprocessedValue)
+		assert(3l === analytic.aggregate(1l, 2l))
+		assert(analytic.aggregate(1L, 2L).isInstanceOf[Long])
+
+		// Check tile analytic output
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4444444444}"""),
+			analytic.storableValue(4444444444L, Tile).get)
+	}
+
 	test("Standard Float Analytic") {
 		// check base
 		val analytic = new NumericSumTileAnalytic[Float]()
 		assert(0.0f === analytic.defaultProcessedValue)
+		assert(0.0f === analytic.defaultUnprocessedValue)
+		assert(3.0f === analytic.aggregate(1.0f, 2.0f))
+		assert(analytic.aggregate(1.0f, 2.0f).isInstanceOf[Float])
+
+		// Check tile analytic output
+		val expected = new JSONObject()
+		expected.put("sum", Float.box(4.2f))
+		JSONUtilitiesTests.assertJsonEqual(expected, analytic.storableValue(4.2f, Tile).get)
+	}
+
+	test("Standard Float Analytic with default value") {
+		// check base
+		val numeric = ExtendedNumeric.ExtendedFloat
+
+		val analytic = new NumericSumTileAnalytic[Float]()(numeric, Some(ProcessedDefault(10.0f)))
+		assert(10.0f === analytic.defaultProcessedValue)
 		assert(0.0f === analytic.defaultUnprocessedValue)
 		assert(3.0f === analytic.aggregate(1.0f, 2.0f))
 		assert(analytic.aggregate(1.0f, 2.0f).isInstanceOf[Float])
@@ -112,6 +160,23 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		// Check tile analytic output
 		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4.3}"""),
 		                                   analytic.storableValue(4.3, Tile).get)
+	}
+
+	test("Standard Double Analytic with default value") {
+		// check base
+		val numeric = ExtendedNumeric.ExtendedDouble
+		val analytic = new NumericSumTileAnalytic[Double]()(numeric, Some(ProcessedDefault(10.0)))
+		assert(10.0 === analytic.defaultProcessedValue)
+		assert(0.0 === analytic.defaultUnprocessedValue)
+		assert(3.0 === analytic.aggregate(1.0, 2.0))
+		assert(analytic.aggregate(1.0, 2.0).isInstanceOf[Double])
+		assert(analytic.aggregate(1.0f, 2.0f).isInstanceOf[Double])
+		assert(analytic.aggregate(1L, 2L).isInstanceOf[Double])
+		assert(analytic.aggregate(1, 2).isInstanceOf[Double])
+
+		// Check tile analytic output
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"sum": 4.3}"""),
+			analytic.storableValue(4.3, Tile).get)
 	}
 
 	// Having testing the summation analytic fully for each type, we just do
