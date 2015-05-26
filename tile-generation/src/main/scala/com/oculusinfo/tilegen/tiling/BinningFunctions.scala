@@ -30,11 +30,13 @@ import com.oculusinfo.binning.TileIndex
 
 
 
-
+// This needs to be serializable because the 'with' clause seems to create an $outer field, which gets serialized
+// (perhaps because of the nested nature of our line functions, because each function is not self-contained?)
 object StandardBinningFunctions
 		extends StandardPointBinningFunctions
 		with StandardLinearBinningFunctions
 		with StandardArcBinningFunctions
+		with Serializable
 {
 }
 
