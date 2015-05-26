@@ -40,6 +40,7 @@
         BaseLayer: require('./layer/BaseLayer'),
         ServerLayer: require('./layer/ServerLayer'),
         ClientLayer: require('./layer/ClientLayer'),
+        MultiUrlClientLayer: require('./layer/MultiUrlClientLayer'),
         Carousel: require('./layer/Carousel'),
         LayerUtil: require('./layer/LayerUtil'),
         VectorLayer: require('./layer/VectorLayer'),

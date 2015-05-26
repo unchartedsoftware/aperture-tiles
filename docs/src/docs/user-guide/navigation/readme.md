@@ -14,7 +14,7 @@ The Aperture Tiles user interface works much like a modern web-based map system.
 
 <h6 class="procedure">To zoom in on an area you want to investigate</h6>
 
-- Double click on it the region, OR 
+- Double click on the region, OR 
 - Click the **Zoom In** ![Zoom Out](../../../img/zoom-in.png) button in the upper right corner of the map.  
 
 <h6 class="procedure">To zoom out</h6>

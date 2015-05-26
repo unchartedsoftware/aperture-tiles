@@ -26,8 +26,6 @@
  */
 package com.oculusinfo.tilegen.pipeline
 
-import java.util.concurrent.atomic.AtomicInteger
-
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.tilegen.datasets.{TilingTaskParameters, TilingTaskParametersFactory}
 import com.oculusinfo.tilegen.pipeline.PipelineOperations._
@@ -132,7 +130,7 @@ object PipelineOperationsParsing extends Logging {
 
 	/**
 	 * Parses args for a filter to the valid range of a mercator geographic projection.
-	 * 
+	 *
 	 * Arguments:
 	 *  ops.latitude - the column containing the latitude value
 	 */

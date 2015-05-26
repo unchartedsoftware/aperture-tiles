@@ -93,6 +93,7 @@
 	height: 20px;
 	left: 18px;
 	z-index: 1;
+	cursor: pointer;
 }
 
 .text-by-frequency-left {
@@ -115,15 +116,14 @@
 }
 
 .text-by-frequency-label {
-	cursor: pointer;
 	position:relative;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	padding-bottom: 5px;
 }
 
 .text-by-frequency-bar {
-	cursor: pointer;
 	position: relative;
 	float:left;
 	bottom: 0px;
