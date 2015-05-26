@@ -370,9 +370,10 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	{
 		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
 			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
+			val allFieldsEscaped = allFields.map(v => if(v.forall(_.isDigit)) { v } else { "`" + v + "`"  })
 
 			val selectStmt =
-				allFields.mkString("SELECT `", "`, `", "` FROM "+table)
+				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)
 
 			val data = sqlc.sql(selectStmt)
 
