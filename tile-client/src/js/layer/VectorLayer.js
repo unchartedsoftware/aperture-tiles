@@ -46,17 +46,16 @@
 	 * }
 	 * </pre>
 	 */
-	function VectorLayer(spec) {
+	function VectorLayer( spec ) {
 		// call base constructor
 		Layer.call(this, spec);
 		// set reasonable defaults
-		this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
-		this.domain = "elastic";
+		this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 749;
+		this.domain = "vector";
 		this.source = spec.source;
 		this.styleMap = spec.styleMap;
-		this.eventListeners = spec.eventListeners;
 		this.strategies = spec.strategies;
-		this.vectors = spec.vectors || [];
+		this.olFeatures = spec.olFeatures || [];
 	}
 
 	VectorLayer.prototype = Object.create(Layer.prototype);
@@ -68,23 +67,19 @@
 	 */
 	VectorLayer.prototype.activate = function() {
 		var layerSpec = {};
-		if (this.strategies) {
+		if ( this.strategies ) {
 			layerSpec.strategies = this.strategies;
 		}
-		if (this.styleMap) {
+		if ( this.styleMap ) {
 			layerSpec.styleMap = this.styleMap;
 		}
-		if (this.eventListeners) {
-			layerSpec.eventListeners = this.eventListeners;
-		}
-		this.olLayer = new OpenLayers.Layer.Vector("Overlay", layerSpec);
-		this.map.olMap.addLayer(this.olLayer);
-		this.olLayer.addFeatures(this.vectors);
-		this.setZIndex(this.zIndex);
-		this.setOpacity(this.opacity);
-		this.setEnabled(this.enabled);
-		this.setTheme(this.map.getTheme());
-
+		this.olLayer = new OpenLayers.Layer.Vector( "Vector Layer", layerSpec );
+		this.setOpacity( this.opacity );
+		this.setEnabled( this.enabled );
+		this.setTheme( this.map.getTheme() );
+		this.map.olMap.addLayer( this.olLayer );
+		this.olLayer.addFeatures( this.olFeatures );
+		this.setZIndex( this.zIndex );
 	};
 
 	/**
@@ -93,10 +88,15 @@
 	 * @private
 	 */
 	VectorLayer.prototype.deactivate = function() {
-		if (this.olLayer) {
-			this.map.olMap.removeLayer(this.olLayer);
+		if ( this.olLayer ) {
+			this.olLayer.strategies.forEach( function( strategy ) {
+				strategy.deactivate();
+			});
+			this.olLayer.strategies = [];
+			this.map.olMap.removeLayer( this.olLayer );
 			this.olLayer.destroyFeatures();
 			this.olLayer.destroy();
+			this.olLayer = null;
 		}
 	};
 
@@ -106,10 +106,10 @@
 	 *
 	 * @param {Array} featuresToAdd - Array of OpenLayers Features
 	 */
-	VectorLayer.prototype.setFeatures = function(featuresToAdd) {
+	VectorLayer.prototype.setFeatures = function( featuresToAdd ) {
 		if ( this.olLayer ) {
 			this.olLayer.destroyFeatures();
-			this.vectors = featuresToAdd;
+			this.olFeatures = featuresToAdd;
 			this.olLayer.addFeatures( featuresToAdd );
 		}
 	};
@@ -120,7 +120,7 @@
 	 *
 	 * @param {String} theme - The theme identifier string.
 	 */
-	VectorLayer.prototype.setTheme = function(theme) {
+	VectorLayer.prototype.setTheme = function( theme ) {
 		this.theme = theme;
 	};
 
@@ -140,15 +140,15 @@
 	 *
 	 * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
 	 */
-	VectorLayer.prototype.setZIndex = function(zIndex) {
+	VectorLayer.prototype.setZIndex = function( zIndex ) {
 		// we by-pass the OpenLayers.Map.setLayerIndex() method and manually
 		// set the z-index of the layer dev. setLayerIndex sets a relative
 		// index based on current map layers, which then sets a z-index. This
 		// caused issues with async layer loading.
 		this.zIndex = zIndex;
 		if ( this.olLayer ) {
-			$(this.olLayer.div).css('z-index', zIndex);
-			PubSub.publish(this.getChannel(), {
+			$( this.olLayer.div ).css( 'z-index', zIndex );
+			PubSub.publish( this.getChannel(), {
 				field: 'zIndex',
 				value: zIndex
 			});
