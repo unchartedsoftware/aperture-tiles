@@ -36,7 +36,7 @@ import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.binning.{TileData, TileIndex}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
+import com.oculusinfo.tilegen.tiling.{BinningParameters, StandardBinningFunctions, TileIO, UniversalBinner}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.streaming.dstream.DStream
@@ -247,8 +247,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * @param tileIO An object that knows how to save tiles.
 	 */
 	def doTiling (tileIO: TileIO): Unit = {
-		val binner = new RDDBinner
-		binner.debug = true
+		val binner = new UniversalBinner
 		val sc = sqlc.sparkContext
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
@@ -259,10 +258,10 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
-					val tiles = binner.processDataByLevel(rdd, getIndexScheme,
-					                                      getBinningAnalytic, tileAnalytics, dataAnalytics,
-					                                      getTilePyramid, levels, getNumXBins, getNumYBins,
-					                                      getConsolidationPartitions)
+					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
+					                                                         StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, levels, getNumXBins, getNumYBins),
+					                                                         StandardBinningFunctions.populateTileIdentity,
+					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
 					                    tileAnalytics, dataAnalytics, getName, getDescription)
