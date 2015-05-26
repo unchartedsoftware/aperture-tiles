@@ -38,6 +38,7 @@
         AnnotationLayer: require('./layer/AnnotationLayer'),
         AxisLayer: require('./layer/AxisLayer'),
         BaseLayer: require('./layer/BaseLayer'),
+        KMLLayer: require('./layer/KMLLayer'),
         ServerLayer: require('./layer/ServerLayer'),
         ClientLayer: require('./layer/ClientLayer'),
         MultiUrlClientLayer: require('./layer/MultiUrlClientLayer'),
