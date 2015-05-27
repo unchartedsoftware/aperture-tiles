@@ -77,7 +77,7 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
 		if ( _startBucket != null && _endBucket != null ) {
 			if ( _startBucket < 0 || _startBucket > _endBucket ) {
-				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
+				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start bucket: " + _startBucket + ", end bucket: " + _endBucket);
 			}
 		}
 		return new FilterTileBucketView<>(inputData, _startBucket, _endBucket);

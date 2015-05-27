@@ -42,17 +42,18 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
 	private TileData<List<T>> _base 		= null;
-	private Integer			  _startBucket 	= 0;
-	private Integer			  _endBucket 	= 0;
+	private Integer			  _startBucket 	= null;
+	private Integer			  _endBucket 	= null;
 
 
-	public FilterTileBucketView (TileData<List<T>> base, int startBucket, int endBucket) {
+	public FilterTileBucketView (TileData<List<T>> base, Integer startBucket, Integer endBucket) {
 		_base = base;
 		_startBucket = startBucket;
 		_endBucket = endBucket;
-
-		if ( _startBucket < 0 || _startBucket > _endBucket ){
-			throw new IllegalArgumentException("Constructor for AverageTileBucketView: arguments are invalid.  start average bucket: " + _startBucket + ", end time bucket: " + _endBucket);
+		if ( _startBucket != null && _endBucket != null ) {
+			if ( _startBucket < 0 || _startBucket > _endBucket ) {
+				throw new IllegalArgumentException( "Constructor for FilterTileBucketView: arguments are invalid.  start bucket: " + _startBucket + ", end bucket: " + _endBucket );
+			}
 		}
 	}
 
