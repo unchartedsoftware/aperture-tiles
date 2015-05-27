@@ -94,28 +94,31 @@ public class OperatorBucketTileTransformer<T> implements TileTransformer<List<T>
 		JSONArray maxBuckets = new JSONArray(inputData.getMetaData("maximum array"));
 		int lastBucket = maxBuckets.length()-1;
 		
-		// if we start at 0 we still need to use _averageRange of buckets for the first average tile view so we use range 0 to (_averageRange-1)
-		int startA = _startBucket - halfRange < 0 ? _startBucket : _startBucket - halfRange;
-		int endA = (_endBucket + halfRange -1) > lastBucket ? lastBucket : (_endBucket + halfRange -1);
-		
-		// if the range overflows, we need to move the start back until the entire _averageRange number of buckets is used for the first average tile view
-		if ( (startA + _averageRange) - 1 > endA ) {
-			startA = (endA - _averageRange + 1) < 0 ? 0 : (endA - _averageRange + 1);
-		}		
-		// if the end underflows we need to set the end to be minumum of start + averageRange
-		if ( endA - (_averageRange-1) < 0 ) {
-			endA = startA + (_averageRange-1) < lastBucket ? startA + (_averageRange-1) : lastBucket;
-		}
-		
-		// if the _average range is odd, we need to add one to the end of the range, unless we are overflowing, then we subtract one from the start
-		if ( (_averageRange & 1) != 0 ) {
-			if ( endA == lastBucket ) {
-				startA = startA - 1 < 0 ? 0 : startA - 1;
+		int startA = 0;
+		int endA = 0;
+		// if range is larger than number of buckets, use all buckets for average
+		if ( _averageRange > lastBucket ) {
+			endA = lastBucket;
+		} else {  // otherwise, calculate the start and end by calculating the centre of the range
+			int centreBucket = _startBucket == _endBucket ? _startBucket : _startBucket + halfRange;
+			if ( centreBucket + halfRange > lastBucket ) {
+				startA = lastBucket - _averageRange + 1;
+				endA = lastBucket;
+			} else if ( centreBucket - halfRange < 0 ) {
+				endA = centreBucket - halfRange < 0 ? _averageRange - 1: centreBucket + halfRange - 1;
 			} else {
-				endA++;
+				startA = centreBucket - halfRange;
+				endA = centreBucket + halfRange - 1;
 			}
-		}
-		
+			// if the _average range is odd, we need to add one to the end of the range, unless we are overflowing, then we subtract one from the start
+			if ( (_averageRange & 1) != 0 ) {
+				if ( endA == lastBucket ) {
+					startA = startA - 1 < 0 ? 0 : startA - 1;
+				} else {
+					endA++;
+				}
+			}
+		}		
 		AverageTileBucketView<T> opTileA = new AverageTileBucketView<>(inputData, startA, endA);
 		AverageTileBucketView<T> opTileB = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
 		return new OperationTileBucketView<>( opTileA, opTileB, _operator );
