@@ -44,19 +44,19 @@ import com.oculusinfo.binning.util.Operator;
 public class OperationTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
-	private TileData<T> _opTileA 	= null;
-	private TileData<T> _opTileB 	= null;
-	private Operator 	_op 		= null;
+	private TileData<T> _opTileAverage 	= null;
+	private TileData<T> _opTileCompare 	= null;
+	private Operator 	_op 			= null;
 
 
-	public OperationTileBucketView (TileData<T> opTileA, TileData<T> opTileB, String op) {
-		_opTileA = opTileA;
-		_opTileB = opTileB;
+	public OperationTileBucketView (TileData<T> opTileAverage, TileData<T> opTileCompare, String op) {
+		_opTileAverage = opTileAverage;
+		_opTileCompare = opTileCompare;
 
 		_op = new Operator(op);
 		
-		if (   getDefinition().getXBins() != _opTileB.getDefinition().getXBins()
-			|| getDefinition().getYBins() != _opTileB.getDefinition().getYBins()) {
+		if (   getDefinition().getXBins() != _opTileAverage.getDefinition().getXBins()
+			|| getDefinition().getYBins() != _opTileAverage.getDefinition().getYBins()) {
 			throw new IllegalArgumentException("Constructor for OperationTileBucketView: arguments are invalid. Tiles to compare are incompatible");
 		}
 	}
@@ -64,7 +64,7 @@ public class OperationTileBucketView<T> implements TileData<List<T>> {
 
 	@Override
 	public TileIndex getDefinition () {
-		return _opTileA.getDefinition();
+		return _opTileCompare.getDefinition();
 	}
 
 
@@ -90,26 +90,26 @@ public class OperationTileBucketView<T> implements TileData<List<T>> {
 			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
 		}
 		List<T> result = new ArrayList<>();
-		result.add( (T)_op.Calculate( (Number)_opTileA.getBin(x, y), (Number)_opTileB.getBin(x, y) ) );
+		result.add( (T)_op.Calculate( (Number)_opTileCompare.getBin(x, y), (Number)_opTileAverage.getBin(x, y) ) );
 		return result;
 	}
 
 
 	@Override
 	public Collection<String> getMetaDataProperties () {
-		return _opTileA.getMetaDataProperties();
+		return _opTileCompare.getMetaDataProperties();
 	}
 
 
 	@Override
 	public String getMetaData (String property) {
-		return _opTileA.getMetaData(property);
+		return _opTileCompare.getMetaData(property);
 	}
 
 
 	@Override
 	public void setMetaData (String property, Object value) {
-		_opTileA.setMetaData(property, value);
+		_opTileCompare.setMetaData(property, value);
 	}
 
 }

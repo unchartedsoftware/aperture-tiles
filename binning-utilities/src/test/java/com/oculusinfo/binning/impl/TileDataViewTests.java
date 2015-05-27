@@ -185,4 +185,33 @@ public class TileDataViewTests {
 			}
 		}
 	}
+	
+	@Test
+	public void testOperationTileBucketView () {
+		int startA = 0, endA = 1;
+		int startB = 0, endB = 3;
+		// since we modify the tile, we won't use a static class tile
+		TileData<List<Double>> sourceListTile = new DenseTileData<>(new TileIndex(1, 1, 1, 2, 2),
+															            Arrays.asList(Arrays.asList( 2.0, 2.0,  4.0,  4.0),
+															            			  Arrays.asList( 4.0, 4.0,  8.0,  8.0),
+															            			  Arrays.asList( 6.0, 6.0, 12.0, 12.0),
+															            			  Arrays.asList( 8.0, 8.0, 16.0, 16.0)));
+		AverageTileBucketView<Double> averageTile = new AverageTileBucketView<Double>(sourceListTile, startA, endA);
+		AverageTileBucketView<Double> compareTile = new AverageTileBucketView<Double>(sourceListTile, startB, endB);
+		OperationTileBucketView<Double> underTest = new OperationTileBucketView<Double>(averageTile, compareTile, "//");
+		
+		Assert.assertEquals(1, underTest.getDefinition().getLevel());
+		Assert.assertEquals(1, underTest.getDefinition().getX());
+		Assert.assertEquals(1, underTest.getDefinition().getY());
+		Assert.assertEquals(2, underTest.getDefinition().getXBins());
+		Assert.assertEquals(2, underTest.getDefinition().getYBins());
+		
+		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
+			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
+				List<Double> bin = underTest.getBin(x,y);
+				Double binValue = bin.get(0);
+				Assert.assertEquals( 1.5, binValue, 0.01); 
+			}
+		}
+	}
 }
