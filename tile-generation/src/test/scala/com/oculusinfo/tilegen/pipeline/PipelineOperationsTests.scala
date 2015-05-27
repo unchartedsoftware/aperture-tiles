@@ -534,4 +534,74 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 	def round(d: Any, places: Int) = {
 		BigDecimal(d.asInstanceOf[Double]).setScale(places, BigDecimal.RoundingMode.HALF_UP).toDouble
 	}
+
+	test("Test geo line-tiling parse and operation") {
+
+		try {
+			// pipeline stage to create test data
+			def createDataOp(count: Int)(input: PipelineData) = {
+				val jsonData = for (n <- 0 until count) yield {
+					val angle = 2*math.Pi*n/count
+					val lon1 = math.cos(angle)*90.0
+					val lat1 = math.sin(angle)*45.0
+					val lon2 = math.cos(angle)*45.0
+					val lat2 = math.sin(angle)*22.5
+					s"""{"x1":$lon1, "y1":$lat1, "x2": $lon2, "y2": $lat2, "data":$n}\n"""
+				}
+				val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+				PipelineData(sqlc, srdd)
+			}
+
+			// Run the tile job
+			val args = Map(
+				"ops.x1Column" -> "x1",
+				"ops.y1Column" -> "y1",
+				"ops.x2Column" -> "x2",
+				"ops.y2Column" -> "y2",
+				"ops.name" -> "test",
+				"ops.description" -> "a test description",
+				"ops.prefix" -> "test_prefix",
+				"ops.levels.0" -> "0,1",
+				"ops.tileWidth" -> "4",
+				"ops.tileHeight" -> "4",
+				"ops.valueColumn" -> "data",
+				"ops.valueType" -> "double",
+				"ops.aggregationType" -> "sum")
+
+			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+			rootStage.addChild(PipelineStage("geo_line_tiling_op", parseGeoSegmentTilingOp(args)))
+			PipelineTree.execute(rootStage, sqlc)
+
+			// Load the metadata and validate its contents - gives us an indication of whether or not the
+			// job completed successfully, and if performed the expected operation.  There are more detailed
+			// tests for the operations themselves.
+			val tileIO = new LocalTileIO("avro")
+			val metaData = tileIO.readMetaData("test.x.y.data").getOrElse(fail("Metadata not created"))
+
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":13}"""),
+				new JSONObject(metaData.getCustomMetaData("0").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":7}"""),
+				new JSONObject(metaData.getCustomMetaData("1").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":13}"""),
+				new JSONObject(metaData.getCustomMetaData("global").toString))
+
+			val customMeta = metaData.getAllCustomMetaData
+			assert(0 === customMeta.get("0.minimum"))
+			assert(13 === customMeta.get("0.maximum"))
+			assert(0 === customMeta.get("1.minimum"))
+			assert(7 === customMeta.get("1.maximum"))
+			assert(0 === customMeta.get("global.minimum"))
+			assert(13 === customMeta.get("global.maximum"))
+		} finally {
+			// Remove the tile set we created
+			def removeRecursively (file: File): Unit = {
+				if (file.isDirectory) {
+					file.listFiles().foreach(removeRecursively)
+				}
+				file.delete()
+			}
+			// If you want to look at the tile set (not remove it) comment out this line.
+			removeRecursively(new File("test.x.y.data"))
+		}
+	}
 }

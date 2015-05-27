@@ -34,7 +34,7 @@ import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.providers.FactoryProvider
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.binning.{TileData, TileIndex}
+import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 import com.oculusinfo.tilegen.tiling.{BinningParameters, StandardBinningFunctions, TileIO, UniversalBinner}
 import org.apache.spark.rdd.RDD
@@ -271,6 +271,37 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		}
 	}
 
+	def doLineTiling (tileIO: TileIO): Unit = {
+		val binner = new UniversalBinner
+		val sc = sqlc.sparkContext
+
+		// Hard code for now, we'll get them later.
+		val minBins = Some(4)
+		val leaderBins = 1024
+		val scaler: (Array[BinIndex], BinIndex, PT) => PT = (endpoints, bin, value) => value
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
+		getLevels.map{levels =>
+			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+
+			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
+				rdd => {
+					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
+						StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels, Some(4), 1024, getNumXBins, getNumYBins),
+						StandardBinningFunctions.populateTileWithLineLeaders(1024, StandardScalingFunctions.identityScale),
+						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+
+					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
+						tileAnalytics, dataAnalytics, getName, getDescription)
+				}
+			}
+
+			process(procFcn, None)
+		}
+	}
+
 	// Axis-related methods and fields
 	private lazy val axisBounds = getAxisBounds()
 
@@ -397,3 +428,9 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		override def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
 	}
 }
+
+
+object StandardScalingFunctions {
+	def identityScale[T]: (Array[BinIndex], BinIndex, T) => T = (endpoints, bin, value) => value
+}
+

@@ -391,6 +391,73 @@ object PipelineOperations {
 		PipelineData(input.sqlContext, input.srdd, Option(tableName))
 	}
 
+	def geoSegmentTilingOp(x1ColSpec: String,
+												 y1ColSpec: String,
+												 x2ColSpec: String,
+												 y2ColSpec: String,
+												 tilingParams: TilingTaskParameters,
+												 hbaseParameters: Option[HBaseParameters],
+												 operation: OperationType = COUNT,
+												 valueColSpec: Option[String] = None,
+												 valueColType: Option[String] = None)
+												(input: PipelineData) = {
+		val tileIO = hbaseParameters match {
+			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
+			case None => new LocalTileIO("avro")
+		}
+		val properties = Map("oculus.binning.projection.type" -> "webmercator")
+
+		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO, properties)(input)
+	}
+
+	private def segmentTilingOpImpl(x1ColSpec: String,
+																	y1ColSpec: String,
+																  x2ColSpec: String,
+																  y2ColSpec: String,
+																	operation: OperationType,
+																	valueColSpec: Option[String],
+																	valueColType: Option[String],
+																	taskParameters: TilingTaskParameters,
+																	tileIO: TileIO,
+																	properties: Map[String, String])
+																 (input: PipelineData) = {
+		// Populate baseline args
+		val args = Map(
+			"oculus.binning.name" -> taskParameters.name,
+			"oculus.binning.description" -> taskParameters.description,
+			"oculus.binning.tileWidth" -> taskParameters.tileWidth.toString,
+			"oculus.binning.tileHeight" -> taskParameters.tileHeight.toString,
+			"oculus.binning.index.type" -> "cartesian",
+			"oculus.binning.index.field.0" -> x1ColSpec,
+			"oculus.binning.index.field.1" -> y1ColSpec,
+			"oculus.binning.index.field.2" -> x2ColSpec,
+			"oculus.binning.index.field.3" -> y2ColSpec
+		)
+
+		val valueProps = operation match {
+			case SUM | MAX | MIN | MEAN =>
+				Map("oculus.binning.value.type" -> "field",
+					"oculus.binning.value.field" -> valueColSpec.get,
+					"oculus.binning.value.valueType" -> valueColType.get,
+					"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+					"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+			case _ =>
+				Map("oculus.binning.value.type" -> "count",
+					"oculus.binning.value.valueType" -> "int",
+					"oculus.binning.value.serializer" -> "[int]-a")
+		}
+
+		// Parse bounds and level args
+		val levelsProps = createLevelsProps("oculus.binning", taskParameters.levels)
+
+		val tableName = PipelineOperations.getOrGenTableName(input, "heatmap_op")
+
+		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
+		tilingTask.doLineTiling(tileIO)
+
+		PipelineData(input.sqlContext, input.srdd, Option(tableName))
+	}
+
 	/**
 	 * Gets a table name out of the input if one exists, otherwise creates a new name
 	 * using a base and an internally incremented counter.
