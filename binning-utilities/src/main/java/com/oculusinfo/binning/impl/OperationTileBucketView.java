@@ -25,45 +25,51 @@ package com.oculusinfo.binning.impl;
 
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.util.Operator;
+
 
 
 
 /**
- * This implementation of TileData takes a TileData whose bins are lists of buckets and presents
- *  a view to a range of buckets.
+ * This implementation of TileData takes a two TileData views/tiles whose bins are single values (such as an average)
+ *  that are compared to each other using the operator passed in as a string.
  *
  */
-public class FilterTileBucketView<T> implements TileData<List<T>> {
+public class OperationTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
-	private TileData<List<T>> _base 		= null;
-	private Integer			  _startBucket 	= 0;
-	private Integer			  _endBucket 	= 0;
+	private TileData<T> _opTileA 	= null;
+	private TileData<T> _opTileB 	= null;
+	private Operator 	_op 		= null;
 
 
-	public FilterTileBucketView (TileData<List<T>> base, int startBucket, int endBucket) {
-		_base = base;
-		_startBucket = startBucket;
-		_endBucket = endBucket;
+	public OperationTileBucketView (TileData<T> opTileA, TileData<T> opTileB, String op) {
+		_opTileA = opTileA;
+		_opTileB = opTileB;
 
-		if ( _startBucket < 0 || _startBucket > _endBucket ){
-			throw new IllegalArgumentException("Constructor for AverageTileBucketView: arguments are invalid.  start average bucket: " + _startBucket + ", end time bucket: " + _endBucket);
+		_op = new Operator(op);
+		
+		if (   getDefinition().getXBins() != _opTileB.getDefinition().getXBins()
+			|| getDefinition().getYBins() != _opTileB.getDefinition().getYBins()) {
+			throw new IllegalArgumentException("Constructor for OperationTileBucketView: arguments are invalid. Tiles to compare are incompatible");
 		}
 	}
 
 
 	@Override
 	public TileIndex getDefinition () {
-		return _base.getDefinition();
+		return _opTileA.getDefinition();
 	}
 
 
 	@Override
+	// method not implemented as this view is to be read only
 	public void setBin(int x, int y, List<T> value)  {
 		if (x < 0 || x >= getDefinition().getXBins()) {
 			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
@@ -71,10 +77,10 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		if (y < 0 || y >= getDefinition().getYBins()) {
 			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
 		}
-		_base.setBin( x, y, value );
 	}
 
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<T> getBin (int x, int y) {
 		if (x < 0 || x >= getDefinition().getXBins()) {
@@ -83,38 +89,27 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		if (y < 0 || y >= getDefinition().getYBins()) {
 			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
 		}
-		//List<T> newBin = new ArrayList<>();
-		List<T> binContents = _base.getBin(x, y);
-		int binSize = binContents.size();
-		int start = ( _startBucket != null ) ? _startBucket : 0;
-		int end = ( _endBucket != null && _endBucket < binSize && _endBucket != 0) ? _endBucket : binSize;
-
-		for(int i = 0; i < binSize; i++) {
-			if ( i >= start && i <= end ) {
-				binContents.set(i, binContents.get(i));
-			} else {
-				binContents.set(i, null);
-			}
-		}
-		return binContents;
+		List<T> result = new ArrayList<>();
+		result.add( (T)_op.Calculate( (Number)_opTileA.getBin(x, y), (Number)_opTileB.getBin(x, y) ) );
+		return result;
 	}
 
 
 	@Override
 	public Collection<String> getMetaDataProperties () {
-		return _base.getMetaDataProperties();
+		return _opTileA.getMetaDataProperties();
 	}
 
 
 	@Override
 	public String getMetaData (String property) {
-		return _base.getMetaData(property);
+		return _opTileA.getMetaData(property);
 	}
 
 
 	@Override
 	public void setMetaData (String property, Object value) {
-		_base.setMetaData(property, value);
+		_opTileA.setMetaData(property, value);
 	}
 
 }
