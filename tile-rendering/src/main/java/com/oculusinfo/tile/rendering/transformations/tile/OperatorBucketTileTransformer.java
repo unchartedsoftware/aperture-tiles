@@ -29,10 +29,11 @@ import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.impl.AverageTileBucketView;
-
+import com.oculusinfo.binning.impl.OperationTileBucketView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,21 +46,19 @@ import org.json.JSONObject;
  *
  */
 
-public class AverageFilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger( AverageFilterByBucketTileTransformer.class );
+public class OperatorBucketTileTransformer<T> implements TileTransformer<List<T>> {
+	private static final Logger LOGGER = LoggerFactory.getLogger( OperatorBucketTileTransformer.class );
 
-	private Integer _startAverage 	= 0;
-	private Integer _endAverage 	= 0;
+	private Integer _averageRange 	= 0;
 	private Integer _startBucket 	= 0;
 	private Integer _endBucket 		= 0;
 	private String  _operator 		= "";
 
 
-	public AverageFilterByBucketTileTransformer(JSONObject arguments){
+	public OperatorBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
-			_startAverage 	= arguments.optInt("startAverage");
-			_endAverage 	= arguments.optInt("endAverage");
+			_averageRange 	= arguments.optInt("averageRange");
 			_startBucket 	= arguments.optInt("startBucket");
 			_endBucket 		= arguments.optInt("endBucket");
 
@@ -85,12 +84,44 @@ public class AverageFilterByBucketTileTransformer<T> implements TileTransformer<
 	 */
 	@Override
 	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
-		if ( _startBucket != null && _endBucket != null && _startAverage != null && _endAverage != null) {
-			if ( _startBucket < 0 || _startBucket > _endBucket || _startAverage < 0 || _startAverage > _endAverage ) {
+		if ( _startBucket != null && _endBucket != null ) {
+			if ( _startBucket < 0 || _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Average filter by time transformer arguments are invalid");
 			}
 		}
-		return new AverageTileBucketView<>(inputData, _startAverage, _endAverage, _operator, _startBucket, _endBucket);
+		// calculate the start and end of the average to compare
+		int halfRange = (int) Math.floor(_averageRange/2);
+		JSONArray maxBuckets = new JSONArray(inputData.getMetaData("maximum array"));
+		int lastBucket = maxBuckets.length()-1;
+		
+		int startA = 0;
+		int endA = 0;
+		// if range is larger than number of buckets, use all buckets for average
+		if ( _averageRange > lastBucket ) {
+			endA = lastBucket;
+		} else {  // otherwise, calculate the start and end by calculating the centre of the range
+			int centreBucket = _startBucket == _endBucket ? _startBucket : _startBucket + halfRange;
+			if ( centreBucket + halfRange > lastBucket ) {
+				startA = lastBucket - _averageRange + 1;
+				endA = lastBucket;
+			} else if ( centreBucket - halfRange < 0 ) {
+				endA = centreBucket - halfRange < 0 ? _averageRange - 1: centreBucket + halfRange - 1;
+			} else {
+				startA = centreBucket - halfRange;
+				endA = centreBucket + halfRange - 1;
+			}
+			// if the _average range is odd, we need to add one to the end of the range, unless we are overflowing, then we subtract one from the start
+			if ( (_averageRange & 1) != 0 ) {
+				if ( endA == lastBucket ) {
+					startA = startA - 1 < 0 ? 0 : startA - 1;
+				} else {
+					endA++;
+				}
+			}
+		}		
+		AverageTileBucketView<T> opTileA = new AverageTileBucketView<>(inputData, startA, endA);
+		AverageTileBucketView<T> opTileB = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
+		return new OperationTileBucketView<>( opTileA, opTileB, _operator );
 	}
 
 }
