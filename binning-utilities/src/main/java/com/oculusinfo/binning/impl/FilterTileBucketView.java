@@ -42,8 +42,8 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
 	private TileData<List<T>> _base 		= null;
-	private Integer			  _startBucket 	= 0;
-	private Integer			  _endBucket 	= 0;
+	private Integer			  _startBucket 	= null;
+	private Integer			  _endBucket 	= null;
 
 
 	public FilterTileBucketView (TileData<List<T>> base, int startBucket, int endBucket) {
@@ -83,7 +83,7 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		if (y < 0 || y >= getDefinition().getYBins()) {
 			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
 		}
-		//List<T> newBin = new ArrayList<>();
+
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
 		int start = ( _startBucket != null ) ? _startBucket : 0;
