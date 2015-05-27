@@ -89,9 +89,11 @@
 	 */
 	VectorLayer.prototype.deactivate = function() {
 		if ( this.olLayer ) {
-			this.olLayer.strategies.forEach( function( strategy ) {
-				strategy.deactivate();
-			});
+			if ( this.olLayer.strategies ) {
+				this.olLayer.strategies.forEach( function( strategy ) {
+					strategy.deactivate();
+				});
+			}
 			this.olLayer.strategies = [];
 			this.map.olMap.removeLayer( this.olLayer );
 			this.olLayer.destroyFeatures();
