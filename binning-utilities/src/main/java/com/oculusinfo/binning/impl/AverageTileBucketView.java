@@ -44,8 +44,8 @@ public class AverageTileBucketView<T> implements TileData<T> {
 
 	private TileData<List<T>> _base 		= null;
 
-	private Integer			  _startCompare = 0;
-	private Integer			  _endCompare 	= 0;
+	private Integer			  _startCompare = null;
+	private Integer			  _endCompare 	= null;
 
 
 	public AverageTileBucketView (TileData<List<T>> base, int startComp, int endComp) {
@@ -88,12 +88,13 @@ public class AverageTileBucketView<T> implements TileData<T> {
 		// compute bin averages for selected average range
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
-		int end = ( _endCompare < binSize ) ? _endCompare : binSize;
+		int start = ( _startCompare != null ) ? _startCompare : 0;
+		int end = ( _endCompare != null && _endCompare < binSize && _endCompare != 0) ? _endCompare : binSize;
 
 		double total = 0;
 		int count = 0;
 		for(int i = 0; i < binSize; i++) {
-			if ( i >= _startCompare && i <= end ) {
+			if ( i >= start && i <= end ) {
 				Number value = (Number) binContents.get(i);
 				total = total + value.doubleValue();
 				count++;

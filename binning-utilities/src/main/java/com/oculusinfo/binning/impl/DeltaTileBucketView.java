@@ -45,8 +45,8 @@ public class DeltaTileBucketView<T> implements TileData<List<T>> {
 	private TileData<List<T>> _base 		= null;
 	private TileData<List<T>> _delta		= null;
 	private Operator		  _operator 	= null;
-	private Integer			  _startCompare = 0;
-	private Integer			  _endCompare 	= 0;
+	private Integer			  _startCompare = null;
+	private Integer			  _endCompare 	= null;
 
 
 	public DeltaTileBucketView (TileData<List<T>> base, TileData<List<T>> delta, String op, int startComp, int endComp) {
