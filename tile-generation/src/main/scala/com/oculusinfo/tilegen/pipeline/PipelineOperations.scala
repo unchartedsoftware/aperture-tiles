@@ -399,7 +399,8 @@ object PipelineOperations {
 												 hbaseParameters: Option[HBaseParameters],
 												 operation: OperationType = COUNT,
 												 valueColSpec: Option[String] = None,
-												 valueColType: Option[String] = None)
+												 valueColType: Option[String] = None,
+												 minimumSegmentLength: Option[Int] = Some(4))
 												(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
@@ -407,7 +408,8 @@ object PipelineOperations {
 		}
 		val properties = Map("oculus.binning.projection.type" -> "webmercator")
 
-		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO, properties)(input)
+		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType, minimumSegmentLength,
+		                    tilingParams, tileIO, properties)(input)
 	}
 
 	private def segmentTilingOpImpl(x1ColSpec: String,
@@ -417,12 +419,13 @@ object PipelineOperations {
 																	operation: OperationType,
 																	valueColSpec: Option[String],
 																	valueColType: Option[String],
+																  minimumSegmentLength: Option[Int],
 																	taskParameters: TilingTaskParameters,
 																	tileIO: TileIO,
 																	properties: Map[String, String])
 																 (input: PipelineData) = {
 		// Populate baseline args
-		val args = Map(
+		val args: Map[String, String] = Map(
 			"oculus.binning.name" -> taskParameters.name,
 			"oculus.binning.description" -> taskParameters.description,
 			"oculus.binning.tileWidth" -> taskParameters.tileWidth.toString,
@@ -432,7 +435,9 @@ object PipelineOperations {
 			"oculus.binning.index.field.1" -> y1ColSpec,
 			"oculus.binning.index.field.2" -> x2ColSpec,
 			"oculus.binning.index.field.3" -> y2ColSpec
-		)
+		) ++ minimumSegmentLength.map(len =>
+			Map("oculus.binning.minimumSegmentLength" -> len.toString)
+		).getOrElse(Map[String, String]())
 
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>

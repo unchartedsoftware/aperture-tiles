@@ -390,39 +390,43 @@ trait StandardLinearBinningFunctions {
 		val tile0a = tileX(t0 * xSize - 1)
 		val tile1a = tileX(t1 * xSize)
 		val tile1 = binToTile(x1, y1)
-		val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
-		val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
-
-		val intermediateTiles =
-		if (isTileGap) {
-			// Determine the end of the lead tiles
-			val x0f = x0 + maxBinDistance
-			val t0f = (x0f + xSize - (x0f % xSize)) / xSize
-			// Determine the start of the trailing tiles
-			val x1s = x1 - maxBinDistance
-			val tns = (x1s - (x1s % xSize)) / xSize
-
-			Iterable.range(t0, t0f).flatMap { t =>
-				val startTile = tileX(t * xSize)
-				val endTile = tileX((t + 1) * xSize - 1)
-
-				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
-			} ++ Iterable.range(tns, tn).flatMap{t =>
-				val startTile = tileX(t * xSize)
-				val endTile = tileX((t + 1) * xSize - 1)
-
-				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
-			}
+		if (tile0 == tile1) {
+			Iterable(tile0)
 		} else {
-			Iterable.range(t0, tn).flatMap{t =>
-				val startTile = tileX(t * xSize)
-				val endTile = tileX((t + 1) * xSize - 1)
+			val initialTiles = if (tile0 == tile0a || t0 > t1) Traversable(tile0) else Traversable(tile0, tile0a)
+			val finalTiles = if (tile1 == tile1a || t0 > t1) Traversable(tile1) else Traversable(tile1a, tile1)
 
-				if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
-			}
+			val intermediateTiles =
+				if (isTileGap) {
+					// Determine the end of the lead tiles
+					val x0f = x0 + maxBinDistance
+					val t0f = (x0f + xSize - (x0f % xSize)) / xSize
+					// Determine the start of the trailing tiles
+					val x1s = x1 - maxBinDistance
+					val tns = (x1s - (x1s % xSize)) / xSize
+
+					Iterable.range(t0, t0f).flatMap { t =>
+						val startTile = tileX(t * xSize)
+						val endTile = tileX((t + 1) * xSize - 1)
+
+						if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+					} ++ Iterable.range(tns, tn).flatMap { t =>
+						val startTile = tileX(t * xSize)
+						val endTile = tileX((t + 1) * xSize - 1)
+
+						if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+					}
+				} else {
+					Iterable.range(t0, tn).flatMap { t =>
+						val startTile = tileX(t * xSize)
+						val endTile = tileX((t + 1) * xSize - 1)
+
+						if (startTile == endTile) Traversable(startTile) else Traversable(startTile, endTile)
+					}
+				}
+
+			initialTiles ++ intermediateTiles ++ finalTiles
 		}
-
-		initialTiles ++ intermediateTiles ++ finalTiles
 	}
 
 	/**

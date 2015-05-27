@@ -335,7 +335,7 @@ object PipelineOperationsParsing extends Logging {
 		val argParser = KeyValuePassthrough(args)
 		val params = parseSegmentTilingOpImpl(args, argParser)
 		geoSegmentTilingOp(params._1, params._2, params._3, params._4, params._5,
-			params._6, params._7, params._8, params._9)(_)
+		                   params._6, params._7, params._8, params._9, params._10)(_)
 	}
 
 	private def parseSegmentTilingOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -346,6 +346,7 @@ object PipelineOperationsParsing extends Logging {
 		val operationType = argParser.getString("ops.aggregationType", "")
 		val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
 		val valueColType = argParser.getStringOption("ops.valueType", "", None)
+		val minimumSegmentLength = argParser.getIntOption("ops.minimumSegmentLength", "", Some(4))
 
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
 			argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
@@ -362,7 +363,7 @@ object PipelineOperationsParsing extends Logging {
 		taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
 		val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
 
-		(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType)
+		(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType, minimumSegmentLength)
 	}
 
 }

@@ -208,6 +208,9 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the type of tile storage to create when this task creates tiles */
 	def getTileType = config.tileType
 
+	/** Get the minimum bin length of drawn segments, for line tiling */
+	def getMinimumSegmentLength = config.minimumSegmentLength
+
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
 
@@ -276,7 +279,6 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		val sc = sqlc.sparkContext
 
 		// Hard code for now, we'll get them later.
-		val minBins = Some(4)
 		val leaderBins = 1024
 		val scaler: (Array[BinIndex], BinIndex, PT) => PT = (endpoints, bin, value) => value
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
@@ -289,7 +291,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
 				rdd => {
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-						StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels, Some(4), 1024, getNumXBins, getNumYBins),
+						StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels, getMinimumSegmentLength, 1024, getNumXBins, getNumYBins),
 						StandardBinningFunctions.populateTileWithLineLeaders(1024, StandardScalingFunctions.identityScale),
 						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 

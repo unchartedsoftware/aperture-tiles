@@ -62,12 +62,14 @@ trait NumberConverter {
 }
 
 class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with NumberConverter with Serializable {
+	private def checkForZero (coords: Seq[Any], index: Int): Double =
+		asDouble(coords.lift(index).getOrElse(0.0))
 
 	def toCartesian (coords: Seq[Any]): (Double, Double) =
-		(asDouble(coords(0)), asDouble(coords(1)))
+		(checkForZero(coords, 0), checkForZero(coords, 1))
 
 	def toCartesianEndpoints (coords: Seq[Any]): (Double, Double, Double, Double) =
-		(asDouble(coords(0)), asDouble(coords(1)), asDouble(coords(2)), asDouble(coords(3)))
+		(checkForZero(coords, 0), checkForZero(coords, 1), checkForZero(coords, 2), checkForZero(coords, 3))
 }
 
 class TimeRangeCartesianSchemaIndexScheme (startDate: Double, secsPerPeriod: Double)
