@@ -32,70 +32,73 @@
     "use strict";
 
     /**
-     * Parses a malformed JSON string into a usable object.
+     * Parses a meta data extremum.
      * @private
      *
-     * @param jsonString {String} the malformed JSON string.
+     * @param {*} The parsed extremum value.
      */
-    function parseMalformedJson( jsonString ) {
-        // replace ( and ) with [ and ]
-        var squared = jsonString.replace( /\(/g, '[' ).replace( /\)/g, ']'),
-            // ensure all attributes are quoted in ""
-            quoted = squared.replace(/([a-zA-Z0-9]+)(:)/g,'"$1"$2');
-        return JSON.parse( quoted );
+    function parseExtremum( extremum ) {
+        var parsed;
+        if ( typeof extremum === 'string' ) {
+            parsed = JSON.parse( extremum );
+        } else if ( extremum instanceof Array ) {
+            if ( extremum.length === 1 &&
+                typeof extremum[0] === 'string' ) {
+                // graph meta data edge case, graph layer meta data
+                // is a JSON string wrapped in an array
+                parsed = JSON.parse( extremum[0] );
+            } else if ( extremum.length > 0 &&
+                extremum[0].maximum !== undefined ||
+                extremum[0].minimum !== undefined ) {
+                // bucketed tile data
+                parsed = [];
+                extremum.forEach( function( value ) {
+                    var result = value.minimum !== undefined ? value.minimum : value.maximum;
+                    parsed.push( result );
+                });
+            } else {
+                parsed = [];
+                extremum.forEach( function( value ) {
+                    parsed.push( value );
+                });
+            }
+        } else {
+            parsed = extremum;
+        }
+        return parsed;
     }
 
     /**
-     * Parse a given layers meta data min and max json strings,
-     * they are currently stored as malformed json, so they require some
-     * massaging.
+     * Parse a given layers meta data min and max.
      * @private
      *
      * @param meta {Object} the layers meta data object.
      */
     function parseMetaMinMaxJson( meta ) {
-        var minMax,
-            min,
-            max,
-            key;
-        if ( typeof meta === 'string' ) {
-            // new meta data is valid json, hurray!
-            return JSON.parse( meta );
-        }
-        // old meta data was crafted in the fiery pits of hades and manifests
-        // as malformed json sometimes wrapped in an array, in one of six
-        // potential formats
-        if ( meta &&
-            ( meta.max !== undefined || meta.maximum !== undefined ) &&
-            ( meta.min !== undefined || meta.minimum !== undefined ) ) {
-            // single bucket entries, in one of three attributes
-			max = meta.maximum !== undefined ? meta.maximum : meta.max.maxmium || meta.max || 0;
-			min = meta.minimum !== undefined ? meta.minimum : meta.min.minimum || meta.min || 0;
-            // sometimes the meta data is wraped in an array
-            max = ( max instanceof Array ) ? max[0] : max;
-            min = ( min instanceof Array ) ? min[0] : min;
-            // sometimes its a string
-            if ( typeof max === 'string' ) {
-                max = parseMalformedJson( max );
+        var minimum,
+            maximum;
+        try {
+            // if meta value is a string, assume it is valid json
+            if ( typeof meta === 'string' ) {
+                // new meta data is valid json, hurray!
+                return JSON.parse( meta );
             }
-            if ( typeof min === 'string' ) {
-                min = parseMalformedJson( min );
+            if ( meta ) {
+                maximum = parseExtremum( meta.maximum );
+                minimum = parseExtremum( meta.minimum );
             }
             // sometimes the parsed value is also wrapped in an array
             return {
-                maximum: ( max instanceof Array ) ? max[0] : max,
-                minimum: ( min instanceof Array ) ? min[0] : min,
+                maximum: maximum,
+                minimum: minimum,
                 bins: meta.bins
             };
+        } catch ( e ) {
+            console.error( "Error occured parsing layer meta data.");
+            return null;
         }
-        // some multi-bucket entries come as arrays
-        minMax = [];
-        for ( key in meta ) {
-            if ( meta.hasOwnProperty( key ) ) {
-                minMax.push( parseMetaMinMaxJson( meta[key] ) );
-            }
-        }
-        return minMax;
+        console.error( "Layer meta data format unrecognized.");
+        return null;
     }
 
     /**
