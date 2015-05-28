@@ -174,7 +174,13 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + config.name
 		else config.name
 
-		pyramidName + "." + indexer.name + "." + valuer.name
+		var name = pyramidName.replace("{v}", valuer.name)
+		name = name.replace("{i}", indexer.name)
+
+		for (i <- 0 to indexer.fields.length -1) {
+			name = name.replace("{i" + i + "}", indexer.fields(i))
+		}
+		name
 	}
 
 
