@@ -195,7 +195,7 @@ object PipelineOperations {
 		val inputTable = getOrGenTableName(input, "mercator_filter_op")
 		val pyramid = new WebMercatorTilePyramid
 		val area = pyramid.getTileBounds(new TileIndex(0, 0, 0))
-		val selectStatement = "SELECT * FROM "+inputTable+" WHERE "+latCol+" >= "+area.getMinY+" AND "+latCol+" < "+area.getMaxY
+		val selectStatement = "SELECT * FROM "+inputTable+" WHERE `" + latCol + "` >= "+area.getMinY+" AND `" + latCol + "` < "+area.getMaxY
 		val outputTable = input.sqlContext.sql(selectStatement)
 		PipelineData(input.sqlContext, outputTable)
 	}
