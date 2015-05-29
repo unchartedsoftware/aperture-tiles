@@ -58,7 +58,7 @@ case class TilingTaskParameters (name: String,
                                  tileHeight: Int,
                                  consolidationPartitions: Option[Int],
                                  tileType: Option[StorageType],
-																 minimumSegmentLength: Option[Int])
+                                 minimumSegmentLength: Option[Int] = None)
 {
 }
 
