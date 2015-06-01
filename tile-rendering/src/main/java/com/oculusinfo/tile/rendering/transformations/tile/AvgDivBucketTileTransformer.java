@@ -29,8 +29,11 @@ import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.impl.AverageTileBucketView;
-import com.oculusinfo.binning.impl.OperationTileBucketView;
+import com.oculusinfo.binning.impl.BinaryOperationTileView;
 
+import com.oculusinfo.binning.impl.UnaryOperationTileView;
+import com.oculusinfo.binning.util.BinaryOperator;
+import com.oculusinfo.binning.util.UnaryOperator;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
@@ -49,14 +52,14 @@ import org.json.JSONObject;
  *
  */
 
-public class DivisionBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger( DivisionBucketTileTransformer.class );
+public class AvgDivBucketTileTransformer<T extends Number> implements TileTransformer<List<T>> {
+	private static final Logger LOGGER = LoggerFactory.getLogger( AvgDivBucketTileTransformer.class );
 
 	protected Integer _averageRange 	= 0;
 	protected Integer _startBucket 	= 0;
 	protected Integer _endBucket 		= 0;
 
-	public DivisionBucketTileTransformer(JSONObject arguments){
+	public AvgDivBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
 			_averageRange 	= arguments.optInt("averageRange");
@@ -117,14 +120,19 @@ public class DivisionBucketTileTransformer<T> implements TileTransformer<List<T>
 				}
 			}
 		}
-		AverageTileBucketView<T> opTileA = new AverageTileBucketView<>(inputData, startA, endA);
-		AverageTileBucketView<T> opTileB = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
-		return new OperationTileBucketView<>( opTileA, opTileB, "//");
+
+		// Divide average 1 by average 2 and apply log10 to the result.
+		AverageTileBucketView<T> numerator = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
+		AverageTileBucketView<T> denominator = new AverageTileBucketView<>(inputData, startA, endA);
+		BinaryOperationTileView<T> binaryOpView = new BinaryOperationTileView<>(
+			numerator, denominator, BinaryOperator.OPERATOR_TYPE.DIVIDE, 1.0);
+		return new UnaryOperationTileView<>(UnaryOperator.OPERATOR_TYPE.LOG_10, binaryOpView, 0.0);
 	}
 
 	@Override
 	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
-		return new Pair<>(1.0/_averageRange, (double) _averageRange);
+		double ext = Math.log10(_averageRange);
+		return new Pair<>(-ext, ext);
 	}
 
 }

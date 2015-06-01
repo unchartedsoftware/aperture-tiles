@@ -29,6 +29,7 @@ package com.oculusinfo.binning.impl;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 
+import com.oculusinfo.binning.util.BinaryOperator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -114,7 +115,7 @@ public class TileDataViewTests {
 
 		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
-				Assert.assertEquals(2.5, underTest.getBin(x,y).doubleValue(), 0.01); 	// value '-' average
+				Assert.assertEquals(2.5, underTest.getBin(x,y).get(0).doubleValue(), 0.01); 	// value '-' average
 			}
 		}
 	}
@@ -128,7 +129,8 @@ public class TileDataViewTests {
 															            			  Arrays.asList( 5.0,  6.0,  7.0,  8.0),
 															            			  Arrays.asList( 9.0, 10.0, 11.0, 12.0),
 															            			  Arrays.asList(13.0, 14.0, 15.0, 16.0)));
-		DeltaTileBucketView<Double> underTest = new DeltaTileBucketView<Double>(sourceListTile, deltaListTile, "-", start, end);
+		DeltaTileBucketView<Double> underTest = new DeltaTileBucketView<>(
+			sourceListTile, deltaListTile, BinaryOperator.OPERATOR_TYPE.SUBTRACT, start, end);
 
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
@@ -194,7 +196,8 @@ public class TileDataViewTests {
 															            			  Arrays.asList( 8.0, 8.0, 16.0, 16.0)));
 		AverageTileBucketView<Double> averageTile = new AverageTileBucketView<Double>(sourceListTile, startA, endA);
 		AverageTileBucketView<Double> compareTile = new AverageTileBucketView<Double>(sourceListTile, startB, endB);
-		OperationTileBucketView<Double> underTest = new OperationTileBucketView<Double>(averageTile, compareTile, "//");
+		BinaryOperationTileView<Double> underTest =
+			new BinaryOperationTileView<Double>(averageTile, compareTile, BinaryOperator.OPERATOR_TYPE.DIVIDE, 1.0);
 
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
