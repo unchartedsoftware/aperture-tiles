@@ -28,10 +28,6 @@ package com.oculusinfo.binning.impl;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.impl.DenseTileData;
-import com.oculusinfo.binning.impl.SubTileDataView;
-import com.oculusinfo.binning.impl.AverageTileBucketView;
-import com.oculusinfo.binning.impl.DeltaTileBucketView;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -109,20 +105,20 @@ public class TileDataViewTests {
 															            			  Arrays.asList( 3.0, 4.0, 1.0, 2.0),
 															            			  Arrays.asList( 4.0, 3.0, 2.0, 1.0)));
 		AverageTileBucketView<Double> underTest = new AverageTileBucketView<Double>(sourceListTile, 0, 3);
-		
+
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
 		Assert.assertEquals(1, underTest.getDefinition().getY());
 		Assert.assertEquals(2, underTest.getDefinition().getXBins());
 		Assert.assertEquals(2, underTest.getDefinition().getYBins());
-		
+
 		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
 				Assert.assertEquals(2.5, underTest.getBin(x,y).doubleValue(), 0.01); 	// value '-' average
 			}
 		}
 	}
-	
+
 	@Test
 	public void testDeltaTileBucketView () {
 		int start = 1, end = 2;
@@ -133,19 +129,19 @@ public class TileDataViewTests {
 															            			  Arrays.asList( 9.0, 10.0, 11.0, 12.0),
 															            			  Arrays.asList(13.0, 14.0, 15.0, 16.0)));
 		DeltaTileBucketView<Double> underTest = new DeltaTileBucketView<Double>(sourceListTile, deltaListTile, "-", start, end);
-		
+
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
 		Assert.assertEquals(1, underTest.getDefinition().getY());
 		Assert.assertEquals(2, underTest.getDefinition().getXBins());
 		Assert.assertEquals(2, underTest.getDefinition().getYBins());
-		
+
 		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
 				List<Double> bin = underTest.getBin(x,y);
 				for (int i=0; i<bin.size(); i++) {
 					if ( i >= start && i <= end ) {
-						Assert.assertEquals( 1.0, bin.get(i), 0.01); 	// value '-' delta 
+						Assert.assertEquals( 1.0, bin.get(i), 0.01); 	// value '-' delta
 					} else {
 						Assert.assertNull(bin.get(i));
 					}
@@ -153,7 +149,7 @@ public class TileDataViewTests {
 			}
 		}
 	}
-	
+
 	@Test
 	public void testFilterTileBucketView () {
 		int start = 1, end = 2;
@@ -164,13 +160,13 @@ public class TileDataViewTests {
 															            			  Arrays.asList( 9.0, 10.0, 11.0, 12.0),
 															            			  Arrays.asList(13.0, 14.0, 15.0, 16.0)));
 		FilterTileBucketView<Double> underTest = new FilterTileBucketView<Double>(sourceListTile,start, end);
-		
+
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
 		Assert.assertEquals(1, underTest.getDefinition().getY());
 		Assert.assertEquals(2, underTest.getDefinition().getXBins());
 		Assert.assertEquals(2, underTest.getDefinition().getYBins());
-		
+
 		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
 				List<Double> bin = underTest.getBin(x,y);
@@ -185,7 +181,7 @@ public class TileDataViewTests {
 			}
 		}
 	}
-	
+
 	@Test
 	public void testOperationTileBucketView () {
 		int startA = 0, endA = 1;
@@ -199,18 +195,18 @@ public class TileDataViewTests {
 		AverageTileBucketView<Double> averageTile = new AverageTileBucketView<Double>(sourceListTile, startA, endA);
 		AverageTileBucketView<Double> compareTile = new AverageTileBucketView<Double>(sourceListTile, startB, endB);
 		OperationTileBucketView<Double> underTest = new OperationTileBucketView<Double>(averageTile, compareTile, "//");
-		
+
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
 		Assert.assertEquals(1, underTest.getDefinition().getY());
 		Assert.assertEquals(2, underTest.getDefinition().getXBins());
 		Assert.assertEquals(2, underTest.getDefinition().getYBins());
-		
+
 		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
 				List<Double> bin = underTest.getBin(x,y);
 				Double binValue = bin.get(0);
-				Assert.assertEquals( 1.5, binValue, 0.01); 
+				Assert.assertEquals( 1.5, binValue, 0.01);
 			}
 		}
 	}

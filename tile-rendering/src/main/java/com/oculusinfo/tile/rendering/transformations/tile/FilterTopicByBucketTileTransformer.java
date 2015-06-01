@@ -28,6 +28,9 @@ import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -70,12 +73,12 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 	}
 
 	@Override
-    public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
-    	TileData<List<T>> resultTile = inputData;
+	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
+		TileData<List<T>> resultTile = inputData;
 
-    	// add in metadata to the tile
-        JSONObject metadata = new JSONObject(inputData.getMetaData("meta"));
-        JSONObject filteredMetadata = null;
+		// add in metadata to the tile
+		JSONObject metadata = new JSONObject(inputData.getMetaData("meta"));
+		JSONObject filteredMetadata = null;
 		if ( metadata.length() > 0 ) {
 			filteredMetadata = filterKeywordMetadata(metadata);
 			if (null != filteredMetadata) {
@@ -83,14 +86,15 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 			}
 		}
 
-        return resultTile;
-    }
+		return resultTile;
+	}
 
-    public JSONObject filterKeywordMetadata(JSONObject inputMetadata) throws JSONException {
-    	if ( _startBucket != null && _endBucket != null ) {
+
+	public JSONObject filterKeywordMetadata(JSONObject inputMetadata) throws JSONException {
+		if ( _startBucket != null && _endBucket != null ) {
 			if ( _startBucket < 0 || _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Filter by keyword bucket transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
-        	}
+			}
 		}
 
 		JSONObject map = inputMetadata.getJSONObject("map");
@@ -112,5 +116,11 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 		map.put("bins", filteredBins);
 
 		return inputMetadata;
-    }
+	}
+
+	@Override
+	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
+		return new Pair<>(0.0d, 0.0);
+	}
+
 }

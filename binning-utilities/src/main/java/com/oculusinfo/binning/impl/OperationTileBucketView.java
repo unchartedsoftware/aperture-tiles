@@ -49,12 +49,12 @@ public class OperationTileBucketView<T> implements TileData<List<T>> {
 	private Operator 	_op 			= null;
 
 
-	public OperationTileBucketView (TileData<T> opTileAverage, TileData<T> opTileCompare, String op) {
+	public OperationTileBucketView(TileData<T> opTileAverage, TileData<T> opTileCompare, String op) {
 		_opTileAverage = opTileAverage;
 		_opTileCompare = opTileCompare;
 
 		_op = new Operator(op);
-		
+
 		if (   getDefinition().getXBins() != _opTileAverage.getDefinition().getXBins()
 			|| getDefinition().getYBins() != _opTileAverage.getDefinition().getYBins()) {
 			throw new IllegalArgumentException("Constructor for OperationTileBucketView: arguments are invalid. Tiles to compare are incompatible");
@@ -90,7 +90,8 @@ public class OperationTileBucketView<T> implements TileData<List<T>> {
 			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
 		}
 		List<T> result = new ArrayList<>();
-		result.add( (T)_op.Calculate( (Number)_opTileCompare.getBin(x, y), (Number)_opTileAverage.getBin(x, y) ) );
+		double r = _op.Calculate( (Number)_opTileCompare.getBin(x, y), (Number)_opTileAverage.getBin(x, y)).doubleValue();
+		result.add( (T) Double.valueOf(r));
 		return result;
 	}
 

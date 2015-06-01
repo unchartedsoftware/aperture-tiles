@@ -46,11 +46,11 @@ import java.util.List;
 /**
  * A server side to render Map<String, Double> (well, technically,
  * List<Pair<String, Double>>) tiles.
- * 
+ *
  * This renderer by default renders the top scores, rendering up to 10 per bin.
  * To render more, fewer, or different texts, override
  * {@link #getTextsToDraw(List)}.
- * 
+ *
  * @author nkronenfeld
  */
 public class TopTextScoresImageRenderer implements TileDataImageRenderer<List<Pair<String, Double>>> {
@@ -106,11 +106,6 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer<List<Pa
 			int textWidth = metrics.stringWidth(text);
 			g.drawString(text, centerX-padding-textWidth, textBaseline);
 		}
-	}
-
-	@Override
-	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		return new Pair<Double, Double>(0.0, 0.0);
 	}
 
 	/**
