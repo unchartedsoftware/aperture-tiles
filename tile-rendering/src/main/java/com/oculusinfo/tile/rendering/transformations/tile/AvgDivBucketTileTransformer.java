@@ -126,7 +126,7 @@ public class AvgDivBucketTileTransformer<T extends Number> implements TileTransf
 		AverageTileBucketView<T> denominator = new AverageTileBucketView<>(inputData, startA, endA);
 		BinaryOperationTileView<T> binaryOpView = new BinaryOperationTileView<>(
 			numerator, denominator, BinaryOperator.OPERATOR_TYPE.DIVIDE, 1.0);
-		return new UnaryOperationTileView<>(UnaryOperator.OPERATOR_TYPE.LOG_10, binaryOpView, 0.0);
+		return new UnaryOperationTileView<>(UnaryOperator.OPERATOR_TYPE.LOG_10, binaryOpView, -(Math.log10(_averageRange)));
 	}
 
 	@Override

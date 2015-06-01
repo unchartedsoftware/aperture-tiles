@@ -55,6 +55,9 @@ public class UnaryOperator {
 				}
 				return Math.log10(operand.doubleValue());
 			case LOG_2:
+				if (errorValue != null & operand.doubleValue() <= 0.0) {
+					return errorValue;
+				}
 				return Math.log(operand.doubleValue()) / Math.log(2);
 			default:
 				return operand;
