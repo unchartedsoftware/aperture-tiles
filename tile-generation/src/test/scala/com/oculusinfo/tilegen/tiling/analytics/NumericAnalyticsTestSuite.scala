@@ -77,7 +77,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		// check base
 		val numeric = ExtendedNumeric.ExtendedInt
 
-		val analytic = new NumericSumTileAnalytic[Int]()(numeric, Some(ProcessedDefault(10)))
+		val analytic = new NumericSumTileAnalytic[Int]()(numeric, Some(10))
 		assert(10 === analytic.defaultProcessedValue)
 		assert(0 === analytic.defaultUnprocessedValue)
 		assert(3 === analytic.aggregate(1, 2))
@@ -105,7 +105,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		// check base
 		val numeric = ExtendedNumeric.ExtendedLong
 
-		val analytic = new NumericSumTileAnalytic[Long]()(numeric, Some(ProcessedDefault(10l)))
+		val analytic = new NumericSumTileAnalytic[Long]()(numeric, Some(10l))
 		assert(10l === analytic.defaultProcessedValue)
 		assert(0l === analytic.defaultUnprocessedValue)
 		assert(3l === analytic.aggregate(1l, 2l))
@@ -134,7 +134,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 		// check base
 		val numeric = ExtendedNumeric.ExtendedFloat
 
-		val analytic = new NumericSumTileAnalytic[Float]()(numeric, Some(ProcessedDefault(10.0f)))
+		val analytic = new NumericSumTileAnalytic[Float]()(numeric, Some(10.0f))
 		assert(10.0f === analytic.defaultProcessedValue)
 		assert(0.0f === analytic.defaultUnprocessedValue)
 		assert(3.0f === analytic.aggregate(1.0f, 2.0f))
@@ -165,7 +165,7 @@ class NumericAnalyticsTestSuite extends FunSuite {
 	test("Standard Double Analytic with default value") {
 		// check base
 		val numeric = ExtendedNumeric.ExtendedDouble
-		val analytic = new NumericSumTileAnalytic[Double]()(numeric, Some(ProcessedDefault(10.0)))
+		val analytic = new NumericSumTileAnalytic[Double]()(numeric, Some(10.0))
 		assert(10.0 === analytic.defaultProcessedValue)
 		assert(0.0 === analytic.defaultUnprocessedValue)
 		assert(3.0 === analytic.aggregate(1.0, 2.0))

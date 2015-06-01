@@ -30,7 +30,7 @@ package com.oculusinfo.tilegen.tiling.analytics
 import java.lang.{Double => JavaDouble}
 import java.util.{List => JavaList}
 import com.oculusinfo.factory.ConfigurableFactory
-import com.oculusinfo.factory.properties.{IntegerProperty, DoubleProperty, StringProperty}
+import com.oculusinfo.factory.properties.{NumberProperty, IntegerProperty, DoubleProperty, StringProperty}
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.tilegen.tiling.IPv4ZCurveIndexScheme._
 import com.oculusinfo.tilegen.util.{NumericallyConfigurableFactory, ExtendedNumeric, TypeConversion}
@@ -45,21 +45,8 @@ object NumericAnalyticFactory {
 	val MIN_COUNT = new IntegerProperty("mincount", "The minimum number of data points a bin must have to be considered for statistical binning", 1)
 	val EMPTY_MEAN = new DoubleProperty("emptymean", "The value to use as a bin's mean when it doesn't have enough data", JavaDouble.NaN)
 	val EMPTY_DEV = new DoubleProperty("emptydev", "The value to use as a bin's standard deviation when it doesn't have enough data", JavaDouble.NaN)
-	val PROCESSED_DEFAULT = new DoubleProperty("processeddefault", "The value to use when it doesn't have any data", 0)
+	val PROCESSED_DEFAULT = new NumberProperty("processeddefault", "The value to use when it doesn't have any data", 0)
 }
-
-case class ProcessedDefault[T](value: T)
-
-object ProcessedDefault {
-	implicit val defaultByte: ProcessedDefault[Byte] = ProcessedDefault(0)
-	implicit val defaultShort: ProcessedDefault[Short] = ProcessedDefault(0)
-	implicit val defaultInt: ProcessedDefault[Int] = ProcessedDefault(0)
-	implicit val defaultLong: ProcessedDefault[Long] = ProcessedDefault(0L)
-	implicit val defaultFloat: ProcessedDefault[Float] = ProcessedDefault(0)
-	implicit val defaultDouble: ProcessedDefault[Double] = ProcessedDefault(0.0)
-}
-
-
 
 class NumericBinningAnalyticFactory (name: String,
                                      parent: ConfigurableFactory[_],
@@ -89,7 +76,9 @@ class NumericBinningAnalyticFactory (name: String,
 	 * @return The factory to be returned by ConfigurableFactory.create.
 	 */
 	override protected def typedCreate[ST, JT](tag: ClassTag[ST], numeric: ExtendedNumeric[ST], conversion: TypeConversion[ST, JT]): BinningAnalytic[_, _] = {
-		val processedDefault = numeric.fromAny(getPropertyValue(PROCESSED_DEFAULT)).asInstanceOf[ProcessedDefault[ST]]
+
+		val processedDefault = numeric.fromNumber(getPropertyValue(PROCESSED_DEFAULT))
+
 		getPropertyValue(AGGREGATION_TYPE).toLowerCase match {
 			case "sum" =>     new NumericSumBinningAnalytic[ST, JT]()(numeric, conversion, Some(processedDefault))
 			case "min" =>     new NumericMinBinningAnalytic[ST, JT]()(numeric, conversion, Some(processedDefault))
@@ -136,7 +125,8 @@ class NumericTileAnalyticFactory (name: String = null,
 	 */
 	override protected def typedCreate[ST, JT](tag: ClassTag[ST], numeric: ExtendedNumeric[ST], conversion: TypeConversion[ST, JT]): TileAnalytic[_] = {
 		val name = optionalGet(ANALYTIC_NAME)
-		val processedDefault = numeric.fromAny(getPropertyValue(PROCESSED_DEFAULT)).asInstanceOf[ProcessedDefault[ST]]
+		val processedDefault = numeric.fromNumber(getPropertyValue(PROCESSED_DEFAULT))
+
 		getPropertyValue(AGGREGATION_TYPE) match {
 			case "sum"     => new NumericSumTileAnalytic[ST](name)(numeric, Some(processedDefault))
 			case "min"     => new NumericMinTileAnalytic[ST](name)(numeric, Some(processedDefault))
@@ -163,13 +153,13 @@ trait NumericType[T] {
  *
  * @tparam T The numeric type of data of which to sum.
  */
-class NumericSumAnalytic[T] ()(implicit numeric: ExtendedNumeric[T], processedDefault : Option[ProcessedDefault[T]] = None) extends Analytic[T] with NumericType[T] {
+class NumericSumAnalytic[T] ()(implicit numeric: ExtendedNumeric[T], processedDefault : Option[T] = None) extends Analytic[T] with NumericType[T] {
 	val numericType = numeric
 	def aggregate (a: T, b: T): T = numeric.plus(a, b)
 	def defaultProcessedValue: T =
 		processedDefault match {
 			case None => numeric.zero
-			case Some(d) => numeric.fromAny(d.value)
+			case Some(d) => numeric.fromAny(d)
 		}
 	def defaultUnprocessedValue: T = numeric.zero
 }
@@ -181,7 +171,7 @@ class NumericSumAnalytic[T] ()(implicit numeric: ExtendedNumeric[T], processedDe
  *            bins (typically a java version of the same numeric type).
  */
 class NumericSumBinningAnalytic[T, JT] () (implicit numeric: ExtendedNumeric[T],
-                                        converter: TypeConversion[T, JT], processedDefault : Option[ProcessedDefault[T]] = None)
+                                        converter: TypeConversion[T, JT], processedDefault : Option[T] = None)
 		extends NumericSumAnalytic[T]()(numeric, processedDefault)
 		with BinningAnalytic[T, JT]
 {
@@ -192,7 +182,7 @@ class NumericSumBinningAnalytic[T, JT] () (implicit numeric: ExtendedNumeric[T],
  *
  * @tparam T The numeric type of data of which to sum.
  */
-class NumericSumTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T], processedDefault : Option[ProcessedDefault[T]] = None)
+class NumericSumTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T], processedDefault : Option[T] = None)
 		extends NumericSumAnalytic[T]()(numeric, processedDefault)
 		with TileAnalytic[T]
 {
@@ -207,7 +197,7 @@ class NumericSumTileAnalytic[T] (analyticName: Option[String] = None)(implicit n
  *
  * @tparam T The numeric type of data of which to take the maximum.
  */
-class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefault : Option[ProcessedDefault[T]] = None) extends Analytic[T] with NumericType[T] {
+class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefault : Option[T] = None) extends Analytic[T] with NumericType[T] {
 	val numericType = numeric
 	def aggregate (a: T, b: T): T =
 		if (numeric.isNaN(a)) b
@@ -216,7 +206,7 @@ class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefa
 	def defaultProcessedValue: T =
 		processedDefault match {
 			case None => numeric.zero
-			case Some(d) => numeric.fromAny(d.value)
+			case Some(d) => numeric.fromAny(d)
 		}
 	def defaultUnprocessedValue: T = numeric.minValue
 }
@@ -228,7 +218,7 @@ class NumericMaxAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefa
  *            bins (typically a java version of the same numeric type).
  */
 class NumericMaxBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
-                                        converter: TypeConversion[T, JT], processedDefault : Option[ProcessedDefault[T]] = None)
+                                        converter: TypeConversion[T, JT], processedDefault : Option[T] = None)
 		extends NumericMaxAnalytic[T]()(numeric, processedDefault)
 		with BinningAnalytic[T, JT]
 {
@@ -239,7 +229,7 @@ class NumericMaxBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
  *
  * @tparam T The numeric type of data of which to take the maximum.
  */
-class NumericMaxTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T], processedDefault : Option[ProcessedDefault[T]] = None)
+class NumericMaxTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T], processedDefault : Option[T] = None)
 		extends NumericMaxAnalytic[T]()(numeric, processedDefault)
 		with TileAnalytic[T]
 {
@@ -311,7 +301,7 @@ class NumericMaxWithPayloadTileAnalytic[T, PT <: Serializable] (
  *
  * @tparam T The numeric type of data of which to take the minimum.
  */
-class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefault : Option[ProcessedDefault[T]] = None) extends Analytic[T] with NumericType[T] {
+class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefault : Option[T] = None) extends Analytic[T] with NumericType[T] {
 	val numericType = numeric
 	def aggregate (a: T, b: T): T =
 		if (numeric.isNaN(a)) b
@@ -320,7 +310,7 @@ class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefa
 	def defaultProcessedValue: T =
 		processedDefault match {
 			case None => numeric.zero
-			case Some(d) => numeric.fromAny(d.value)
+			case Some(d) => numeric.fromAny(d)
 		}
 	def defaultUnprocessedValue: T = numeric.maxValue
 }
@@ -332,7 +322,7 @@ class NumericMinAnalytic[T] (implicit numeric: ExtendedNumeric[T], processedDefa
  *            bins (typically a java version of the same numeric type).
  */
 class NumericMinBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
-                                        converter: TypeConversion[T, JT], processedDefault : Option[ProcessedDefault[T]] = None)
+                                        converter: TypeConversion[T, JT], processedDefault : Option[T] = None)
 		extends NumericMinAnalytic[T]()(numeric, processedDefault)
 		with BinningAnalytic[T, JT]
 {
@@ -343,7 +333,7 @@ class NumericMinBinningAnalytic[T, JT] (implicit numeric: ExtendedNumeric[T],
  *
  * @tparam T The numeric type of data of which to take the minimum.
  */
-class NumericMinTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T], processedDefault : Option[ProcessedDefault[T]] = None)
+class NumericMinTileAnalytic[T] (analyticName: Option[String] = None)(implicit numeric: ExtendedNumeric[T], processedDefault : Option[T] = None)
 		extends NumericMinAnalytic[T]()(numeric, processedDefault)
 		with TileAnalytic[T]
 {
@@ -420,7 +410,7 @@ class NumericMeanAnalytic[T] (emptyValue: Double = JavaDouble.NaN,
 	val numericType = ExtendedNumeric.ExtendedDouble
 	def aggregate (a: (T, Int), b: (T, Int)): (T, Int) =
 		(numeric.plus(a._1, b._1), (a._2 + b._2))
-	def defaultProcessedValue: (T, Int) = (numeric.zero, 0)
+	def defaultProcessedValue: (T, Int) = (numeric.fromDouble(emptyValue), 0)
 	def defaultUnprocessedValue: (T, Int) = (numeric.zero, 0)
 	protected def calculate (value: (T, Int)): Double = {
 		val (total, count) = value
@@ -488,7 +478,7 @@ class NumericStatsAnalytic[T] (emptyValue: (Double, Double) = (JavaDouble.NaN, J
 {
 	def aggregate (a: (T, T, Int), b: (T, T, Int)): (T, T, Int) =
 		(numeric.plus(a._1, b._1), numeric.plus(a._2, b._2), (a._3+b._3))
-	def defaultProcessedValue: (T, T, Int) = (numeric.zero, numeric.zero, 0)
+	def defaultProcessedValue: (T, T, Int) = (numeric.fromDouble(emptyValue._1), numeric.fromDouble(emptyValue._2), 0)
 	def defaultUnprocessedValue: (T, T, Int) = (numeric.zero, numeric.zero, 0)
 	protected def calculate (value: (T, T, Int)): (Double, Double) = {
 		val count = value._3
