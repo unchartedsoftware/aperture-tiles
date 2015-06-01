@@ -92,6 +92,11 @@ abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
 	def serializer: TileSerializer[BT]
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[BT], _]]
+
+	/** Transformed the pyramid name by inserting the name of the valuer*/
+	def getTransformedName(inputName : String) : String = {
+		inputName.replace("{v}", name)
+	}
 }
 
 /**

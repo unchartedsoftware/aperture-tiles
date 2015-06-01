@@ -73,6 +73,17 @@ abstract class IndexExtractor () {
 
 	// List any tile analytics automatically associated with this index extractor
 	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] = Seq()
+
+	/** Transformed the pyramid name by inserting the field names of the indexer*/
+	def getTransformedName(inputName : String) : String = {
+		var TransformedName = inputName.replace("{i}", name)
+
+		for (i <- 0 to fields.length -1) {
+			TransformedName = TransformedName.replace("{i" + i + "}", fields(i))
+		}
+		
+		TransformedName
+	}
 }
 
 
@@ -90,7 +101,7 @@ object IndexExtractorFactory {
 	 */
 	val defaultFactory = "cartesian"
 	/**
-	 * A set of providers for index extractor factories, to be used when constructing tile tasks 
+	 * A set of providers for index extractor factories, to be used when constructing tile tasks
 	 * to construct the relevant index extractor for the current task.
 	 */
 	val subFactoryProviders = MutableMap[Any, FactoryProvider[IndexExtractor]]()
@@ -101,7 +112,7 @@ object IndexExtractorFactory {
 
 	/**
 	 * Add an IndexExtractor sub-factory provider to the list of all possible such providers.
-	 * 
+	 *
 	 * This will replace a previous provider of the same key
 	 */
 	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[IndexExtractor]): Unit =
