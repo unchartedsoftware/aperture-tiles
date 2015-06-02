@@ -61,28 +61,6 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 		return new TypeDescriptor(getAcceptedBinClass());
 	}
 
-
-	private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
-		String rawValue = parameter.getPropertyValue(property);
-		try {
-			return Double.parseDouble(rawValue);
-		} catch (NumberFormatException|NullPointerException e) {
-			LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
-			return def;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see TileDataImageRenderer#getLevelExtrema()
-	 */
-	@Override
-	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<>(minimumValue,  maximumValue);
-	}
-
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */

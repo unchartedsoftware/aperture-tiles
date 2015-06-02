@@ -30,7 +30,7 @@ import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Operator;
+import com.oculusinfo.binning.util.BinaryOperator;
 
 
 
@@ -44,15 +44,16 @@ public class DeltaTileBucketView<T> implements TileData<List<T>> {
 
 	private TileData<List<T>> _base 		= null;
 	private TileData<List<T>> _delta		= null;
-	private Operator		  _operator 	= null;
+	private BinaryOperator _operator 	= null;
 	private Integer			  _startCompare = null;
 	private Integer			  _endCompare 	= null;
 
 
-	public DeltaTileBucketView (TileData<List<T>> base, TileData<List<T>> delta, String op, int startComp, int endComp) {
+	public DeltaTileBucketView (TileData<List<T>> base, TileData<List<T>> delta, BinaryOperator.OPERATOR_TYPE op,
+								int startComp, int endComp) {
 		_base = base;
 		_delta = delta;
-		_operator = new Operator(op);
+		_operator = new BinaryOperator(op);
 		_startCompare = startComp;
 		_endCompare = endComp;
 
@@ -103,7 +104,7 @@ public class DeltaTileBucketView<T> implements TileData<List<T>> {
 
 		for(int i = 0; i < binSize; i++) {
 			if ( i >= start && i <= end ) {
-				sourceData.set(i, (T)_operator.Calculate( (Number)sourceData.get(i), (Number)deltaData.get(i)));
+				sourceData.set(i, (T)_operator.calculate( (Number)sourceData.get(i), (Number)deltaData.get(i)));
 			} else {
 				sourceData.set(i, null);
 			}

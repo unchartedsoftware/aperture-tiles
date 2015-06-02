@@ -178,12 +178,14 @@ public class TileServiceImpl implements TileService {
 		int coarseness = config.getPropertyValue( LayerConfiguration.COARSENESS );
 
 		@SuppressWarnings("unchecked")
-		TileTransformer<T> tileTransformer = config.produce( TileTransformer.class );
+		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
 
-		TileData<T> data = tileDataForIndex( index, dataId, serializer, pyramidIO, coarseness );
+		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
+		if (data == null) {
+			return null;
+		}
 
 		data = tileTransformer.transform( data );
-
 		if ( data != null ) {
 			return renderer.render( data, config );
 		}

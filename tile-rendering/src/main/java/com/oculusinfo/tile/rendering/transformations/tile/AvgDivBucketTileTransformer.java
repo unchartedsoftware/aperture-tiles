@@ -29,8 +29,14 @@ import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.impl.AverageTileBucketView;
-import com.oculusinfo.binning.impl.OperationTileBucketView;
+import com.oculusinfo.binning.impl.BinaryOperationTileView;
 
+import com.oculusinfo.binning.impl.UnaryOperationTileView;
+import com.oculusinfo.binning.util.BinaryOperator;
+import com.oculusinfo.binning.util.UnaryOperator;
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -46,26 +52,21 @@ import org.json.JSONObject;
  *
  */
 
-public class OperatorBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger( OperatorBucketTileTransformer.class );
+public class AvgDivBucketTileTransformer<T extends Number> implements TileTransformer<List<T>> {
+	private static final Logger LOGGER = LoggerFactory.getLogger( AvgDivBucketTileTransformer.class );
 
-	private Integer _averageRange 	= 0;
-	private Integer _startBucket 	= 0;
-	private Integer _endBucket 		= 0;
-	private String  _operator 		= "";
+	protected Integer _averageRange 	= 0;
+	protected Integer _startBucket 	= 0;
+	protected Integer _endBucket 		= 0;
 
-
-	public OperatorBucketTileTransformer(JSONObject arguments){
+	public AvgDivBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
 			_averageRange 	= arguments.optInt("averageRange");
 			_startBucket 	= arguments.optInt("startBucket");
 			_endBucket 		= arguments.optInt("endBucket");
-
-			// get the operator
-			_operator = arguments.optString("operator");
 		} else {
-			LOGGER.warn("No arguements passed in to filterbucket transformer");
+			LOGGER.warn("No arguments passed in to filterbucket transformer");
 		}
 	}
 
@@ -93,7 +94,7 @@ public class OperatorBucketTileTransformer<T> implements TileTransformer<List<T>
 		int halfRange = (int) Math.floor(_averageRange/2);
 		JSONArray maxBuckets = new JSONArray(inputData.getMetaData("maximum array"));
 		int lastBucket = maxBuckets.length()-1;
-		
+
 		int startA = 0;
 		int endA = 0;
 		// if range is larger than number of buckets, use all buckets for average
@@ -118,10 +119,20 @@ public class OperatorBucketTileTransformer<T> implements TileTransformer<List<T>
 					endA++;
 				}
 			}
-		}		
-		AverageTileBucketView<T> opTileA = new AverageTileBucketView<>(inputData, startA, endA);
-		AverageTileBucketView<T> opTileB = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
-		return new OperationTileBucketView<>( opTileA, opTileB, _operator );
+		}
+
+		// Divide average 1 by average 2 and apply log10 to the result.
+		AverageTileBucketView<T> numerator = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
+		AverageTileBucketView<T> denominator = new AverageTileBucketView<>(inputData, startA, endA);
+		BinaryOperationTileView<T> binaryOpView = new BinaryOperationTileView<>(
+			numerator, denominator, BinaryOperator.OPERATOR_TYPE.DIVIDE, 1.0);
+		return new UnaryOperationTileView<>(UnaryOperator.OPERATOR_TYPE.LOG_10, binaryOpView, -(Math.log10(_averageRange)));
+	}
+
+	@Override
+	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
+		double ext = Math.log10(_averageRange);
+		return new Pair<>(-ext, ext);
 	}
 
 }
