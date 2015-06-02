@@ -29,7 +29,7 @@
 
     var Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
-		Util = require('../util/Util'),
+        Util = require('../util/Util'),
         AnnotationService = require('../rest/AnnotationService'),
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
@@ -89,13 +89,13 @@
      * </pre>
      */
     function AnnotationLayer( spec ) {
-		var that = this,
+        var that = this,
             getURL = spec.getURL || LayerUtil.getURL;
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 500;
-		this.filter = spec.filter || {};
+        this.filter = spec.filter || {};
         this.domain = "annotation";
         this.source = spec.source;
         this.getURL = function( bounds ) {
@@ -272,7 +272,7 @@
                 callback();
             });
     };
-	
+
 	/**
      * Set the layer's filter function type.
      * @memberof AnnotationLayer
@@ -297,7 +297,7 @@
         return this.filter.type;
     };
 
-	
+
 	/**
      * Set the annotation filter data attribute
      * @memberof AnnotationLayer
@@ -311,7 +311,7 @@
             PubSub.publish( this.getChannel(), {field: 'filterData', value: filterData} );
         }
     };
-	
+
 	/**
      * Get the filter data attribute.
      * @memberof AnnotationLayer
@@ -322,7 +322,7 @@
         return this.filter.data || {};
     };
 
-/**
+    /**
      * Generate query parameters based on state of layer
      * @memberof AnnotationLayer
      *
@@ -334,6 +334,7 @@
         };
         return Util.encodeQueryParams( query );
     };
+    
     /**
      * Redraws the entire layer.
      * @memberof ServerLayer
