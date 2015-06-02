@@ -28,6 +28,7 @@ import com.oculusinfo.annotation.filter.AnnotationFilter;
 import com.oculusinfo.annotation.filter.impl.EmptyFilterFactory;
 import com.oculusinfo.annotation.filter.impl.NMostRecentByGroupFactory;
 import com.oculusinfo.annotation.filter.impl.ScriptableFilterFactory;
+import com.oculusinfo.annotation.filter.impl.TimeFacetFilterFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.providers.FactoryProvider;
 
@@ -68,6 +69,12 @@ public enum DefaultAnnotationFilterFactoryProvider implements FactoryProvider<An
 		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
 				List<String> path) {
 			return new ScriptableFilterFactory(parent, path);
+		}
+	}), TIMEFACET(new Constructor() {
+		@Override
+		public ConfigurableFactory<AnnotationFilter> create (ConfigurableFactory<?> parent,
+				List<String> path) {
+			return new TimeFacetFilterFactory(parent, path);
 		}
 	});
 
