@@ -57,7 +57,7 @@
         return '<div class="' + AXIS_LABEL_CLASS
             + ' ' + axis.horizontalOrVertical + AXIS_POSITIONED_LABEL_CLASS_SUFFIX + '"'
             + 'style="position:absolute;">'
-            + AxisUtil.formatText( marker.label, axis.units )
+            + axis.format( marker.label )
             + '</div>';
     }
 
@@ -89,7 +89,7 @@
             + 'line-height: ' + axis.MAX_LABEL_HEIGHT + 'px;'   // center text vertically
             + axis.leftOrTop + ":" + primaryPosition + 'px;'
             + axis.oppositePosition + ":" + secondaryPosition + 'px;">'
-            + AxisUtil.formatText( marker.label, axis.units )
+            + axis.format( marker.label )
             +'</div>';
     }
 
@@ -455,7 +455,7 @@
             // create label
             $label = $('<div class="axis-hover-label hover-label" style="'+
                 axis.leftOrTop+':'+ marker.pixel +'px;">'+
-                    '<div class="hover-label-text">'+ AxisUtil.formatText( marker.label, axis.units, true ) +'</div>'+
+                    '<div class="hover-label-text">'+ axis.format( marker.label, true ) +'</div>'+
                 '</div>');
             // append label
             axis.$content.append( $label );
@@ -672,6 +672,18 @@
         }
         // add each marker to correct pixel location in axis DOM elements
         updateAxisContent( this );
+    };
+
+    /**
+     * Format a value by the axis unit specification.
+     *
+     * @param {number} value - The value to format.
+     * @param {boolean} verbose - Whether the formatting should be verbose. (optional)
+     *
+     * @returns {String} The resulting formatted value string.
+     */
+    Axis.prototype.format = function( value, verbose ) {
+        return AxisUtil.formatText( value, this.units, verbose );
     };
 
     /**

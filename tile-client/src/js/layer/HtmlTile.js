@@ -175,6 +175,17 @@
         div.style.visibility = 'inherit';
         div.innerHTML = "";
 
+        // get renderer
+        renderer = this.layer.renderer;
+        if ( typeof renderer === "function" ) {
+            renderer = renderer.call( this.layer, this.bounds );
+        }
+
+        // hide standard tile hover interaction
+        if ( renderer.spec.hideTile ) {
+            div.className = div.className + " hideTile";
+        }
+
         if ( !data ) {
             // no data
             return;
@@ -193,12 +204,6 @@
         });
         if ( !hasTileOrHits ) {
             return;
-        }
-
-        // get renderer
-        renderer = this.layer.renderer;
-        if ( typeof renderer === "function" ) {
-            renderer = renderer.call( this.layer, this.bounds );
         }
 
         // if aggregator, aggregate the data
@@ -235,10 +240,6 @@
             div.innerHTML = html;
         }
 
-        // hide standard tile hover interaction
-        if ( renderer.spec.hideTile ) {
-            div.className = div.className + " hideTile";
-        }
         // inject selected entry classes
         renderer.injectEntries( div.children, this.entries );
         // call renderer hook function
