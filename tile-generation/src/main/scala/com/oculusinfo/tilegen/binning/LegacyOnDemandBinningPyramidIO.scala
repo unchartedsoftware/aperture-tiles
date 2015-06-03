@@ -54,11 +54,9 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
 
 import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
-import com.oculusinfo.tilegen.tiling.UniversalBinner
+import com.oculusinfo.tilegen.tiling.RDDBinner
 import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.StandardBinningFunctions
-import com.oculusinfo.tilegen.tiling.BinningParameters
 
 
 
@@ -66,7 +64,7 @@ import com.oculusinfo.tilegen.tiling.BinningParameters
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
+@deprecated class LegacyOnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	private val sc = sqlc.sparkContext
 	private val tasks = MutableMap[String, TilingTask[_, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
@@ -219,15 +217,16 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
 				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)
-				val locaterFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])] =
+				val spreaderFcn: Seq[Any] => TraversableOnce[(TileIndex, BinIndex)] =
 					index => {
 						val cartesianIndex = indexScheme.toCartesian(index)
 
 						val spread = cartesianSpreaderFcn(cartesianIndex._1, cartesianIndex._2)
-						spread.map(r => (r._1, Array(r._2)))
+						spread
 					}
 
-				val binner = new UniversalBinner
+				val binner = new RDDBinner
+				binner.debug = true
 
 				val results: Array[TileData[BT]] = task.transformRDD[TileData[BT]](
 					rdd => {
@@ -235,10 +234,9 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						                                             binningAnalytic,
 						                                             task.getTileAnalytics,
 						                                             task.getDataAnalytics,
-						                                             locaterFcn,
-						                                             StandardBinningFunctions.populateTileIdentity,
-						                                             new BinningParameters(tileType = task.getTileType,
-						                                                                   maxPartitions = consolidationPartitions))
+						                                             spreaderFcn,
+						                                             consolidationPartitions,
+						                                             task.getTileType)
 					}
 				).collect
 
