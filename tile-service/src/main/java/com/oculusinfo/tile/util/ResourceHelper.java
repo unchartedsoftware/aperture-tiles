@@ -69,7 +69,7 @@ public class ResourceHelper {
 			try {
 				File file = new File(path);
 				logger.info("Loading file from: " + file.getAbsolutePath());
-				inp = Files.asByteSource(file).getInput();
+				inp = Files.asByteSource(file).openStream();
 			}
 			catch (IOException e){
 				logger.info("Error loading file from: " + path);
