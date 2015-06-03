@@ -90,18 +90,17 @@ object IndexExtractorFactory {
 	 */
 	val defaultFactory = "cartesian"
 	/**
-	 * A set of providers for index extractor factories, to be used when constructing tile tasks 
+	 * A set of providers for index extractor factories, to be used when constructing tile tasks
 	 * to construct the relevant index extractor for the current task.
 	 */
 	val subFactoryProviders = MutableMap[Any, FactoryProvider[IndexExtractor]]()
 	subFactoryProviders(FactoryKey(CartesianIndexExtractorFactory.NAME,   classOf[CartesianIndexExtractorFactory]))   = CartesianIndexExtractorFactory.provider
-	subFactoryProviders(FactoryKey(LineSegmentIndexExtractorFactory.NAME, classOf[LineSegmentIndexExtractorFactory])) = LineSegmentIndexExtractorFactory.provider
 	subFactoryProviders(FactoryKey(IPv4IndexExtractorFactory.NAME,        classOf[IPv4IndexExtractorFactory]))        = IPv4IndexExtractorFactory.provider
 	subFactoryProviders(FactoryKey(TimeRangeIndexExtractorFactory.NAME,   classOf[TimeRangeIndexExtractorFactory]))   = TimeRangeIndexExtractorFactory.provider
 
 	/**
 	 * Add an IndexExtractor sub-factory provider to the list of all possible such providers.
-	 * 
+	 *
 	 * This will replace a previous provider of the same key
 	 */
 	def addSubFactoryProvider (identityKey: Any, provider: FactoryProvider[IndexExtractor]): Unit =
@@ -187,60 +186,19 @@ class CartesianIndexExtractorFactory (parent: ConfigurableFactory[_], path: Java
 
 	override protected def create(): IndexExtractor = {
 		val fields = getPropertyValue(IndexExtractorFactory.FIELDS_PROPERTY).asScala
-		val xField = fields(0)
-		val yField = if (fields.size < 2) "zero" else fields(1)
-		new CartesianIndexExtractor(xField, yField)
+		new CartesianIndexExtractor(fields)
 	}
 }
 /**
  * A simple index extractor that extracts cartesian coordinates from the data, based on fields specified in
  * the configuration
- * @param xField The field from which to get the X coordinate of a given record
- * @param yField The field from which to get the Y coordinate of a given record
+ * @param columns The columns from which to take the coordinates of each record
  */
-class CartesianIndexExtractor (xField: String, yField: String) extends IndexExtractor() {
-	private def checkForZero (field: String): String = if ("zero" == field) "0" else field
-	@transient lazy private val _fields = Seq(checkForZero(xField), checkForZero(yField))
-	def fields = _fields
+class CartesianIndexExtractor (columns: Seq[String]) extends IndexExtractor() {
+	def fields = columns
 	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
 }
 
-object LineSegmentIndexExtractorFactory {
-	val NAME = "segment"
-	def provider = IndexExtractorFactory.subFactoryProvider((parent, path) =>
-		new LineSegmentIndexExtractorFactory(parent, path))
-}
-/** A constructor for a standard line segment index extractor */
-class LineSegmentIndexExtractorFactory (parent: ConfigurableFactory[_], path: JavaList[String])
-		extends IndexExtractorFactory(LineSegmentIndexExtractorFactory.NAME, parent, path)
-{
-	// Initialize needed properties
-	addProperty(IndexExtractorFactory.FIELDS_PROPERTY)
-
-	override protected def create (): IndexExtractor = {
-		val fields = getPropertyValue(IndexExtractorFactory.FIELDS_PROPERTY).asScala
-		val x1Field = fields(0)
-		val y1Field = if (fields.size < 4) "zero" else fields(1)
-		val x2Field = if (fields.size < 4) fields(1) else fields(2)
-		val y2Field = if (fields.size < 4) "zero" else fields(3)
-		new LineSegmentIndexExtractor(x1Field, y1Field, x2Field, y2Field)
-	}
-}
-
-/**
- * An index extractor that extracts from a record the description of a line segment
- * @param x1Var The field from which to get the X coordinate of the first point of the described line segment from a given record.
- * @param y1Var The field from which to get the Y coordinate of the first point of the described line segment from a given record.
- * @param x2Var The field from which to get the X coordinate of the second point of the described line segment from a given record.
- * @param y2Var The field from which to get the Y coordinate of the second point of the described line segment from a given record.
- */
-class LineSegmentIndexExtractor (x1Var: String, y1Var: String, x2Var: String, y2Var: String)
-		extends IndexExtractor()
-{
-	@transient lazy private val _fields = Seq(x1Var, y1Var, x2Var, y2Var)
-	def fields = _fields
-	def indexScheme: IndexScheme[Seq[Any]] = new CartesianSchemaIndexScheme
-}
 
 object IPv4IndexExtractorFactory {
 	val NAME = "ipv4"

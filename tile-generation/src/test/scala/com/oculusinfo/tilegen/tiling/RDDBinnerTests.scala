@@ -58,7 +58,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 			((n.toDouble, (7-n).toDouble), 1.0)
 		)
 
-		val binner = new RDDBinner
+		val binner = new UniversalBinner
 		val tileIO = new TestTileIO
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 		val pyramidId = "simple test"
@@ -114,7 +114,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 			((n.toDouble, (7-n).toDouble), 1.0)
 		)
 
-		val binner = new RDDBinner
+		val binner = new UniversalBinner
 		val tileIO = new TestTileIO
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 		val pyramidId = "1-d test"
@@ -175,7 +175,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		}
 		val data = sc.parallelize(rawData)
 
-		val binner = new RDDBinner
+		val binner = new UniversalBinner
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 
 		val coordFcn: (((Double, Double), Double)) => Try[(Double, Double)] = record => Try(record._1)

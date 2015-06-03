@@ -27,14 +27,21 @@ package com.oculusinfo.tilegen.pipeline
 
 
 import java.io.File
+import java.lang.{Double => JavaDouble}
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 
-import com.oculusinfo.binning.TileIndex
+import scala.collection.JavaConverters._
+
+import com.oculusinfo.binning.{BinIndex, TileIndex}
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
+import com.oculusinfo.binning.io.impl.{FileSystemPyramidSource, FileBasedPyramidIO}
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
+import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.JSONUtilitiesTests
-import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities
+import com.oculusinfo.tilegen.datasets.{TileAssertions, SchemaTypeUtilities}
 import com.oculusinfo.tilegen.tiling.LocalTileIO
+import org.apache.avro.file.CodecFactory
 import org.apache.spark.SharedSparkContext
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.types._
@@ -45,7 +52,7 @@ import scala.collection.mutable.ListBuffer
 
 
 
-class PipelineOperationsTests extends FunSuite with SharedSparkContext {
+class PipelineOperationsTests extends FunSuite with SharedSparkContext with TileAssertions {
 	import PipelineOperations._
 	import PipelineOperationsParsing._
 
@@ -533,5 +540,139 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext {
 
 	def round(d: Any, places: Int) = {
 		BigDecimal(d.asInstanceOf[Double]).setScale(places, BigDecimal.RoundingMode.HALF_UP).toDouble
+	}
+
+	test("Test geo line-tiling parse and operation") {
+		try {
+			// pipeline stage to create test data
+			def createDataOp(count: Int)(input: PipelineData) = {
+				// Total pattern is:
+				// +------------------------+
+				// |                        |
+				// |    4     3  2     1    |
+				// |       4  3  2  1       |
+				// |    5  5        0  0    |
+				// |    6  6       11 11    |
+				// |       7  8  9 10       |
+				// |    7     8  9    10    |
+				// |                        |
+				// +------------------------+
+				// Line format is: (t1x, t1y, b1x, b1y, t2x, t2y, b2x, b2y, v)
+				val coords = List(
+					(1, 1, 1, 3, 1, 1, 2, 3, 0),
+					(1, 1, 1, 2, 1, 1, 2, 1, 1),
+					(1, 1, 0, 2, 1, 1, 0, 1, 2),
+					(0, 1, 3, 2, 0, 1, 3, 1, 3),
+					(0, 1, 2, 2, 0, 1, 1, 1, 4),
+					(0, 1, 2, 3, 0, 1, 1, 3, 5),
+					(0, 0, 2, 0, 0, 0, 1, 0, 6),
+					(0, 0, 2, 1, 0, 0, 1, 2, 7),
+					(0, 0, 3, 1, 0, 0, 3, 2, 8),
+					(1, 0, 0, 1, 1, 0, 0, 2, 9),
+					(1, 0, 1, 1, 1, 0, 2, 2, 10),
+					(1, 0, 1, 0, 1, 0, 2, 0, 11)
+				)
+				val pyramid = new WebMercatorTilePyramid
+				val jsonData = coords.map{case (t1x, t1y, b1x, b1y, t2x, t2y, b2x, b2y, v) =>
+					val t1 = new TileIndex(1, t1x, t1y, 4, 4)
+					val b1 = new BinIndex(b1x, b1y)
+					val cell1 = pyramid.getBinBounds(t1, b1)
+					val x1 = cell1.getCenterX
+					val y1 = cell1.getCenterY
+
+					val t2 = new TileIndex(1, t2x, t2y, 4, 4)
+					val b2 = new BinIndex(b2x, b2y)
+					val cell2 = pyramid.getBinBounds(t2, b2)
+					val x2 = cell2.getCenterX
+					val y2 = cell2.getCenterY
+
+					val value = v.toDouble
+					s"""{"x1": $x1, "y1": $y1, "x2": $x2, "y2": $y2, "data": $value}"""
+				}
+
+				val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+				PipelineData(sqlc, srdd)
+			}
+
+			// Run the tile job
+			val args = Map(
+				"ops.x1Column" -> "x1",
+				"ops.y1Column" -> "y1",
+				"ops.x2Column" -> "x2",
+				"ops.y2Column" -> "y2",
+				"ops.name" -> "test",
+				"ops.description" -> "a test description",
+				"ops.prefix" -> "test_prefix",
+				"ops.levels.0" -> "0,1",
+				"ops.tileWidth" -> "4",
+				"ops.tileHeight" -> "4",
+				"ops.valueColumn" -> "data",
+				"ops.valueType" -> "double",
+				"ops.aggregationType" -> "sum",
+				"ops.minimumSegmentLength" -> "0"
+			)
+
+			val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+			rootStage.addChild(PipelineStage("geo_line_tiling_op", parseGeoSegmentTilingOp(args)))
+			PipelineTree.execute(rootStage, sqlc)
+
+			// Load the metadata and validate its contents - gives us an indication of whether or not the
+			// job completed successfully, and if performed the expected operation.  There are more detailed
+			// tests for the operations themselves.
+			val pyramidIO = new FileBasedPyramidIO(new FileSystemPyramidSource("", "avro"))
+			val metaData = new PyramidMetaData(pyramidIO.readMetaData("test.x1.y1.x2.y2.data"))
+			val serializer = new PrimitiveAvroSerializer[JavaDouble](classOf[JavaDouble], CodecFactory.bzip2Codec())
+			val tile000 = pyramidIO.readTiles("test.x1.y1.x2.y2.data", serializer, Iterable(new TileIndex(0, 0, 0, 4, 4)).asJava)
+			val tile100 = pyramidIO.readTiles("test.x1.y1.x2.y2.data", serializer, Iterable(new TileIndex(1, 0, 0, 4, 4)).asJava)
+			val tile101 = pyramidIO.readTiles("test.x1.y1.x2.y2.data", serializer, Iterable(new TileIndex(1, 0, 1, 4, 4)).asJava)
+			val tile110 = pyramidIO.readTiles("test.x1.y1.x2.y2.data", serializer, Iterable(new TileIndex(1, 1, 0, 4, 4)).asJava)
+			val tile111 = pyramidIO.readTiles("test.x1.y1.x2.y2.data", serializer, Iterable(new TileIndex(1, 1, 1, 4, 4)).asJava)
+
+			assertTileContents(List( 4.0,  3.0,  2.0,  1.0,
+			                         5.0, 12.0,  3.0,  0.0,
+			                         6.0, 21.0, 30.0, 11.0,
+			                         7.0,  8.0,  9.0, 10.0), tile000.get(0))
+			assertTileContents(List( 0.0,  6.0,  6.0,  0.0,
+			                         0.0,  0.0,  7.0,  8.0,
+			                         0.0,  7.0,  0.0,  8.0,
+			                         0.0,  0.0,  0.0,  0.0), tile100.get(0))
+			assertTileContents(List( 0.0, 11.0, 11.0,  0.0,
+			                         9.0, 10.0,  0.0,  0.0,
+			                         9.0,  0.0, 10.0,  0.0,
+			                         0.0,  0.0,  0.0,  0.0), tile110.get(0))
+			assertTileContents(List( 0.0,  0.0,  0.0,  0.0,
+			                         0.0,  4.0,  0.0,  3.0,
+			                         0.0,  0.0,  4.0,  3.0,
+			                         0.0,  5.0,  5.0,  0.0), tile101.get(0))
+			assertTileContents(List( 0.0,  0.0,  0.0,  0.0,
+			                         2.0,  0.0,  1.0,  0.0,
+			                         2.0,  1.0,  0.0,  0.0,
+			                         0.0,  0.0,  0.0,  0.0), tile111.get(0))
+
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":30}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("0").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":11}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("1").toString))
+			JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"minimum":0, "maximum":30}"""),
+			                                   new JSONObject(metaData.getCustomMetaData("global").toString))
+
+			val customMeta = metaData.getAllCustomMetaData
+			assert(0 === customMeta.get("0.minimum"))
+			assert(30 === customMeta.get("0.maximum"))
+			assert(0 === customMeta.get("1.minimum"))
+			assert(11 === customMeta.get("1.maximum"))
+			assert(0 === customMeta.get("global.minimum"))
+			assert(30 === customMeta.get("global.maximum"))
+		} finally {
+			// Remove the tile set we created
+			def removeRecursively (file: File): Unit = {
+				if (file.isDirectory) {
+					file.listFiles().foreach(removeRecursively)
+				}
+				file.delete()
+			}
+			// If you want to look at the tile set (not remove it) comment out this line.
+			removeRecursively(new File("test.x1.y1.x2.y2.data"))
+		}
 	}
 }

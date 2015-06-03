@@ -48,6 +48,7 @@ import com.oculusinfo.tilegen.util.OptionsFactoryMixin
  * @param tileWidth The number of bins into which each tile created is divided horizontally
  * @param tileHeight The number of bins into which each tile created is divided vertically
  * @param consolidationPartitions The number of partitions into which to consolidate data when performign reduce operations
+ * @param minimumSegmentLength The minimum length segments must be (in bins) before they are drawn.
  */
 case class TilingTaskParameters (name: String,
                                  description: String,
@@ -56,7 +57,8 @@ case class TilingTaskParameters (name: String,
                                  tileWidth: Int,
                                  tileHeight: Int,
                                  consolidationPartitions: Option[Int],
-                                 tileType: Option[StorageType])
+                                 tileType: Option[StorageType],
+                                 minimumSegmentLength: Option[Int] = None)
 {
 }
 
@@ -71,6 +73,7 @@ object TilingTaskParametersFactory {
 	val TILE_HEIGHT_PROPERTY = new IntegerProperty("tileHeight", "The height of created tiles, in bins", 256)
 	val PARTITIONS_PROPERTY = new IntegerProperty("consolidationPartitions", "The number of partitions into which to consolidate data when performign reduce operations", 0)
 	val TILE_TYPE_PROPERTY = new StringProperty("tileType", "The type of tile storage to use when creating tiles.  If unspecified, a heuristic will be used that is ideal for tiles whose bin values are the size of doubles.  If tiles have bins significantly larger than doubles, sparse is recommended.", "unspecified", Array("unspecified", "dense", "sparse"))
+	val MINIMUM_SEGMENT_LENGTH = new IntegerProperty("minimumSegmentLength", "The minimum length of a segment (in bins) before it is drawn", 4)
 }
 class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
@@ -85,6 +88,7 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 	addProperty(TILE_HEIGHT_PROPERTY)
 	addProperty(PARTITIONS_PROPERTY)
 	addProperty(TILE_TYPE_PROPERTY)
+	addProperty(MINIMUM_SEGMENT_LENGTH)
 
 	private def parseLevels (levelsDescriptions: Seq[String]): Seq[Seq[Int]] = {
 		levelsDescriptions.map(levelSet =>
@@ -113,6 +117,7 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 		                         getPropertyValue(TILE_WIDTH_PROPERTY),
 		                         getPropertyValue(TILE_HEIGHT_PROPERTY),
 		                         optionalGet(PARTITIONS_PROPERTY).map(_.intValue()),
-		                         tileType)
+		                         tileType,
+		                         optionalGet(MINIMUM_SEGMENT_LENGTH).map(_.intValue()))
 	}
 }

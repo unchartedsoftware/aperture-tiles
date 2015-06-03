@@ -32,7 +32,7 @@ import java.util.Properties
 
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
-import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, RDDBinner, RDDLineBinner, SqliteTileIO, TileIO}
+import com.oculusinfo.tilegen.tiling.{UniversalBinner, RDDLineBinner, TileIO}
 import com.oculusinfo.tilegen.util.{EndPointsToLine, PropertiesWrapper}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -230,8 +230,7 @@ object CSVGraphBinner {
 			)
 		}
 		else  {//if (_graphDataType == "nodes")
-			val binner = new RDDBinner
-			binner.debug = true
+			val binner = new UniversalBinner
 			task.getLevels.map(levels =>
 				{
 					// Add level accumulators for all analytics for these levels (for now at least)
@@ -438,7 +437,7 @@ object CSVGraphBinner {
 					processTaskGeneric(sc, TilingTask(sqlc, table, props), tileIO)
 
 					if (cache) sqlc.uncacheTable(table)
-					
+
 					// reset tile gen levels for next loop iteration
 					props.setProperty("oculus.binning.levels."+m, "")
 				}

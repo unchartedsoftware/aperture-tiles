@@ -37,31 +37,16 @@ import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TimeRangeCarte
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.List
 import scala.reflect.ClassTag
-import scala.util.Try
 
-import org.apache.spark.Accumulable
 import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.SqliteTileIO
+import com.oculusinfo.tilegen.tiling.UniversalBinner
 import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.tiling.TimeIndexScheme
 import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
 
 
@@ -173,8 +158,7 @@ object CSVTimeRangeBinner {
 	                     task: TilingTask[PT, DT, AT, BT],
 	                     tileIO: TileIO,
 	                     properties: KeyValueArgumentSource): Unit = {
-		val binner = new RDDBinner
-		binner.debug = true
+		val binner = new UniversalBinner
 
 		val tileAnalytics = task.getTileAnalytics
 		val dataAnalytics = task.getDataAnalytics
