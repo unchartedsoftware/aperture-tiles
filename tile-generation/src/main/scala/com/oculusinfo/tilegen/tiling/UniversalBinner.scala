@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2015 Uncharted Software Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -54,9 +54,9 @@ object UniversalBinner {
 	 *
 	 * @param dataSet the dataSet for which to determine the number of
 	 *                partitions.
-	 * @param minPartitions The minimum number of partitions into which to split the data.  If none, 
+	 * @param minPartitions The minimum number of partitions into which to split the data.  If none,
 	 *                      the number of partitions will not be increased.
-	 * @param maxPartitions The maximum number of partitions into which to split the data.  If none, 
+	 * @param maxPartitions The maximum number of partitions into which to split the data.  If none,
 	 *                      the number of partitions will not be decreased.
 	 * @return The number of partitions that should be used for this dataset.
 	 */
@@ -69,7 +69,7 @@ object UniversalBinner {
 
 	/**
 	 * Optionally aggregate two optional values
-	 * 
+	 *
 	 * @param aggFcn An aggregation function for combining two Ts
 	 * @param value1 The first value to aggregate
 	 * @param value2 The second value to aggregate
@@ -80,9 +80,9 @@ object UniversalBinner {
 		aggFcn.map(fcn => (value1 ++ value2).reduceLeftOption(fcn)).getOrElse(None)
 
 	/**
-	 * Add two maps together, aggregating entries with the same key in the two maps according to 
+	 * Add two maps together, aggregating entries with the same key in the two maps according to
 	 * a given aggregator function.
-	 * 
+	 *
 	 * @param aggFcn The aggregation function for adding values together
 	 * @param map1 The first of the two maps
 	 * @param map2 The second of the two maps
@@ -214,16 +214,16 @@ class UniversalBinner {
 	 * @param data The data to tile
 	 * @param binAnalytic The aggregation function to use to tile the data
 	 * @param tileAnalytics Optional analytics to apply to each produced tile
-	 * @param dataAnalytics Optional analytics to apply to each raw data point, and bin along with 
+	 * @param dataAnalytics Optional analytics to apply to each raw data point, and bin along with
 	 *                      the tiles.
-	 * @param locateIndexFcn: A function that takes in input index, and indicates which tile(s) it 
-	 *                        is on.  The array of bin indices indicates precisely where on the 
+	 * @param locateIndexFcn: A function that takes in input index, and indicates which tile(s) it
+	 *                        is on.  The array of bin indices indicates precisely where on the
 	 *                        tiles is indicated, in universal bin coordinates.
-	 * @param populateTileFcn A function that takes the precise specification of the input location 
-	 *                        and value in a single tile, and outputs all the located values in 
-	 *                        that tile.  The input bins are in universal bin coordinates, as in 
+	 * @param populateTileFcn A function that takes the precise specification of the input location
+	 *                        and value in a single tile, and outputs all the located values in
+	 *                        that tile.  The input bins are in universal bin coordinates, as in
 	 *                        locateIndexFcn, while the output bins are bins for the specific tile
-	 *                        in question.  Note that this function should return an empty map if 
+	 *                        in question.  Note that this function should return an empty map if
 	 *                        given empty inputs.
 	 * @param parameters General binning parameters affecting how this tiling will be done.
 	 */
@@ -352,13 +352,13 @@ class UniversalBinner {
 
 /**
  * A simple parameter class to encapsulate the various parameters used by a binning job
- * 
+ *
  * @param debug Whether or not to output debug information about the job
  * @param xBins The number of bins per generated tile in the horizontal direction
  * @param yBins the number of bins per generated tile in the vertical direction
  * @param minPartitions The minimum number of partitions to use during reduce operations
  * @param maxPartitions The maximum number of partitions to use during reduce operations
- * @param tileType The type of tile to generate (dense or sparse); None for a fairly good 
+ * @param tileType The type of tile to generate (dense or sparse); None for a fairly good
  *                 heuristic to decide on a tile-by-tile basis.
  */
 case class BinningParameters (debug: Boolean = true,
