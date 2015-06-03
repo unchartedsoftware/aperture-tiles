@@ -31,7 +31,7 @@ import java.io.FileInputStream
 import java.util.Properties
 
 import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
-import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
+import com.oculusinfo.tilegen.tiling.{UniversalBinner, TileIO}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -95,8 +95,7 @@ object CSVBinner {
 	                BT] (sc: SparkContext,
 	                     task: TilingTask[PT, DT, AT, BT],
 	                     tileIO: TileIO): Unit = {
-		val binner = new RDDBinner
-		binner.debug = true
+		val binner = new UniversalBinner
 
 		val tileAnalytics = task.getTileAnalytics
 		val dataAnalytics = task.getDataAnalytics
