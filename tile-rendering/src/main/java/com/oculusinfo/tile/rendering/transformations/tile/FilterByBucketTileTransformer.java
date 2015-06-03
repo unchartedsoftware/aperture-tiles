@@ -24,14 +24,18 @@
  */
 package com.oculusinfo.tile.rendering.transformations.tile;
 
+
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.impl.DenseTileData;
+import com.oculusinfo.binning.impl.FilterTileBucketView;
 
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONException;
@@ -51,14 +55,15 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 
 	private Integer _startBucket = null;
 	private Integer _endBucket = null;
+	private List<Double> _minVals = null;
+	private List<Double> _maxVals = null;
+
 
 	public FilterByBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
 			_startBucket = arguments.optInt("startBucket");
 			_endBucket = arguments.optInt("endBucket");
-		} else {
-			LOGGER.warn("No arguements passed in to filterbucket transformer");
 		}
 	}
 
@@ -75,55 +80,81 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 	 * Note: This transformer explicitly transforms all tiles into a dense tile format.  If a sparse tile is
 	 * 			passed in, the values not explicitly represented will be set to null.
 	 */
-    @Override
-    public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
-    	TileData<List<T>> resultTile = null;
-
+	@Override
+	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
 		if ( _startBucket != null && _endBucket != null ) {
 			if ( _startBucket < 0 || _startBucket > _endBucket ) {
-				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
-        	}
+				throw new IllegalArgumentException("Filter by time transformer arguments are invalid.  start bucket: " + _startBucket + ", end bucket: " + _endBucket);
+			}
 		}
+		return new FilterTileBucketView<>(inputData, _startBucket, _endBucket);
+	}
 
-        int xBins = inputData.getDefinition().getXBins();
-        int yBins = inputData.getDefinition().getYBins();
-
-        TileIndex index = inputData.getDefinition();
-		List<List<T>> transformedData = new ArrayList<>(index.getXBins()*index.getYBins());
-
-        for (int ty = 0; ty < yBins; ty++){
-            for (int tx = 0; tx < xBins; tx++){
-                List<T> binContents = inputData.getBin(tx, ty);
-                int binSize = binContents.size();
-				int start = ( _startBucket != null ) ? _startBucket : 0;
-				int end = ( _endBucket != null ) ? _endBucket : binSize;
-
-                // make sure we have a full array to add into the tile for dense tile creation
-                List<T> transformedBin = new ArrayList<>();
-                for(int i = 0; i < binSize; i++) {
-                    if ( i >= start && i <= end ) {
-                    	transformedBin.add(i, binContents.get(i));
-                    } else {
-                    	transformedBin.add(i, null);
-                    }
-                }
-                transformedData.add(transformedBin);
-            }
-        }
-
-        resultTile = new DenseTileData<>(inputData.getDefinition(), transformedData);
-
-        // add in metadata to the tile
-        Collection<String> keys = inputData.getMetaDataProperties();
-		if (null != keys && !keys.isEmpty()) {
-			for (String key: keys) {
-			String value = inputData.getMetaData(key);
-			if (null != value)
-				resultTile.setMetaData(key, value);
+	@Override
+	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
+		// Parse the mins and maxes for the buckets out of the supplied JSON.
+		if (_minVals == null) {
+			String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
+			_minVals = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
+			_maxVals = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
+			if (_startBucket == null) {
+				_startBucket = 0;
+				_endBucket = _minVals.size();
+			}
+		}
+		// Compute the min/max for the range of buckets.
+		double minimumValue = Double.MIN_VALUE;
+		double maximumValue = -Double.MAX_VALUE;
+		if (_startBucket == _endBucket) {
+			minimumValue = _minVals.get(_startBucket);
+			maximumValue = _maxVals.get(_startBucket);
+		} else {
+			for (int i = _startBucket; i < _endBucket; i++) {
+				Double val = _minVals.get(i);
+				if (val < minimumValue) {
+					minimumValue = val;
+				}
+				val = _maxVals.get(i);
+				if (val > maximumValue) {
+					maximumValue = val;
+				}
 			}
 		}
 
-        return resultTile;
-    }
+		return new Pair<>(minimumValue,  maximumValue);
+	}
 
+	// Extracts all the extrema
+	private List<Double> parseExtremum (LayerConfiguration parameter, StringProperty property, String propName,
+										String layer, Double def) {
+		String rawValue = parameter.getPropertyValue(property);
+		ArrayList<Double> values = null;
+
+		// If the is no extremum info available return the default.
+		if (rawValue == null) {
+			values = new ArrayList<>(1);
+			values.add(def);
+			return values;
+		}
+
+		// Convert string into json object
+		try {
+			JSONArray ex = new JSONArray(rawValue);
+			values = new ArrayList<>(ex.length());
+			for (int i = 0; i < ex.length(); i++) {
+				values.add(ex.getJSONObject(i).getDouble(propName));
+			}
+			return values;
+		} catch (NumberFormatException|NullPointerException e) {
+			LOGGER.warn("Bad " + propName + " value " + rawValue + " for " + layer + ", defaulting to " + def);
+			values.clear();
+			values.add(def);
+			return values;
+		} catch (JSONException e) {
+			LOGGER.warn("JSON parse exception", e);
+			values.clear();
+			values.add(def);
+			return values;
+		}
+	}
 }

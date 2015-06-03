@@ -109,7 +109,7 @@ public class LayerServiceImpl implements LayerService {
 			LayerConfiguration config = getLayerConfiguration( layerId, null );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
             if ( dataId == null ) {
-				LOGGER.error( "Couldn't determine data id for layer: "+layerId+" , pleas ensure the layer config file is correct." );
+				LOGGER.error( "Couldn't determine data id for layer: "+layerId+" , please ensure the layer config file is correct." );
                 return null;
             }
 			PyramidIO pyramidIO = config.produce( PyramidIO.class );

@@ -27,9 +27,9 @@ package com.oculusinfo.tile.rendering.transformations.value;
 /**
  * A value transformer that transforms two-tailed infinite range into a finite
  * range.  The range assumes a center of zero, and min/max defined as
- * +/-(max(abs(expectedMin),abs(expectedMax)), with the extrema mapped to +/-10
- * of the sigmoid curve.  The curve can be further scaled int the x direction for a
- * better data fit if needed.
+ * +/-(max(abs(expectedMin),abs(expectedMax)), which is then normalized to [-1, 1].
+ * A default value of .15d is used to scale the curve in the x direction, which is
+ * leaves it pretty close to the shape of the curve produced by log10.
  *
  * @author nkronenfeld
  */
@@ -38,17 +38,19 @@ public class SigmoidValueTransformer implements ValueTransformer<Double> {
 	private double _scale;
 
 	public SigmoidValueTransformer (double expectedMin, double expectedMax) {
-		this(expectedMin, expectedMax, 1d);
+		this(expectedMin, expectedMax, .15d);
 	}
 
 	public SigmoidValueTransformer (double expectedMin, double expectedMax, double scale) {
-		_scale = scale * 10d;
+		_scale = scale;
 		_distance = Math.max(Math.abs(expectedMin), Math.abs(expectedMax));
 	}
 
 	@Override
 	public Double transform (Double value) {
-		double scaledInput = value / _distance * _scale;
+		// normalize value on interval [-1.0, 1.0]
+		double normalized = value / _distance;
+		double scaledInput = normalized / _scale;
 		return (1/(1+Math.exp(-scaledInput)));
 	}
 

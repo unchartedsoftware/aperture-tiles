@@ -138,7 +138,7 @@
      * Returns the word cloud words containing font size and x and y coordinates
      */
     createWordCloud = function( wordCounts, min, max ) {
-        var minFontSize = 10,
+        var minFontSize = 13,
             maxFontSize = 28,
             boundingBox = {
                 width: 256 - HORIZONTAL_OFFSET*2,

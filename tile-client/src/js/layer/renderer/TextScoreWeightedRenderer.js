@@ -121,7 +121,7 @@
             values = RendererUtil.getAttributeValue( data, spec.rootKey ),
             levelMinMax = this.parent.getLevelMinMax(),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
-            minFontSize = 12,
+            minFontSize = 13,
             maxFontSize = 18,
             entries = [],
             html = '',

@@ -21,6 +21,7 @@ task setBuildVersions {
 				hadoopCommonVersion = "2.6.0-cdh5.4.1"
 				hadoopCoreVersion = "2.6.0-mr1-cdh5.4.1"
 				hbaseVersion = "1.0.0-cdh5.4.1"
+        htraceVersion = "3.1.0-incubating"
 				sparkVersion = "1.3.0-cdh5.4.1"
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
@@ -99,10 +100,6 @@ subprojects {
 		}
 	}
 
-	// A shared function to determine whether we use the older unified HBase jar, or the
-	// newer split jars.  Currently just looks for cdh5 vs other build types.
-	ext.checkHBaseSplit = buildType =~ /cdh5\w*/
-
 	// A shared function that adds hbase dependencies to the supplied project based on the build type.
 	// We can't use the DSL in this context, so we have to go through the lower level DependencyManager APIs.
 	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
@@ -112,8 +109,9 @@ subprojects {
 		if (config == null || config == "") {
 			config = "compile"
 		}
+
 		// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
-		if (checkHBaseSplit) {
+		if ( buildType =~ /cdh5\w*/) {
 			logger.info("Matched CDH5x cloudera version - using new-style jars")
 			getDependencies().add(config, "org.apache.hbase:hbase-common:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -137,7 +135,15 @@ subprojects {
 				exclude group: "org.jboss.netty", module: "netty"
 				exclude group: "io.netty", module: "netty"
 			})
-		} else {
+		  getDependencies().add(config, "org.apache.htrace:htrace-core:$htraceVersion", {
+				exclude group: "asm", module: "asm"
+				exclude group: "org.slf4j", module: "slf4j-api"
+				exclude group: "org.slf4j", module: "slf4j-log4j12"
+				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
+			})
+    } else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
 			getDependencies().add(config, "org.apache.hbase:hbase:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -147,29 +153,6 @@ subprojects {
 				exclude group: "org.jboss.netty", module: "netty"
 				exclude group: "io.netty", module: "netty"
 			})
-		}
-	}
-
-	// Function passed down to subprojects that produces calls to add hbase jars
-	// to a spark-run script.
-	ext.getHBaseJarStrings = {
-		if (checkHBaseSplit) {
-			"""\
-addSparkJar org.apache.hbase hbase-common $hbaseVersion
-addSparkJar org.apache.hbase hbase-server $hbaseVersion
-addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
-		} else {
-			"addSparkJar org.apache.hbase hbase $hbaseVersion"
-		}
-	}
-
-	// Function passed down to subprojects that poduces hbase class path entries
-	// to be used in run scripts.
-	ext.getHBaseClasspathEntries = {
-		if (checkHBaseSplit) {
-			"\${LIB}/hbase-client.jar:\${LIB}/hbase-server.jar:\${LIB}/hbase-common.jar"
-		} else {
-			"\${LIB}/hbase.jar"
 		}
 	}
 

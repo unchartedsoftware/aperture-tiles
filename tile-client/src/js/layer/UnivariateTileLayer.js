@@ -149,19 +149,17 @@
     OpenLayers.Layer.Univariate.prototype.redraw = function() {
         var redrawn = false;
         if (this.map) {
-
             // min/max Range may have changed
             this.inRange = this.calculateInRange();
-
             // map's center might not yet be set
             var extent = this.getExtent();
-
             if ( extent && this.inRange && this.visibility ) {
                 var zoomChanged = true;
                 this.moveTo( extent, zoomChanged, false );
                 this.events.triggerEvent("moveend",
                     {"zoomChanged": zoomChanged});
                 redrawn = true;
+                repositionLayer( this.map, this );
             }
         }
         return redrawn;

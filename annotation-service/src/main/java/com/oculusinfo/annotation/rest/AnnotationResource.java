@@ -44,6 +44,8 @@ import com.oculusinfo.annotation.index.AnnotationIndexer;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.QueryParamDecoder;
+
 import org.restlet.resource.ServerResource;
 
 public class AnnotationResource extends ServerResource {
@@ -123,7 +125,8 @@ public class AnnotationResource extends ServerResource {
 
             JSONObject decodedQueryParams = null;
             if ( getRequest().getResourceRef().hasQuery() ) {
-                decodedQueryParams = new JSONObject( getRequest().getResourceRef().getQuery() );
+            	// decode and build JSONObject from request parameters
+                decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
             }
 
 			int zoomLevel = Integer.parseInt(levelDir);

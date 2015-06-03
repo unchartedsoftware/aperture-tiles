@@ -23,7 +23,7 @@ Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or 
 <h6 class="procedure">To use Aperture Tiles with Apache Spark in standalone mode in Windows</h6>
 
 - [Download](https://spark.apache.org/downloads.html) and install a pre-built version of Apache Spark with the following properties:
-	1. **Spark release**: 1.2.0
+	1. **Spark release**: 1.3.0
 	2. **Package type**: Pre-built for CDH4
 
 ## <a name="prerequisites"></a> Prerequisites ##
@@ -51,7 +51,7 @@ Aperture Tiles requires the following third-party tools:
 			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
 			<td style="vertical-align: text-top" class="description">
 				<a href="http://spark.incubator.apache.org/">Apache Spark</a>
-				<br>v1.2
+				<br>v1.3
 			</td>
 			<td style="vertical-align: text-top" class="description">
 				Specify the version of Hadoop with which Spark will be working (if applicable).
@@ -98,7 +98,7 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 					<li><a href="http://hortonworks.com/">HortonWorks</a></li>
 				</ul>
 			</td>
-			<td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.2 if the installation is older.</td>
+			<td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.3 if the installation is older.</td>
 		</tr>
 	</table>
 </div>
@@ -113,10 +113,16 @@ The source code repository for Aperture Tiles is available on [GitHub](https://g
 
 <h6 class="procedure">To work with the Aperture Tiles source code</h6>
 
-- Execute the following command to clone the *master* branch of the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
+1. Execute the following command to clone the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
 
 	```bash
 	git clone https://github.com/unchartedsoftware/aperture-tiles.git
+	```
+
+2. Check out the *master* branch to work with the most recent stable release:
+
+	```bash
+	git checkout master
 	```
 
 ### <a name="building-project"></a> Building the Project ###

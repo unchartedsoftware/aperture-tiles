@@ -29,6 +29,7 @@
 
     var Layer = require('./Layer'),
         LayerUtil = require('./LayerUtil'),
+        Util = require('../util/Util'),
         AnnotationService = require('../rest/AnnotationService'),
         HtmlTileLayer = require('./HtmlTileLayer'),
         PubSub = require('../util/PubSub');
@@ -88,13 +89,18 @@
      * </pre>
      */
     function AnnotationLayer( spec ) {
+        var that = this,
+            getURL = spec.getURL || LayerUtil.getURL;
         // call base constructor
         Layer.call( this, spec );
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 500;
+        this.filter = spec.filter || {};
         this.domain = "annotation";
         this.source = spec.source;
-        this.getURL = spec.getURL || LayerUtil.getURL;
+        this.getURL = function( bounds ) {
+            return getURL.call( this, bounds ) + that.getQueryParamString();
+        };
         if ( spec.tileClass) {
             this.tileClass = spec.tileClass;
         }
@@ -126,7 +132,7 @@
                 renderer: this.renderer
             });
         // set whether it is enabled or not before attaching, to prevent
-        // needless tile reuqestst
+        // needless tile requests
         this.setEnabled( this.enabled );
         this.setTheme( this.map.getTheme() );
         this.setOpacity( this.opacity );
@@ -267,6 +273,68 @@
             });
     };
 
+	/**
+     * Set the layer's filter function type.
+     * @memberof AnnotationLayer
+     *
+     * @param {String} filterType - The annotation filter type.
+     */
+    AnnotationLayer.prototype.setFilterType = function ( filterType ) {
+        if ( this.filter.type !== filterType ) {
+            this.filter.type = filterType;
+            this.redraw();
+            PubSub.publish( this.getChannel(), {field: 'filterType', value: filterType} );
+        }
+    };
+
+    /**
+     * Get the layers filter type.
+     * @memberof AnnotationLayer
+     *
+     * @return {String} The tile filter type.
+     */
+    AnnotationLayer.prototype.getFilterType = function () {
+        return this.filter.type;
+    };
+
+
+	/**
+     * Set the annotation filter data attribute
+     * @memberof AnnotationLayer
+     *
+     * @param {Object} filterData - The filter data attribute.
+     */
+    AnnotationLayer.prototype.setFilterData = function ( filterData ) {
+        if ( this.filter.data !== filterData ) {
+            this.filter.data = filterData;
+            this.redraw();
+            PubSub.publish( this.getChannel(), {field: 'filterData', value: filterData} );
+        }
+    };
+
+	/**
+     * Get the filter data attribute.
+     * @memberof AnnotationLayer
+     *
+     * @returns {Object} The tile filter data attribute.
+     */
+    AnnotationLayer.prototype.getFilterData = function () {
+        return this.filter.data || {};
+    };
+
+    /**
+     * Generate query parameters based on state of layer
+     * @memberof AnnotationLayer
+     *
+     * @returns {String} The query parameter string based on the attributes of this layer.
+     */
+     AnnotationLayer.prototype.getQueryParamString = function() {
+        var query = {
+            filter: this.filter
+        };
+        return Util.encodeQueryParams( query );
+    };
+    
     /**
      * Redraws the entire layer.
      * @memberof ServerLayer
