@@ -25,6 +25,7 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import grizzled.slf4j.Logging
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.Try
@@ -95,12 +96,9 @@ object UniversalBinner {
 
 
 
-class UniversalBinner {
+class UniversalBinner extends Logging {
 	import UniversalBinner._
 
-
-	private def log (msg: String) =
-		println(msg)
 
 	/** Helper function to mimic RDDBinner interface */
 	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
@@ -124,16 +122,15 @@ class UniversalBinner {
 		name: String = "unknown",
 		description: String = "unknown") =
 	{
-		log("Binning data")
-		log("\tConsolidation partitions: "+consolidationPartitions)
-		log("\tWrite location: "+writeLocation)
-		log("\tTile io type: "+tileIO.getClass.getName)
-		log("\tlevel sets: "+levelSets.map(_.mkString("[", ", ", "]"))
-			    .mkString("[", ", ", "]"))
-		log("\tX Bins: "+xBins)
-		log("\tY Bins: "+yBins)
-		log("\tName: "+name)
-		log("\tDescription: "+description)
+		info("Binning data")
+		info("\tConsolidation partitions: "+consolidationPartitions)
+		info("\tWrite location: "+writeLocation)
+		info("\tTile io type: "+tileIO.getClass.getName)
+		info("\tlevel sets: "+levelSets.map(_.mkString("[", ", ", "]")).mkString("[", ", ", "]"))
+		info("\tX Bins: "+xBins)
+		info("\tY Bins: "+yBins)
+		info("\tName: "+name)
+		info("\tDescription: "+description)
 
 		val startTime = System.currentTimeMillis()
 
@@ -176,7 +173,7 @@ class UniversalBinner {
 				                    serializer, tileAnalytics, dataAnalytics,
 				                    name, description)
 				val levelEndTime = System.currentTimeMillis()
-				log("Finished binning levels ["+levels.mkString(", ")+"] of data set "
+				info("Finished binning levels ["+levels.mkString(", ")+"] of data set "
 					    + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
 			}
 		)
@@ -184,7 +181,7 @@ class UniversalBinner {
 		bareData.unpersist(false)
 
 		val endTime = System.currentTimeMillis()
-		log("Finished binning data set " + name + " into "
+		info("Finished binning data set " + name + " into "
 			    + levelSets.map(_.size).reduce(_+_)
 			    + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
 			    + ((endTime-startTime)/60000.0) + " minutes")
