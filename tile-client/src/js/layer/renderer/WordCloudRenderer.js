@@ -35,6 +35,9 @@
         MAX_WORDS_DISPLAYED = 10,
         HORIZONTAL_OFFSET = 10,
         VERTICAL_OFFSET = 24,
+        SIZE_FUNCTION = 'log',
+        MIN_FONT_SIZE = 13,
+        MAX_FONT_SIZE = 28,
         spiralPosition,
         intersectTest,
         overlapTest,
@@ -137,10 +140,8 @@
     /**
      * Returns the word cloud words containing font size and x and y coordinates
      */
-    createWordCloud = function( wordCounts, min, max ) {
-        var minFontSize = 13,
-            maxFontSize = 28,
-            boundingBox = {
+    createWordCloud = function( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize ) {
+        var boundingBox = {
                 width: 256 - HORIZONTAL_OFFSET*2,
                 height: 256 - VERTICAL_OFFSET*2,
                 x: 0,
@@ -162,7 +163,7 @@
             fontSize = RendererUtil.getFontSize( count, min, max, {
                 maxFontSize: maxFontSize,
                 minFontSize: minFontSize,
-                type: 'log'
+                type: sizeFunction
             });
             // frequency percent
             percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
@@ -179,7 +180,8 @@
                 collisions : 0
             };
 
-            while( pos.collisions < 10 ) {
+            var numWords = wordCounts.length
+            while( pos.collisions < numWords ) {
                 // increment position in a spiral
                 pos = spiralPosition( pos );
                 // test for intersection
@@ -188,7 +190,7 @@
                         word: word,
                         entry: wordCounts[i].entry,
                         fontSize: fontSize,
-                        percentLabel: Math.round( percent / 10 ) * 10,
+                        percentLabel: Math.round( percent / numWords ) * numWords,
                         x:pos.x,
                         y:pos.y,
                         width: dim.width,
@@ -240,7 +242,7 @@
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             levelMinMax = this.parent.getLevelMinMax(),
-            numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
+            numEntries,
             html = '',
             wordCounts = [],
             entries = [],
@@ -249,7 +251,35 @@
             min,
             max,
             i,
-            cloud;
+            cloud,
+            sizeFunction,
+            minFontSize,
+            maxFontSize;
+
+        // Check for external config values - when not present fallback on internal default.
+        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.maxWords)) {
+            numEntries = Math.min(values.length, MAX_WORDS_DISPLAYED);
+        } else {
+            numEntries = this.spec.config.maxWords;
+        }
+
+        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.sizeFunction)) {
+            sizeFunction = SIZE_FUNCTION;
+        } else {
+            sizeFunction = this.spec.config.sizeFunction;
+        }
+
+        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.minFontSize)) {
+            minFontSize = MIN_FONT_SIZE;
+        } else {
+            minFontSize = this.spec.config.minFontSize;
+        }
+
+        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.maxFontSize)) {
+            maxFontSize = MAX_FONT_SIZE;
+        } else {
+            maxFontSize = this.spec.config.maxFontSize;
+        }
 
         for ( i=0; i<numEntries; i++ ) {
             value = values[i];
@@ -263,7 +293,7 @@
         min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
         max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
 
-        cloud = createWordCloud( wordCounts, min, max );
+        cloud = createWordCloud( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize);
 
         for ( i=0; i<cloud.length; i++ ) {
 
