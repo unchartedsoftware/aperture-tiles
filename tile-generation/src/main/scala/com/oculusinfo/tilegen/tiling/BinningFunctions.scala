@@ -696,7 +696,7 @@ trait StandardArcBinningFunctions {
 	}
 
 	// Limited version of arcUniversalBins that just gets the tiles crossed.
-	def arcTiles (start: BinIndex, end: BinIndex, sample: TileIndex): TraversableOnce[TileIndex] = {
+	def arcTiles (start: BinIndex, end: BinIndex, sample: TileIndex, limit: Option[Int] = None): TraversableOnce[TileIndex] = {
 
 		val x0 = start.getX
 		val y0 = start.getY
@@ -726,8 +726,14 @@ trait StandardArcBinningFunctions {
 		val (xSize, ySize) = pairAbs(rotate(sample.getXBins, sample.getYBins, rotation))
 
 
-		var y = math.round(y1r+ycr)-0.5-ycr
+		val yStart = math.round(y1r+ycr)-0.5-ycr
 		val yEnd = math.round(y0r+ycr)-0.5-ycr
+		val yMids = limit.flatMap(distance =>
+			if (yEnd-yStart > 2*distance+1) Some((yStart+distance, yEnd-distance))
+			else None
+		)
+
+		var y = yStart
 		val r2 = radius*radius
 		new WhileIterator[(Double, Double)](
 			() => y <= yEnd,
@@ -747,19 +753,13 @@ trait StandardArcBinningFunctions {
 				// get the edge of that bin, centered again
 				val lastBin = y + math.ceil(edge-yAbs)
 				y = lastBin+1
+				// If we have a gap, see if we're in it
+				yMids.foreach{case (endStart, startEnd) =>
+						if (y > endStart && y < startEnd) y = startEnd
+				}
 				(yCur min yEnd, lastBin min yEnd)
 			}
 		).flatMap{case (yb0: Double, ybn: Double) =>
-				// Original code, from above:
-				//			val ypr = math.round(ycr+y).toInt
-				//			// x range from the start of the bin to the end of the bin
-				//			val ya = y max y1r
-				//			val x2ad = math.sqrt(r2 - (ya * ya)) + xcr
-				//			val yb = (y+1) min y0r
-				//			val x2bd = math.sqrt(r2 - (yb * yb)) + xcr
-				//			val x2a = math.round(math.sqrt(r2 - (ya * ya)) + xcr).toInt
-				//			val x2b = math.round(math.sqrt(r2 - (yb * yb)) + xcr).toInt
-
 				val absyb0 = math.round(yb0 + ycr).toInt
 				val absybn = math.round(ybn + ycr).toInt
 				// x range from the start of the tile to the end of the tile
@@ -779,7 +779,7 @@ trait StandardArcBinningFunctions {
 	}
 
 	// Limited version of arcUniversalBins that just gets the tiles crossed.
-	def arcBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex): TraversableOnce[BinIndex] = {
+	def arcBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex, limit: Option[Int] = None): TraversableOnce[BinIndex] = {
 
 		val x0 = start.getX
 		val y0 = start.getY
@@ -814,7 +814,19 @@ trait StandardArcBinningFunctions {
 		val minY = minBinRot._2 min maxBinRot._2
 		val maxY = minBinRot._2 max maxBinRot._2
 
+		val yStartArc = math.round(y1r+ycr)-0.5-ycr
+		val yEndArc = math.round(y0r+ycr)-0.5-ycr
+		val yMids = limit.flatMap(distance =>
+			if (yEndArc-yStartArc > 2*distance+1) Some((yStartArc+distance, yEndArc-distance))
+			else None
+		)
+
 		var y = math.round((minY max y1r)+ycr)-0.5-ycr
+		// If we have a gap, see if we're in it
+		yMids.foreach{case (endStart, startEnd) =>
+			if (y > endStart && y < startEnd) y = startEnd
+		}
+
 		val yEnd = math.round((maxY min y0r)+ycr)-0.5-ycr
 		val r2 = radius*radius
 
@@ -824,6 +836,12 @@ trait StandardArcBinningFunctions {
 			() => {
 				val yCur = y
 				y = y + 1
+
+				// If we have a gap, see if we're in it
+				yMids.foreach{case (endStart, startEnd) =>
+					if (y > endStart && y < startEnd) y = startEnd
+				}
+
 				yCur
 			}
 		).flatMap{y =>
@@ -837,7 +855,7 @@ trait StandardArcBinningFunctions {
 			val x2a = math.round(math.sqrt(r2 - (ya * ya)) + xcr).toInt
 			val x2b = math.round(math.sqrt(r2 - (yb * yb)) + xcr).toInt
 
-			if (x2a == x2b) {
+			val bins = if (x2a == x2b) {
 				// No X travel; output the one bin
 				val (xp, yp) = rotate(x2a, ypr, -rotation)
 				val uBin = new BinIndex(xp, yp)
@@ -850,6 +868,7 @@ trait StandardArcBinningFunctions {
 					TileIndex.universalBinIndexToTileBinIndex(tile, uBin)
 				}
 			}
+			bins
 		}.filter { tileAndBin =>
 			// If the arc spans multiple tiles in Y at this X, there may be bins here in the other one.
 			tileAndBin.getTile == tile

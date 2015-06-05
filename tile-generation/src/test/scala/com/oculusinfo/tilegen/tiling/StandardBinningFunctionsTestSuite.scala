@@ -394,11 +394,38 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 		val sample = new TileIndex(4, 0, 0, 4, 4)
 
 		val expected = arcUniversalBins(startBin, endBin).toList.sortWith(binSorter)
-		expected.map(bin => println(bin+"\t"+TileIndex.universalBinIndexToTileBinIndex(sample, bin)))
 
 		val actual = arcTiles(startBin, endBin, sample).flatMap(tile =>
 			arcBinsForTile(startBin, endBin, tile).map(bin => TileIndex.tileBinIndexToUniversalBinIndex(tile, bin))
 		).toList.sortWith(binSorter)
+
+		assert(expected === actual)
+	}
+
+	test("Test arc bins with limitted distance") {
+		def distance (a: BinIndex, b: BinIndex): Int = {
+			math.abs(a.getX - b.getX) max math.abs(a.getY - b.getY)
+		}
+
+		val startBin = new BinIndex(5, 38)
+		val endBin = new BinIndex(41, 28)
+		// level 4, 4 bins per tile = 64 bins
+		// Distance is 5 => 41 = 36ish; limitting to 9, should include about half
+		val limit = 9
+		val sample = new TileIndex(4, 0, 0, 4, 4)
+
+		val expected = arcUniversalBins(startBin, endBin)
+			.filter(bin => distance(startBin, bin) <= 9 || distance(endBin, bin) <= 9)
+			.toList.sortWith(binSorter)
+
+		val actual = arcTiles(startBin, endBin, sample, Some(limit)).flatMap { tile =>
+			val bins = arcBinsForTile(startBin, endBin, tile, Some(limit)).toList
+
+			// Make sure none of our tiles produce no bins
+			assert(bins.size > 0)
+
+			bins.map(bin => TileIndex.tileBinIndexToUniversalBinIndex(tile, bin))
+		}.toList.sortWith(binSorter)
 
 		assert(expected === actual)
 	}
