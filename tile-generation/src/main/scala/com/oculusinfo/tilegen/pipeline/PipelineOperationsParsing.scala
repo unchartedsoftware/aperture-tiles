@@ -335,36 +335,44 @@ object PipelineOperationsParsing extends Logging {
 		val argParser = KeyValuePassthrough(args)
 		val params = parseSegmentTilingOpImpl(args, argParser)
 		geoSegmentTilingOp(params._1, params._2, params._3, params._4, params._5,
-		                   params._6, params._7, params._8, params._9, params._10)(_)
-	}
-
-	private def parseSegmentTilingOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
-		val x1ColSpec = argParser.getString("ops.x1Column", "Colspec denoting data x column for segment origins")
-		val y1ColSpec = argParser.getString("ops.y1Column", "Colspec denoting data y column for segment origins")
-		val x2ColSpec = argParser.getString("ops.x2Column", "Colspec denoting data x column for segment destinations")
-		val y2ColSpec = argParser.getString("ops.y2Column", "Colspec denoting data y column for segmeng destinations")
-		val operationType = argParser.getString("ops.aggregationType", "")
-		val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
-		val valueColType = argParser.getStringOption("ops.valueType", "", None)
-		val minimumSegmentLength = argParser.getIntOption("ops.minimumSegmentLength", "", Some(4))
-
-		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
-			argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
-			argParser.getStringOption("hbase.master", "HBase master address", None))
-		val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
-			Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
-		} else {
-			None
+		                   params._6, params._7, params._8, params._9, params._10,
+		                   params._11, params._12)(_)
 		}
 
-		val operationEnum = OperationType.withName(operationType.toUpperCase)
+		private def parseSegmentTilingOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
+			val x1ColSpec = argParser.getString("ops.x1Column", "Colspec denoting data x column for segment origins")
+			val y1ColSpec = argParser.getString("ops.y1Column", "Colspec denoting data y column for segment origins")
+			val x2ColSpec = argParser.getString("ops.x2Column", "Colspec denoting data x column for segment destinations")
+			val y2ColSpec = argParser.getString("ops.y2Column", "Colspec denoting data y column for segmeng destinations")
+			val operationType = argParser.getString("ops.aggregationType", "")
+			val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
+			val valueColType = argParser.getStringOption("ops.valueType", "", None)
+			val minimumSegmentLength = argParser.getIntOption("ops.minimumSegmentLength",
+			                                                  "The minimum length (in bins) of a segment for it to be drawn; shorter segments are ignored. Default is 4.",
+			                                                  Some(4))
+			val maximumLeaderLength = argParser.getIntOption("ops.maximumLeaderLength",
+			                                                 "The maximum length (in bins) from the endpoints of a line to draw.  Portions of the line farther than this "+
+				                                                 "distance will not be drawn.  Default is 1024 bins.", Some(1024))
+			val drawArcs = argParser.getBoolean("ops.arcs",
+			                                    "If true, draws arcs.  If false, draws lines.  Default is false.", Some(false))
 
-		val taskParametersFactory = new TilingTaskParametersFactory(null, List("ops"))
-		taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
-		val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
+			val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
+			                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+			                      argParser.getStringOption("hbase.master", "HBase master address", None))
+			val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
+				Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
+			} else {
+				None
+			}
 
-		(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType, minimumSegmentLength)
+			val operationEnum = OperationType.withName(operationType.toUpperCase)
+
+			val taskParametersFactory = new TilingTaskParametersFactory(null, List("ops"))
+			taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
+			val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
+
+			(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType, minimumSegmentLength, maximumLeaderLength, drawArcs)
+		}
+
 	}
-
-}
 

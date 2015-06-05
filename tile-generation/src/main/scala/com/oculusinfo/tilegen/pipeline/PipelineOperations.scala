@@ -133,9 +133,9 @@ object PipelineOperations {
 		val maxTime = maxDate.getTime
 
 		val filterFcn = udf((value: String) => {
-			val time = formatter.parse(value).getTime
-			minTime <= time && time <= maxTime
-		})
+			                    val time = formatter.parse(value).getTime
+			                    minTime <= time && time <= maxTime
+		                    })
 		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
@@ -170,8 +170,8 @@ object PipelineOperations {
 		val minTime = minDate.getTime
 		val maxTime = maxDate.getTime
 		val filterFcn = udf((time: Timestamp) => {
-			minTime <= time.getTime && time.getTime <= maxTime
-		})
+			                    minTime <= time.getTime && time.getTime <= maxTime
+		                    })
 		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
@@ -392,38 +392,43 @@ object PipelineOperations {
 	}
 
 	def geoSegmentTilingOp(x1ColSpec: String,
-												 y1ColSpec: String,
-												 x2ColSpec: String,
-												 y2ColSpec: String,
-												 tilingParams: TilingTaskParameters,
-												 hbaseParameters: Option[HBaseParameters],
-												 operation: OperationType = COUNT,
-												 valueColSpec: Option[String] = None,
-												 valueColType: Option[String] = None,
-												 minimumSegmentLength: Option[Int] = Some(4))
-												(input: PipelineData) = {
+	                       y1ColSpec: String,
+	                       x2ColSpec: String,
+	                       y2ColSpec: String,
+	                       tilingParams: TilingTaskParameters,
+	                       hbaseParameters: Option[HBaseParameters],
+	                       operation: OperationType = COUNT,
+	                       valueColSpec: Option[String] = None,
+	                       valueColType: Option[String] = None,
+	                       minimumSegmentLength: Option[Int] = Some(4),
+	                       maximumLeaderLength: Option[Int] = Some(1024),
+	                       drawArcs: Boolean = false)
+	                      (input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
 		}
 		val properties = Map("oculus.binning.projection.type" -> "webmercator")
 
-		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType, minimumSegmentLength,
+		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType,
+		                    minimumSegmentLength, maximumLeaderLength, drawArcs,
 		                    tilingParams, tileIO, properties)(input)
 	}
 
 	private def segmentTilingOpImpl(x1ColSpec: String,
-																	y1ColSpec: String,
-																  x2ColSpec: String,
-																  y2ColSpec: String,
-																	operation: OperationType,
-																	valueColSpec: Option[String],
-																	valueColType: Option[String],
-																  minimumSegmentLength: Option[Int],
-																	taskParameters: TilingTaskParameters,
-																	tileIO: TileIO,
-																	properties: Map[String, String])
-																 (input: PipelineData) = {
+	                                y1ColSpec: String,
+	                                x2ColSpec: String,
+	                                y2ColSpec: String,
+	                                operation: OperationType,
+	                                valueColSpec: Option[String],
+	                                valueColType: Option[String],
+	                                minimumSegmentLength: Option[Int],
+	                                maximumLeaderLength: Option[Int],
+	                                drawArcs: Boolean,
+	                                taskParameters: TilingTaskParameters,
+	                                tileIO: TileIO,
+	                                properties: Map[String, String])
+	                               (input: PipelineData) = {
 		// Populate baseline args
 		val args: Map[String, String] = Map(
 			"oculus.binning.name" -> taskParameters.name,
@@ -434,22 +439,25 @@ object PipelineOperations {
 			"oculus.binning.index.field.0" -> x1ColSpec,
 			"oculus.binning.index.field.1" -> y1ColSpec,
 			"oculus.binning.index.field.2" -> x2ColSpec,
-			"oculus.binning.index.field.3" -> y2ColSpec
+			"oculus.binning.index.field.3" -> y2ColSpec,
+			"oculus.binning.drawArcs" -> drawArcs.toString
 		) ++ minimumSegmentLength.map(len =>
 			Map("oculus.binning.minimumSegmentLength" -> len.toString)
+		).getOrElse(Map[String, String]()) ++ maximumLeaderLength.map(len =>
+			Map("oculus.binning.maximumLeaderLength" -> len.toString)
 		).getOrElse(Map[String, String]())
 
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
 				Map("oculus.binning.value.type" -> "field",
-					"oculus.binning.value.field" -> valueColSpec.get,
-					"oculus.binning.value.valueType" -> valueColType.get,
-					"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
-					"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+				    "oculus.binning.value.field" -> valueColSpec.get,
+				    "oculus.binning.value.valueType" -> valueColType.get,
+				    "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+				    "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
 			case _ =>
 				Map("oculus.binning.value.type" -> "count",
-					"oculus.binning.value.valueType" -> "int",
-					"oculus.binning.value.serializer" -> "[int]-a")
+				    "oculus.binning.value.valueType" -> "int",
+				    "oculus.binning.value.serializer" -> "[int]-a")
 		}
 
 		// Parse bounds and level args
