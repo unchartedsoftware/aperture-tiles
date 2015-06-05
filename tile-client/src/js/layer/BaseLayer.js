@@ -55,7 +55,8 @@
         Layer.call( this, spec );
         // set defaults
         this.type = spec.type || "blank";
-				this.url = spec.url;
+		this.url = spec.url;
+		this.attribution = spec.attribution;
         this.options = spec.options || {
             color : "rgb(0,0,0)"
         };
@@ -91,7 +92,17 @@
 				// tms layer
                 this.olLayer = new OpenLayers.Layer.TMS( "BaseLayer", this.url, this.options );
                 break;
+			case "xyz":
+				// xyz layer
+                this.olLayer = new OpenLayers.Layer.XYZ( "BaseLayer", this.url, this.options );
+                break;
         }
+		if ( this.attribution ) {
+			$( this.map.getElement() ).append(
+				'<div class=baselayer-attribution>' +
+				this.attribution +
+				'</div>' );
+		}
 		// create baselayer and set as baselayer
         this.map.olMap.addLayer( this.olLayer );
         this.map.olMap.setBaseLayer( this.olLayer );
@@ -102,7 +113,7 @@
         }
 		if ( this.olLayer.mapObject ) {
 			var gmapContainer = this.olLayer.mapObject.getDiv();
-			$( gmapContainer ).css("background-color", "rgba(0,0,0,0)");
+			$( gmapContainer ).css( "background-color", "rgba(0,0,0,0)" );
 		}
         // ensure baselayer remains bottom layer
 		$( this.olLayer.div ).css( 'z-index', -1 );
@@ -122,6 +133,9 @@
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
         }
+		if ( this.attribution ) {
+			$( this.map.getElement() ).find('.baselayer-attribution').remove();
+		}
         this.map.getElement().style['background-color'] = '';
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
