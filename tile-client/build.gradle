@@ -66,3 +66,9 @@ publishing {
         }
     }
 }
+
+idea {
+	module {
+		excludeDirs += [file("node_modules"), file("vendor")]
+	}
+}
