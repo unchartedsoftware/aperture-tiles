@@ -399,10 +399,7 @@ object PipelineOperations {
 	                       hbaseParameters: Option[HBaseParameters],
 	                       operation: OperationType = COUNT,
 	                       valueColSpec: Option[String] = None,
-	                       valueColType: Option[String] = None,
-	                       minimumSegmentLength: Option[Int] = Some(4),
-	                       maximumLeaderLength: Option[Int] = Some(1024),
-	                       drawArcs: Boolean = false)
+	                       valueColType: Option[String] = None)
 	                      (input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
@@ -411,7 +408,6 @@ object PipelineOperations {
 		val properties = Map("oculus.binning.projection.type" -> "webmercator")
 
 		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType,
-		                    minimumSegmentLength, maximumLeaderLength, drawArcs,
 		                    tilingParams, tileIO, properties)(input)
 	}
 
@@ -422,9 +418,6 @@ object PipelineOperations {
 	                                operation: OperationType,
 	                                valueColSpec: Option[String],
 	                                valueColType: Option[String],
-	                                minimumSegmentLength: Option[Int],
-	                                maximumLeaderLength: Option[Int],
-	                                drawArcs: Boolean,
 	                                taskParameters: TilingTaskParameters,
 	                                tileIO: TileIO,
 	                                properties: Map[String, String])
@@ -440,10 +433,10 @@ object PipelineOperations {
 			"oculus.binning.index.field.1" -> y1ColSpec,
 			"oculus.binning.index.field.2" -> x2ColSpec,
 			"oculus.binning.index.field.3" -> y2ColSpec,
-			"oculus.binning.drawArcs" -> drawArcs.toString
-		) ++ minimumSegmentLength.map(len =>
+			"oculus.binning.drawArcs" -> taskParameters.drawArcs.toString
+		) ++ taskParameters.minimumSegmentLength.map(len =>
 			Map("oculus.binning.minimumSegmentLength" -> len.toString)
-		).getOrElse(Map[String, String]()) ++ maximumLeaderLength.map(len =>
+		).getOrElse(Map[String, String]()) ++ taskParameters.maximumLeaderLength.map(len =>
 			Map("oculus.binning.maximumLeaderLength" -> len.toString)
 		).getOrElse(Map[String, String]())
 
