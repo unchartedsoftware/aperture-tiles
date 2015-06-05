@@ -59,7 +59,7 @@
                 // new url to render
                 if ( this.isLoading ) {
                     this.dataRequests.forEach( function( request ) {
-                        request.abort();
+                        request.fail();
                     });
                     this.dataRequests = null;
                     this.isLoading = false;
