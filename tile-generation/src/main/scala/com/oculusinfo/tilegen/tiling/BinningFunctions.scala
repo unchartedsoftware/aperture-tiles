@@ -123,12 +123,12 @@ trait StandardLinearBinningFunctions {
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
 	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-										minBins: Option[Int], maxBins: Option[Int],
-										xBins: Int = 256, yBins: Int = 256)
-	: T => Traversable[(TileIndex, Array[BinIndex])] = {
+	                  minBins: Option[Int], maxBins: Option[Int],
+	                  xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
 			if (minBins.map(_ <= length).getOrElse(true) &&
-				maxBins.map(_ > length).getOrElse(true)) {
+				    maxBins.map(_ > length).getOrElse(true)) {
 				// Fill in somewhere around here.
 				linearTiles(firstBin, lastBin, sampleTile).map(tile => (tile, Array(firstBin, lastBin)))
 			} else {
@@ -156,8 +156,8 @@ trait StandardLinearBinningFunctions {
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
 	def locateLineLeaders[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-															minBins: Option[Int], leaderBins: Int, xBins: Int = 256, yBins: Int = 256)
-	:T => Traversable[(TileIndex, Array[BinIndex])] = {
+	                         minBins: Option[Int], leaderBins: Int, xBins: Int = 256, yBins: Int = 256)
+			:T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
 			if (minBins.map(_ <= length).getOrElse(true)) {
 				closeLinearTiles(firstBin, lastBin, sampleTile, leaderBins).map(tile => (tile, Array(firstBin, lastBin)))
@@ -170,8 +170,8 @@ trait StandardLinearBinningFunctions {
 	}
 
 	private def locateLineInternal[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-																		spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])],
-																		xBins: Int = 256, yBins: Int = 256)
+	                                  spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])],
+	                                  xBins: Int = 256, yBins: Int = 256)
 			: T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
@@ -193,7 +193,7 @@ trait StandardLinearBinningFunctions {
 					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
 					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
-						math.abs(uniBin1.getY - uniBin2.getY))
+						              math.abs(uniBin1.getY - uniBin2.getY))
 
 					spread(length, uniBin1, uniBin2, tile1)
 				}
@@ -211,11 +211,11 @@ trait StandardLinearBinningFunctions {
 	 * Takes endpoints of line segments, and populates the tiles with the bins at which that line crosses that tile
 	 */
 	def populateTileWithLineSegments[T] (scaler: (Array[BinIndex], BinIndex, T) => T)
-																			(tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
-			linearBinsForTile(bins(0), bins(1), tile).map(bin =>
-				(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-			).toMap
-		}
+	                                (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
+		linearBinsForTile(bins(0), bins(1), tile).map(bin =>
+			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
+		).toMap
+	}
 
 	/**
 	 * Draw line segment leaders only (pixels within a given distance of endpoints or less)
@@ -224,7 +224,7 @@ trait StandardLinearBinningFunctions {
 	 * the leader length of either endpoint.
 	 */
 	def populateTileWithLineLeaders[T] (leaderLength: Int, scaler: (Array[BinIndex], BinIndex, T) => T)
-																		 (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
+	                               (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
 		closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength).map(bin =>
 			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
 		).toMap
@@ -342,7 +342,7 @@ trait StandardLinearBinningFunctions {
 	 * @return Each tile in the segment, in universal bin coordinates
 	 */
 	def closeLinearTiles (start: BinIndex, end: BinIndex, sample: TileIndex, maxBinDistance: Int)
-	: Traversable[TileIndex] = {
+			: Traversable[TileIndex] = {
 		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
 
 		val singleTileGap = if (steep) sample.getYBins else sample.getXBins
@@ -499,6 +499,77 @@ trait StandardLinearBinningFunctions {
 
 
 trait StandardArcBinningFunctions {
+	/**
+	 * A function to spread input arcs over several levels of tile pyramid, only drawing a fixed length
+	 * leader on each arc (assuming the segment is longer than twice the specified leader length; if shorter, the
+	 * whole arc is drawn).
+	 *
+	 * @param indexScheme The scheme for interpretting input indices
+	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
+	 * @param levels The levels at which to tile
+	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None
+	 *                to have no minimum segment length
+	 * @param distance The length of the segment leader to draw on each end.
+	 * @param xBins The number of bins into which each tile is broken in the horizontal direction
+	 * @param yBins the number of bins into which each tile is broken in the vertical direction
+	 * @return a traversable over the tiles this line crosses, each associated with the overall
+	 *         endpoints of this line, in universal bin coordinates.
+	 */
+	def locateArcs[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	                  minBins: Option[Int], distance: Option[Int], xBins: Int = 256, yBins: Int = 256)
+			:T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val spread: (Long, BinIndex, BinIndex, TileIndex) => TraversableOnce[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
+			if (minBins.map(_ <= length).getOrElse(true)) {
+				arcTiles(firstBin, lastBin, sampleTile, distance).map(tile => (tile, Array(firstBin, lastBin)))
+			} else {
+				Traversable()
+			}
+		}
+
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
+		                                bounds.getMaxX, bounds.getMaxY)
+
+		index => {
+			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
+			if (minX <= x1 && x1 <= maxX &&
+				    minY <= y1 && y1 <= maxY &&
+				    minX <= x2 && x2 <= maxX &&
+				    minY < y2 && y2 <= maxY) {
+				levels.flatMap{level =>
+					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
+					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
+					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+
+					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
+					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
+					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+
+					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
+						              math.abs(uniBin1.getY - uniBin2.getY))
+
+					spread(length, uniBin1, uniBin2, tile1)
+				}
+			} else {
+				Traversable()
+			}
+		}
+	}
+
+
+	/**
+	 * Draw line segment leaders only (pixels within a given distance of endpoints or less)
+	 *
+	 * Takes endpoints, and populates the tiles with the bins at which that line crosses that tile, and are within
+	 * the leader length of either endpoint.
+	 */
+	def populateTileWithArcs[T] (distance: Option[Int], scaler: (Array[BinIndex], BinIndex, T) => T)
+	                        (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
+		arcBinsForTile(bins(0), bins(1), tile, distance).map(bin =>
+			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
+		).toMap
+	}
+
 	/**
 	 * Takes the two endpoints of the desired arc, and returns the center, radius, start slope, end
 	 * slope, and a list of the needed octants.
@@ -755,7 +826,7 @@ trait StandardArcBinningFunctions {
 				y = lastBin+1
 				// If we have a gap, see if we're in it
 				yMids.foreach{case (endStart, startEnd) =>
-						if (y > endStart && y < startEnd) y = startEnd
+					if (y > endStart && y < startEnd) y = startEnd
 				}
 				(yCur min yEnd, lastBin min yEnd)
 			}

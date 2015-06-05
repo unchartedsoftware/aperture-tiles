@@ -123,42 +123,42 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 		// Shift a bin at a time over boundaries to make sure tiles match perfectly.
 		// Test horizontally
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 2, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(0, 10), new BinIndex(11, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(0, 10), new BinIndex(11, 10), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(1, 10), new BinIndex(12, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(1, 10), new BinIndex(12, 10), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 1, 13, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(2, 10), new BinIndex(13, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(2, 10), new BinIndex(13, 10), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 1, 13, 4, 4), new TileIndex(4, 3, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(3, 10), new BinIndex(14, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(3, 10), new BinIndex(14, 10), sample, 2).toSet)
 
 		// Test vertically
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 0), new BinIndex(10, 11), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 0), new BinIndex(10, 11), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 2, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 1), new BinIndex(10, 12), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 1), new BinIndex(10, 12), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 14, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 2, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 2), new BinIndex(10, 13), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 2), new BinIndex(10, 13), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 14, 4, 4), new TileIndex(4, 2, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 3), new BinIndex(10, 14), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 3), new BinIndex(10, 14), sample, 2).toSet)
 
 		// Test diagonally
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(0, 0), new BinIndex(11, 11), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(0, 0), new BinIndex(11, 11), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(1, 1), new BinIndex(12, 12), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(1, 1), new BinIndex(12, 12), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 1, 14, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(2, 2), new BinIndex(13, 13), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(2, 2), new BinIndex(13, 13), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 1, 14, 4, 4), new TileIndex(4, 3, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(3, 3), new BinIndex(14, 14), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(3, 3), new BinIndex(14, 14), sample, 2).toSet)
 
 	}
 
@@ -186,7 +186,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val uBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, bin)
 			val binDistance = math.min(axialDistance(uBin, start), axialDistance(uBin, end))
 			assert(binDistance <= distance,
-				"Bin "+bin+" in tile "+tile+" is more than "+distance+" from endpoints (distance is "+binDistance+")")
+			       "Bin "+bin+" in tile "+tile+" is more than "+distance+" from endpoints (distance is "+binDistance+")")
 		}
 	}
 	// Also test:
@@ -267,9 +267,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val t1 = math.toRadians(theta1)
 			val t2 = math.toRadians(theta2)
 			val arcInfo = initializeArc(new BinIndex(math.round(100*math.cos(t1)).toInt,
-			                                                   math.round(100*math.sin(t1)).toInt),
-			                                      new BinIndex(math.round(100*math.cos(t2)).toInt,
-			                                                   math.round(100*math.sin(t2)).toInt))
+			                                         math.round(100*math.sin(t1)).toInt),
+			                            new BinIndex(math.round(100*math.cos(t2)).toInt,
+			                                         math.round(100*math.sin(t2)).toInt))
 
 			assert(ApproximateNumber(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
 			assert(ApproximateNumber(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
