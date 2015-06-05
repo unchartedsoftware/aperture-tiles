@@ -25,7 +25,7 @@
 package com.oculusinfo.tilegen.tiling
 
 
-
+import scala.collection.mutable
 import scala.util.Try
 
 import org.scalatest.FunSuite
@@ -292,6 +292,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	private def bi (x: Int, y: Int): BinIndex = new BinIndex(x, y)
+	private val tileSorter: (TileIndex, TileIndex) => Boolean = (a, b) => {
+		a.getX < b.getX || (a.getX == b.getX && a.getY < b.getY)
+	}
 	private val binSorter: (BinIndex, BinIndex) => Boolean = (a, b) => {
 		val angleA = math.atan2(a.getY, a.getX)
 		val angleB = math.atan2(b.getY, b.getX)
@@ -301,7 +304,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	test("Test simple arcs - symetrical across axis") {
-		val bins = arcUniversalBins2(bi(-7, 12), bi(7, 12)).toList.sortWith(binSorter)
+		val bins = arcUniversalBins(bi(-7, 12), bi(7, 12)).toList.sortWith(binSorter)
 
 		// Make sure our arc bounds are correct
 		assert(12 === bins.map(_.getY).reduce(_ min _))
@@ -334,7 +337,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	test("Test simple arcs - symetrical across diagonal") {
-		val bins = arcUniversalBins2(bi(7, 27), bi(27, 7)).toList.sortWith(binSorter)
+		val bins = arcUniversalBins(bi(7, 27), bi(27, 7)).toList.sortWith(binSorter)
 
 		// Make sure our arc bounds are correct
 		assert(7 === bins.map(_.getY).reduce(_ min _))
@@ -366,6 +369,38 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val r = math.sqrt((x * x) + (y * y))
 			assert(new ApproximateNumber(idealR, 0.75) === r)
 		}
+	}
+
+
+
+
+	test("Test arc tiles") {
+		val startBin = new BinIndex(5, 38)
+		val endBin = new BinIndex(41, 28)
+		// level 4, 4 bins per tile = 64 bins
+		val sample = new TileIndex(4, 0, 0, 4, 4)
+		val expected = arcUniversalBins(startBin, endBin)
+			.map(bin => TileIndex.universalBinIndexToTileBinIndex(sample, bin).getTile)
+			.toSet.toList.sortWith(tileSorter)
+
+		val actual = arcTiles(startBin, endBin, sample).toList.sortWith(tileSorter)
+		assert(expected === actual)
+	}
+
+	test("Test arc bins") {
+		val startBin = new BinIndex(5, 38)
+		val endBin = new BinIndex(41, 28)
+		// level 4, 4 bins per tile = 64 bins
+		val sample = new TileIndex(4, 0, 0, 4, 4)
+
+		val expected = arcUniversalBins(startBin, endBin).toList.sortWith(binSorter)
+		expected.map(bin => println(bin+"\t"+TileIndex.universalBinIndexToTileBinIndex(sample, bin)))
+
+		val actual = arcTiles(startBin, endBin, sample).flatMap(tile =>
+			arcBinsForTile(startBin, endBin, tile).map(bin => TileIndex.tileBinIndexToUniversalBinIndex(tile, bin))
+		).toList.sortWith(binSorter)
+
+		assert(expected === actual)
 	}
 }
 
