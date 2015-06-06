@@ -209,7 +209,7 @@ public class TileDataViewTests {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
 				List<Double> bin = underTest.getBin(x,y);
 				Double binValue = bin.get(0);
-				Assert.assertEquals( 1.5, binValue, 0.01);
+				Assert.assertEquals( 1/1.5, binValue, 0.01);
 			}
 		}
 	}
