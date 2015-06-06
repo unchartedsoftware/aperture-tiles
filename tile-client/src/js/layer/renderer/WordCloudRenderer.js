@@ -142,8 +142,8 @@
      */
     createWordCloud = function( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize ) {
         var boundingBox = {
-                width: 256 - HORIZONTAL_OFFSET*2,
-                height: 256 - VERTICAL_OFFSET*2,
+                width: 256 - HORIZONTAL_OFFSET * 2,
+                height: 256 - VERTICAL_OFFSET * 2,
                 x: 0,
                 y: 0
             },
@@ -180,7 +180,7 @@
                 collisions : 0
             };
 
-            var numWords = wordCounts.length
+            var numWords = wordCounts.length;
             while( pos.collisions < numWords ) {
                 // increment position in a spiral
                 pos = spiralPosition( pos );
@@ -190,7 +190,7 @@
                         word: word,
                         entry: wordCounts[i].entry,
                         fontSize: fontSize,
-                        percentLabel: Math.round( percent / numWords ) * numWords,
+                        percentLabel: Math.round( percent / 10 ) * 10, // round to nearest 10
                         x:pos.x,
                         y:pos.y,
                         width: dim.width,
@@ -221,6 +221,7 @@
      */
     function WordCloudRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.meta.aggregated";
+        spec.text = spec.text || {};
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -241,8 +242,11 @@
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
+            numEntries = Math.min( values.length, text.maxWords || MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
-            numEntries,
+            sizeFunction = text.sizeFunction || SIZE_FUNCTION,
+            minFontSize = text.minFontSize || MIN_FONT_SIZE,
+            maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
             html = '',
             wordCounts = [],
             entries = [],
@@ -251,35 +255,7 @@
             min,
             max,
             i,
-            cloud,
-            sizeFunction,
-            minFontSize,
-            maxFontSize;
-
-        // Check for external config values - when not present fallback on internal default.
-        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.maxWords)) {
-            numEntries = Math.min(values.length, MAX_WORDS_DISPLAYED);
-        } else {
-            numEntries = this.spec.config.maxWords;
-        }
-
-        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.sizeFunction)) {
-            sizeFunction = SIZE_FUNCTION;
-        } else {
-            sizeFunction = this.spec.config.sizeFunction;
-        }
-
-        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.minFontSize)) {
-            minFontSize = MIN_FONT_SIZE;
-        } else {
-            minFontSize = this.spec.config.minFontSize;
-        }
-
-        if (_.isUndefined(this.spec.config) || _.isUndefined(this.spec.config.maxFontSize)) {
-            maxFontSize = MAX_FONT_SIZE;
-        } else {
-            maxFontSize = this.spec.config.maxFontSize;
-        }
+            cloud;
 
         for ( i=0; i<numEntries; i++ ) {
             value = values[i];
@@ -293,7 +269,13 @@
         min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
         max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
 
-        cloud = createWordCloud( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize);
+        cloud = createWordCloud(
+            wordCounts,
+            min,
+            max,
+            sizeFunction,
+            minFontSize,
+            maxFontSize );
 
         for ( i=0; i<cloud.length; i++ ) {
 
