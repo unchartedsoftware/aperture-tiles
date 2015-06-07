@@ -56,7 +56,7 @@ import com.oculusinfo.tilegen.tiling.analytics.{TileAnalytic, AnalysisDescriptio
  * other binning classes.  This takes an RDD of data and transforms it
  * into a pyramid of tiles.
  */
-@deprecated class RDDBinner {
+@deprecated("Use UniversalBinner", "0.7") class RDDBinner {
 	var debug: Boolean = true
 
 	/**

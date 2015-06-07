@@ -25,7 +25,7 @@
 package com.oculusinfo.tilegen.tiling
 
 
-
+import scala.collection.mutable
 import scala.util.Try
 
 import org.scalatest.FunSuite
@@ -123,42 +123,42 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 		// Shift a bin at a time over boundaries to make sure tiles match perfectly.
 		// Test horizontally
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 2, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(0, 10), new BinIndex(11, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(0, 10), new BinIndex(11, 10), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(1, 10), new BinIndex(12, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(1, 10), new BinIndex(12, 10), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 1, 13, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(2, 10), new BinIndex(13, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(2, 10), new BinIndex(13, 10), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 13, 4, 4), new TileIndex(4, 1, 13, 4, 4), new TileIndex(4, 3, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(3, 10), new BinIndex(14, 10), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(3, 10), new BinIndex(14, 10), sample, 2).toSet)
 
 		// Test vertically
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 0), new BinIndex(10, 11), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 0), new BinIndex(10, 11), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 2, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 1), new BinIndex(10, 12), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 1), new BinIndex(10, 12), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 14, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 2, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 2), new BinIndex(10, 13), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 2), new BinIndex(10, 13), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 2, 15, 4, 4), new TileIndex(4, 2, 14, 4, 4), new TileIndex(4, 2, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(10, 3), new BinIndex(10, 14), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(10, 3), new BinIndex(10, 14), sample, 2).toSet)
 
 		// Test diagonally
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4)) ===
-			closeLinearTiles(new BinIndex(0, 0), new BinIndex(11, 11), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(0, 0), new BinIndex(11, 11), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(1, 1), new BinIndex(12, 12), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(1, 1), new BinIndex(12, 12), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 1, 14, 4, 4), new TileIndex(4, 2, 13, 4, 4), new TileIndex(4, 3, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(2, 2), new BinIndex(13, 13), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(2, 2), new BinIndex(13, 13), sample, 2).toSet)
 
 		assert(Set(new TileIndex(4, 0, 15, 4, 4), new TileIndex(4, 1, 14, 4, 4), new TileIndex(4, 3, 12, 4, 4)) ===
-			closeLinearTiles(new BinIndex(3, 3), new BinIndex(14, 14), sample, 2).toSet)
+			       closeLinearTiles(new BinIndex(3, 3), new BinIndex(14, 14), sample, 2).toSet)
 
 	}
 
@@ -186,7 +186,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val uBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, bin)
 			val binDistance = math.min(axialDistance(uBin, start), axialDistance(uBin, end))
 			assert(binDistance <= distance,
-				"Bin "+bin+" in tile "+tile+" is more than "+distance+" from endpoints (distance is "+binDistance+")")
+			       "Bin "+bin+" in tile "+tile+" is more than "+distance+" from endpoints (distance is "+binDistance+")")
 		}
 	}
 	// Also test:
@@ -267,9 +267,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val t1 = math.toRadians(theta1)
 			val t2 = math.toRadians(theta2)
 			val arcInfo = initializeArc(new BinIndex(math.round(100*math.cos(t1)).toInt,
-			                                                   math.round(100*math.sin(t1)).toInt),
-			                                      new BinIndex(math.round(100*math.cos(t2)).toInt,
-			                                                   math.round(100*math.sin(t2)).toInt))
+			                                         math.round(100*math.sin(t1)).toInt),
+			                            new BinIndex(math.round(100*math.cos(t2)).toInt,
+			                                         math.round(100*math.sin(t2)).toInt))
 
 			assert(ApproximateNumber(0.0, epsilon*3) === arcInfo._1, "(X center coordinate differed)")
 			assert(ApproximateNumber(0.0, epsilon*3) === arcInfo._2, "(Y center coordinate differed)")
@@ -292,6 +292,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	private def bi (x: Int, y: Int): BinIndex = new BinIndex(x, y)
+	private val tileSorter: (TileIndex, TileIndex) => Boolean = (a, b) => {
+		a.getX < b.getX || (a.getX == b.getX && a.getY < b.getY)
+	}
 	private val binSorter: (BinIndex, BinIndex) => Boolean = (a, b) => {
 		val angleA = math.atan2(a.getY, a.getX)
 		val angleB = math.atan2(b.getY, b.getX)
@@ -301,7 +304,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	test("Test simple arcs - symetrical across axis") {
-		val bins = arcUniversalBins2(bi(-7, 12), bi(7, 12)).toList.sortWith(binSorter)
+		val bins = arcUniversalBins(bi(-7, 12), bi(7, 12)).toList.sortWith(binSorter)
 
 		// Make sure our arc bounds are correct
 		assert(12 === bins.map(_.getY).reduce(_ min _))
@@ -334,7 +337,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 
 	test("Test simple arcs - symetrical across diagonal") {
-		val bins = arcUniversalBins2(bi(7, 27), bi(27, 7)).toList.sortWith(binSorter)
+		val bins = arcUniversalBins(bi(7, 27), bi(27, 7)).toList.sortWith(binSorter)
 
 		// Make sure our arc bounds are correct
 		assert(7 === bins.map(_.getY).reduce(_ min _))
@@ -366,6 +369,65 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 			val r = math.sqrt((x * x) + (y * y))
 			assert(new ApproximateNumber(idealR, 0.75) === r)
 		}
+	}
+
+
+
+
+	test("Test arc tiles") {
+		val startBin = new BinIndex(5, 38)
+		val endBin = new BinIndex(41, 28)
+		// level 4, 4 bins per tile = 64 bins
+		val sample = new TileIndex(4, 0, 0, 4, 4)
+		val expected = arcUniversalBins(startBin, endBin)
+			.map(bin => TileIndex.universalBinIndexToTileBinIndex(sample, bin).getTile)
+			.toSet.toList.sortWith(tileSorter)
+
+		val actual = arcTiles(startBin, endBin, sample).toList.sortWith(tileSorter)
+		assert(expected === actual)
+	}
+
+	test("Test arc bins") {
+		val startBin = new BinIndex(5, 38)
+		val endBin = new BinIndex(41, 28)
+		// level 4, 4 bins per tile = 64 bins
+		val sample = new TileIndex(4, 0, 0, 4, 4)
+
+		val expected = arcUniversalBins(startBin, endBin).toList.sortWith(binSorter)
+
+		val actual = arcTiles(startBin, endBin, sample).flatMap(tile =>
+			arcBinsForTile(startBin, endBin, tile).map(bin => TileIndex.tileBinIndexToUniversalBinIndex(tile, bin))
+		).toList.sortWith(binSorter)
+
+		assert(expected === actual)
+	}
+
+	test("Test arc bins with limitted distance") {
+		def distance (a: BinIndex, b: BinIndex): Int = {
+			math.abs(a.getX - b.getX) max math.abs(a.getY - b.getY)
+		}
+
+		val startBin = new BinIndex(5, 38)
+		val endBin = new BinIndex(41, 28)
+		// level 4, 4 bins per tile = 64 bins
+		// Distance is 5 => 41 = 36ish; limitting to 9, should include about half
+		val limit = 9
+		val sample = new TileIndex(4, 0, 0, 4, 4)
+
+		val expected = arcUniversalBins(startBin, endBin)
+			.filter(bin => distance(startBin, bin) <= 9 || distance(endBin, bin) <= 9)
+			.toList.sortWith(binSorter)
+
+		val actual = arcTiles(startBin, endBin, sample, Some(limit)).flatMap { tile =>
+			val bins = arcBinsForTile(startBin, endBin, tile, Some(limit)).toList
+
+			// Make sure none of our tiles produce no bins
+			assert(bins.size > 0)
+
+			bins.map(bin => TileIndex.tileBinIndexToUniversalBinIndex(tile, bin))
+		}.toList.sortWith(binSorter)
+
+		assert(expected === actual)
 	}
 }
 
