@@ -211,6 +211,12 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the minimum bin length of drawn segments, for line tiling */
 	def getMinimumSegmentLength = config.minimumSegmentLength
 
+	/** Get the maximum number of bins to draw on the ends of segments, for line tiling */
+	def getMaximumLeaderLength = config.maximumLeaderLength
+
+	/** Get whether or not segments should be drawn as arcs */
+	def drawArcs = config.drawArcs
+
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
 
@@ -290,13 +296,26 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
 				rdd => {
+					val locateFcn =
+						if (drawArcs) StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
+						                                                  getMinimumSegmentLength, getMaximumLeaderLength,
+						                                                  getNumXBins, getNumYBins)
+						else StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
+						                                                getMinimumSegmentLength, getMaximumLeaderLength.get,
+						                                                getNumXBins, getNumYBins)
+
+					val populateFcn: (TileIndex, Array[BinIndex], PT) => Map[BinIndex, PT] =
+						if (drawArcs) StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
+						                                                            StandardScalingFunctions.identityScale)
+						else StandardBinningFunctions.populateTileWithLineLeaders(getMaximumLeaderLength.get,
+						                                                          StandardScalingFunctions.identityScale)
+
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-						StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels, getMinimumSegmentLength, 1024, getNumXBins, getNumYBins),
-						StandardBinningFunctions.populateTileWithLineLeaders(1024, StandardScalingFunctions.identityScale),
-						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+					                                                         locateFcn, populateFcn,
+					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-						tileAnalytics, dataAnalytics, getName, getDescription)
+					                    tileAnalytics, dataAnalytics, getName, getDescription)
 				}
 			}
 

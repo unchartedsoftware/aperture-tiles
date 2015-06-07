@@ -64,7 +64,7 @@ import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
 /**
  * This class reads and caches a data set for live queries of its tiles
  */
-@deprecated class LegacyOnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
+@deprecated("Use OnDemandBinningPyramidIO", "0.7") class LegacyOnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	private val sc = sqlc.sparkContext
 	private val tasks = MutableMap[String, TilingTask[_, _, _, _]]()
 	private val metaData = MutableMap[String, PyramidMetaData]()
