@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.tiling
 
 
 import grizzled.slf4j.Logging
+import org.apache.spark.Accumulator
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.Try
@@ -61,9 +62,9 @@ object UniversalBinner {
 	 *                      the number of partitions will not be decreased.
 	 * @return The number of partitions that should be used for this dataset.
 	 */
-	def getNumSplits[T: ClassTag] (dataSet: RDD[T],
-	                               minPartitions: Option[Int],
-	                               maxPartitions: Option[Int]): Int =
+	def getNumSplits[T: ClassTag](dataSet: RDD[T],
+																minPartitions: Option[Int],
+																maxPartitions: Option[Int]): Int =
 		dataSet.partitions.size
 			.max(minPartitions.getOrElse(0))
 			.min(maxPartitions.getOrElse(Int.MaxValue))
@@ -76,8 +77,8 @@ object UniversalBinner {
 	 * @param value2 The second value to aggregate
 	 * @tparam T The type of value to aggregate
 	 */
-	def optAggregate[T] (aggFcn: Option[(T, T) => T],
-	                     value1: Option[T], value2: Option[T]): Option[T] =
+	def optAggregate[T](aggFcn: Option[(T, T) => T],
+											value1: Option[T], value2: Option[T]): Option[T] =
 		aggFcn.map(fcn => (value1 ++ value2).reduceLeftOption(fcn)).getOrElse(None)
 
 	/**
@@ -90,8 +91,16 @@ object UniversalBinner {
 	 * @tparam K The class type of the map keys
 	 * @tparam V The class type of the map values
 	 */
-	def aggregateMaps[K, V] (aggFcn: (V, V) => V, map1: Map[K, V], map2: Map[K, V]): Map[K, V] =
-		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map{case (k, v) => (k, v.map(_._2).reduce(aggFcn))}
+	def aggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
+		map2.keys.foreach { key =>
+			map1(key) = map1.get(key).map(value => aggFcn(value, map2(key))).getOrElse(map2(key))
+		}
+		map1
+	}
+
+//	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
+//		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map { case (k, v) => (k, v.map(_._2).reduce(aggFcn)) }
+//	}
 }
 
 
@@ -99,6 +108,7 @@ object UniversalBinner {
 class UniversalBinner extends Logging {
 	import UniversalBinner._
 
+	val stats = MutableMap[String, Accumulator[Double]]()
 
 	/** Helper function to mimic RDDBinner interface */
 	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
@@ -230,16 +240,36 @@ class UniversalBinner extends Logging {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 locateIndexFcn: IT => Traversable[(TileIndex, Array[BinIndex])],
-		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => Map[BinIndex, PT],
+		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT],
 		 parameters: BinningParameters = new BinningParameters()): RDD[TileData[BT]] =
 	{
 		// If asked to run in debug mode, keep some stats on how much aggregation is going on in
 		// this stage.
-		val aggregationTracker = if (parameters.debug) Some(data.context.accumulator(0)) else None
+		val aggregationTracker = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		aggregationTracker.foreach(tracker => stats("aggregation") = tracker)
+		val consolidateTimer = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		consolidateTimer.foreach(timer => stats("consolidation") = timer)
+		val combinerTimer = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		combinerTimer.foreach(timer => stats("combiner") = timer)
+		val mergeValueTimer = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		mergeValueTimer.foreach(timer => stats("merge") = timer)
+		val mergeValueTimera = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		mergeValueTimera.foreach(timer => stats("merge a") = timer)
+		val mergeValueTimerb = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		mergeValueTimerb.foreach(timer => stats("merge b") = timer)
+		val mergeValueTimerc = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		mergeValueTimerc.foreach(timer => stats("merge c") = timer)
+		val mergeValueTimerd = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		mergeValueTimerd.foreach(timer => stats("merge d") = timer)
+		val combineValueTimer = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		combineValueTimer.foreach(timer => stats("combine") = timer)
+		val tileCreationTimer = if (parameters.debug) Some(data.context.accumulator(0.0)) else None
+		tileCreationTimer.foreach(timer => stats("tile creation") = timer)
 
 		// First, within each partition, group data by tile
 		val consolidatedByPartition: RDD[(TileIndex, Array[BinIndex], PT, Option[DT])] =
 			data.mapPartitions{iter =>
+				val start = System.nanoTime()
 				val partitionResults = MutableMap[(TileIndex, Array[BinIndex]), (PT, Option[DT])]()
 
 				// Map each input record in this partition into tile coordinates, ...
@@ -259,45 +289,78 @@ class UniversalBinner extends Logging {
 							partitionResults(key) = newValue
 						}
 				}
-				partitionResults.iterator.map(results => (results._1._1, results._1._2, results._2._1, results._2._2))
+				val result = partitionResults.iterator.map(results => (results._1._1, results._1._2, results._2._1, results._2._2))
+				consolidateTimer.foreach{timer =>
+					val end = System.nanoTime()
+					timer += (end - start) / 1000000.0
+				}
+				result
 			}
 
 		// TODO: If this works, look at using MutableMaps instead of Maps as the first output
 		// value, and adding in place.
 		// TODO: If that works, look into getting rid of the mutable map in the previous step
 		// Combine all information from a single tile
-		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			c => {
+				val start = System.nanoTime()
 				val (tile, bins, value, analyticValue) = c
-				(populateTileFcn(tile, bins, value), analyticValue)
+				val result = (populateTileFcn(tile, bins, value), analyticValue)
+				combinerTimer.foreach { timer =>
+					val end = System.nanoTime()
+					timer += (end - start) / 1000000.0
+				}
+				result
 			}
-		val mergeValue: ((Map[BinIndex, PT], Option[DT]),
-		                 (TileIndex, Array[BinIndex], PT, Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+		val mergeValue: ((MutableMap[BinIndex, PT], Option[DT]),
+		                 (TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			(aggregateValue, recordValue) => {
+				val start = System.nanoTime()
 				val (binValues, curAnalyticValue) = aggregateValue
 				val (tile, bins, value, newAnalyticValue) = recordValue
+				val startA = System.nanoTime()
 				val binAggregator = binAnalytic.aggregate(_, _)
+				mergeValueTimera.foreach(timer => timer += (System.nanoTime() - startA) / 1000000.0)
+				val startB = System.nanoTime()
 				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
-				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
-				 optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
+				mergeValueTimerb.foreach(timer => timer += (System.nanoTime() - startB) / 1000000.0)
+
+				val startC = System.nanoTime()
+				val resultC = aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value))
+				mergeValueTimerc.foreach(timer => timer += (System.nanoTime() - startC) / 1000000.0)
+				val startD = System.nanoTime()
+				val resultD = optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue)
+				mergeValueTimerd.foreach(timer => timer += (System.nanoTime() - startD) / 1000000.0)
+
+				val result = (resultC, resultD)
+
+				mergeValueTimer.foreach(timer => timer += (System.nanoTime() - start) / 1000000.0)
+				result
 			}
-		val mergeCombiners: ((Map[BinIndex, PT], Option[DT]),
-		                     (Map[BinIndex, PT], Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+		val mergeCombiners: ((MutableMap[BinIndex, PT], Option[DT]),
+		                     (MutableMap[BinIndex, PT], Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			(tileValues1, tileValues2) => {
+				val start = System.nanoTime()
 				val (binValues1, analyticValue1) = tileValues1
 				val (binValues2, analyticValue2) = tileValues2
 				val binAggregator = binAnalytic.aggregate(_, _)
 				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
-				(aggregateMaps(binAggregator, binValues1, binValues2),
+				val result = (aggregateMaps(binAggregator, binValues1, binValues2),
 				 optAggregate(analyticAggregator, analyticValue1, analyticValue2))
+				combineValueTimer.foreach{timer =>
+					val end = System.nanoTime()
+					timer += (end - start) / 1000000.0
+				}
+				result
 			}
 		val a = consolidatedByPartition.map{case (tile, bins, value, analyticValue) =>
 			(tile, (tile, bins, value, analyticValue))
 		}
-		val tileInfos = a.combineByKey[(Map[BinIndex, PT], Option[DT])](createCombiner, mergeValue, mergeCombiners)
+		val tileInfos = a.combineByKey[(MutableMap[BinIndex, PT], Option[DT])](createCombiner, mergeValue, mergeCombiners)
 
 		// Now, go through those results and convert to tiles.
-		tileInfos.map{tileInfo =>
+		val tiles = tileInfos.map{tileInfo =>
+			val start = System.nanoTime()
 			val index = tileInfo._1
 			val binValues = tileInfo._2._1
 			val analyticValue = tileInfo._2._2
@@ -342,8 +405,14 @@ class UniversalBinner extends Logging {
 				}
 			)
 
+			tileCreationTimer.foreach { timer =>
+				val end = System.nanoTime()
+				timer += (end - start) / 1000000.0
+			}
 			tile
 		}
+
+		tiles
 	}
 }
 

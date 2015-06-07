@@ -24,6 +24,10 @@
  */
 package com.oculusinfo.tilegen.tiling
 
+
+
+import scala.collection.mutable.{Map => MutableMap}
+
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
@@ -95,8 +99,8 @@ trait StandardPointBinningFunctions {
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
-	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
-		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
+	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
 
 }
 
@@ -211,10 +215,10 @@ trait StandardLinearBinningFunctions {
 	 * Takes endpoints of line segments, and populates the tiles with the bins at which that line crosses that tile
 	 */
 	def populateTileWithLineSegments[T] (scaler: (Array[BinIndex], BinIndex, T) => T)
-	                                (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
-		linearBinsForTile(bins(0), bins(1), tile).map(bin =>
+	                                (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
+		MutableMap(linearBinsForTile(bins(0), bins(1), tile).map(bin =>
 			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toMap
+		).toSeq: _*)
 	}
 
 	/**
@@ -224,10 +228,10 @@ trait StandardLinearBinningFunctions {
 	 * the leader length of either endpoint.
 	 */
 	def populateTileWithLineLeaders[T] (leaderLength: Int, scaler: (Array[BinIndex], BinIndex, T) => T)
-	                               (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
-		closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength).map(bin =>
+	                               (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
+		MutableMap(closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength).map(bin =>
 			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toMap
+		).toSeq: _*)
 	}
 
 
@@ -564,10 +568,10 @@ trait StandardArcBinningFunctions {
 	 * the leader length of either endpoint.
 	 */
 	def populateTileWithArcs[T] (distance: Option[Int], scaler: (Array[BinIndex], BinIndex, T) => T)
-	                        (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
-		arcBinsForTile(bins(0), bins(1), tile, distance).map(bin =>
+	                        (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
+		MutableMap(arcBinsForTile(bins(0), bins(1), tile, distance).map(bin =>
 			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toMap
+		).toSeq: _*)
 	}
 
 	/**
