@@ -143,7 +143,11 @@
                     html += '<div class="point-annotation point-annotation-fill" style="'
                           + 'left:' + offset.x + 'px;'
                           + 'top:' + offset.y + 'px;'
-                          + 'border-width: 2px;"></div>'
+                          + 'border-width: 2px;"';
+                    if (value[j].data.labels) {
+                        html += ' title="' + value[j].data.labels + '"';
+                    }
+                    html += '></div>'
                           + '<div class="point-annotation point-annotation-border" style="'
                           + 'left:' + offset.x + 'px;'
                           + 'top:' + offset.y + 'px;'
