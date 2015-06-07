@@ -257,13 +257,9 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		val oldTime2 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
 
 		val newTime1 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
-		val results1 = newBinner.stats.map{case (stat, value) => "\t"+stat+": "+value.value}.mkString("\n")
 		val newTime2 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
-		val results2 = newBinner.stats.map{case (stat, value) => "\t"+stat+": "+value.value}.mkString("\n")
 		val newTime3 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
-		val results3 = newBinner.stats.map{case (stat, value) => "\t"+stat+": "+value.value}.mkString("\n")
 		val newTime4 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
-		val results4 = newBinner.stats.map{case (stat, value) => "\t"+stat+": "+value.value}.mkString("\n")
 
 		val oldTime3 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
 		val oldTime4 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
@@ -274,12 +270,8 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		println("Old time 4: "+oldTime4)
 		println
 		println("New time 1: "+newTime1)
-		println(results1)
 		println("New time 2: "+newTime2)
-		println(results2)
 		println("New time 3: "+newTime3)
-		println(results3)
 		println("New time 4: "+newTime4)
-		println(results4)
 	}
 }
