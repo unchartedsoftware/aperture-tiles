@@ -227,7 +227,8 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 	}
 
 
-	test("Test tiling speed") {
+	// Test the tiling speed of the universal binner versus the old RDDBinner.
+	ignore("Test tiling speed") {
 		def time (f: () => Unit): Double = {
 			val start = System.nanoTime()
 			f()
