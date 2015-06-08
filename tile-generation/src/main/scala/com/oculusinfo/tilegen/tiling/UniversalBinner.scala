@@ -92,10 +92,17 @@ object UniversalBinner {
 	 * @tparam V The class type of the map values
 	 */
 	def aggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
-		map2.keys.foreach { key =>
-			map1(key) = map1.get(key).map(value => aggFcn(value, map2(key))).getOrElse(map2(key))
+		if (map1.size > map2.size) {
+			map2.keys.foreach { key =>
+				map1(key) = map1.get(key).map(value => aggFcn(value, map2(key))).getOrElse(map2(key))
+			}
+			map1
+		} else {
+			map1.keys.foreach { key =>
+				map2(key) = map2.get(key).map { value => aggFcn(value, map1(key))}.getOrElse(map1(key))
+			}
+			map2
 		}
-		map1
 	}
 
 //	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
