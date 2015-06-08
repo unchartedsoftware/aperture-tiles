@@ -29,6 +29,8 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
+import scala.collection.mutable.{Map => MutableMap}
+
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.providers.FactoryProvider
@@ -304,7 +306,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 						                                                getMinimumSegmentLength, getMaximumLeaderLength.get,
 						                                                getNumXBins, getNumYBins)
 
-					val populateFcn: (TileIndex, Array[BinIndex], PT) => Map[BinIndex, PT] =
+					val populateFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT] =
 						if (drawArcs) StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
 						                                                            StandardScalingFunctions.identityScale)
 						else StandardBinningFunctions.populateTileWithLineLeaders(getMaximumLeaderLength.get,

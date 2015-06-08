@@ -26,6 +26,7 @@ package com.oculusinfo.tilegen.tiling
 
 
 import grizzled.slf4j.Logging
+import org.apache.spark.Accumulator
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.Try
@@ -61,9 +62,9 @@ object UniversalBinner {
 	 *                      the number of partitions will not be decreased.
 	 * @return The number of partitions that should be used for this dataset.
 	 */
-	def getNumSplits[T: ClassTag] (dataSet: RDD[T],
-	                               minPartitions: Option[Int],
-	                               maxPartitions: Option[Int]): Int =
+	def getNumSplits[T: ClassTag](dataSet: RDD[T],
+																minPartitions: Option[Int],
+																maxPartitions: Option[Int]): Int =
 		dataSet.partitions.size
 			.max(minPartitions.getOrElse(0))
 			.min(maxPartitions.getOrElse(Int.MaxValue))
@@ -76,8 +77,8 @@ object UniversalBinner {
 	 * @param value2 The second value to aggregate
 	 * @tparam T The type of value to aggregate
 	 */
-	def optAggregate[T] (aggFcn: Option[(T, T) => T],
-	                     value1: Option[T], value2: Option[T]): Option[T] =
+	def optAggregate[T](aggFcn: Option[(T, T) => T],
+											value1: Option[T], value2: Option[T]): Option[T] =
 		aggFcn.map(fcn => (value1 ++ value2).reduceLeftOption(fcn)).getOrElse(None)
 
 	/**
@@ -90,15 +91,29 @@ object UniversalBinner {
 	 * @tparam K The class type of the map keys
 	 * @tparam V The class type of the map values
 	 */
-	def aggregateMaps[K, V] (aggFcn: (V, V) => V, map1: Map[K, V], map2: Map[K, V]): Map[K, V] =
-		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map{case (k, v) => (k, v.map(_._2).reduce(aggFcn))}
+	def aggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
+		if (map1.size > map2.size) {
+			map2.keys.foreach { key =>
+				map1(key) = map1.get(key).map(value => aggFcn(value, map2(key))).getOrElse(map2(key))
+			}
+			map1
+		} else {
+			map1.keys.foreach { key =>
+				map2(key) = map2.get(key).map { value => aggFcn(value, map1(key))}.getOrElse(map1(key))
+			}
+			map2
+		}
+	}
+
+//	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
+//		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map { case (k, v) => (k, v.map(_._2).reduce(aggFcn)) }
+//	}
 }
 
 
 
 class UniversalBinner extends Logging {
 	import UniversalBinner._
-
 
 	/** Helper function to mimic RDDBinner interface */
 	def binAndWriteData[RT: ClassTag, IT: ClassTag, PT: ClassTag,
@@ -230,13 +245,9 @@ class UniversalBinner extends Logging {
 		 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]],
 		 dataAnalytics: Option[AnalysisDescription[_, DT]],
 		 locateIndexFcn: IT => Traversable[(TileIndex, Array[BinIndex])],
-		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => Map[BinIndex, PT],
+		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT],
 		 parameters: BinningParameters = new BinningParameters()): RDD[TileData[BT]] =
 	{
-		// If asked to run in debug mode, keep some stats on how much aggregation is going on in
-		// this stage.
-		val aggregationTracker = if (parameters.debug) Some(data.context.accumulator(0)) else None
-
 		// First, within each partition, group data by tile
 		val consolidatedByPartition: RDD[(TileIndex, Array[BinIndex], PT, Option[DT])] =
 			data.mapPartitions{iter =>
@@ -254,7 +265,6 @@ class UniversalBinner extends Logging {
 							partitionResults(key) = (binAnalytic.aggregate(newValue._1, oldValue._1),
 							                         optAggregate(analyticAggregator,
 							                                      newValue._2, oldValue._2))
-							aggregationTracker.foreach(_ += 1)
 						} else {
 							partitionResults(key) = newValue
 						}
@@ -266,23 +276,24 @@ class UniversalBinner extends Logging {
 		// value, and adding in place.
 		// TODO: If that works, look into getting rid of the mutable map in the previous step
 		// Combine all information from a single tile
-		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			c => {
 				val (tile, bins, value, analyticValue) = c
 				(populateTileFcn(tile, bins, value), analyticValue)
 			}
-		val mergeValue: ((Map[BinIndex, PT], Option[DT]),
-		                 (TileIndex, Array[BinIndex], PT, Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+		val mergeValue: ((MutableMap[BinIndex, PT], Option[DT]),
+		                 (TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			(aggregateValue, recordValue) => {
 				val (binValues, curAnalyticValue) = aggregateValue
 				val (tile, bins, value, newAnalyticValue) = recordValue
 				val binAggregator = binAnalytic.aggregate(_, _)
 				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
+
 				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
-				 optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
+					optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
 			}
-		val mergeCombiners: ((Map[BinIndex, PT], Option[DT]),
-		                     (Map[BinIndex, PT], Option[DT])) => (Map[BinIndex, PT], Option[DT]) =
+		val mergeCombiners: ((MutableMap[BinIndex, PT], Option[DT]),
+		                     (MutableMap[BinIndex, PT], Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			(tileValues1, tileValues2) => {
 				val (binValues1, analyticValue1) = tileValues1
 				val (binValues2, analyticValue2) = tileValues2
@@ -294,7 +305,7 @@ class UniversalBinner extends Logging {
 		val a = consolidatedByPartition.map{case (tile, bins, value, analyticValue) =>
 			(tile, (tile, bins, value, analyticValue))
 		}
-		val tileInfos = a.combineByKey[(Map[BinIndex, PT], Option[DT])](createCombiner, mergeValue, mergeCombiners)
+		val tileInfos = a.combineByKey[(MutableMap[BinIndex, PT], Option[DT])](createCombiner, mergeValue, mergeCombiners)
 
 		// Now, go through those results and convert to tiles.
 		tileInfos.map{tileInfo =>
