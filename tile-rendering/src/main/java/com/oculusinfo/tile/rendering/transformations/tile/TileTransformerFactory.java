@@ -89,6 +89,9 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 		} else if ("avgdivbucket".equals(transformerTypes)) {
 			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
 			return new AvgDivBucketTileTransformer<>(arguments);
+		} else if ("avglogbucket".equals(transformerTypes)) {
+			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
+			return new AvgLogBucketTileTransformer<>(arguments);
 		} else {  // 'identity' or none passed in will give the default transformer
 			return new IdentityTileTransformer<Object>();
 		}
