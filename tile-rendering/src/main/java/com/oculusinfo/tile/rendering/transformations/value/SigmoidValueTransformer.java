@@ -50,7 +50,7 @@ public class SigmoidValueTransformer implements ValueTransformer<Double> {
 	public Double transform (Double value) {
 		// normalize value on interval [-1.0, 1.0]
 		double normalized = value / _distance;
-		double scaledInput = normalized / _scale;
+		double scaledInput = normalized / (_scale * _distance);
 		return (1/(1+Math.exp(-scaledInput)));
 	}
 
