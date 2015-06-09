@@ -44,11 +44,6 @@ import java.util.List;
 public class AvgLogBucketTileTransformer<T extends Number> extends BucketTileTransformer<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AvgLogBucketTileTransformer.class);
 
-	private Integer _startBucket 	= 0;
-	private Integer _endBucket 		= 0;
-	private List<Double> _minVals = null;
-	private List<Double> _maxVals = null;
-
 	public AvgLogBucketTileTransformer(JSONObject arguments){
 		super(arguments);
 	}
