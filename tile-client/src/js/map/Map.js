@@ -357,11 +357,16 @@
      */
     resetLayerZIndices = function( map ) {
         var layers = map.layers,
+            baselayer,
             i;
         if ( map.layers ) {
             for ( i=0; i<layers.length; i++ ) {
                 layers[i].setZIndex( layers[i].getZIndex() );
             }
+        }
+        if ( map.baseLayerIndex >= 0 ) {
+            baselayer = map.baselayers[ map.baseLayerIndex ];
+            baselayer.resetZIndex();
         }
         if ( map.olMarkers ) {
             $( map.olMarkers.div ).css( 'z-index', MARKER_Z_INDEX );
@@ -505,7 +510,7 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index];
+                newBaseLayer = this.baselayers[ index ];
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;

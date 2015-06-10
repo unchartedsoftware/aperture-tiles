@@ -67,7 +67,7 @@
 
     /**
      * Activates the layer object. This should never be called manually.
-     * @memberof AnnotationLayer
+     * @memberof BaseLayer
      * @private
      */
     BaseLayer.prototype.activate = function() {
@@ -125,7 +125,7 @@
 
     /**
      * Dectivates the layer object. This should never be called manually.
-     * @memberof AnnotationLayer
+     * @memberof BaseLayer
      * @private
      */
     BaseLayer.prototype.deactivate = function() {
@@ -138,6 +138,23 @@
 		}
         this.map.getElement().style['background-color'] = '';
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+	/**
+     * Set the z index of the layer.
+     * @memberof BaseLayer
+     *
+     * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
+     */
+	BaseLayer.prototype.resetZIndex = function () {
+        // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
+        // set the z-index of the layer dev. setLayerIndex sets a relative
+        // index based on current map layers, which then sets a z-index. This
+        // caused issues with async layer loading.
+        if ( this.olLayer ) {
+            $( this.olLayer.div ).css( 'z-index', -1 );
+        }
+        PubSub.publish( this.getChannel(), { field: 'zIndex', value: -1 });
     };
 
 	module.exports = BaseLayer;
