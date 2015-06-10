@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.oculusinfo.binning.util.Statistics;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -290,34 +291,51 @@ public class HBasePyramidIO implements PyramidIO {
 		}
 	}
 
+	private static final String HBRT_START      = "hb.rt.start";
+	private static final String HBRT_PREP       = "hb.rt.prep";
+	private static final String HBRT_READ       = "hb.rt.read";
+	private static final String HBRT_SERIALIZED = "hb.rt.serial";
 	@Override
 	public <T> List<TileData<T>> readTiles (String tableName,
 	                                        TileSerializer<T> serializer,
 	                                        Iterable<TileIndex> tiles) throws IOException {
-		List<String> rowIds = new ArrayList<String>();
-		for (TileIndex tile: tiles) {
-			rowIds.add(rowIdFromTileIndex(tile));
-		}
-
-		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
-
-		List<TileData<T>> results = new LinkedList<TileData<T>>();
-
-		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
-		Iterator<TileIndex> indexIterator = tiles.iterator();
-
-		while (iData.hasNext()) {
-			Map<HBaseColumn, byte[]> rawResult = iData.next();
-			TileIndex index = indexIterator.next();
-			if (null != rawResult) {
-				byte[] rawData = rawResult.get(TILE_COLUMN);
-				ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-				TileData<T> data = serializer.deserialize(index, bais);
-				results.add(data);
+		try {
+			Statistics.checkpointTimeNano(HBRT_START);
+			List<String> rowIds = new ArrayList<String>();
+			for (TileIndex tile : tiles) {
+				rowIds.add(rowIdFromTileIndex(tile));
 			}
-		}
 
-		return results;
+			Statistics.checkpointTimeNano(HBRT_PREP);
+			List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
+			Statistics.checkpointTimeNano(HBRT_READ);
+
+			List<TileData<T>> results = new LinkedList<TileData<T>>();
+
+			Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
+			Iterator<TileIndex> indexIterator = tiles.iterator();
+
+			while (iData.hasNext()) {
+				Map<HBaseColumn, byte[]> rawResult = iData.next();
+				TileIndex index = indexIterator.next();
+				if (null != rawResult) {
+					byte[] rawData = rawResult.get(TILE_COLUMN);
+					ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
+					TileData<T> data = serializer.deserialize(index, bais);
+					results.add(data);
+				}
+			}
+
+			Statistics.checkpointTimeNano(HBRT_SERIALIZED);
+			Statistics.addCheckpointDifference(tableName + ": HBasePyramidIO.readTiles[A]: Prep time", HBRT_START, HBRT_PREP);
+			Statistics.addCheckpointDifference(tableName + ": HBasePyramidIO.readTiles[B]: Read time", HBRT_PREP, HBRT_READ);
+			Statistics.addCheckpointDifference(tableName + ": HBasePyramidIO.readTiles[C]: Serialization time", HBRT_READ, HBRT_SERIALIZED);
+			Statistics.addCheckpointDifference(tableName + ": HBasePyramidIO.readTiles[D]: Total time", HBRT_START, HBRT_SERIALIZED);
+			Statistics.addStatistic(tableName + ": HBasePyramidIO.readTiles[E]: Results", (long) results.size());
+			return results;
+		} finally {
+			Statistics.clearCheckpoints(HBRT_START, HBRT_PREP, HBRT_READ, HBRT_SERIALIZED);
+		}
 	}
 
 	@Override
