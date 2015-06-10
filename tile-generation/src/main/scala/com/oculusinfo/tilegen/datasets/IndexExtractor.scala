@@ -74,7 +74,13 @@ abstract class IndexExtractor () {
 	// List any tile analytics automatically associated with this index extractor
 	def getTileAnalytics[BT]: Seq[AnalysisDescription[TileData[BT], _]] = Seq()
 
-	/** Transformed the pyramid name by inserting the field names of the indexer*/
+	/** Transformed the pyramid name by inserting the field names of the indexer
+		* Use the tiling task parameter "name" to generate customized tiling.
+		* The string "{i}" will be replaced by the IndexExtractor.name value
+		* For example: "MyTilingName.{i}" -> "MyTilingName.x.y"
+		* The string "{i0}", "{i1}"... will be replaced by the IndexExtractor.fields[i] value
+		* For example: "MyTilingName.{i0}-{i1}" -> "MyTilingName.x-y"
+		*/
 	def getTransformedName(inputName : String) : String = {
 		var TransformedName = inputName.replace("{i}", name)
 
