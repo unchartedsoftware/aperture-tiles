@@ -10,7 +10,7 @@
 						{{topic.label}}
 						<ul>
 							{% for bookmark in topic.bookmarks %}
-								<li><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
+								<li><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
 							{% endfor %}
 						</ul>
 					{% endif %}

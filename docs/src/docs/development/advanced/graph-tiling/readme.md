@@ -625,13 +625,13 @@ Once a graph dataset has been converted to CSV format and the nodes have been po
 
 ### CSVGraphBinner ###
 
-In general, the CSVGraphBinner application works similarly to the standard Aperture Tiles [CSVBinner](../standard-tiling/#csvbinner). It ingests a properties file (\*.bd) and create a collection of Avro tile data files.
+In general, the CSVGraphBinner application works similarly to the standard Aperture Tiles [CSVBinner](../../how-to/standard-tiling/#csvbinner). It ingests a properties file (\*.bd) and create a collection of Avro tile data files.
 
 **NOTE**: Heatmaps of graph nodes and edges must be generated separately.
 
 #### Nodes ####
 
-The following BD file parameters are used to configure CSVGraphBinner to generate tiles of graph nodes. For additional information on BD file parameters, see the [CSVBinner](../standard-tiling/#csvbinner) section of the [Standard Tiling Jobs](../standard-tiling/) topic.
+The following BD file parameters are used to configure CSVGraphBinner to generate tiles of graph nodes. For additional information on BD file parameters, see the [CSVBinner](../../how-to/standard-tiling/#csvbinner) section of the [Standard Tiling Jobs](../standard-tiling/) topic.
 
 ```properties
 # Indicate that you want to create a tile set of node elements
@@ -662,7 +662,7 @@ Given these parameters, the application parses columns 2 and 3 of each node obje
 
 #### Edges ####
 
-The following BD file parameters are used to configure CSVGraphBinner to generate tiles of graph edges. For additional information on BD file parameters, see the [CSVBinner](../standard-tiling/#csvbinner) section of the [Standard Tiling Jobs](../standard-tiling/) topic.
+The following BD file parameters are used to configure CSVGraphBinner to generate tiles of graph edges. For additional information on BD file parameters, see the [CSVBinner](../../how-to/standard-tiling/#csvbinner) section of the [Standard Tiling Jobs](../standard-tiling/) topic.
 
 ```properties
 # Indicate that you want to create a tile set of edge elements

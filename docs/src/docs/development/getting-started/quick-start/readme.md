@@ -21,7 +21,7 @@ At the end of this guide, you will have an example Aperture Tiles application th
 
 ## <a name="prerequisites"></a> Prerequisites ##
 
-Before beginning this Quick Start example, install the prerequisites described in the [Packaged Distribution](../installation/#packaged-distribution) section of the [Installation](../installation/) topic.
+Before beginning this Quick Start example, install the prerequisites described in the [Packaged Distribution](../installation/#packaged-distributions) section of the [Installation](../installation/) topic.
 
 Once you have installed all the prerequisites, you can generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
