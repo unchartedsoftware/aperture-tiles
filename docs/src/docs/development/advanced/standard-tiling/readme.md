@@ -10,7 +10,7 @@ layout: chapter
 Standard Tiling Jobs
 ====================
 
-The following sections describe advanced properties available for [standard tiling jobs](../standard-tiling/) executed with the [CSVBinner](#csvbinner).
+The following sections describe advanced properties available for [standard tiling jobs](../../how-to/standard-tiling/) executed with the [CSVBinner](../../how-to/standard-tiling/#csvbinner).
 
 - [Source Data Format](#source-data-format)
 - [Field Scaling](#field-scaling)

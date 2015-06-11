@@ -190,7 +190,7 @@ Additional properties are available for scaling fields logarithmically before th
 						Location to which tiles are written:
 						<ul>
 							<li><em>file</em> (<em>default</em>): Writes .avro files to the local file system. <strong>NOTE</strong>: If this type is used on a distributed cluster, the file is saved to the worker node, not the machine that initiates the tiling job.</li>
-							<li><em>hbase</em>: Writes to HBase. See the <a href="#hbase-connection">HBase Connection</a> section below for further HBase configuration properties</li>
+							<li><em>hbase</em>: Writes to HBase. For further HBase configuration properties, see the following step.</li>
 						</ul>
 					</td>
 				</tr>
