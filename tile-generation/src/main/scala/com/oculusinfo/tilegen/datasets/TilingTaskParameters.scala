@@ -62,6 +62,7 @@ case class TilingTaskParameters (name: String,
                                  maximumLeaderLength: Option[Int] = None,
                                  drawArcs: Boolean = false)
 {
+	def getDefiniteMaximumLeaderLength: Int = maximumLeaderLength.getOrElse(TilingTaskParametersFactory.MAXIMUM_LEADER_LENGTH.getDefaultValue)
 }
 
 

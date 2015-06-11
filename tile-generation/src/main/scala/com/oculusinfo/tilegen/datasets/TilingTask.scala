@@ -216,6 +216,9 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the maximum number of bins to draw on the ends of segments, for line tiling */
 	def getMaximumLeaderLength = config.maximumLeaderLength
 
+	/** Get the maximum number of bins to draw on the ends of segments, disallowing the ability not to specify. */
+	def getDefiniteMaximumLeaderLength = config.getDefiniteMaximumLeaderLength
+
 	/** Get whether or not segments should be drawn as arcs */
 	def drawArcs = config.drawArcs
 
@@ -303,13 +306,13 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 						                                                  getMinimumSegmentLength, getMaximumLeaderLength,
 						                                                  getNumXBins, getNumYBins)
 						else StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
-						                                                getMinimumSegmentLength, getMaximumLeaderLength.get,
+						                                                getMinimumSegmentLength, getDefiniteMaximumLeaderLength,
 						                                                getNumXBins, getNumYBins)
 
 					val populateFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT] =
 						if (drawArcs) StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
 						                                                            StandardScalingFunctions.identityScale)
-						else StandardBinningFunctions.populateTileWithLineLeaders(getMaximumLeaderLength.get,
+						else StandardBinningFunctions.populateTileWithLineLeaders(getDefiniteMaximumLeaderLength,
 						                                                          StandardScalingFunctions.identityScale)
 
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
