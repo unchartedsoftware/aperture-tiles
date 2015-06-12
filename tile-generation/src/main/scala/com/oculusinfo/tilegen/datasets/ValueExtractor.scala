@@ -200,7 +200,7 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 		val path = List("serializer").asJava
 		new TileSerializerFactory(this, path, DefaultTileSerializerFactoryProvider.values.map(_.createFactory(this, path)).toList.asJava)
 	}
-	addProperty(SERIALIZATION_FRAMEWORK, Arrays.asList("serialization"))
+	addProperty(SERIALIZATION_FRAMEWORK, Arrays.asList("serializer"))
 	addChildFactory(serializerFactory)
 
 	/**
