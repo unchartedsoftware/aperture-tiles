@@ -109,17 +109,24 @@ public class LayerServiceImpl implements LayerService {
 			LayerConfiguration config = getLayerConfiguration( layerId, null );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
             if ( dataId == null ) {
+				LOGGER.error( "Couldn't determine data id for layer: "+layerId+" , please ensure the layer config file is correct." );
                 return null;
             }
 			PyramidIO pyramidIO = config.produce( PyramidIO.class );
-			return getMetaData( layerId, dataId, pyramidIO );
+			if ( pyramidIO == null ) {
+				LOGGER.error( "Couldn't produce the pyramid io instance for layer: "+layerId+" , this is most likely due to either:\n" +
+					"\t1) Missing or incorrectly configured 'data' node. Please confirm 'data.id' and 'pyramidio.*' are correct.\n" +
+					"\t2) The layer files are unavailable. Please confirm that the database is available, or the files are in the correct directory Default='res://'." );
+				return null;
+			}
+			return getCachedMetaData( layerId, dataId, pyramidIO );
 		} catch (ConfigurationException e) {
 			LOGGER.error( "Couldn't determine pyramid I/O method for {}", layerId, e );
 			return null;
 		}
 	}
 
-	private PyramidMetaData getMetaData( String layerId, String dataId, PyramidIO pyramidIO ) {
+	private PyramidMetaData getCachedMetaData( String layerId, String dataId, PyramidIO pyramidIO ) {
 		try {
 			JSONObject metadata = _metaDataCache.get( layerId );
 			if ( metadata == null ) {

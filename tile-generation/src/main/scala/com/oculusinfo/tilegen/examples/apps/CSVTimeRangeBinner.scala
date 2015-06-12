@@ -37,31 +37,16 @@ import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TimeRangeCarte
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.List
 import scala.reflect.ClassTag
-import scala.util.Try
 
-import org.apache.spark.Accumulable
 import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.TilePyramid
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.tilegen.spark.SparkConnector
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.CartesianIndexScheme
-import com.oculusinfo.tilegen.tiling.HBaseTileIO
-import com.oculusinfo.tilegen.tiling.IndexScheme
-import com.oculusinfo.tilegen.tiling.LocalTileIO
-import com.oculusinfo.tilegen.tiling.RDDBinner
-import com.oculusinfo.tilegen.tiling.SqliteTileIO
+import com.oculusinfo.tilegen.tiling.UniversalBinner
 import com.oculusinfo.tilegen.tiling.TileIO
-import com.oculusinfo.tilegen.tiling.TimeIndexScheme
 import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
 
 
@@ -73,20 +58,20 @@ import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
 
 /*
  * The following properties control how the application runs:
- * 
+ *
  *  hbase.zookeeper.quorum
  *      If tiles are written to hbase, the zookeeper quorum location needed to
  *      connect to hbase.
- * 
+ *
  *  hbase.zookeeper.port
  *      If tiles are written to hbase, the port through which to connect to
  *      zookeeper.  Defaults to 2181
- * 
+ *
  *  hbase.master
  *      If tiles are written to hbase, the location of the hbase master to
  *      which to write them
  *
- * 
+ *
  *  spark
  *      The location of the spark master.
  *      Defaults to "localhost"
@@ -95,13 +80,13 @@ import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
  *      The file system location of Spark in the remote location (and,
  *      necessarily, on the local machine too)
  *      Defaults to "/srv/software/spark-0.7.2"
- * 
+ *
  *  user
  *      A user name to stick in the job title so people know who is running the
  *      job
  *
  *
- * 
+ *
  *  oculus.tileio.type
  *      The way in which tiles are written - either hbase (to write to hbase,
  *      see hbase. properties above to specify where) or file  to write to the
@@ -111,31 +96,31 @@ import com.oculusinfo.tilegen.util.{KeyValueArgumentSource, PropertiesWrapper}
  *	oculus.tileio.sqlite.path
  * 		If 'oculus.tileio.type=sqlite' then the database can be found using this
  *   	file location.
- * 
+ *
  *	oculus.binning.pyramidNameFormat
  * 		Each pyramid will use have a name that represents its date. The name format
  *   	is a SimpleDateFormat string that will transform the pyramid's date.
- * 
+ *
  *	oculus.binning.timeField
  * 		Specifies which field the indexer should use to find the time field data.
- *   	eg. 
+ *   	eg.
  *    	if:		oculus.binning.timeField=time
  *   	then:	oculus.binning.parsing.time.index=0
  *     			oculus.binning.parsing.time.fieldType=date
  *       		oculus.binning.parsing.time.dateFormat=yyyy-MM-dd HH:mm:ss
- *     
- * 
+ *
+ *
  * 	oculus.binning.timeRange.dateFormat
- *  	The SimpleDateFormat string to interpret oculus.binning.timeRange.startDate 
- * 
+ *  	The SimpleDateFormat string to interpret oculus.binning.timeRange.startDate
+ *
  * 	oculus.binning.timeRange.startDate
  *  	This is the earliest date that should be considered valid data from the source.
  *   	Any data found prior to the startDate will be dropped.
- *  
+ *
  *  oculus.binning.timeRange.secondsPerRange
  *  	The number of seconds in each time range. Each time range will be a multiple of
- *   	secondsPerRange seconds after oculus.binning.timeRange.startDate. 
- *  
+ *   	secondsPerRange seconds after oculus.binning.timeRange.startDate.
+ *
  *  oculus.binning.tileWidth
  *  oculus.binning.tileHeight
  *  	Specifies the tile width and height. Default is 256.
@@ -164,8 +149,8 @@ object CSVTimeRangeBinner {
 		                                      description)
 		tileIO.writeMetaData(baseLocation, metaData)
 	}
-	
-	
+
+
 	def processTask[PT: ClassTag,
 	                DT: ClassTag,
 	                AT: ClassTag,
@@ -173,8 +158,7 @@ object CSVTimeRangeBinner {
 	                     task: TilingTask[PT, DT, AT, BT],
 	                     tileIO: TileIO,
 	                     properties: KeyValueArgumentSource): Unit = {
-		val binner = new RDDBinner
-		binner.debug = true
+		val binner = new UniversalBinner
 
 		val tileAnalytics = task.getTileAnalytics
 		val dataAnalytics = task.getDataAnalytics
@@ -246,7 +230,7 @@ object CSVTimeRangeBinner {
 							rangeMD.getValidZoomLevels.asScala.map(_.intValue).toSet
 						}
 					).reduce(_ ++ _)
-					
+
 					writeBaseMetaData(tileIO,
 					                  task.getTilePyramid,
 					                  task.getName,
@@ -304,9 +288,9 @@ object CSVTimeRangeBinner {
 			argIdx = argIdx + 1
 		}
 		defProps.setProperty("oculus.binning.index.type", "timerange")
-		
+
 		val startIdx = argIdx;
-		
+
 		val connectorProperties = new PropertiesWrapper(defProps)
 		val connector = connectorProperties.getSparkConnector()
 		val sc = connector.createContext(Some("Pyramid Binning"))
@@ -334,7 +318,7 @@ object CSVTimeRangeBinner {
 				Some(true))
 			// Register it as a table
 			val table = "table"+argIdx
-			reader.asSchemaRDD.registerTempTable(table)
+			reader.asDataFrame.registerTempTable(table)
 			if (cache) sqlc.cacheTable(table)
 
 			// Process the data

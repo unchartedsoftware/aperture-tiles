@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -25,7 +25,7 @@
 package com.oculusinfo.binning;
 
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.awt.geom.Point2D;

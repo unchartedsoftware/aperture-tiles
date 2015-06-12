@@ -86,6 +86,7 @@
     /**
      * Checks the layer metadata for a translation map. If it exists, returns
      * the translated entry for the provided topic.
+     * @memberof Aggregator
      *
      * @param {String} topic - The topic to translate.
      *
@@ -114,7 +115,10 @@
             i;
         // first iterate over all buckets and organize them by id
         for ( i=start; i<=end; i++ ) {
-            func( buckets[i], i-start ); // subtract start to always have index 0 based
+            // subtract start to always have index 0 based
+            if ( func( buckets[i], i-start ) ) {
+                return;
+            }
         }
     };
 

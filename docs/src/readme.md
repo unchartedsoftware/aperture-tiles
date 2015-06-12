@@ -7,7 +7,7 @@ layout: section
 Aperture Tiles <span class="tagline">tile-based visual analytics for big data</span>
 =======================================================
 
-Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore data sets containing billions of data points (or more). 
+Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore datasets containing billions of data points (or more). 
  
 Business and government leaders, operators and analysts today have more data than ever at hand to make smart, informed decisions. This information comes from various places, including social media, sensor data, financial transactions, cyber and open-source data. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.
  
@@ -15,7 +15,7 @@ Aperture Tiles uses a pyramid of tiles to structure, analyze, visualize and inte
  
 Tailored analytic overlays (e.g., alerts, pattern detection, feature extraction) can be applied to the data at every scale, ranging from the entire dataset to a very small portion of it. Seeing all of the data reveals informative patterns and provides important context to understanding insights identified by computational analytics. 
 
-Aperture Tiles is open source, and free to use under the MIT License. 
+Aperture Tiles is an open source software product managed by Uncharted Software Inc. The MIT License is used.
 
 ### Easy-to-Use Big Data Visual Analytics
 
@@ -44,7 +44,7 @@ Aperture Tiles is under ongoing development and is freely available for download
 ###Interested in Learning More?
 
 * [Tour](tour/): Take our tour to learn more about Aperture Tiles.
-* [Documentation](docs/development/how-to/quickstart/): Learn how to install, implement and test your Aperture Tiles applications.
-	* [Quick Start](docs/development/how-to/quickstart/): Our Julia data set provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
+* [Documentation](docs/development/getting-started/quick-start/): Learn how to install, implement and test your Aperture Tiles applications.
+	* [Quick Start](docs/development/getting-started/quick-start/): Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
 * [Live Examples](demos/): See our demos page to see live examples of the capabilities of Aperture Tiles.
 * [Download](download/): For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.

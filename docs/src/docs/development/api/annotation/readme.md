@@ -4,7 +4,7 @@ subsection: Development
 chapter: API
 topic: Annotation
 permalink: docs/development/api/annotation/
-layout: submenu
+layout: chapter
 ---
 
 # Annotation Service #
@@ -17,53 +17,46 @@ The Aperture Tiles Annotation Service REST API is based on the Aperture Tiles Bi
 
 A single annotation received from a GET request or submitted in a write, modify or remove POST request.
 
-<div class="details props">
-	<div class="innerProps">
-		<h3 class="sectionTitle">
-			Method Detail
-		</h3>
+<div class="props">
+	<h3 class="sectionTitle">Method Detail</h3>
+	<dl class="detailList">
+		<dt class="heading">Parameters:</dt>
 		
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt class="heading">Parameters:</dt>
+		<dt>
+			<span class="light fixedFont">{Integer}</span> <b>level</b>
+		</dt>
+		<dd>Native zoom level in which the annotation is inserted.</dd>
+		
+		<dt>
+			<span class="light fixedFont">{Real or Array of Real}</span> <b>x</b>
+		</dt>
+		<dd>Raw x data coordinate of the annotation. Either a Real or an Array containing two Real [min, max] for range-based annotations.</dd>
+		
+		<dt>
+			<span class="light fixedFont">{Real or Array of Real}</span> <b>y</b>
+		</dt>
+		<dd>Raw y data coordinate of the annotation. Either a Real or an Array containing two Real [min, max] for range-based annotations.</dd>
+		
+		<dt>
+			<span class="light fixedFont">{JSON}</span> <b>range</b>
+		</dt>
+		<dd><em>min</em> and <em>max</em> key value pairs indicating the zoom-level aggregation range (inclusive). Given as Integers.</dd>
 				
-				<dt>
-					<span class="light fixedFont">{Integer}</span> <b>level</b>
-				</dt>
-				<dd>Native zoom level in which the annotation is inserted.</dd>
+		<dt>
+			<span class="light fixedFont">{String}</span> <b>group</b>
+		</dt>
+		<dd>Exclusive groupings by which annotations can be filtered.</dd>
 				
-				<dt>
-					<span class="light fixedFont">{Real or Array of Real}</span> <b>x</b>
-				</dt>
-				<dd>Raw x data coordinate of the annotation. Either a Real or an Array containing two Real [min, max] for range-based annotations.</dd>
+		<dt>
+			<span class="light fixedFont">{JSON}</span> <b>data</b>
+		</dt>
+		<dd>Additional information to be stored within the tile.</dd>
 				
-				<dt>
-					<span class="light fixedFont">{Real or Array of Real}</span> <b>y</b>
-				</dt>
-				<dd>Raw y data coordinate of the annotation. Either a Real or an Array containing two Real [min, max] for range-based annotations.</dd>
-				
-				<dt>
-					<span class="light fixedFont">{JSON}</span> <b>range</b>
-				</dt>
-				<dd><em>min</em> and <em>max</em> key value pairs indicating the zoom-level aggregation range (inclusive). Given as Integers.</dd>
-						
-				<dt>
-					<span class="light fixedFont">{String}</span> <b>group</b>
-				</dt>
-				<dd>Exclusive groupings by which annotations can be filtered.</dd>
-						
-				<dt>
-					<span class="light fixedFont">{JSON}</span> <b>data</b>
-				</dt>
-				<dd>Additional information to be stored within the tile.</dd>
-						
-				<dt>
-					<span class="light fixedFont">{JSON}</span> <b>certificate</b>
-				</dt>
-				<dd>Contains an RFC4122 version 4 compliant UUID and a Unix timestamp. Returned by the server upon successful write and modify operations.</dd>
-			</dl>
-		</ul>
-	</div>
+		<dt>
+			<span class="light fixedFont">{JSON}</span> <b>certificate</b>
+		</dt>
+		<dd>Contains an RFC4122 version 4 compliant UUID and a Unix timestamp. Returned by the server upon successful write and modify operations.</dd>
+	</dl>
 </div>
 
 Example:
@@ -91,28 +84,21 @@ Example:
 
 A collection of annotations from a single GET request. Contains all annotations (aggregated by bin-key) that pass through the current filter configuration.
 
-<div class="details props">
-	<div class="innerProps">
-		<h3 class="sectionTitle">
-			Method Detail
-		</h3>
-		
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt class="heading">Parameters:</dt>
-				
-				<dt>
-					<span class="light fixedFont">{JSON}</span> <b>title</b>
-				</dt>
-				<dd>The respective tile index containing the level, x index and y index (where 0,0 is bottom left).</dd>
-				
-				<dt>
-					<span class="light fixedFont">{JSON}</span> <b>annotations</b>
-				</dt>
-				<dd>An array of annotations aggregated by bin-key.</dd>
-			</dl>
-		</ul>
-	</div>
+<div class="props">
+	<h3 class="sectionTitle">Method Detail</h3>
+	<dl class="detailList">
+		<dt class="heading">Parameters:</dt>
+
+		<dt>
+			<span class="light fixedFont">{JSON}</span> <b>title</b>
+		</dt>
+		<dd>The respective tile index containing the level, x index and y index (where 0,0 is bottom left).</dd>
+
+		<dt>
+			<span class="light fixedFont">{JSON}</span> <b>annotations</b>
+		</dt>
+		<dd>An array of annotations aggregated by bin-key.</dd>
+	</dl>
 </div>
 
 Example:
@@ -154,28 +140,21 @@ Example:
 
 An Annotation Certificate is comprised of the UUID and timestamp from a successful POST request. The certificate is used during remove and modify operations to ensure client-server coherency in the event of live editing conflicts. When a certificate in a supplied annotation does not match that held by the server, the request is ignored and an error status is returned to the client.
 
-<div class="details props">
-	<div class="innerProps">
-		<h3 class="sectionTitle">
-			Method Detail
-		</h3>
-		
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt class="heading">Parameters:</dt>
-				
-				<dt>
-					<span class="light fixedFont">{String}</span> <b>uuid</b>
-				</dt>
-				<dd>An RFC 4122 Version 4 compliant UUID generated by the server.</dd>
-				
-				<dt>
-					<span class="light fixedFont">{String}</span> <b>timestamp</b>
-				</dt>
-				<dd>A Unix timestamp generated by the server.</dd>
-			</dl>
-		</ul>
-	</div>
+<div class="props">
+	<h3 class="sectionTitle">Method Detail</h3>
+	<dl class="detailList">
+		<dt class="heading">Parameters:</dt>
+
+		<dt>
+			<span class="light fixedFont">{String}</span> <b>uuid</b>
+		</dt>
+		<dd>An RFC 4122 Version 4 compliant UUID generated by the server.</dd>
+
+		<dt>
+			<span class="light fixedFont">{String}</span> <b>timestamp</b>
+		</dt>
+		<dd>A Unix timestamp generated by the server.</dd>
+	</dl>
 </div>
 
 Example:
@@ -205,91 +184,69 @@ Returns an Annotation Tile for a specified filter configuration UUID, annotation
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/annotation/{layerId}/{level}/{x}/{y}/{z}.{ext}</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`GET`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Output MIME Type</td>
-						<td class="nameDescription">
-							<div class="description">application/json</div>
-						</td>
-					</tr>
-					
-					<tr class='item3'>
-						<td class="attributes">Output</td>
-						<td class="nameDescription">
-							<div class="description">Annotation Tile</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/annotation/{layerId}/{level}/{x}/{y}/{z}.{ext}</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`GET`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Output MIME Type</td>
+				<td class="nameDescription">
+					<div class="description">application/json</div>
+				</td>
+			</tr>
+
+			<tr class='item3'>
+				<td class="attributes">Output</td>
+				<td class="nameDescription">
+					<div class="description">Annotation Tile</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 <div class="details props">
-	<div class="innerProps">
-		<h3 class="sectionTitle">
-			Method Detail
-		</h3>
+	<h3 class="sectionTitle">Method Detail</h3>
+	<dl class="detailList">
+		<dt class="heading">URL Parameters:</dt>
 		
-		<ul class="methodDetail" id="MethodDetail">
-			<dl class="detailList params">
-				<dt class="heading">URL Parameters:</dt>
+		<dt>layer</dt>
+		<dd>Annotation layer ID.</dd>
+		
+		<dt>uuid</dt>
+		<dd>Filter configuration UUID. Submit <em>default</em> to use the default server filter configuration.</dd>
+		
+		<dt>level</dt>
+		<dd>Zoom level, where 0 is highest level of aggregation.</dd>
+		
+		<dt>x</dt>
+		<dd>Horizontal tile index, where 0 represents the leftmost column of tiles.</dd>
 				
-				<dt>
-					<b>layer</b>
-				</dt>
-				<dd>Annotation layer ID.</dd>
+		<dt>y</dt>
+		<dd>Vertical tile index, where 0 represents the bottommost row of tiles.</dd>
 				
-				<dt>
-					<b>uuid</b>
-				</dt>
-				<dd>Filter configuration UUID. Submit <em>default</em> to use the default server filter configuration.</dd>
-				
-				<dt>
-					<b>level</b>
-				</dt>
-				<dd>Zoom level, where 0 is highest level of aggregation.</dd>
-				
-				<dt>
-					<b>x</b>
-				</dt>
-				<dd>Horizontal tile index, where 0 represents the leftmost column of tiles.</dd>
-						
-				<dt>
-					<b>y</b>
-				</dt>
-				<dd>Vertical tile index, where 0 represents the bottommost row of tiles.</dd>
-						
-				<dt>
-					<b>.ext</b>
-				</dt>
-				<dd>The extension of the annotation format. Only JSON is currently supported.</dd>
-			</dl>
-		</ul>
-	</div>
+		<dt>.ext</dt>
+		<dd>The extension of the annotation format. Only JSON is currently supported.</dd>
+	</dl>
 </div>
 
 Example request:
@@ -339,119 +296,114 @@ Submits a new annotation to be written to the server. Upon success, a certificat
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/annotation/{layerId}/</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`POST`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Output MIME Type</td>
-						<td class="nameDescription">
-							<div class="description">application/json</div>
-						</td>
-					</tr>
-					
-					<tr class='item3'>
-						<td class="attributes">Output</td>
-						<td class="nameDescription">
-							<div class="description">AnnotationCertificate</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/annotation/{layerId}/</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`POST`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Output MIME Type</td>
+				<td class="nameDescription">
+					<div class="description">application/json</div>
+				</td>
+			</tr>
+
+			<tr class='item3'>
+				<td class="attributes">Output</td>
+				<td class="nameDescription">
+					<div class="description">AnnotationCertificate</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 <div class="props">
 	<h3 class="sectionTitle">Method Detail</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Request Parameter</th>
-						<th scope="col">Description</th>
-						<th scope="col">Data Type</th>
-						<th scope="col">Single/Multiple</th>
-						<th scope="col">Required?</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">type</td>
-						<td class="nameDescription">
-							<div class="description">"write"</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">String</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">layer</td>
-						<td class="nameDescription">
-							<div class="description">annotation layer id</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">String</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">annotation</td>
-						<td class="nameDescription">
-							<div class="description">annotation</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">JSON</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Request Parameter</th>
+				<th scope="col">Description</th>
+				<th scope="col">Data Type</th>
+				<th scope="col">Single/Multiple</th>
+				<th scope="col">Required?</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">type</td>
+				<td class="nameDescription">
+					<div class="description">"write"</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">String</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">layer</td>
+				<td class="nameDescription">
+					<div class="description">annotation layer id</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">String</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">annotation</td>
+				<td class="nameDescription">
+					<div class="description">annotation</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">JSON</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 ```
 
@@ -493,119 +445,114 @@ Submits a modify request to the server. If the certificate in the annotation sta
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/annotation/{layerId}/</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">Method</td>
-						<td class="nameDescription">
-							<div class="description">`POST`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Output MIME Type</td>
-						<td class="nameDescription">
-							<div class="description">application/json</div>
-						</td>
-					</tr>
-					
-					<tr class='item3'>
-						<td class="attributes">Output</td>
-						<td class="nameDescription">
-							<div class="description">AnnotationCertificate</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/annotation/{layerId}/</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">Method</td>
+				<td class="nameDescription">
+					<div class="description">`POST`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Output MIME Type</td>
+				<td class="nameDescription">
+					<div class="description">application/json</div>
+				</td>
+			</tr>
+
+			<tr class='item3'>
+				<td class="attributes">Output</td>
+				<td class="nameDescription">
+					<div class="description">AnnotationCertificate</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 <div class="props">
 	<h3 class="sectionTitle">Method Detail</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Request Parameter</th>
-						<th scope="col">Description</th>
-						<th scope="col">Data Type</th>
-						<th scope="col">Single/Multiple</th>
-						<th scope="col">Required?</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">type</td>
-						<td class="nameDescription">
-							<div class="description">"modify"</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">String</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">layer</td>
-						<td class="nameDescription">
-							<div class="description">annotation layer id</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">String</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">current</td>
-						<td class="nameDescription">
-							<div class="description">The annotation after modification. Must contain a valid certificate key.</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">JSON</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Request Parameter</th>
+				<th scope="col">Description</th>
+				<th scope="col">Data Type</th>
+				<th scope="col">Single/Multiple</th>
+				<th scope="col">Required?</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">type</td>
+				<td class="nameDescription">
+					<div class="description">"modify"</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">String</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">layer</td>
+				<td class="nameDescription">
+					<div class="description">annotation layer id</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">String</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">current</td>
+				<td class="nameDescription">
+					<div class="description">The annotation after modification. Must contain a valid certificate key.</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">JSON</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 ```
 
@@ -651,119 +598,114 @@ Submits a removal request to the server. If the certificate is valid, the operat
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Attributes</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">URL</td>
-						<td class="nameDescription">
-							<div class="description">/{version}/annotation/{layerId}/</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">HTTP Method</td>
-						<td class="nameDescription">
-							<div class="description">`POST`</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">Output MIME Type</td>
-						<td class="nameDescription">
-							<div class="description">application/json</div>
-						</td>
-					</tr>
-					
-					<tr class='item3'>
-						<td class="attributes">Output</td>
-						<td class="nameDescription">
-							<div class="description">JSON</div>
-						</td>
-					</tr>
-					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Attributes</th>
+				<th scope="col">Description</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">URL</td>
+				<td class="nameDescription">
+					<div class="description">/{version}/annotation/{layerId}/</div>
+				</td>
+			</tr>
+
+			<tr class='item1'>
+				<td class="attributes">HTTP Method</td>
+				<td class="nameDescription">
+					<div class="description">`POST`</div>
+				</td>
+			</tr>
+
+			<tr class='item2'>
+				<td class="attributes">Output MIME Type</td>
+				<td class="nameDescription">
+					<div class="description">application/json</div>
+				</td>
+			</tr>
+
+			<tr class='item3'>
+				<td class="attributes">Output</td>
+				<td class="nameDescription">
+					<div class="description">JSON</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 <div class="props">
 	<h3 class="sectionTitle">Method Detail</h3>
-		<nav>
-			<table class="summaryTable">
-				<thead>
-					<tr>
-						<th scope="col">Request Parameter</th>
-						<th scope="col">Description</th>
-						<th scope="col">Data Type</th>
-						<th scope="col">Single/Multiple</th>
-						<th scope="col">Required?</th>
-					</tr>
-				</thead>
-				
-				<tbody>
-					<tr class='item0'>
-						<td class="attributes">type</td>
-						<td class="nameDescription">
-							<div class="description">"write"</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">String</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>
-					
-					<tr class='item1'>
-						<td class="attributes">layer</td>
-						<td class="nameDescription">
-							<div class="description">annotation layer id</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">String</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>
-					
-					<tr class='item2'>
-						<td class="attributes">certificate</td>
-						<td class="nameDescription">
-							<div class="description">The certificate of the annotation to be removed.</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">JSON</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Single</div>
-						</td>
-						<td class="nameDescription">
-							<div class="description">Yes</div>
-						</td>
-					</tr>					
-				</tbody>
-			</table>
-		</nav>
+	<table class="summaryTable">
+		<thead>
+			<tr>
+				<th scope="col">Request Parameter</th>
+				<th scope="col">Description</th>
+				<th scope="col">Data Type</th>
+				<th scope="col">Single/Multiple</th>
+				<th scope="col">Required?</th>
+			</tr>
+		</thead>
+		
+		<tbody>
+			<tr class='item0'>
+				<td class="attributes">type</td>
+				<td class="nameDescription">
+					<div class="description">"write"</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">String</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+			
+			<tr class='item1'>
+				<td class="attributes">layer</td>
+				<td class="nameDescription">
+					<div class="description">annotation layer id</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">String</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+			
+			<tr class='item2'>
+				<td class="attributes">certificate</td>
+				<td class="nameDescription">
+					<div class="description">The certificate of the annotation to be removed.</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">JSON</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Single</div>
+				</td>
+				<td class="nameDescription">
+					<div class="description">Yes</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 Example request:
 
-```html
+```http
 POST http://localhost:8080/instagram/rest/v1.0/annotation/parlor-annotations/
 ```
 

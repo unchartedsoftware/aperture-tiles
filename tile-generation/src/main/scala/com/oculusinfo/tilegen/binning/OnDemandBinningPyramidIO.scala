@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2015 Uncharted Software Inc.
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -44,10 +44,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.{Map => MutableMap}
 import scala.reflect.ClassTag
-import scala.util.{Try, Success, Failure}
-
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
 
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileData
@@ -56,12 +52,13 @@ import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.metadata.PyramidMetaData
-import com.oculusinfo.factory.util.Pair
 
 import com.oculusinfo.tilegen.datasets.{CSVReader, CSVDataSource, TilingTask}
-import com.oculusinfo.tilegen.tiling.RDDBinner
+import com.oculusinfo.tilegen.tiling.UniversalBinner
 import com.oculusinfo.tilegen.util.{PropertiesWrapper, Rectangle}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
+import com.oculusinfo.tilegen.tiling.StandardBinningFunctions
+import com.oculusinfo.tilegen.tiling.BinningParameters
 
 
 
@@ -81,7 +78,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 	def getConsolidationPartitions = consolidationPartitions
 
 	def getTask (pyramidId: String) = tasks(pyramidId)
-	
+
 	def initializeForWrite (pyramidId: String): Unit = {
 	}
 
@@ -118,7 +115,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						Some(true))
 					// Register it as a table
 					val table = TilingTask.rectifyTableName("table "+pyramidId)
-					reader.asSchemaRDD.registerTempTable(table)
+					reader.asDataFrame.registerTempTable(table)
 					if (cache) sqlc.cacheTable(table)
 
 					// Create our tiling task
@@ -177,7 +174,7 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 	/**
 	 * Direct programatic initialization.
-	 * 
+	 *
 	 * Temporary route until we get full pipeline configuration
 	 */
 	def initializeDirectly (pyramidId: String, task: TilingTask[_, _, _, _]): Unit ={
@@ -222,16 +219,15 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 				val boundsTest = bounds.getSerializableContainmentTest(pyramid, xBins, yBins)
 				val cartesianSpreaderFcn = bounds.getSpreaderFunction[PT](pyramid, xBins, yBins)
-				val spreaderFcn: Seq[Any] => TraversableOnce[(TileIndex, BinIndex)] =
+				val locaterFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])] =
 					index => {
 						val cartesianIndex = indexScheme.toCartesian(index)
 
 						val spread = cartesianSpreaderFcn(cartesianIndex._1, cartesianIndex._2)
-						spread
+						spread.map(r => (r._1, Array(r._2)))
 					}
 
-				val binner = new RDDBinner
-				binner.debug = true
+				val binner = new UniversalBinner
 
 				val results: Array[TileData[BT]] = task.transformRDD[TileData[BT]](
 					rdd => {
@@ -239,9 +235,10 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 						                                             binningAnalytic,
 						                                             task.getTileAnalytics,
 						                                             task.getDataAnalytics,
-						                                             spreaderFcn,
-						                                             consolidationPartitions,
-						                                             task.getTileType)
+						                                             locaterFcn,
+						                                             StandardBinningFunctions.populateTileIdentity,
+						                                             new BinningParameters(tileType = task.getTileType,
+						                                                                   maxPartitions = consolidationPartitions))
 					}
 				).collect
 
@@ -304,5 +301,5 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 
 	def removeTiles (id: String, tiles: JavaIterable[TileIndex]  ) : Unit =
 		throw new IOException("removeTiles not currently supported for OnDemandBinningPyramidIO")
-	
+
 }

@@ -48,9 +48,9 @@
         if ( shouldDraw ) {
             this.positionTile();
             dataUrl = this.layer.getURL( this.bounds );
-
-            if ( dataUrl !== this.url ) {
-
+            dataUrl = ( dataUrl instanceof Array ) ? dataUrl : [ dataUrl ];
+            if ( !_.isEqual( dataUrl, this.url ) ) {
+                // format request
                 this.url = dataUrl;
                 this.tileData = null;
                 this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
@@ -58,8 +58,10 @@
 
                 // new url to render
                 if ( this.isLoading ) {
-                    this.dataRequest.abort();
-                    this.dataRequest = null;
+                    this.dataRequests.forEach( function( request ) {
+                        request.fail();
+                    });
+                    this.dataRequests = null;
                     this.isLoading = false;
                 }
 
@@ -71,29 +73,50 @@
                 // hide tile contents until have data
                 this.div.style.visibility = 'hidden';
                 this.isLoading = true;
-                this.dataRequest = $.ajax({
-                    url: this.url
-                }).then(
-                    function( data ) {
-                        if ( dataUrl === this.url ) {
-                            that.tileData = data;
-                            that.renderTile( that.div, that.tileData );
+                var deferreds = [];
+
+                this.dataRequests = dataUrl.map( function( url ) {
+                    var deferred = $.Deferred();
+                    deferreds.push( deferred );
+                    return $.ajax({
+                        url: url
+                    }).then(
+                        function( results ) {
+                            deferred.resolve( results );
+                        },
+                        function( xhr ) {
+                            console.error( xhr.responseText );
+                            console.error( xhr );
                         }
+                    ).always(
+                        function() {
+                            that.isLoading = false;
+                            that.dataRequest = null;
+                    });
+                });
+                $.when.apply( $, deferreds ).then(
+                    function() {
+                        that.tileData = [];
+                        var i;
+                        for ( i=0; i<arguments.length; i++ ) {
+                            that.tileData.push( arguments[i] );
+                        }
+                        that.renderTile( that.div, that.tileData );
                     },
                     function( xhr ) {
                         console.error( xhr.responseText );
                         console.error( xhr );
                     }
-                ).always( function() {
-                    that.isLoading = false;
-                    that.dataRequest = null;
-                });
-
+                ).always(
+                    function() {
+                        that.isLoading = false;
+                        that.dataRequest = null;
+                    }
+                );
             } else {
                 // already have right data, just render
                 this.renderTile( this.div, this.tileData );
             }
-
         } else if ( shouldDraw === false ) {
             this.unload();
         }
@@ -134,7 +157,7 @@
         }
     };
 
-    OpenLayers.Tile.HTML.prototype.renderTile = function(container, data) {
+    OpenLayers.Tile.HTML.prototype.renderTile = function( container, data ) {
 
         if ( !this.layer || !this.div ) {
             // if the div or layer is no longer available, exit gracefully
@@ -152,30 +175,56 @@
         div.style.visibility = 'inherit';
         div.innerHTML = "";
 
-        if ( !data || ( !data.tile && !data.hits ) ) {
-            // exit early if not data to render
-            return;
-        }
-
-        if ( data.hits ) {
-            // add tile index to elastic search result
-            data.index = this.tileIndex;
-        }
-
+        // get renderer
         renderer = this.layer.renderer;
-        aggregator = renderer.aggregator;
-
-        // if renderer is attached, use it
         if ( typeof renderer === "function" ) {
             renderer = renderer.call( this.layer, this.bounds );
         }
-        // if aggregator, aggregate the data
-        if ( aggregator ) {
-            data.tile.meta = {
-                raw: data.tile.meta.map.bins,
-                aggregated: aggregator.aggregate( data.tile.meta.map.bins )
-            };
+
+        // hide standard tile hover interaction
+        if ( renderer.spec.hideTile ) {
+            div.className = div.className + " hideTile";
         }
+
+        if ( !data ) {
+            // no data
+            return;
+        }
+
+        // wrap it in an array for generic handling
+        data = ( data instanceof Array ) ? data : [ data ];
+
+        // ensure there is at least one set of data
+        // tile data is under 'tile', elasticsearch is under 'hits'
+        var hasTileOrHits = false;
+        data.forEach( function( datum ) {
+            if ( datum.tile || datum.hits ) {
+                hasTileOrHits = true;
+            }
+        });
+        if ( !hasTileOrHits ) {
+            return;
+        }
+
+        // if aggregator, aggregate the data
+        aggregator = renderer.aggregator;
+        if ( aggregator ) {
+            data.forEach( function( datum ) {
+                if ( datum.tile ) {
+                    datum.tile.meta = {
+                        raw: datum.tile.meta.map.bins,
+                        aggregated: aggregator.aggregate( datum.tile.meta.map.bins )
+                    };
+                } else {
+                    datum.tile = null;
+                }
+            });
+        }
+
+        // unwrap if only a single entry
+        data = ( data.length === 1 ) ? data[0] : data;
+
+        // render data
         render = renderer.render( data );
         html = render.html;
         this.entries = render.entries;
@@ -191,10 +240,6 @@
             div.innerHTML = html;
         }
 
-        // hide standard tile hover interaction
-        if ( renderer.spec.hideTile ) {
-            div.className = div.className + " hideTile";
-        }
         // inject selected entry classes
         renderer.injectEntries( div.children, this.entries );
         // call renderer hook function

@@ -35,7 +35,7 @@ import com.oculusinfo.binning.impl.AOITilePyramid
 
 trait IndexScheme[T] {
 	def toCartesian (t: T): (Double, Double)
-	
+
 	//TODO -- toCartesianEndpoints is only used for RDDLineBinner
 	//so ideally this should be moved to LineSegmentIndexScheme in RDDLineBinner?
 	def toCartesianEndpoints (t: T): (Double, Double, Double, Double)
@@ -62,12 +62,14 @@ trait NumberConverter {
 }
 
 class CartesianSchemaIndexScheme extends IndexScheme[Seq[Any]] with NumberConverter with Serializable {
+	private def checkForZero (coords: Seq[Any], index: Int): Double =
+		asDouble(coords.lift(index).getOrElse(0.0))
 
 	def toCartesian (coords: Seq[Any]): (Double, Double) =
-		(asDouble(coords(0)), asDouble(coords(1)))
+		(checkForZero(coords, 0), checkForZero(coords, 1))
 
 	def toCartesianEndpoints (coords: Seq[Any]): (Double, Double, Double, Double) =
-		(asDouble(coords(0)), asDouble(coords(1)), asDouble(coords(2)), asDouble(coords(3)))
+		(checkForZero(coords, 0), checkForZero(coords, 1), checkForZero(coords, 2), checkForZero(coords, 3))
 }
 
 class TimeRangeCartesianSchemaIndexScheme (startDate: Double, secsPerPeriod: Double)
@@ -89,7 +91,7 @@ class IPv4ZCurveSchemaIndexScheme extends IndexScheme[Seq[Any]] with Serializabl
 		val value = values(0)
 		val ipAddress: Array[Byte] = value match {
 			case s: String => s.split("\\.").map(_.trim.toByte)
-			case a: ArrayBuffer[Byte] => a.toArray
+			case a: ArrayBuffer[_] => a.asInstanceOf[ArrayBuffer[Byte]].toArray
 		}
 		def getXDigit (byte: Byte): Long =
 			(((byte & 0x40) >> 3) |

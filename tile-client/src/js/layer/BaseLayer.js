@@ -55,7 +55,8 @@
         Layer.call( this, spec );
         // set defaults
         this.type = spec.type || "blank";
-				this.url = spec.url;
+		this.url = spec.url;
+		this.attribution = spec.attribution;
         this.options = spec.options || {
             color : "rgb(0,0,0)"
         };
@@ -66,7 +67,7 @@
 
     /**
      * Activates the layer object. This should never be called manually.
-     * @memberof AnnotationLayer
+     * @memberof BaseLayer
      * @private
      */
     BaseLayer.prototype.activate = function() {
@@ -91,7 +92,17 @@
 				// tms layer
                 this.olLayer = new OpenLayers.Layer.TMS( "BaseLayer", this.url, this.options );
                 break;
+			case "xyz":
+				// xyz layer
+                this.olLayer = new OpenLayers.Layer.XYZ( "BaseLayer", this.url, this.options );
+                break;
         }
+		if ( this.attribution ) {
+			$( this.map.getElement() ).append(
+				'<div class=baselayer-attribution>' +
+				this.attribution +
+				'</div>' );
+		}
 		// create baselayer and set as baselayer
         this.map.olMap.addLayer( this.olLayer );
         this.map.olMap.setBaseLayer( this.olLayer );
@@ -102,7 +113,7 @@
         }
 		if ( this.olLayer.mapObject ) {
 			var gmapContainer = this.olLayer.mapObject.getDiv();
-			$( gmapContainer ).css("background-color", "rgba(0,0,0,0)");
+			$( gmapContainer ).css( "background-color", "rgba(0,0,0,0)" );
 		}
         // ensure baselayer remains bottom layer
 		$( this.olLayer.div ).css( 'z-index', -1 );
@@ -114,7 +125,7 @@
 
     /**
      * Dectivates the layer object. This should never be called manually.
-     * @memberof AnnotationLayer
+     * @memberof BaseLayer
      * @private
      */
     BaseLayer.prototype.deactivate = function() {
@@ -122,8 +133,28 @@
             this.map.olMap.removeLayer( this.olLayer );
             this.olLayer.destroy();
         }
+		if ( this.attribution ) {
+			$( this.map.getElement() ).find('.baselayer-attribution').remove();
+		}
         this.map.getElement().style['background-color'] = '';
         PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
+    };
+
+	/**
+     * Set the z index of the layer.
+     * @memberof BaseLayer
+     *
+     * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
+     */
+	BaseLayer.prototype.resetZIndex = function () {
+        // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
+        // set the z-index of the layer dev. setLayerIndex sets a relative
+        // index based on current map layers, which then sets a z-index. This
+        // caused issues with async layer loading.
+        if ( this.olLayer ) {
+            $( this.olLayer.div ).css( 'z-index', -1 );
+        }
+        PubSub.publish( this.getChannel(), { field: 'zIndex', value: -1 });
     };
 
 	module.exports = BaseLayer;

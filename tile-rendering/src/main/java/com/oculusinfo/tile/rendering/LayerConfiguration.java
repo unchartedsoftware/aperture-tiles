@@ -61,7 +61,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     /**
      * public configuration paths, properties under these paths are accessible to the client.
      */
-	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","tileTransform" ) );
+	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileTransform"));
     public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
     public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
     public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
@@ -91,7 +91,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	    1);
 	public static final StringProperty PIXEL_SHAPE = new StringProperty("pixelShape",
 		    "Used by the standard heatmap renderer to allow either circular or square 'pixels' if coarseness > 2x2. Valid settings are 'circle' (default) or 'square'.",
-		    "circle");	
+		    "circle");
 	public static final IntegerProperty OUTPUT_WIDTH = new IntegerProperty("outputWidth",
 	    "The output image width, defaults to the standard 256",
 	    256);
@@ -208,9 +208,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		_levelMaximum = levelMaximum;
 		_levelMinimum = levelMinimum;
 		try {
-			TileDataImageRenderer<?> renderer = produce(TileDataImageRenderer.class);
-			if (null != renderer) {
-				Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
+			TileTransformer<?> tileTransformer = produce(TileTransformer.class);
+			if (null != tileTransformer) {
+				Pair<Double, Double> extrema = tileTransformer.getTransformedExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
 			}
 		} catch (ConfigurationException e) {

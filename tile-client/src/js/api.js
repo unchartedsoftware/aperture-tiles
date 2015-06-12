@@ -38,11 +38,15 @@
         AnnotationLayer: require('./layer/AnnotationLayer'),
         AxisLayer: require('./layer/AxisLayer'),
         BaseLayer: require('./layer/BaseLayer'),
+        KMLLayer: require('./layer/KMLLayer'),
         ServerLayer: require('./layer/ServerLayer'),
         ClientLayer: require('./layer/ClientLayer'),
+        MultiUrlClientLayer: require('./layer/MultiUrlClientLayer'),
         Carousel: require('./layer/Carousel'),
         LayerUtil: require('./layer/LayerUtil'),
         VectorLayer: require('./layer/VectorLayer'),
+        HtmlMarker: require('./layer/HtmlMarker'),
+        HtmlMarkerLayer: require('./layer/HtmlMarkerLayer'),
         Layer: require('./layer/Layer'),
 
         // Renderer

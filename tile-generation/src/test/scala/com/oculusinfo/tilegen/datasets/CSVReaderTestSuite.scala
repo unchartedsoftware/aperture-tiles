@@ -28,6 +28,7 @@ package com.oculusinfo.tilegen.datasets
 
 
 import java.util.{Calendar, Properties, TimeZone}
+import org.apache.spark.sql.types._
 
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.log4j.{Level, LogManager}
@@ -63,33 +64,33 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val configuration = new Properties()
 
 		configuration.setProperty("oculus.binning.parsing.separator",        ",")
-		configuration.setProperty("oculus.binning.parsing.bool.index",       "0")
-		configuration.setProperty("oculus.binning.parsing.bool.fieldType",   "boolean")
-		configuration.setProperty("oculus.binning.parsing.byte.index",       "1")
-		configuration.setProperty("oculus.binning.parsing.byte.fieldType",   "byte")
-		configuration.setProperty("oculus.binning.parsing.short.index",      "2")
-		configuration.setProperty("oculus.binning.parsing.short.fieldType",  "short")
-		configuration.setProperty("oculus.binning.parsing.int.index",        "3")
-		configuration.setProperty("oculus.binning.parsing.int.fieldType",    "int")
-		configuration.setProperty("oculus.binning.parsing.long.index",       "4")
-		configuration.setProperty("oculus.binning.parsing.long.fieldType",   "long")
-		configuration.setProperty("oculus.binning.parsing.float.index",      "5")
-		configuration.setProperty("oculus.binning.parsing.float.fieldType",  "float")
-		configuration.setProperty("oculus.binning.parsing.double.index",     "6")
-		configuration.setProperty("oculus.binning.parsing.double.fieldType", "double")
-		configuration.setProperty("oculus.binning.parsing.str.index",        "7")
-		configuration.setProperty("oculus.binning.parsing.str.fieldType",    "string")
-		configuration.setProperty("oculus.binning.parsing.ip.index",         "8")
-		configuration.setProperty("oculus.binning.parsing.ip.fieldType",     "ipv4")
-		configuration.setProperty("oculus.binning.parsing.date.index",       "9")
-		configuration.setProperty("oculus.binning.parsing.date.fieldType",   "date")
-		configuration.setProperty("oculus.binning.parsing.date.dateFormat",  "HH:mm:ss")
-		configuration.setProperty("oculus.binning.parsing.prop.index",       "10")
-		configuration.setProperty("oculus.binning.parsing.prop.fieldType",   "propertyMap")
-		configuration.setProperty("oculus.binning.parsing.prop.property",               "n")
-		configuration.setProperty("oculus.binning.parsing.prop.propertyType",           "int")
-		configuration.setProperty("oculus.binning.parsing.prop.propertySeparator",      ";")
-		configuration.setProperty("oculus.binning.parsing.prop.propertyValueSeparator", "=")
+		configuration.setProperty("oculus.binning.parsing.cbool.index",       "0")
+		configuration.setProperty("oculus.binning.parsing.cbool.fieldType",   "boolean")
+		configuration.setProperty("oculus.binning.parsing.cbyte.index",       "1")
+		configuration.setProperty("oculus.binning.parsing.cbyte.fieldType",   "byte")
+		configuration.setProperty("oculus.binning.parsing.cshort.index",      "2")
+		configuration.setProperty("oculus.binning.parsing.cshort.fieldType",  "short")
+		configuration.setProperty("oculus.binning.parsing.cint.index",        "3")
+		configuration.setProperty("oculus.binning.parsing.cint.fieldType",    "int")
+		configuration.setProperty("oculus.binning.parsing.clong.index",       "4")
+		configuration.setProperty("oculus.binning.parsing.clong.fieldType",   "long")
+		configuration.setProperty("oculus.binning.parsing.cfloat.index",      "5")
+		configuration.setProperty("oculus.binning.parsing.cfloat.fieldType",  "float")
+		configuration.setProperty("oculus.binning.parsing.cdouble.index",     "6")
+		configuration.setProperty("oculus.binning.parsing.cdouble.fieldType", "double")
+		configuration.setProperty("oculus.binning.parsing.cstr.index",        "7")
+		configuration.setProperty("oculus.binning.parsing.cstr.fieldType",    "string")
+		configuration.setProperty("oculus.binning.parsing.cip.index",         "8")
+		configuration.setProperty("oculus.binning.parsing.cip.fieldType",     "ipv4")
+		configuration.setProperty("oculus.binning.parsing.cdate.index",       "9")
+		configuration.setProperty("oculus.binning.parsing.cdate.fieldType",   "date")
+		configuration.setProperty("oculus.binning.parsing.cdate.dateFormat",  "HH:mm:ss")
+		configuration.setProperty("oculus.binning.parsing.cprop.index",       "10")
+		configuration.setProperty("oculus.binning.parsing.cprop.fieldType",   "propertyMap")
+		configuration.setProperty("oculus.binning.parsing.cprop.property",               "n")
+		configuration.setProperty("oculus.binning.parsing.cprop.propertyType",           "int")
+		configuration.setProperty("oculus.binning.parsing.cprop.propertySeparator",      ";")
+		configuration.setProperty("oculus.binning.parsing.cprop.propertyValueSeparator", "=")
 
 		new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 	}
@@ -99,17 +100,17 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val fields = reader.schema.fields
 		assert(11 === fields.size)
 
-		assert(("bool",   BooleanType)         === (fields( 0).name, fields( 0).dataType))
-		assert(("byte",   ByteType)            === (fields( 1).name, fields( 1).dataType))
-		assert(("short",  ShortType)           === (fields( 2).name, fields( 2).dataType))
-		assert(("int",    IntegerType)         === (fields( 3).name, fields( 3).dataType))
-		assert(("long",   LongType)            === (fields( 4).name, fields( 4).dataType))
-		assert(("float",  FloatType)           === (fields( 5).name, fields( 5).dataType))
-		assert(("double", DoubleType)          === (fields( 6).name, fields( 6).dataType))
-		assert(("str",    StringType)          === (fields( 7).name, fields( 7).dataType))
-		assert(("ip",     ArrayType(ByteType)) === (fields( 8).name, fields( 8).dataType))
-		assert(("date",   TimestampType)       === (fields( 9).name, fields( 9).dataType))
-		assert(("prop",   IntegerType)         === (fields(10).name, fields(10).dataType))
+		assert(("cbool",   BooleanType)         === (fields( 0).name, fields( 0).dataType))
+		assert(("cbyte",   ByteType)            === (fields( 1).name, fields( 1).dataType))
+		assert(("cshort",  ShortType)           === (fields( 2).name, fields( 2).dataType))
+		assert(("cint",    IntegerType)         === (fields( 3).name, fields( 3).dataType))
+		assert(("clong",   LongType)            === (fields( 4).name, fields( 4).dataType))
+		assert(("cfloat",  FloatType)           === (fields( 5).name, fields( 5).dataType))
+		assert(("cdouble", DoubleType)          === (fields( 6).name, fields( 6).dataType))
+		assert(("cstr",    StringType)          === (fields( 7).name, fields( 7).dataType))
+		assert(("cip",     ArrayType(ByteType)) === (fields( 8).name, fields( 8).dataType))
+		assert(("cdate",   TimestampType)       === (fields( 9).name, fields( 9).dataType))
+		assert(("cprop",   IntegerType)         === (fields(10).name, fields(10).dataType))
 	}
 
 	test("Test CSV => Data conversion") {
@@ -117,31 +118,31 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val reader = createReader
 		import reader.sqlc._
 
-		val booleans = reader.asSchemaRDD.select('bool).map(_(0).asInstanceOf[Boolean]).collect.toList
+		val booleans = reader.asDataFrame.selectExpr("cbool").map(_(0).asInstanceOf[Boolean]).collect.toList
 		booleans.grouped(2).foreach(values => assert(List(false, true) === values))
 
-		val bytes = reader.asSchemaRDD.select('byte).map(_(0).asInstanceOf[Byte]).collect.toList
+		val bytes = reader.asDataFrame.selectExpr("cbyte").map(_(0).asInstanceOf[Byte]).collect.toList
 		bytes.zipWithIndex.foreach(values => assert((1+values._2).toByte === values._1))
 
-		val shorts = reader.asSchemaRDD.select('short).map(_(0).asInstanceOf[Short]).collect.toList
+		val shorts = reader.asDataFrame.selectExpr("cshort").map(_(0).asInstanceOf[Short]).collect.toList
 		shorts.zipWithIndex.foreach(values => assert((1+values._2).toShort=== values._1))
 
-		val ints = reader.asSchemaRDD.select('int).map(_(0).asInstanceOf[Int]).collect.toList
+		val ints = reader.asDataFrame.selectExpr("cint").map(_(0).asInstanceOf[Int]).collect.toList
 		ints.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
 
-		val longs = reader.asSchemaRDD.select('long).map(_(0).asInstanceOf[Long]).collect.toList
+		val longs = reader.asDataFrame.selectExpr("clong").map(_(0).asInstanceOf[Long]).collect.toList
 		longs.zipWithIndex.foreach(values => assert((1+values._2).toLong === values._1))
 
-		val floats = reader.asSchemaRDD.select('float).map(_(0).asInstanceOf[Float]).collect.toList
+		val floats = reader.asDataFrame.selectExpr("cfloat").map(_(0).asInstanceOf[Float]).collect.toList
 		floats.zipWithIndex.foreach(values => assert((1+values._2).toFloat === values._1))
 
-		val doubles = reader.asSchemaRDD.select('double).map(_(0).asInstanceOf[Double]).collect.toList
+		val doubles = reader.asDataFrame.selectExpr("cdouble").map(_(0).asInstanceOf[Double]).collect.toList
 		doubles.zipWithIndex.foreach(values => assert((1+values._2).toDouble === values._1))
 
-		val strings = reader.asSchemaRDD.select('str).map(_(0).asInstanceOf[String]).collect.toList
+		val strings = reader.asDataFrame.selectExpr("cstr").map(_(0).asInstanceOf[String]).collect.toList
 		strings.zipWithIndex.foreach(values => assert("abc%d".format(1+values._2) == values._1))
 
-		val ips = reader.asSchemaRDD.select('ip).map(_(0).asInstanceOf[Seq[Byte]]).collect.toList
+		val ips = reader.asDataFrame.selectExpr("cip").map(_(0).asInstanceOf[Seq[Byte]]).collect.toList
 		ips.zipWithIndex.foreach(values =>
 			{
 				assert(4 === values._1.size)
@@ -152,7 +153,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			}
 		)
 
-		val dates = reader.asSchemaRDD.select('date).map(_(0).asInstanceOf[java.util.Date]).collect.toList
+		val dates = reader.asDataFrame.selectExpr("cdate").map(_(0).asInstanceOf[java.util.Date]).collect.toList
 		dates.zipWithIndex.foreach(values =>
 			{
 				val date = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
@@ -165,7 +166,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			}
 		)
 
-		val props = reader.asSchemaRDD.select('prop).map(_(0).asInstanceOf[Int]).collect.toList
+		val props = reader.asDataFrame.selectExpr("cprop").map(_(0).asInstanceOf[Int]).collect.toList
 		props.zipWithIndex.foreach(values => assert((1+values._2).toInt=== values._1))
 	}
 
@@ -177,15 +178,15 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 		import reader.sqlc._
 
-		val result = reader.asSchemaRDD.select('caseSensitiveKey).map(_(0).asInstanceOf[String]).first()
+		val result = reader.asDataFrame.select(new Column("caseSensitiveKey")).map(_(0).asInstanceOf[String]).first()
 		assertResult("test result")(result)
 
 		intercept[Exception] {
-			reader.asSchemaRDD.select('CaseSensitiveKey).map(_(0).asInstanceOf[String]).first()
+			reader.asDataFrame.select(new Column("CaseSensitiveKey")).map(_(0).asInstanceOf[String]).first()
 		}
 
 		intercept[Exception] {
-			reader.asSchemaRDD.select('casesensitivekey).map(_(0).asInstanceOf[String]).first()
+			reader.asDataFrame.select(new Column("casesensitivekey")).map(_(0).asInstanceOf[String]).first()
 		}
 	}
 
@@ -197,7 +198,7 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 		val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
 		import reader.sqlc._
 
-		val result = reader.asSchemaRDD.select('test).map(_(0).asInstanceOf[String]).first()
+		val result = reader.asDataFrame.select(new Column("test")).map(_(0).asInstanceOf[String]).first()
 		assertResult("test result")(result)
 	}
 
@@ -218,11 +219,11 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 
 		import reader.sqlc._
 
-		val result = reader.asSchemaRDD.select('testMap).map(_(0).asInstanceOf[String]).first()
+		val result = reader.asDataFrame.select(new Column("testMap")).map(_(0).asInstanceOf[String]).first()
 		assertResult("test value")(result)
 
 		intercept[Exception] {
-			failReader.asSchemaRDD.select('testMap).map(_(0).asInstanceOf[String]).first()
+			failReader.asDataFrame.select(new Column("testMap")).map(_(0).asInstanceOf[String]).first()
 		}
 	}
 }

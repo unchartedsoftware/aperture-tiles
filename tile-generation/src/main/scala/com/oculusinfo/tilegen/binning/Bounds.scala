@@ -82,7 +82,7 @@ class Bounds (val level: Int,
 	 * @param yBins The number of bins per tile along the vertical axis
 	 */
 	def getSpreaderFunction[T] (pyramid: TilePyramid, xBins: Int = 256, yBins: Int = 256) :
-			(Double, Double) => TraversableOnce[(TileIndex, BinIndex)] =
+			(Double, Double) => Traversable[(TileIndex, BinIndex)] =
 		getSpreaderFunctionInternal[T](pyramid, xBins, yBins)
 
 	private def getSpreaderFunctionInternal[T] (pyramid: TilePyramid, xBins: Int = 256, yBins: Int = 256) :

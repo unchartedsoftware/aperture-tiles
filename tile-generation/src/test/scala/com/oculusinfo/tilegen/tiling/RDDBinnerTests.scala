@@ -58,7 +58,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 			((n.toDouble, (7-n).toDouble), 1.0)
 		)
 
-		val binner = new RDDBinner
+		val binner = new UniversalBinner
 		val tileIO = new TestTileIO
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 		val pyramidId = "simple test"
@@ -114,7 +114,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 			((n.toDouble, (7-n).toDouble), 1.0)
 		)
 
-		val binner = new RDDBinner
+		val binner = new UniversalBinner
 		val tileIO = new TestTileIO
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 		val pyramidId = "1-d test"
@@ -175,7 +175,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		}
 		val data = sc.parallelize(rawData)
 
-		val binner = new RDDBinner
+		val binner = new UniversalBinner
 		val pyramid = new AOITilePyramid(0.0, 0.0, 7.9999, 7.9999)
 
 		val coordFcn: (((Double, Double), Double)) => Try[(Double, Double)] = record => Try(record._1)
@@ -224,5 +224,55 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		assert(tileIOSparse.getTile(sparseId, new TileIndex(1, 1, 0, 4, 4)).get.isInstanceOf[SparseTileData[_]])
 		assert(tileIOSparse.getTile(sparseId, new TileIndex(1, 0, 1, 4, 4)).get.isInstanceOf[SparseTileData[_]])
 		assert(tileIOSparse.getTile(sparseId, new TileIndex(1, 1, 1, 4, 4)).get.isInstanceOf[SparseTileData[_]])
+	}
+
+
+	// Test the tiling speed of the universal binner versus the old RDDBinner.
+	ignore("Test tiling speed") {
+		def time (f: () => Unit): Double = {
+			val start = System.nanoTime()
+			f()
+			val end = System.nanoTime()
+			(end-start)/1000000.0
+		}
+
+		val oldBinner = new RDDBinner
+		oldBinner.debug = true
+		val newBinner = new UniversalBinner
+
+		// IT, PT, option[DT]
+		val intNone: Option[Int] = None
+		val data = sc.parallelize(1 to 10, 10)
+			.mapPartitions(i => (1 to 100000).map(n => ((math.random, math.random), math.random, intNone)).toIterator)
+		data.cache
+		data.count
+
+		val index = new CartesianIndexScheme
+		val analytic = new NumericSumBinningAnalytic[Double, JavaDouble]()
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Int]] = None
+		val dataAnalytics: Option[AnalysisDescription[Int, Int]] = None
+		val pyramid: TilePyramid = new AOITilePyramid(0.0, 0.0, 1.0, 1.0)
+		val levels = Seq(0,1,2,3,4,5,6,7,8,9)
+
+		val oldTime1 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+		val oldTime2 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+
+		val newTime1 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+		val newTime2 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+		val newTime3 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+		val newTime4 = time(() => newBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+
+		val oldTime3 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+		val oldTime4 = time(() => oldBinner.processDataByLevel(data, index, analytic, tileAnalytics, dataAnalytics, pyramid, levels).count)
+
+		println("Old time 1: "+oldTime1)
+		println("Old time 2: "+oldTime2)
+		println("Old time 3: "+oldTime3)
+		println("Old time 4: "+oldTime4)
+		println
+		println("New time 1: "+newTime1)
+		println("New time 2: "+newTime2)
+		println("New time 3: "+newTime3)
+		println("New time 4: "+newTime4)
 	}
 }

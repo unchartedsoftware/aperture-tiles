@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
@@ -28,7 +29,7 @@ package com.oculusinfo.tilegen.datasets
 
 import java.util.Properties
 
-import org.apache.spark.sql.SchemaRDD
+import org.apache.spark.sql.DataFrame
 
 import scala.collection.JavaConverters._
 
@@ -45,7 +46,7 @@ import com.oculusinfo.tilegen.binning.OnDemandAccumulatorPyramidIO
  */
 class TilingTaskTestSuite extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
 	val pyramidId = "unknown.x.y.count"
-	var data: SchemaRDD = null
+	var data: DataFrame = null
 	var task: TilingTask[_, _, _, _] = null
 	var pyramidIo: OnDemandAccumulatorPyramidIO = null
 

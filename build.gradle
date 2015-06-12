@@ -12,69 +12,28 @@
 // ** ANY NEW DEPLOYMENT VARIANTS NEED TO BE ADDED HERE. **
 // ********************************************************
 task setBuildVersions {
+	// Aperture tiles requires, at a minimum, Spark 1.3.0 and HBase 1.0
 	switch (buildType) {
-		case "cdh5.3.0":
+		// No cloudera version before 5.4.0 meets our minumum requirements
+		case "cdh5.4.1":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
-				hadoopCommonVersion = "2.5.0-cdh5.3.0"
-				hadoopCoreVersion = "2.5.0-mr1-cdh5.3.0"
-				hbaseVersion = "0.98.6-cdh5.3.0"
-				sparkVersion = "1.2.0-cdh5.3.0"
+				hadoopCommonVersion = "2.6.0-cdh5.4.1"
+				hadoopCoreVersion = "2.6.0-mr1-cdh5.4.1"
+				hbaseVersion = "1.0.0-cdh5.4.1"
+        htraceVersion = "3.1.0-incubating"
+				sparkVersion = "1.3.0-cdh5.4.1"
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
 			break
-		case "cdh5.2.0":
+		case "cdh5.4.0":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
-				hadoopCommonVersion = "2.5.0-cdh5.2.0"
-				hadoopCoreVersion = "2.5.0-mr1-cdh5.2.0"
-				hbaseVersion = "0.98.6-cdh5.2.0"
-				sparkVersion = "1.1.0-cdh5.2.0"
-				dependencyScalaVersion = "2.10"
-				scalaVersion = "2.10.3"
-			}
-			break
-		case "cdh5.1.2":
-			logger.info "Valid build type found - using $buildType"
-			project.ext { // apply project scope to vars, otherwise local to task
-				hadoopCommonVersion = "2.3.0-cdh5.1.2"
-				hadoopCoreVersion = "2.3.0-mr1-cdh5.1.2"
-				hbaseVersion = "0.98.1-cdh5.1.2"
-				sparkVersion = "1.0.0-cdh5.1.2"
-				dependencyScalaVersion = "2.10"
-				scalaVersion = "2.10.3"
-			}
-            break
-		case "cdh5.1.0":
-			logger.info "Valid build type found - using $buildType"
-			project.ext {
-				hadoopCommonVersion = "2.3.0-cdh5.1.0"
-				hadoopCoreVersion = "2.3.0-mr1-cdh5.1.0"
-				hbaseVersion = "0.98.1-cdh5.1.0"
-				sparkVersion = "1.0.0-cdh5.1.0"
-				dependencyScalaVersion = "2.10"
-				scalaVersion = "2.10.3"
-			}
-			break
-		case "cdh5.0.0":
-			logger.info "Valid build type found - using $buildType"
-			project.ext {
-				hadoopCommonVersion = "2.3.0-cdh5.0.0"
-				hadoopCoreVersion = "2.3.0-mr1-cdh5.0.0"
-				hbaseVersion = "0.96.1.1-cdh5.0.0"
-				sparkVersion = "1.1.1" // Instead of 0.9.0-cdh5.0.0.  We require >= 1.0
-				dependencyScalaVersion = "2.10"
-				scalaVersion = "2.10.3"
-			}
-			break
-		case "cdh4.6.0":
-			logger.info "Valid build type found - using $buildType"
-			project.ext {
-				hadoopCommonVersion = "2.0.0-cdh4.6.0"
-				hadoopCoreVersion = "2.0.0-mr1-cdh4.6.0"
-				hbaseVersion = "0.94.15-cdh4.6.0"
-				sparkVersion = "1.2.0" // instead of 0.9.0-cdh4.6.0. We require >= 1.0
+				hadoopCommonVersion = "2.6.0-cdh5.4.0"
+				hadoopCoreVersion = "2.6.0-mr1-cdh5.4.0"
+				hbaseVersion = "1.0.0-cdh5.4.0"
+				sparkVersion = "1.3.0-cdh5.4.0"
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
 			}
@@ -90,7 +49,7 @@ init.dependsOn setBuildVersions
 // This only needs to be run when a new version of gradle is used, and the produced files should be checked into
 // source control when its done.
 task wrapper(type: Wrapper) {
-	gradleVersion = '2.1'
+	gradleVersion = '2.4'
 }
 
 // If we don't explicitly tell modules to inherit from the project settings, those without scala/java code will
@@ -117,7 +76,7 @@ subprojects {
 	// Shared group and version info.  We keep build variant types in the version names so that we get
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
-	version = "0.6-SNAPSHOT-$buildType"
+	version = "0.7-SNAPSHOT-$buildType"
 
 	// Aperture JS version - shared between a few places
 	project.ext.apertureJsVersion = "1.1.0-SNAPSHOT"
@@ -141,10 +100,6 @@ subprojects {
 		}
 	}
 
-	// A shared function to determine whether we use the older unified HBase jar, or the
-	// newer split jars.  Currently just looks for cdh5 vs other build types.
-	ext.checkHBaseSplit = buildType =~ /cdh5\w*/
-
 	// A shared function that adds hbase dependencies to the supplied project based on the build type.
 	// We can't use the DSL in this context, so we have to go through the lower level DependencyManager APIs.
 	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
@@ -154,20 +109,23 @@ subprojects {
 		if (config == null || config == "") {
 			config = "compile"
 		}
+
 		// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
-		if (checkHBaseSplit) {
+		if ( buildType =~ /cdh5\w*/) {
 			logger.info("Matched CDH5x cloudera version - using new-style jars")
 			getDependencies().add(config, "org.apache.hbase:hbase-common:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
 			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -175,8 +133,17 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
-		} else {
+		  getDependencies().add(config, "org.apache.htrace:htrace-core:$htraceVersion", {
+				exclude group: "asm", module: "asm"
+				exclude group: "org.slf4j", module: "slf4j-api"
+				exclude group: "org.slf4j", module: "slf4j-log4j12"
+				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
+			})
+    } else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
 			getDependencies().add(config, "org.apache.hbase:hbase:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -184,30 +151,8 @@ subprojects {
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
 				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
 				exclude group: "org.jboss.netty", module: "netty"
+				exclude group: "io.netty", module: "netty"
 			})
-		}
-	}
-
-	// Function passed down to subprojects that produces calls to add hbase jars
-	// to a spark-run script.
-	ext.getHBaseJarStrings = {
-		if (checkHBaseSplit) {
-			"""\
-addSparkJar org.apache.hbase hbase-common $hbaseVersion
-addSparkJar org.apache.hbase hbase-server $hbaseVersion
-addSparkJar org.apache.hbase hbase-client $hbaseVersion"""
-		} else {
-			"addSparkJar org.apache.hbase hbase $hbaseVersion"
-		}
-	}
-
-	// Function passed down to subprojects that poduces hbase class path entries
-	// to be used in run scripts.
-	ext.getHBaseClasspathEntries = {
-		if (checkHBaseSplit) {
-			"\${LIB}/hbase-client.jar:\${LIB}/hbase-server.jar:\${LIB}/hbase-common.jar"
-		} else {
-			"\${LIB}/hbase.jar"
 		}
 	}
 
