@@ -52,16 +52,16 @@ import org.json.JSONObject;
 public class AvgDivBucketTileTransformer<T extends Number> implements TileTransformer<List<T>> {
 	private static final Logger LOGGER = LoggerFactory.getLogger( AvgDivBucketTileTransformer.class );
 
-	protected Integer _averageRange 	= 0;
-	protected Integer _startBucket 	= 0;
-	protected Integer _endBucket 		= 0;
+	protected Integer _averageRange = 0;
+	protected Integer _startBucket = 0;
+	protected Integer _endBucket = 0;
 
 	public AvgDivBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
-			_averageRange 	= arguments.optInt("averageRange");
-			_startBucket 	= arguments.optInt("startBucket");
-			_endBucket 		= arguments.optInt("endBucket");
+			_averageRange = arguments.optInt("averageRange");
+			_startBucket = arguments.optInt("startBucket");
+			_endBucket = arguments.optInt("endBucket");
 		} else {
 			LOGGER.warn("No arguments passed in to filterbucket transformer");
 		}
