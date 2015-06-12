@@ -44,8 +44,8 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BucketTileTransformer.class);
 
-	protected Integer _startBucket = 0;
-	protected Integer _endBucket = 0;
+	protected Integer _startBucket = null;
+	protected Integer _endBucket = null;
 
 	private List<Double> _minVals = null;
 	private List<Double> _maxVals = null;
@@ -53,8 +53,8 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 	public BucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
-			_startBucket 	= arguments.optInt("startBucket");
-			_endBucket 		= arguments.optInt("endBucket");
+			_startBucket = arguments.optInt("startBucket");
+			_endBucket = arguments.optInt("endBucket");
 		} else {
 			LOGGER.warn("No arguments passed in to transformer " + getClass().getSimpleName());
 		}
