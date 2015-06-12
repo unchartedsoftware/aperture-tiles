@@ -173,10 +173,17 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 	/** Get the name by which the tile pyramid produced by this task should be known. */
 	val getName = {
-		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + config.name
-		else config.name
 
-		pyramidName + "." + indexer.name + "." + valuer.name
+		var transformedName = config.name
+		transformedName = valuer.getTransformedName(transformedName)
+
+		transformedName = indexer.getTransformedName(transformedName)
+
+		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + transformedName
+		else transformedName
+
+		pyramidName
+
 	}
 
 
