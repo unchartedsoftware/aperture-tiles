@@ -208,9 +208,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		_levelMaximum = levelMaximum;
 		_levelMinimum = levelMinimum;
 		try {
-			TileDataImageRenderer<?> renderer = produce(TileDataImageRenderer.class);
-			if (null != renderer) {
-				Pair<Double, Double> extrema = renderer.getLevelExtrema(this);
+			TileTransformer<?> tileTransformer = produce(TileTransformer.class);
+			if (null != tileTransformer) {
+				Pair<Double, Double> extrema = tileTransformer.getTransformedExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
 			}
 		} catch (ConfigurationException e) {

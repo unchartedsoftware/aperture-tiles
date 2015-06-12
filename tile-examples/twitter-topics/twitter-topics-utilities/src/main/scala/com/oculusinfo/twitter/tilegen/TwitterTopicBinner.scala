@@ -33,7 +33,7 @@ import java.util.{Date, List => JavaList}
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.tiling.analytics.{AnalysisDescription, CompositeAnalysisDescription}
-import com.oculusinfo.tilegen.tiling.{CartesianIndexScheme, RDDBinner, TileIO}
+import com.oculusinfo.tilegen.tiling.{CartesianIndexScheme, UniversalBinner, TileIO}
 import com.oculusinfo.tilegen.util.ArgumentParser
 import com.oculusinfo.twitter.binning.{TwitterTopicAvroSerializer, TwitterDemoTopicRecord}
 import org.apache.avro.file.CodecFactory
@@ -163,8 +163,7 @@ object TwitterTopicBinner {
 		).map(record => (record._1, record._2, dataAnalytics.map(_.convert(record))))
 		data.cache
 
-		val binner = new RDDBinner
-		binner.debug = true
+		val binner = new UniversalBinner
 		val tilePyramid = new WebMercatorTilePyramid
 
 		// Add global analytic accumulators

@@ -25,6 +25,7 @@ package com.oculusinfo.binning.impl;
 
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -39,7 +40,7 @@ import com.oculusinfo.binning.TileIndex;
  *  a view to the average value of a range of buckets
  *
  */
-public class AverageTileBucketView<T> implements TileData<T> {
+public class AverageTileBucketView<T extends Number> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
 	private TileData<List<T>> _base 		= null;
@@ -54,7 +55,6 @@ public class AverageTileBucketView<T> implements TileData<T> {
 		_endCompare = endComp;
 	}
 
-
 	@Override
 	public TileIndex getDefinition () {
 		return _base.getDefinition();
@@ -63,28 +63,14 @@ public class AverageTileBucketView<T> implements TileData<T> {
 
 	@Override
 	// method not implemented as this view is to be read only
-	public void setBin(int x, int y, T value)  {
-		if (x < 0 || x >= getDefinition().getXBins()) {
-			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
-		}
-		if (y < 0 || y >= getDefinition().getYBins()) {
-			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
-		}
-	}
+	public void setBin(int x, int y, List<T> value)  {}
 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public T getBin (int x, int y) {
-		if (x < 0 || x >= getDefinition().getXBins()) {
-			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
-		}
-		if (y < 0 || y >= getDefinition().getYBins()) {
-			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
-		}
-
+	public List<T> getBin (int x, int y) {
 		Number result = 0.0;
-		
+
 		// compute bin averages for selected average range
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
@@ -93,17 +79,19 @@ public class AverageTileBucketView<T> implements TileData<T> {
 
 		double total = 0;
 		int count = 0;
-		for(int i = 0; i < binSize; i++) {
+		for(int i = start; i < binSize; i++) {
 			if ( i >= start && i <= end ) {
-				Number value = (Number) binContents.get(i);
+				Number value = binContents.get(i);
 				total = total + value.doubleValue();
 				count++;
 			}
 		}
 		if ( count != 0 ) {
 			result = (total/count);
-		}		
-		return (T) result;
+		}
+		List<T> resultList = new ArrayList<>(1);
+		resultList.add((T) result);
+		return resultList;
 	}
 
 

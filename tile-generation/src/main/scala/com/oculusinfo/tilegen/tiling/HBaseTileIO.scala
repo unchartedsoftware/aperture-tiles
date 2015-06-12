@@ -34,10 +34,9 @@ import scala.collection.mutable.{HashSet => MutableSet}
 import scala.collection.mutable.{Map => MutableMap}
 
 import org.apache.hadoop.fs.Path
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.Put
-import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.hbase.{TableName, HBaseConfiguration}
+import org.apache.hadoop.hbase.client.{ConnectionFactory, HBaseAdmin, Put, Result}
+;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
@@ -66,13 +65,13 @@ import com.oculusinfo.tilegen.util.ArgumentParser
 
 /**
  * Read and write tiles from HBase
- * 
- * When reading from or writing to any cluster-based storage mechanism, for 
- * efficiency's sake, we want to pay attention to data locality - i.e., we want 
- * to read data on the machine the data is on, and write it directly to the 
+ *
+ * When reading from or writing to any cluster-based storage mechanism, for
+ * efficiency's sake, we want to pay attention to data locality - i.e., we want
+ * to read data on the machine the data is on, and write it directly to the
  * machine where it goes.
- * 
- * In the case of HBase, this requires overriding small portions of several 
+ *
+ * In the case of HBase, this requires overriding small portions of several
  * basic TileIO methods - which essentially requires us to simply rewrite them.
  */
 class HBaseTileIO (zookeeperQuorum: String,
@@ -95,10 +94,10 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 	/**
 	 * Read a set of tiles.
-	 * 
-	 * We can do a little better than the standard; if levels is null, we can 
+	 *
+	 * We can do a little better than the standard; if levels is null, we can
 	 * just read all tiles.
-	 * 
+	 *
 	 * Note that this uses the new Hadoop API
 	 */
 	override def readTileSet[T] (sc: SparkContext,
@@ -111,10 +110,11 @@ class HBaseTileIO (zookeeperQuorum: String,
 		import org.apache.hadoop.hbase.mapred.TableInputFormat._
 
 		val conf = pyramidIO.getConfiguration()
+		val connection = ConnectionFactory.createConnection(conf);
 		conf.set(TableInputFormat.INPUT_TABLE, baseLocation)
-		val admin = new HBaseAdmin(conf)
+		val admin = connection.getAdmin
 
-		if (!admin.isTableAvailable(baseLocation)) {
+		if (!admin.isTableAvailable(TableName.valueOf(baseLocation))) {
 			sc.parallelize(List[TileData[T]]())
 		} else {
 			val hBaseRDD = sc.newAPIHadoopRDD(conf,
@@ -148,7 +148,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 
 	/**
 	 * Write a tile set directly to HBase.
-	 * 
+	 *
 	 * Note that this uses the old Hadoop API
 	 */
 	override def writeTileSet[BT, AT, DT] (pyramider: TilePyramid,
@@ -201,9 +201,9 @@ class HBaseTileIO (zookeeperQuorum: String,
 						baos.flush
 
 						val put = new Put(rowIdFromTileIndex(index).getBytes())
-						put.add(TILE_COLUMN.getFamily(),
-						        TILE_COLUMN.getQualifier(),
-						        baos.toByteArray())
+						put.addColumn(TILE_COLUMN.getFamily(),
+							TILE_COLUMN.getQualifier(),
+							baos.toByteArray())
 
 						(new ImmutableBytesWritable, put)
 					}

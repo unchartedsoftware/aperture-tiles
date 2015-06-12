@@ -29,14 +29,16 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
+import scala.collection.mutable.{Map => MutableMap}
+
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.providers.FactoryProvider
 import com.oculusinfo.factory.util.Pair
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.binning.{TileData, TileIndex}
+import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.{RDDBinner, TileIO}
+import com.oculusinfo.tilegen.tiling.{BinningParameters, StandardBinningFunctions, TileIO, UniversalBinner}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.streaming.dstream.DStream
@@ -215,6 +217,15 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the type of tile storage to create when this task creates tiles */
 	def getTileType = config.tileType
 
+	/** Get the minimum bin length of drawn segments, for line tiling */
+	def getMinimumSegmentLength = config.minimumSegmentLength
+
+	/** Get the maximum number of bins to draw on the ends of segments, for line tiling */
+	def getMaximumLeaderLength = config.maximumLeaderLength
+
+	/** Get whether or not segments should be drawn as arcs */
+	def drawArcs = config.drawArcs
+
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
 
@@ -254,8 +265,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * @param tileIO An object that knows how to save tiles.
 	 */
 	def doTiling (tileIO: TileIO): Unit = {
-		val binner = new RDDBinner
-		binner.debug = true
+		val binner = new UniversalBinner
 		val sc = sqlc.sparkContext
 
 		tileAnalytics.map(_.addGlobalAccumulator(sc))
@@ -266,14 +276,57 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
-					val tiles = binner.processDataByLevel(rdd, getIndexScheme,
-					                                      getBinningAnalytic, tileAnalytics, dataAnalytics,
-					                                      getTilePyramid, levels, getNumXBins, getNumYBins,
-					                                      getConsolidationPartitions)
+					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
+					                                                         StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, levels, getNumXBins, getNumYBins),
+					                                                         StandardBinningFunctions.populateTileIdentity,
+					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
 					                    tileAnalytics, dataAnalytics, getName, getDescription)
 				}
+
+			process(procFcn, None)
+		}
+	}
+
+	def doLineTiling (tileIO: TileIO): Unit = {
+		val binner = new UniversalBinner
+		val sc = sqlc.sparkContext
+
+		// Hard code for now, we'll get them later.
+		val leaderBins = 1024
+		val scaler: (Array[BinIndex], BinIndex, PT) => PT = (endpoints, bin, value) => value
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
+		getLevels.map{levels =>
+			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+
+			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
+				rdd => {
+					val locateFcn =
+						if (drawArcs) StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
+						                                                  getMinimumSegmentLength, getMaximumLeaderLength,
+						                                                  getNumXBins, getNumYBins)
+						else StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
+						                                                getMinimumSegmentLength, getMaximumLeaderLength.get,
+						                                                getNumXBins, getNumYBins)
+
+					val populateFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT] =
+						if (drawArcs) StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
+						                                                            StandardScalingFunctions.identityScale)
+						else StandardBinningFunctions.populateTileWithLineLeaders(getMaximumLeaderLength.get,
+						                                                          StandardScalingFunctions.identityScale)
+
+					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
+					                                                         locateFcn, populateFcn,
+					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+
+					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
+					                    tileAnalytics, dataAnalytics, getName, getDescription)
+				}
+			}
 
 			process(procFcn, None)
 		}
@@ -377,9 +430,10 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	{
 		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
 			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
+			val allFieldsEscaped = allFields.map(v => if(v.forall(_.isDigit)) { v } else { "`" + v + "`"  })
 
 			val selectStmt =
-				allFields.mkString("SELECT `", "`, `", "` FROM "+table)
+				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)
 
 			val data = sqlc.sql(selectStmt)
 
@@ -405,3 +459,9 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		override def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
 	}
 }
+
+
+object StandardScalingFunctions {
+	def identityScale[T]: (Array[BinIndex], BinIndex, T) => T = (endpoints, bin, value) => value
+}
+

@@ -87,10 +87,10 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		}
 		(steep, x0, y0, x1, y1)
 	}
-	
+
 	/**
-	 * Re-order coords of two endpoints for efficient implementation of Bresenham's line algorithm  
-	 */	
+	 * Re-order coords of two endpoints for efficient implementation of Bresenham's line algorithm
+	 */
 	def getPoints (start: BinIndex, end: BinIndex): (Boolean, Int, Int, Int, Int) = {
 		val xs = start.getX()
 		val xe = end.getX()
@@ -113,8 +113,8 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		}
 	}
 
-	
-	
+
+
 	test("Bresenham Alternatives") {
 		// Make sure our scala-like version matches the unscala-like one from wikipedia.
 		for (w <- 0 to 10;
@@ -126,21 +126,21 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			assert(getPoints(b1, b2) === wikipediaGetPoints(b1, b2))
 		}
 	}
-	
-	
+
+
 	/*
 	 * Tests the basic line binning case, where we create a line across our world bounds
 	 * and our removal distance threshold is set such that it is rendered in its entirety.
 	 */
 	test("Basic line binning") {
 		val pyramidId = "basic line binning"
-		val tileIO = runLineBinning(pyramidId, 512, true)
-		
+		val tileIO = runNewLineBinning(pyramidId, 512, true)
+
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 256, 256))
 		assert(tile00.isDefined)
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 256, 256))
 		assert(tile10.isDefined)
-		
+
 		val tile01 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 1, 256, 256))
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 256, 256))
@@ -149,9 +149,9 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile00.get.isInstanceOf[SparseTileData[_]])
 		for (x <- 0 to 255) assert(tile00.get.getBin(x, 14) == 1.0 && tile10.get.getBin(x, 14) == 1.0)
 	}
-	
-	
-	
+
+
+
 	/*
 	 * Tests the faded end line binning case, where we create a line across our world bounds
 	 * and our removal distance threshold is set such that only the end of the line is rendered.
@@ -159,13 +159,13 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 	 */
 	test("Line binning with fade") {
 		val pyramidId = "faded line binning"
-		val tileIO = runLineBinning(pyramidId, 256, true)
-		
+		val tileIO = runNewLineBinning(pyramidId, 256, false)
+
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 256, 256))
 		assert(tile00.isDefined)
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 256, 256))
 		assert(tile10.isDefined)
-		
+
 		val tile01 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 1, 4, 4))
 		assert(tile01.isEmpty)
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
@@ -175,21 +175,26 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		assert(tile10.get.isInstanceOf[SparseTileData[_]])
 
 		for (x <- 1 to 255) {
-			assert(tile00.get.getBin(x, 14).toString.toDouble < tile00.get.getBin(x-1, 14).toString.toDouble)
-			assert(tile10.get.getBin(x, 14).toString.toDouble > tile10.get.getBin(x-1, 14).toString.toDouble)
+			val v0x = tile00.get.getBin(x, 14).toString.toDouble
+			val v0x1 = tile00.get.getBin(x-1, 14).toString.toDouble
+			assert(v0x < v0x1, "Tile 00, Bin %d, %.4f ! < %.4f".format(x, v0x, v0x1))
+
+			val v1x = tile10.get.getBin(x, 14).toString.toDouble
+			val v1x1 = tile10.get.getBin(x-1, 14).toString.toDouble
+			assert(v1x > v1x1, "Tile 10, Bin %d, %.4f ! > %.4f".format(x, v1x, v1x1))
 		}
 	}
-	
-	
-	
+
+
+
 	/*
 	 * Tests the faded end line binning case, where we create a line across our world bounds
 	 * and our removal distance threshold is set such that only the end of the line is rendered.
 	 */
 	test("Line binning with removed line") {
 		val pyramidId = "removed line binning"
-		val tileIO = runLineBinning(pyramidId, 4, false)
-		
+		val tileIO = runNewLineBinning(pyramidId, 4, false)
+
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 4, 4))
 		assert(tile00.isEmpty)
 		val tile10 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 0, 4, 4))
@@ -199,9 +204,9 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		val tile11 = tileIO.getTile(pyramidId, new TileIndex(1, 1, 1, 4, 4))
 		assert(tile11.isEmpty)
 	}
-	
-	
-	
+
+
+
 	/*
 	 * Helper function to run line binning based on a mercator tile pyramid.
 	 */
@@ -209,16 +214,16 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 		// First row of data has value at the start and end.  Segment binner
 		// should create a line between the two.
 		val data = sc.parallelize(List(new SegmentData(new Segment(-180.0, -10.0, 180.0, -10.0), 1.0)))
-		
+
 		val binner = new RDDLineBinner(1, maxLength, showEnds)
 		val tileIO = new TestTileIO
 		val pyramid = new WebMercatorTilePyramid
-		
+
 		val coordFcn: SegmentData => Try[Segment] = segmentData => Try(segmentData.segment)
 		val valueFcn: SegmentData => Try[Double] = segmentData => Try(segmentData.count)
 		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Double]] = None
 		val dataAnalytics: Option[AnalysisDescription[SegmentData, Double]] = None
-		
+
 		val lineDrawer = new EndPointsToLine(maxLength, 256, 256)
 
 		binner.binAndWriteData(
@@ -240,6 +245,55 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			xBins=256, yBins=256)
 		tileIO
 	}
-	
+
+	def runNewLineBinning (pyramidId: String, maxLength: Int, wholeLine: Boolean) = {
+		// First row of data has value at the start and end.  Segment binner
+		// should create a line between the two.
+		val rawdata = sc.parallelize(List(new SegmentData(new Segment(-180.0, -10.0, 180.0, -10.0), 1.0)))
+
+		val binner = new UniversalBinner
+		val tileIO = new TestTileIO
+		val pyramid = new WebMercatorTilePyramid
+
+		val coordFcn: SegmentData => Try[Segment] = segmentData => Try(segmentData.segment)
+		val valueFcn: SegmentData => Try[Double] = segmentData => Try(segmentData.count)
+		val tileAnalytics: Option[AnalysisDescription[TileData[JavaDouble], Double]] = None
+		val dataAnalytics: Option[AnalysisDescription[SegmentData, Double]] = None
+
+		val lineDrawer = new EndPointsToLine(maxLength, 256, 256)
+
+		val noDouble: Option[Double] = None
+		val data: RDD[(Segment, Double, Option[Double])] =
+			rawdata.map(segData => (coordFcn(segData), valueFcn(segData), noDouble))
+				.filter(seg => seg._1.isSuccess && seg._2.isSuccess).map(seg => (seg._1.get, seg._2.get, seg._3))
+
+		val (locateFcn, populateFcn) =
+			if (wholeLine) {
+				val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => value
+
+				(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, List(1), None, None)(_),
+					StandardBinningFunctions.populateTileWithLineSegments(valueScaler)(_, _, _))
+			} else {
+				val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => {
+					val d0 = math.abs(endpoints(0).getX - bin.getX) max math.abs(endpoints(0).getY - bin.getY)
+					val d1 = math.abs(endpoints(1).getX - bin.getX) max math.abs(endpoints(1).getY - bin.getY)
+					val d = d0 min d1
+					val scale = (1.0 - (d.toDouble / maxLength.toDouble)).max(0.0).min(1.0) // Limit to from 0 to 1.
+					value*scale
+				}
+
+				(StandardBinningFunctions.locateLineLeaders(new SegmentIndexScheme, pyramid, List(1), None, maxLength)(_),
+					StandardBinningFunctions.populateTileWithLineLeaders(maxLength, valueScaler)(_, _, _))
+			}
+		val tiles = binner.processData[Segment, Double, Double, Double, JavaDouble](data,
+			new NumericSumBinningAnalytic[Double, JavaDouble](), tileAnalytics, dataAnalytics,
+			locateFcn, populateFcn)
+
+		tileIO.writeTileSet(pyramid, pyramidId, tiles,
+		                    new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
+		                    tileAnalytics, dataAnalytics, "name", "description")
+
+		tileIO
+	}
 }
 

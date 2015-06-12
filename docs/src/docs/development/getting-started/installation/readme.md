@@ -113,10 +113,16 @@ The source code repository for Aperture Tiles is available on [GitHub](https://g
 
 <h6 class="procedure">To work with the Aperture Tiles source code</h6>
 
-- Execute the following command to clone the *master* branch of the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
+1. Execute the following command to clone the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
 
 	```bash
 	git clone https://github.com/unchartedsoftware/aperture-tiles.git
+	```
+
+2. Check out the *master* branch to work with the most recent stable release:
+
+	```bash
+	git checkout master
 	```
 
 ### <a name="building-project"></a> Building the Project ###

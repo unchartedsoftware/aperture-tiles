@@ -27,12 +27,45 @@ package com.oculusinfo.binning.util;
 /**
  * Simple abstraction of a mathematical operator that we can pass around as a parameter
  */
-public class Operator {
+public class BinaryOperator {
 
-	private String _operator = "";
+	public enum OPERATOR_TYPE {
+		ADD,
+		SUBTRACT,
+		DIVIDE,
+		MULTIPLY
+	};
 
-	public Operator(String operator) {
+	public final OPERATOR_TYPE _operator;
+
+	public BinaryOperator(OPERATOR_TYPE operator) {
 		_operator = operator;
+	}
+
+	/**
+	 * Uses the class member operator to perform the calculation.  More operations can
+	 * be added here as needed.
+	 *
+	 * @param operand1 the first value to use in the calculation
+	 * @param operand2 the second value to use in the calculation
+	 * @param errorVal optional error value to use when bad input detected
+	 * @return Number represents the result of the calculation
+	 */
+	public Number calculate(Number operand1, Number operand2, Number errorVal) {
+		if (_operator.equals(OPERATOR_TYPE.ADD)) {
+			return operand1.doubleValue() + operand2.doubleValue();
+		} else if (_operator.equals(OPERATOR_TYPE.SUBTRACT)) {
+			return operand1.doubleValue() - operand2.doubleValue();
+		} else if (_operator.equals(OPERATOR_TYPE.MULTIPLY)) {
+			return operand1.doubleValue() * operand2.doubleValue();
+		} else if (_operator.equals(OPERATOR_TYPE.DIVIDE)) {
+			if (operand2.doubleValue() == 0.0 && errorVal != null) {
+				return errorVal;
+			}
+			return operand1.doubleValue() / operand2.doubleValue();
+		} else {
+			throw new ExceptionInInitializerError();
+		}
 	}
 
 	/**
@@ -43,21 +76,7 @@ public class Operator {
 	 * @param operand2 the second value to use in the calculation
 	 * @return Number represents the result of the calculation
 	 */
-	public Number Calculate(Number operand1, Number operand2) {
-		if (_operator.equals("+")) {
-			return operand1.doubleValue() + operand2.doubleValue();
-		} else if (_operator.equals("-")) {
-			return operand1.doubleValue() - operand2.doubleValue();
-		} else if (_operator.equals("*")) {
-			return operand1.doubleValue() * operand2.doubleValue();
-		} else if (_operator.equals("//")) {
-			if (operand2.equals(0.0)) {
-				return 0.0;
-			} else {
-				return operand1.doubleValue() / operand2.doubleValue();
-			}
-		} else {
-			throw new ExceptionInInitializerError();
-		}
+	public Number calculate(Number operand1, Number operand2) {
+		return calculate(operand1, operand2, null);
 	}
 }

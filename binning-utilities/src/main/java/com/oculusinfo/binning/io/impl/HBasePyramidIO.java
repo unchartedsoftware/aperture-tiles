@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -41,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -50,7 +51,6 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 
-//import org.apache.hadoop.hbase.TableName;
 
 public class HBasePyramidIO implements PyramidIO {
 	private static final String META_DATA_INDEX      = "metadata";
@@ -75,9 +75,9 @@ public class HBasePyramidIO implements PyramidIO {
 	public static final HBaseColumn  METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
 
 
-	private Configuration       _config;
-	private HBaseAdmin          _admin;
-	private HConnection         _connection;
+	private Configuration _config;
+	private Admin         _admin;
+	private Connection    _connection;
 
 	public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
@@ -90,8 +90,8 @@ public class HBasePyramidIO implements PyramidIO {
 		_config.set("hbase.zookeeper.property.clientPort", zookeeperPort);
 		_config.set("hbase.master", hbaseMaster);
 		_config.set("hbase.client.keyvalue.maxsize", "0");
-		_admin = new HBaseAdmin(_config);
-		_connection = HConnectionManager.createConnection(_config);
+		_connection = ConnectionFactory.createConnection(_config);
+		_admin = _connection.getAdmin();
 	}
 
 
@@ -136,15 +136,14 @@ public class HBasePyramidIO implements PyramidIO {
 	/*
 	 * Gets an existing table (without creating it)
 	 */
-	private HTableInterface getTable (String tableName) throws IOException {
-
-		return _connection.getTable( tableName );
+	private Table getTable (String tableName) throws IOException {
+		return _connection.getTable(TableName.valueOf(tableName));
 	}
 
 	/*
 	 * Given a put request (a request to put data into a table), add a single
 	 * entry into the request
-	 * 
+	 *
 	 * @param existingPut
 	 *            The existing request. If null, a request will be created for
 	 *            the given row. If non-null, no check will be performed to make
@@ -166,23 +165,23 @@ public class HBasePyramidIO implements PyramidIO {
 			existingPut = new Put(rowId.getBytes());
 		}
 
-		existingPut.add(column.family, column.qualifier, data);
+		existingPut.addColumn(column.family, column.qualifier, data);
 
 		return existingPut;
 	}
 
 	/*
 	 * Write a series of rows out to the given table
-	 * 
+	 *
 	 * @param table
 	 *            The table to which to write
 	 * @param rows
 	 *            The rows to write
 	 */
 	private void writeRows (String tableName, List<Row> rows) throws InterruptedException, IOException {
-		HTableInterface table = getTable(tableName);
-		table.batch(rows);
-		table.flushCommits();
+		Table table = getTable(tableName);
+		Object[] results = new Object[rows.size()];
+		table.batch(rows, results);
 		table.close();
 	}
 
@@ -190,7 +189,7 @@ public class HBasePyramidIO implements PyramidIO {
 		Map<HBaseColumn, byte[]> results = null;
 		for (HBaseColumn column: columns) {
 			if (row.containsColumn(column.family, column.qualifier)) {
-				if (null == results) results = new HashMap<HBaseColumn, byte[]>(); 
+				if (null == results) results = new HashMap<HBaseColumn, byte[]>();
 				results.put(column, row.getValue(column.family, column.qualifier));
 			}
 		}
@@ -199,7 +198,7 @@ public class HBasePyramidIO implements PyramidIO {
 
 	/*
 	 * Read several rows of data.
-	 * 
+	 *
 	 * @param table
 	 *            The table to read
 	 * @param rows
@@ -212,7 +211,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 *         map.
 	 */
 	private List<Map<HBaseColumn, byte[]>> readRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
-		HTableInterface table = getTable(tableName);
+		Table table = getTable(tableName);
 
 		List<Get> gets = new ArrayList<Get>(rows.size());
 		for (String rowId: rows) {
@@ -236,9 +235,9 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public void initializeForWrite (String tableName) throws IOException {
-		if ( !_admin.tableExists(tableName) ) {
+		if ( !_admin.tableExists(TableName.valueOf(tableName)) ) {
 			try {
-				HTableDescriptor tableDesc = new HTableDescriptor(tableName);          
+				HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
 				HColumnDescriptor metadataFamily = new HColumnDescriptor(METADATA_FAMILY_NAME);
 				tableDesc.addFamily(metadataFamily);
 				HColumnDescriptor tileFamily = new HColumnDescriptor(TILE_FAMILY_NAME);
@@ -247,7 +246,7 @@ public class HBasePyramidIO implements PyramidIO {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
 
@@ -275,7 +274,7 @@ public class HBasePyramidIO implements PyramidIO {
 			List<Row> rows = new ArrayList<Row>();
 			rows.add(addToPut(null, META_DATA_INDEX, METADATA_COLUMN, metaData.getBytes()));
 			Put put = new Put(META_DATA_INDEX.getBytes());
-			put.add(METADATA_FAMILY_NAME, EMPTY_BYTES, metaData.getBytes());
+			put.addColumn(METADATA_FAMILY_NAME, EMPTY_BYTES, metaData.getBytes());
 			writeRows(tableName, rows);
 		} catch (InterruptedException e) {
 			throw new IOException("Error writing metadata to HBase", e);
@@ -299,7 +298,7 @@ public class HBasePyramidIO implements PyramidIO {
 		for (TileIndex tile: tiles) {
 			rowIds.add(rowIdFromTileIndex(tile));
 		}
-        
+
 		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
 
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
@@ -327,7 +326,7 @@ public class HBasePyramidIO implements PyramidIO {
 	                                      TileIndex tile) throws IOException {
 		List<String> rowIds = new ArrayList<String>();
 		rowIds.add(rowIdFromTileIndex(tile));
-        
+
 		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
 		Iterator<Map<HBaseColumn, byte[]>> iData = rawResults.iterator();
 
@@ -353,20 +352,20 @@ public class HBasePyramidIO implements PyramidIO {
 
 		return new String(rawData.get(0).get(METADATA_COLUMN));
 	}
-	
+
 	@Override
 	public void removeTiles (String tableName, Iterable<TileIndex> tiles) throws IOException {
-    	
+
 		List<String> rowIds = new ArrayList<>();
 		for (TileIndex tile: tiles) {
 			rowIds.add( rowIdFromTileIndex( tile ) );
-		}        
+		}
 		deleteRows(tableName, rowIds, TILE_COLUMN);
 	}
-	
+
 	private void deleteRows (String tableName, List<String> rows, HBaseColumn... columns) throws IOException {
 
-		HTableInterface table = getTable(tableName);
+		Table table = getTable(tableName);
 		List<Delete> deletes = new LinkedList<Delete>();
 		for (String rowId: rows) {
 			Delete delete = new Delete(rowId.getBytes());
@@ -375,13 +374,13 @@ public class HBasePyramidIO implements PyramidIO {
 		table.delete(deletes);
 		table.close();
 	}
-	
+
 	public void dropTable( String tableName ) {
-    	
+
 		try {
-			_admin.disableTable( /*TableName.valueOf(*/ tableName /*)*/ );
-			_admin.deleteTable( /*TableName.valueOf(*/ tableName /*)*/ );
+			_admin.disableTable(TableName.valueOf(tableName));
+			_admin.deleteTable(TableName.valueOf(tableName));
 		} catch (Exception e) {}
- 	
+
 	}
 }

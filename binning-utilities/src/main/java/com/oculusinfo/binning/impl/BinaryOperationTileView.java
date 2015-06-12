@@ -31,7 +31,7 @@ import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.util.Operator;
+import com.oculusinfo.binning.util.BinaryOperator;
 
 
 
@@ -41,75 +41,72 @@ import com.oculusinfo.binning.util.Operator;
  *  that are compared to each other using the operator passed in as a string.
  *
  */
-public class OperationTileBucketView<T> implements TileData<List<T>> {
+public class BinaryOperationTileView<T extends Number> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
-	private TileData<T> _opTileAverage 	= null;
-	private TileData<T> _opTileCompare 	= null;
-	private Operator 	_op 			= null;
+	private TileData<List<T>> _tileData1 = null;
+	private TileData<List<T>> _tileData2 = null;
+	private BinaryOperator _op 			= null;
 
+	private final int _binCount;
 
-	public OperationTileBucketView (TileData<T> opTileAverage, TileData<T> opTileCompare, String op) {
-		_opTileAverage = opTileAverage;
-		_opTileCompare = opTileCompare;
+	private final Number _errorValue;
 
-		_op = new Operator(op);
-		
-		if (   getDefinition().getXBins() != _opTileAverage.getDefinition().getXBins()
-			|| getDefinition().getYBins() != _opTileAverage.getDefinition().getYBins()) {
-			throw new IllegalArgumentException("Constructor for OperationTileBucketView: arguments are invalid. Tiles to compare are incompatible");
+	public BinaryOperationTileView(TileData<List<T>> tileData1, TileData<List<T>> tileData2, BinaryOperator.OPERATOR_TYPE op,
+								   Number errorValue) {
+		_errorValue = errorValue;
+		_tileData1 = tileData1;
+		_tileData2 = tileData2;
+
+		_op = new BinaryOperator(op);
+
+		if (   getDefinition().getXBins() != _tileData1.getDefinition().getXBins()
+			|| getDefinition().getYBins() != _tileData1.getDefinition().getYBins()) {
+			throw new IllegalArgumentException("Constructor for BinaryOperationTileBucketView: " +
+				"arguments are invalid. Tiles to compare are incompatible");
 		}
+
+		_binCount = _tileData1.getBin(0, 0).size();
 	}
 
 
 	@Override
 	public TileIndex getDefinition () {
-		return _opTileCompare.getDefinition();
+		return _tileData2.getDefinition();
 	}
 
 
 	@Override
 	// method not implemented as this view is to be read only
-	public void setBin(int x, int y, List<T> value)  {
-		if (x < 0 || x >= getDefinition().getXBins()) {
-			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
-		}
-		if (y < 0 || y >= getDefinition().getYBins()) {
-			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
-		}
-	}
+	public void setBin(int x, int y, List<T> value)  {}
 
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<T> getBin (int x, int y) {
-		if (x < 0 || x >= getDefinition().getXBins()) {
-			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
-		}
-		if (y < 0 || y >= getDefinition().getYBins()) {
-			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
-		}
 		List<T> result = new ArrayList<>();
-		result.add( (T)_op.Calculate( (Number)_opTileCompare.getBin(x, y), (Number)_opTileAverage.getBin(x, y) ) );
+		for (int i = 0; i < _binCount; i++) {
+			result.add((T) _op.calculate(_tileData1.getBin(x, y).get(i), _tileData2.getBin(x, y).get(i), _errorValue));
+		}
 		return result;
 	}
 
 
 	@Override
 	public Collection<String> getMetaDataProperties () {
-		return _opTileCompare.getMetaDataProperties();
+		return _tileData2.getMetaDataProperties();
 	}
 
 
 	@Override
 	public String getMetaData (String property) {
-		return _opTileCompare.getMetaData(property);
+		return _tileData2.getMetaData(property);
 	}
 
 
 	@Override
 	public void setMetaData (String property, Object value) {
-		_opTileCompare.setMetaData(property, value);
+		_tileData2.setMetaData(property, value);
 	}
 
 }

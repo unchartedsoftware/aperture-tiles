@@ -25,11 +25,17 @@
 package com.oculusinfo.tile.rendering.transformations.tile;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.impl.FilterTileBucketView;
 
+import com.oculusinfo.factory.ConfigurationException;
+import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.LayerConfiguration;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONException;
@@ -44,20 +50,10 @@ import org.json.JSONObject;
  *
  */
 
-public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger( FilterByBucketTileTransformer.class );
-
-	private Integer _startBucket = null;
-	private Integer _endBucket = null;
+public class FilterByBucketTileTransformer<T> extends BucketTileTransformer<T> {
 
 	public FilterByBucketTileTransformer(JSONObject arguments){
-		if ( arguments != null ) {
-			// get the start and end time range
-			_startBucket = arguments.optInt("startBucket");
-			_endBucket = arguments.optInt("endBucket");
-		} else {
-			LOGGER.warn("No arguements passed in to filterbucket transformer");
-		}
+		super(arguments);
 	}
 
 
@@ -82,5 +78,4 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 		}
 		return new FilterTileBucketView<>(inputData, _startBucket, _endBucket);
 	}
-
 }

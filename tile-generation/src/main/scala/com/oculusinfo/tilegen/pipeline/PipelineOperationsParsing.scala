@@ -311,5 +311,58 @@ object PipelineOperationsParsing extends Logging {
 
 		(xColSpec, yColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType)
 	}
-}
+
+	/**
+	 * Parse args for basic line tile generation operation that writes to HDFS, and return an instance of that
+	 * operation with those arguments applied.  If HBase properties are not set, file based IO is used.
+	 *
+	 * Arguments:
+	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
+	 *    hbase.zookeeper.port - Zookeeper port. (optional)
+	 *    hbase.master - HBase master address. (optional)
+	 *    ops.xColumn - Colspec denoting data x column
+	 *    ops.yColumn - Colspec denoting data y column
+	 *    ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
+	 *                          "sum", "mean", "max"
+	 *    ops.valueColumn - Colspec denoting data column to use as aggregation source.  Not required when type is
+	 *
+	 *    Tiling task consumes a TilingTaskParameters object that
+	 *    is populated via an argument map.  The argument map passed to this function will be used for that
+	 *    purpose, so all arguments required by that object should be set.
+	 */
+	def parseGeoSegmentTilingOp(args: Map[String, String]) = {
+		logger.debug(s"Parsing hbaseSegmentTilingOp with args $args")
+		val argParser = KeyValuePassthrough(args)
+		val params = parseSegmentTilingOpImpl(args, argParser)
+		geoSegmentTilingOp(params._1, params._2, params._3, params._4, params._5,
+		                   params._6, params._7, params._8, params._9)(_)
+		}
+
+		private def parseSegmentTilingOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
+			val x1ColSpec = argParser.getString("ops.x1Column", "Colspec denoting data x column for segment origins")
+			val y1ColSpec = argParser.getString("ops.y1Column", "Colspec denoting data y column for segment origins")
+			val x2ColSpec = argParser.getString("ops.x2Column", "Colspec denoting data x column for segment destinations")
+			val y2ColSpec = argParser.getString("ops.y2Column", "Colspec denoting data y column for segmeng destinations")
+			val operationType = argParser.getString("ops.aggregationType", "")
+			val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
+			val valueColType = argParser.getStringOption("ops.valueType", "", None)
+			val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
+			                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+			                      argParser.getStringOption("hbase.master", "HBase master address", None))
+			val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
+				Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
+			} else {
+				None
+			}
+
+			val operationEnum = OperationType.withName(operationType.toUpperCase)
+
+			val taskParametersFactory = new TilingTaskParametersFactory(null, List("ops"))
+			taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
+			val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
+
+			(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType)
+		}
+
+	}
 

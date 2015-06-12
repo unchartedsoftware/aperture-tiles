@@ -55,7 +55,7 @@ import com.oculusinfo.tile.util.GraphicsUtilities;
 /**
  * An image renderer that works off of tile grids, but instead of rendering
  * a heatmap, calculates some statistics and renders them as text.
- * 
+ *
  * @author  dgray
  */
 public class NumberStatisticImageRenderer implements TileDataImageRenderer<Number> {
@@ -72,15 +72,7 @@ public class NumberStatisticImageRenderer implements TileDataImageRenderer<Numbe
 	public TypeDescriptor getAcceptedTypeDescriptor() {
 		return new TypeDescriptor(getAcceptedBinClass());
 	}
-	
 
-	/* (non-Javadoc)
-	 * @see TileDataImageRenderer#getLevelExtrema(LayerConfiguration)
-	 */
-	@Override
-	public Pair<Double, Double> getLevelExtrema (LayerConfiguration config) throws ConfigurationException {
-		return new Pair<Double, Double>(0.0, 0.0);
-	}
 
 	/* (non-Javadoc)
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
@@ -90,47 +82,47 @@ public class NumberStatisticImageRenderer implements TileDataImageRenderer<Numbe
 		BufferedImage bi;
 		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
- 		
+
 		try {
 			index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 
 			bi = GraphicsUtilities.createCompatibleTranslucentImage(width, height);
-		
+
 			int xBins = data.getDefinition().getXBins();
 			int yBins = data.getDefinition().getYBins();
-			
+
 			double totalBinCount = 0;
 			double maxBinCount = 0;
 			double totalNonEmptyBins = 0;
-			
+
 			for(int ty = 0; ty < yBins; ty++){
 				for(int tx = 0; tx < xBins; tx++){
 
 					double binCount = data.getBin(tx, ty).doubleValue();
 					if (binCount > 0 ){
-						
+
 						totalNonEmptyBins += 1;
-						
+
 						if(binCount > maxBinCount){
 							maxBinCount = binCount;
 						}
 						totalBinCount += binCount;
-					}					
+					}
 				}
 			}
-			
+
 			double coverage = totalNonEmptyBins/(xBins*yBins);
 
 			DecimalFormat decFormat = new DecimalFormat("");
 			String formattedTotal 		= decFormat.format(totalBinCount) + " events   ";
 			decFormat = new DecimalFormat("##.##");
 			String formattedCoverage 	= decFormat.format(coverage * 100) + "% coverage";
-			
+
 			String text = layerId + ": " + formattedTotal + " " + formattedCoverage;
 			drawTextGlow(bi, text, 5, 10, FONT, Color.white, Color.black);
-					
+
 		} catch (Exception e) {
 			LOGGER.debug("Tile is corrupt: " + layerId + ":" + index);
 			LOGGER.debug("Tile error: ", e);
@@ -138,11 +130,11 @@ public class NumberStatisticImageRenderer implements TileDataImageRenderer<Numbe
 		}
 		return bi;
 	}
-	
+
 	/**
 	 * Draw a line of text with a glow around it. Uses fast blurring approximation of gaussian.
 	 * TODO: Support calling this multiple times! currently wipes out anything that was there before.
-	 * 
+	 *
 	 * @param destination
 	 * @param text
 	 * @param xOffset
@@ -158,25 +150,25 @@ public class NumberStatisticImageRenderer implements TileDataImageRenderer<Numbe
 		FontMetrics fm = g.getFontMetrics();
 		Rectangle2D bounds = fm.getStringBounds(text, g);
 		FontRenderContext frc = g.getFontRenderContext();
-		
-		TextLayout layout = new TextLayout(text, g.getFont(), frc);			
+
+		TextLayout layout = new TextLayout(text, g.getFont(), frc);
 		float sw = (float) layout.getBounds().getWidth();
 		float sh = (float) layout.getBounds().getHeight();
 		Shape shape = layout.getOutline(AffineTransform.getTranslateInstance(
-		                                                                     bounds.getWidth()/2-sw/2 + xOffset, 
+		                                                                     bounds.getWidth()/2-sw/2 + xOffset,
 		                                                                     bounds.getHeight()*0.5+sh/2 + yOffset));
-		
+
 		BufferedImage biText = GraphicsUtilities.createCompatibleImage(destination);
 		Graphics2D gText = biText.createGraphics(); // { gText
 		gText.setFont(g.getFont());
 		gText.setColor(glowColor);
 		gText.setStroke(new BasicStroke(2));
 		gText.draw(shape);
-		gText.dispose(); // } End gText	
-		
+		gText.dispose(); // } End gText
+
 		StackBlurFilter blur = new StackBlurFilter(3, 3);
 		blur.filter(biText, destination);
-		
+
 		g.setColor(textColor);
 		g.fill(shape);
 		g.dispose();
