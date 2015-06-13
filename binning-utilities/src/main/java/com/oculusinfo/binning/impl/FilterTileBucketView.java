@@ -41,9 +41,9 @@ import com.oculusinfo.binning.TileIndex;
 public class FilterTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
-	private TileData<List<T>> _base 		= null;
-	private Integer			  _startBucket 	= null;
-	private Integer			  _endBucket 	= null;
+	private TileData<List<T>> _base = null;
+	private Integer	_startBucket = null;
+	private Integer	_endBucket = null;
 
 
 	public FilterTileBucketView (TileData<List<T>> base, Integer startBucket, Integer endBucket) {
@@ -88,7 +88,7 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
 		int start = ( _startBucket != null ) ? _startBucket : 0;
-		int end = ( _endBucket != null && _endBucket < binSize && _endBucket != 0) ? _endBucket : binSize;
+		int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
 
 		for(int i = 0; i < binSize; i++) {
 			if ( i >= start && i <= end ) {
