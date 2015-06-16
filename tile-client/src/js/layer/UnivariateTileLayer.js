@@ -29,6 +29,10 @@
 
     var UnivariateTile = require('./UnivariateTile');
 
+    function getResolutionScale(layer) {
+        return parseInt(layer.div.style.width, 10) / 100;
+    }
+
     function clampBounds( bounds, layer ) {
         bounds = bounds.clone();
         if ( layer.dimension === "x" ) {
@@ -265,50 +269,85 @@
      * of the grid depending the the dimension this layer represents.
      */
     OpenLayers.Layer.Univariate.prototype.moveGriddedTiles = function(deferred) {
-        if ( !deferred && !OpenLayers.Animation.isNative ) {
-            if ( this.moveTimerId !== null ) {
-                window.clearTimeout( this.moveTimerId );
-            }
-            this.moveTimerId = window.setTimeout(
-                this.deferMoveGriddedTiles, this.tileLoadingDelay
-            );
-            return;
-        }
-        var buffer = this.buffer || 1;
-        var scale = this.getResolutionScale();
-        while ( true ) {
+        var buffer = this.buffer + 1;
+        while(true) {
+            var tlTile = this.grid[0][0];
             var tlViewPort = {
-                x: ( this.grid[0][0].position.x * scale ) +
-                    parseInt( this.div.style.left, 10 ) +
-                    parseInt( this.map.layerContainerDiv.style.left ),
-                y: ( this.grid[0][0].position.y * scale ) +
-                    parseInt( this.div.style.top, 10 ) +
-                    parseInt( this.map.layerContainerDiv.style.top )
+                x: tlTile.position.x +
+                this.map.layerContainerOriginPx.x,
+                y: tlTile.position.y +
+                this.map.layerContainerOriginPx.y
             };
+            var ratio = this.getServerResolution() / this.map.getResolution();
             var tileSize = {
-                w: this.tileSize.w * scale,
-                h: this.tileSize.h * scale
+                w: Math.round(this.tileSize.w * ratio),
+                h: Math.round(this.tileSize.h * ratio)
             };
-
-            if ( this.dimension === 'x' ) {
-                if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
-                    this.shiftColumn( true );
-                } else if (tlViewPort.x < -tileSize.w * buffer) {
-                    this.shiftColumn( false );
-                } else {
-                    break;
-                }
+            if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
+                this.shiftColumn(true, tileSize);
+            } else if (tlViewPort.x < -tileSize.w * buffer) {
+                this.shiftColumn(false, tileSize);
+            } else if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
+                this.shiftRow(true, tileSize);
+            } else if (tlViewPort.y < -tileSize.h * buffer) {
+                this.shiftRow(false, tileSize);
             } else {
-                if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
-                    this.shiftRow( true );
-                } else if (tlViewPort.y < -tileSize.h * buffer) {
-                    this.shiftRow( false );
-                } else {
-                    break;
-                }
+                break;
             }
         }
-    };
+    }
+    //    if ( !deferred && !OpenLayers.Animation.isNative ) {
+    //        if ( this.moveTimerId !== null ) {
+    //            window.clearTimeout( this.moveTimerId );
+    //        }
+    //        this.moveTimerId = window.setTimeout(
+    //            this.deferMoveGriddedTiles, this.tileLoadingDelay
+    //        );
+    //        return;
+    //    }
+    //    var buffer = this.buffer || 1;
+    //    var scale = getResolutionScale(this);
+    //    while ( true ) {
+    //        var gridIdx = 0;
+    //        for (var i = 0; i < this.grid.length; i++) {
+    //            gridIdx = i;
+    //            if (this.grid[i].length != 0) {
+    //                break;
+    //            }
+    //        }
+    //        console.log(this.grid);
+    //        var tlViewPort = {
+    //            x: ( this.grid[gridIdx][0].position.x * scale ) +
+    //                parseInt( this.div.style.left, 10 ) +
+    //                parseInt( this.map.layerContainerDiv.style.left ),
+    //            y: ( this.grid[gridIdx][0].position.y * scale ) +
+    //                parseInt( this.div.style.top, 10 ) +
+    //                parseInt( this.map.layerContainerDiv.style.top )
+    //        };
+    //        var tileSize = {
+    //            w: this.tileSize.w * scale,
+    //            h: this.tileSize.h * scale
+    //        };
+    //
+    //        if ( this.dimension === 'x' ) {
+    //            if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
+    //                this.shiftColumn( true );
+    //            } else if (tlViewPort.x < -tileSize.w * buffer) {
+    //                this.shiftColumn( false );
+    //            } else {
+    //                break;
+    //            }
+    //        } else {
+    //            if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
+    //                this.shiftRow( true );
+    //            } else if (tlViewPort.y < -tileSize.h * buffer) {
+    //                this.shiftRow( false );
+    //            } else {
+    //                break;
+    //            }
+    //        }
+    //    }
+    //};
 
     module.exports = OpenLayers.Layer.Univariate;
 }());
