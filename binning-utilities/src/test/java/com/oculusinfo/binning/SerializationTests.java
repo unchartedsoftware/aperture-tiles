@@ -62,7 +62,7 @@ public class SerializationTests {
 
 
 
-		List<TileData<Double>> tiles = io.readTiles("backwardsCompatibilityTest", serializer, Collections.singleton(index));
+		List<TileData<Double>> tiles = io.readTiles("backwardsCompatibilityTest", serializer, Collections.singleton(index), null);
 		TileData<Double> tileOut = tiles.get(0);
 		double dataOut = tileOut.getBin(0, 0);
 
@@ -116,7 +116,7 @@ public class SerializationTests {
 		TileSerializer<Double> serializer = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
-		List<TileData<Double>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
+		List<TileData<Double>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index), null);
 		Assert.assertEquals(1, tilesOut.size());
 		TileData<Double> firstOut = tilesOut.get(0);
 		Assert.assertEquals(tile.getDefinition(), firstOut.getDefinition());
@@ -140,7 +140,7 @@ public class SerializationTests {
 		TileSerializer<List<Double>> serializer = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
-		List<TileData<List<Double>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
+		List<TileData<List<Double>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index), null);
 		Assert.assertEquals(1, tilesOut.size());
 		TileData<List<Double>> firstOut = tilesOut.get(0);
 		Assert.assertEquals(tile.getDefinition(), firstOut.getDefinition());
@@ -169,7 +169,7 @@ public class SerializationTests {
 		TileSerializer<List<String>> serializer = new PrimitiveArrayAvroSerializer<>(String.class, CodecFactory.nullCodec());
 		io.writeTiles(".", serializer, Collections.singleton(tile));
 
-		List<TileData<List<String>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index));
+		List<TileData<List<String>>> tilesOut = io.readTiles(".", serializer, Collections.singleton(index), null);
 		Assert.assertEquals(1, tilesOut.size());
 		TileData<List<String>> firstOut = tilesOut.get(0);
 		Assert.assertEquals(tile.getDefinition(), firstOut.getDefinition());

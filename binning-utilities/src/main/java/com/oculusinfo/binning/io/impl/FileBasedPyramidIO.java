@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -27,6 +27,7 @@ package com.oculusinfo.binning.io.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
@@ -39,12 +40,12 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
  * Implements a PyramidIO for reading tiles that are based on the filesystem (zip, resource, or directory)
  * 	This class will be injected with a PyramidSource object that will provide the necesarry tile access depending
  *  on the particular type of file system tile used.
- *  
+ *
  */
 public class FileBasedPyramidIO implements PyramidIO {
-	
+
 	private PyramidSource _source;
-	
+
 	public FileBasedPyramidIO(PyramidSource source){
 		_source = source;
 	}
@@ -61,7 +62,7 @@ public class FileBasedPyramidIO implements PyramidIO {
 	@Override
 	public <T> void writeTiles (String basePath, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
-    	
+
 		_source.writeTiles(basePath, serializer, data);
 	}
 
@@ -76,9 +77,9 @@ public class FileBasedPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> List<TileData<T>> readTiles (String basePath,
-	                                        TileSerializer<T> serializer,
-	                                        Iterable<TileIndex> tiles) throws IOException {
+	public <T> List<TileData<T>> readTiles(String basePath,
+										   TileSerializer<T> serializer,
+										   Iterable<TileIndex> tiles, Map properties) throws IOException {
 		return _source.readTiles(basePath, serializer, tiles);
 	}
 
@@ -93,7 +94,7 @@ public class FileBasedPyramidIO implements PyramidIO {
 	public String readMetaData (String basePath) throws IOException {
 		return _source.readMetaData(basePath);
 	}
-	
+
 	@Override
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
 		_source.removeTiles(id, tiles);

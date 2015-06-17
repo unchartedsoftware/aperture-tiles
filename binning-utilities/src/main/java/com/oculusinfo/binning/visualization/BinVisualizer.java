@@ -442,7 +442,7 @@ public class BinVisualizer extends JFrame {
 		try {
 			List<TileData<Double>> data = _pyramidIO.readTiles(_pyramidId,
 			                                                   _serializer,
-			                                                   Collections.singleton(index));
+			                                                   Collections.singleton(index), null);
 			if (1 == data.size()) {
 				TileData<Double> tile = data.get(0);
 				showTile(tile);

@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -62,7 +62,7 @@ public class AnnotationHBaseIOTests {
     private int NUM_ENTRIES = 50;
 	private AnnotationIO _dataIO;
 	private PyramidIO _tileIO;
-	
+
 	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
 	private AnnotationSerializer _dataSerializer;
 	private TilePyramid _pyramid;
@@ -74,21 +74,21 @@ public class AnnotationHBaseIOTests {
 			_dataIO = new HBaseAnnotationIO("MUST",
 			                                "SET",
 			                                "THESE");
-    		
+
 			_tileIO = new HBasePyramidIO("MUST",
 			                             "SET",
 			                             "THESE");
 		} catch (Exception e) {
-    		
+
 			LOGGER.error("Error: " + e.getMessage());
-			
+
 		}
-    	
+
 		_pyramid = new WebMercatorTilePyramid();
 		_indexer = new AnnotationIndexerImpl();
 		_tileSerializer = new StringLongPairArrayMapJsonSerializer();
-		_dataSerializer = new JSONAnnotationDataSerializer();  	
-	
+		_dataSerializer = new JSONAnnotationDataSerializer();
+
 	}
 
 	@Test
@@ -98,12 +98,12 @@ public class AnnotationHBaseIOTests {
 
 		List<AnnotationData<?>> annotations = generator.generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationTile> tiles = generator.generateTiles( annotations, _indexer, _pyramid );
-		
+
 		List<TileIndex> tileIndices = AnnotationUtil.tilesToIndices( tiles );
 		List<Pair<String, Long>> dataIndices = AnnotationUtil.dataToIndices( annotations );
 
 		try {
-    		
+
 			/*
 			 *  Create Table
 			 */
@@ -112,40 +112,40 @@ public class AnnotationHBaseIOTests {
 			_dataIO.initializeForWrite( TABLE_NAME );
 			/*
 			 *  Write annotations
-			 */ 	
+			 */
 			LOGGER.debug("Writing "+NUM_ENTRIES+" to table");
 			_tileIO.writeTiles(TABLE_NAME, _tileSerializer, AnnotationTile.convertToRaw( tiles ) );
 			_dataIO.writeData(TABLE_NAME, _dataSerializer, annotations );
-	        
+
 			/*
 			 *  Read and check all annotations
 			 */
 			LOGGER.debug( "Reading all annotations" );
-			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(TABLE_NAME, _tileSerializer, tileIndices));
+			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(TABLE_NAME, _tileSerializer, tileIndices, null));
 			List<AnnotationData<?>> allData = _dataIO.readData( TABLE_NAME, _dataSerializer, dataIndices );
 			AnnotationUtil.printTiles( allTiles );
 			AnnotationUtil.printData( allData );
-	    	
+
 			LOGGER.debug( "Comparing annotations" );
 			Assert.assertTrue( AnnotationUtil.compareTiles( allTiles, tiles ) );
 			Assert.assertTrue( AnnotationUtil.compareData( allData, annotations ) );
-	    	
+
 			LOGGER.debug("Removing "+NUM_ENTRIES+" from table");
 			_tileIO.removeTiles(TABLE_NAME, tileIndices );
 			_dataIO.removeData(TABLE_NAME, dataIndices );
-	       
-			allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(TABLE_NAME, _tileSerializer, tileIndices));
+
+			allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(TABLE_NAME, _tileSerializer, tileIndices, null));
 			allData = _dataIO.readData( TABLE_NAME, _dataSerializer, dataIndices );
-	    	
+
 			Assert.assertTrue( allTiles.size() == 0 );
 			Assert.assertTrue( allData.size() == 0 );
-	    	
+
 			LOGGER.debug( "Complete" );
-	
+
 		} catch (Exception e) {
-    		
+
 			LOGGER.error( "Error: " + e.getMessage() );
-			
+
 		} finally {
 			/*
 			 * Drop table

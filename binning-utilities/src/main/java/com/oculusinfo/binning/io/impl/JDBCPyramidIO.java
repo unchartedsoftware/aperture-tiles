@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
@@ -45,9 +46,9 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 /**
  * JDBC-based implementation of PyramidIO.
- * 
+ *
  * @author rcameron
- * 
+ *
  */
 public class JDBCPyramidIO implements PyramidIO {
 	private static final String TABLE_METADATA = "metadata";
@@ -60,7 +61,7 @@ public class JDBCPyramidIO implements PyramidIO {
 	private static final String COL_PYRAMID_ID = "pyramid_id";
 
 	private Connection _connection;
-	
+
 	public JDBCPyramidIO(String driverClassName, String dbUrl) throws Exception {
 		Class.forName(driverClassName);
 		_connection = DriverManager.getConnection(dbUrl);
@@ -99,7 +100,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				sb.append(",");
 				sb.append(COL_TILE_ROW);
 				sb.append("))");
-				
+
 				stmt = _connection.createStatement();
 				stmt.executeUpdate(sb.toString());
 			}
@@ -111,7 +112,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				sb.append(" (");
 				sb.append(COL_PYRAMID_ID);
 				sb.append(" TEXT PRIMARY KEY, metadata TEXT)");
-				
+
 				if (stmt == null) stmt = _connection.createStatement();
 				stmt.executeUpdate(sb.toString());
 			}
@@ -127,7 +128,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			}
 		}
 	}
-	
+
 	// We wrap pyramid ids in [] so we can use a wider range of characters in
 	// pyramid IDs.
 	private String toTableName(String pyramidId) {
@@ -140,10 +141,10 @@ public class JDBCPyramidIO implements PyramidIO {
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT name FROM 'sqlite_master' WHERE type='table' AND name=");
 		sb.append(toTableName(pyramidId));
-		
+
 		Statement stmt = null;
 		boolean exists = false;
-		
+
 		try {
 			stmt = _connection.createStatement();
 			stmt.execute(sb.toString());
@@ -153,7 +154,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				stmt.close();
 			}
 		}
-		
+
 		return exists;
 	}
 
@@ -227,7 +228,7 @@ public class JDBCPyramidIO implements PyramidIO {
 		}
 		return metadata != null;
 	}
-	
+
 	@Override
 	public void writeMetaData(String pyramidId, String metaData)
 		throws IOException {
@@ -260,7 +261,7 @@ public class JDBCPyramidIO implements PyramidIO {
 				sb.append(metaData);
 				sb.append("')");
 			}
-			
+
 			stmt = _connection.createStatement();
 			stmt.execute(sb.toString());
 		} catch (SQLException e) {
@@ -283,7 +284,7 @@ public class JDBCPyramidIO implements PyramidIO {
 
 	@Override
 	public <T> List<TileData<T>> readTiles(String pyramidId,
-	                                       TileSerializer<T> serializer, Iterable<TileIndex> tiles)
+										   TileSerializer<T> serializer, Iterable<TileIndex> tiles, Map properties)
 		throws IOException {
 		PreparedStatement ps = null;
 		try {
@@ -404,7 +405,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			sb.append(" = '");
 			sb.append(toTableName(pyramidId));
 			sb.append("'");
-			
+
 			stmt = _connection.createStatement();
 			ResultSet resultSet = stmt.executeQuery(sb
 			                                        .toString());
@@ -424,7 +425,7 @@ public class JDBCPyramidIO implements PyramidIO {
 			}
 		}
 	}
-	
+
 	@Override
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
 		throw new IOException("removeTiles not currently supported for JDBCPyramidIO");

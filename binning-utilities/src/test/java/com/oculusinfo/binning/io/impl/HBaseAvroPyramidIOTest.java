@@ -61,7 +61,7 @@ public class HBaseAvroPyramidIOTest {
 		tiles.add(index);
 
 		try {
-			return pio.readTiles(pyramidId, serializer, tiles);
+			return pio.readTiles(pyramidId, serializer, tiles, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

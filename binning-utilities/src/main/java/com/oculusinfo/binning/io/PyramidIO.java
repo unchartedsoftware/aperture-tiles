@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,20 +24,21 @@
 package com.oculusinfo.binning.io;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Properties;
-
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 
 
 /**
  * A PyramidIO is a class that can read and write tile pyramids.
- * 
+ *
  * @author nkronenfeld
  */
 public interface PyramidIO {
@@ -49,7 +50,7 @@ public interface PyramidIO {
 
 	/**
 	 * Initialize the system for writing a pyramid
-	 * 
+	 *
 	 * @param pyramidId The ID of the pyramid to be written; the meaning of this
 	 *            ID is dependent on the I/O type
 	 */
@@ -57,7 +58,7 @@ public interface PyramidIO {
 
 	/**
 	 * Write a set of tiles out
-	 * 
+	 *
 	 * @param pyramidId The ID of the pyramid to be written; the meaning of this
 	 *            ID is dependent on the I/O type
 	 * @param serializer A serializer class that defines how the specific data
@@ -70,7 +71,7 @@ public interface PyramidIO {
 
 	/**
 	 * Writes out new metadata for this tile set
-	 * 
+	 *
 	 * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
 	 *            is dependent on the I/O type
 	 * @param metaData The metadata to be written
@@ -80,7 +81,7 @@ public interface PyramidIO {
 	/**
 	 * Initialize a dataset for reading. This rarely has to do anything, but in
 	 * live tile generation, must describe the dataset pretty completely.
-	 * 
+	 *
 	 * @param pyramidId The ID of the data set to be read
 	 * @param width The desired number of bins per tile along the X axis. Some
 	 *            implementations will need this information (if they are
@@ -95,19 +96,20 @@ public interface PyramidIO {
 
 	/**
 	 * Read in a set of tiles
-	 * 
+	 *
 	 * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
 	 *            is dependent on the I/O type
 	 * @param serializer A serializaer class that defines how the specific data
 	 *            format will be read
+	 * @param properties
 	 * @return A list of tiles
 	 */
-	public <T> List<TileData<T>> readTiles (String pyramidId, TileSerializer<T> serializer,
-	                                        Iterable<TileIndex> tiles) throws IOException;
+	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer,
+										   Iterable<TileIndex> tiles, Map properties) throws IOException;
 
 	/**
 	 * Get a stream containing the raw data for one tile.
-	 * 
+	 *
 	 * @param pyramidId The ID of the pyramid to be read; the meaning of this ID
 	 *            is dependent on the I/O type
 	 * @param serializer A serializaer class that defines how the specific data
@@ -123,16 +125,16 @@ public interface PyramidIO {
 
 	/**
 	 * Gets the metadata for this tile set
-	 * 
+	 *
 	 * @param pyramidId An ID of the pyramid to be read; the use of this ID is
 	 *            dependent on the I/O type
 	 */
 	public String readMetaData (String pyramidId) throws IOException;
-	
-	
-	
+
+
+
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException;
-    
-	
-	
+
+
+
 }

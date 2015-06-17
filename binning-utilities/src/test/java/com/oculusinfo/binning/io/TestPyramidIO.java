@@ -41,7 +41,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 /**
  * An in-memory storage of pyramids, for use in testing.
- * 
+ *
  * @author nkronenfeld
  */
 public class TestPyramidIO implements PyramidIO {
@@ -90,9 +90,9 @@ public class TestPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> List<TileData<T>> readTiles (String pyramidId,
-	                                        TileSerializer<T> serializer,
-	                                        Iterable<TileIndex> tiles) throws IOException {
+	public <T> List<TileData<T>> readTiles(String pyramidId,
+										   TileSerializer<T> serializer,
+										   Iterable<TileIndex> tiles, Map properties) throws IOException {
 		List<TileData<T>> results = new ArrayList<TileData<T>>();
 		for (TileIndex index: tiles) {
 			String key = getTileKey(pyramidId, index);
@@ -130,7 +130,7 @@ public class TestPyramidIO implements PyramidIO {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
 		throw new IOException("removeTiles not currently supported for TestPyramidIO");

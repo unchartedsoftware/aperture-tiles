@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -66,7 +66,7 @@ public class AnnotationServiceImpl implements AnnotationService {
         "[\"Urgent\",\"High\",\"Medium\",\"Low\"]");
 	// These two functions are used to check and cast the type of the tile serializer we use.
 
-	// Just wrapping the Map.class, which is the same as the complex class listed due to 
+	// Just wrapping the Map.class, which is the same as the complex class listed due to
 	// type erasure.
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static Class<Map<String, List<Pair<String, Long>>>> getRuntimeBinClass () {
@@ -87,7 +87,7 @@ public class AnnotationServiceImpl implements AnnotationService {
     private FactoryProvider<AnnotationIO> _annotationIOFactoryProvider;
     private FactoryProvider<AnnotationFilter> _annotationFilterFactoryProvider;
     private Map<String, Boolean> _initializedLayersById;
-	
+
 	protected final ReadWriteLock _lock = new ReentrantReadWriteLock();
 
     @Inject
@@ -141,7 +141,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 	public Pair<String,Long> write( String layer,
 	                                AnnotationData<?> annotation ) throws IllegalArgumentException {
-		
+
 		_lock.writeLock().lock();
 		try {
 
@@ -175,7 +175,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 			// return generated certificate
 			return annotation.getCertificate();
-    		
+
 		} catch ( Exception e ) {
 			e.printStackTrace();
 			throw new IllegalArgumentException( e.getMessage() );
@@ -227,7 +227,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		}
 
 	}
-	
+
 
 	public List<List<AnnotationData<?>>> read( String layer, TileIndex index, JSONObject query ) {
 
@@ -239,15 +239,15 @@ public class AnnotationServiceImpl implements AnnotationService {
 			AnnotationFilter filter = config.produce( AnnotationFilter.class );
 
 			return getDataFromTiles( layer, index, filter, pyramid );
-    		
+
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
-		} finally { 		
+		} finally {
 			_lock.readLock().unlock();
 		}
 	}
-	
-		
+
+
 	public void remove( String layer, Pair<String, Long> certificate ) throws IllegalArgumentException {
 
 		_lock.writeLock().lock();
@@ -277,54 +277,54 @@ public class AnnotationServiceImpl implements AnnotationService {
 		}
 	}
 
-	
+
 	/*
-	 * 
+	 *
 	 * Helper methods
-	 * 
-	 */	
+	 *
+	 */
 
 	/*
 	 * Check data UUID in IO, if already exists, return true
 	 */
 	private boolean checkForCollision( String layer, AnnotationData<?> annotation ) {
-		
+
 		List<Pair<String,Long>> certificate = new LinkedList<>();
 		certificate.add( annotation.getCertificate() );
 		return ( readDataFromIO( layer, certificate ).size() > 0 ) ;
 	}
-	
+
 	/*
 	 * Check data timestamp from clients source, if out of date, return true
 	 */
 	public boolean isRequestOutOfDate( String layer, Pair<String, Long> certificate ) {
-		
+
 		List<Pair<String, Long>> certificates = new LinkedList<>();
 		certificates.add( certificate );
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
-		
+
 		if ( annotations.size() == 0 ) {
 			// removed since client update, abort
 			return true;
 		}
-		
+
 		if ( !annotations.get(0).getTimestamp().equals( certificate.getSecond() ) ) {
 			// clients timestamp doesn't not match most up to date, abort
 			return true;
 		}
-		
+
 		// everything seems to be in order
 		return false;
 	}
-	
-	
+
+
 	/*
 	 * Iterate through all indices, find matching tiles and add data certificate, if tile
 	 * is missing, add it
 	 */
 	private void addDataCertificateToTiles( List<AnnotationTile> tiles, List<TileAndBinIndices> indices, AnnotationData<?> data ) {
-		
-		for ( TileAndBinIndices index : indices ) {			
+
+		for ( TileAndBinIndices index : indices ) {
 			// check all existing tiles for matching index
 			boolean found = false;
 			for ( AnnotationTile tile : tiles ) {
@@ -333,17 +333,17 @@ public class AnnotationServiceImpl implements AnnotationService {
 					tile.addDataToBin( index.getBin(), data );
 					found = true;
 					break;
-				} 
+				}
 			}
 			if ( !found ) {
 				// no tile exists, add tile
                 AnnotationTile tile = new AnnotationTile( index.getTile() );
 				tile.addDataToBin(index.getBin(), data);
-				tiles.add( tile );    	
+				tiles.add( tile );
 			}
-		}				
+		}
 	}
-	
+
 	/*
 	 * Iterate through all tiles, removing data certificate from bins, any tiles with no bin entries
 	 * are added to tileToRemove, the rest are added to tilesToWrite
@@ -355,7 +355,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	                                             TilePyramid pyramid ) {
 		// clear supplied lists
 		tilesToWrite.clear();
-		tilesToRemove.clear();	
+		tilesToRemove.clear();
 
 		// for each tile, remove data from bins
 		for ( AnnotationTile tile : tiles ) {
@@ -363,8 +363,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 			BinIndex binIndex = _indexer.getIndicesByLevel( data, tile.getDefinition().getLevel(), pyramid ).get(0).getBin();
 			// remove data from tile
             tile.removeDataFromBin(binIndex, data);
-		}	
-		
+		}
+
 		// determine which tiles need to be re-written and which need to be removed
 		for ( AnnotationTile tile : tiles ) {
 			if ( tile.isEmpty() ) {
@@ -376,30 +376,30 @@ public class AnnotationServiceImpl implements AnnotationService {
 			}
 		}
 	}
-	
+
 	/*
 	 * convert a List<TileAndBinIndices> to List<TileIndex>
 	 */
 	private List<TileIndex> convert( List<TileAndBinIndices> tiles ) {
-		
+
 		List<TileIndex> indices = new ArrayList<>();
-		for ( TileAndBinIndices tile : tiles ) {			
+		for ( TileAndBinIndices tile : tiles ) {
 			indices.add( tile.getTile() );
 		}
-		
+
 		return indices;
 	}
 
-	
+
 	private List< List<AnnotationData<?>> > getDataFromTiles( String layer, TileIndex tileIndex, AnnotationFilter filter, TilePyramid pyramid ) {
-		
-		// wrap index into list 
+
+		// wrap index into list
 		List<TileIndex> indices = new LinkedList<>();
 		indices.add( tileIndex );
-			
+
 		// get tiles
 		List< AnnotationTile > tiles = readTilesFromIO( layer, indices );
-				
+
 		// for each tile, assemble list of all data certificates
 		List<Pair<String,Long>> certificates = new LinkedList<>();
 		List<FilteredBinResults> results = new LinkedList<>();
@@ -407,9 +407,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 			// for each bin
 			FilteredBinResults r = filter.filterBins(tile.getData());
 			certificates.addAll(r.getFilteredBins());
-			results.add(r);			
+			results.add(r);
 		}
-		
+
 		// read data from io
 		List<AnnotationData<?>> annotations = readDataFromIO( layer, certificates );
 
@@ -439,9 +439,9 @@ public class AnnotationServiceImpl implements AnnotationService {
 		return dataByBin;
 	}
 
-	
+
 	private void addDataToTiles( String layer, AnnotationData<?> data, TilePyramid pyramid ) {
-		
+
 		// get list of the indices for all levels
 		List< TileAndBinIndices > indices = _indexer.getIndices( data, pyramid );
 		// get all affected tiles
@@ -449,13 +449,13 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// add new data certificate to tiles
 		addDataCertificateToTiles( tiles, indices, data );
 		// write tiles back to io
-		writeTilesToIO( layer, tiles );    		
+		writeTilesToIO( layer, tiles );
 		// write data to io
 		writeDataToIO( layer, data );
 
 	}
-	
-	
+
+
 	private void removeDataFromTiles( String layer, Pair<String, Long> certificate, TilePyramid pyramid ) {
 
 		// read the annotation data
@@ -472,19 +472,19 @@ public class AnnotationServiceImpl implements AnnotationService {
 		// remove data from tiles and organize into lists to write and remove
 		removeDataCertificateFromTiles( tilesToWrite, tilesToRemove, tiles, data, pyramid );
 		// write modified tiles
-		writeTilesToIO( layer, tilesToWrite );		
+		writeTilesToIO( layer, tilesToWrite );
 		// remove empty tiles and data
 		removeTilesFromIO( layer, tilesToRemove );
 	}
 
 
 	protected void writeTilesToIO( String layer, List< AnnotationTile > tiles ) {
-		
+
 		if ( tiles.size() == 0 ) return;
-		
+
 		try {
 			LayerConfiguration config = getLayerConfiguration( layer, null );
-			PyramidIO io = config.produce(PyramidIO.class);	
+			PyramidIO io = config.produce(PyramidIO.class);
 
 			TileSerializer<Map<String, List<Pair<String, Long>>>> serializer =
 				SerializationTypeChecker.checkBinClass(config.produce(TileSerializer.class),
@@ -493,16 +493,16 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			io.writeTiles( dataId, serializer, AnnotationTile.convertToRaw( tiles ) );
-					
+
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
-		
+
 	}
-	
-	
+
+
 	protected void writeDataToIO( String layer, AnnotationData<?> data ) {
-		
+
 		List<AnnotationData<?>> dataList = new LinkedList<>();
 		dataList.add( data );
 
@@ -516,30 +516,30 @@ public class AnnotationServiceImpl implements AnnotationService {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
 	}
-	
+
 
 	protected void removeTilesFromIO( String layer, List<TileIndex> tiles ) {
 
 		if ( tiles.size() == 0 ) {
 			return;
 		}
-		
+
 		try {
 
 			LayerConfiguration config = getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce( PyramidIO.class );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			io.removeTiles( dataId, tiles );
-			
+
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
 
 	}
-	
-	
+
+
 	protected void removeDataFromIO( String layer, Pair<String, Long> data ) {
-		
+
 		List<Pair<String, Long>> dataList = new LinkedList<>();
 		dataList.add( data );
 
@@ -549,14 +549,14 @@ public class AnnotationServiceImpl implements AnnotationService {
 			AnnotationIO io = config.produce( AnnotationIO.class );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			io.removeData( dataId, dataList );
-			
+
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
 
 	}
-	
-	
+
+
 	protected List< AnnotationTile > readTilesFromIO( String layer, List<TileIndex> indices ) {
 
         List< AnnotationTile > tiles = new LinkedList<>();
@@ -565,7 +565,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		if ( indices.size() == 0 ) {
 			return tiles;
 		}
-		
+
 		try {
 			LayerConfiguration config = getLayerConfiguration( layer, null );
 			PyramidIO io = config.produce( PyramidIO.class );
@@ -576,34 +576,34 @@ public class AnnotationServiceImpl implements AnnotationService {
 
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 
-			for ( AnnotationTile tile : AnnotationTile.convertFromRaw( io.readTiles(dataId, serializer, indices) ) ) {
+			for ( AnnotationTile tile : AnnotationTile.convertFromRaw( io.readTiles(dataId, serializer, indices, null) ) ) {
 				if (!readTiles.contains(tile.getDefinition())) {
 					readTiles.add(tile.getDefinition());
 					tiles.add(tile);
 				}
 			}
-					
+
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
-		return tiles;		
+		return tiles;
 	}
-	
+
 	protected List<AnnotationData<?>> readDataFromIO( String layer, List<Pair<String,Long>> certificates ) {
-		
+
 		List<AnnotationData<?>> data = new LinkedList<>();
-		
+
 		if ( certificates.size() == 0 ) {
 			return data;
 		}
-		
+
 		try {
 
 			LayerConfiguration config = getLayerConfiguration( layer, null );
             String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 			AnnotationIO io = config.produce( AnnotationIO.class );
 			data = io.readData( dataId, _dataSerializer, certificates );
-			
+
 		} catch ( Exception e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}

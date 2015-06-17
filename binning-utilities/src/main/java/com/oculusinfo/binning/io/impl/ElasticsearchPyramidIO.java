@@ -11,6 +11,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -84,24 +85,38 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	// note about the start/end/x/y confusion
 	// x,y
-	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY){
+	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, Map filterObject){
 
 //		LOGGER.debug("--X--" + String.valueOf((long) Math.floor(endX - startX)));
 //		LOGGER.debug("--Y--" + String.valueOf((long) Math.floor(startY- endY) ));
 
+//		String filterType = (String) filterObject.get("type");
+
+		String value;
+		String path;
+
+		AndFilterBuilder filter = FilterBuilders.andFilter(
+			FilterBuilders.rangeFilter("locality_bag.dateBegin")
+				.gt(startX)
+				.lte(endX),
+			FilterBuilders.rangeFilter("cluster_tellfinder")
+				.gte(endY)
+				.lte(startY)
+		);
+
+		if (filterObject != null && filterObject.containsKey("value") && filterObject.containsKey("path")) {
+//			LOGGER.debug("Filtering" + filterObject.get("value") + filterObject.get("path"));
+			value =(String) filterObject.get("value");
+			path = (String) filterObject.get("path");
+			filter.add(FilterBuilders.termFilter(path, value));
+		}
+
 		SearchRequestBuilder searchRequestBuilder =
 			baseQuery(
-				FilterBuilders.andFilter(
-					FilterBuilders.rangeFilter("locality_bag.dateBegin")
-						.gt(startX)
-						.lte(endX),
-					FilterBuilders.rangeFilter("cluster_tellfinder")
-						.gte(endY)
-						.lte(startY)
-				)
+				filter
 			)
 			.addAggregation(
-				AggregationBuilders.dateHistogram("date_agg")
+				AggregationBuilders.histogram("date_agg")
 					.field("locality_bag.dateBegin")
 					.interval(getIntervalFromBounds(startX, endX))
 					.minDocCount(1)
@@ -112,6 +127,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 							.minDocCount(1)
 					)
 			);
+
+//		LOGGER.debug(searchRequestBuilder.toString());
 
 		return searchRequestBuilder
 				.execute()
@@ -169,53 +186,48 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		return result;
 	}
 
-	private Map<Integer, Map> aggregationMapParse(DateHistogram date_agg, TileIndex tileIndex) {
-		List<? extends DateHistogram.Bucket> dateBuckets = date_agg.getBuckets();
+	private Map<Integer, Map> aggregationMapParse(Histogram date_agg, TileIndex tileIndex) {
+		List<? extends Histogram.Bucket> dateBuckets = date_agg.getBuckets();
 
 		Map<Integer, Map> result = new HashMap<>();
 
-		// initialize the map
-		// might not need to do this?
-		for (int i = 0; i < 256; i++) {
-			Map <Integer, Long> intermediate = new HashMap<>();
-			for (int j = 0; j < 256; j++){
-				intermediate.put(j, (long) 0);
-			}
-			result.put(i,intermediate);
-		}
+		long maxval = 0;
 
-		for (DateHistogram.Bucket dateBucket : dateBuckets) {
+		for (Histogram.Bucket dateBucket : dateBuckets) {
 			Histogram cluster_agg = dateBucket.getAggregations().get("cluster_range");
 			List<? extends Histogram.Bucket> clusterBuckets = cluster_agg.getBuckets();
 
-			for( Histogram.Bucket clusterBucket : clusterBuckets) {
+			BinIndex xBinIndex = AOIP.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), 0, tileIndex);
+			int xBin = xBinIndex.getX();
+			Map<Integer,Long> intermediate = new HashMap<>();
+			result.put(xBin, intermediate);
 
-				// transform from root coordinates into bin coordinates
+			for( Histogram.Bucket clusterBucket : clusterBuckets) {
+				//given the bin coordinates, see if there's any data in those bins, add values to existing bins
 				BinIndex binIndex = AOIP.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), clusterBucket.getKeyAsNumber().doubleValue(), tileIndex);
-				int xBin = binIndex.getX();
 				int yBin = binIndex.getY();
 
-				//given the bin coordinates, see if there's any data in those bins, add values to existing bins
-
 				if (result.containsKey(xBin) && result.get(xBin).containsKey(yBin)) {
-					result.get(xBin).put(yBin, (long)result.get(xBin).get(yBin) + clusterBucket.getDocCount());
+					intermediate.put(yBin, (long) intermediate.get(yBin) + clusterBucket.getDocCount());
 				}
-
-//				intermediate.put((long) clusterBucket.getKeyAsNumber(), clusterBucket.getDocCount());
-//				result.put((long) dateBucket.getKeyAsNumber(), intermediate);
-
+				else if (result.containsKey(xBin) && !(intermediate.containsKey(yBin))) {
+					intermediate.put(yBin, clusterBucket.getDocCount());
+				}
+				if (maxval < clusterBucket.getDocCount()){
+					maxval = clusterBucket.getDocCount();
+				}
 			}
-
 		}
+//		LOGGER.debug("maxvalue: " + String.valueOf(maxval));
 		return result;
 	}
 
 
 
 	@Override
-	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles) throws IOException {
+	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles, Map filterObject) throws IOException {
 
-		LOGGER.debug("read Tiles");
+//		LOGGER.debug("read Tiles");
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
 		// iterate over the tile indices
@@ -229,9 +241,9 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double startY = rect.getMaxY();
 			double endY = rect.getY();
 
-			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY);
+			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, filterObject);
 
-			DateHistogram date_agg = sr.getAggregations().get("date_agg");
+			Histogram date_agg = sr.getAggregations().get("date_agg");
 
 			Map<Integer, Map> tileMap = aggregationMapParse(date_agg, tileIndex);
 
@@ -276,7 +288,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
 		LOGGER.debug("Pretending to read metadata");
-		return "{\"bounds\":[1417459397000,0,1430881122000,1481798],\"maxzoom\":1,\"scheme\":\"TMS\",\"description\":\"Elasticsearch test layer\",\"projection\":\"EPSG:4326\",\"name\":\"ES_SIFT_CROSSPLOT\",\"minzoom\":1,\"tilesize\":256,\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"469.0\", \"0\":\"700\"}}}";
+		return "{\"bounds\":[1417459397000,0,1430881122000,1481798],\"maxzoom\":1,\"scheme\":\"TMS\",\"description\":\"Elasticsearch test layer\",\"projection\":\"EPSG:4326\",\"name\":\"ES_SIFT_CROSSPLOT\",\"minzoom\":1,\"tilesize\":256,\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
 	}
 
 	@Override

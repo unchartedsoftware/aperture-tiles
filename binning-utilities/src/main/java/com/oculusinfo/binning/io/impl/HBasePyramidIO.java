@@ -291,9 +291,9 @@ public class HBasePyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> List<TileData<T>> readTiles (String tableName,
-	                                        TileSerializer<T> serializer,
-	                                        Iterable<TileIndex> tiles) throws IOException {
+	public <T> List<TileData<T>> readTiles(String tableName,
+										   TileSerializer<T> serializer,
+										   Iterable<TileIndex> tiles, Map properties) throws IOException {
 		List<String> rowIds = new ArrayList<String>();
 		for (TileIndex tile: tiles) {
 			rowIds.add(rowIdFromTileIndex(tile));

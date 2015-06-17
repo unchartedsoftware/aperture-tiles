@@ -44,7 +44,7 @@ import java.util.List;
 
 
 public class FileSystemPyramidSourceTest {
-	
+
 	private static String SOURCE_DIR = "./src/test/file_pyramid/";
 	private static String SOURCE_EXT = "avro";
 	private static String SOURCE_LAYER = "test";
@@ -53,7 +53,7 @@ public class FileSystemPyramidSourceTest {
 	private static int Y_INDEX = 2;
 
 
-	@Test 
+	@Test
 	public void writeReadAvroRoundTripTest () {
 		FileBasedPyramidIO io = new FileBasedPyramidIO(new FileSystemPyramidSource(SOURCE_DIR, SOURCE_EXT));
 		TileSerializer<Integer> serializer = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
@@ -113,9 +113,9 @@ public class FileSystemPyramidSourceTest {
 		TileIndex index = new TileIndex(4, 3, 2);
 
 		tiles.add(index);
-		
+
 		try {
-			return pio.readTiles(pyramidId, serializer, tiles);
+			return pio.readTiles(pyramidId, serializer, tiles, null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
