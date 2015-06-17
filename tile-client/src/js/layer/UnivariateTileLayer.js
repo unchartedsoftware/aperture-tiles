@@ -283,71 +283,24 @@
                 w: Math.round(this.tileSize.w * ratio),
                 h: Math.round(this.tileSize.h * ratio)
             };
-            if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
-                this.shiftColumn(true, tileSize);
-            } else if (tlViewPort.x < -tileSize.w * buffer) {
-                this.shiftColumn(false, tileSize);
-            } else if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
-                this.shiftRow(true, tileSize);
-            } else if (tlViewPort.y < -tileSize.h * buffer) {
-                this.shiftRow(false, tileSize);
+            if (this.dimension === 'x') {
+                if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
+                    this.shiftColumn(true, tileSize);
+                } else if (tlViewPort.x < -tileSize.w * buffer) {
+                    this.shiftColumn(false, tileSize);
+                } else {
+                    break;
+                }
             } else {
-                break;
+                if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
+                    this.shiftRow(true, tileSize);
+                } else if (tlViewPort.y < -tileSize.h * buffer) {
+                    this.shiftRow(false, tileSize);
+                } else {
+                    break;
+                }
             }
         }
     }
-    //    if ( !deferred && !OpenLayers.Animation.isNative ) {
-    //        if ( this.moveTimerId !== null ) {
-    //            window.clearTimeout( this.moveTimerId );
-    //        }
-    //        this.moveTimerId = window.setTimeout(
-    //            this.deferMoveGriddedTiles, this.tileLoadingDelay
-    //        );
-    //        return;
-    //    }
-    //    var buffer = this.buffer || 1;
-    //    var scale = getResolutionScale(this);
-    //    while ( true ) {
-    //        var gridIdx = 0;
-    //        for (var i = 0; i < this.grid.length; i++) {
-    //            gridIdx = i;
-    //            if (this.grid[i].length != 0) {
-    //                break;
-    //            }
-    //        }
-    //        console.log(this.grid);
-    //        var tlViewPort = {
-    //            x: ( this.grid[gridIdx][0].position.x * scale ) +
-    //                parseInt( this.div.style.left, 10 ) +
-    //                parseInt( this.map.layerContainerDiv.style.left ),
-    //            y: ( this.grid[gridIdx][0].position.y * scale ) +
-    //                parseInt( this.div.style.top, 10 ) +
-    //                parseInt( this.map.layerContainerDiv.style.top )
-    //        };
-    //        var tileSize = {
-    //            w: this.tileSize.w * scale,
-    //            h: this.tileSize.h * scale
-    //        };
-    //
-    //        if ( this.dimension === 'x' ) {
-    //            if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
-    //                this.shiftColumn( true );
-    //            } else if (tlViewPort.x < -tileSize.w * buffer) {
-    //                this.shiftColumn( false );
-    //            } else {
-    //                break;
-    //            }
-    //        } else {
-    //            if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
-    //                this.shiftRow( true );
-    //            } else if (tlViewPort.y < -tileSize.h * buffer) {
-    //                this.shiftRow( false );
-    //            } else {
-    //                break;
-    //            }
-    //        }
-    //    }
-    //};
-
     module.exports = OpenLayers.Layer.Univariate;
 }());
