@@ -37,11 +37,12 @@ import java.util.Date
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.datasets.{CSVReader, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
-
+import org.apache.spark.sql.types.DataType
 
 
 /**
@@ -94,6 +95,19 @@ object PipelineOperations {
 	def loadJsonDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
 		val context = data.sqlContext
 		val srdd = coalesce(context, context.jsonFile(path), partitions)
+		PipelineData(data.sqlContext, srdd)
+	}
+
+	/**
+	 *
+	 * @param path Valid HDFS path to the data.
+	 * @param partitions Number of partitions to load data into.
+	 * @param data Not used.
+	 * @return PipelineData with a schema RDD populated from the Parquet file.
+	 */
+	def loadParquetDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
+		val context = data.sqlContext
+		val srdd = coalesce(context, context.parquetFile(path), partitions)
 		PipelineData(data.sqlContext, srdd)
 	}
 
@@ -266,6 +280,31 @@ object PipelineOperations {
 	 */
 	def columnSelectOp(colSpecs: Seq[String])(input: PipelineData) = {
 		PipelineData(input.sqlContext, input.srdd.selectExpr(colSpecs:_*))
+	}
+
+	/**
+	 * Convert the data type of a column
+	 *
+	 * @param sourceColSpec nae of the colum to be converted
+	 * @param columnFcn function doing the type conversion
+	 * @param columnType target data type
+	 * @param input PipelineData from previous stage
+	 * @return PipelineData containing updated Dataframe
+	 */
+	def convertColumnTypeOp (sourceColSpec: String, columnFcn: Array[Any] => Any, columnType: DataType)(input: PipelineData) = {
+
+		// Make sure the temp column name is unique
+		val tempCol = "temp-column-" + System.currentTimeMillis()
+
+		val columnAdded = addColumn(input.srdd, tempCol, columnType, c => columnFcn(c) , sourceColSpec)
+
+		val result = columnAdded.select(columnAdded.columns
+			.filter(_ != sourceColSpec)
+			.map(colName => new Column(colName))
+			.toList : _ *
+		).withColumnRenamed(tempCol, sourceColSpec)
+
+		PipelineData(input.sqlContext, result)
 	}
 
 	/**
