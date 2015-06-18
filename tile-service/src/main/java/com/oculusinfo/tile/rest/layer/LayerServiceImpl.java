@@ -37,7 +37,6 @@ import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,9 +44,23 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Singleton
 public class LayerServiceImpl implements LayerService {
@@ -289,7 +302,8 @@ public class LayerServiceImpl implements LayerService {
 	private void readConfigFiles( File[] files ) {
 		for (File file: files) {
 			try {
-				JSONArray contents = new JSONArray( new JSONTokener(new FileReader(file)) );
+                String fileContent = replaceEnvVars(file);
+				JSONArray contents = new JSONArray( new JSONTokener(fileContent) );
                 for ( int i=0; i<contents.length(); i++ ) {
                     if( contents.get(i) instanceof JSONObject ) {
                         JSONObject layerJSON = contents.getJSONObject(i);
@@ -302,7 +316,51 @@ public class LayerServiceImpl implements LayerService {
 				return;
 			} catch (JSONException e) {
 				LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
-			}
-		}
+			} catch (IOException e) {
+                LOGGER.error("Unable to read layer configuration file {}.", file, e);
+            }
+        }
 	}
+
+    // TODO Put in a new config service if its not too much factory module guice trouble
+    private String replaceEnvVars(File configFile) throws IOException {
+        String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
+        Properties properties = new Properties();
+        String pathToProperties = System.getenv("TILE_CONFIG_PROPERTIES");
+        if (pathToProperties == null) {
+            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable not set");
+            return configFileContent;
+        }
+        Map<String, String> replacements = new HashMap<>();
+        try (InputStream input = new FileInputStream(pathToProperties)) {
+            properties.load(input);
+            Enumeration e = properties.propertyNames();
+            LOGGER.info("Loaded tile config properties file: {}", pathToProperties);
+
+            while (e.hasMoreElements()) {
+                String key = (String) e.nextElement();
+                replacements.put(key, properties.getProperty(key));
+            }
+        } catch (IOException e) {
+            LOGGER.error("Unable to read tile config properties file {}.", pathToProperties, e);
+        }
+
+        return replaceTokens(configFileContent, replacements);
+    }
+
+    // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string
+    private String replaceTokens(String text, Map<String, String> replacements) {
+        Pattern pattern = Pattern.compile("\\[(.+?)\\]");
+        Matcher matcher = pattern.matcher(text);
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            String replacement = replacements.get(matcher.group(1));
+            if (replacement != null) {
+                matcher.appendReplacement(buffer, "");
+                buffer.append(replacement);
+            }
+        }
+        matcher.appendTail(buffer);
+        return buffer.toString();
+    }
 }
