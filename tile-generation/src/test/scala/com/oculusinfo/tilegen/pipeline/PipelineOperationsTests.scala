@@ -408,6 +408,30 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assert(schema.fieldNames.contains("num"))
 	}
 
+	test("Test column type conversion") {
+		var schema: StructType = null
+		def schemaOp()(input: PipelineData) = {
+			schema = input.srdd.schema
+			input
+		}
+
+		val resPath = getClass.getResource("/json_test.data").toURI.getPath
+		val argMap = Map(
+			"ops.path" -> resPath,
+			"ops.columns" -> "val,num")
+
+		val rootStage = PipelineStage("load", parseLoadJsonDataOp(argMap))
+		rootStage.addChild(PipelineStage("column_select", parseColumnSelectOp(argMap)))
+			.addChild(PipelineStage("convert", convertColumnTypeOp("num", x => x(0).asInstanceOf[Long].toString, StringType)(_)))
+			.addChild(PipelineStage("output", schemaOp()(_)))
+
+		PipelineTree.execute(rootStage, sqlc)
+
+		assertResult(schema.fields.size)(2)
+		assert(schema.fields(1).name == "num")
+		assert(schema.fields(1).dataType == StringType)
+	}
+
 	test("Test geo heatmap parse and operation") {
 
 		try {
