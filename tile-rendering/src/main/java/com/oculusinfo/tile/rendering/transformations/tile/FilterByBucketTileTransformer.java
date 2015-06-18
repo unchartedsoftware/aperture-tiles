@@ -50,21 +50,10 @@ import org.json.JSONObject;
  *
  */
 
-public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>> {
-	private static final Logger LOGGER = LoggerFactory.getLogger( FilterByBucketTileTransformer.class );
-
-	private Integer _startBucket = null;
-	private Integer _endBucket = null;
-	private List<Double> _minVals = null;
-	private List<Double> _maxVals = null;
-
+public class FilterByBucketTileTransformer<T> extends BucketTileTransformer<T> {
 
 	public FilterByBucketTileTransformer(JSONObject arguments){
-		if ( arguments != null ) {
-			// get the start and end time range
-			_startBucket = arguments.optInt("startBucket");
-			_endBucket = arguments.optInt("endBucket");
-		}
+		super(arguments);
 	}
 
 
@@ -88,73 +77,5 @@ public class FilterByBucketTileTransformer<T> implements TileTransformer<List<T>
 			}
 		}
 		return new FilterTileBucketView<>(inputData, _startBucket, _endBucket);
-	}
-
-	@Override
-	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
-		// Parse the mins and maxes for the buckets out of the supplied JSON.
-		if (_minVals == null) {
-			String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-			_minVals = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-			_maxVals = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-			if (_startBucket == null) {
-				_startBucket = 0;
-				_endBucket = _minVals.size();
-			}
-		}
-		// Compute the min/max for the range of buckets.
-		double minimumValue = Double.MIN_VALUE;
-		double maximumValue = -Double.MAX_VALUE;
-		if (_startBucket == _endBucket) {
-			minimumValue = _minVals.get(_startBucket);
-			maximumValue = _maxVals.get(_startBucket);
-		} else {
-			for (int i = _startBucket; i < _endBucket; i++) {
-				Double val = _minVals.get(i);
-				if (val < minimumValue) {
-					minimumValue = val;
-				}
-				val = _maxVals.get(i);
-				if (val > maximumValue) {
-					maximumValue = val;
-				}
-			}
-		}
-
-		return new Pair<>(minimumValue,  maximumValue);
-	}
-
-	// Extracts all the extrema
-	private List<Double> parseExtremum (LayerConfiguration parameter, StringProperty property, String propName,
-										String layer, Double def) {
-		String rawValue = parameter.getPropertyValue(property);
-		ArrayList<Double> values = null;
-
-		// If the is no extremum info available return the default.
-		if (rawValue == null) {
-			values = new ArrayList<>(1);
-			values.add(def);
-			return values;
-		}
-
-		// Convert string into json object
-		try {
-			JSONArray ex = new JSONArray(rawValue);
-			values = new ArrayList<>(ex.length());
-			for (int i = 0; i < ex.length(); i++) {
-				values.add(ex.getJSONObject(i).getDouble(propName));
-			}
-			return values;
-		} catch (NumberFormatException|NullPointerException e) {
-			LOGGER.warn("Bad " + propName + " value " + rawValue + " for " + layer + ", defaulting to " + def);
-			values.clear();
-			values.add(def);
-			return values;
-		} catch (JSONException e) {
-			LOGGER.warn("JSON parse exception", e);
-			values.clear();
-			values.add(def);
-			return values;
-		}
 	}
 }

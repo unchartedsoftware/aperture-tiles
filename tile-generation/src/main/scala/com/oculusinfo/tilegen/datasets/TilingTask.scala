@@ -29,6 +29,8 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
+import scala.collection.mutable.{Map => MutableMap}
+
 import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.providers.FactoryProvider
@@ -171,10 +173,17 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 	/** Get the name by which the tile pyramid produced by this task should be known. */
 	val getName = {
-		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + config.name
-		else config.name
 
-		pyramidName + "." + indexer.name + "." + valuer.name
+		var transformedName = config.name
+		transformedName = valuer.getTransformedName(transformedName)
+
+		transformedName = indexer.getTransformedName(transformedName)
+
+		val pyramidName = if (config.prefix.isDefined) config.prefix.get + "." + transformedName
+		else transformedName
+
+		pyramidName
+
 	}
 
 
@@ -210,6 +219,12 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 	/** Get the minimum bin length of drawn segments, for line tiling */
 	def getMinimumSegmentLength = config.minimumSegmentLength
+
+	/** Get the maximum number of bins to draw on the ends of segments, for line tiling */
+	def getMaximumLeaderLength = config.maximumLeaderLength
+
+	/** Get whether or not segments should be drawn as arcs */
+	def drawArcs = config.drawArcs
 
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
@@ -290,13 +305,26 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
 				rdd => {
+					val locateFcn =
+						if (drawArcs) StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
+						                                                  getMinimumSegmentLength, getMaximumLeaderLength,
+						                                                  getNumXBins, getNumYBins)
+						else StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
+						                                                getMinimumSegmentLength, getMaximumLeaderLength.get,
+						                                                getNumXBins, getNumYBins)
+
+					val populateFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT] =
+						if (drawArcs) StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
+						                                                            StandardScalingFunctions.identityScale)
+						else StandardBinningFunctions.populateTileWithLineLeaders(getMaximumLeaderLength.get,
+						                                                          StandardScalingFunctions.identityScale)
+
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-						StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels, getMinimumSegmentLength, 1024, getNumXBins, getNumYBins),
-						StandardBinningFunctions.populateTileWithLineLeaders(1024, StandardScalingFunctions.identityScale),
-						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+					                                                         locateFcn, populateFcn,
+					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-						tileAnalytics, dataAnalytics, getName, getDescription)
+					                    tileAnalytics, dataAnalytics, getName, getDescription)
 				}
 			}
 

@@ -24,6 +24,10 @@
  */
 package com.oculusinfo.tilegen.tiling
 
+
+
+import scala.collection.mutable.{Map => MutableMap}
+
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
@@ -95,8 +99,8 @@ trait StandardPointBinningFunctions {
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
-	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => Map[BinIndex, T] =
-		(tile, bins, value) => bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)).toMap
+	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
 
 }
 
@@ -123,12 +127,12 @@ trait StandardLinearBinningFunctions {
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
 	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-										minBins: Option[Int], maxBins: Option[Int],
-										xBins: Int = 256, yBins: Int = 256)
-	: T => Traversable[(TileIndex, Array[BinIndex])] = {
+	                  minBins: Option[Int], maxBins: Option[Int],
+	                  xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
 			if (minBins.map(_ <= length).getOrElse(true) &&
-				maxBins.map(_ > length).getOrElse(true)) {
+				    maxBins.map(_ > length).getOrElse(true)) {
 				// Fill in somewhere around here.
 				linearTiles(firstBin, lastBin, sampleTile).map(tile => (tile, Array(firstBin, lastBin)))
 			} else {
@@ -156,8 +160,8 @@ trait StandardLinearBinningFunctions {
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
 	def locateLineLeaders[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-															minBins: Option[Int], leaderBins: Int, xBins: Int = 256, yBins: Int = 256)
-	:T => Traversable[(TileIndex, Array[BinIndex])] = {
+	                         minBins: Option[Int], leaderBins: Int, xBins: Int = 256, yBins: Int = 256)
+			:T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
 			if (minBins.map(_ <= length).getOrElse(true)) {
 				closeLinearTiles(firstBin, lastBin, sampleTile, leaderBins).map(tile => (tile, Array(firstBin, lastBin)))
@@ -170,8 +174,8 @@ trait StandardLinearBinningFunctions {
 	}
 
 	private def locateLineInternal[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
-																		spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])],
-																		xBins: Int = 256, yBins: Int = 256)
+	                                  spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])],
+	                                  xBins: Int = 256, yBins: Int = 256)
 			: T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
@@ -193,7 +197,7 @@ trait StandardLinearBinningFunctions {
 					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
 					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
-						math.abs(uniBin1.getY - uniBin2.getY))
+						              math.abs(uniBin1.getY - uniBin2.getY))
 
 					spread(length, uniBin1, uniBin2, tile1)
 				}
@@ -211,11 +215,11 @@ trait StandardLinearBinningFunctions {
 	 * Takes endpoints of line segments, and populates the tiles with the bins at which that line crosses that tile
 	 */
 	def populateTileWithLineSegments[T] (scaler: (Array[BinIndex], BinIndex, T) => T)
-																			(tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
-			linearBinsForTile(bins(0), bins(1), tile).map(bin =>
-				(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-			).toMap
-		}
+	                                (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
+		MutableMap(linearBinsForTile(bins(0), bins(1), tile).map(bin =>
+			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
+		).toSeq: _*)
+	}
 
 	/**
 	 * Draw line segment leaders only (pixels within a given distance of endpoints or less)
@@ -224,10 +228,10 @@ trait StandardLinearBinningFunctions {
 	 * the leader length of either endpoint.
 	 */
 	def populateTileWithLineLeaders[T] (leaderLength: Int, scaler: (Array[BinIndex], BinIndex, T) => T)
-																		 (tile: TileIndex, bins: Array[BinIndex], value: T): Map[BinIndex, T] = {
-		closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength).map(bin =>
+	                               (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
+		MutableMap(closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength).map(bin =>
 			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toMap
+		).toSeq: _*)
 	}
 
 
@@ -342,7 +346,7 @@ trait StandardLinearBinningFunctions {
 	 * @return Each tile in the segment, in universal bin coordinates
 	 */
 	def closeLinearTiles (start: BinIndex, end: BinIndex, sample: TileIndex, maxBinDistance: Int)
-	: Traversable[TileIndex] = {
+			: Traversable[TileIndex] = {
 		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
 
 		val singleTileGap = if (steep) sample.getYBins else sample.getXBins
@@ -500,6 +504,77 @@ trait StandardLinearBinningFunctions {
 
 trait StandardArcBinningFunctions {
 	/**
+	 * A function to spread input arcs over several levels of tile pyramid, only drawing a fixed length
+	 * leader on each arc (assuming the segment is longer than twice the specified leader length; if shorter, the
+	 * whole arc is drawn).
+	 *
+	 * @param indexScheme The scheme for interpretting input indices
+	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
+	 * @param levels The levels at which to tile
+	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None
+	 *                to have no minimum segment length
+	 * @param distance The length of the segment leader to draw on each end.
+	 * @param xBins The number of bins into which each tile is broken in the horizontal direction
+	 * @param yBins the number of bins into which each tile is broken in the vertical direction
+	 * @return a traversable over the tiles this line crosses, each associated with the overall
+	 *         endpoints of this line, in universal bin coordinates.
+	 */
+	def locateArcs[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	                  minBins: Option[Int], distance: Option[Int], xBins: Int = 256, yBins: Int = 256)
+			:T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val spread: (Long, BinIndex, BinIndex, TileIndex) => TraversableOnce[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
+			if (minBins.map(_ <= length).getOrElse(true)) {
+				arcTiles(firstBin, lastBin, sampleTile, distance).map(tile => (tile, Array(firstBin, lastBin)))
+			} else {
+				Traversable()
+			}
+		}
+
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
+		                                bounds.getMaxX, bounds.getMaxY)
+
+		index => {
+			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
+			if (minX <= x1 && x1 <= maxX &&
+				    minY <= y1 && y1 <= maxY &&
+				    minX <= x2 && x2 <= maxX &&
+				    minY < y2 && y2 <= maxY) {
+				levels.flatMap{level =>
+					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
+					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
+					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+
+					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
+					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
+					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+
+					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
+						              math.abs(uniBin1.getY - uniBin2.getY))
+
+					spread(length, uniBin1, uniBin2, tile1)
+				}
+			} else {
+				Traversable()
+			}
+		}
+	}
+
+
+	/**
+	 * Draw line segment leaders only (pixels within a given distance of endpoints or less)
+	 *
+	 * Takes endpoints, and populates the tiles with the bins at which that line crosses that tile, and are within
+	 * the leader length of either endpoint.
+	 */
+	def populateTileWithArcs[T] (distance: Option[Int], scaler: (Array[BinIndex], BinIndex, T) => T)
+	                        (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
+		MutableMap(arcBinsForTile(bins(0), bins(1), tile, distance).map(bin =>
+			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
+		).toSeq: _*)
+	}
+
+	/**
 	 * Takes the two endpoints of the desired arc, and returns the center, radius, start slope, end
 	 * slope, and a list of the needed octants.
 	 *
@@ -561,21 +636,39 @@ trait StandardArcBinningFunctions {
 		 octants)
 	}
 
+	private def octantTransform (x: Int, y: Int, octant: Int): (Int, Int) =
+		octant match {
+			case 0 => (x, y)
+			case 1 => (y, x)
+			case 2 => (-y, x)
+			case 3 => (-x, y)
+			case 4 => (-x, -y)
+			case 5 => (-y, -x)
+			case 6 => (y, -x)
+			case 7 => (x, -y)
+		}
 
+	private def rotate [@specialized(Double, Int) N: Numeric] (x: N, y: N, rotation: Int): (N, N) = {
+		val num: Numeric[N] = implicitly[Numeric[N]]
+		import num.mkNumericOps
 
-	def arcUniversalBins (start: BinIndex, end: BinIndex): Traversable[BinIndex] = {
-		def octantTransform (x: Int, y: Int, octant: Int): (Int, Int) =
-			octant match {
-				case 0 => (x, y)
-				case 1 => (y, x)
-				case 2 => (-y, x)
-				case 3 => (-x, y)
-				case 4 => (-x, -y)
-				case 5 => (-y, -x)
-				case 6 => (y, -x)
-				case 7 => (x, -y)
-			}
+		rotation match {
+			case -6 => (-y, x)
+			case -4 => (-x, -y)
+			case -2 => (y, -x)
+			case 0 => (x, y)
+			case 2 => (-y, x)
+			case 4 => (-x, -y)
+			case 6 => (y, -x)
+			case _ => throw new IllegalArgumentException("Bad rotation "+rotation)
+		}
+	}
+	private def pairAbs [@specialized(Double, Int) N: Numeric] (pair: (N, N)): (N, N) = {
+		val num: Numeric[N] = implicitly[Numeric[N]]
+		(num.abs(pair._1), num.abs(pair._2))
+	}
 
+	def arcUniversalBinsBresenham (start: BinIndex, end: BinIndex): Traversable[BinIndex] = {
 		val x0 = start.getX
 		val y0 = start.getY
 		val x1 = end.getX
@@ -620,18 +713,9 @@ trait StandardArcBinningFunctions {
 
 
 
-	def arcUniversalBins2 (start: BinIndex, end: BinIndex): TraversableOnce[BinIndex] = {
-		def octantTransform (x: Int, y: Int, octant: Int): (Int, Int) =
-			octant match {
-				case 0 => (x, y)
-				case 1 => (y, x)
-				case 2 => (-y, x)
-				case 3 => (-x, y)
-				case 4 => (-x, -y)
-				case 5 => (-y, -x)
-				case 6 => (y, -x)
-				case 7 => (x, -y)
-			}
+	// This modifies the typical Bresenham algorithm to make it a little more efficient for a straight 60 degree
+	// arc
+	def arcUniversalBins (start: BinIndex, end: BinIndex): TraversableOnce[BinIndex] = {
 
 		val x0 = start.getX
 		val y0 = start.getY
@@ -652,22 +736,6 @@ trait StandardArcBinningFunctions {
 			var tmpRot = 0
 			while (!isGoodRotation(tmpRot)) tmpRot = tmpRot + 2
 			tmpRot
-		}
-
-		def rotate [@specialized(Double, Int) N: Numeric] (x: N, y: N, rotation: Int): (N, N) = {
-			val num: Numeric[N] = implicitly[Numeric[N]]
-			import num.mkNumericOps
-
-			rotation match {
-				case -6 => (-y, x)
-				case -4 => (-x, -y)
-				case -2 => (y, -x)
-				case 0 => (x, y)
-				case 2 => (-y, x)
-				case 4 => (-x, -y)
-				case 6 => (y, -x)
-				case _ => throw new IllegalArgumentException("Bad rotation "+rotation)
-			}
 		}
 
 		// Get the endpoint coordinates relative to the center, rotated into the correct position
@@ -700,6 +768,186 @@ trait StandardArcBinningFunctions {
 				new BinIndex(xp, yp)
 			}
 		}
+	}
+
+	// Limited version of arcUniversalBins that just gets the tiles crossed.
+	def arcTiles (start: BinIndex, end: BinIndex, sample: TileIndex, limit: Option[Int] = None): TraversableOnce[TileIndex] = {
+
+		val x0 = start.getX
+		val y0 = start.getY
+		val x1 = end.getX
+		val y1 = end.getY
+		val (xc, yc, radius, startSlope, endSlope, octants) = initializeArc(start, end)
+
+		// Rotate so everything is E of the Y axis
+		//
+		// 60 degree arcs should never inhabit more than three quadrants, so we can rotate them
+		// so they are on the right side.
+		val rotation: Int = {
+			def isGoodRotation (r: Int): Boolean = {
+				val min = octants.map(oct => (oct._1 + r) % 8).reduce(_ min _)
+				val max = octants.map(oct => (oct._1 + r) % 8).reduce(_ max _)
+				((6 == min && 7 == max) || (0 == min && 1 == max) || (0 == min && 7 == max))
+			}
+			var tmpRot = 0
+			while (!isGoodRotation(tmpRot)) tmpRot = tmpRot + 2
+			tmpRot
+		}
+
+		// Get the endpoint coordinates relative to the center, rotated into the correct position
+		val (x0r, y0r) = rotate(x0 - xc, y0 - yc, rotation)
+		val (x1r, y1r) = rotate(x1 - xc, y1 - yc, rotation)
+		val (xcr, ycr) = rotate(xc, yc, rotation)
+		val (xSize, ySize) = pairAbs(rotate(sample.getXBins, sample.getYBins, rotation))
+
+
+		val yStart = math.round(y1r+ycr)-0.5-ycr
+		val yEnd = math.round(y0r+ycr)-0.5-ycr
+		val yMids = limit.flatMap(distance =>
+			if (yEnd-yStart > 2*distance+1) Some((yStart+distance, yEnd-distance))
+			else None
+		)
+
+		var y = yStart
+		val r2 = radius*radius
+		new WhileIterator[(Double, Double)](
+			() => y <= yEnd,
+			() => {
+				// Return pairs of y's, indicating the top edges of the top and bottom bins of the tile.
+				// So if the tile runs from 0 to 256, with 256 tiles, this should return (0, 255)
+
+				// Store our start position
+				val yCur = y
+
+				// Find the bottom edge of the current tile
+				// Get the real (not centered) y position
+				val yAbs = ycr+y
+				// Get the top of the last bin in this tile
+				val edge = math.ceil(yAbs/ySize)*ySize-1
+
+				// get the edge of that bin, centered again
+				val lastBin = y + math.ceil(edge-yAbs)
+				y = lastBin+1
+				// If we have a gap, see if we're in it
+				yMids.foreach{case (endStart, startEnd) =>
+					if (y > endStart && y < startEnd) y = startEnd
+				}
+				(yCur min yEnd, lastBin min yEnd)
+			}
+		).flatMap{case (yb0: Double, ybn: Double) =>
+				val absyb0 = math.round(yb0 + ycr).toInt
+				val absybn = math.round(ybn + ycr).toInt
+				// x range from the start of the tile to the end of the tile
+				val ya = yb0 max y1r
+				val xad = math.sqrt(r2 - (ya * ya)) + xcr
+				val xa = math.round(xad).toInt
+				val yb = (ybn+1) min y0r
+				val xbd = math.sqrt(r2 - (yb * yb)) + xcr
+				val xb = math.round(xbd).toInt
+
+				((xa min xb) to (xa max xb)).map { absx =>
+					val (xr, yr) = rotate(absx, absyb0, -rotation)
+					val bin = new BinIndex(xr, yr)
+					TileIndex.universalBinIndexToTileBinIndex(sample, bin).getTile
+				}.toSet
+		}
+	}
+
+	// Limited version of arcUniversalBins that just gets the tiles crossed.
+	def arcBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex, limit: Option[Int] = None): TraversableOnce[BinIndex] = {
+
+		val x0 = start.getX
+		val y0 = start.getY
+		val x1 = end.getX
+		val y1 = end.getY
+		val (xc, yc, radius, startSlope, endSlope, octants) = initializeArc(start, end)
+
+		// Rotate so everything is E of the Y axis
+		//
+		// 60 degree arcs should never inhabit more than three quadrants, so we can rotate them
+		// so they are on the right side.
+		val rotation: Int = {
+			def isGoodRotation(r: Int): Boolean = {
+				val min = octants.map(oct => (oct._1 + r) % 8).reduce(_ min _)
+				val max = octants.map(oct => (oct._1 + r) % 8).reduce(_ max _)
+				((6 == min && 7 == max) || (0 == min && 1 == max) || (0 == min && 7 == max))
+			}
+			var tmpRot = 0
+			while (!isGoodRotation(tmpRot)) tmpRot = tmpRot + 2
+			tmpRot
+		}
+
+		// Get the endpoint coordinates relative to the center, rotated into the correct position
+		val (x0r, y0r) = rotate(x0 - xc, y0 - yc, rotation)
+		val (x1r, y1r) = rotate(x1 - xc, y1 - yc, rotation)
+		val (xcr, ycr) = rotate(xc, yc, rotation)
+		// Figure out our rotated, centered tile bounds
+		val minBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(0, 0))
+		val maxBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, new BinIndex(tile.getXBins-1, tile.getYBins-1))
+		val minBinRot = rotate(minBin.getX - xc, minBin.getY - yc, rotation)
+		val maxBinRot = rotate(maxBin.getX - xc, maxBin.getY - yc, rotation)
+		val minY = minBinRot._2 min maxBinRot._2
+		val maxY = minBinRot._2 max maxBinRot._2
+
+		val yStartArc = math.round(y1r+ycr)-0.5-ycr
+		val yEndArc = math.round(y0r+ycr)-0.5-ycr
+		val yMids = limit.flatMap(distance =>
+			if (yEndArc-yStartArc > 2*distance+1) Some((yStartArc+distance, yEndArc-distance))
+			else None
+		)
+
+		var y = math.round((minY max y1r)+ycr)-0.5-ycr
+		// If we have a gap, see if we're in it
+		yMids.foreach{case (endStart, startEnd) =>
+			if (y > endStart && y < startEnd) y = startEnd
+		}
+
+		val yEnd = math.round((maxY min y0r)+ycr)-0.5-ycr
+		val r2 = radius*radius
+
+		new WhileIterator(
+			// Figure out the Y range of this tile
+			() => y <= yEnd,
+			() => {
+				val yCur = y
+				y = y + 1
+
+				// If we have a gap, see if we're in it
+				yMids.foreach{case (endStart, startEnd) =>
+					if (y > endStart && y < startEnd) y = startEnd
+				}
+
+				yCur
+			}
+		).flatMap{y =>
+			// Map each Y into its X range
+			val ypr = math.round(ycr+y).toInt
+			// x range from the start of the bin to the end of the bin
+			val ya = y max y1r
+			val x2ad = math.sqrt(r2 - (ya * ya)) + xcr
+			val yb = (y+1) min y0r
+			val x2bd = math.sqrt(r2 - (yb * yb)) + xcr
+			val x2a = math.round(math.sqrt(r2 - (ya * ya)) + xcr).toInt
+			val x2b = math.round(math.sqrt(r2 - (yb * yb)) + xcr).toInt
+
+			val bins = if (x2a == x2b) {
+				// No X travel; output the one bin
+				val (xp, yp) = rotate(x2a, ypr, -rotation)
+				val uBin = new BinIndex(xp, yp)
+				Seq(TileIndex.universalBinIndexToTileBinIndex(tile, uBin))
+			} else {
+				// X travel; output both bins.
+				((x2a min x2b) to (x2a max x2b)).map { xpr =>
+					val (xp, yp) = rotate(xpr, ypr, -rotation)
+					val uBin = new BinIndex(xp, yp)
+					TileIndex.universalBinIndexToTileBinIndex(tile, uBin)
+				}
+			}
+			bins
+		}.filter { tileAndBin =>
+			// If the arc spans multiple tiles in Y at this X, there may be bins here in the other one.
+			tileAndBin.getTile == tile
+		}.map(_.getBin)
 	}
 }
 

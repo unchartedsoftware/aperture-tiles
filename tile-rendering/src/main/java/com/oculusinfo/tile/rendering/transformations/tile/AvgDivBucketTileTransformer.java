@@ -45,26 +45,23 @@ import org.json.JSONObject;
 
 
 /**
- * 	This transformer will take in JSON or tileData object representing bins of a double array
- * 		tile and will filter out all counts in the bins representing the time buckets indicated
- * 		in the configuration.  The double arrays passed back will be in the order that they are
- * 		sequenced in the JSON/Tile array passed in.
- *
+ * 	This transformer takes in a range of buckets centered on val V, takes their average, and divides them by the average
+ * 	of another range of buckets centered on val V.  The numerator range can be varied externally, while the denominator
+ * 	range is fixed.  Log10 of the final result is returned.
  */
-
 public class AvgDivBucketTileTransformer<T extends Number> implements TileTransformer<List<T>> {
 	private static final Logger LOGGER = LoggerFactory.getLogger( AvgDivBucketTileTransformer.class );
 
-	protected Integer _averageRange 	= 0;
-	protected Integer _startBucket 	= 0;
-	protected Integer _endBucket 		= 0;
+	protected Integer _averageRange = 0;
+	protected Integer _startBucket = 0;
+	protected Integer _endBucket = 0;
 
 	public AvgDivBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
 			// get the start and end time range
-			_averageRange 	= arguments.optInt("averageRange");
-			_startBucket 	= arguments.optInt("startBucket");
-			_endBucket 		= arguments.optInt("endBucket");
+			_averageRange = arguments.optInt("averageRange");
+			_startBucket = arguments.optInt("startBucket");
+			_endBucket = arguments.optInt("endBucket");
 		} else {
 			LOGGER.warn("No arguments passed in to filterbucket transformer");
 		}
@@ -134,5 +131,4 @@ public class AvgDivBucketTileTransformer<T extends Number> implements TileTransf
 		double ext = Math.log10(_averageRange);
 		return new Pair<>(-ext, ext);
 	}
-
 }

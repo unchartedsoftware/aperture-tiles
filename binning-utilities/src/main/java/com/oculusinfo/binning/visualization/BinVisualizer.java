@@ -24,11 +24,26 @@
  */
 package com.oculusinfo.binning.visualization;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Image;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.DenseTileSliceView;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import org.apache.avro.file.CodecFactory;
+
+import javax.swing.*;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
@@ -36,30 +51,13 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-
-import org.apache.avro.file.CodecFactory;
-
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
-import com.oculusinfo.binning.metadata.PyramidMetaData;
 
 
 
@@ -95,35 +93,39 @@ public class BinVisualizer extends JFrame {
 
 	private static enum SerializerEnum {
 		Avro,
+		AvroBucketted,
+		Kryo,
+		KryoBucketted,
 		Legacy
 	}
 
 
 
-	private Image                     _image;
-	private JLabel                    _imageVis;
-	private PyramidIO                 _pyramidIO;
-	private TilePyramid               _pyramid;
-	private TileSerializer<Double>    _serializer;
-	private String                    _pyramidId;
+	private Image                        _image;
+	private JLabel                       _imageVis;
+	private PyramidIO                    _pyramidIO;
+	private TilePyramid                  _pyramid;
+	private TileSerializer<Double>       _serializer;
+	private TileSerializer<List<Double>> _bucketSerializer;
+	private String                       _pyramidId;
 
 
 
-	private GroupLayout               _layout;
-	private JPanel                    _tileChooser;
-	private JFileChooser              _fileChooser;
-	private JComboBox<IOEnum>         _ioField;
-	private JPanel                    _ioSelectorContainer;
-	private PyramidIOSelector         _ioSelector;
-	private JComboBox<PyramidEnum>    _pyramidField;
-	private JLabel                    _pyramidDesc;
-	private JComboBox<SerializerEnum> _serializerField;
-	private JTextField                _idField;
-	private JComboBox<Integer>        _levelField;
-	private JComboBox<Integer>        _xField;
-	private JComboBox<Integer>        _yField;
-	private JButton                   _show;
-	private JCheckBox                 _showText;
+	private GroupLayout                  _layout;
+	private JPanel                       _tileChooser;
+	private JFileChooser                 _fileChooser;
+	private JComboBox<IOEnum>            _ioField;
+	private JPanel                       _ioSelectorContainer;
+	private PyramidIOSelector            _ioSelector;
+	private JComboBox<PyramidEnum>       _pyramidField;
+	private JLabel                       _pyramidDesc;
+	private JComboBox<SerializerEnum>    _serializerField;
+	private JTextField                   _idField;
+	private JComboBox<Integer>           _levelField;
+	private JComboBox<Integer>           _xField;
+	private JComboBox<Integer>           _yField;
+	private JButton                      _show;
+	private JCheckBox                    _showText;
 
 
 
@@ -139,6 +141,7 @@ public class BinVisualizer extends JFrame {
 		_pyramidIO = null;
 		_pyramid = null;
 		_serializer = null;
+		_bucketSerializer = null;
 		_pyramidId = null;
 		_fileChooser = new JFileChooser();
 		createTileChooser();
@@ -333,12 +336,34 @@ public class BinVisualizer extends JFrame {
 	private void setSerializer (SerializerEnum type) {
 		boolean changed = false;
 		switch (type) {
-		case Avro:
-			if (null == _serializer || !(_serializer instanceof PrimitiveAvroSerializer)) {
-				_serializer = new PrimitiveAvroSerializer<Double>(Double.class, CodecFactory.bzip2Codec());
-				changed = true;
-			}
-			break;
+			case Avro:
+				if (null == _serializer || !(_serializer instanceof PrimitiveAvroSerializer)) {
+					_serializer = new PrimitiveAvroSerializer<Double>(Double.class, CodecFactory.bzip2Codec());
+					_bucketSerializer = null;
+					changed = true;
+				}
+				break;
+			case AvroBucketted:
+				if (null == _bucketSerializer|| !(_bucketSerializer instanceof PrimitiveArrayAvroSerializer)) {
+					_bucketSerializer = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
+					_serializer = null;
+					changed = true;
+				}
+				break;
+			case Kryo:
+				if (null == _serializer || !(_serializer instanceof KryoSerializer)) {
+					_serializer = new KryoSerializer<Double>(new TypeDescriptor(Double.class));
+					_bucketSerializer = null;
+					changed = true;
+				}
+				break;
+			case KryoBucketted:
+				if (null == _bucketSerializer|| !(_bucketSerializer instanceof KryoSerializer)) {
+					_bucketSerializer = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)), KryoSerializer.Codec.GZIP);
+					_serializer = null;
+					changed = true;
+				}
+				break;
 		case Legacy:
 			if (null == _serializer ||
                !(_serializer instanceof com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer)) {
@@ -431,7 +456,7 @@ public class BinVisualizer extends JFrame {
 		if (null == _pyramid) return;
 		if (null == _pyramidId) return;
 		if (null == _pyramidIO) return;
-		if (null == _serializer) return;
+		if (null == _serializer && null == _bucketSerializer) return;
 		if (null == _levelField.getSelectedItem()) return;
 		if (null == _xField.getSelectedItem()) return;
 		if (null == _yField.getSelectedItem()) return;
@@ -440,14 +465,22 @@ public class BinVisualizer extends JFrame {
 		                                (Integer) _yField.getSelectedItem());
 
 		try {
-			List<TileData<Double>> data = _pyramidIO.readTiles(_pyramidId,
-			                                                   _serializer,
-			                                                   Collections.singleton(index), null);
+			List<TileData<Double>> data = null;
+			if (null != _serializer) {
+				data = _pyramidIO.readTiles(_pyramidId, _serializer, Collections.singleton(index), null);
+			} else {
+				List<TileData<List<Double>>> rawData = _pyramidIO.readTiles(_pyramidId, _bucketSerializer, Collections.singleton(index), null);
+				data = new ArrayList<>();
+				for (TileData<List<Double>> tile: rawData) {
+					data.add(new DenseTileSliceView<Double>(tile, 0));
+				}
+			}
 			if (1 == data.size()) {
 				TileData<Double> tile = data.get(0);
 				showTile(tile);
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -468,8 +501,8 @@ public class BinVisualizer extends JFrame {
 		double maxValue = Double.MIN_VALUE;
 		for (int x=0; x<xBins; ++x) {
 			for (int y=0; y<yBins; ++y) {
-				double value = tile.getBin(x, y).doubleValue();
-				if (value > maxValue) maxValue = value;
+				Number value = tile.getBin(x, y);
+				if (null != value && value.doubleValue() > maxValue) maxValue = value.doubleValue();
 			}
 		}
 		for (int x=0; x<xBins; ++x) {
@@ -478,18 +511,19 @@ public class BinVisualizer extends JFrame {
 				int maxX = (int) Math.round(1024*((double) x+1) / ((double) xBins));
 				int minY = (int) Math.round(1024*((double) y)   / ((double) yBins));
 				int maxY = (int) Math.round(1024*((double) y+1) / ((double) yBins));
-				float value = (float) Math.sqrt(tile.getBin(x, y).doubleValue() / maxValue);
-				float alpha;
-				if (tile.getBin(x, y).doubleValue() > 0)
+				Number binValue = tile.getBin(x, y);
+				float alpha = 0.0f;
+				float value = 0.0f;
+				if (null != binValue && binValue.doubleValue() > 0) {
+					value = (float) Math.sqrt(binValue.doubleValue() / maxValue);
 					alpha = 1.0f;
-				else
-					alpha = 0.0f;
+				}
 				Color c = new Color(1.0f, 1.0f-value, 1.0f-value, alpha);
 				g.setColor(c);
 				g.fillRect(minX, minY, maxX-minX, maxY-minY);
-				if (_showText.isSelected()) {
+				if (_showText.isSelected() && null != binValue) {
 					g.setColor(Color.BLACK);
-					g.drawString(tile.getBin(x, y).toString(), minX + (maxX - minX)/2f, minY + (maxY - minY)/2f);
+					g.drawString(binValue.toString(), minX + (maxX - minX) / 2f, minY + (maxY - minY) / 2f);
 				}
 			}
 		}

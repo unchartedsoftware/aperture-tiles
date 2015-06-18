@@ -43,10 +43,9 @@ import com.oculusinfo.binning.TileIndex;
 public class AverageTileBucketView<T extends Number> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
-	private TileData<List<T>> _base 		= null;
-
-	private Integer			  _startCompare = null;
-	private Integer			  _endCompare 	= null;
+	private TileData<List<T>> _base = null;
+	private Integer	_startCompare = null;
+	private Integer	_endCompare = null;
 
 
 	public AverageTileBucketView (TileData<List<T>> base, int startComp, int endComp) {
@@ -54,6 +53,7 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 		_startCompare = startComp;
 		_endCompare = endComp;
 	}
+
 
 	@Override
 	public TileIndex getDefinition () {
@@ -75,7 +75,7 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
 		int start = ( _startCompare != null ) ? _startCompare : 0;
-		int end = ( _endCompare != null && _endCompare < binSize && _endCompare != 0) ? _endCompare : binSize;
+		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
 
 		double total = 0;
 		int count = 0;

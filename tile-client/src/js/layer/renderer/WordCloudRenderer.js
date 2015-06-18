@@ -35,6 +35,9 @@
         MAX_WORDS_DISPLAYED = 10,
         HORIZONTAL_OFFSET = 10,
         VERTICAL_OFFSET = 24,
+        SIZE_FUNCTION = 'log',
+        MIN_FONT_SIZE = 13,
+        MAX_FONT_SIZE = 28,
         spiralPosition,
         intersectTest,
         overlapTest,
@@ -137,12 +140,10 @@
     /**
      * Returns the word cloud words containing font size and x and y coordinates
      */
-    createWordCloud = function( wordCounts, min, max ) {
-        var minFontSize = 13,
-            maxFontSize = 28,
-            boundingBox = {
-                width: 256 - HORIZONTAL_OFFSET*2,
-                height: 256 - VERTICAL_OFFSET*2,
+    createWordCloud = function( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize ) {
+        var boundingBox = {
+                width: 256 - HORIZONTAL_OFFSET * 2,
+                height: 256 - VERTICAL_OFFSET * 2,
                 x: 0,
                 y: 0
             },
@@ -162,7 +163,7 @@
             fontSize = RendererUtil.getFontSize( count, min, max, {
                 maxFontSize: maxFontSize,
                 minFontSize: minFontSize,
-                type: 'log'
+                type: sizeFunction
             });
             // frequency percent
             percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
@@ -179,7 +180,8 @@
                 collisions : 0
             };
 
-            while( pos.collisions < 10 ) {
+            var numWords = wordCounts.length;
+            while( pos.collisions < numWords ) {
                 // increment position in a spiral
                 pos = spiralPosition( pos );
                 // test for intersection
@@ -188,7 +190,7 @@
                         word: word,
                         entry: wordCounts[i].entry,
                         fontSize: fontSize,
-                        percentLabel: Math.round( percent / 10 ) * 10,
+                        percentLabel: Math.round( percent / 10 ) * 10, // round to nearest 10
                         x:pos.x,
                         y:pos.y,
                         width: dim.width,
@@ -219,6 +221,7 @@
      */
     function WordCloudRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.meta.aggregated";
+        spec.text = spec.text || {};
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -239,8 +242,11 @@
             textKey = text.textKey,
             countKey = text.countKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
+            numEntries = Math.min( values.length, text.maxWords || MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
-            numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED),
+            sizeFunction = text.sizeFunction || SIZE_FUNCTION,
+            minFontSize = text.minFontSize || MIN_FONT_SIZE,
+            maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
             html = '',
             wordCounts = [],
             entries = [],
@@ -263,7 +269,13 @@
         min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
         max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
 
-        cloud = createWordCloud( wordCounts, min, max );
+        cloud = createWordCloud(
+            wordCounts,
+            min,
+            max,
+            sizeFunction,
+            minFontSize,
+            maxFontSize );
 
         for ( i=0; i<cloud.length; i++ ) {
 

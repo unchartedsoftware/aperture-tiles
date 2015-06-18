@@ -43,16 +43,16 @@
      */
     getMapMinAndMaxInViewportPixels = function( map ) {
         var olMap = map.olMap;
-        return {
-            min : {
-                x: olMap.minPx.x,
-                y: olMap.maxPx.y
-            },
-            max : {
-                x: olMap.maxPx.x,
-                y: olMap.minPx.y
-            }
-        };
+		return {
+			min: olMap.getViewPortPxFromLonLat(
+					new OpenLayers.LonLat(
+						olMap.maxExtent.left,
+						olMap.maxExtent.bottom ) ),
+			max: olMap.getViewPortPxFromLonLat(
+					new OpenLayers.LonLat(
+						olMap.maxExtent.right,
+						olMap.maxExtent.top ) )
+		};
     };
 
     module.exports = {

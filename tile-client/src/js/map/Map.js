@@ -357,11 +357,16 @@
      */
     resetLayerZIndices = function( map ) {
         var layers = map.layers,
+            baselayer,
             i;
         if ( map.layers ) {
             for ( i=0; i<layers.length; i++ ) {
                 layers[i].setZIndex( layers[i].getZIndex() );
             }
+        }
+        if ( map.baseLayerIndex >= 0 ) {
+            baselayer = map.baselayers[ map.baseLayerIndex ];
+            baselayer.resetZIndex();
         }
         if ( map.olMarkers ) {
             $( map.olMarkers.div ).css( 'z-index', MARKER_Z_INDEX );
@@ -500,7 +505,7 @@
          */
         setBaseLayerIndex: function( index ) {
             var oldBaseLayer = this.baselayers[ this.baseLayerIndex ],
-                newBaseLayer = this.baselayers[ index];
+                newBaseLayer = this.baselayers[ index ];
             if ( !newBaseLayer ) {
                 console.error("Error, no baselayer for supplied index: " + index );
                 return;
@@ -723,6 +728,29 @@
                 olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
+        },
+
+        /**
+         * Restricts the map extents to a particular bounding box. If no arg is
+         * provided, this removes previous restrictions.
+         * @memberof Map.prototype
+         *
+         * @param {Object} bounds - The bounding box to zoom to.
+         */
+        restrictExtent: function( bounds ) {
+            if ( !bounds ) {
+                this.olMap.restrictedExtent = null;
+                this.olMap.zoomToMaxExtent();
+                return;
+            }
+            var minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY ),
+                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY ),
+                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx ),
+                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx ),
+                olBounds = new OpenLayers.Bounds();
+            olBounds.extend( minLonLat );
+            olBounds.extend( maxLonLat );
+            this.olMap.restrictedExtent = olBounds;
             this.olMap.zoomToExtent( olBounds );
         },
 
