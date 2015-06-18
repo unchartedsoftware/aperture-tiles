@@ -46,20 +46,24 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private Node node;
 	private Client client;
 
-	private Client getClient(){
-		return this.client;
-	}
+	private String index;
+	private String filterField;
+	private String filterType;
 
-	public ElasticsearchPyramidIO(){
+	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String esFilterField, String es_filter_type_prop) {
 
-		LOGGER.debug("ES pyramid constructor");
+		LOGGER.debug("ES custom config constructor ?");
+
+		this.index = esIndex;
+		this.filterField = esFilterField;
+		this.filterType = es_filter_type_prop;
 
 		if ( this.node == null ) {
 			LOGGER.debug("Existing node not found.");
 			Node node = NodeBuilder.nodeBuilder()
 				.data(false)
 				.client(true)
-				.clusterName("memex_es_dev")
+				.clusterName(esClusterName)
 				.node();
 			Client client = node.client();
 			this.node = node;
@@ -72,9 +76,13 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		}
 	}
 
+	private Client getClient(){
+		return this.client;
+	}
+
 	private SearchRequestBuilder baseQuery(FilterBuilder filter){
 
-		return this.getClient().prepareSearch("sift_test_6")
+		return this.getClient().prepareSearch(this.index)
 			.setTypes("datum")
 			.setSearchType(SearchType.COUNT)
 			.setQuery(QueryBuilders.filteredQuery(
@@ -86,11 +94,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	// note about the start/end/x/y confusion
 	// x,y
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, Map filterObject){
-
-//		LOGGER.debug("--X--" + String.valueOf((long) Math.floor(endX - startX)));
-//		LOGGER.debug("--Y--" + String.valueOf((long) Math.floor(startY- endY) ));
-
-//		String filterType = (String) filterObject.get("type");
 
 		String value;
 		String path;
@@ -107,8 +110,15 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		if (filterObject != null && filterObject.containsKey("value") && filterObject.containsKey("path")) {
 //			LOGGER.debug("Filtering" + filterObject.get("value") + filterObject.get("path"));
 			value =(String) filterObject.get("value");
-			path = (String) filterObject.get("path");
-			filter.add(FilterBuilders.termFilter(path, value));
+//			path = (String) filterObject.get("path");
+			path = this.filterField;
+
+			if (this.filterType.equals("terms")){
+				filter.add(FilterBuilders.termFilter(path, value));
+			}
+			if (this.filterType.equals("range")){
+				filter.add(FilterBuilders.rangeFilter(path).lt(value));
+			}
 		}
 
 		SearchRequestBuilder searchRequestBuilder =
