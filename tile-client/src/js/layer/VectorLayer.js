@@ -94,6 +94,14 @@
 					strategy.deactivate();
 				});
 			}
+			if ( this.olLayer.events.listeners.featureselected ) {
+        // this.olLayer.events.remove( 'featureselected' );
+        this.map.olMap.controls[1].deactivate();
+        this.map.olMap.controls[1].destroy();
+        this.map.olMap.removeControl(this.map.olMap.controls[1]);
+       }
+
+
 			this.olLayer.strategies = [];
 			this.map.olMap.removeLayer( this.olLayer );
 			this.olLayer.destroyFeatures();

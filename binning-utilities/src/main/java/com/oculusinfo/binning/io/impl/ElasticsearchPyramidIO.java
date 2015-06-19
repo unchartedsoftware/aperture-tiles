@@ -95,7 +95,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	// x,y
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, Map filterObject){
 
-		String value;
+		HashMap values;
 		String path;
 
 		AndFilterBuilder filter = FilterBuilders.andFilter(
@@ -107,17 +107,23 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				.lte(startY)
 		);
 
-		if (filterObject != null && filterObject.containsKey("value") && filterObject.containsKey("path")) {
-//			LOGGER.debug("Filtering" + filterObject.get("value") + filterObject.get("path"));
-			value =(String) filterObject.get("value");
-//			path = (String) filterObject.get("path");
-			path = this.filterField;
+		if (filterObject != null && filterObject.containsKey("values") && filterObject.containsKey("path")) {
+//			value =(String) filterObject.get("value");
+			values = (HashMap) filterObject.get("values");
+			int numValues = values.size();
+			List<String> terms = new ArrayList<>();
+
+			for (int i=0;i < numValues; i++ ){
+				terms.add((String) values.get(String.valueOf(i)));
+			}
+
+			path = (String) filterObject.get("path");
 
 			if (this.filterType.equals("terms")){
-				filter.add(FilterBuilders.termFilter(path, value));
+				filter.add(FilterBuilders.termsFilter(path, terms).execution("or"));
 			}
 			if (this.filterType.equals("range")){
-				filter.add(FilterBuilders.rangeFilter(path).lt(value));
+				filter.add(FilterBuilders.rangeFilter(path).lt(values));
 			}
 		}
 
@@ -263,29 +269,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 		return results;
 	}
-
-	private void word (){
-
-//			List<Long> longs = aggregationParse(date_agg);
-
-//			DenseTileData tileData = new DenseTileData(tile,longs);
-		//			TileData<Map<Integer, Map<Integer, Double>>> tileData = new SparseTileData<Map<Integer, Map<Integer, Double>>>( tile , integerMapMap);
-
-//			XContentBuilder builder = XContentFactory.jsonBuilder();
-//			builder.startObject();
-//			sr.toXContent(builder, ToXContent.EMPTY_PARAMS);
-//			builder.endObject();
-//			byte[] bytesArray = builder.bytesStream().bytes().toBytes();
-//			builder.close();
-//			ByteArrayInputStream bais = new ByteArrayInputStream(bytesArray);
-
-//			TileData tileData = (TileData) bais;
-
-//			LOGGER.debug("Num hits " + String.valueOf(searchResponse.getHits().totalHits()));
-
-//			LOGGER.debug(searchResponse.getAggregations().asMap().toString());
-	}
-
 
 	@Override
 	public <T> InputStream getTileStream(String pyramidId, TileSerializer<T> serializer, TileIndex tile) throws IOException {
