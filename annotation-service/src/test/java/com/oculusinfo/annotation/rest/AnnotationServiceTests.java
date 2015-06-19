@@ -44,6 +44,8 @@ import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvi
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.config.ConfigService;
+import com.oculusinfo.tile.rest.config.ConfigServiceImpl;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
 import org.json.JSONArray;
@@ -67,6 +69,8 @@ public class AnnotationServiceTests {
     protected String _dataId;
 	protected String [] _groups;
     protected LayerService _layerService;
+    // TODO Introduce Mockito
+    private ConfigService _configService;
 
 	List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
 	Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
@@ -96,8 +100,8 @@ public class AnnotationServiceTests {
                 new StandardImageRendererFactoryProvider(),
                 new StandardTileTransformerFactoryProvider()
             );
-
-            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
+            _configService = new ConfigServiceImpl();
+            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider, _configService );
 
 			_dataId = _layerService.getLayerConfiguration( _layerId, null ).getPropertyValue( LayerConfiguration.DATA_ID );
 
