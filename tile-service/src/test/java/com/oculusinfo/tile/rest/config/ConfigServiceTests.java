@@ -18,19 +18,52 @@ public class ConfigServiceTests {
     @Before
     public void setUp() throws Exception {
         _configService = new ConfigServiceImpl();
-        String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").toURI().getPath();
-        Map<String,String> newEnv = new HashMap<>();
-        newEnv.put("TILE_CONFIG_PROPERTIES", pathToProperties);
-        setEnv(newEnv);
+
     }
 
     @Test
     public void testReplaceProperties() throws Exception {
+        String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").toURI().getPath();
+        Map<String,String> newEnv = new HashMap<>();
+        newEnv.put("TILE_CONFIG_PROPERTIES", pathToProperties);
+        setEnv(newEnv);
+
         File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
         String replaced = _configService.replaceProperties(configFile);
+
         assertTrue(replaced.contains("\"foo.zookeeper.quorum\": \"bar.test.local\""));
         assertTrue(replaced.contains("\"foo.zookeeper.port\": \"2222\""));
         assertTrue(replaced.contains("\"foo.master\": \"bar.test.local:33333\""));
+        assertTrue(replaced.contains("\"endpoint\": \"http://some.host/some.data/\""));
+    }
+
+    @Test(expected = ConfigException.class)
+    public void testReplaceProperties_invalidConfigFile() throws Exception {
+        File foo = new File("foo");
+        _configService.replaceProperties(foo);
+    }
+
+    @Test(expected = ConfigException.class)
+    public void testReplaceProperties_invalidPathToPropertiesInEnvVar() throws Exception {
+        Map<String,String> newEnv = new HashMap<>();
+        newEnv.put("TILE_CONFIG_PROPERTIES", "invalid/path/to.properties");
+        setEnv(newEnv);
+        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
+        _configService.replaceProperties(configFile);
+    }
+
+    @Test
+    public void testReplaceProperties_envVarIsNull_usesDefaultReplacements() throws Exception {
+        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
+        String replaced = _configService.replaceProperties(configFile);
+
+        // The default properties file only has one replacement that matches a key in the test json file
+        assertTrue(replaced.contains("\"endpoint\": \"http://some.endpoint/somedata\""));
+
+        // The other keys remain templated
+        assertTrue(replaced.contains("\"foo.zookeeper.quorum\": \"[foo.zookeeper.quorum]\""));
+        assertTrue(replaced.contains("\"foo.zookeeper.port\": \"[foo.zookeeper.port]\""));
+        assertTrue(replaced.contains("\"foo.master\": \"[foo.master]\""));
     }
 
     // ONLY FOR UNIT TESTING
