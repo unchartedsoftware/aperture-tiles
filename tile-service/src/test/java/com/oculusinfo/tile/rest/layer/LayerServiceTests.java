@@ -32,6 +32,8 @@ import com.oculusinfo.tile.init.providers.*;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.QueryParamDecoder;
 
+import com.oculusinfo.tile.rest.config.ConfigService;
+import com.oculusinfo.tile.rest.config.ConfigServiceImpl;
 import org.json.JSONObject;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -43,6 +45,9 @@ public class LayerServiceTests {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( LayerServiceTests.class );
     protected LayerService _layerService;
+
+    // TODO Introduce Mockito
+    private ConfigService _configService;
 
 	@Before
 	public void setup () {
@@ -59,7 +64,8 @@ public class LayerServiceTests {
                 new StandardImageRendererFactoryProvider(),
                 new StandardTileTransformerFactoryProvider()
             );
-            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
+            _configService = new ConfigServiceImpl();
+            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider, _configService );
 		} catch (Exception e) {
 			throw e;
 		}
