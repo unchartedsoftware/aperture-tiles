@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ConfigServiceTests {
 
@@ -27,9 +27,10 @@ public class ConfigServiceTests {
     @Test
     public void testReplaceProperties() throws Exception {
         File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
-        String result = _configService.replaceProperties(configFile);
-        System.out.println(result);
-        assertNotNull(result);
+        String replaced = _configService.replaceProperties(configFile);
+        assertTrue(replaced.contains("\"foo.zookeeper.quorum\": \"bar.test.local\""));
+        assertTrue(replaced.contains("\"foo.zookeeper.port\": \"2222\""));
+        assertTrue(replaced.contains("\"foo.master\": \"bar.test.local:33333\""));
     }
 
     // ONLY FOR UNIT TESTING
