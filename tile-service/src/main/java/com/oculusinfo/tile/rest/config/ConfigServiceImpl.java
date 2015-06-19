@@ -25,13 +25,12 @@
 package com.oculusinfo.tile.rest.config;
 
 import com.google.inject.Singleton;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -45,33 +44,42 @@ import java.util.regex.Pattern;
 @Singleton
 public class ConfigServiceImpl implements ConfigService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigServiceImpl.class);
-
     @Override
-    public String replaceProperties(File configFile) throws IOException {
-        String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
-        Properties properties = new Properties();
-        String pathToProperties = System.getenv("TILE_CONFIG_PROPERTIES");
-        if (pathToProperties == null) {
-            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable not set, returning original config file content");
-            return configFileContent;
+    public String replaceProperties(File configFile) throws ConfigException {
+        try {
+            return replaceTokens(
+                    new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8),
+                    buildReplacements());
+        } catch (IOException e) {
+            throw new ConfigException(String.format("Unable to read config file %s", configFile), e);
         }
-        Map<String, String> replacements = new HashMap<>();
+    }
 
+    protected Map<String, String> buildReplacements() throws ConfigException {
+        String pathToProperties = getPathToProperties();
         try (InputStream input = new FileInputStream(pathToProperties)) {
+            Map<String, String> replacements = new HashMap<>();
+            Properties properties = new Properties();
             properties.load(input);
             Enumeration e = properties.propertyNames();
-            LOGGER.info("Loaded tile config properties file: {}", pathToProperties);
-
             while (e.hasMoreElements()) {
                 String key = (String) e.nextElement();
                 replacements.put(key, properties.getProperty(key));
             }
+            return replacements;
         } catch (IOException e) {
-            LOGGER.error("Unable to read tile config properties file {}.", pathToProperties, e);
+            throw new ConfigException(String.format("Unable to read properties file %s", pathToProperties), e);
         }
+    }
 
-        return replaceTokens(configFileContent, replacements);
+    protected String getPathToProperties() throws ConfigException {
+        try {
+            return System.getenv("TILE_CONFIG_PROPERTIES") != null ?
+                    System.getenv("TILE_CONFIG_PROPERTIES") :
+                    this.getClass().getClassLoader().getResource("default-config.properties").toURI().getPath();
+        } catch (URISyntaxException e) {
+            throw new ConfigException("Unable to get path to default-config.properties", e);
+        }
     }
 
     // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string

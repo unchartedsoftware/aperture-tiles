@@ -36,6 +36,7 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.config.ConfigException;
 import com.oculusinfo.tile.rest.config.ConfigService;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
 import org.json.JSONArray;
@@ -46,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -307,56 +307,12 @@ public class LayerServiceImpl implements LayerService {
                         _layers.add( layerJSON );
                     }
                 }
-			} catch (FileNotFoundException e) {
-				LOGGER.error("Cannot find layer configuration file {} ", file, e);
-				return;
 			} catch (JSONException e) {
 				LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
-			} catch (IOException e) {
-                LOGGER.error("Unable to read layer configuration file {}.", file, e);
+			} catch (ConfigException e) {
+                LOGGER.error("Unable to replace properties in layer file {}.", file, e);
             }
         }
 	}
 
-    // TODO Put in a new config service if its not too much factory module guice trouble
-//    private String replaceEnvVars(File configFile) throws IOException {
-//        String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
-//        Properties properties = new Properties();
-//        String pathToProperties = System.getenv("TILE_CONFIG_PROPERTIES");
-//        if (pathToProperties == null) {
-//            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable not set");
-//            return configFileContent;
-//        }
-//        Map<String, String> replacements = new HashMap<>();
-//        try (InputStream input = new FileInputStream(pathToProperties)) {
-//            properties.load(input);
-//            Enumeration e = properties.propertyNames();
-//            LOGGER.info("Loaded tile config properties file: {}", pathToProperties);
-//
-//            while (e.hasMoreElements()) {
-//                String key = (String) e.nextElement();
-//                replacements.put(key, properties.getProperty(key));
-//            }
-//        } catch (IOException e) {
-//            LOGGER.error("Unable to read tile config properties file {}.", pathToProperties, e);
-//        }
-//
-//        return replaceTokens(configFileContent, replacements);
-//    }
-
-    // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string
-//    private String replaceTokens(String text, Map<String, String> replacements) {
-//        Pattern pattern = Pattern.compile("\\[(.+?)\\]");
-//        Matcher matcher = pattern.matcher(text);
-//        StringBuffer buffer = new StringBuffer();
-//        while (matcher.find()) {
-//            String replacement = replacements.get(matcher.group(1));
-//            if (replacement != null) {
-//                matcher.appendReplacement(buffer, "");
-//                buffer.append(replacement);
-//            }
-//        }
-//        matcher.appendTail(buffer);
-//        return buffer.toString();
-//    }
 }

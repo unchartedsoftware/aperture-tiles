@@ -1,7 +1,6 @@
 package com.oculusinfo.tile.rest.config;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * The ConfigService is responsible for converting templated configuration files...
@@ -10,6 +9,6 @@ import java.io.IOException;
  */
 public interface ConfigService {
 
-    String replaceProperties(File configFile) throws IOException;
+    String replaceProperties(File configFile) throws ConfigException;
 
 }
