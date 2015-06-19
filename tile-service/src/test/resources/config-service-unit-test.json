@@ -1,0 +1,8 @@
+{
+    "pyramidio": {
+        "type": "foo",
+        "foo.zookeeper.quorum": "[foo.zookeeper.quorum]",
+        "foo.zookeeper.port": "[foo.zookeeper.port]",
+        "foo.master": "[foo.master]"
+    }
+}
