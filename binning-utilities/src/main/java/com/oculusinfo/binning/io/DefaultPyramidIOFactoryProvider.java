@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ * Copyright (c) 2015 Uncharted Software Inc. http://www.uncharted.software/
  *
  * Released under the MIT License.
  *
