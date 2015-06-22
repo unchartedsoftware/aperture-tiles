@@ -304,13 +304,15 @@
             horizontalSlide,
             verticalSlide;
         enableSlide = function() {
-            // set enable / disable callbacks
-            if (axis.isXAxis) {
-                axis.$header.click( verticalSlide );
-                axis.$content.click( verticalSlide );
-            } else {
-                axis.$header.click( horizontalSlide );
-                axis.$content.click( horizontalSlide );
+            // set enable / disable callbacks if collapsible axis
+            if (axis.collapsible) {
+                if (axis.isXAxis) {
+                    axis.$header.click(verticalSlide);
+                    axis.$content.click(verticalSlide);
+                } else {
+                    axis.$header.click(horizontalSlide);
+                    axis.$content.click(horizontalSlide);
+                }
             }
         };
         disableSlide = function() {
@@ -520,7 +522,7 @@
         this.repeat = ( spec.repeat !== undefined ) ? spec.repeat : false;
         this.title = spec.title || 'Axis';
         this.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
-
+        this.collapsible = ( spec.collapsible !== undefined ) ? spec.collapsible : true;
         spec.intervals = spec.intervals || {};
         this.intervals = {};
         this.intervals.type = ( spec.intervals.type !== undefined ) ? spec.intervals.type.toLowerCase() : 'percentage';

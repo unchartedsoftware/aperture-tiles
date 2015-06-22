@@ -387,7 +387,6 @@ public class JsonTileVisualizer extends JFrame {
 
 
 	private void showCurrentTile () {
-		if (null == _pyramid) return;
 		if (null == _pyramidId) return;
 		if (null == _pyramidIO) return;
 		if (null == _levelField.getSelectedItem()) return;
