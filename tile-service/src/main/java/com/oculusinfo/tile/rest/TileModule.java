@@ -39,8 +39,8 @@ import com.oculusinfo.tile.rest.tile.TileServiceImpl;
 public class TileModule extends AbstractModule {
 	@Override
 	protected void configure() {
-		bind( LayerService.class ).to( LayerServiceImpl.class );
-		bind( ConfigService.class ).to( ConfigServiceImpl.class );
+        bind( ConfigService.class ).to( ConfigServiceImpl.class );
+        bind( LayerService.class ).to( LayerServiceImpl.class );
 		bind( TileService.class ).to( TileServiceImpl.class );
 		bind( LegendService.class ).to( LegendServiceImpl.class );
 	}
