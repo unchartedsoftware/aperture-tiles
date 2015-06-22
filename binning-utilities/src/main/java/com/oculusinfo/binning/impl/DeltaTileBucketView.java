@@ -42,11 +42,11 @@ import com.oculusinfo.binning.util.BinaryOperator;
 public class DeltaTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
-	private TileData<List<T>> _base 		= null;
-	private TileData<List<T>> _delta		= null;
-	private BinaryOperator _operator 	= null;
-	private Integer			  _startCompare = null;
-	private Integer			  _endCompare 	= null;
+	private TileData<List<T>> _base = null;
+	private TileData<List<T>> _delta = null;
+	private BinaryOperator _operator = null;
+	private Integer	_startCompare = null;
+	private Integer	_endCompare = null;
 
 
 	public DeltaTileBucketView (TileData<List<T>> base, TileData<List<T>> delta, BinaryOperator.OPERATOR_TYPE op,
@@ -100,7 +100,7 @@ public class DeltaTileBucketView<T> implements TileData<List<T>> {
 
 		int binSize = sourceData.size();
 		int start = ( _startCompare != null ) ? _startCompare : 0;
-		int end = ( _endCompare != null && _endCompare < binSize && _endCompare != 0) ? _endCompare : binSize;
+		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
 
 		for(int i = 0; i < binSize; i++) {
 			if ( i >= start && i <= end ) {

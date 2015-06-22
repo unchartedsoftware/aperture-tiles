@@ -78,6 +78,8 @@
         spec.point = spec.point || {};
         spec.point.xKey = spec.point.xKey || 'x';
         spec.point.yKey = spec.point.yKey || 'y';
+		spec.point.magnitude.min = spec.point.magnitude.min || -1;
+		spec.point.magnitude.max = spec.point.magnitude.max || -1;
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -140,7 +142,14 @@
                 positionKey = Math.floor( offset.x ) + "," + Math.floor( offset.y );
                 if ( !positionMap[ positionKey ] ) {
                     positionMap[ positionKey ] = true;
-                    html += '<div class="point-annotation point-annotation-fill" style="'
+					// calculate proper colour based on magnitude, if present
+					var percent = "";
+					if ( spec.point.magnitude.min > 0 && spec.point.magnitude.max > 0 && value[j].data.magnitude ) {
+						// get percent and round up to nearest 10
+						var percent_value = ((value[j].data.magnitude - spec.point.magnitude.min)/(spec.point.magnitude.max - spec.point.magnitude.min))*100;
+						percent = "-" + Math.ceil(percent_value/10)*10;
+					}
+                    html += '<div class="point-annotation point-annotation-fill' + percent + '" style="'
                           + 'left:' + offset.x + 'px;'
                           + 'top:' + offset.y + 'px;'
                           + 'border-width: 2px;"';

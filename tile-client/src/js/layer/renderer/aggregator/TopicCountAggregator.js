@@ -52,8 +52,10 @@
         for ( i=0; i<buckets.length; i++ ) {
             // add to total count
             score = buckets[i].score;
-            total = ( typeof score === "number" ) ? score : score.total;
-            aggregation.count += total;
+            if (score !== undefined) {
+                total = ( typeof score === "number" ) ? score : score.total;
+                aggregation.count += total;
+            }
         }
         return aggregation;
     }

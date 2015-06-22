@@ -92,6 +92,15 @@ abstract class ValueExtractor[PT: ClassTag, BT] extends Serializable {
 	def serializer: TileSerializer[BT]
 
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[BT], _]]
+
+	/** Transformed the pyramid name by inserting the name of the valuer
+		* Use the tiling task parameter "name" to generate customized tiling.
+		* The string "{v}" will be replaced by the ValueExtractor.name value
+		* For example: "MyTilingName.{v}" -> "MyTilingName.count"
+		*/
+	def getTransformedName(inputName : String) : String = {
+		inputName.replace("{v}", name)
+	}
 }
 
 /**

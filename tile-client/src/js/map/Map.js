@@ -733,6 +733,29 @@
                 olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
+        },
+
+        /**
+         * Restricts the map extents to a particular bounding box. If no arg is
+         * provided, this removes previous restrictions.
+         * @memberof Map.prototype
+         *
+         * @param {Object} bounds - The bounding box to zoom to.
+         */
+        restrictExtent: function( bounds ) {
+            if ( !bounds ) {
+                this.olMap.restrictedExtent = null;
+                this.olMap.zoomToMaxExtent();
+                return;
+            }
+            var minViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.minX, bounds.minY ),
+                maxViewportPx = MapUtil.getViewportPixelFromCoord( this, bounds.maxX, bounds.maxY ),
+                minLonLat = this.olMap.getLonLatFromViewPortPx( minViewportPx ),
+                maxLonLat = this.olMap.getLonLatFromViewPortPx( maxViewportPx ),
+                olBounds = new OpenLayers.Bounds();
+            olBounds.extend( minLonLat );
+            olBounds.extend( maxLonLat );
+            this.olMap.restrictedExtent = olBounds;
             this.olMap.zoomToExtent( olBounds );
         },
 

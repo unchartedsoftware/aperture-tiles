@@ -426,7 +426,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 			val args = Map(
 				"ops.xColumn" -> "x",
 				"ops.yColumn" -> "y",
-				"ops.name" -> "test",
+				"ops.name" -> "test.{i}.{v}",
 				"ops.description" -> "a test description",
 				"ops.prefix" -> "test_prefix",
 				"ops.levels.0" -> "0",
@@ -485,7 +485,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 			val args = Map(
 				"ops.xColumn" -> "x",
 				"ops.yColumn" -> "y",
-				"ops.name" -> "test",
+				"ops.name" -> "test.{i}.{v}",
 				"ops.description" -> "a test description",
 				"ops.prefix" -> "test_prefix",
 				"ops.levels.0" -> "0",
@@ -600,7 +600,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 				"ops.y1Column" -> "y1",
 				"ops.x2Column" -> "x2",
 				"ops.y2Column" -> "y2",
-				"ops.name" -> "test",
+				"ops.name" -> "test.{i}.{v}",
 				"ops.description" -> "a test description",
 				"ops.prefix" -> "test_prefix",
 				"ops.levels.0" -> "0,1",

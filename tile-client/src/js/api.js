@@ -45,6 +45,8 @@
         Carousel: require('./layer/Carousel'),
         LayerUtil: require('./layer/LayerUtil'),
         VectorLayer: require('./layer/VectorLayer'),
+        HtmlMarker: require('./layer/HtmlMarker'),
+        HtmlMarkerLayer: require('./layer/HtmlMarkerLayer'),
         Layer: require('./layer/Layer'),
 
         // Renderer
