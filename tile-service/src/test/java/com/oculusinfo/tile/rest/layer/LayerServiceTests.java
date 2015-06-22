@@ -28,31 +28,49 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.providers.FactoryProvider;
-import com.oculusinfo.tile.init.providers.*;
+import com.oculusinfo.tile.init.providers.StandardImageRendererFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardLayerConfigurationProvider;
+import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTileTransformerFactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.QueryParamDecoder;
-
+import com.oculusinfo.tile.rest.config.ConfigException;
 import com.oculusinfo.tile.rest.config.ConfigService;
-import com.oculusinfo.tile.rest.config.ConfigServiceImpl;
 import org.json.JSONObject;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class LayerServiceTests {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( LayerServiceTests.class );
-    protected LayerService _layerService;
+    private static final String UNIT_TEST_CONFIG_JSON = "unit-test-config.json";
 
-    // TODO Introduce Mockito
+    protected LayerService _layerService;
     private ConfigService _configService;
 
-	@Before
-	public void setup () {
+    @Before
+	public void setup () throws Exception {
 		try {
-			String configFile = "res:///unit-test-config.json";
+			String configFile = "res:///" + UNIT_TEST_CONFIG_JSON;
             Set<FactoryProvider<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
             Set<FactoryProvider<TileSerializer<?>>> serializerSet = new HashSet<>();
@@ -64,14 +82,23 @@ public class LayerServiceTests {
                 new StandardImageRendererFactoryProvider(),
                 new StandardTileTransformerFactoryProvider()
             );
-            _configService = new ConfigServiceImpl();
-            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider, _configService );
+
+            _configService = mock(ConfigService.class);
+            withMockConfigService();
+
+            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider, _configService);
 		} catch (Exception e) {
 			throw e;
 		}
 	}
 
-	@Test
+    private void withMockConfigService() throws URISyntaxException, IOException, ConfigException {
+        File configFile = new File(this.getClass().getClassLoader().getResource(UNIT_TEST_CONFIG_JSON).toURI());
+        String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
+        when(_configService.replaceProperties(any(File.class))).thenReturn(configFileContent);
+    }
+
+    @Test
 	public void getLayerJSONsTest() {
 		List< JSONObject > jsons = _layerService.getLayerJSONs();
 		assert( jsons.size() == 2 );
