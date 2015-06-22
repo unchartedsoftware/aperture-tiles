@@ -65,7 +65,7 @@ public class LayerServiceImpl implements LayerService {
     private Map< String, JSONObject > _layersBySha;
 	private Map< String, JSONObject > _metaDataCache;
     private FactoryProvider< LayerConfiguration > _layerConfigurationProvider;
-    private ConfigService _configService;
+    private final ConfigService _configService;
 
 	@Inject
 	public LayerServiceImpl( @Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,

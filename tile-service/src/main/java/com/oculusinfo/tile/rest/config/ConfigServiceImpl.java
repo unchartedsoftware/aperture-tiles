@@ -25,6 +25,10 @@
 package com.oculusinfo.tile.rest.config;
 
 import com.google.inject.Singleton;
+import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +47,8 @@ import java.util.regex.Pattern;
 
 @Singleton
 public class ConfigServiceImpl implements ConfigService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
 
     @Override
     public String replaceProperties(File configFile) throws ConfigException {
@@ -74,9 +80,16 @@ public class ConfigServiceImpl implements ConfigService {
 
     protected String getPathToProperties() throws ConfigException {
         try {
-            return System.getenv("TILE_CONFIG_PROPERTIES") != null ?
-                    System.getenv("TILE_CONFIG_PROPERTIES") :
-                    this.getClass().getClassLoader().getResource("default-config.properties").toURI().getPath();
+            String pathToProperties;
+            String configEnvVar = System.getenv("TILE_CONFIG_PROPERTIES");
+            if (StringUtils.isNotEmpty(configEnvVar)) {
+                pathToProperties = configEnvVar;
+                LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable is set, using properties file {} ", pathToProperties);
+            } else {
+                pathToProperties = this.getClass().getClassLoader().getResource("default-config.properties").toURI().getPath();
+                LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable NOT set, using default properties file {}", pathToProperties);
+            }
+            return pathToProperties;
         } catch (URISyntaxException e) {
             throw new ConfigException("Unable to get path to default-config.properties", e);
         }

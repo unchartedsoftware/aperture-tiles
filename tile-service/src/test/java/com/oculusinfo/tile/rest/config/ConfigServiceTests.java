@@ -1,5 +1,6 @@
 package com.oculusinfo.tile.rest.config;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,7 +19,13 @@ public class ConfigServiceTests {
     @Before
     public void setUp() throws Exception {
         _configService = new ConfigServiceImpl();
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        HashMap<String, String> newenv = new HashMap<>();
+        newenv.put("TILE_CONFIG_PROPERTIES", "");
+        setEnv(newenv);
     }
 
     @Test

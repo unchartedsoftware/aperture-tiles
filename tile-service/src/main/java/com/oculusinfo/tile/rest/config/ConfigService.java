@@ -3,7 +3,7 @@ package com.oculusinfo.tile.rest.config;
 import java.io.File;
 
 /**
- * The ConfigService is responsible for converting templated configuration files...
+ * The ConfigService is responsible for replacing property keys in templated configuration files with values from a properties file.
  *
  * @author danielabar
  */
