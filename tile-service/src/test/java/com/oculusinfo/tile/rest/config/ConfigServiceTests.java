@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
+import static com.oculusinfo.tile.rest.config.ConfigServiceImpl.CONFIG_ENV_VAR;
 
 public class ConfigServiceTests {
 
@@ -24,7 +25,7 @@ public class ConfigServiceTests {
     @After
     public void tearDown() throws Exception {
         HashMap<String, String> newenv = new HashMap<>();
-        newenv.put("TILE_CONFIG_PROPERTIES", "");
+        newenv.put(CONFIG_ENV_VAR, "");
         setEnv(newenv);
     }
 
@@ -32,7 +33,7 @@ public class ConfigServiceTests {
     public void testReplaceProperties() throws Exception {
         String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").getPath();
         Map<String,String> newEnv = new HashMap<>();
-        newEnv.put("TILE_CONFIG_PROPERTIES", pathToProperties);
+        newEnv.put(CONFIG_ENV_VAR, pathToProperties);
         setEnv(newEnv);
 
         File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
@@ -53,7 +54,7 @@ public class ConfigServiceTests {
     @Test(expected = ConfigException.class)
     public void testReplaceProperties_invalidPathToPropertiesInEnvVar() throws Exception {
         Map<String,String> newEnv = new HashMap<>();
-        newEnv.put("TILE_CONFIG_PROPERTIES", "invalid/path/to.properties");
+        newEnv.put(CONFIG_ENV_VAR, "invalid/path/to.properties");
         setEnv(newEnv);
         File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
         _configService.replaceProperties(configFile);

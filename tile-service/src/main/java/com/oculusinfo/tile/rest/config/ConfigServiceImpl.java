@@ -50,6 +50,9 @@ public class ConfigServiceImpl implements ConfigService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
 
+    public static final String CONFIG_ENV_VAR = "TILE_CONFIG_PROPERTIES";
+    public static final String DEFAULT_CONFIG_PROPERTIES = "default-config.properties";
+
     @Override
     public String replaceProperties(File configFile) throws ConfigException {
         try {
@@ -89,20 +92,20 @@ public class ConfigServiceImpl implements ConfigService {
 
     protected String getPathToProperties() throws ConfigException {
         String pathToProperties;
-        String configEnvVar = System.getenv("TILE_CONFIG_PROPERTIES");
+        String configEnvVar = System.getenv(CONFIG_ENV_VAR);
         if (StringUtils.isNotEmpty(configEnvVar)) {
             pathToProperties = configEnvVar;
-            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable is set, using properties file {} ", pathToProperties);
+            LOGGER.warn("{} environment variable is set, using properties file {} ", CONFIG_ENV_VAR, pathToProperties);
         } else {
             pathToProperties = getPathToPropertiesFromClasspath();
-            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable NOT set, using default file from classpath {}", pathToProperties);
+            LOGGER.warn("{} environment variable NOT set, using default file from classpath {}", CONFIG_ENV_VAR, pathToProperties);
         }
         return pathToProperties;
     }
 
     protected String getPathToPropertiesFromClasspath() {
         String path = null;
-        URL resource = this.getClass().getClassLoader().getResource("default-config.properties");
+        URL resource = this.getClass().getClassLoader().getResource(DEFAULT_CONFIG_PROPERTIES);
         if (resource != null) {
             path = resource.getPath();
         }
