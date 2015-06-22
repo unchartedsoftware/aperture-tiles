@@ -69,7 +69,7 @@ public class HBasePyramidIO implements PyramidIO {
 
 
 	private static final byte[]      EMPTY_BYTES          = new byte[0];
-	private static final byte[]      TILE_FAMILY_NAME     = "tileData".getBytes();
+	protected static final byte[]      TILE_FAMILY_NAME     = "tileData".getBytes();
 	public static final HBaseColumn  TILE_COLUMN          = new HBaseColumn(TILE_FAMILY_NAME, EMPTY_BYTES);
 	private static final byte[]      METADATA_FAMILY_NAME = "metaData".getBytes();
 	public static final HBaseColumn  METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
@@ -160,7 +160,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 * @return The put request - the same as is passed in, or a new request if
 	 *         none was passed in.
 	 */
-	private Put addToPut (Put existingPut, String rowId, HBaseColumn column, byte[] data) {
+	protected Put addToPut (Put existingPut, String rowId, HBaseColumn column, byte[] data) {
 		if (null == existingPut) {
 			existingPut = new Put(rowId.getBytes());
 		}
@@ -178,7 +178,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 * @param rows
 	 *            The rows to write
 	 */
-	private void writeRows (String tableName, List<Row> rows) throws InterruptedException, IOException {
+	protected void writeRows (String tableName, List<Row> rows) throws InterruptedException, IOException {
 		Table table = getTable(tableName);
 		Object[] results = new Object[rows.size()];
 		table.batch(rows, results);
@@ -294,12 +294,18 @@ public class HBasePyramidIO implements PyramidIO {
 	public <T> List<TileData<T>> readTiles (String tableName,
 	                                        TileSerializer<T> serializer,
 	                                        Iterable<TileIndex> tiles) throws IOException {
+		return readTiles(tableName, serializer, tiles, TILE_COLUMN);
+	}
+	protected <T> List<TileData<T>> readTiles (String tableName,
+											   TileSerializer<T> serializer,
+											   Iterable<TileIndex> tiles,
+											   HBaseColumn column) throws IOException {
 		List<String> rowIds = new ArrayList<String>();
 		for (TileIndex tile: tiles) {
 			rowIds.add(rowIdFromTileIndex(tile));
 		}
 
-		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, TILE_COLUMN);
+		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, column);
 
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
@@ -310,7 +316,7 @@ public class HBasePyramidIO implements PyramidIO {
 			Map<HBaseColumn, byte[]> rawResult = iData.next();
 			TileIndex index = indexIterator.next();
 			if (null != rawResult) {
-				byte[] rawData = rawResult.get(TILE_COLUMN);
+				byte[] rawData = rawResult.get(column);
 				ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
 				TileData<T> data = serializer.deserialize(index, bais);
 				results.add(data);
