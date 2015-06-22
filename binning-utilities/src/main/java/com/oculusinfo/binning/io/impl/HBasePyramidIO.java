@@ -28,14 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -250,16 +243,20 @@ public class HBasePyramidIO implements PyramidIO {
 		}
 	}
 
+	public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		serializer.serialize(tile, baos);
+
+		return addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
+		                TILE_COLUMN, baos.toByteArray());
+	}
+
 	@Override
 	public <T> void writeTiles (String tableName, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
 		List<Row> rows = new ArrayList<Row>();
 		for (TileData<T> tile: data) {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			serializer.serialize(tile, baos);
-
-			rows.add(addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
-			                  TILE_COLUMN, baos.toByteArray()));
+			rows.add(getPutForTile(tile, serializer));
 		}
 		try {
 			writeRows(tableName, rows);

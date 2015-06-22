@@ -28,11 +28,11 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.DenseTileMultiSliceView;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Row;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +50,7 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 		super(zookeeperQuorum, zookeeperPort, hbaseMaster);
 	}
 
-	private int numSlices (TileData<?> tile) {
+	public int numSlices (TileData<?> tile) {
 		int slices = 0;
 		TileIndex index = tile.getDefinition();
 		for (int x=0; x < index.getXBins(); ++x) {
@@ -67,17 +67,7 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 		return slices;
 	}
 
-	@Override
-	public <T> void writeTiles(String tableName, TileSerializer<T> serializer, Iterable<TileData<T>> data) throws IOException {
-		TypeDescriptor binType = serializer.getBinTypeDescription();
-		if (List.class == binType.getMainType()) {
-			writeSlices(tableName, (TileSerializer) serializer, (Iterable) data);
-		} else {
-			super.writeTiles(tableName, serializer, data);
-		}
-	}
-
-	private HBaseColumn getSliceColumn (int minSlice, int maxSlice) {
+	public HBaseColumn getSliceColumn (int minSlice, int maxSlice) {
 		String qualifier;
 		if (minSlice == maxSlice) {
 			qualifier = ""+minSlice;
@@ -87,36 +77,31 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 		return new HBaseColumn(TILE_FAMILY_NAME, qualifier.getBytes());
 	}
 
-	private <T> void writeSlices (String tableName,
-								  TileSerializer<List<T>> serializer,
-								  Iterable<TileData<List<T>>> data) throws IOException {
-		List<Row> rows = new ArrayList<Row>();
-		for (TileData<List<T>> tile: data) {
-			// Record our base form
-			{
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(tile, baos);
+	public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException {
+		TypeDescriptor binType = serializer.getBinTypeDescription();
 
-				rows.add(addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
-				                  TILE_COLUMN, baos.toByteArray()));
-			}
-			// Figure out into how many slices to divide the data
-			int slices = numSlices(tile);
-			// Make sure we have all our necessary columns.
-			// Divide the tile into slices, storing each of them individually in their own column
-			for (int s = 0; s < slices; ++s) {
-				TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(slice, baos);
-				rows.add(addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
-				                  getSliceColumn(s, s), baos.toByteArray()));
-			}
+		Put put = super.getPutForTile(tile, serializer);
+		if (List.class == binType.getMainType()) {
+			put = addSlices(put, (TileSerializer) serializer, (TileData) tile);
 		}
-		try {
-			writeRows(tableName, rows);
-		} catch (InterruptedException e) {
-			throw new IOException("Error writing tiles to HBase", e);
+
+		return put;
+	}
+
+	private <T> Put addSlices (Put existingPut,
+							   TileSerializer<List<T>> serializer,
+							   TileData<List<T>> tile) throws IOException {
+		// Figure out into how many slices to divide the data
+		int slices = numSlices(tile);
+		// Divide the tile into slices, storing each of them individually in their own column
+		for (int s = 0; s < slices; ++s) {
+			TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			serializer.serialize(slice, baos);
+			existingPut = addToPut(existingPut, rowIdFromTileIndex(tile.getDefinition()),
+			                       getSliceColumn(s, s), baos.toByteArray());
 		}
+		return existingPut;
 	}
 
 	@Override
