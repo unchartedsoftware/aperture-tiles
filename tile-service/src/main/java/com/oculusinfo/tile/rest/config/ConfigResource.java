@@ -1,20 +1,16 @@
 package com.oculusinfo.tile.rest.config;
 
 import com.google.inject.Inject;
-import com.oculusinfo.tile.rest.layer.LayerResource;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
 public class ConfigResource extends ServerResource {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LayerResource.class);
 
     private ConfigService _service;
 
