@@ -423,8 +423,13 @@
             controls: [
                 this.navigationControls,
                 this.zoomControls
-            ]
+            ],
+            tileManager: new OpenLayers.TileManager({
+                moveDelay: 1000,
+                zoomDelay: 1000
+            })
         });
+
         // set theme, default to 'dark' theme
         this.setTheme( spec.theme );
     }

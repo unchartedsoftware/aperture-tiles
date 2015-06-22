@@ -50,31 +50,36 @@
         } else {
             $div.css( 'left', 0 );
         }
+        updateTilePositions(map, layer);
     }
 
     function onMapMove( map, layer ) {
         return function() {
-            var $container = $( layer.div ).parent(),
-                $viewport = $( map.viewPortDiv ),
-                $div = $( layer.div ),
-                offset = $container.position(),
-                height = $viewport.height();
-            if ( layer.dimension === "x" ) {
-                // reset tile position within the layer div
-                $div.children().each( function() {
-                    $( this ).css( 'top', -256 );
-                });
-                // then set div position
-                $div.css( 'top', height - offset.top );
-            } else {
-                // reset tile position within the layer div
-                $div.children().each( function() {
-                    $( this ).css( 'left', 0 );
-                });
-                // then set div position
-                $div.css( 'left', -offset.left );
-            }
+            updateTilePositions(map, layer);
         };
+    }
+
+    function updateTilePositions(map, layer) {
+        var $container = $( layer.div ).parent(),
+            $viewport = $( map.viewPortDiv ),
+            $div = $( layer.div ),
+            offset = $container.position(),
+            height = $viewport.height();
+        if ( layer.dimension === "x" ) {
+            // reset tile position within the layer div
+            $div.children().each( function() {
+                $( this ).css( 'top', -256 );
+            });
+            // then set div position
+            $div.css( 'top', height - offset.top );
+        } else {
+            // reset tile position within the layer div
+            $div.children().each( function() {
+                $( this ).css( 'left', 0 );
+            });
+            // then set div position
+            $div.css( 'left', -offset.left );
+        }
     }
 
     OpenLayers.Layer.Univariate = function( name, url, options ) {
@@ -265,50 +270,38 @@
      * of the grid depending the the dimension this layer represents.
      */
     OpenLayers.Layer.Univariate.prototype.moveGriddedTiles = function(deferred) {
-        if ( !deferred && !OpenLayers.Animation.isNative ) {
-            if ( this.moveTimerId !== null ) {
-                window.clearTimeout( this.moveTimerId );
-            }
-            this.moveTimerId = window.setTimeout(
-                this.deferMoveGriddedTiles, this.tileLoadingDelay
-            );
-            return;
-        }
-        var buffer = this.buffer || 1;
-        var scale = this.getResolutionScale();
-        while ( true ) {
+        var buffer = this.buffer + 1;
+        while(true) {
+            var tlTile = this.grid[0][0];
             var tlViewPort = {
-                x: ( this.grid[0][0].position.x * scale ) +
-                    parseInt( this.div.style.left, 10 ) +
-                    parseInt( this.map.layerContainerDiv.style.left ),
-                y: ( this.grid[0][0].position.y * scale ) +
-                    parseInt( this.div.style.top, 10 ) +
-                    parseInt( this.map.layerContainerDiv.style.top )
+                x: tlTile.position.x +
+                this.map.layerContainerOriginPx.x,
+                y: tlTile.position.y +
+                this.map.layerContainerOriginPx.y
             };
+            var ratio = this.getServerResolution() / this.map.getResolution();
             var tileSize = {
-                w: this.tileSize.w * scale,
-                h: this.tileSize.h * scale
+                w: Math.round(this.tileSize.w * ratio),
+                h: Math.round(this.tileSize.h * ratio)
             };
-
-            if ( this.dimension === 'x' ) {
+            if (this.dimension === 'x') {
                 if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
-                    this.shiftColumn( true );
+                    this.shiftColumn(true, tileSize);
                 } else if (tlViewPort.x < -tileSize.w * buffer) {
-                    this.shiftColumn( false );
+                    this.shiftColumn(false, tileSize);
                 } else {
                     break;
                 }
             } else {
                 if (tlViewPort.y > -tileSize.h * (buffer - 1)) {
-                    this.shiftRow( true );
+                    this.shiftRow(true, tileSize);
                 } else if (tlViewPort.y < -tileSize.h * buffer) {
-                    this.shiftRow( false );
+                    this.shiftRow(false, tileSize);
                 } else {
                     break;
                 }
             }
         }
-    };
-
+    }
     module.exports = OpenLayers.Layer.Univariate;
 }());
