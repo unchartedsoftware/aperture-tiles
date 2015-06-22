@@ -30,7 +30,7 @@ public class ConfigServiceTests {
 
     @Test
     public void testReplaceProperties() throws Exception {
-        String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").toURI().getPath();
+        String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").getPath();
         Map<String,String> newEnv = new HashMap<>();
         newEnv.put("TILE_CONFIG_PROPERTIES", pathToProperties);
         setEnv(newEnv);

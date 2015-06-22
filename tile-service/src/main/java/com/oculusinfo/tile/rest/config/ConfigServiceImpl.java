@@ -53,9 +53,14 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public String replaceProperties(File configFile) throws ConfigException {
         try {
-            return replaceTokens(
-                    new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8),
-                    buildReplacements());
+            Map<String, String> replacements = buildReplacements();
+            String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
+            if (replacements != null) {
+                return replaceTokens(configFileContent, replacements);
+            } else {
+                LOGGER.warn("No config properties found, using file as is {}", configFile.getAbsolutePath());
+                return configFileContent;
+            }
         } catch (IOException e) {
             throw new ConfigException(String.format("Unable to read config file %s", configFile), e);
         }
@@ -63,6 +68,10 @@ public class ConfigServiceImpl implements ConfigService {
 
     protected Map<String, String> buildReplacements() throws ConfigException {
         String pathToProperties = getPathToProperties();
+        if (StringUtils.isEmpty(pathToProperties)) {
+            return null;
+        }
+
         try (InputStream input = new FileInputStream(pathToProperties)) {
             Map<String, String> replacements = new HashMap<>();
             Properties properties = new Properties();
@@ -86,18 +95,18 @@ public class ConfigServiceImpl implements ConfigService {
             LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable is set, using properties file {} ", pathToProperties);
         } else {
             pathToProperties = getPathToPropertiesFromClasspath();
-            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable NOT set, using default properties file {}", pathToProperties);
+            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable NOT set, using default file from classpath {}", pathToProperties);
         }
         return pathToProperties;
     }
 
-    protected String getPathToPropertiesFromClasspath() throws ConfigException {
+    protected String getPathToPropertiesFromClasspath() {
+        String path = null;
         URL resource = this.getClass().getClassLoader().getResource("default-config.properties");
         if (resource != null) {
-            return resource.getPath();
-        } else {
-            throw new ConfigException("Default properties file was null");
+            path = resource.getPath();
         }
+        return path;
     }
 
     // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string
