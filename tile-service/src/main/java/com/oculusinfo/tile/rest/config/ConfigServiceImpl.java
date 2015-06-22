@@ -34,7 +34,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -79,19 +79,24 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     protected String getPathToProperties() throws ConfigException {
-        try {
-            String pathToProperties;
-            String configEnvVar = System.getenv("TILE_CONFIG_PROPERTIES");
-            if (StringUtils.isNotEmpty(configEnvVar)) {
-                pathToProperties = configEnvVar;
-                LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable is set, using properties file {} ", pathToProperties);
-            } else {
-                pathToProperties = this.getClass().getClassLoader().getResource("default-config.properties").toURI().getPath();
-                LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable NOT set, using default properties file {}", pathToProperties);
-            }
-            return pathToProperties;
-        } catch (URISyntaxException e) {
-            throw new ConfigException("Unable to get path to default-config.properties", e);
+        String pathToProperties;
+        String configEnvVar = System.getenv("TILE_CONFIG_PROPERTIES");
+        if (StringUtils.isNotEmpty(configEnvVar)) {
+            pathToProperties = configEnvVar;
+            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable is set, using properties file {} ", pathToProperties);
+        } else {
+            pathToProperties = getPathToPropertiesFromClasspath();
+            LOGGER.warn("TILE_CONFIG_PROPERTIES environment variable NOT set, using default properties file {}", pathToProperties);
+        }
+        return pathToProperties;
+    }
+
+    protected String getPathToPropertiesFromClasspath() throws ConfigException {
+        URL resource = this.getClass().getClassLoader().getResource("default-config.properties");
+        if (resource != null) {
+            return resource.getPath();
+        } else {
+            throw new ConfigException("Default properties file was null");
         }
     }
 
