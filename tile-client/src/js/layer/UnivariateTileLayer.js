@@ -29,10 +29,6 @@
 
     var UnivariateTile = require('./UnivariateTile');
 
-    function getResolutionScale(layer) {
-        return parseInt(layer.div.style.width, 10) / 100;
-    }
-
     function clampBounds( bounds, layer ) {
         bounds = bounds.clone();
         if ( layer.dimension === "x" ) {
@@ -54,31 +50,36 @@
         } else {
             $div.css( 'left', 0 );
         }
+        updateTilePositions(map, layer);
     }
 
     function onMapMove( map, layer ) {
         return function() {
-            var $container = $( layer.div ).parent(),
-                $viewport = $( map.viewPortDiv ),
-                $div = $( layer.div ),
-                offset = $container.position(),
-                height = $viewport.height();
-            if ( layer.dimension === "x" ) {
-                // reset tile position within the layer div
-                $div.children().each( function() {
-                    $( this ).css( 'top', -256 );
-                });
-                // then set div position
-                $div.css( 'top', height - offset.top );
-            } else {
-                // reset tile position within the layer div
-                $div.children().each( function() {
-                    $( this ).css( 'left', 0 );
-                });
-                // then set div position
-                $div.css( 'left', -offset.left );
-            }
+            updateTilePositions(map, layer);
         };
+    }
+
+    function updateTilePositions(map, layer) {
+        var $container = $( layer.div ).parent(),
+            $viewport = $( map.viewPortDiv ),
+            $div = $( layer.div ),
+            offset = $container.position(),
+            height = $viewport.height();
+        if ( layer.dimension === "x" ) {
+            // reset tile position within the layer div
+            $div.children().each( function() {
+                $( this ).css( 'top', -256 );
+            });
+            // then set div position
+            $div.css( 'top', height - offset.top );
+        } else {
+            // reset tile position within the layer div
+            $div.children().each( function() {
+                $( this ).css( 'left', 0 );
+            });
+            // then set div position
+            $div.css( 'left', -offset.left );
+        }
     }
 
     OpenLayers.Layer.Univariate = function( name, url, options ) {
