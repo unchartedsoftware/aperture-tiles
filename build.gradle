@@ -14,14 +14,14 @@
 task setBuildVersions {
 	// Aperture tiles requires, at a minimum, Spark 1.3.0 and HBase 1.0
 	switch (buildType) {
-		// No cloudera version before 5.4.0 meets our minumum requirements
+	// No cloudera version before 5.4.0 meets our minumum requirements
 		case "cdh5.4.1":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
 				hadoopCommonVersion = "2.6.0-cdh5.4.1"
 				hadoopCoreVersion = "2.6.0-mr1-cdh5.4.1"
 				hbaseVersion = "1.0.0-cdh5.4.1"
-        htraceVersion = "3.1.0-incubating"
+				htraceVersion = "3.1.0-incubating"
 				sparkVersion = "1.3.0-cdh5.4.1"
 				dependencyScalaVersion = "2.10"
 				scalaVersion = "2.10.3"
@@ -135,7 +135,7 @@ subprojects {
 				exclude group: "org.jboss.netty", module: "netty"
 				exclude group: "io.netty", module: "netty"
 			})
-		  getDependencies().add(config, "org.apache.htrace:htrace-core:$htraceVersion", {
+			getDependencies().add(config, "org.apache.htrace:htrace-core:$htraceVersion", {
 				exclude group: "asm", module: "asm"
 				exclude group: "org.slf4j", module: "slf4j-api"
 				exclude group: "org.slf4j", module: "slf4j-log4j12"
@@ -143,7 +143,7 @@ subprojects {
 				exclude group: "org.jboss.netty", module: "netty"
 				exclude group: "io.netty", module: "netty"
 			})
-    } else {
+		} else {
 			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
 			getDependencies().add(config, "org.apache.hbase:hbase:$hbaseVersion", {
 				exclude group: "asm", module: "asm"
@@ -209,15 +209,15 @@ subprojects {
 
 			// Create a watch daemon thread
 			task watchThread() << {
-			    Thread.start {
-			        project.tasks.watch.execute()
-			    }
+				Thread.start {
+					project.tasks.watch.execute()
+				}
 			}
 
 			// Copy client js build files into the exploded war
 			task copyClientJsToExploded(type: Copy) {
 				from fileTree(TILE_CLIENT_BUILD).include("*.js")
-			    into EXPLODED_DIR
+				into EXPLODED_DIR
 			}
 			copyClientJsToExploded.inputs.dir TILE_CLIENT_BUILD
 			copyClientJsToExploded.outputs.dir EXPLODED_DIR
@@ -225,7 +225,7 @@ subprojects {
 			// Copy client css build files into the exploded war
 			task copyClientCssToExploded(type: Copy) {
 				from fileTree(TILE_CLIENT_BUILD).include("*.css")
-			    into EXPLODED_DIR
+				into EXPLODED_DIR
 			}
 			copyClientCssToExploded.inputs.dir TILE_CLIENT_BUILD
 			copyClientCssToExploded.outputs.dir EXPLODED_DIR
@@ -233,7 +233,7 @@ subprojects {
 			// Copy tile-service jar files into the exploded war
 			task copyTileServiceToExploded(type: Copy) {
 				from fileTree(TILE_SERVICE_BUILD).include("*.jar")
-			    into EXPLODED_LIBS
+				into EXPLODED_LIBS
 			}
 			copyTileServiceToExploded.inputs.dir TILE_SERVICE_BUILD
 			copyTileServiceToExploded.outputs.dir EXPLODED_LIBS
@@ -258,7 +258,7 @@ subprojects {
 			// Copy binning-utilities jar into the exploded war
 			task copyBinningUtilToExploded(type: Copy) {
 				from fileTree(BINNING_UTIL_BUILD).include("*.jar")
-			    into EXPLODED_LIBS
+				into EXPLODED_LIBS
 			}
 			copyBinningUtilToExploded.inputs.dir BINNING_UTIL_BUILD
 			copyBinningUtilToExploded.outputs.dir EXPLODED_LIBS
@@ -266,7 +266,7 @@ subprojects {
 			// Copy math-utilities jar into the exploded war
 			task copyMathUtilToExploded(type: Copy) {
 				from fileTree(MATH_UTIL_BUILD).include("*.jar")
-			    into EXPLODED_LIBS
+				into EXPLODED_LIBS
 			}
 			copyMathUtilToExploded.inputs.dir MATH_UTIL_BUILD
 			copyMathUtilToExploded.outputs.dir EXPLODED_LIBS
@@ -274,7 +274,7 @@ subprojects {
 			// Copy annotation-service jar into the exploded war
 			task copyAnnotationServiceToExploded(type: Copy) {
 				from fileTree(ANNOTATION_SERVICE_BUILD).include("*.jar")
-			    into EXPLODED_LIBS
+				into EXPLODED_LIBS
 			}
 			copyAnnotationServiceToExploded.inputs.dir ANNOTATION_SERVICE_BUILD
 			copyAnnotationServiceToExploded.outputs.dir EXPLODED_LIBS
@@ -282,7 +282,7 @@ subprojects {
 			// Copy the application files into the exploded war
 			task copyAppToExploded(type: Copy) {
 				from fileTree(APPLICATION_DIR)
-			    into EXPLODED_DIR
+				into EXPLODED_DIR
 			}
 			copyAppToExploded.inputs.dir APPLICATION_DIR
 			copyAppToExploded.outputs.dir EXPLODED_DIR
@@ -290,13 +290,13 @@ subprojects {
 			// Configure the watch task
 			watch {
 				serviceWatch {
-			        files fileTree(TILE_SERVICE_SRC).include('**/*.java')
-			        tasks ':tile-service:jar', 'copyTileServiceToExploded'
-			    }
-			    annotationWatch {
-			        files fileTree(ANNOTATION_SERVICE_SRC).include('**/*.java')
-			        tasks ':annotation-service:jar', 'copyAnnotationServiceToExploded'
-			    }
+					files fileTree(TILE_SERVICE_SRC).include('**/*.java')
+					tasks ':tile-service:jar', 'copyTileServiceToExploded'
+				}
+				annotationWatch {
+					files fileTree(ANNOTATION_SERVICE_SRC).include('**/*.java')
+					tasks ':annotation-service:jar', 'copyAnnotationServiceToExploded'
+				}
 				factoryWatch {
 					files fileTree(FACTORY_UTIL_SRC).include('**/*.java')
 					tasks ':factory-utilities:jar', 'copyFactoryUtilToExploded'
@@ -305,26 +305,26 @@ subprojects {
 					files fileTree(TILE_RENDERING_SRC).include('**/*.java')
 					tasks ':tile-rendering:jar', 'copyTileRenderingToExploded'
 				}
-			    binningWatch {
-			        files fileTree(BINNING_UTIL_SRC).include('**/*.java')
-			        tasks ':binning-utilities:jar', 'copyBinningUtilToExploded'
-			    }
-			    mathWatch {
-			        files fileTree(MATH_UTIL_SRC).include('**/*.java')
-			        tasks ':math-utilities:jar', 'copyMathUtilToExploded'
-			    }
-			    clientJsWatch {
-			        files fileTree(TILE_CLIENT_SRC).include('**/*.js')
-			        tasks ':tile-client:build_js', 'copyClientJsToExploded'
-			    }
-			    clientCssWatch {
-			        files fileTree(TILE_CLIENT_SRC).include('**/*.css')
-			        tasks ':tile-client:build_css', 'copyClientCssToExploded'
-			    }
-			    appWatch {
-			    	files fileTree(APPLICATION_DIR)
-			        tasks 'copyAppToExploded'
-			    }
+				binningWatch {
+					files fileTree(BINNING_UTIL_SRC).include('**/*.java')
+					tasks ':binning-utilities:jar', 'copyBinningUtilToExploded'
+				}
+				mathWatch {
+					files fileTree(MATH_UTIL_SRC).include('**/*.java')
+					tasks ':math-utilities:jar', 'copyMathUtilToExploded'
+				}
+				clientJsWatch {
+					files fileTree(TILE_CLIENT_SRC).include('**/*.js')
+					tasks ':tile-client:build_js', 'copyClientJsToExploded'
+				}
+				clientCssWatch {
+					files fileTree(TILE_CLIENT_SRC).include('**/*.css')
+					tasks ':tile-client:build_css', 'copyClientCssToExploded'
+				}
+				appWatch {
+					files fileTree(APPLICATION_DIR)
+					tasks 'copyAppToExploded'
+				}
 			}
 
 			// Add the tile-service and annotation-service dependencies
@@ -341,9 +341,9 @@ subprojects {
 			war.dependsOn ":tile-client:install"
 
 			task explodeWar() {
-			    doLast {
-			    	ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
-			    }
+				doLast {
+					ant.unzip(src: war.archivePath, dest: EXPLODED_DIR)
+				}
 			}
 			explodeWar.dependsOn war
 
@@ -352,9 +352,9 @@ subprojects {
 			jettyRun {
 				httpPort = 8080
 				contextPath = project.name
-    			scanIntervalSeconds = 1
-    			reload = "automatic"
-    			webAppSourceDirectory = file(EXPLODED_DIR)
+				scanIntervalSeconds = 1
+				reload = "automatic"
+				webAppSourceDirectory = file(EXPLODED_DIR)
 			}
 			jettyRun.dependsOn watchThread
 			jettyRun.dependsOn explodeWar
