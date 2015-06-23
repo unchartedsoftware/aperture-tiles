@@ -389,10 +389,10 @@ public class HBasePyramidIO implements PyramidIO {
 
 
 	// A separate object to separate out our Put generator, so it can be used in distributed environments
-	static interface HBaseTilePutter extends Serializable {
+	public static interface HBaseTilePutter extends Serializable {
 		public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException;
 	}
-	static class StandardHBaseTilePutter implements HBaseTilePutter {
+	public static class StandardHBaseTilePutter implements HBaseTilePutter {
 		@Override
 		public <T> Put getPutForTile(TileData<T> tile, TileSerializer<T> serializer) throws IOException {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();

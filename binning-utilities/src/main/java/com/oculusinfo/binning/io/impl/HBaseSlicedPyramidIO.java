@@ -89,7 +89,7 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 
 
 
-	static class SlicedHBaseTilePutter extends StandardHBaseTilePutter {
+	public static class SlicedHBaseTilePutter extends StandardHBaseTilePutter {
 		@Override
 		public <T> Put getPutForTile(TileData<T> tile, TileSerializer<T> serializer) throws IOException {
 			TypeDescriptor binType = serializer.getBinTypeDescription();
