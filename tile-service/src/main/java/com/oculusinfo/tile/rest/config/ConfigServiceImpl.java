@@ -56,6 +56,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public String replaceProperties(File configFile) throws ConfigException {
         try {
+            LOGGER.info("Processing configFile {}", configFile);
             Map<String, String> replacements = buildReplacements();
             String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
             if (replacements != null) {
@@ -118,8 +119,10 @@ public class ConfigServiceImpl implements ConfigService {
         Matcher matcher = pattern.matcher(text);
         StringBuffer buffer = new StringBuffer();
         while (matcher.find()) {
-            String replacement = replacements.get(matcher.group(1));
+            String matchedKey = matcher.group(1);
+            String replacement = replacements.get(matchedKey);
             if (replacement != null) {
+                LOGGER.info("Replacing {} with {}", matchedKey, replacement);
                 matcher.appendReplacement(buffer, "");
                 buffer.append(replacement);
             }
