@@ -33,7 +33,6 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.AvroJSONConverter;
-import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
@@ -67,7 +66,7 @@ public class TileServiceImpl implements TileService {
 	}
 
 
-	private <T> TileData<T> tileDataForIndex(TileIndex index, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO, int coarseness, JSONObject filterObject) throws IOException {
+	private <T> TileData<T> tileDataForIndex( TileIndex index, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO, int coarseness ) throws IOException {
 		TileData<T> data = null;
 		if ( coarseness > 1 ) {
 			int coarsenessFactor = ( int ) Math.pow( 2, coarseness - 1 );
@@ -83,7 +82,7 @@ public class TileServiceImpl implements TileService {
 					( int ) Math.floor( index.getX() / coarsenessFactor ),
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
 
-				tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ), null);
+				tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ) );
 				if ( tileDatas.size() >= 1 ) {
 					//we got data for this level so use it
 					break;
@@ -100,7 +99,7 @@ public class TileServiceImpl implements TileService {
 			data = SubTileDataView.fromSourceAbsolute( tileDatas.get( 0 ), index );
 		} else {
 			// No coarseness - use requested tile
-			java.util.List<TileData<T>> tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ), filterObject!= null ? JsonUtilities.jsonObjToMap(filterObject): null);
+			java.util.List<TileData<T>> tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ) );
 			if ( !tileDatas.isEmpty() ) {
 				data = tileDatas.get( 0 );
 			}
@@ -181,10 +180,7 @@ public class TileServiceImpl implements TileService {
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
 
-		Map<String, String> filterMap = new HashMap<>();
-		JSONObject filterProperties = config.getPropertyValue(LayerConfiguration.FILTER_PROPS);
-
-		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness, filterProperties);
+		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
 		if (data == null) {
 			return null;
 		}

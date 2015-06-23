@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -65,7 +65,7 @@ public class AnnotationFileSystemIOTest {
     private int NUM_ENTRIES = 50;
 	private AnnotationIO _dataIO;
 	private PyramidIO _tileIO;
-
+	
 	private TileSerializer<Map<String, List<Pair<String, Long>>>> _tileSerializer;
 	private AnnotationSerializer _dataSerializer;
 	private TilePyramid _pyramid;
@@ -76,16 +76,16 @@ public class AnnotationFileSystemIOTest {
 	public void setup () {
 
 		try {
-
+    		
 			_dataIO = new FileSystemAnnotationIO( new FileSystemAnnotationSource( ROOT_PATH, DATA_EXT ) );
 			_tileIO = new FileBasedPyramidIO(new FileSystemPyramidSource(ROOT_PATH, TILE_EXT));
-
+    		
 		} catch (Exception e) {
 
 			LOGGER.debug("Error: " + e.getMessage());
-
+			
 		}
-
+    	
 		_pyramid = new WebMercatorTilePyramid();
 		_indexer = new AnnotationIndexerImpl();
 		_tileSerializer = new StringLongPairArrayMapJsonSerializer();
@@ -93,7 +93,7 @@ public class AnnotationFileSystemIOTest {
 
 	}
 
-
+	
 	@Test
 	public void testFileSystemIO() {
 
@@ -101,24 +101,24 @@ public class AnnotationFileSystemIOTest {
 
 		List<AnnotationData<?>> annotations = generator.generateJSONAnnotations( NUM_ENTRIES );
 		List<AnnotationTile> tiles = generator.generateTiles( annotations, _indexer, _pyramid );
-
+		
 		List<TileIndex> tileIndices = AnnotationUtil.tilesToIndices( tiles );
 		List<Pair<String, Long>> dataIndices = AnnotationUtil.dataToIndices( annotations );
-
+        
 		try {
-
+    		
 			/*
 			 *  Write annotations
 			 */
 			LOGGER.debug("Writing "+NUM_ENTRIES+" to file system");
 			_tileIO.writeTiles(BASE_PATH, _tileSerializer, AnnotationTile.convertToRaw(tiles) );
 			_dataIO.writeData(BASE_PATH, _dataSerializer, annotations );
-
+	        
 			/*
 			 *  Read and check all annotations
 			 */
 			LOGGER.debug( "Reading all annotations" );
-			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices, null));
+			List<AnnotationTile> allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices));
 			List<AnnotationData<?>> allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
 			AnnotationUtil.printTiles( allTiles );
 			AnnotationUtil.printData( allData );
@@ -130,20 +130,20 @@ public class AnnotationFileSystemIOTest {
 			LOGGER.debug("Removing "+NUM_ENTRIES+" from file system");
 			_tileIO.removeTiles(BASE_PATH, tileIndices );
 			_dataIO.removeData(BASE_PATH, dataIndices );
-
-			allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices, null));
+	       
+			allTiles = AnnotationTile.convertFromRaw(_tileIO.readTiles(BASE_PATH, _tileSerializer, tileIndices));
 			allData = _dataIO.readData( BASE_PATH, _dataSerializer, dataIndices );
-
+	    	
 			Assert.assertTrue( allTiles.size() == 0 );
 			Assert.assertTrue( allData.size() == 0 );
 
 			LOGGER.debug( "Complete" );
-
-
+	    	
+	
 		} catch (Exception e) {
-
+    		
 			LOGGER.debug("Error: " + e.getMessage());
-
+			
 		} finally {
 
 			LOGGER.debug("Deleting temporary directories");

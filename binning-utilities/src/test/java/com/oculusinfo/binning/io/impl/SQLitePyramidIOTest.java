@@ -45,8 +45,8 @@ import com.oculusinfo.factory.util.Pair;
 
 /**
  * test SQLite implementation
- * This will only work on a machine with SQLite already installed; since we
- * don't want to mandate SQLite installation just to build properly, the
+ * This will only work on a machine with SQLite already installed; since we 
+ * don't want to mandate SQLite installation just to build properly, the 
  * default state of these tests is to ignore them.
  */
 @Ignore
@@ -109,7 +109,7 @@ public class SQLitePyramidIOTest {
 
 			List<TileData<List<Pair<String, Integer>>>> readResult =
 				sqlitePyramidIO.readTiles(PYRAMID_ID, serializer,
-				                          Collections.singletonList(tileDef), null);
+				                          Collections.singletonList(tileDef));
 			Assert.assertTrue(readResult.size()==1);
 
 			TileData<List<Pair<String, Integer>>> readTileData = readResult.get(0);

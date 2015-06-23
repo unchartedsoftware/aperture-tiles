@@ -1,18 +1,18 @@
 /**
  * Copyright (c) 2013 Oculus Info Inc. http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -151,7 +151,7 @@ public class CachingPyramidIO implements PyramidIO {
 	/**
 	 * Request a set of tiles, retrieving some of them immediately, and setting
 	 * the rest up for eventual retrieval
-	 *
+	 * 
 	 * @param pyramidId the pyramid io
 	 * @param serializer the serializer
 	 * @param indices Indices of tiles to be requested.  May not be null.
@@ -170,8 +170,8 @@ public class CachingPyramidIO implements PyramidIO {
 				return;
 
 			PyramidIO base = getBasePyramidIO(pyramidId);
-			List<TileData<T>> tiles = base.readTiles(pyramidId, serializer, newIndices, null);
-
+			List<TileData<T>> tiles = base.readTiles(pyramidId, serializer, newIndices);
+    
 			// Cache recieved tiles...
 			for (TileData<T> tile: tiles) {
 				cache.provideTile(tile);
@@ -185,9 +185,9 @@ public class CachingPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public <T> List<TileData<T>> readTiles(String pyramidId,
-										   TileSerializer<T> serializer,
-										   Iterable<TileIndex> indices, Map properties) throws IOException {
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> indices) throws IOException {
 		TileCache<T> cache = getTileCache(pyramidId);
 		synchronized (cache) {
 			List<TileData<T>> tiles = new ArrayList<>();
@@ -199,7 +199,7 @@ public class CachingPyramidIO implements PyramidIO {
 				if (null != tile)
 					tiles.add(tile);
 			}
-
+    
 			return(tiles);
 		}
 	}

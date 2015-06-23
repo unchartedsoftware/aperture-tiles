@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2014 Oculus Info Inc. 
  * http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import com.oculusinfo.binning.TileData;
@@ -43,7 +42,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 public class DummyPyramidIO implements PyramidIO {
     private String _metaData;
     public DummyPyramidIO (double minX, double maxX, double minY, double maxY, int minZ, int maxZ) {
-        String metaData =
+        String metaData = 
                 "{"+
                 "  \"name\":\"dummy\",\n"+
                 "  \"description\":\"dummy layer\",\n"+
@@ -94,9 +93,9 @@ public class DummyPyramidIO implements PyramidIO {
     }
 
     @Override
-    public <T> List<TileData<T>> readTiles(String pyramidId,
-										   TileSerializer<T> serializer,
-										   Iterable<TileIndex> tiles, Map properties) throws IOException {
+    public <T> List<TileData<T>> readTiles (String pyramidId,
+                                            TileSerializer<T> serializer,
+                                            Iterable<TileIndex> tiles) throws IOException {
         List<TileData<T>> results = new ArrayList<>();
         for (TileIndex rawIndex: tiles) {
             TileIndex index = new TileIndex(rawIndex.getLevel(), rawIndex.getX(), rawIndex.getY(), 1, 1);

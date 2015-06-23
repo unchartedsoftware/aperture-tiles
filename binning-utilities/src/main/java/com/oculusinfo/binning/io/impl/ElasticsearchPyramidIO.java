@@ -241,7 +241,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 
 	@Override
-	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles, Map filterObject) throws IOException {
+	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles) throws IOException {
 
 //		LOGGER.debug("read Tiles");
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
@@ -257,6 +257,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double startY = rect.getMaxY();
 			double endY = rect.getY();
 
+			Map filterObject = null;
 			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, filterObject);
 
 			Histogram date_agg = sr.getAggregations().get("date_agg");
