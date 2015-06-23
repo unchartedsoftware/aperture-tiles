@@ -45,29 +45,18 @@ import java.util.regex.Pattern;
 public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 	private static final Pattern SLICE_PATTERN = Pattern.compile("(?<table>.*)\\[(?<min>[0-9]+)(?>-(?<max>[0-9]+))?\\]");
 
+	private HBaseTilePutter _putter;
 	public HBaseSlicedPyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
 		super(zookeeperQuorum, zookeeperPort, hbaseMaster);
+		_putter = new SlicedHBaseTilePutter();
 	}
 
-	public int numSlices (TileData<?> tile) {
-		int slices = 0;
-		TileIndex index = tile.getDefinition();
-		for (int x=0; x < index.getXBins(); ++x) {
-			for (int y = 0; y < index.getYBins(); ++y) {
-				try {
-					List<?> bin = (List<?>) tile.getBin(x, y);
-					int size = bin.size();
-					if (size > slices) slices = size;
-				} catch (ClassCastException|NullPointerException e) {
-					// Swallow it, we don't care here.
-				}
-			}
-		}
-		return slices;
+	@Override public HBaseTilePutter getPutter () {
+		return _putter;
 	}
 
-	public HBaseColumn getSliceColumn (int minSlice, int maxSlice) {
+	public static HBaseColumn getSliceColumn (int minSlice, int maxSlice) {
 		String qualifier;
 		if (minSlice == maxSlice) {
 			qualifier = ""+minSlice;
@@ -75,33 +64,6 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 			qualifier = ""+minSlice+"-"+maxSlice;
 		}
 		return new HBaseColumn(TILE_FAMILY_NAME, qualifier.getBytes());
-	}
-
-	public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException {
-		TypeDescriptor binType = serializer.getBinTypeDescription();
-
-		Put put = super.getPutForTile(tile, serializer);
-		if (List.class == binType.getMainType()) {
-			put = addSlices(put, (TileSerializer) serializer, (TileData) tile);
-		}
-
-		return put;
-	}
-
-	private <T> Put addSlices (Put existingPut,
-							   TileSerializer<List<T>> serializer,
-							   TileData<List<T>> tile) throws IOException {
-		// Figure out into how many slices to divide the data
-		int slices = numSlices(tile);
-		// Divide the tile into slices, storing each of them individually in their own column
-		for (int s = 0; s < slices; ++s) {
-			TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			serializer.serialize(slice, baos);
-			existingPut = addToPut(existingPut, rowIdFromTileIndex(tile.getDefinition()),
-			                       getSliceColumn(s, s), baos.toByteArray());
-		}
-		return existingPut;
 	}
 
 	@Override
@@ -122,6 +84,55 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 			return super.readTiles(realName, serializer, tiles, c);
 		} else {
 			return super.readTiles(tableName, serializer, tiles);
+		}
+	}
+
+
+
+	static class SlicedHBaseTilePutter extends StandardHBaseTilePutter {
+		@Override
+		public <T> Put getPutForTile(TileData<T> tile, TileSerializer<T> serializer) throws IOException {
+			TypeDescriptor binType = serializer.getBinTypeDescription();
+
+			Put put = super.getPutForTile(tile, serializer);
+			if (List.class == binType.getMainType()) {
+				put = addSlices(put, (TileSerializer) serializer, (TileData) tile);
+			}
+
+			return put;
+		}
+
+		private <T> Put addSlices (Put existingPut,
+								   TileSerializer<List<T>> serializer,
+								   TileData<List<T>> tile) throws IOException {
+			// Figure out into how many slices to divide the data
+			int slices = numSlices(tile);
+			// Divide the tile into slices, storing each of them individually in their own column
+			for (int s = 0; s < slices; ++s) {
+				TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				serializer.serialize(slice, baos);
+				existingPut = addToPut(existingPut, rowIdFromTileIndex(tile.getDefinition()),
+					getSliceColumn(s, s), baos.toByteArray());
+			}
+			return existingPut;
+		}
+
+		private int numSlices (TileData<?> tile) {
+			int slices = 0;
+			TileIndex index = tile.getDefinition();
+			for (int x=0; x < index.getXBins(); ++x) {
+				for (int y = 0; y < index.getYBins(); ++y) {
+					try {
+						List<?> bin = (List<?>) tile.getBin(x, y);
+						int size = bin.size();
+						if (size > slices) slices = size;
+					} catch (ClassCastException|NullPointerException e) {
+						// Swallow it, we don't care here.
+					}
+				}
+			}
+			return slices;
 		}
 	}
 }
