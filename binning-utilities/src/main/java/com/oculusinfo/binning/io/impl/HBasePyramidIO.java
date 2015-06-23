@@ -24,10 +24,7 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
@@ -68,9 +65,10 @@ public class HBasePyramidIO implements PyramidIO {
 	public static final HBaseColumn  METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
 
 
-	private Configuration _config;
-	private Admin         _admin;
-	private Connection    _connection;
+	private Configuration   _config;
+	private Admin           _admin;
+	private Connection      _connection;
+	private HBaseTilePutter _putter;
 
 	public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
@@ -85,6 +83,7 @@ public class HBasePyramidIO implements PyramidIO {
 		_config.set("hbase.client.keyvalue.maxsize", "0");
 		_connection = ConnectionFactory.createConnection(_config);
 		_admin = _connection.getAdmin();
+		_putter = new StandardHBaseTilePutter();
 	}
 
 
@@ -153,7 +152,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 * @return The put request - the same as is passed in, or a new request if
 	 *         none was passed in.
 	 */
-	protected Put addToPut (Put existingPut, String rowId, HBaseColumn column, byte[] data) {
+	static protected Put addToPut (Put existingPut, String rowId, HBaseColumn column, byte[] data) {
 		if (null == existingPut) {
 			existingPut = new Put(rowId.getBytes());
 		}
@@ -243,20 +242,20 @@ public class HBasePyramidIO implements PyramidIO {
 		}
 	}
 
-	public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(tile, baos);
-
-		return addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
-		                TILE_COLUMN, baos.toByteArray());
+	/**
+	 * Get a distributable object that knows how to create HBase puts, so we can distribute our work across a cluster.
+	 */
+	public HBaseTilePutter getPutter () {
+		return _putter;
 	}
 
 	@Override
 	public <T> void writeTiles (String tableName, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
 		List<Row> rows = new ArrayList<Row>();
+		HBaseTilePutter putter = getPutter();
 		for (TileData<T> tile: data) {
-			rows.add(getPutForTile(tile, serializer));
+			rows.add(putter.getPutForTile(tile, serializer));
 		}
 		try {
 			writeRows(tableName, rows);
@@ -385,5 +384,22 @@ public class HBasePyramidIO implements PyramidIO {
 			_admin.deleteTable(TableName.valueOf(tableName));
 		} catch (Exception e) {}
 
+	}
+
+
+
+	// A separate object to separate out our Put generator, so it can be used in distributed environments
+	static interface HBaseTilePutter extends Serializable {
+		public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException;
+	}
+	static class StandardHBaseTilePutter implements HBaseTilePutter {
+		@Override
+		public <T> Put getPutForTile(TileData<T> tile, TileSerializer<T> serializer) throws IOException {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			serializer.serialize(tile, baos);
+
+			return addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
+				TILE_COLUMN, baos.toByteArray());
+		}
 	}
 }
