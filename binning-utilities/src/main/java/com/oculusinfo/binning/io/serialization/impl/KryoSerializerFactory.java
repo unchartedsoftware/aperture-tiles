@@ -71,19 +71,6 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 
 
 	// Get the name to associate with a given value type
-	private static final Map<Class<?>, String> TYPE_NAMES =
-		Collections.unmodifiableMap(new HashMap<Class<?>, String>() {
-				private static final long serialVersionUID = 1L;
-				{
-					put(Boolean.class, "boolean");
-					put(Integer.class, "int");
-					put(Long.class, "long");
-					put(Float.class, "float");
-					put(Double.class, "double");
-					put(ByteBuffer.class, "bytes");
-					put(String.class, "string");
-				}
-			});
 	private static String getTypeName (TypeDescriptor type) {
 		Class<?> mainType = type.getMainType();
 		String name;
@@ -102,8 +89,7 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 			endSubList = ")";
 		} else {
 			// Normal case: name + generics
-			if (TYPE_NAMES.containsKey(mainType)) name = TYPE_NAMES.get(mainType);
-			else name = mainType.getSimpleName().toLowerCase();
+			name = mainType.getSimpleName().toLowerCase();
 			startSubList = "<";
 			endSubList = ">";
 		}

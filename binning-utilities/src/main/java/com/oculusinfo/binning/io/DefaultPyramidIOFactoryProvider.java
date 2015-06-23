@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
+ * Copyright (c) 2015 Uncharted Software Inc. http://www.uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -25,16 +25,11 @@ package com.oculusinfo.binning.io;
 
 
 
-import com.oculusinfo.binning.io.impl.DummyPyramidIOFactory;
-import com.oculusinfo.binning.io.impl.ElasticsearchPyramidIOFactory;
-import com.oculusinfo.binning.io.impl.FileBasedPyramidIOFactory;
-import com.oculusinfo.binning.io.impl.HBasePyramidIOFactory;
-import com.oculusinfo.binning.io.impl.JDBCPyramidIOFactory;
-import com.oculusinfo.binning.io.impl.SQLitePyramidIOFactory;
+import java.util.List;
+
+import com.oculusinfo.binning.io.impl.*;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.providers.FactoryProvider;
-
-import java.util.List;
 
 
 
@@ -59,6 +54,12 @@ public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO
 				return new HBasePyramidIOFactory(parent, path);
 			}
 		}),
+	HBASE_SLICED(new Constructor() {
+			@Override
+			public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+				return new HBaseSlicedPyramidIOFactory(parent, path);
+			}
+		}),
     FILE(new Constructor() {
             @Override
             public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
@@ -77,12 +78,6 @@ public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO
                 return new SQLitePyramidIOFactory(parent, path);
             }
         }),
-	ELASTICSEARCH(new Constructor() {
-		@Override
-		public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
-			return new ElasticsearchPyramidIOFactory(parent, path);
-		}
-	}),
     DUMMY(new Constructor() {
             @Override
             public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
