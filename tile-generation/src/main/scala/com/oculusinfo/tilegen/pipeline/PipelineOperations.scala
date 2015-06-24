@@ -539,7 +539,7 @@ object PipelineOperations {
  * @param zookeeperPort Zookeeper port.
  * @param hbaseMaster HBase master address
  */
-case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String)
+case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String, slicing: Boolean = false)
 
 /**
  * Area of interest region
