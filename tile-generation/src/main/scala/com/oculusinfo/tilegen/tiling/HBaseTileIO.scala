@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
- * http://www.oculusinfo.com/
+ * Copyright (c) 2015 Uncharted Software Inc. http://www.uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -28,15 +27,12 @@ package com.oculusinfo.tilegen.tiling
 
 
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 
 import scala.collection.mutable.{HashSet => MutableSet}
-import scala.collection.mutable.{Map => MutableMap}
 
-import org.apache.hadoop.fs.Path
-import org.apache.hadoop.hbase.{TableName, HBaseConfiguration}
-import org.apache.hadoop.hbase.client.{ConnectionFactory, HBaseAdmin, Put, Result}
-;
+import org.apache.hadoop.hbase.TableName
+import org.apache.hadoop.hbase.client.{ConnectionFactory, Result}
+
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
@@ -46,16 +42,11 @@ import org.apache.hadoop.mapred.JobConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.rdd.NewHadoopRDD
 
-import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.io.PyramidIO
-import com.oculusinfo.binning.io.impl.HBasePyramidIO
-import com.oculusinfo.binning.io.impl.FileBasedPyramidIO
+import com.oculusinfo.binning.io.impl.{HBaseSlicedPyramidIO, HBasePyramidIO}
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.binning.metadata.PyramidMetaData
 
 import com.oculusinfo.tilegen.spark.IntMaxAccumulatorParam
 import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
@@ -74,9 +65,10 @@ import com.oculusinfo.tilegen.util.ArgumentParser
  * In the case of HBase, this requires overriding small portions of several
  * basic TileIO methods - which essentially requires us to simply rewrite them.
  */
-class HBaseTileIO (zookeeperQuorum: String,
-                   zookeeperPort: String,
-                   hbaseMaster: String) extends TileIO {
+class HBaseTileIO ( zookeeperQuorum: String,
+                    zookeeperPort: String,
+                    hbaseMaster: String,
+										slicing: Boolean = false) extends TileIO {
 	// We are going to need access to HBasePyramidIO constants and static
 	// methods, for column names, and row ID formation and parsing.
 	import com.oculusinfo.binning.io.impl.HBasePyramidIO._
@@ -87,7 +79,8 @@ class HBaseTileIO (zookeeperQuorum: String,
 	// the like.  Plus, the basic TileIO interface requires we implement
 	// this.
 	def getPyramidIO : HBasePyramidIO =
-		new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
+		if (slicing) new HBaseSlicedPyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
+		else new HBasePyramidIO(zookeeperQuorum, zookeeperPort, hbaseMaster)
 
 
 
@@ -194,16 +187,7 @@ class HBaseTileIO (zookeeperQuorum: String,
 						xbins += index.getXBins
 						ybins += index.getYBins
 
-						// Create a Put (a table write object) that will write this tile
-						val baos = new ByteArrayOutputStream()
-						serializer.serialize(tile, baos);
-						baos.close
-						baos.flush
-
-						val put = new Put(rowIdFromTileIndex(index).getBytes())
-						put.addColumn(TILE_COLUMN.getFamily(),
-							TILE_COLUMN.getQualifier(),
-							baos.toByteArray())
+						val put = pyramidIO.getPutForTile(tile, serializer)
 
 						(new ImmutableBytesWritable, put)
 					}

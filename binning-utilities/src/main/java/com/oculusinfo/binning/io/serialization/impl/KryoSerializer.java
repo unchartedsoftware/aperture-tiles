@@ -3,6 +3,8 @@ package com.oculusinfo.binning.io.serialization.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.*;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -26,7 +28,7 @@ import com.oculusinfo.factory.util.Pair;
 
 /**
  * A generic Kryo serializer capable of serializing all sorts of tile data.
- * 
+ *
  * @author nkronenfeld
  *
  * @param <T> The type of data this instance of the serializer intends to serialize.
@@ -34,6 +36,15 @@ import com.oculusinfo.factory.util.Pair;
 public class KryoSerializer<T> implements TileSerializer<T> {
 	private static final long serialVersionUID = 611839716702420914L;
 	public static enum Codec {DEFLATE, BZIP, GZIP};
+	public static final Set<Class<?>> PRIMITIVE_TYPES =
+		Collections.unmodifiableSet(new HashSet<Class<?>>() {
+			private static final long serialVersionUID = 1L;
+
+			{
+				addAll(PrimitiveAvroSerializer.PRIMITIVE_TYPES);
+				add(Short.class);
+			}
+		});
 
 
 
@@ -44,10 +55,10 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	// Our type description
 	private TypeDescriptor _typeDesc;
 	private Codec _codec;
-	
+
 	/**
 	 * Create a serializer.
-	 * 
+	 *
 	 * @param typeDesc
 	 *            A detailed description of our fully expanded generic type.
 	 *            This should, of course, match the generic type with which the
@@ -94,7 +105,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 		}
 		Input input = new Input(compressionStream);
 		try {
-	
+
 			Object data = kryo().readClassAndObject(input);
 			if (data instanceof TileData) return (TileData) data;
 			else return null;
@@ -132,8 +143,8 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 		}
 	}
 
-    
-    
+
+
 	private class LocalizedKryo extends ThreadLocal<Kryo> {
 		protected Kryo initialValue () {
 			Kryo kryo = new Kryo();
@@ -169,14 +180,14 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	}
 
 	/**
-	 * This is just a quick wrapping InputStream to get around a bug in apache commons bzip 
-	 * uncompression, where when it is passed a buffer into which to read, and told to offset by 
-	 * the length of the buffer, it returns that the file is done, rather than that the buffer is 
+	 * This is just a quick wrapping InputStream to get around a bug in apache commons bzip
+	 * uncompression, where when it is passed a buffer into which to read, and told to offset by
+	 * the length of the buffer, it returns that the file is done, rather than that the buffer is
 	 * done.
-	 * 
+	 *
 	 * The bug is Commons Compress / COMPRESS-300
 	 * (https://issues.apache.org/jira/browse/COMPRESS-309)
-	 * 
+	 *
 	 * @author nkronenfeld
 	 */
 	public static class BZipInputStreamWrapper extends InputStream {
