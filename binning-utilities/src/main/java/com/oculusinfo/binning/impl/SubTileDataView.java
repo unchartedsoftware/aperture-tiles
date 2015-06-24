@@ -99,6 +99,9 @@ public class SubTileDataView<T> implements TileData<T> {
         return _index;
     }
 
+	@Override
+	public T getDefaultValue () { return _source.getDefaultValue(); }
+
     @Override
     public T getBin (int x, int y) {
         if (x < 0 || x >= getDefinition().getXBins()) {

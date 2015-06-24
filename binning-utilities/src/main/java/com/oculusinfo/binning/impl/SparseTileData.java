@@ -111,6 +111,10 @@ public class SparseTileData<T> extends TileDataMetadataImpl<T> implements TileDa
 
 	/** {@inheritDoc} */
 	@Override
+	public T getDefaultValue () { return _defaultValue; }
+
+	/** {@inheritDoc} */
+	@Override
 	public void setBin(int x, int y, T value) {
 		if (x < 0 || x >= _definition.getXBins()) {
 			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");

@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -46,11 +46,11 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 	}
 
 	transient private Schema _entrySchema;
-	
+
 	abstract protected String getEntrySchemaFile ();
 	abstract protected T getEntryValue (GenericRecord entry);
 	abstract protected void setEntryValue (GenericRecord avroEntry, T rawEntry) throws IOException;
-	
+
 	@Override
 	protected String getRecordSchemaFile () {
 		return "arrayData.avsc";
@@ -62,16 +62,16 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 		}
 		return _entrySchema;
 	}
-	
+
 	protected Schema createEntrySchema() throws IOException {
 		return new AvroSchemaComposer().addResource(getEntrySchemaFile()).resolved();
 	}
-	
+
 	@Override
 	protected Schema createRecordSchema() throws IOException {
 		return new AvroSchemaComposer().add(getEntrySchema()).addResource(getRecordSchemaFile()).resolved();
 	}
-		
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected List<T> getValue (GenericRecord bin) {
@@ -87,10 +87,12 @@ abstract public class GenericAvroArraySerializer<T> extends GenericAvroSerialize
 	protected void setValue (GenericRecord bin, List<T> values) throws IOException {
 		List<GenericRecord> avroValues = new ArrayList<GenericRecord>();
 
-		for (T value: values) {
-			GenericRecord avroValue = new GenericData.Record(getEntrySchema());
-			setEntryValue(avroValue, value);
-			avroValues.add(avroValue);
+		if (null != values) {
+			for (T value : values) {
+				GenericRecord avroValue = new GenericData.Record(getEntrySchema());
+				setEntryValue(avroValue, value);
+				avroValues.add(avroValue);
+			}
 		}
 
 		bin.put("value", avroValues);
