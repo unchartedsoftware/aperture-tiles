@@ -49,6 +49,17 @@ public class UnaryOperationTileView<T extends Number> implements TileData<List<T
 	}
 
 	@Override
+	public List<T> getDefaultValue () {
+		List<T> baseDefault = _tileData.getDefaultValue();
+		if (null == baseDefault) return null;
+		else {
+			List<T> ourDefault = new ArrayList<>();
+			for (T t: baseDefault) ourDefault.add((T) _op.calculate(t, _errorValue));
+		}
+		return null;
+	}
+
+	@Override
 	public void setBin(int x, int y, List<T> value) {}
 
 	@Override

@@ -35,9 +35,9 @@ import com.oculusinfo.binning.TileIndex;
 
 
 /**
- * This implementation of TileData takes a TileData whose bins are lists of buckets, and presents 
+ * This implementation of TileData takes a TileData whose bins are lists of buckets, and presents
  * a view to a single slice of it - the same bucket in each bin.
- * 
+ *
  * @author nkronenfeld
  */
 public class DenseTileSliceView<T> implements TileData<T> {
@@ -59,6 +59,13 @@ public class DenseTileSliceView<T> implements TileData<T> {
     public TileIndex getDefinition () {
         return _base.getDefinition();
     }
+
+	@Override
+	public T getDefaultValue () {
+		List<T> baseDefault = _base.getDefaultValue();
+		if (null == baseDefault || baseDefault.size() <= _slice) return null;
+		else return baseDefault.get(_slice);
+	}
 
     @Override
     public void setBin (int x, int y, T value) {
