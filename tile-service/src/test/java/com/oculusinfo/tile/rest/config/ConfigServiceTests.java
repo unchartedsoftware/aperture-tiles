@@ -10,8 +10,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
 import static com.oculusinfo.tile.rest.config.ConfigServiceImpl.CONFIG_ENV_VAR;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ConfigServiceTests {
 
@@ -69,9 +70,20 @@ public class ConfigServiceTests {
         assertTrue(replaced.contains("\"endpoint\": \"http://some.endpoint/somedata\""));
 
         // The other keys remain templated
-        assertTrue(replaced.contains("\"foo.zookeeper.quorum\": \"[foo.zookeeper.quorum]\""));
-        assertTrue(replaced.contains("\"foo.zookeeper.port\": \"[foo.zookeeper.port]\""));
-        assertTrue(replaced.contains("\"foo.master\": \"[foo.master]\""));
+        assertTrue(replaced.contains("\"foo.zookeeper.quorum\": \"${foo.zookeeper.quorum}\""));
+        assertTrue(replaced.contains("\"foo.zookeeper.port\": \"${foo.zookeeper.port}\""));
+        assertTrue(replaced.contains("\"foo.master\": \"${foo.master}\""));
+    }
+
+    @Test
+    public void testReplaceTokens() {
+        String text = "The ${some.animal} jumped over the ${some.object}";
+        Map<String, String> replacements = new HashMap<>();
+        replacements.put("some.animal", "cow");
+        replacements.put("some.object", "moon");
+
+        String replaced = _configService.replaceTokens(text, replacements);
+        assertEquals("The cow jumped over the moon", replaced);
     }
 
     // ONLY FOR UNIT TESTING

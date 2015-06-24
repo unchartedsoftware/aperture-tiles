@@ -1,13 +1,13 @@
 {
     "pyramidio": {
         "type": "foo",
-        "foo.zookeeper.quorum": "[foo.zookeeper.quorum]",
-        "foo.zookeeper.port": "[foo.zookeeper.port]",
-        "foo.master": "[foo.master]"
+        "foo.zookeeper.quorum": "${foo.zookeeper.quorum}",
+        "foo.zookeeper.port": "${foo.zookeeper.port}",
+        "foo.master": "${foo.master}"
     },
     "public": {
         "drilldown": {
-            "endpoint": "[drilldown.endpoint]",
+            "endpoint": "${drilldown.endpoint}",
             "mode": "some_mode.txt"
         }
     }
