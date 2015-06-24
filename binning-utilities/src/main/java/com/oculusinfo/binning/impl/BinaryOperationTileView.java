@@ -75,19 +75,6 @@ public class BinaryOperationTileView<T extends Number> implements TileData<List<
 		return _tileData2.getDefinition();
 	}
 
-	@Override
-	public List<T> getDefaultValue () {
-		List<T> default1 = _tileData1.getDefaultValue();
-		List<T> default2 = _tileData2.getDefaultValue();
-		if (null == default1 || null == default2) return null;
-		else {
-			List<T> ourDefault = new ArrayList<>();
-			for (int i=0; i<Math.min(default1.size(), default2.size()); ++i) {
-				ourDefault.add((T) _op.calculate(default1.get(i), default2.get(i), _errorValue));
-			}
-			return ourDefault;
-		}
-	}
 
 	@Override
 	// method not implemented as this view is to be read only

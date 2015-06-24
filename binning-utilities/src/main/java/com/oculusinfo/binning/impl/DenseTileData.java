@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- *
+ * 
  * Released under the MIT License.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,13 +34,13 @@ import com.oculusinfo.binning.TileIndex;
 
 /**
  * This class represents a tile's worth of data as a dense array.
- *
+ * 
  * It also contains the tile index describing the position of the tile.
- *
+ * 
  * This object is not necessarily immutable.
- *
+ * 
  * @author nkronenfeld
- *
+ * 
  * @param <T> The type of data stored in the bins of this tile.
  */
 public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileData<T> {
@@ -50,7 +50,6 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 
 	private TileIndex           _definition;
 	private List<T>             _data;
-	private T                   _default;
 
 
 
@@ -62,7 +61,7 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 
 	/**
 	 * Construct a dense tile data object for a particular tile. All entries are initialized to null.
-	 *
+	 * 
 	 * @param definition The index of the tile whose data is to be collected by this object.
 	 */
 	public DenseTileData(TileIndex definition) {
@@ -71,7 +70,7 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 
 	/**
 	 * Construct a dense tile for a particular tile index. All entries are initialized to the given default value.
-	 *
+	 * 
 	 * @param definition The index of the tile whose data is to be collected by this object.
 	 * @param defaultValue The default value of each bin
 	 */
@@ -80,10 +79,9 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 		_definition = definition;
 		_data = new ArrayList<T>(_definition.getXBins()
 		                         * _definition.getYBins());
-		_default = defaultValue;
 		for (int x = 0; x < _definition.getXBins(); ++x) {
 			for (int y = 0; y < _definition.getYBins(); ++y) {
-				_data.add(_default);
+				_data.add(defaultValue);
 			}
 		}
 	}
@@ -91,7 +89,7 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 	/**
 	 * Construct a tile for a particular tile index, with preset data. Note the passed-in preset data is used as is,
 	 * not copied.
-	 *
+	 * 
 	 * @param definition
 	 *            The index of the tile whose data is to be represented by this
 	 *            object.
@@ -116,14 +114,6 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 	@Override
 	public TileIndex getDefinition() {
 		return _definition;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public T getDefaultValue () {return _default;}
-
-	public void setDefaultValue (T defaultValue) {
-		_default = defaultValue;
 	}
 
 	/** {@inheritDoc} */

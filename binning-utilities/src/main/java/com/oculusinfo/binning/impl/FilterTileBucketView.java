@@ -25,7 +25,6 @@ package com.oculusinfo.binning.impl;
 
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,24 +33,28 @@ import com.oculusinfo.binning.TileIndex;
 
 
 
-
 /**
  * This implementation of TileData takes a TileData whose bins are lists of buckets and presents
- *  a view to the average value of a range of buckets
+ *  a view to a range of buckets.
  *
  */
-public class AverageTileBucketView<T extends Number> implements TileData<List<T>> {
+public class FilterTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
 	private TileData<List<T>> _base = null;
-	private Integer	_startCompare = null;
-	private Integer	_endCompare = null;
+	private Integer	_startBucket = null;
+	private Integer	_endBucket = null;
 
 
-	public AverageTileBucketView (TileData<List<T>> base, int startComp, int endComp) {
+	public FilterTileBucketView (TileData<List<T>> base, Integer startBucket, Integer endBucket) {
 		_base = base;
-		_startCompare = startComp;
-		_endCompare = endComp;
+		_startBucket = startBucket;
+		_endBucket = endBucket;
+		if ( _startBucket != null && _endBucket != null ) {
+			if ( _startBucket < 0 || _startBucket > _endBucket ) {
+				throw new IllegalArgumentException( "Constructor for FilterTileBucketView: arguments are invalid.  start bucket: " + _startBucket + ", end bucket: " + _endBucket );
+			}
+		}
 	}
 
 
@@ -62,36 +65,39 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 
 
 	@Override
-	// method not implemented as this view is to be read only
-	public void setBin(int x, int y, List<T> value)  {}
+	public void setBin(int x, int y, List<T> value)  {
+		if (x < 0 || x >= getDefinition().getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= getDefinition().getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+		_base.setBin( x, y, value );
+	}
 
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<T> getBin (int x, int y) {
-		Number result = 0.0;
+		if (x < 0 || x >= getDefinition().getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= getDefinition().getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
 
-		// compute bin averages for selected average range
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
-		int start = ( _startCompare != null ) ? _startCompare : 0;
-		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
+		int start = ( _startBucket != null ) ? _startBucket : 0;
+		int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
 
-		double total = 0;
-		int count = 0;
-		for(int i = start; i < binSize; i++) {
+		for(int i = 0; i < binSize; i++) {
 			if ( i >= start && i <= end ) {
-				Number value = binContents.get(i);
-				total = total + value.doubleValue();
-				count++;
+				binContents.set(i, binContents.get(i));
+			} else {
+				binContents.set(i, null);
 			}
 		}
-		if ( count != 0 ) {
-			result = (total/count);
-		}
-		List<T> resultList = new ArrayList<>(1);
-		resultList.add((T) result);
-		return resultList;
+		return binContents;
 	}
 
 

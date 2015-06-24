@@ -121,7 +121,7 @@ public class TileDataViewTests {
 	}
 
 	@Test
-	public void testMultiSliceView () {
+	public void testDeltaTileBucketView () {
 		int start = 1, end = 2;
 		// since we modify the tile, we won't use a static class tile
 		TileData<List<Double>> sourceListTile = new DenseTileData<>(new TileIndex(1, 1, 1, 2, 2),
@@ -129,7 +129,39 @@ public class TileDataViewTests {
 															            			  Arrays.asList( 5.0,  6.0,  7.0,  8.0),
 															            			  Arrays.asList( 9.0, 10.0, 11.0, 12.0),
 															            			  Arrays.asList(13.0, 14.0, 15.0, 16.0)));
-		DenseTileMultiSliceView<Double> underTest = new DenseTileMultiSliceView<Double>(sourceListTile, start, end);
+		DeltaTileBucketView<Double> underTest = new DeltaTileBucketView<>(
+			sourceListTile, deltaListTile, BinaryOperator.OPERATOR_TYPE.SUBTRACT, start, end);
+
+		Assert.assertEquals(1, underTest.getDefinition().getLevel());
+		Assert.assertEquals(1, underTest.getDefinition().getX());
+		Assert.assertEquals(1, underTest.getDefinition().getY());
+		Assert.assertEquals(2, underTest.getDefinition().getXBins());
+		Assert.assertEquals(2, underTest.getDefinition().getYBins());
+
+		for (int y=0; y<underTest.getDefinition().getYBins(); y++) {
+			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
+				List<Double> bin = underTest.getBin(x,y);
+				for (int i=0; i<bin.size(); i++) {
+					if ( i >= start && i <= end ) {
+						Assert.assertEquals( 1.0, bin.get(i), 0.01); 	// value '-' delta
+					} else {
+						Assert.assertNull(bin.get(i));
+					}
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testFilterTileBucketView () {
+		int start = 1, end = 2;
+		// since we modify the tile, we won't use a static class tile
+		TileData<List<Double>> sourceListTile = new DenseTileData<>(new TileIndex(1, 1, 1, 2, 2),
+															            Arrays.asList(Arrays.asList( 1.0,  2.0,  3.0,  4.0),
+															            			  Arrays.asList( 5.0,  6.0,  7.0,  8.0),
+															            			  Arrays.asList( 9.0, 10.0, 11.0, 12.0),
+															            			  Arrays.asList(13.0, 14.0, 15.0, 16.0)));
+		FilterTileBucketView<Double> underTest = new FilterTileBucketView<Double>(sourceListTile,start, end);
 
 		Assert.assertEquals(1, underTest.getDefinition().getLevel());
 		Assert.assertEquals(1, underTest.getDefinition().getX());
@@ -141,9 +173,12 @@ public class TileDataViewTests {
 			for (int x=0; x<underTest.getDefinition().getXBins(); x++) {
 				List<Double> bin = underTest.getBin(x,y);
 				List<Double> sourceBin = sourceListTile.getBin(x, y);
-				Assert.assertEquals(end-start+1, bin.size());
-				for (int i=start; i <= end; ++i) {
-					Assert.assertEquals(sourceBin.get(i), bin.get(i-start));
+				for (int i=0; i<bin.size(); i++) {
+					if ( i >= start && i <= end ) {
+						Assert.assertEquals( bin.get(i), sourceBin.get(i), 0.01);
+					} else {
+						Assert.assertNull(bin.get(i));
+					}
 				}
 			}
 		}

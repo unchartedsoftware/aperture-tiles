@@ -36,9 +36,9 @@ import com.oculusinfo.binning.TileIndex;
 
 /**
  * This implementation of TileData takes a TileData whose bins are semantically lists of buckets -
- * but actually sparse maps from bucket index to value = and presents a view to a single slice of
+ * but actually sparse maps from bucket index to value = and presents a view to a single slice of 
  * it - the same bucket in each bin.
- *
+ * 
  * @author nkronenfeld
  */
 public class SparseTileSliceView<T> implements TileData<T> {
@@ -62,9 +62,6 @@ public class SparseTileSliceView<T> implements TileData<T> {
     public TileIndex getDefinition () {
         return _base.getDefinition();
     }
-
-	@Override
-	public T getDefaultValue () { return _defaultValue; }
 
     @Override
     public void setBin (int x, int y, T value) {
