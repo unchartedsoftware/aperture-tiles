@@ -121,6 +121,8 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 			}
 		}
 
+		System.out.println("Tile "+getDefinition()+": nullBins"+nullBins+", allBins: "+bins+", Dense: "+(nullBins*2 < bins));
+
 		return nullBins*2 < bins;
 	}
 
