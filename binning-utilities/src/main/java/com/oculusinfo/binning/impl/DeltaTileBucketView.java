@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Uncharted Software. http://www.uncharted.software/
+ * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
  *
  * Released under the MIT License.
  *
@@ -25,33 +25,46 @@ package com.oculusinfo.binning.impl;
 
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
-
+import com.oculusinfo.binning.util.BinaryOperator;
 
 
 
 /**
  * This implementation of TileData takes a TileData whose bins are lists of buckets and presents
- *  a view to the average value of a range of buckets
- *
+ *  a view to a range of buckets that are compared to the same range of buckets from another
+ *  TileData object that is compatible. The caller can specify what operation to use for the comparison.
  */
-public class AverageTileBucketView<T extends Number> implements TileData<List<T>> {
+public class DeltaTileBucketView<T> implements TileData<List<T>> {
 	private static final long serialVersionUID = 1234567890L;
 
 	private TileData<List<T>> _base = null;
+	private TileData<List<T>> _delta = null;
+	private BinaryOperator _operator = null;
 	private Integer	_startCompare = null;
 	private Integer	_endCompare = null;
 
 
-	public AverageTileBucketView (TileData<List<T>> base, int startComp, int endComp) {
+	public DeltaTileBucketView (TileData<List<T>> base, TileData<List<T>> delta, BinaryOperator.OPERATOR_TYPE op,
+								int startComp, int endComp) {
 		_base = base;
+		_delta = delta;
+		_operator = new BinaryOperator(op);
 		_startCompare = startComp;
 		_endCompare = endComp;
+
+		List<T> sourceData = _base.getBin(0, 0);
+		List<T> deltaData = _delta.getBin(0, 0);
+
+		if (   getDefinition().getXBins() != delta.getDefinition().getXBins()
+			|| getDefinition().getYBins() != delta.getDefinition().getYBins()
+			|| sourceData.size() != deltaData.size() ){
+			throw new IllegalArgumentException("Constructor for DeltaTileBucketView: arguments are invalid. Tiles to compare are incompatible");
+		}
 	}
 
 
@@ -62,36 +75,41 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 
 
 	@Override
-	// method not implemented as this view is to be read only
-	public void setBin(int x, int y, List<T> value)  {}
+	public void setBin (int x, int y, List<T> value) {
+		if (x < 0 || x >= getDefinition().getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= getDefinition().getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+		_base.setBin(x, y, (List<T>)value);
+	}
 
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<T> getBin (int x, int y) {
-		Number result = 0.0;
+		if (x < 0 || x >= getDefinition().getXBins()) {
+			throw new IllegalArgumentException("Bin x index is outside of tile's valid bin range");
+		}
+		if (y < 0 || y >= getDefinition().getYBins()) {
+			throw new IllegalArgumentException("Bin y index is outside of tile's valid bin range");
+		}
+		List<T> sourceData = _base.getBin(x, y);
+		List<T> deltaData = _delta.getBin(x, y);
 
-		// compute bin averages for selected average range
-		List<T> binContents = _base.getBin(x, y);
-		int binSize = binContents.size();
+		int binSize = sourceData.size();
 		int start = ( _startCompare != null ) ? _startCompare : 0;
 		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
 
-		double total = 0;
-		int count = 0;
-		for(int i = start; i < binSize; i++) {
+		for(int i = 0; i < binSize; i++) {
 			if ( i >= start && i <= end ) {
-				Number value = binContents.get(i);
-				total = total + value.doubleValue();
-				count++;
+				sourceData.set(i, (T)_operator.calculate( (Number)sourceData.get(i), (Number)deltaData.get(i)));
+			} else {
+				sourceData.set(i, null);
 			}
 		}
-		if ( count != 0 ) {
-			result = (total/count);
-		}
-		List<T> resultList = new ArrayList<>(1);
-		resultList.add((T) result);
-		return resultList;
+		return sourceData;
 	}
 
 

@@ -50,11 +50,6 @@ public interface TileData<T> extends Serializable {
 	TileIndex getDefinition();
 
 	/**
-	 * Get the default value to use for any unset bins
-	 */
-	T getDefaultValue ();
-
-	/**
 	 * Set the value of a particular bin in this tile
 	 *
 	 * @param x The x coordinate of the bin to be changed.
