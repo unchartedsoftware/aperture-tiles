@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,15 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.oculusinfo.binning.io.serialization.impl.DoubleJsonSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.KryoSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.PairArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.PairAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringIntPairArrayJsonSerializerFactory;
-import com.oculusinfo.binning.io.serialization.impl.StringLongPairArrayMapJsonSerializerFactory;
+import com.oculusinfo.binning.io.serialization.impl.*;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.providers.AbstractFactoryProvider;
@@ -52,10 +44,10 @@ import com.oculusinfo.factory.util.Pair;
  * <br>
  * To create one use the create method for the desired type. Example:<br>
  *
- * This isn't really an enum, but acts like one in all ways except 
- * initialization; it is not one to allow us to use loops and generification 
+ * This isn't really an enum, but acts like one in all ways except
+ * initialization; it is not one to allow us to use loops and generification
  * during initialization.
- * 
+ *
  * <pre>
  * <code>
  * DefaultPyramidIOFactoryProvider.FILE.create();
@@ -204,14 +196,9 @@ public final class DefaultTileSerializerFactoryProvider
 
 				{
 					List<Pair<String, TypeDescriptor>> primitives = new ArrayList<>();
-					primitives.add(new Pair<String, TypeDescriptor>("boolean", new TypeDescriptor(Boolean.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("byte",    new TypeDescriptor(Byte.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("short",   new TypeDescriptor(Short.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("int",     new TypeDescriptor(Integer.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("long",    new TypeDescriptor(Long.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("float",   new TypeDescriptor(Float.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("double",  new TypeDescriptor(Double.class)));
-					primitives.add(new Pair<String, TypeDescriptor>("string",  new TypeDescriptor(String.class)));
+					for (Class<?> primitive: KryoSerializer.PRIMITIVE_TYPES) {
+						primitives.add(new Pair<String, TypeDescriptor>(primitive.getSimpleName().toLowerCase(), new TypeDescriptor(primitive)));
+					}
 
 					// Simple types
 					for (final Pair<String, TypeDescriptor> primitive: primitives) {
@@ -253,7 +240,7 @@ public final class DefaultTileSerializerFactoryProvider
 				}
 			});
 
-	
+
 	// -------------------------------------
 
 	private final String      _name;
