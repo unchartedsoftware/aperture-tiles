@@ -37,27 +37,53 @@ import com.oculusinfo.annotation.io.serialization.AnnotationSerializer;
 import com.oculusinfo.annotation.io.serialization.JSONAnnotationDataSerializer;
 import com.oculusinfo.annotation.util.AnnotationGenerator;
 import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
+import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.providers.FactoryProvider;
-import com.oculusinfo.tile.init.providers.*;
+import com.oculusinfo.tile.init.providers.StandardImageRendererFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardLayerConfigurationProvider;
+import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTilePyramidFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTileSerializerFactoryProvider;
+import com.oculusinfo.tile.init.providers.StandardTileTransformerFactoryProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.config.ConfigException;
+import com.oculusinfo.tile.rest.config.ConfigService;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class AnnotationServiceTests {
 
     private static final Logger LOGGER = LoggerFactory.getLogger( AnnotationServiceTests.class );
+    private static final String UNIT_TEST_CONFIG_JSON = "unit-test-config.json";
 	static final int NUM_THREADS = 8;
     static final double [] BOUNDS = { 180, 85.05, -180, -85.05 };
     static final int NUM_ENTRIES = 50;
@@ -67,8 +93,9 @@ public class AnnotationServiceTests {
     protected String _dataId;
 	protected String [] _groups;
     protected LayerService _layerService;
+    private ConfigService _configService;
 
-	List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
+    List<AnnotationWrapper> _publicAnnotations = new ArrayList<>();
 	Integer _remainingAnnotations = NUM_ENTRIES * NUM_THREADS;
 	Random _random = new Random( System.currentTimeMillis() );
 	final Object decisionLock = new Object();
@@ -78,7 +105,7 @@ public class AnnotationServiceTests {
     	
 		try {
 
-			String configFile = "res:///unit-test-config.json";
+            String configFile = "res:///" + UNIT_TEST_CONFIG_JSON;
 
             Set<FactoryProvider<PyramidIO>> tileIoSet = new HashSet<>();
             tileIoSet.addAll( Arrays.asList( DefaultPyramidIOFactoryProvider.values() ) );
@@ -97,7 +124,10 @@ public class AnnotationServiceTests {
                 new StandardTileTransformerFactoryProvider()
             );
 
-            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider );
+            _configService = mock(ConfigService.class);
+            withMockConfigService();
+
+            _layerService = new LayerServiceImpl( configFile, layerConfigurationProvider, _configService);
 
 			_dataId = _layerService.getLayerConfiguration( _layerId, null ).getPropertyValue( LayerConfiguration.DATA_ID );
 
@@ -121,6 +151,12 @@ public class AnnotationServiceTests {
 			LOGGER.error( "Error setting up test", e );
 		}
 	}
+
+    private void withMockConfigService() throws URISyntaxException, IOException, ConfigException {
+        File configFile = new File(this.getClass().getClassLoader().getResource(UNIT_TEST_CONFIG_JSON).toURI());
+        String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
+        when(_configService.replaceProperties(any(File.class))).thenReturn(configFileContent);
+    }
 
 	@After
 	public void teardown () {
