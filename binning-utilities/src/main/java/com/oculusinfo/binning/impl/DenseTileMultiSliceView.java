@@ -121,7 +121,7 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 			}
 		}
 
-		return nullBins*2 > bins;
+		return nullBins*2 < bins;
 	}
 
 	public TileData<List<T>> harden () {
