@@ -18,8 +18,8 @@ public interface ConfigService {
      *              "data": {
      *                  "pyramidio": {
      *                      "type": "hbase",
-     *                      "hbase.zookeeper.quorum": "[hbase.zookeeper.quorum]",
-     *                      "hbase.zookeeper.port": "["hbase.zookeeper.port"]"
+     *                      "hbase.zookeeper.quorum": "${hbase.zookeeper.quorum}",
+     *                      "hbase.zookeeper.port": "${hbase.zookeeper.port}"
      *                  }
      *              }
      *          }

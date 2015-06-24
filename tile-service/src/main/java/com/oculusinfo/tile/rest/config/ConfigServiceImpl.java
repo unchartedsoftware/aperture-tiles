@@ -115,7 +115,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string
     protected String replaceTokens(String text, Map<String, String> replacements) {
-        Pattern pattern = Pattern.compile("\\[(.+?)\\]");
+        Pattern pattern = Pattern.compile("\\$\\{(.+?)\\}");
         Matcher matcher = pattern.matcher(text);
         StringBuffer buffer = new StringBuffer();
         while (matcher.find()) {
