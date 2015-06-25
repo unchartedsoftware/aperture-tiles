@@ -60,4 +60,6 @@ public interface ConfigService {
      */
     String replaceProperties(File configFile) throws ConfigException;
 
+    boolean isValidFileName(String name);
+
 }
