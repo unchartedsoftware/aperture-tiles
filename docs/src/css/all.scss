@@ -176,6 +176,7 @@ img {
 	}
 	&.context-logo {
 		margin: 20px 0 4px;
+		max-width: 236px;
 	}
 	&.screenshot {
 		margin: 20px auto 4px;
@@ -354,10 +355,8 @@ pre {
 
 .uncharted-footer
 {
-	background-image: url("../img/resources/footer-symbols.png");
-	background-position: left bottom;
-	background-repeat: no-repeat;
-	padding-bottom: 60px;
+	padding-top: 28px;
+	max-width: 150px;
 }
 
 .footer-padding {
@@ -583,4 +582,12 @@ hr {
 	border-bottom-width: 0;
 	border-color: $txt-block-border;
 	margin: 18px 0 15px 20px;
+}
+
+.copyright {
+	margin-top: 0;
+}
+
+figure {
+	margin: 0;
 }
