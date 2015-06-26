@@ -200,7 +200,7 @@ IDs and labels for parent communities are automatically chosen as the underlying
 
 ### GraphClusterApp ###
 
-GraphClusterApp's implementation of the Louvain clustering algorithm uses Sotera’s [distributed Louvain modularity algorithm](https://github.com/Sotera/distributed-louvain-modularity) in conjunction with Spark’s [GraphX graph processing library](https://github.com/Sotera/spark-distributed-louvain-modularity).
+GraphClusterApp's implementation of the Louvain clustering algorithm uses Sotera's [distributed Louvain modularity algorithm](https://github.com/Sotera/distributed-louvain-modularity) in conjunction with Spark's [GraphX graph processing library](https://github.com/Sotera/spark-distributed-louvain-modularity).
 
 <h6 class="procedure">To execute the GraphClusterApp and hierarchically cluster your data</h6>
 
@@ -390,7 +390,7 @@ Node positions can be computed using a hierarchical force-directed algorithm wit
 - The [HierarchicFDLayout](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util/HierarchicFDLayout.scala) class.
 - The [ClusteredGraphLayoutApp](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util/ClusteredGraphLayoutApp.scala) Scala application.
 
-The hierarchic force-directed algorithm runs in a distributed manner using Spark’s GraphX library. The layout of each hierarchy level is determined in sequence starting with the highest hierarchical level. Graph communities are defined as circles, where size is based on the number of internal raw nodes in the community.
+The hierarchic force-directed algorithm runs in a distributed manner using Spark's GraphX library. The layout of each hierarchy level is determined in sequence starting with the highest hierarchical level. Graph communities are defined as circles, where size is based on the number of internal raw nodes in the community.
 
 ### ClusterGraphLayoutApp ###
 
@@ -739,7 +739,7 @@ In this case, long line segments are rendered within one tile length of each end
 
 By default, tiles for a nodes and edges are generated using one hierarchy level for all zoom levels. 
 
-For example, even though hierarchical info of a graph’s nodes may be available if the data has been Louvain clustered, it may be preferable to only use the raw nodes (hierarchy level 0) for tile generation. However, for a dense graph with many edges, it may be worthwhile to assign different hierarchy levels to different zooms. This can be accomplished using the following parameters:
+For example, even though hierarchical info of a graph's nodes may be available if the data has been Louvain clustered, it may be preferable to only use the raw nodes (hierarchy level 0) for tile generation. However, for a dense graph with many edges, it may be worthwhile to assign different hierarchy levels to different zooms. This can be accomplished using the following parameters:
 
 ```properties
 oculus.binning.hierarchical.clusters=true
