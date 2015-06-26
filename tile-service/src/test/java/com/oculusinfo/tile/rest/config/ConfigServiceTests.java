@@ -12,7 +12,6 @@ import java.util.Map;
 
 import static com.oculusinfo.tile.rest.config.ConfigServiceImpl.CONFIG_ENV_VAR;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -87,36 +86,6 @@ public class ConfigServiceTests {
 
         String replaced = _configService.replaceTokens(text, replacements);
         assertEquals("The cow jumped over the moon", replaced);
-    }
-
-    @Test
-    public void testIsValidFileName_validSimple() {
-        String name = "foo";
-        assertTrue(_configService.isValidFileName(name));
-    }
-
-    @Test
-    public void testIsValidFileName_validDot() {
-        String name = "foo.json";
-        assertTrue(_configService.isValidFileName(name));
-    }
-
-    @Test
-    public void testIsValidFileName_validUnderscore() {
-        String name = "foo-bar.txt";
-        assertTrue(_configService.isValidFileName(name));
-    }
-
-    @Test
-    public void testIsValidFileName_inValidStar() {
-        String name = "foo-bar*.txt";
-        assertFalse(_configService.isValidFileName(name));
-    }
-
-    @Test
-    public void testIsValidFileName_inValidNull() {
-        String name = null;
-        assertFalse(_configService.isValidFileName(name));
     }
 
     @Test

@@ -61,8 +61,12 @@ public interface ConfigService {
      */
     String replaceProperties(File configFile) throws ConfigException;
 
+    /**
+     * Find a configuration file in resources/config if it exists.
+     * @param name Name of the file to check for, example views.json
+     * @return File if it exists, null otherwise.
+     * @throws URISyntaxException
+     */
     File findResourceConfig(String name) throws URISyntaxException;
-
-    boolean isValidFileName(String name);
 
 }
