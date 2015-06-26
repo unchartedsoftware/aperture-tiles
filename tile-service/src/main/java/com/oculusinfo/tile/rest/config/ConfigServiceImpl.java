@@ -87,18 +87,6 @@ public class ConfigServiceImpl implements ConfigService {
         return matchingFile;
     }
 
-    @Override
-    public boolean isValidFileName(String name) {
-        boolean isValid = false;
-        if (name != null) {
-//            Pattern pattern = Pattern.compile("^[a-zA-Z0-9\\.\\-]+$");
-            Pattern pattern = Pattern.compile("^[a-zA-Z0-9\\.\\-]{1,50}");
-            Matcher matcher = pattern.matcher(name);
-            isValid = matcher.matches();
-        }
-        return isValid;
-    }
-
     protected Map<String, String> buildReplacements() throws ConfigException {
         String pathToProperties = getPathToProperties();
         if (StringUtils.isEmpty(pathToProperties)) {
