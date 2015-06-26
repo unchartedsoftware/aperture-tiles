@@ -7,6 +7,7 @@ import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.util.JsonUtilities;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -20,6 +21,7 @@ import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Created by cmenezes on 2015-06-04.
@@ -93,12 +96,9 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	// note about the start/end/x/y confusion
 	// x,y
-	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, Map filterObject){
+	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, JSONObject filterJSON){
 
-		HashMap values;
-		String path;
-
-		AndFilterBuilder filter = FilterBuilders.andFilter(
+		AndFilterBuilder boundaryFilter = FilterBuilders.andFilter(
 			FilterBuilders.rangeFilter("locality_bag.dateBegin")
 				.gt(startX)
 				.lte(endX),
@@ -107,29 +107,52 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				.lte(startY)
 		);
 
-		if (filterObject != null && filterObject.containsKey("values") && filterObject.containsKey("path")) {
-//			value =(String) filterObject.get("value");
-			values = (HashMap) filterObject.get("values");
-			int numValues = values.size();
-			List<String> terms = new ArrayList<>();
-
-			for (int i=0;i < numValues; i++ ){
-				terms.add((String) values.get(String.valueOf(i)));
-			}
-
-			path = (String) filterObject.get("path");
-
-			if (this.filterType.equals("terms")){
-				filter.add(FilterBuilders.termsFilter(path, terms).execution("or"));
-			}
-			if (this.filterType.equals("range")){
-				filter.add(FilterBuilders.rangeFilter(path).lt(values));
-			}
+		Map<String, Object> filterMap = null;
+		// transform filter list json to a map
+		try{
+			filterMap = JsonUtilities.jsonObjToMap(filterJSON);
+		}catch (Exception e){
+			filterMap = null;
 		}
 
+		// now need to transform the map to a more useful format
+		// e.g. make a list from the ordinal keys
+
+		if (filterMap != null) {
+			Set<String> strings = filterMap.keySet();
+			List<Map> filterList = new ArrayList<>();
+			for (String str : strings) {
+				filterList.add((Map) filterMap.get(str));
+			}
+
+			for (Map filter : filterList) {
+				String type = (String) filter.get("type");
+				String filterPath = (String)filter.get("path");
+
+				switch (type){
+					case "terms":
+						Map termsMap = (Map)filter.get("terms");
+						List<String> termsList = new ArrayList();
+						for (Object key : termsMap.keySet()){
+							termsList.add((String)termsMap.get(key));
+						}
+						boundaryFilter.add(FilterBuilders.termsFilter(filterPath, termsList).execution("or"));
+						break;
+					case "range":
+						// range filter temporarily disabled because this needs a double/long rather than the
+						// date text string that we're giving it
+						// either get the client filter service to pass along a numeric date or do some transformation
+						// here
+//						boundaryFilter.add(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
+						break;
+					default:
+						LOGGER.error("Unsupported filter type");
+				}
+			}
+		}
 		SearchRequestBuilder searchRequestBuilder =
 			baseQuery(
-				filter
+				boundaryFilter
 			)
 			.addAggregation(
 				AggregationBuilders.histogram("date_agg")
@@ -234,16 +257,11 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				}
 			}
 		}
-//		LOGGER.debug("maxvalue: " + String.valueOf(maxval));
+
 		return result;
 	}
 
-
-
-	@Override
-	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles) throws IOException {
-
-//		LOGGER.debug("read Tiles");
+	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles, JSONObject properties) throws IOException {
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
 		// iterate over the tile indices
@@ -257,8 +275,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double startY = rect.getMaxY();
 			double endY = rect.getY();
 
-			Map filterObject = null;
-			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, filterObject);
+
+			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, properties);
 
 			Histogram date_agg = sr.getAggregations().get("date_agg");
 
@@ -269,6 +287,11 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		}
 
 		return results;
+	}
+
+	@Override
+	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles) throws IOException {
+		return readTiles(pyramidId,serializer,tiles,null);
 	}
 
 	@Override
