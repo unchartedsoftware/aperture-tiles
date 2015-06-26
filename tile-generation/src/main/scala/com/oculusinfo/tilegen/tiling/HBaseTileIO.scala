@@ -169,6 +169,7 @@ class HBaseTileIO ( zookeeperQuorum: String,
 		val xbins = data.context.accumulator(0)(new IntMaxAccumulatorParam)
 		val ybins = data.context.accumulator(0)(new IntMaxAccumulatorParam)
 
+    val putter = pyramidIO.getPutter
 
 		// Turn each tile into a table row, noting mins, maxes, and counts as
 		// we go.  Note that none of the min/max/count accumulation is actually
@@ -187,7 +188,7 @@ class HBaseTileIO ( zookeeperQuorum: String,
 						xbins += index.getXBins
 						ybins += index.getYBins
 
-						val put = pyramidIO.getPutForTile(tile, serializer)
+						val put = putter.getPutForTile(tile, serializer)
 
 						(new ImmutableBytesWritable, put)
 					}

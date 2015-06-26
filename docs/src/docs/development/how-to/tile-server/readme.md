@@ -18,7 +18,7 @@ The Tile Server in your new template relies on the following configuration files
 - [Tile Properties](#tileproperties), which specifies constants used by Guice during initialization, including the location of your Spark installation, and the location of some server configuration files.
 - [Layers](#layers), which defines the individual layers of data that can be overlaid on your base map. The layers file also indicates whether rendering should be performed by the server or the client.
 
-The remainder of the tile server configuration, which includes instantiation of the map, its base features and axis configuration, should be handled in the [Application JavaScript](#app-js) (*/src/main/webapp/js/***app.js**).
+The remainder of the configuration, which includes instantiation of the map, its base features and axis configuration, should be handled in the [Application JavaScript](../tile-client/#application-javascript) (*/src/main/webapp/js/***app.js**).
 
 ## <a name="webxml"></a> Web XML ##
 

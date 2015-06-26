@@ -24,39 +24,22 @@
  */
 package com.oculusinfo.binning.io.impl;
 
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
+import java.io.*;
+import java.util.*;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Row;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
 
 
 public class HBasePyramidIO implements PyramidIO {
@@ -82,9 +65,10 @@ public class HBasePyramidIO implements PyramidIO {
 	public static final HBaseColumn  METADATA_COLUMN      = new HBaseColumn(METADATA_FAMILY_NAME, EMPTY_BYTES);
 
 
-	private Configuration _config;
-	private Admin         _admin;
-	private Connection    _connection;
+	private Configuration   _config;
+	private Admin           _admin;
+	private Connection      _connection;
+	private HBaseTilePutter _putter;
 
 	public HBasePyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
@@ -99,6 +83,7 @@ public class HBasePyramidIO implements PyramidIO {
 		_config.set("hbase.client.keyvalue.maxsize", "0");
 		_connection = ConnectionFactory.createConnection(_config);
 		_admin = _connection.getAdmin();
+		_putter = new StandardHBaseTilePutter();
 	}
 
 
@@ -110,7 +95,7 @@ public class HBasePyramidIO implements PyramidIO {
 		// Use the minimum possible number of digits for the tile key
 		int digits = (int) Math.floor(Math.log10(1 << tile.getLevel()))+1;
 		return String.format("%02d,%0"+digits+"d,%0"+digits+"d",
-			tile.getLevel(), tile.getX(), tile.getY());
+		                     tile.getLevel(), tile.getX(), tile.getY());
 	}
 
 	/**
@@ -119,8 +104,8 @@ public class HBasePyramidIO implements PyramidIO {
 	public static TileIndex tileIndexFromRowId (String rowId) {
 		String[] fields = rowId.split(",");
 		return new TileIndex(Integer.parseInt(fields[0]),
-			Integer.parseInt(fields[1]),
-			Integer.parseInt(fields[2]));
+		                     Integer.parseInt(fields[1]),
+		                     Integer.parseInt(fields[2]));
 	}
 
 
@@ -167,7 +152,7 @@ public class HBasePyramidIO implements PyramidIO {
 	 * @return The put request - the same as is passed in, or a new request if
 	 *         none was passed in.
 	 */
-	protected Put addToPut (Put existingPut, String rowId, HBaseColumn column, byte[] data) {
+	static protected Put addToPut (Put existingPut, String rowId, HBaseColumn column, byte[] data) {
 		if (null == existingPut) {
 			existingPut = new Put(rowId.getBytes());
 		}
@@ -257,20 +242,20 @@ public class HBasePyramidIO implements PyramidIO {
 		}
 	}
 
-	public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		serializer.serialize(tile, baos);
-
-		return addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
-			TILE_COLUMN, baos.toByteArray());
+	/**
+	 * Get a distributable object that knows how to create HBase puts, so we can distribute our work across a cluster.
+	 */
+	public HBaseTilePutter getPutter () {
+		return _putter;
 	}
 
 	@Override
 	public <T> void writeTiles (String tableName, TileSerializer<T> serializer,
-								Iterable<TileData<T>> data) throws IOException {
+	                            Iterable<TileData<T>> data) throws IOException {
 		List<Row> rows = new ArrayList<Row>();
+		HBaseTilePutter putter = getPutter();
 		for (TileData<T> tile: data) {
-			rows.add(getPutForTile(tile, serializer));
+			rows.add(putter.getPutForTile(tile, serializer));
 		}
 		try {
 			writeRows(tableName, rows);
@@ -303,8 +288,8 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public <T> List<TileData<T>> readTiles (String tableName,
-											TileSerializer<T> serializer,
-											Iterable<TileIndex> tiles) throws IOException {
+	                                        TileSerializer<T> serializer,
+	                                        Iterable<TileIndex> tiles) throws IOException {
 		return readTiles(tableName, serializer, tiles, TILE_COLUMN);
 	}
 	protected <T> List<TileData<T>> readTiles (String tableName,
@@ -339,8 +324,8 @@ public class HBasePyramidIO implements PyramidIO {
 
 	@Override
 	public <T> InputStream getTileStream (String tableName,
-										  TileSerializer<T> serializer,
-										  TileIndex tile) throws IOException {
+	                                      TileSerializer<T> serializer,
+	                                      TileIndex tile) throws IOException {
 		List<String> rowIds = new ArrayList<String>();
 		rowIds.add(rowIdFromTileIndex(tile));
 
@@ -399,5 +384,22 @@ public class HBasePyramidIO implements PyramidIO {
 			_admin.deleteTable(TableName.valueOf(tableName));
 		} catch (Exception e) {}
 
+	}
+
+
+
+	// A separate object to separate out our Put generator, so it can be used in distributed environments
+	public static interface HBaseTilePutter extends Serializable {
+		public <T> Put getPutForTile (TileData<T> tile, TileSerializer<T> serializer) throws IOException;
+	}
+	public static class StandardHBaseTilePutter implements HBaseTilePutter {
+		@Override
+		public <T> Put getPutForTile(TileData<T> tile, TileSerializer<T> serializer) throws IOException {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			serializer.serialize(tile, baos);
+
+			return addToPut(null, rowIdFromTileIndex(tile.getDefinition()),
+				TILE_COLUMN, baos.toByteArray());
+		}
 	}
 }

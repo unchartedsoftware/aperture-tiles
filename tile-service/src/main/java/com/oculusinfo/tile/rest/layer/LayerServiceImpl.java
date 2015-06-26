@@ -36,8 +36,9 @@ import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.CachingLayerConfigurationProvider;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
+import com.oculusinfo.tile.rest.config.ConfigException;
+import com.oculusinfo.tile.rest.config.ConfigService;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,9 +46,14 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 @Singleton
 public class LayerServiceImpl implements LayerService {
@@ -59,15 +65,18 @@ public class LayerServiceImpl implements LayerService {
     private Map< String, JSONObject > _layersBySha;
 	private Map< String, JSONObject > _metaDataCache;
     private FactoryProvider< LayerConfiguration > _layerConfigurationProvider;
+    private final ConfigService _configService;
 
 	@Inject
 	public LayerServiceImpl( @Named("com.oculusinfo.tile.layer.config") String layerConfigurationLocation,
-	                         FactoryProvider<LayerConfiguration> layerConfigProvider ) {
+	                         FactoryProvider<LayerConfiguration> layerConfigProvider,
+                             ConfigService configService) {
 		_layers = new ArrayList<>();
 		_layersById = new HashMap<>();
         _layersBySha = new HashMap<>();
 		_metaDataCache = new HashMap<>();
         _layerConfigurationProvider = layerConfigProvider;
+        _configService = configService;
 
 		if (layerConfigProvider instanceof CachingLayerConfigurationProvider) {
             CachingLayerConfigurationProvider caching = (CachingLayerConfigurationProvider)layerConfigProvider;
@@ -289,7 +298,8 @@ public class LayerServiceImpl implements LayerService {
 	private void readConfigFiles( File[] files ) {
 		for (File file: files) {
 			try {
-				JSONArray contents = new JSONArray( new JSONTokener(new FileReader(file)) );
+                String fileContent = _configService.replaceProperties(file);
+				JSONArray contents = new JSONArray( new JSONTokener(fileContent) );
                 for ( int i=0; i<contents.length(); i++ ) {
                     if( contents.get(i) instanceof JSONObject ) {
                         JSONObject layerJSON = contents.getJSONObject(i);
@@ -297,12 +307,12 @@ public class LayerServiceImpl implements LayerService {
                         _layers.add( layerJSON );
                     }
                 }
-			} catch (FileNotFoundException e) {
-				LOGGER.error("Cannot find layer configuration file {} ", file, e);
-				return;
 			} catch (JSONException e) {
 				LOGGER.error("Layer configuration file {} was not valid JSON.", file, e);
-			}
-		}
+			} catch (ConfigException e) {
+                LOGGER.error("Unable to replace properties in layer file {}.", file, e);
+            }
+        }
 	}
+
 }
