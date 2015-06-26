@@ -13,6 +13,8 @@ import java.util.Map;
 import static com.oculusinfo.tile.rest.config.ConfigServiceImpl.CONFIG_ENV_VAR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConfigServiceTests {
@@ -115,6 +117,18 @@ public class ConfigServiceTests {
     public void testIsValidFileName_inValidNull() {
         String name = null;
         assertFalse(_configService.isValidFileName(name));
+    }
+
+    @Test
+    public void testFindResourceConfig_found() throws Exception {
+        File resourceConfig = _configService.findResourceConfig("test1.json");
+        assertNotNull(resourceConfig);
+    }
+
+    @Test
+    public void testFindResourceConfig_notFound() throws Exception {
+        File resourceConfig = _configService.findResourceConfig("test2.txt");
+        assertNull(resourceConfig);
     }
 
     // ONLY FOR UNIT TESTING

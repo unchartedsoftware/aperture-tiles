@@ -24,24 +24,10 @@ public class ConfigResource extends ServerResource {
         try {
             String result = "{}";
             String name = ( String ) getRequest().getAttributes().get( "name" );
-
-            if (_service.isValidFileName(name)) {
-                String path = ConfigResource.class.getResource("/config").toURI().getPath();
-                File matchingFile = null;
-                File configRoot = new File(path);
-                File[] files = configRoot.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.getName().equals(name)) {
-                            matchingFile = file;
-                        }
-                    }
-                }
-                if (matchingFile != null) {
-                    result = _service.replaceProperties(matchingFile);
-                }
+            File matchingFile = _service.findResourceConfig(name);
+            if (matchingFile != null) {
+                result = _service.replaceProperties(matchingFile);
             }
-
             setStatus(Status.SUCCESS_OK);
             return new JsonRepresentation( result );
 
