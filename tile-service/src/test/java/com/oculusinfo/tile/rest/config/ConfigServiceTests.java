@@ -12,6 +12,8 @@ import java.util.Map;
 
 import static com.oculusinfo.tile.rest.config.ConfigServiceImpl.CONFIG_ENV_VAR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConfigServiceTests {
@@ -84,6 +86,18 @@ public class ConfigServiceTests {
 
         String replaced = _configService.replaceTokens(text, replacements);
         assertEquals("The cow jumped over the moon", replaced);
+    }
+
+    @Test
+    public void testFindResourceConfig_found() throws Exception {
+        File resourceConfig = _configService.findResourceConfig("test1.json");
+        assertNotNull(resourceConfig);
+    }
+
+    @Test
+    public void testFindResourceConfig_notFound() throws Exception {
+        File resourceConfig = _configService.findResourceConfig("test2.txt");
+        assertNull(resourceConfig);
     }
 
     // ONLY FOR UNIT TESTING

@@ -22,11 +22,12 @@ public class ConfigResource extends ServerResource {
     @Get
     public Representation getConfig() {
         try {
-
+            String result = "{}";
             String name = ( String ) getRequest().getAttributes().get( "name" );
-            String path = ConfigResource.class.getResource("/config").toURI().getPath();
-            File file = new File(path, name);
-            String result = _service.replaceProperties(file);
+            File matchingFile = _service.findResourceConfig(name);
+            if (matchingFile != null) {
+                result = _service.replaceProperties(matchingFile);
+            }
             setStatus(Status.SUCCESS_OK);
             return new JsonRepresentation( result );
 

@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -68,6 +69,22 @@ public class ConfigServiceImpl implements ConfigService {
         } catch (IOException e) {
             throw new ConfigException(String.format("Unable to read config file %s", configFile), e);
         }
+    }
+
+    @Override
+    public File findResourceConfig(String name) throws URISyntaxException {
+        String path = ConfigResource.class.getResource("/config").toURI().getPath();
+        File matchingFile = null;
+        File configRoot = new File(path);
+        File[] files = configRoot.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().equals(name)) {
+                    matchingFile = file;
+                }
+            }
+        }
+        return matchingFile;
     }
 
     protected Map<String, String> buildReplacements() throws ConfigException {
