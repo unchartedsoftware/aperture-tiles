@@ -3,14 +3,14 @@
 		<div class="toc-header">{{ chapter.label }}</div>
 		<{{ chapter.listType }} class="toc-body">
 			{% for topic in chapter.topics %}
-				<li>
+				<li class="toc-item">
 					{% if topic.label != page.topic %}
 						<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}">{{topic.label}}</a>
 					{% else %}
 						{{topic.label}}
-						<ul>
+						<ul class="toc-body">
 							{% for bookmark in topic.bookmarks %}
-								<li><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
+								<li class="toc-item"><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
 							{% endfor %}
 						</ul>
 					{% endif %}
