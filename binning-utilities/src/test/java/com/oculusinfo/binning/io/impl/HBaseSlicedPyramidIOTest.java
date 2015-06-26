@@ -38,7 +38,6 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-@Ignore
 public class HBaseSlicedPyramidIOTest {
 	@Test
 	public void testRoundRoundTripWhole () throws Exception {
@@ -76,5 +75,31 @@ public class HBaseSlicedPyramidIOTest {
 		} finally {
 			io.dropTable(table);
 		}
+	}
+
+	@Test
+	public void testRelativeReadSpeed () throws Exception {
+		HBaseSlicedPyramidIO io = new HBaseSlicedPyramidIO("hadoop-s1", "2181", "hadoop-s1:60000");
+		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		String table = "heatmapTimeDebug-sliced";
+		TileIndex index = new TileIndex(0, 0, 0);
+		List<TileIndex> indices = Arrays.asList(index);
+
+		long startFull = System.currentTimeMillis();
+		for (int i=0; i<256; ++i) {
+			io.readTiles(table, serializer, indices);
+		}
+		long endFull = System.currentTimeMillis();
+
+		long startSlice = System.currentTimeMillis();
+		for (int i=0; i<256; ++i) {
+			List<TileData<List<Integer>>> slices = io.readTiles(table + "["+i+"]", serializer, indices);
+			TileData<List<Integer>> slice = slices.get(0);
+			int bins = slice.getDefinition().getXBins();
+		}
+		long endSlice = System.currentTimeMillis();
+
+		System.out.println("Time for full tile: " + ((endFull - startFull) / 1000.0));
+		System.out.println("Time for slices: "+((endSlice-startSlice)/1000.0));
 	}
 }
