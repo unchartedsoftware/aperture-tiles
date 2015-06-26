@@ -1,6 +1,7 @@
 package com.oculusinfo.tile.rest.config;
 
 import java.io.File;
+import java.net.URISyntaxException;
 
 /**
  * The ConfigService is responsible for replacing property keys in templated configuration files with values from a properties file.
@@ -59,6 +60,8 @@ public interface ConfigService {
      * @throws ConfigException If unable to read configuration or properties file
      */
     String replaceProperties(File configFile) throws ConfigException;
+
+    File findResourceConfig(String name) throws URISyntaxException;
 
     boolean isValidFileName(String name);
 
