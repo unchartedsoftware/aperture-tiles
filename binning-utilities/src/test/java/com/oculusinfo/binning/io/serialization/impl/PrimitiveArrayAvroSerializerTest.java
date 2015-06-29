@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.oculusinfo.binning.impl.DenseTileMultiSliceView;
+import com.oculusinfo.binning.impl.SparseTileData;
 import org.apache.avro.file.CodecFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -97,10 +98,10 @@ public class PrimitiveArrayAvroSerializerTest {
 	@Test
 	public void testInteger () throws Exception {
 		testRoundTrip(Integer.class, 2,
-		              0, 0,
-		              1, 1,
-		              2, 4,
-		              3, 9);
+			0, 0,
+			1, 1,
+			2, 4,
+			3, 9);
 	}
 
 	@Test
@@ -194,7 +195,7 @@ public class PrimitiveArrayAvroSerializerTest {
 	@Test
 	public void testNullBinsInDenseTileSlice () throws Exception {
 		TileData<List<Integer>> inputTile = new DenseTileData<>(new TileIndex(0, 0, 0, 4, 4));
-		inputTile.setBin(0, 0, Arrays.asList( 1));
+		inputTile.setBin(0, 0, Arrays.asList(1));
 		inputTile.setBin(1, 1, Arrays.asList( 2,  4));
 		inputTile.setBin(2, 2, Arrays.asList( 3,  6,  9));
 		inputTile.setBin(3, 3, Arrays.asList( 4,  8, 12, 16));
@@ -223,6 +224,56 @@ public class PrimitiveArrayAvroSerializerTest {
 						}
 					}
 				}
+			}
+		}
+	}
+
+	@Test
+	public void testDenseDefaults () throws Exception {
+		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		DenseTileData<List<Integer>> denseBase = new DenseTileData<List<Integer>>(new TileIndex(0, 0, 0, 2, 2), Arrays.asList(1, 2, 3));
+
+		{
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			serializer.serialize(denseBase, baos);
+			baos.flush();
+			baos.close();
+			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+			TileData<List<Integer>> out = serializer.deserialize(denseBase.getDefinition(), bais);
+
+			Assert.assertTrue(out instanceof DenseTileData<?>);
+
+			List<Integer> baseDefault = denseBase.getDefaultValue();
+			List<Integer> readDefault = ((DenseTileData<List<Integer>>) out).getDefaultValue();
+
+			Assert.assertEquals(baseDefault.size(), readDefault.size());
+			for (int i=0; i<baseDefault.size(); ++i) {
+				Assert.assertEquals(baseDefault.get(i), readDefault.get(i));
+			}
+		}
+	}
+
+	@Test
+	public void testSparseDefaults () throws Exception {
+		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		SparseTileData<List<Integer>> sparseBase = new SparseTileData<List<Integer>>(new TileIndex(0, 0, 0, 2, 2), Arrays.asList(4, 5, 6));
+
+		{
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			serializer.serialize(sparseBase, baos);
+			baos.flush();
+			baos.close();
+			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+			TileData<List<Integer>> out = serializer.deserialize(sparseBase.getDefinition(), bais);
+
+			Assert.assertTrue(out instanceof SparseTileData<?>);
+
+			List<Integer> baseDefault = sparseBase.getDefaultValue();
+			List<Integer> readDefault = ((SparseTileData<List<Integer>>) out).getDefaultValue();
+
+			Assert.assertEquals(baseDefault.size(), readDefault.size());
+			for (int i=0; i<baseDefault.size(); ++i) {
+				Assert.assertEquals(baseDefault.get(i), readDefault.get(i));
 			}
 		}
 	}
