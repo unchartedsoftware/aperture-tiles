@@ -31,6 +31,7 @@ import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.util.Pair;
 import org.apache.avro.file.CodecFactory;
@@ -84,24 +85,24 @@ public class HBaseSlicedPyramidIOTest {
 	@Test
 	public void testRelativeReadSpeed () throws Exception {
 		int iterations = 100;
+		int slices = 52;
 		HBaseSlicedPyramidIO io = new HBaseSlicedPyramidIO("hadoop-s1", "2181", "hadoop-s1:60000");
-		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
-		String table = "heatmapTimeDebug-sliced";
-		TileIndex index = new TileIndex(0, 0, 0);
-		List<TileIndex> indices = Arrays.asList(index);
+		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
+		String table = "nycTaxiDropoffsHeatmap_sw2015_sliced";
+		List<TileIndex> indices = Arrays.asList(new TileIndex(9,151,319));
 
 		System.out.println("Reading full tile");
 		TileData<List<Integer>> full = null;
 		long startFull = System.currentTimeMillis();
 		for (int i=0; i<iterations; ++i) {
-			for (int s=0; s<14; ++s) {
+			for (int s=0; s<slices; ++s) {
 				full = io.readTiles(table, serializer, indices).get(0);
 			}
 		}
 		long endFull = System.currentTimeMillis();
 
 		System.out.println("Checking slice contents");
-		for (int s=0; s<14; ++s) {
+		for (int s=0; s<slices; ++s) {
 			TileData<List<Integer>> slice = io.readTiles(table + "["+s+"]", serializer, indices).get(0);
 			for (int x=0; x<full.getDefinition().getXBins(); ++x) {
 				for (int y=0; y<full.getDefinition().getYBins(); ++y) {
@@ -110,7 +111,7 @@ public class HBaseSlicedPyramidIOTest {
 					if (null == fullBin || 0 == fullBin.size()) {
 						Assert.assertTrue(null == sliceBin || 0 == sliceBin.size());
 					} else {
-						Assert.assertEquals(14, fullBin.size());
+						Assert.assertEquals(slices, fullBin.size());
 						Assert.assertEquals(1, sliceBin.size());
 						Assert.assertEquals(fullBin.get(s), sliceBin.get(0));
 					}
@@ -121,13 +122,26 @@ public class HBaseSlicedPyramidIOTest {
 		System.out.println("Reading sliced tiles");
 		long startSlice = System.currentTimeMillis();
 		for (int i=0; i<iterations; ++i) {
-			for (int s=0; s<14; ++s) {
+			for (int s=0; s<slices; ++s) {
 				io.readTiles(table + "["+s+"]", serializer, indices);
 			}
 		}
 		long endSlice = System.currentTimeMillis();
 
+		System.out.println("Reading unsliced tiles");
+		indices = Arrays.asList(new TileIndex(0, 0, 0));
+		TileSerializer<Double> dSerializer = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
+		String singleSliceTable = "twitter-ebola-p1-heatmap";
+		long startSingle = System.currentTimeMillis();
+		for (int i=0; i<iterations; ++i) {
+			for (int s=0; s<slices; ++s) {
+				io.readTiles(singleSliceTable, dSerializer, indices);
+			}
+		}
+		long endSingle = System.currentTimeMillis();
+
 		System.out.println("Time for full tile: " + ((endFull - startFull) / 1000.0));
 		System.out.println("Time for slices: "+((endSlice-startSlice)/1000.0));
+		System.out.println("Time for unsliced table: "+((endSingle-startSingle)/1000.0));
 	}
 }
