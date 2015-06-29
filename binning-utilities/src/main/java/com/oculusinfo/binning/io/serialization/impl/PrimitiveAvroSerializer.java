@@ -130,9 +130,9 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 		return _schema;
 	}
 
-	// This doesn't need to be checked because 
+	// This doesn't need to be checked because
 	//  (a) One can't create a serializer for which it theoreticallly won't work.
-	//  (b) It is possible to use the wrong serializer for a given tile, in which 
+	//  (b) It is possible to use the wrong serializer for a given tile, in which
 	//      case it will fail - but it should fail in that case.
 	@SuppressWarnings("unchecked")
 	@Override
@@ -141,6 +141,9 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 			// A bit of a hack to handle string tiles as strings rather than Utf8s
 			return (T) bin.get("value").toString();
 		} else {
+			if (null == bin || null == bin.get("value")) {
+				return null;
+			}
 			return (T) bin.get("value");
 		}
 	}
