@@ -99,6 +99,23 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 	 *            The data for this tile
 	 */
 	public DenseTileData(TileIndex definition, List<T> tileData) {
+		this(definition, null, tileData);
+	}
+
+	/**
+	 * Construct a tile for a particular tile index, with preset data. Note the passed-in preset data is used as is,
+	 * not copied.
+	 *
+	 * @param definition
+	 *            The index of the tile whose data is to be represented by this
+	 *            object.
+	 * @param defaultValue
+	 *            The default value to use for undefined bins; not used, since all bins are defined, but needed
+	 *            for some edge cases anyway (such as slicing, when a resultant slice ends up being sparse)
+	 * @param tileData
+	 *            The data for this tile
+	 */
+	public DenseTileData(TileIndex definition, T defaultValue, List<T> tileData) {
 
 		_definition = definition;
 		int requiredLength = _definition.getXBins() * _definition.getYBins();
@@ -110,6 +127,7 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 			                                   + tileData.size());
 		}
 		_data = tileData;
+		_default = defaultValue;
 	}
 
 	/** {@inheritDoc} */
