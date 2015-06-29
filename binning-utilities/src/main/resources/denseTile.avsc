@@ -2,7 +2,7 @@
   "name" : "denseTile",
   "namespace" : "ar.avro",
   "type" : "record",
-  "fields" : 
+  "fields" :
     [
       {"name": "level", "type": "int",
        "doc": "The Z-level at which this tile lies.  Z=0 is the least-precise (zoomed-farthest-out) tile"},
@@ -19,10 +19,10 @@
        "type": {"type": "array", "items": "ar.avro.recordType" },
        "doc": "The actual data for this tile"},
 
-      {"name": "default", "type": ["ar.avro.recordType","null"], "default":"null",
+      {"name": "default", "type": ["null", "ar.avro.recordType"], "default":null,
         "doc": "Default value inside the system.  Analogous to an image's background color or null"},
 
-      {"name": "meta", "type":[{"type":"map", "values":"string"}, "null"], "default":"null",
+      {"name": "meta", "type":["null", {"type":"map", "values":"string"}], "default":null,
         "doc": "Pass-through metadata location.  For things like provenance, time stamps, etc."}
     ]
 }
