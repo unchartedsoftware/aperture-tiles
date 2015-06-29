@@ -63,13 +63,19 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 		if ( this.node == null ) {
 			LOGGER.debug("Existing node not found.");
-			Node node = NodeBuilder.nodeBuilder()
-				.data(false)
-				.client(true)
-				.clusterName(esClusterName)
-				.node();
+			try{
+				Node node = NodeBuilder.nodeBuilder()
+					.loadConfigSettings(false)
+					.data(false)
+					.client(true)
+					.clusterName(esClusterName)
+					.node();
+				this.node = node;
+			}catch (IllegalArgumentException e){
+				LOGGER.debug("Is this actually catching anything?");
+			}
+
 			Client client = node.client();
-			this.node = node;
 			this.client = client;
 			this.AOIP = new AOITilePyramid(bounds[0],bounds[1],bounds[2],bounds[3]);
 
@@ -100,10 +106,10 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 		AndFilterBuilder boundaryFilter = FilterBuilders.andFilter(
 			FilterBuilders.rangeFilter("locality_bag.dateBegin")
-				.gt(startX)
+				.gt(startX) //startx is min val
 				.lte(endX),
 			FilterBuilders.rangeFilter("cluster_tellfinder")
-				.gte(endY)
+				.gte(endY) //endy is min val
 				.lte(startY)
 		);
 
@@ -305,6 +311,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
 		LOGGER.debug("Pretending to read metadata");
+		// faking the bounds and zoom level right now, but this should be retrievable at least from the config file,
+		// and parts of it from an Elasticsearch boundary query.
 		return "{\"bounds\":[1417459397000,0,1430881122000,1481798],\"maxzoom\":1,\"scheme\":\"TMS\",\"description\":\"Elasticsearch test layer\",\"projection\":\"EPSG:4326\",\"name\":\"ES_SIFT_CROSSPLOT\",\"minzoom\":1,\"tilesize\":256,\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
 	}
 
