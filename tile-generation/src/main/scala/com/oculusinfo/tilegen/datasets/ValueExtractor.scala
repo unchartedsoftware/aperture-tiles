@@ -236,7 +236,12 @@ abstract class ValueExtractorFactory (name: String, parent: ConfigurableFactory[
 		val suffix = if ("avro" == framework) "-a"
 		else if ("kryo" == framework) "-k"
 		else ""
-		baseType.format(expectedPrimitiveCLass.map(_.getSimpleName.toLowerCase()):_*) + suffix
+    
+		val baseFormat = baseType.format(expectedPrimitiveCLass.map(_.getSimpleName.toLowerCase()):_*)
+    if (baseFormat.endsWith(suffix))
+      baseFormat
+    else
+      baseFormat + suffix
 	}
 }
 
