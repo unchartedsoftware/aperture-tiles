@@ -228,6 +228,10 @@
 
     WordCloudRenderer.prototype = Object.create( Renderer.prototype );
 
+	WordCloudRenderer.prototype.getEntrySelector = function() {
+		return ".word-cloud-label";
+	};
+	
     /**
      * Implementation specific rendering function.
      * @memberof WordCloudRenderer
@@ -248,11 +252,10 @@
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
 			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
-            html = '',
+			$html = $([]),
             wordCounts = [],
             entries = [],
             value,
-            word,
             min,
             max,
             i,
@@ -277,26 +280,36 @@
             sizeFunction,
             minFontSize,
             maxFontSize );
+			
+		var $label = $('<div class="count-summary-' + countLabel + ' word-cloud-label count-summary"></div>');
+		$html = $html.add( $label );
 
-        for ( i=0; i<cloud.length; i++ ) {
+        cloud.forEach ( function( word ) {
+			var html_string = '';
+			entries.push( word.entry );
 
-            word = cloud[i];
-            entries.push( word.entry );
-
-            html += '<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
+            html_string += '<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'
                     + 'width:'+word.width+'px;'
-                    + 'height:'+word.height+'px; "'
-					+ 'onmouseover="javascript:$(\'.count-summary-' + countLabel + '\').html(\'' + word.entry.count + '\');" '
-					+ 'onmouseout="javascript:$(\'.count-summary-' + countLabel + '\').html(\'\');">'
-					+ word.word+'</div>';
-        }
-		html += '<div class="count-summary-' + countLabel + ' word-cloud-label count-summary"></div>';
+                    + 'height:'+word.height+'px;">'+word.word+'</div>';
+			var $wordLabel = $(html_string);
+			
+			$wordLabel.mouseenter(function() {
+				$label.show(); // show label
+				$label.text( word.entry.count );
+			});
+			$wordLabel.mouseleave(function() {
+				$label.hide(); // hide label
+			});
+
+			// add it to the group
+			$html = $html.add( $wordLabel );
+        });
 		
         return {
-            html: html,
+            html: $html,
             entries: entries
         };
     };
