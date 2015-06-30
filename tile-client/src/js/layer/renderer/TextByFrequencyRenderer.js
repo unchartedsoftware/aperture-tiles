@@ -108,7 +108,7 @@
     TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
 
 	TextByFrequencyRenderer.prototype.getEntrySelector = function() {
-		return ".text-by-frequency-entry";
+		return ".text-by-frequency-label";
 	};
 	
     /**
@@ -144,15 +144,20 @@
             visibility,
             index,
             height,
-            i, j;
+            i = 0, 
+			j = 0;	
+		
+		var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
+		$html = $html.append( $label );	
 
+		values = values.slice( 0, numEntries );
         values.forEach ( function( value ) {
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
             text = RendererUtil.getAttributeValue( value, textKey );
             chartSize = counts.length;
             // highest count for the topic
-            highestCount = getHighestCount( values[i], countKey );
+            highestCount = getHighestCount( value, countKey );
             // scale the height based on level min / max
             height = RendererUtil.getFontSize(
                 highestCount,
@@ -164,9 +169,6 @@
                     type: "log"
                 });
 
-			var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
-			$html = $html.append( $label );
-			
 			// create container 'entry' for chart and hashtag
 			var html_string = '';
             html_string += '<div class="text-by-frequency-entry" style="'
@@ -205,6 +207,7 @@
                     + 'top:'+(100-relativePercent)+'%;"></div>';
 				var $chartBar = $(bar_string);
 				$chart.append($chartBar);
+				j += 1;
             });
 			$entry.append( $chart );
             // create tag label
@@ -219,6 +222,7 @@
 			$entry.append( $labelTag );
 			
 			$html.append($entry);
+			i += 1;
         });
 
         return {
