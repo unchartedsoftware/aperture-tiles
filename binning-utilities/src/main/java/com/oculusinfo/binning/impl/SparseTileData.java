@@ -214,4 +214,9 @@ public class SparseTileData<T> extends TileDataMetadataImpl<T> implements TileDa
 			throw new UnsupportedOperationException("Illegal to remove elements from SparseTileData.getData()");
 		}
 	}
+
+	@Override
+	public String toString () {
+		return "<sparse-tile index=\""+getDefinition()+"\", default=\""+_defaultValue+"\"/>";
+	}
 }
