@@ -53,6 +53,9 @@
                 spec.text.themes[i].injectTheme({
                     selector: ".word-cloud-label"
                 });
+				spec.text.themes[i].injectTheme({
+                    selector: ".count-summary"
+                });
             }
         }
     };
@@ -252,7 +255,7 @@
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
 			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
-			$html = $([]),
+			$html = $("<div></div>"),
             wordCounts = [],
             entries = [],
             value,
@@ -281,8 +284,8 @@
             minFontSize,
             maxFontSize );
 			
-		var $label = $('<div class="count-summary-' + countLabel + ' word-cloud-label count-summary"></div>');
-		$html = $html.add( $label );
+		var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
+		$html = $html.append( $label );
 
         cloud.forEach ( function( word ) {
 			var html_string = '';
@@ -296,16 +299,16 @@
                     + 'height:'+word.height+'px;">'+word.word+'</div>';
 			var $wordLabel = $(html_string);
 			
-			$wordLabel.mouseenter(function() {
+			$wordLabel.mouseover(function() {
 				$label.show(); // show label
 				$label.text( word.entry.count );
 			});
-			$wordLabel.mouseleave(function() {
+			$wordLabel.mouseout(function() {
 				$label.hide(); // hide label
 			});
 
 			// add it to the group
-			$html = $html.add( $wordLabel );
+			$html = $html.append( $wordLabel );
         });
 		
         return {
