@@ -73,7 +73,8 @@
                 // hide tile contents until have data
                 this.div.style.visibility = 'hidden';
                 this.isLoading = true;
-                var deferreds = [];
+                var deferreds = [],
+                    requestTilekey = this.tilekey;
 
                 this.dataRequests = dataUrl.map( function( url ) {
                     var deferred = $.Deferred();
@@ -96,6 +97,10 @@
                 });
                 $.when.apply( $, deferreds ).then(
                     function() {
+                        if ( that.tilekey !== requestTilekey ) {
+                            // old data, reject it
+                            return;
+                        }
                         that.tileData = [];
                         var i;
                         for ( i=0; i<arguments.length; i++ ) {
@@ -124,6 +129,10 @@
     };
 
     OpenLayers.Tile.HTML.prototype.createBackBuffer = function() {
+        return null;
+    };
+
+    OpenLayers.Tile.Image.prototype.createBackBuffer = function() {
         return null;
     };
 
