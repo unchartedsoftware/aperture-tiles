@@ -12,7 +12,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.AndFilterBuilder;
+import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -106,8 +106,11 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	// note about the start/end/x/y confusion
 	// x,y
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, JSONObject filterJSON){
+		BoolFilterBuilder boundaryFilter = FilterBuilders.boolFilter();
 
-		AndFilterBuilder boundaryFilter = FilterBuilders.andFilter(
+		// the first filter added excludes everything outside of the tile boundary
+		// on both the xField and the yField
+		boundaryFilter.must(
 			FilterBuilders.rangeFilter(this.xField)
 				.gt(startX) //startx is min val
 				.lte(endX),
@@ -142,12 +145,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 						for (Object key : termsMap.keySet()){
 							termsList.add((String)termsMap.get(key));
 						}
-						boundaryFilter.add(FilterBuilders.termsFilter(filterPath, termsList).execution("or"));
+						boundaryFilter.must(FilterBuilders.termsFilter(filterPath, termsList).execution("or"));
 						break;
 					case "range":
 						// Note range filter requires a numeric value to filter on,
 						// doesn't work if passing in formatted date strings like "2015-03-01"
-						boundaryFilter.add(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
+						boundaryFilter.must(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
 						break;
 					default:
 						LOGGER.error("Unsupported filter type");
