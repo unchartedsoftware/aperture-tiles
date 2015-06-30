@@ -107,6 +107,10 @@
 
     TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
 
+	TextByFrequencyRenderer.prototype.getEntrySelector = function() {
+		return ".text-by-frequency-label";
+	};
+	
     /**
      * Implementation specific rendering function.
      * @memberof TextByFrequencyRenderer
@@ -128,10 +132,10 @@
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
+			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
             percentLabel,
-            html = '',
+            $html = $("<div></div>"),
             entries = [],
-            value,
             text,
             highestCount,
             counts,
@@ -140,16 +144,20 @@
             visibility,
             index,
             height,
-            i, j;
+            i = 0, 
+			j = 0;	
+		
+		var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
+		$html = $html.append( $label );	
 
-        for ( i=0; i<numEntries; i++ ) {
-            value = values[i];
+		values = values.slice( 0, numEntries );
+        values.forEach ( function( value ) {
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
             text = RendererUtil.getAttributeValue( value, textKey );
             chartSize = counts.length;
             // highest count for the topic
-            highestCount = getHighestCount( values[i], countKey );
+            highestCount = getHighestCount( value, countKey );
             // scale the height based on level min / max
             height = RendererUtil.getFontSize(
                 highestCount,
@@ -161,18 +169,29 @@
                     type: "log"
                 });
 
-            html += '<div class="text-by-frequency-entry" style="'
+			// create container 'entry' for chart and hashtag
+			var html_string = '';
+            html_string += '<div class="text-by-frequency-entry" style="'
                 // ensure constant spacing independent of height
                   + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
-                  + 'height:' + height + 'px">';
-
+                  + 'height:' + height + 'px"></div>';
+			var $entry = $(html_string);
+			
+			$entry.mouseover(function() {
+				$label.show(); // show label
+				$label.text( value.count );
+			});
+			$entry.mouseout(function() {
+				$label.hide(); // hide label
+			});
+            
             // create chart
-            html += '<div class="text-by-frequency-left">';
-            for ( j=0; j<chartSize; j++ ) {
+			var $chart = $('<div class="text-by-frequency-left"></div>');
+            counts.forEach ( function( count ) {
                 // if invertOrder is true, invert the order of iteration
                 index = ( invertOrder ) ? chartSize - j - 1 : j;
                 // get the percent relative to the highest count in the tile
-                relativePercent = ( counts[index] / highestCount ) * 100;
+                relativePercent = ( count / highestCount ) * 100;
                 // if percent === 0, hide bar
                 visibility = ( relativePercent > 0 ) ? '' : 'hidden';
                 // class percent in increments of 10
@@ -180,26 +199,34 @@
                 // set minimum bar length
                 relativePercent = Math.max( relativePercent, 20 );
                 // create bar
-                html += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
+				var bar_string = '';
+                bar_string += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
                     + 'visibility:'+visibility+';'
                     + 'height:'+relativePercent+'%;'
                     + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
                     + 'top:'+(100-relativePercent)+'%;"></div>';
-            }
-            html += '</div>';
-
+				var $chartBar = $(bar_string);
+				$chart.append($chartBar);
+				j += 1;
+            });
+			$entry.append( $chart );
             // create tag label
-            html += '<div class="text-by-frequency-right">';
-            html += '<div class="text-by-frequency-label" style="' +
+			var $labelTag = $('<div class="text-by-frequency-right"></div>');
+			var label_string = '';
+            label_string += '<div class="text-by-frequency-label" style="' +
                 'font-size:'+height+'px;' +
                 'line-height:'+height+'px;' +
                 'height:'+height+'px">'+text+'</div>';
-            html += '</div>';
-            html += '</div>';
-        }
+			var $labelText = $(label_string);
+			$labelTag.append( $labelText );
+			$entry.append( $labelTag );
+			
+			$html.append($entry);
+			i += 1;
+        });
 
         return {
-            html: html,
+            html: $html,
             entries: entries
         };
     };

@@ -302,6 +302,6 @@
                 }
             }
         }
-    }
+    };
     module.exports = OpenLayers.Layer.Univariate;
 }());
