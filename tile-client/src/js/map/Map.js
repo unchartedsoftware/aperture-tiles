@@ -420,6 +420,8 @@
                 20037508.342789244,
                 20037508.342789244
             ]),
+            zoomMethod: null,
+            panMethod: null,
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
@@ -427,8 +429,8 @@
                 this.zoomControls
             ],
             tileManager: new OpenLayers.TileManager({
-                moveDelay: 1000,
-                zoomDelay: 1000
+                moveDelay: 400,
+                zoomDelay: 400
             })
         });
 
