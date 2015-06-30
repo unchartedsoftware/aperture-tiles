@@ -247,6 +247,7 @@
             sizeFunction = text.sizeFunction || SIZE_FUNCTION,
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
+			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
             html = '',
             wordCounts = [],
             entries = [],
@@ -287,9 +288,13 @@
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'
                     + 'width:'+word.width+'px;'
-                    + 'height:'+word.height+'px;">'+word.word+'</div>';
+                    + 'height:'+word.height+'px; "'
+					+ 'onmouseover="javascript:$(\'.count-summary-' + countLabel + '\').html(\'' + word.entry.count + '\');" '
+					+ 'onmouseout="javascript:$(\'.count-summary-' + countLabel + '\').html(\'\');">'
+					+ word.word+'</div>';
         }
-
+		html += '<div class="count-summary-' + countLabel + ' word-cloud-label count-summary"></div>';
+		
         return {
             html: html,
             entries: entries

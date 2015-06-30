@@ -128,6 +128,7 @@
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
+			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
             percentLabel,
             html = '',
             entries = [],
@@ -164,7 +165,9 @@
             html += '<div class="text-by-frequency-entry" style="'
                 // ensure constant spacing independent of height
                   + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
-                  + 'height:' + height + 'px">';
+                  + 'height:' + height + 'px" ' 
+				  + 'onmouseover="javascript:$(\'.count-summary-' + countLabel + '\').html(\'' + value.count + '\');" '
+				  + 'onmouseout="javascript:$(\'.count-summary-' + countLabel + '\').html(\'\');">';
 
             // create chart
             html += '<div class="text-by-frequency-left">';
@@ -197,6 +200,7 @@
             html += '</div>';
             html += '</div>';
         }
+		html += '<div class="count-summary-' + countLabel + ' text-by-frequency-label count-summary"></div>';
 
         return {
             html: html,
