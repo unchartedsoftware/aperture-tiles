@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+@Ignore
 public class HBaseSlicedPyramidIOTest {
 	@Test
 	public void testRoundRoundTripWhole () throws Exception {
@@ -84,7 +85,7 @@ public class HBaseSlicedPyramidIOTest {
 
 	@Test
 	public void testRelativeReadSpeed () throws Exception {
-		int iterations = 100;
+		int iterations = 2;
 		int slices = 52;
 		HBaseSlicedPyramidIO io = new HBaseSlicedPyramidIO("hadoop-s1", "2181", "hadoop-s1:60000");
 		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
