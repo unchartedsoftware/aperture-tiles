@@ -19,7 +19,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -125,9 +124,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			filterMap = null;
 		}
 
-		// now need to transform the map to a more useful format
-		// e.g. make a list from the ordinal keys
-
 		if (filterMap != null) {
 			Set<String> strings = filterMap.keySet();
 			List<Map> filterList = new ArrayList<>();
@@ -149,10 +145,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 						boundaryFilter.add(FilterBuilders.termsFilter(filterPath, termsList).execution("or"));
 						break;
 					case "range":
-//						range filter temporarily disabled because this needs a double/long rather than the
-//						date text string that we're giving it
-//						either get the client filter service to pass along a numeric date or do some transformation
-//						here
+						// Note range filter requires a numeric value to filter on,
+						// doesn't work if passing in formatted date strings like "2015-03-01"
 						boundaryFilter.add(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
 						break;
 					default:
@@ -177,15 +171,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 					)
 			);
 
-//		LOGGER.debug(searchRequestBuilder.toString());
-
 		return searchRequestBuilder
 				.execute()
 				.actionGet();
 	}
 
 	private Long getIntervalFromBounds(double start, double end) {
-
 		return (long) Math.floor((end - start )/ TILE_PIXEL_DIMENSION);
 	};
 
@@ -201,39 +192,16 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public void initializeForWrite(String pyramidId) throws IOException {
-
-	}
+	public void initializeForWrite(String pyramidId) throws IOException {}
 
 	@Override
-	public <T> void writeTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileData<T>> data) throws IOException {
-
-	}
+	public <T> void writeTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileData<T>> data) throws IOException {}
 
 	@Override
-	public void writeMetaData(String pyramidId, String metaData) throws IOException {
-
-	}
+	public void writeMetaData(String pyramidId, String metaData) throws IOException {}
 
 	@Override
-	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
-		LOGGER.debug("Initialize for read");
-	}
-
-	private List<Long> aggregationParse(DateHistogram aggregation) {
-		List<? extends DateHistogram.Bucket> buckets = aggregation.getBuckets();
-		List<Long> result = new ArrayList<>();
-
-		for(DateHistogram.Bucket bucket : buckets) {
-			Histogram cluster_agg = bucket.getAggregations().get("yField");
-			List<? extends Histogram.Bucket> buckets1 = cluster_agg.getBuckets();
-
-			for( Histogram.Bucket bucket1 : buckets1 ) {
-				result.add(bucket1.getDocCount());
-			}
-		}
-		return result;
-	}
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {}
 
 	private Map<Integer, Map> aggregationMapParse(Histogram date_agg, TileIndex tileIndex) {
 		List<? extends Histogram.Bucket> dateBuckets = date_agg.getBuckets();
@@ -285,14 +253,11 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double startY = rect.getMaxY();
 			double endY = rect.getY();
 
-
 			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, properties);
-
 			Histogram date_agg = sr.getAggregations().get("xField");
-
 			Map<Integer, Map> tileMap = aggregationMapParse(date_agg, tileIndex);
-
 			SparseTileData tileData = new SparseTileData(tileIndex,tileMap, 0);
+
 			results.add(tileData);
 		}
 
@@ -306,9 +271,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	@Override
 	public <T> InputStream getTileStream(String pyramidId, TileSerializer<T> serializer, TileIndex tile) throws IOException {
-
-		LOGGER.debug( "Call to getTileStream" );
-
 		return null;
 	}
 
@@ -317,7 +279,18 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		LOGGER.debug("Pretending to read metadata");
 		// faking the bounds and zoom level right now, but this should be retrievable at least from the config file,
 		// and parts of it from an Elasticsearch boundary query.
-		return "{\"bounds\":[1417459397000,0,1430881122000,1481798],\"maxzoom\":1,\"scheme\":\"TMS\",\"description\":\"Elasticsearch test layer\",\"projection\":\"EPSG:4326\",\"name\":\"ES_SIFT_CROSSPLOT\",\"minzoom\":1,\"tilesize\":256,\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
+
+		return "{\"bounds\":["+
+			bounds.get(0) + "," +
+			bounds.get(1) + "," +
+			bounds.get(2) + "," +
+			bounds.get(3) + "],"+
+			"\"maxzoom\":1,\"scheme\":\"TMS\","+
+			"\"description\":\"Elasticsearch test layer\","+
+			"\"projection\":\"EPSG:4326\","+
+			"\"name\":\"ES_SIFT_CROSSPLOT\","+
+			"\"minzoom\":1,\"tilesize\":256,"+
+			"\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
 	}
 
 	@Override
