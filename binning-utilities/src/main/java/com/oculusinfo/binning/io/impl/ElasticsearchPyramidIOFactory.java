@@ -1,12 +1,17 @@
 package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.SharedInstanceFactory;
+import com.oculusinfo.factory.properties.JSONArrayProperty;
 import com.oculusinfo.factory.properties.StringProperty;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,16 +24,18 @@ public class ElasticsearchPyramidIOFactory extends SharedInstanceFactory<Pyramid
 	public static StringProperty ES_INDEX = new StringProperty("es.index","The es index",null);
 	public static StringProperty ES_CLUSTER_NAME = new StringProperty("es.cluster.name", "The elasticsearch cluster name for connection", null);
 
-	public static StringProperty ES_FILTER_FIELD = new StringProperty("es.filter.field","Elasticsearch filter field for this layer",null);
-	public static StringProperty ES_FILTER_TYPE = new StringProperty("es.filter.type","Elasticsearch filter type for this layer",null);
+	public static StringProperty ES_FIELD_X = new StringProperty("es.field.x","Elasticsearch field for x values",null);
+	public static StringProperty ES_FIELD_Y = new StringProperty("es.field.y","Elasticsearch field for y values",null);
+	public static JSONArrayProperty AOI_BOUNDS = new JSONArrayProperty("aoi.bounds", "elasticsearch AOI bounds", null);
 
 	public ElasticsearchPyramidIOFactory(ConfigurableFactory<?> parent, List<String> path) {
 		super("elasticsearch", PyramidIO.class, parent, path);
 
 		addProperty(ES_INDEX);
 		addProperty(ES_CLUSTER_NAME);
-		addProperty(ES_FILTER_FIELD);
-		addProperty(ES_FILTER_TYPE);
+		addProperty(ES_FIELD_X);
+		addProperty(ES_FIELD_Y);
+		addProperty(AOI_BOUNDS);
 	}
 
 	@Override
@@ -36,12 +43,25 @@ public class ElasticsearchPyramidIOFactory extends SharedInstanceFactory<Pyramid
 		try{
 			LOGGER.info("ES pyramid factory.");
 
-			String es_cluster_name_prop = getPropertyValue(ES_CLUSTER_NAME);
-			String es_index_prop = getPropertyValue(ES_INDEX);
-			String es_filter_field_prop = getPropertyValue(ES_FILTER_FIELD);
-			String es_filter_type_prop = getPropertyValue(ES_FILTER_TYPE);
+			String cluster_name = getPropertyValue(ES_CLUSTER_NAME);
+			String elastic_index = getPropertyValue(ES_INDEX);
+			String es_field_x = getPropertyValue(ES_FIELD_X);
+			String es_field_y = getPropertyValue(ES_FIELD_Y);
 
-			return new ElasticsearchPyramidIO(es_cluster_name_prop, es_index_prop, es_filter_field_prop, es_filter_type_prop);
+			JSONArray aoi_array = getPropertyValue(AOI_BOUNDS);
+			List<Double> bounds = new ArrayList<>();
+			try{
+				if (aoi_array != null){
+					List<Object> aoi_bounds = JsonUtilities.jsonArrayToList(aoi_array);
+					for(int i = 0; i < aoi_bounds.size(); i++){
+						bounds.add( (Double) aoi_bounds.get(i));
+					}
+				}
+			} catch (Exception e){
+				throw new ConfigurationException();
+			}
+
+			return new ElasticsearchPyramidIO(cluster_name, elastic_index, es_field_x, es_field_y, bounds);
 
 		}catch (Exception e){
 			LOGGER.error("Error creating ES pyramidio", e);

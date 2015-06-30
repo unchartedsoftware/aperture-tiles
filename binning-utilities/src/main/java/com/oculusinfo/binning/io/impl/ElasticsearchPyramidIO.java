@@ -43,23 +43,27 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchPyramidIO.class);
 
-	private static final double[] bounds = new double[]{1417459397000.0, 0, 1426219029000.0, 1481798};
+	public static final int TILE_PIXEL_DIMENSION = 256; //used to calculate histogram aggregation interval to fit into 256x256 pixels
+
 	private AOITilePyramid AOIP;
 
 	private Node node;
 	private Client client;
 
 	private String index;
-	private String filterField;
-	private String filterType;
+	private String xField;
+	private String yField;
 
-	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String esFilterField, String es_filter_type_prop) {
+	private List<Double> bounds;
+
+	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String xField, String yField, List<Double> aoi_bounds) {
 
 		LOGGER.debug("ES custom config constructor ?");
 
 		this.index = esIndex;
-		this.filterField = esFilterField;
-		this.filterType = es_filter_type_prop;
+		this.xField = xField;
+		this.yField = yField;
+		this.bounds = aoi_bounds;
 
 		if ( this.node == null ) {
 			LOGGER.debug("Existing node not found.");
@@ -72,12 +76,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 					.node();
 				this.node = node;
 			}catch (IllegalArgumentException e){
-				LOGGER.debug("Is this actually catching anything?");
+				LOGGER.debug("Illegal arguments to Elasticsearch node builder.");
 			}
 
 			Client client = node.client();
 			this.client = client;
-			this.AOIP = new AOITilePyramid(bounds[0],bounds[1],bounds[2],bounds[3]);
+			this.AOIP = new AOITilePyramid(bounds.get(0),bounds.get(1),bounds.get(2),bounds.get(3));
 
 		}
 		else {
@@ -105,10 +109,10 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, JSONObject filterJSON){
 
 		AndFilterBuilder boundaryFilter = FilterBuilders.andFilter(
-			FilterBuilders.rangeFilter("locality_bag.dateBegin")
+			FilterBuilders.rangeFilter(this.xField)
 				.gt(startX) //startx is min val
 				.lte(endX),
-			FilterBuilders.rangeFilter("cluster_tellfinder")
+			FilterBuilders.rangeFilter(this.yField)
 				.gte(endY) //endy is min val
 				.lte(startY)
 		);
@@ -161,13 +165,13 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				boundaryFilter
 			)
 			.addAggregation(
-				AggregationBuilders.histogram("date_agg")
-					.field("locality_bag.dateBegin")
+				AggregationBuilders.histogram("xField")
+					.field(this.xField)
 					.interval(getIntervalFromBounds(startX, endX))
 					.minDocCount(1)
 					.subAggregation(
-						AggregationBuilders.histogram("cluster_range")
-							.field("cluster_tellfinder")
+						AggregationBuilders.histogram("yField")
+							.field(this.yField)
 							.interval(getIntervalFromBounds(endY, startY))
 							.minDocCount(1)
 					)
@@ -182,7 +186,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private Long getIntervalFromBounds(double start, double end) {
 
-		return (long) Math.floor((end - start )/256);
+		return (long) Math.floor((end - start )/ TILE_PIXEL_DIMENSION);
 	};
 
 
@@ -221,7 +225,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		List<Long> result = new ArrayList<>();
 
 		for(DateHistogram.Bucket bucket : buckets) {
-			Histogram cluster_agg = bucket.getAggregations().get("cluster_range");
+			Histogram cluster_agg = bucket.getAggregations().get("yField");
 			List<? extends Histogram.Bucket> buckets1 = cluster_agg.getBuckets();
 
 			for( Histogram.Bucket bucket1 : buckets1 ) {
@@ -239,7 +243,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		long maxval = 0;
 
 		for (Histogram.Bucket dateBucket : dateBuckets) {
-			Histogram cluster_agg = dateBucket.getAggregations().get("cluster_range");
+			Histogram cluster_agg = dateBucket.getAggregations().get("yField");
 			List<? extends Histogram.Bucket> clusterBuckets = cluster_agg.getBuckets();
 
 			BinIndex xBinIndex = AOIP.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), 0, tileIndex);
@@ -284,7 +288,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, properties);
 
-			Histogram date_agg = sr.getAggregations().get("date_agg");
+			Histogram date_agg = sr.getAggregations().get("xField");
 
 			Map<Integer, Map> tileMap = aggregationMapParse(date_agg, tileIndex);
 
