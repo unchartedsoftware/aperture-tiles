@@ -34,7 +34,6 @@
 		marker.layer = layer;
 		marker.map = layer.map;
 		marker.activate();
-		$( layer.olLayer.div ).css( 'z-index', layer.getZIndex() );
 	}
 
 	function removeMarkerFromLayer( marker ) {
@@ -103,10 +102,23 @@
 		this.markers.push( marker );
 	};
 
-	HtmlMarkerLayer.prototype.addMarkers = function( markers ) {
-		markers.forEach( function( marker ) {
-			this.addMarker( marker );
-		}, this );
+	HtmlMarkerLayer.prototype.addMarkers = function( markers, chunkSize, pause ) {
+		var that = this;
+		if ( chunkSize ) {
+			// adding large quantities of markers to the map is slow, so
+			// break it into async chunks to let the app breath in between
+			_.chunk( markers, chunkSize ).forEach( function( chunk, index ) {
+				setTimeout( function() {
+					chunk.forEach( function( marker ) {
+						that.addMarker( marker );
+					});
+				}, pause * index || 0 );
+			});
+		} else {
+			markers.forEach( function( marker ) {
+				that.addMarker( marker );
+			});
+		}
 	};
 
 	HtmlMarkerLayer.prototype.removeMarker = function( marker ) {
