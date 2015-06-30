@@ -81,9 +81,9 @@ public class TileServiceImpl implements TileService {
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
 
 				if (pyramidIO instanceof ElasticsearchPyramidIO) {
-					tileDatas = ((ElasticsearchPyramidIO) pyramidIO).readTiles(dataId, serializer, Collections.singleton( index ), tileProperties);
+					tileDatas = ((ElasticsearchPyramidIO) pyramidIO).readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ), tileProperties);
 				} else {
-					tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ) );
+					tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ) );
 				}
 
 				if ( tileDatas.size() >= 1 ) {

@@ -145,11 +145,11 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 						boundaryFilter.add(FilterBuilders.termsFilter(filterPath, termsList).execution("or"));
 						break;
 					case "range":
-						// range filter temporarily disabled because this needs a double/long rather than the
-						// date text string that we're giving it
-						// either get the client filter service to pass along a numeric date or do some transformation
-						// here
-//						boundaryFilter.add(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
+//						range filter temporarily disabled because this needs a double/long rather than the
+//						date text string that we're giving it
+//						either get the client filter service to pass along a numeric date or do some transformation
+//						here
+						boundaryFilter.add(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
 						break;
 					default:
 						LOGGER.error("Unsupported filter type");
