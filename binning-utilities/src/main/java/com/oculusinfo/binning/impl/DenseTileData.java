@@ -198,4 +198,9 @@ public class DenseTileData<T> extends TileDataMetadataImpl<T> implements TileDat
 			return result;
 		}
 	}
+
+	@Override
+	public String toString () {
+		return "<dense-tile index=\""+getDefinition()+"\", default=\""+_default+"\"/>";
+	}
 }
