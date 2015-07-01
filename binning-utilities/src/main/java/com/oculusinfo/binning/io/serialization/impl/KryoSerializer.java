@@ -66,7 +66,7 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 	 *            violating it will cause a host of problems.
 	 */
 	public KryoSerializer (TypeDescriptor typeDesc, Class<?>... classesToRegister) {
-		this(typeDesc, Codec.BZIP, classesToRegister);
+		this(typeDesc, Codec.GZIP, classesToRegister);
 	}
 	public KryoSerializer (TypeDescriptor typeDesc, Codec codec, Class<?>... classesToRegister) {
 		_typeDesc = typeDesc;
