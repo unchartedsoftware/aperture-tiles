@@ -60,6 +60,8 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 		return _base.getDefinition();
 	}
 
+	@Override
+	public List<T> getDefaultValue () { return _base.getDefaultValue(); }
 
 	@Override
 	// method not implemented as this view is to be read only

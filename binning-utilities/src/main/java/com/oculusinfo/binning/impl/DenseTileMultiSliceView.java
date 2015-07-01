@@ -57,6 +57,9 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 	}
 
 	@Override
+	public List<T> getDefaultValue() { return _base.getDefaultValue(); }
+
+	@Override
 	public void setBin(int x, int y, List<T> value) {
 		assert(value.size() == _slices.size());
 		List<T> binOrig = _base.getBin(x, y);
@@ -87,16 +90,67 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 		}
 	}
 
+	private boolean binNullForUs (List<T> baseValue) {
+		if (null == baseValue) return true;
+		for (int slice: _slices) {
+			if (baseValue.size() > slice && null != baseValue.get(slice)) return false;
+		}
+		return true;
+	}
 	@Override
 	public List<T> getBin(int x, int y) {
 		List<T> origValue = _base.getBin(x, y);
-		if (null == origValue) return null;
+		if (binNullForUs(origValue)) return null;
 		List<T> result = new ArrayList<>(_slices.size());
 		for (int slice: _slices) {
 			if (origValue.size() <= slice) result.add(null);
 			else result.add(origValue.get(slice));
 		}
 		return result;
+	}
+
+	/* Determine, if hardened, if this tile should be dense or sparse */
+	private boolean isDense () {
+		TileIndex index = getDefinition();
+		int nullBins = 0;
+		int bins = 0;
+		for (int x=0; x<index.getXBins(); ++x) {
+			for (int y=0; y<index.getYBins(); ++y) {
+				if (binNullForUs(_base.getBin(x, y))) ++nullBins;
+				++bins;
+			}
+		}
+
+		return nullBins*2 < bins;
+	}
+
+	public TileData<List<T>> harden () {
+		TileIndex index = getDefinition();
+		if (isDense()) {
+			DenseTileData<List<T>> hardened = new DenseTileData<>(index);
+			hardened.setDefaultValue(_base.getDefaultValue());
+
+			for (int x=0; x<index.getXBins(); ++x) {
+				for (int y=0; y<index.getYBins(); ++y) {
+					hardened.setBin(x, y, getBin(x, y));
+				}
+			}
+
+			return hardened;
+		} else {
+			SparseTileData<List<T>> hardened = new SparseTileData<>(index, _base.getDefaultValue());
+
+			for (int x=0; x<index.getXBins(); ++x) {
+				for (int y=0; y<index.getYBins(); ++y) {
+					List<T> value = getBin(x, y);
+					if (null != value) {
+						hardened.setBin(x, y, getBin(x, y));
+					}
+				}
+			}
+
+			return hardened;
+		}
 	}
 
 	@Override

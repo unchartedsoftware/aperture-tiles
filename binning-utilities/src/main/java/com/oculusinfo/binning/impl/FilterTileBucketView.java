@@ -25,6 +25,7 @@ package com.oculusinfo.binning.impl;
 
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -63,6 +64,23 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		return _base.getDefinition();
 	}
 
+	@Override
+	public List<T> getDefaultValue () {
+		List<T> baseDefault = _base.getDefaultValue();
+		if (null == baseDefault) return null;
+		else {
+			List<T> ourDefault = new ArrayList<>();
+			int binSize = baseDefault.size();
+			int start = ( _startBucket != null ) ? _startBucket : 0;
+			int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
+
+			for(int i = 0; i < binSize; i++) {
+				if (i >= start && i <= end) ourDefault.add(baseDefault.get(i));
+				else ourDefault.add(null);
+			}
+			return ourDefault;
+		}
+	}
 
 	@Override
 	public void setBin(int x, int y, List<T> value)  {

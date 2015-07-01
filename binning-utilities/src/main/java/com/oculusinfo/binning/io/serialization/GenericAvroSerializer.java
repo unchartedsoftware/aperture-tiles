@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -119,7 +119,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		}
 		return _tileSchema.get().get(storage);
 	}
-	
+
 	protected Schema createTileSchema (StorageType storage) throws IOException {
 		switch (storage) {
 		case Dense:
@@ -130,7 +130,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public TypeDescriptor getBinTypeDescription () {
 		return _typeDescription;
@@ -153,9 +153,9 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 
 		DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>();
 		DataFileStream<GenericRecord> dataFileReader = new DataFileStream<GenericRecord>(stream, reader);
-    	
+
 		try {
-        	
+
 			GenericRecord r = dataFileReader.next();
 
 			int level = (Integer) r.get("level");
@@ -187,8 +187,13 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 					++i;
 					if (i >= xBins * yBins) break;
 				}
+				T defaultValue = null;
+				GenericRecord defaultBin = (GenericRecord) r.get("default");
+				if (null != defaultBin) {
+					defaultValue = getValue((GenericRecord) r.get("default"));
+				}
 
-				newTile = new DenseTileData<T>(newTileIndex, data);
+				newTile = new DenseTileData<T>(newTileIndex, defaultValue, data);
 				break;
 			}
 			case Sparse: {
@@ -267,7 +272,7 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		tileRecord.put("meta", getTileMetaData(tile));
 
 		GenericRecord defaultValueRecord = new GenericData.Record(recordSchema);
-		setValue(defaultValueRecord, tile.getDefaultBinValue());
+		setValue(defaultValueRecord, tile.getDefaultValue());
 		tileRecord.put("default", defaultValueRecord);
 
 		writeRecord(tileRecord, tileSchema, stream);
@@ -294,8 +299,16 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		tileRecord.put("xBinCount", idx.getXBins());
 		tileRecord.put("yBinCount", idx.getYBins());
 		tileRecord.put("values", bins);
-		tileRecord.put("default", null);
 		tileRecord.put("meta", getTileMetaData(tile));
+
+		T defaultValue = tile.getDefaultValue();
+		if (null == defaultValue) {
+			tileRecord.put("default", null);
+		} else {
+			GenericRecord defaultValueRecord = new GenericData.Record(recordSchema);
+			setValue(defaultValueRecord, tile.getDefaultValue());
+			tileRecord.put("default", defaultValueRecord);
+		}
 
 		writeRecord(tileRecord, tileSchema, stream);
 	}
