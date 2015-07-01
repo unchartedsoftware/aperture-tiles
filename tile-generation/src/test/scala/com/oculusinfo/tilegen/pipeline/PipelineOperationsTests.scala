@@ -408,6 +408,69 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assert(schema.fieldNames.contains("num"))
 	}
 
+  test("Test column type conversion") {
+    var schema: StructType = null
+    def schemaOp()(input: PipelineData) = {
+      schema = input.srdd.schema
+      input
+    }
+    val resultListInt = ListBuffer[Any]()
+    val resultListString = ListBuffer[Any]()
+
+    try {
+      // pipeline stage to create test data
+      def createDataOp(count: Int)(input: PipelineData) = {
+        val jsonData = for (x <- 0 until count; y <- 0 until count / 2) yield {
+          val lon = -180.0 + (x / count.toFloat * 360.0)
+          val lat = -45.0 + (y * 90.0 / (count / 2))
+          var data = (x * count + y).toDouble
+          if (x == 0 && y == 0){data = Double.MaxValue}
+          if (x == 0 && y == 1){data = data + 0.5}
+
+          s"""{"x":$lon, "y":$lat, "data":$data}\n"""
+        }
+        val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+        PipelineData(sqlc, srdd)
+      }
+
+      // Run the tile job
+      val args = Map(
+        "ops.xColumn" -> "x",
+        "ops.yColumn" -> "y",
+        "ops.name" -> "test.{i}.{v}",
+        "ops.description" -> "a test description",
+        "ops.prefix" -> "test_prefix",
+        "ops.levels.0" -> "0",
+        "ops.tileWidth" -> "4",
+        "ops.tileHeight" -> "4",
+        "ops.valueColumn" -> "data",
+        "ops.valueType" -> "double",
+        "ops.aggregationType" -> "sum")
+
+      val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+      rootStage.addChild(PipelineStage("convert_int", convertColumnTypeOp("data", x => x(0).asInstanceOf[Double].toInt, IntegerType)(_)))
+        .addChild(PipelineStage("output_schema", schemaOp()(_)))
+        .addChild(PipelineStage("output_int", outputOp("data", resultListInt)(_)))
+        .addChild(PipelineStage("convert_string", convertColumnTypeOp("data", x => x(0).asInstanceOf[Int].toString, StringType)(_)))
+        .addChild(PipelineStage("output_string", outputOp("data", resultListString)(_)))
+      PipelineTree.execute(rootStage, sqlc)
+
+      // Check schema
+      assertResult(schema.fields.size)(3)
+      assert(schema.fields(2).name == "data")
+      assert(schema.fields(2).dataType == IntegerType)
+
+      // Double to Int
+      assert(resultListInt(0) == Integer.MAX_VALUE) // Double to int conversion is capped at max int
+      assert(resultListInt(1) == 1) // Double to int conversion takes only the integer part of the number
+      assert(resultListInt(2) == 2)
+
+      // Int to String
+      assert(resultListString(3) == "3")
+
+    }
+  }
+
 	test("Test geo heatmap parse and operation") {
 
 		try {
