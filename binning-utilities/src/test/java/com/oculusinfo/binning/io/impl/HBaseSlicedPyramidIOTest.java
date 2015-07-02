@@ -85,11 +85,11 @@ public class HBaseSlicedPyramidIOTest {
 
 	@Test
 	public void testRelativeReadSpeed () throws Exception {
-		int iterations = 2;
-		int slices = 52;
+		int iterations = 1;
+		int slices = 53;
 		HBaseSlicedPyramidIO io = new HBaseSlicedPyramidIO("hadoop-s1", "2181", "hadoop-s1:60000");
-		TileSerializer<List<Integer>> serializer = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
-		String table = "nycTaxiDropoffsHeatmap_sw2015_sliced";
+		TileSerializer<List<Integer>> ks = new KryoSerializer<List<Integer>>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)));
+		String table = "nycTaxiHeatmap_sw2015_weekly";
 		List<TileIndex> indices = Arrays.asList(new TileIndex(9,151,319));
 
 		System.out.println("Reading full tile");
@@ -97,14 +97,14 @@ public class HBaseSlicedPyramidIOTest {
 		long startFull = System.currentTimeMillis();
 		for (int i=0; i<iterations; ++i) {
 			for (int s=0; s<slices; ++s) {
-				full = io.readTiles(table, serializer, indices).get(0);
+				full = io.readTiles(table, ks, indices).get(0);
 			}
 		}
 		long endFull = System.currentTimeMillis();
 
 		System.out.println("Checking slice contents");
 		for (int s=0; s<slices; ++s) {
-			TileData<List<Integer>> slice = io.readTiles(table + "["+s+"]", serializer, indices).get(0);
+			TileData<List<Integer>> slice = io.readTiles(table + "["+s+"]", ks, indices).get(0);
 			for (int x=0; x<full.getDefinition().getXBins(); ++x) {
 				for (int y=0; y<full.getDefinition().getYBins(); ++y) {
 					List<Integer> fullBin = full.getBin(x, y);
@@ -124,7 +124,7 @@ public class HBaseSlicedPyramidIOTest {
 		long startSlice = System.currentTimeMillis();
 		for (int i=0; i<iterations; ++i) {
 			for (int s=0; s<slices; ++s) {
-				io.readTiles(table + "["+s+"]", serializer, indices);
+				io.readTiles(table + "["+s+"]", ks, indices);
 			}
 		}
 		long endSlice = System.currentTimeMillis();
