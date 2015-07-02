@@ -285,7 +285,7 @@ object PipelineOperations {
 	/**
 	 * Convert the data type of a column
 	 *
-	 * @param sourceColSpec nae of the colum to be converted
+	 * @param sourceColSpec name of the colum to be converted
 	 * @param columnFcn function doing the type conversion
 	 * @param columnType target data type
 	 * @param input PipelineData from previous stage
@@ -300,8 +300,7 @@ object PipelineOperations {
 
 		val result = columnAdded.select(columnAdded.columns
 			.filter(_ != sourceColSpec)
-			.map(colName => new Column(colName))
-			.toList : _ *
+			.map(colName => new Column(colName)) : _ *
 		).withColumnRenamed(tempCol, sourceColSpec)
 
 		PipelineData(input.sqlContext, result)
