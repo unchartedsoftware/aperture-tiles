@@ -199,8 +199,64 @@ public class HBaseSlicedPyramidIOTest {
 
 	@Test
 	public void testSliceDecompositionVsSingleSlices () throws Exception {
-		String table = "hbsioTest";
+		String table = "nycTaxiHeatmap_sw2015_weekly";
 		HBaseSlicedPyramidIO io = new HBaseSlicedPyramidIO("hadoop-s1", "2181", "hadoop-s1:60000");
 		TileSerializer<List<Integer>> serializer = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)));
+
+		TileSerializer<List<Integer>> ks = new KryoSerializer<List<Integer>>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)));
+		TileIndex index = new TileIndex(9, 151, 319);
+		List<TileIndex> indices = Arrays.asList(index);
+
+		System.out.println("Reading full tile");
+		long fullStart = System.nanoTime();
+		TileData<List<Integer>> full = io.readTiles(table, ks, indices).get(0);
+		long fullEnd = System.nanoTime();
+
+		System.out.println("Reading 7-27, pyramided");
+		long pyramidedStart = System.nanoTime();
+		TileData<List<Integer>> pyramided = io.readTiles(table+"[7-27]", ks, indices).get(0);
+		long pyramidedEnd = System.nanoTime();
+
+		System.out.println("Reading 7-27, individual");
+		io.setPyramidding(false);
+		long individualStart = System.nanoTime();
+		TileData<List<Integer>> individual = io.readTiles(table+"[7-27]", ks, indices).get(0);
+		long individualEnd = System.nanoTime();
+
+		double fullTime = (fullEnd - fullStart) / 1000000.0;
+		double pTime = (pyramidedEnd - pyramidedStart) / 1000000.0;
+		double iTime = (individualEnd - individualStart) / 1000000.0;
+		System.out.println("Full time: " + fullTime + "ms");
+		System.out.println("Pyramided time: "+pTime+"ms");
+		System.out.println("One-by-one time: "+iTime+"ms");
+		// Check contents
+		String pDiffs = "";
+		String iDiffs = "";
+		for (int x=0; x<index.getXBins(); ++x) {
+			for (int y=0; y<index.getYBins(); ++y) {
+				List<Integer> fullBin = full.getBin(x, y);
+				List<Integer> pBin = pyramided.getBin(x, y);
+				List<Integer> iBin = individual.getBin(x, y);
+
+				if (null == fullBin || 28 > fullBin.size()) {
+					if (null != pBin && pBin.size() > 0)  pDiffs += "["+x+", "+y+"]: Not null\n";
+					if (null != iBin && iBin.size() > 0)  iDiffs += "["+x+", "+y+"]: Not null\n";
+				} else {
+					if (null == pBin || pBin.size() != 21) pDiffs += "["+x+", "+y+"]: null\n";
+					if (null == iBin || iBin.size() != 21) iDiffs += "["+x+", "+y+"]: null\n";
+					for (int z=7; z<=27; ++z) {
+						int iVal = iBin.get(z-7);
+						int pVal = pBin.get(z-7);
+						int fVal = fullBin.get(z);
+						if (pVal != fVal)
+							pDiffs += "["+x+", "+y+", "+z+"]\n";
+						if (iVal != fVal)
+							iDiffs += "["+x+", "+y+", "+z+"]\n";
+					}
+				}
+			}
+		}
+		Assert.assertTrue(pDiffs, 0 == pDiffs.length());
+		Assert.assertTrue(iDiffs, 0 == iDiffs.length());
 	}
 }

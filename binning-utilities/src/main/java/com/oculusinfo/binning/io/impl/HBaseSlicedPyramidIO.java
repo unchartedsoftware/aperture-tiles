@@ -128,10 +128,10 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 				for (int i=0; i<numReal; ++i) {
 					// We know this cast is correct because of our guard condition up top, that
 					// List is the main type of T.
-					realResults.add(compose((List) rawResults, i, numReal, columns.length));
+					realResults.add(compose((List) rawResults, i, columns.length, numReal));
 				}
+				return realResults;
 			}
-			return rawResults;
 		} else {
 			return super.readTiles(tableName, serializer, tiles);
 		}
