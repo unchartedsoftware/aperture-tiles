@@ -145,4 +145,55 @@ public class HBaseSlicedPyramidIOTest {
 		System.out.println("Time for slices: "+((endSlice-startSlice)/1000.0));
 		System.out.println("Time for unsliced table: "+((endSingle-startSingle)/1000.0));
 	}
+
+	private <S, T> Pair<S, T> p(S s, T t) {
+		return new Pair<S, T>(s, t);
+	}
+
+	private void testRange (int start, int end, Pair<Integer, Integer>... expectedRangeElements) {
+		List<Pair<Integer, Integer>> actualRangeElements = HBaseSlicedPyramidIO.decomposeRange(start, end);
+		Assert.assertEquals(expectedRangeElements.length, actualRangeElements.size());
+		for (int n=0; n<expectedRangeElements.length; ++n)
+			Assert.assertEquals(expectedRangeElements[n], actualRangeElements.get(n));
+	}
+
+	@Test
+	public void testRangeDecomposition () {
+		testRange(0, 15, p(0, 15));
+		testRange(1, 15, p(1, 1), p(2, 3), p(4, 7), p(8, 15));
+		testRange(16, 16, p(16, 16));
+		testRange(16, 17, p(16, 17));
+		testRange(16, 18, p(16, 17), p(18, 18));
+		testRange(16, 30, p(16, 23), p(24, 27), p(28, 29), p(30, 30));
+		testRange(22, 84, p(22, 23), p(24, 31), p(32, 63), p(64, 79), p(80, 83), p(84, 84));
+		testRange(5, 5, p(5, 5));
+
+		for (int start=0; start<128; ++start) {
+			for (int end=start; end<128; ++end) {
+				// We make sure of five things for each range set:
+				//   (1) the endpoints from one sub-range to the next match
+				//   (2) the total range of the sub-ranges is the intended total range
+				//   (3) No more than two sub-ranges in a row are the same size (if they are, they should be
+				//       on either side of our algorithm's 'mid-point', but we can't check that)
+				//   (4) All ranges start on the proper boundary modulus.
+				//   (5) There are no empty ranges.
+				List<Pair<Integer, Integer>> rangeElts = HBaseSlicedPyramidIO.decomposeRange(start, end);
+				Assert.assertTrue(rangeElts.size() > 0);  // Check 5, part of check 2
+				int duplicateSizes = 0;
+				int lastSize = 0;
+				int lastEnd = start-1;                                // Part of check 2
+				for (Pair<Integer, Integer> elt: rangeElts) {
+					int size = elt.getSecond() - elt.getFirst() + 1;
+					Assert.assertTrue(size > 0);                      // Check 5
+					Assert.assertTrue(0 == (elt.getFirst() % size));  // Check 4
+					if (lastSize == size) ++ duplicateSizes;
+					lastSize = size;
+					Assert.assertEquals(lastEnd+1, elt.getFirst()+0); // Check 1, part of check 2
+					lastEnd = elt.getSecond();
+				}
+				Assert.assertEquals(end, lastEnd);                    // Part of check 2
+				Assert.assertTrue(duplicateSizes <= 1);               // Check 3
+			}
+		}
+	}
 }
