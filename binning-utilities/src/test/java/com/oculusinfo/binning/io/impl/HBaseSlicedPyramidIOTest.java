@@ -196,4 +196,11 @@ public class HBaseSlicedPyramidIOTest {
 			}
 		}
 	}
+
+	@Test
+	public void testSliceDecompositionVsSingleSlices () throws Exception {
+		String table = "hbsioTest";
+		HBaseSlicedPyramidIO io = new HBaseSlicedPyramidIO("hadoop-s1", "2181", "hadoop-s1:60000");
+		TileSerializer<List<Integer>> serializer = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)));
+	}
 }

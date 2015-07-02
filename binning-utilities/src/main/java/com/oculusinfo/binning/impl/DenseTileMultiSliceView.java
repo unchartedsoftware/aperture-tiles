@@ -33,7 +33,7 @@ import java.util.List;
 
 /**
  * This implementation of TileData takes a TileData whose bins are lists of buckets, and presents
- * a view to a single slice of it - the same bucket in each bin.
+ * a view to a subset of those buckets - the same buckets in each bin.
  *
  * @author nkronenfeld
  */
@@ -57,7 +57,16 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 	}
 
 	@Override
-	public List<T> getDefaultValue() { return _base.getDefaultValue(); }
+	public List<T> getDefaultValue() {
+		List<T> base = _base.getDefaultValue();
+		if (null == base) return null;
+		List<T> ourDefault = new ArrayList<>();
+		for (int slice: _slices) {
+			if (base.size() > slice) ourDefault.add(base.get(slice));
+			else ourDefault.add(null);
+		}
+		return ourDefault;
+	}
 
 	@Override
 	public void setBin(int x, int y, List<T> value) {

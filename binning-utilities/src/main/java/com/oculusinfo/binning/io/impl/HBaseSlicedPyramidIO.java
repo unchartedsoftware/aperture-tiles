@@ -26,6 +26,7 @@ package com.oculusinfo.binning.io.impl;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.DenseTileMultiSliceView;
+import com.oculusinfo.binning.impl.MultiSliceTileView;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.util.Pair;
@@ -47,15 +48,24 @@ import java.util.regex.Pattern;
 public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 	private static final Pattern SLICE_PATTERN = Pattern.compile("(?<table>.*)\\[(?<min>[0-9]+)(?>-(?<max>[0-9]+))?\\]");
 
+
+
+	private boolean         _doPyramidding;
 	private HBaseTilePutter _putter;
+
 	public HBaseSlicedPyramidIO (String zookeeperQuorum, String zookeeperPort, String hbaseMaster)
 		throws IOException {
 		super(zookeeperQuorum, zookeeperPort, hbaseMaster);
-		_putter = new SlicedHBaseTilePutter();
+		setPyramidding(true);
 	}
 
 	@Override public HBaseTilePutter getPutter () {
 		return _putter;
+	}
+
+	public void setPyramidding (boolean doPyramidding) {
+		_doPyramidding = doPyramidding;
+		_putter = new SlicedHBaseTilePutter(_doPyramidding);
 	}
 
 	public static HBaseColumn getSliceColumn (int minSlice, int maxSlice) {
@@ -68,22 +78,60 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 		return new HBaseColumn(TILE_FAMILY_NAME, qualifier.getBytes());
 	}
 
+	private <T> TileData<List<T>> compose (List<TileData<List<T>>> candidates,
+										   int startIndex, int numComponents, int increment) {
+		List<TileData<List<T>>> components = new ArrayList<>();
+		for (int c=0; c<numComponents; ++c) {
+			components.add((TileData) candidates.get(startIndex + c * increment));
+		}
+		return new MultiSliceTileView<T>(components);
+	}
+
 	@Override
 	public <T> List<TileData<T>> readTiles (String tableName,
 											TileSerializer<T> serializer,
 											Iterable<TileIndex> tiles) throws IOException {
 		Matcher m = SLICE_PATTERN.matcher(tableName);
-		if (m.matches()) {
+		TypeDescriptor binType = serializer.getBinTypeDescription();
+		if (List.class == binType.getMainType() && m.matches()) {
 			String realName = m.group("table");
-			HBaseColumn c;
+			HBaseColumn[] columns;
+
 			int min = Integer.parseInt(m.group("min"));
 			if (null == m.group("max")) {
-				c = getSliceColumn(min, min);
+				columns = new HBaseColumn[] { getSliceColumn(min, min) };
 			} else {
 				int max = Integer.parseInt(m.group("max"));
-				c = getSliceColumn(min, max);
+				List<Pair<Integer, Integer>> sliceRanges;
+				if (_doPyramidding) {
+					sliceRanges = decomposeRange(min, max);
+				} else {
+					sliceRanges = new ArrayList<>();
+					for (int n=min; n<=max; ++n) {
+						sliceRanges.add(new Pair<>(n, n));
+					}
+				}
+				columns = new HBaseColumn[sliceRanges.size()];
+				for (int i = 0; i < sliceRanges.size(); ++i) {
+					Pair<Integer, Integer> sliceRange = sliceRanges.get(i);
+					columns[i] = getSliceColumn(sliceRange.getFirst(), sliceRange.getSecond());
+				}
 			}
-			return super.readTiles(realName, serializer, tiles, c);
+			List<TileData<T>> rawResults = super.readTiles(realName, serializer, tiles, columns);
+
+			if (1 == columns.length) return rawResults;
+			else {
+				// Consolidate the columns from each tile.
+				int numRaw = rawResults.size();
+				int numReal = numRaw/columns.length;
+				List<TileData<T>> realResults = new ArrayList<>(numReal);
+				for (int i=0; i<numReal; ++i) {
+					// We know this cast is correct because of our guard condition up top, that
+					// List is the main type of T.
+					realResults.add(compose((List) rawResults, i, numReal, columns.length));
+				}
+			}
+			return rawResults;
 		} else {
 			return super.readTiles(tableName, serializer, tiles);
 		}
@@ -148,6 +196,11 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 
 
 	public static class SlicedHBaseTilePutter extends StandardHBaseTilePutter {
+		private boolean _doPyramidding;
+		public SlicedHBaseTilePutter (boolean doPyramidding) {
+			_doPyramidding = doPyramidding;
+		}
+
 		@Override
 		public <T> Put getPutForTile(TileData<T> tile, TileSerializer<T> serializer) throws IOException {
 			TypeDescriptor binType = serializer.getBinTypeDescription();
@@ -165,13 +218,22 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 								   TileData<List<T>> tile) throws IOException {
 			// Figure out into how many slices to divide the data
 			int slices = numSlices(tile);
-			// Divide the tile into slices, storing each of them individually in their own column
-			for (int s = 0; s < slices; ++s) {
-				TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s).harden();
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				serializer.serialize(slice, baos);
-				existingPut = addToPut(existingPut, rowIdFromTileIndex(tile.getDefinition()),
-					getSliceColumn(s, s), baos.toByteArray());
+			// Store the whole thing pyramidded.
+			int slicesPerWrite = 1;
+			while (slicesPerWrite < slices) {
+				// Divide the tile into slices, storing each of them individually in their own column
+				for (int startSlice = 0; startSlice < slices; startSlice = startSlice + slicesPerWrite) {
+					int endSlice = startSlice + slicesPerWrite - 1;
+					TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, startSlice, endSlice).harden();
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					serializer.serialize(slice, baos);
+					existingPut = addToPut(existingPut, rowIdFromTileIndex(tile.getDefinition()),
+						getSliceColumn(startSlice, endSlice), baos.toByteArray());
+				}
+
+				// If not pyramidding, bail out after our first time through.
+				if (_doPyramidding) slicesPerWrite = slicesPerWrite * 2;
+				else slicesPerWrite = slices;
 			}
 			return existingPut;
 		}
