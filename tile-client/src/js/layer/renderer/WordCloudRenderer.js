@@ -254,7 +254,6 @@
             sizeFunction = text.sizeFunction || SIZE_FUNCTION,
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
-			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
 			$html = $("<div></div>"),
             wordCounts = [],
             entries = [],
@@ -284,7 +283,7 @@
             minFontSize,
             maxFontSize );
 			
-		var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
+		var $label = $('<div class="count-summary"></div>');
 		$html = $html.append( $label );
 
         cloud.forEach ( function( word ) {

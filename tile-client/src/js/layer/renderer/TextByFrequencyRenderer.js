@@ -132,7 +132,6 @@
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
-			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
             percentLabel,
             $html = $("<div></div>"),
             entries = [],
@@ -147,7 +146,7 @@
             i = 0, 
 			j = 0;	
 		
-		var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
+		var $label = $('<div class="count-summary"></div>');
 		$html = $html.append( $label );	
 
 		values = values.slice( 0, numEntries );
