@@ -13,6 +13,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.BoolFilterBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -152,6 +153,15 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 						// doesn't work if passing in formatted date strings like "2015-03-01"
 						boundaryFilter.must(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
 						break;
+					case "UDF":
+						// build a user defined facet
+						Map fieldsMap = (Map)filter.get("fields");
+						BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+						for (Object key: fieldsMap.keySet()){
+							boolQuery.must(QueryBuilders.matchQuery((String)fieldsMap.get(key), filter.get("query")));
+						}
+						boundaryFilter.must(FilterBuilders.queryFilter(boolQuery));
+						break;
 					default:
 						LOGGER.error("Unsupported filter type");
 				}
@@ -180,7 +190,14 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	}
 
 	private Long getIntervalFromBounds(double start, double end) {
-		return (long) Math.floor((end - start )/ TILE_PIXEL_DIMENSION);
+		long interval;
+		interval = ((long) Math.floor((end - start) / TILE_PIXEL_DIMENSION));
+
+		if (interval <= 0) {
+			interval = 1;
+		}
+
+		return interval;
 	};
 
 
