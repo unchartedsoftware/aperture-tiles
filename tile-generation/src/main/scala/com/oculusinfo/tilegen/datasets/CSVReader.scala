@@ -34,6 +34,8 @@ import org.apache.spark.sql.types._
 
 import scala.util.Try
 
+import au.com.bytecode.opencsv.CSVParser
+
 /**
  * A class that allows reading a schema file and a CSV file as a DataFrame.
  *
@@ -126,14 +128,30 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 	                                                 "The separator to use between fields in the input data",
 	                                                 Some("\t"))
 
+  private val _quotechar = configuration.getString("oculus.binning.parsing.quotechar",
+                                                    "The character to use for quoted fields in the input data",
+                                                    Some(""))
+
 	private lazy val _parsed: DataFrame = {
 		val separator = _separator
+    val quotechar = _quotechar
 		val parsers = _parsers
 		val indices = _indices
 		val N = _fields
 		val rowRDD: RDD[Row] = data.map(record =>
 			Try{
-				val fields = record.split(separator)
+
+        def getFields(line : String) = {
+          if (quotechar.isEmpty) {
+            val parser = new CSVParser(separator.charAt(0))
+            parser.parseLine(line)
+          } else {
+            val parser = new CSVParser(separator.charAt(0), quotechar.charAt(0))
+            parser.parseLine(line)
+          }
+        }
+
+				val fields = getFields(record)
 				val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
 				row(values:_*)
 			}
