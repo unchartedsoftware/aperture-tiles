@@ -92,7 +92,7 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 
 	public JSONObject filterKeywordMetadata(JSONObject inputMetadata) throws JSONException {
 		if ( _startBucket != null && _endBucket != null ) {
-			if ( _startBucket < 0 || _startBucket > _endBucket ) {
+			if ( _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Filter by keyword bucket transformer arguments are invalid.  start time bucket: " + _startBucket + ", end time bucket: " + _endBucket);
 			}
 		}
