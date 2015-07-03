@@ -8,6 +8,7 @@ import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.JsonUtilities;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -17,6 +18,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -45,7 +47,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	public static final int TILE_PIXEL_DIMENSION = 256; //used to calculate histogram aggregation interval to fit into 256x256 pixels
 
-	private AOITilePyramid AOIP;
+	private AOITilePyramid AOIP; //
 
 	private Node node;
 	private Client client;
@@ -57,8 +59,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private List<Double> bounds;
 
 	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String xField, String yField, List<Double> aoi_bounds) {
-
-		LOGGER.debug("ES custom config constructor ?");
 
 		this.index = esIndex;
 		this.xField = xField;
@@ -89,13 +89,9 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		}
 	}
 
-	private Client getClient(){
-		return this.client;
-	}
-
 	private SearchRequestBuilder baseQuery(FilterBuilder filter){
 
-		return this.getClient().prepareSearch(this.index)
+		return this.client.prepareSearch(this.index)
 			.setTypes("datum")
 			.setSearchType(SearchType.COUNT)
 			.setQuery(QueryBuilders.filteredQuery(
@@ -104,13 +100,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			));
 	}
 
-	// note about the start/end/x/y confusion
-	// x,y
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, JSONObject filterJSON){
-		BoolFilterBuilder boundaryFilter = FilterBuilders.boolFilter();
 
 		// the first filter added excludes everything outside of the tile boundary
 		// on both the xField and the yField
+		BoolFilterBuilder boundaryFilter = FilterBuilders.boolFilter();
+
 		boundaryFilter.must(
 			FilterBuilders.rangeFilter(this.xField)
 				.gt(startX) //startx is min val
@@ -151,15 +146,22 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 					case "range":
 						// Note range filter requires a numeric value to filter on,
 						// doesn't work if passing in formatted date strings like "2015-03-01"
-						boundaryFilter.must(FilterBuilders.rangeFilter(filterPath).from(filter.get("from")).to(filter.get("to")));
+						// check for existence of from OR to or FROM and TO
+						RangeFilterBuilder rangeFilterBuilder = FilterBuilders.rangeFilter(filterPath);
+
+						if (filter.containsKey("from") && filter.get("from") != null){
+							rangeFilterBuilder.from(filter.get("from"));
+						}
+						if (filter.containsKey("to") && filter.get("to") != null){
+							rangeFilterBuilder.to(filter.get("to"));
+						}
+						boundaryFilter.must(rangeFilterBuilder);
 						break;
 					case "UDF":
 						// build a user defined facet
-						Map fieldsMap = (Map)filter.get("fields");
 						BoolQueryBuilder boolQuery = new BoolQueryBuilder();
-						for (Object key: fieldsMap.keySet()){
-							boolQuery.must(QueryBuilders.matchQuery((String)fieldsMap.get(key), filter.get("query")));
-						}
+
+						boolQuery.must(QueryBuilders.matchQuery("body.en", StringEscapeUtils.escapeJavaScript((String) filter.get("query"))));
 						boundaryFilter.must(FilterBuilders.queryFilter(boolQuery));
 						break;
 					default:
@@ -168,18 +170,16 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			}
 		}
 		SearchRequestBuilder searchRequestBuilder =
-			baseQuery(
-				boundaryFilter
-			)
+			baseQuery(boundaryFilter)
 			.addAggregation(
 				AggregationBuilders.histogram("xField")
 					.field(this.xField)
-					.interval(getIntervalFromBounds(startX, endX))
+					.interval(getHistogramIntervalFromBounds(startX, endX))
 					.minDocCount(1)
 					.subAggregation(
 						AggregationBuilders.histogram("yField")
 							.field(this.yField)
-							.interval(getIntervalFromBounds(endY, startY))
+							.interval(getHistogramIntervalFromBounds(endY, startY))
 							.minDocCount(1)
 					)
 			);
@@ -189,11 +189,10 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				.actionGet();
 	}
 
-	private Long getIntervalFromBounds(double start, double end) {
-		long interval;
-		interval = ((long) Math.floor((end - start) / TILE_PIXEL_DIMENSION));
-
-		if (interval <= 0) {
+	private Long getHistogramIntervalFromBounds(double start, double end) {
+		long interval = ((long) Math.floor((end - start) / TILE_PIXEL_DIMENSION));
+		// we cannot pass elasticsearch a histogram interval less than 1
+		if (interval < 1) {
 			interval = 1;
 		}
 
@@ -296,9 +295,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
-		LOGGER.debug("Pretending to read metadata");
-		// faking the bounds and zoom level right now, but this should be retrievable at least from the config file,
-		// and parts of it from an Elasticsearch boundary query.
 
 		return "{\"bounds\":["+
 			bounds.get(0) + "," +
