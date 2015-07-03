@@ -71,18 +71,23 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<T> getBin (int x, int y) {
-		Number result = 0.0;
-
-		// compute bin averages for selected average range
+		List<T> resultList = new ArrayList<>(1);
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
-		int start = ( _startCompare != null ) ? _startCompare : 0;
+		Number result = 0.0;
+		
+		// if the bucket range falls outside of the available bin range, return empty list
+		boolean inRange = _endCompare >= 0 && _startCompare <= binSize;	
+ 
+		// If start or end (but not both) fall outside the bin range, constrain the range to available bin range
+		int start = ( _startCompare != null && _startCompare >= 0 ) ? _startCompare : 0;
 		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
-
+		
+		// compute bin averages for selected average range. 	
 		double total = 0;
 		int count = 0;
 		for(int i = start; i < binSize; i++) {
-			if ( i >= start && i <= end ) {
+			if ( i >= start && i <= end && inRange ) {
 				Number value = binContents.get(i);
 				total = total + value.doubleValue();
 				count++;
@@ -91,7 +96,6 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 		if ( count != 0 ) {
 			result = (total/count);
 		}
-		List<T> resultList = new ArrayList<>(1);
 		resultList.add((T) result);
 		return resultList;
 	}
