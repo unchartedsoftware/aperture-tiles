@@ -94,6 +94,14 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 		return new Pair<>(minimumValue, maximumValue);
 	}
 
+	public Integer getStartBucket() {
+		return _startBucket;
+	}
+
+	public Integer getEndBucket() {
+		return _endBucket;
+	}
+
 	/**
 	 * Extracts the extremum for a level from its LayerConfig
 	 */

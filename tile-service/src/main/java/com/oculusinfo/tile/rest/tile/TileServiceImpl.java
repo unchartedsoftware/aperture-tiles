@@ -30,13 +30,16 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.SubTileDataView;
 import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.impl.HBaseSlicedPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.AvroJSONConverter;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.transformations.tile.BucketTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformerFactory;
 import com.oculusinfo.tile.rest.layer.LayerService;
 
 
@@ -66,7 +69,9 @@ public class TileServiceImpl implements TileService {
 	}
 
 
-	private <T> TileData<T> tileDataForIndex( TileIndex index, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO, int coarseness ) throws IOException {
+	private <T> TileData<T> tileDataForIndex( TileIndex index, String dataId, String layer, TileSerializer<T> serializer,
+	                                          PyramidIO pyramidIO, int coarseness,
+	                                          TileTransformer tileTransformer) throws IOException {
 		TileData<T> data = null;
 		if ( coarseness > 1 ) {
 			int coarsenessFactor = ( int ) Math.pow( 2, coarseness - 1 );
@@ -81,8 +86,25 @@ public class TileServiceImpl implements TileService {
 				scaleLevelIndex = new TileIndex( index.getLevel() - coarsenessLevel,
 					( int ) Math.floor( index.getX() / coarsenessFactor ),
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
+				if (pyramidIO instanceof HBaseSlicedPyramidIO) {
+					PyramidMetaData metadata = _layerService.getMetaData( layer );
+					int numBuckets = Integer.parseInt(metadata.getCustomMetaData("bucketCount"));
 
-				tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ) );
+					Integer start = ((BucketTileTransformer) tileTransformer).getStartBucket();
+					Integer end = ((BucketTileTransformer) tileTransformer).getEndBucket();
+
+					String bracket = "[0-" + numBuckets + "]";
+					if (start != null && end != null) {
+						if (end > start) {
+							bracket = "[" + start + "-" + end + "]";
+						} else {
+							bracket = "[" + start + "]";
+						}
+					}
+					tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton( scaleLevelIndex ) );
+				} else {
+					tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ) );
+				}
 				if ( tileDatas.size() >= 1 ) {
 					//we got data for this level so use it
 					break;
@@ -127,7 +149,7 @@ public class TileServiceImpl implements TileService {
 			config.setLevelProperties( index, minimum, maximum );
 			// produce the tile renderer from the configuration
 			TileDataImageRenderer<?> tileRenderer = config.produce( TileDataImageRenderer.class );
-			bi = renderTileImage( config, layer, index, tileSet, tileRenderer );
+			bi = renderTileImage( config, layer, index, tileSet, tileRenderer, query );
 
 		} catch ( ConfigurationException e ) {
 			LOGGER.warn( "No renderer specified for tile request. " + e.getMessage() );
@@ -153,18 +175,19 @@ public class TileServiceImpl implements TileService {
 
 	private <T> BufferedImage renderTileImage( LayerConfiguration config, String layer,
 											   TileIndex index, Iterable<TileIndex> tileSet,
-											   TileDataImageRenderer<T> renderer ) throws ConfigurationException, IOException, Exception {
+											   TileDataImageRenderer<T> renderer, JSONObject query)
+			throws ConfigurationException, IOException, Exception {
 		// prepare for rendering
 		config.prepareForRendering( layer, index, tileSet );
 
 		// get data source id, and produce the pyramidio and serializer
 		// these are all common points of failure in the config, so explicitly log these
-		String dataId = config.getPropertyValue( LayerConfiguration.DATA_ID );
+		String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 		if ( dataId == null ) {
 			LOGGER.error( "Could not determine data id for layer:" + layer + ", please confirm that it has been configured correctly." );
 			return null;
 		}
-		PyramidIO pyramidIO = config.produce( PyramidIO.class );
+		PyramidIO pyramidIO = config.produce(PyramidIO.class);
 		if ( dataId == null ) {
 			LOGGER.error( "Could not produce pyramidio for layer:" + layer + ", please confirm that it has been configured correctly and data is avalable." );
 			return null;
@@ -179,8 +202,7 @@ public class TileServiceImpl implements TileService {
 
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
-
-		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness);
+		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, coarseness, tileTransformer);
 		if (data == null) {
 			return null;
 		}
