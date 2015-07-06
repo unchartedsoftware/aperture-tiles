@@ -230,16 +230,24 @@
         // if aggregator, aggregate the data
         aggregator = renderer.aggregator;
         if ( aggregator ) {
+            var outOfRangeCount = 0;
             data.forEach( function( datum ) {
                 if ( datum.tile ) {
                     datum.tile.meta = {
                         raw: datum.tile.meta.map.bins,
                         aggregated: aggregator.aggregate( datum.tile.meta.map.bins )
                     };
-                } else {
-                    datum.tile = null;
+                    // check if requested range is outside of available range
+                    if ( datum.tile.meta.aggregated.length === 0 ) {
+                        // no data, flag as out of range
+                        outOfRangeCount++;
+                    }
                 }
             });
+            // if all data is outside the range, exit early
+            if ( outOfRangeCount === data.length ) {
+                return;
+            }
         }
 
         // unwrap if only a single entry
