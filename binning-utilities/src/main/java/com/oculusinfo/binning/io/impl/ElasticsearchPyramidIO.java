@@ -190,7 +190,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		long interval = ((long) Math.floor((end - start) / TILE_PIXEL_DIMENSION));
 		// the calculated interval can be less than 1 if the data is sparse
 		// we cannot pass elasticsearch a histogram interval less than 1
-		// so set it to 1 
+		// so set it to 1
 		if (interval < 1) {
 			interval = 1;
 		}
@@ -293,7 +293,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
-
+		//TODO find a better way to get bounds + level metadata
 		return "{\"bounds\":["+
 			bounds.get(0) + "," +
 			bounds.get(1) + "," +
