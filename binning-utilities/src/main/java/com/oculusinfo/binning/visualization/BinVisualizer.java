@@ -164,11 +164,11 @@ public class BinVisualizer extends JFrame {
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.setMnemonic('x');
 		exit.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed (ActionEvent e) {
-				System.exit(0);
-			}
-		});
+				@Override
+				public void actionPerformed (ActionEvent e) {
+					System.exit(0);
+				}
+			});
 		fileMenu.add(exit);
 
 
@@ -231,20 +231,20 @@ public class BinVisualizer extends JFrame {
 		int max = Short.MAX_VALUE;
 		JLabel extraArea = new JLabel();
 		_layout.setHorizontalGroup(
-			_layout.createParallelGroup()
-				.addGroup(_layout.createSequentialGroup().addComponent(ioLabel, 0, pref, max).addComponent(_ioField))
-				.addGroup(_layout.createSequentialGroup().addGap(25).addComponent(_ioSelectorContainer, 0, pref, max))
-				.addGroup(_layout.createSequentialGroup().addComponent(pyramidLabel, 0, pref, max).addComponent(_pyramidField))
-				.addGroup(_layout.createSequentialGroup().addComponent(_pyramidDesc, 0, pref, max))
-				.addGroup(_layout.createSequentialGroup().addComponent(serializerLabel, 0, pref, max).addComponent(_serializerField))
-				.addGroup(_layout.createSequentialGroup().addComponent(idLabel, 0, pref, max).addComponent(_idField))
-				.addGroup(_layout.createSequentialGroup().addComponent(levelLabel, 0, pref, max).addComponent(_levelField))
-				.addGroup(_layout.createSequentialGroup().addComponent(xLabel, 0, pref, max).addComponent(_xField))
-				.addGroup(_layout.createSequentialGroup().addComponent(yLabel, 0, pref, max).addComponent(_yField))
-				.addComponent(_show, Alignment.TRAILING)
-				.addComponent(_showText, Alignment.TRAILING)
-				.addComponent(extraArea)
-		);
+		                           _layout.createParallelGroup()
+		                           .addGroup(_layout.createSequentialGroup().addComponent(ioLabel, 0, pref, max).addComponent(_ioField))
+		                           .addGroup(_layout.createSequentialGroup().addGap(25).addComponent(_ioSelectorContainer, 0, pref, max))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(pyramidLabel, 0, pref, max).addComponent(_pyramidField))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(_pyramidDesc, 0, pref, max))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(serializerLabel, 0, pref, max).addComponent(_serializerField))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(idLabel, 0, pref, max).addComponent(_idField))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(levelLabel, 0, pref, max).addComponent(_levelField))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(xLabel, 0, pref, max).addComponent(_xField))
+		                           .addGroup(_layout.createSequentialGroup().addComponent(yLabel, 0, pref, max).addComponent(_yField))
+		                           .addComponent(_show, Alignment.TRAILING)
+		                           .addComponent(_showText, Alignment.TRAILING)
+		                           .addComponent(extraArea)
+		                           );
 		_layout.setVerticalGroup(
 			_layout.createSequentialGroup()
 				.addGroup(_layout.createParallelGroup().addComponent(ioLabel).addComponent(_ioField))
@@ -274,62 +274,62 @@ public class BinVisualizer extends JFrame {
 
 	private void setIOType (IOEnum type) {
 		switch (type) {
-			case File:
-				if (null != _ioSelector) {
-					if (_ioSelector instanceof FileSystemPyramidIOSelector) {
-						return;
-					}
-					_ioSelectorContainer.removeAll();
+		case File:
+			if (null != _ioSelector) {
+				if (_ioSelector instanceof FileSystemPyramidIOSelector) {
+					return;
 				}
-				_ioSelector = new FileSystemPyramidIOSelector(_fileChooser);
-				_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
-				break;
-			case HBase:
-				if (null != _ioSelector) {
-					if (_ioSelector instanceof HBasePyramidIOSelector) {
-						return;
-					}
-					_ioSelectorContainer.removeAll();
+				_ioSelectorContainer.removeAll();
+			}
+			_ioSelector = new FileSystemPyramidIOSelector(_fileChooser);
+			_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
+			break;
+		case HBase:
+			if (null != _ioSelector) {
+				if (_ioSelector instanceof HBasePyramidIOSelector) {
+					return;
 				}
-				_ioSelector = new HBasePyramidIOSelector();
-				_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
-				break;
-			case SQLite:
-				if (null != _ioSelector) {
-					if (_ioSelector instanceof SQLitePyramidIOSelector) {
-						return;
-					}
-					_ioSelectorContainer.removeAll();
+				_ioSelectorContainer.removeAll();
+			}
+			_ioSelector = new HBasePyramidIOSelector();
+			_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
+			break;
+		case SQLite:
+			if (null != _ioSelector) {
+				if (_ioSelector instanceof SQLitePyramidIOSelector) {
+					return;
 				}
-				_ioSelector = new SQLitePyramidIOSelector();
-				_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
-				break;
-			case ZipStream:
-				if (null != _ioSelector) {
-					if (_ioSelector instanceof ZipFilePyramidIOSelector) {
-						return;
-					}
-					_ioSelectorContainer.removeAll();
+				_ioSelectorContainer.removeAll();
+			}
+			_ioSelector = new SQLitePyramidIOSelector();
+			_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
+			break;
+		case ZipStream:
+			if (null != _ioSelector) {
+				if (_ioSelector instanceof ZipFilePyramidIOSelector) {
+					return;
 				}
-				_ioSelector = new ZipFilePyramidIOSelector(_fileChooser);
-				_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
-				break;
-			default:
-				if (null != _ioSelector) {
-					_ioSelectorContainer.removeAll();
-					_ioSelector = null;
-				}
+				_ioSelectorContainer.removeAll();
+			}
+			_ioSelector = new ZipFilePyramidIOSelector(_fileChooser);
+			_ioSelectorContainer.add(_ioSelector.getPanel(), BorderLayout.CENTER);
+			break;
+		default:
+			if (null != _ioSelector) {
+				_ioSelectorContainer.removeAll();
+				_ioSelector = null;
+			}
 		}
 		//        _layout.layoutContainer(_tileChooser);
 		_ioSelector.getPanel().addPropertyChangeListener(new PropertyChangeListener() {
-			@Override
-			public void propertyChange (PropertyChangeEvent event) {
-				if (PYRAMID_IO.equals(event.getPropertyName())) {
-					_pyramidIO = _ioSelector.getPyramidIO();
-					updateAvailableLevels();
+				@Override
+				public void propertyChange (PropertyChangeEvent event) {
+					if (PYRAMID_IO.equals(event.getPropertyName())) {
+						_pyramidIO = _ioSelector.getPyramidIO();
+						updateAvailableLevels();
+					}
 				}
-			}
-		});
+			});
 		_tileChooser.validate();
 	}
 
@@ -364,12 +364,12 @@ public class BinVisualizer extends JFrame {
 					changed = true;
 				}
 				break;
-			case Legacy:
-				if (null == _serializer ||
-					!(_serializer instanceof com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer)) {
-					_serializer = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
-					changed = true;
-				}
+		case Legacy:
+			if (null == _serializer ||
+               !(_serializer instanceof com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer)) {
+				_serializer = new com.oculusinfo.binning.io.serialization.impl.BackwardCompatibilitySerializer();
+				changed = true;
+			}
 		}
 		if (changed) {
 			updateAvailableLevels();
@@ -403,7 +403,7 @@ public class BinVisualizer extends JFrame {
 				return;
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting level metadata for "
-					+ _pyramidId);
+				           + _pyramidId);
 			}
 		}
 		_levelField.removeAllItems();
@@ -419,7 +419,7 @@ public class BinVisualizer extends JFrame {
 			_pyramid = metaData.getTilePyramid();
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting level metadata for "
-				+ _pyramidId);
+			           + _pyramidId);
 		}
 
 		if (null == _pyramid) {
@@ -432,8 +432,8 @@ public class BinVisualizer extends JFrame {
 			_pyramidField.setSelectedItem(PyramidEnum.AreaOfInterest);
 			Rectangle2D bounds = _pyramid.getTileBounds(new TileIndex(0, 0, 0));
 			_pyramidDesc.setText(String.format("bounds: [%.4f, %.4f] to [%.4f, %.4f]",
-				bounds.getMinX(), bounds.getMinY(),
-				bounds.getMaxX(), bounds.getMaxY()));
+			                                   bounds.getMinX(), bounds.getMinY(),
+			                                   bounds.getMaxX(), bounds.getMaxY()));
 		}
 	}
 	private void updateAvailableCoordinates () {
@@ -461,8 +461,8 @@ public class BinVisualizer extends JFrame {
 		if (null == _xField.getSelectedItem()) return;
 		if (null == _yField.getSelectedItem()) return;
 		TileIndex index = new TileIndex((Integer) _levelField.getSelectedItem(),
-			(Integer) _xField.getSelectedItem(),
-			(Integer) _yField.getSelectedItem());
+		                                (Integer) _xField.getSelectedItem(),
+		                                (Integer) _yField.getSelectedItem());
 
 		try {
 			List<TileData<Double>> data = null;
@@ -535,16 +535,16 @@ public class BinVisualizer extends JFrame {
 			displayImage = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
 			g = displayImage.createGraphics();
 			g.drawImage(mapImage, 0, 0, new ImageObserver() {
-				@Override
-				public boolean imageUpdate (Image img, int infoflags, int x, int y,
-											int width, int height) {
-					if (ImageObserver.ALLBITS == (ImageObserver.ALLBITS&infoflags)) {
-						showTile(tile);
-						return false;
+					@Override
+					public boolean imageUpdate (Image img, int infoflags, int x, int y,
+					                            int width, int height) {
+						if (ImageObserver.ALLBITS == (ImageObserver.ALLBITS&infoflags)) {
+							showTile(tile);
+							return false;
+						}
+						return true;
 					}
-					return true;
-				}
-			});
+				});
 			g.drawImage(tileImage, 0, 0, null);
 			g.dispose();
 		}
@@ -559,12 +559,12 @@ public class BinVisualizer extends JFrame {
 		Rectangle2D bounds = mercator.getEPSG_900913Bounds(tile, null);
 
 		String url = String.format("http://129.206.228.72/cached/osm?LAYERS=osm_auto:all&STYLES=&"
-				+ "SRS=EPSG%%3A900913&FORMAT=image%%2Fpng&SERVICE=WMS&VERSION=1.1.1"
-				+ "&REQUEST=GetMap&BBOX=%.3f,%.3f,%.3f,%.3f&WIDTH=1024&HEIGHT=1024",
-			bounds.getMinX(),
-			bounds.getMinY(),
-			bounds.getMaxX(),
-			bounds.getMaxY());
+		                           + "SRS=EPSG%%3A900913&FORMAT=image%%2Fpng&SERVICE=WMS&VERSION=1.1.1"
+		                           + "&REQUEST=GetMap&BBOX=%.3f,%.3f,%.3f,%.3f&WIDTH=1024&HEIGHT=1024",
+		                           bounds.getMinX(),
+		                           bounds.getMinY(),
+		                           bounds.getMaxX(),
+		                           bounds.getMaxY());
 
 		try {
 			return getToolkit().getImage(new URL(url));
