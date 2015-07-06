@@ -400,10 +400,12 @@
         this.setPyramid( spec.pyramid );
         // initialize base layer index to -1 for no baselayer
         this.baseLayerIndex = -1;
+        // disable kinetic pan
+        OpenLayers.Control.DragPan.prototype.enableKinetic = false;
 		// navigation controls
 		this.navigationControls = new OpenLayers.Control.Navigation({
-				documentDrag: true,
-				zoomBoxEnabled: false
+			documentDrag: true,
+			zoomBoxEnabled: false
 		});
 		// zoom controls
 		this.zoomControls = new OpenLayers.Control.Zoom();
@@ -418,6 +420,8 @@
                 20037508.342789244,
                 20037508.342789244
             ]),
+            zoomMethod: null,
+            panMethod: null,
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
@@ -425,8 +429,8 @@
                 this.zoomControls
             ],
             tileManager: new OpenLayers.TileManager({
-                moveDelay: 1000,
-                zoomDelay: 1000
+                moveDelay: 400,
+                zoomDelay: 400
             })
         });
 

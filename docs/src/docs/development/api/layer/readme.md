@@ -202,7 +202,7 @@ Example response:
 
 ## <a name="store-configuration-state"></a> Store a Configuration State ##
 
-Store a configuration state on the server that can be accessed at a later time. Returns the SHA-256 hash of the state. This SHA-256 hash can be used later as a ‘state’ query parameter. Hashes are deterministic and cachable.
+Store a configuration state on the server that can be accessed at a later time. Returns the SHA-256 hash of the state. This SHA-256 hash can be used later as a 'state' query parameter. Hashes are deterministic and cachable.
 
 <div class="props">
 	<h3 class="sectionTitle">Method Summary</h3>

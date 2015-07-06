@@ -32,14 +32,15 @@ package com.oculusinfo.tilegen.pipeline
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.Date
+import java.util.{GregorianCalendar, Date}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.tilegen.datasets.{CSVReader, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets.{SchemaTypeUtilities, CSVReader, TilingTask, TilingTaskParameters}
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{TimestampType, IntegerType}
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 
 
@@ -161,7 +162,7 @@ object PipelineOperations {
 	 *
 	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
 	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
-	 * @param timeCol Column spec denoting name of time column in input schema RDD.  In this case time column
+	 * @param timeCol Column spec denoting name of time column in input DataFrame.  In this case time column
 	 *                is expected to store a Date.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
@@ -174,6 +175,47 @@ object PipelineOperations {
 		                    })
 		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
+
+  /**
+   * Pipeline op to parse a string date into a timestamp
+   * @param stringDateCol The column from which to get the date (as a string)
+   * @param dateCol The column into which to put the date (as a timestamp)
+   * @param format The expected format of the date
+   * @param input Input pipeline data to transform
+   * @return Transformed pipeline data with the new time field column.
+   */
+  def parseDateOp (stringDateCol: String, dateCol: String, format: String)(input: PipelineData): PipelineData = {
+    val formatter = new SimpleDateFormat(format);
+    val fieldExtractor: Array[Any] => Any = row => {
+      val date = formatter.parse(row(0).toString)
+      new Timestamp(date.getTime)
+    }
+    val output = SchemaTypeUtilities.addColumn(input.srdd, dateCol, TimestampType, fieldExtractor, stringDateCol)
+    PipelineData(input.sqlContext, output)
+  }
+
+  /**
+   * Pipeline op to get a single field out of a date, and create a new column with that field
+   *
+   * For instance, this can take a date, and transform it to a week of the year, or a day of the month.
+   *
+   * @param timeCol Column spec denoting the name of a time column in the input DataFrame.  In this case,
+   *                the column is expected to store a Date.
+   * @param fieldCol The name of the column to create with the time field value
+   * @param timeField The field of the date to retrieve
+   * @param input Input pipeline data to transform
+   * @return Transformed pipeline data with the new time field column.
+   */
+  def dateFieldOp (timeCol: String, fieldCol: String, timeField: Int)(input: PipelineData): PipelineData = {
+    val fieldExtractor: Array[Any] => Any = row => {
+      val date = row(0).asInstanceOf[Date]
+      val calendar = new GregorianCalendar()
+      calendar.setTime(date)
+      calendar.get(timeField)
+    }
+    val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
+    PipelineData(input.sqlContext, output)
+  }
 
 	/**
 	 * Pipeline op to cache data - this allows for subsequent stages in the pipeline to run against computed
@@ -501,7 +543,7 @@ object PipelineOperations {
  * @param zookeeperPort Zookeeper port.
  * @param hbaseMaster HBase master address
  */
-case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String)
+case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbaseMaster: String, slicing: Boolean = false)
 
 /**
  * Area of interest region

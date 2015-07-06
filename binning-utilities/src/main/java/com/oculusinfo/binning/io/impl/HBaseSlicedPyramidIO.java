@@ -109,7 +109,7 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 			int slices = numSlices(tile);
 			// Divide the tile into slices, storing each of them individually in their own column
 			for (int s = 0; s < slices; ++s) {
-				TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s);
+				TileData<List<T>> slice = new DenseTileMultiSliceView<T>(tile, s, s).harden();
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				serializer.serialize(slice, baos);
 				existingPut = addToPut(existingPut, rowIdFromTileIndex(tile.getDefinition()),

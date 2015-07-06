@@ -53,6 +53,7 @@ body {
 
 ul {
 	padding-left: 30px;
+	margin-top: 6px;
 	&.table {
 		margin: 0;
 		padding-left: 26.25px;
@@ -61,10 +62,14 @@ ul {
 
 ol {
 	padding-left: 30px;
+	margin-top: 6px;
 }​
 
 li {
 	margin: 0 0 6px 0;
+	&.toc-item {
+		margin: 0 0 3px 0;
+	}
 }
 
 .methodDetail {
@@ -176,6 +181,7 @@ img {
 	}
 	&.context-logo {
 		margin: 20px 0 4px;
+		max-width: 236px;
 	}
 	&.screenshot {
 		margin: 20px auto 4px;
@@ -231,7 +237,7 @@ pre {
 .toc-header {
 	font-size: 16px;
 	font-weight: bold;
-	margin-left: 30px;
+	margin: 0 0 5px 30px;
 	text-align: center;
 }
 
@@ -354,10 +360,8 @@ pre {
 
 .uncharted-footer
 {
-	background-image: url("../img/resources/footer-symbols.png");
-	background-position: left bottom;
-	background-repeat: no-repeat;
-	padding-bottom: 60px;
+	padding-top: 28px;
+	max-width: 150px;
 }
 
 .footer-padding {
@@ -366,7 +370,7 @@ pre {
 
 .toc-body {
 	line-height: 23px;
-	margin: 0 0 5px;
+	margin: 0 0 3px;
 }​
 
 .context-info {
@@ -583,4 +587,12 @@ hr {
 	border-bottom-width: 0;
 	border-color: $txt-block-border;
 	margin: 18px 0 15px 20px;
+}
+
+.copyright {
+	margin-top: 0;
+}
+
+figure {
+	margin: 0;
 }

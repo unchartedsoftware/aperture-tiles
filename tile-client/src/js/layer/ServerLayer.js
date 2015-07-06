@@ -460,6 +460,31 @@
         return this.tileTransform.type;
     };
 
+	/**
+     * Set the tile transform data based on the time range passed in
+     * @memberof ServerLayer
+     *
+     * @param {number} start - A unix timestamp representing the start of the time range
+     * @param {number} end - A unix timestamp representing the end of the time range
+     */
+    ServerLayer.prototype.setTileTransformRange = function ( start, end ) {
+		var startBucket = -1,
+			endBucket = -1,
+			layerMin = this.source.meta.meta.rangeMin,
+			layerMax = this.source.meta.meta.rangeMax,
+			numBuckets = this.source.meta.meta.bucketCount;
+		
+		if ( start < this.source.meta.meta.rangeMax && end >  this.source.meta.meta.rangeMin ) {
+			var bucketSize = (layerMax - layerMin)/numBuckets;
+			startBucket = Math.floor( (start - layerMin)/bucketSize );
+			endBucket = Math.floor( (end - layerMin)/bucketSize );
+		}
+				
+		this.setTileTransformData({
+			startBucket: startBucket,
+			endBucket: endBucket });
+	};
+	
     /**
      * Set the tile transform data attribute
      * @memberof ServerLayer

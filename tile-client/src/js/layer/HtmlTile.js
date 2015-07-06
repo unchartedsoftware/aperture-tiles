@@ -41,6 +41,10 @@
 
     OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
 
+    OpenLayers.Tile.HTML.prototype.getTile = function() {
+        return this.div;
+    };
+
     OpenLayers.Tile.HTML.prototype.draw = function() {
         var that = this,
             shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments ),
@@ -56,6 +60,8 @@
                 this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
                 this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
+                this.events.triggerEvent( 'beforeload' );
+
                 // new url to render
                 if ( this.isLoading ) {
                     this.dataRequests.forEach( function( request ) {
@@ -63,6 +69,9 @@
                     });
                     this.dataRequests = null;
                     this.isLoading = false;
+                    this._loadEvent = "reload";
+                } else {
+                    this._loadEvent = "loadstart";
                 }
 
                 if ( !this.url ) {
@@ -73,7 +82,10 @@
                 // hide tile contents until have data
                 this.div.style.visibility = 'hidden';
                 this.isLoading = true;
-                var deferreds = [];
+                var deferreds = [],
+                    requestTilekey = this.tilekey;
+
+                this.events.triggerEvent( this._loadEvent );
 
                 this.dataRequests = dataUrl.map( function( url ) {
                     var deferred = $.Deferred();
@@ -96,6 +108,10 @@
                 });
                 $.when.apply( $, deferreds ).then(
                     function() {
+                        if ( that.tilekey !== requestTilekey ) {
+                            // old data, reject it
+                            return;
+                        }
                         that.tileData = [];
                         var i;
                         for ( i=0; i<arguments.length; i++ ) {
@@ -109,6 +125,7 @@
                     }
                 ).always(
                     function() {
+                        that.events.triggerEvent("loadend");
                         that.isLoading = false;
                         that.dataRequest = null;
                     }
@@ -124,6 +141,10 @@
     };
 
     OpenLayers.Tile.HTML.prototype.createBackBuffer = function() {
+        return null;
+    };
+
+    OpenLayers.Tile.Image.prototype.createBackBuffer = function() {
         return null;
     };
 
