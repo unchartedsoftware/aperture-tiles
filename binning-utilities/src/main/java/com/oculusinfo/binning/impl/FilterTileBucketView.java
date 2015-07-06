@@ -73,7 +73,7 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 			int binSize = baseDefault.size();
 			
 			// determine if the desired bucket range is within the total available bin range
-			boolean inRange = _endBucket >= 0 && _startBucket <= binSize;
+			boolean inRange = (_endBucket >= 0 && _startBucket <= binSize) || (_endBucket == null && _startBucket == null);
 			
 			// If start or end (but not both) fall outside the bin range, constrain the range to available bin range
 			int start = ( _startBucket != null && _startBucket >= 0 ) ? _startBucket : 0;
@@ -115,7 +115,7 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		int binSize = binContents.size();
 		
 		// determine if the desired bucket range is within the total available bin range
-		boolean inRange = _endBucket >= 0 && _startBucket <= binSize;
+		boolean inRange = (_endBucket >= 0 && _startBucket <= binSize) || (_endBucket == null && _startBucket == null);
 		
 		int start = ( _startBucket != null && _startBucket >= 0 ) ? _startBucket : 0;
 		int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
