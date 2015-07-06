@@ -82,11 +82,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
     public static final String DEFAULT_VERSION = "v1.0";
 
-
 	public static final JSONProperty FILTER_PROPS = new JSONProperty("filterProps",
 		"Filter properties that will be used in elasticsearch queries",
 		null);
-
 	public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
         null);
@@ -135,8 +133,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         )));
 
 	private ValueTransformerFactory _transformFactory;
-
-
 	private TileIndex _tileCoordinate;
 	private String _levelMinimum;
 	private String _levelMaximum;
@@ -187,7 +183,6 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
         addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORM_PATH) );
 		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
-
 	}
 
 	@Override
