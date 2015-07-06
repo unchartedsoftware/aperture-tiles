@@ -25,147 +25,153 @@
 
 (function() {
 
-	"use strict";
+    "use strict";
 
-	var Layer = require('./Layer'),
-		PubSub = require('../util/PubSub');
+    var Layer = require('./Layer'),
+        PubSub = require('../util/PubSub');
 
-	/**
-	 * Instantiate a VectorLayer object.
-	 * @class VectorLayer
-	 * @augments Layer
-	 * @classdesc A client rendered layer object.
-	 *
-	 * @param {Object} spec - The specification object.
-	 * <pre>
-	 * {
-	 *     opacity  {float}    - The opacity of the layer. Default = 1.0
-	 *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
-	 *     zIndex   {integer}  - The z index of the layer. Default = 1000
-	 *     vectors {Array} 	   - Array of OpenLayers Vector objects to add to the map
-	 * }
-	 * </pre>
-	 */
-	function VectorLayer( spec ) {
-		// call base constructor
-		Layer.call(this, spec);
-		// set reasonable defaults
-		this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 749;
-		this.domain = "vector";
-		this.source = spec.source;
-		this.styleMap = spec.styleMap;
-		this.strategies = spec.strategies;
-		this.olFeatures = spec.olFeatures || [];
-	}
+    /**
+     * Instantiate a VectorLayer object.
+     * @class VectorLayer
+     * @augments Layer
+     * @classdesc A client rendered layer object.
+     *
+     * @param {Object} spec - The specification object.
+     * <pre>
+     * {
+     *     opacity  {float}    - The opacity of the layer. Default = 1.0
+     *     enabled  {boolean}  - Whether the layer is visible or not. Default = true
+     *     zIndex   {integer}  - The z index of the layer. Default = 1000
+     *     vectors {Array}     - Array of OpenLayers Vector objects to add to the map
+     * }
+     * </pre>
+     */
+    function VectorLayer(spec) {
+        // call base constructor
+        Layer.call(this, spec);
+        // set reasonable defaults
+        this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
+        this.domain = "vector";
+        this.source = spec.source;
+        this.styleMap = spec.styleMap;
+        this.strategies = spec.strategies;
+        this.getData = spec.getData;
+        this.teardown = spec.teardown;
+        this.olFeatures = spec.olFeatures || [];
+    }
 
-	VectorLayer.prototype = Object.create(Layer.prototype);
+    VectorLayer.prototype = Object.create(Layer.prototype);
 
-	/**
-	 * Activates the layer object. This should never be called manually.
-	 * @memberof VectorLayer
-	 * @private
-	 */
-	VectorLayer.prototype.activate = function() {
-		var layerSpec = {};
-		if ( this.strategies ) {
-			layerSpec.strategies = this.strategies;
-		}
-		if ( this.styleMap ) {
-			layerSpec.styleMap = this.styleMap;
-		}
-		this.olLayer = new OpenLayers.Layer.Vector( "Vector Layer", layerSpec );
-		this.setOpacity( this.opacity );
-		this.setEnabled( this.enabled );
-		this.setTheme( this.map.getTheme() );
-		this.map.olMap.addLayer( this.olLayer );
-		this.olLayer.addFeatures( this.olFeatures );
-		this.setZIndex( this.zIndex );
-	};
+    /**
+     * Activates the layer object. This should never be called manually.
+     * @memberof VectorLayer
+     * @private
+     */
+    VectorLayer.prototype.activate = function() {
+        var layerSpec = {};
+        if (this.strategies) {
+            layerSpec.strategies = this.strategies;
+        }
+        if (this.styleMap) {
+            layerSpec.styleMap = this.styleMap;
+        }
+        this.olLayer = new OpenLayers.Layer.Vector("Vector Layer", layerSpec);
+        this.setOpacity(this.opacity);
+        this.setEnabled(this.enabled);
+        this.setTheme(this.map.getTheme());
 
-	/**
-	 * Dectivates the layer object. This should never be called manually.
-	 * @memberof VectorLayer
-	 * @private
-	 */
-	VectorLayer.prototype.deactivate = function() {
-		if ( this.olLayer ) {
-			if ( this.olLayer.strategies ) {
-				this.olLayer.strategies.forEach( function( strategy ) {
-					strategy.deactivate();
-				});
-			}
-			this.olLayer.strategies = [];
-			this.map.olMap.removeLayer( this.olLayer );
-			this.olLayer.destroyFeatures();
-			this.olLayer.destroy();
-			this.olLayer = null;
-		}
-	};
+        this.map.olMap.addLayer(this.olLayer);
 
-	/**
-	 * Remove all features from the layer and add the new features
-	 * passed in
-	 *
-	 * @param {Array} featuresToAdd - Array of OpenLayers Features
-	 */
-	VectorLayer.prototype.setFeatures = function( featuresToAdd ) {
-		if ( this.olLayer ) {
-			this.olLayer.destroyFeatures();
-			this.olFeatures = featuresToAdd;
-			this.olLayer.addFeatures( featuresToAdd );
-		}
-	};
+        this.getData(this);
 
-	/**
-	 * Updates the theme associated with the layer.
-	 * @memberof VectorLayer
-	 *
-	 * @param {String} theme - The theme identifier string.
-	 */
-	VectorLayer.prototype.setTheme = function( theme ) {
-		this.theme = theme;
-	};
+        this.setZIndex(this.zIndex);
+    };
 
-	/**
-	 * Get the current theme for the layer.
-	 * @memberof VectorLayer
-	 *
-	 * @returns {String} The theme identifier string.
-	 */
-	VectorLayer.prototype.getTheme = function() {
-		return this.theme;
-	};
+    /**
+     * Dectivates the layer object. This should never be called manually.
+     * @memberof VectorLayer
+     * @private
+     */
+    VectorLayer.prototype.deactivate = function() {
+        this.teardown();
+        if (this.olLayer) {
+            if (this.olLayer.strategies) {
+                this.olLayer.strategies.forEach(function(strategy) {
+                    strategy.deactivate();
+                });
+            }
+            this.olLayer.strategies = [];
+            this.map.olMap.removeLayer(this.olLayer);
+            this.olLayer.destroyFeatures();
+            this.olLayer.destroy();
+            this.olLayer = null;
+        }
+    };
 
-	/**
-	 * Set the z index of the layer.
-	 * @memberof VectorLayer
-	 *
-	 * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
-	 */
-	VectorLayer.prototype.setZIndex = function( zIndex ) {
-		// we by-pass the OpenLayers.Map.setLayerIndex() method and manually
-		// set the z-index of the layer dev. setLayerIndex sets a relative
-		// index based on current map layers, which then sets a z-index. This
-		// caused issues with async layer loading.
-		this.zIndex = zIndex;
-		if ( this.olLayer ) {
-			$( this.olLayer.div ).css( 'z-index', zIndex );
-			PubSub.publish( this.getChannel(), {
-				field: 'zIndex',
-				value: zIndex
-			});
-		}
-	};
+    /**
+     * Remove all features from the layer and add the new features
+     * passed in
+     *
+     * @param {Array} featuresToAdd - Array of OpenLayers Features
+     */
+    VectorLayer.prototype.setFeatures = function(featuresToAdd) {
+        if (this.olLayer) {
+            this.olLayer.destroyFeatures();
+            this.olFeatures = featuresToAdd;
+            this.olLayer.addFeatures(featuresToAdd);
+        }
+    };
 
-	/**
-	 * Get the layers zIndex.
-	 * @memberof VectorLayer
-	 *
-	 * @returns {integer} The zIndex for the layer.
-	 */
-	VectorLayer.prototype.getZIndex = function() {
-		return this.zIndex;
-	};
+    /**
+     * Updates the theme associated with the layer.
+     * @memberof VectorLayer
+     *
+     * @param {String} theme - The theme identifier string.
+     */
+    VectorLayer.prototype.setTheme = function(theme) {
+        this.theme = theme;
+    };
 
-	module.exports = VectorLayer;
+    /**
+     * Get the current theme for the layer.
+     * @memberof VectorLayer
+     *
+     * @returns {String} The theme identifier string.
+     */
+    VectorLayer.prototype.getTheme = function() {
+        return this.theme;
+    };
+
+    /**
+     * Set the z index of the layer.
+     * @memberof VectorLayer
+     *
+     * @param {integer} zIndex - The new z-order value of the layer, where 0 is front.
+     */
+    VectorLayer.prototype.setZIndex = function(zIndex) {
+        // we by-pass the OpenLayers.Map.setLayerIndex() method and manually
+        // set the z-index of the layer dev. setLayerIndex sets a relative
+        // index based on current map layers, which then sets a z-index. This
+        // caused issues with async layer loading.
+        this.zIndex = zIndex;
+        if (this.olLayer) {
+            $(this.olLayer.div).css('z-index', zIndex);
+            PubSub.publish(this.getChannel(), {
+                field: 'zIndex',
+                value: zIndex
+            });
+        }
+    };
+
+    /**
+     * Get the layers zIndex.
+     * @memberof VectorLayer
+     *
+     * @returns {integer} The zIndex for the layer.
+     */
+    VectorLayer.prototype.getZIndex = function() {
+        return this.zIndex;
+    };
+
+    module.exports = VectorLayer;
 }());
