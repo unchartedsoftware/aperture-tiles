@@ -13,14 +13,16 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.json.JSONObject;
@@ -49,7 +51,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private AOITilePyramid AOIP; //
 
-	private Node node;
 	private Client client;
 
 	private String index;
@@ -64,28 +65,24 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		this.xField = xField;
 		this.yField = yField;
 		this.bounds = aoi_bounds;
+		this.AOIP = new AOITilePyramid(bounds.get(0),bounds.get(1),bounds.get(2),bounds.get(3));
 
-		if ( this.node == null ) {
+		if ( this.client == null ) {
 			LOGGER.debug("Existing node not found.");
 			try{
-				Node node = NodeBuilder.nodeBuilder()
-					.loadConfigSettings(false)
-					.data(false)
-					.client(true)
-					.clusterName(esClusterName)
-					.node();
-				this.node = node;
+				Settings settings = ImmutableSettings.settingsBuilder()
+					.put("cluster.name",esClusterName).build();
+				this.client = new TransportClient(settings)
+					.addTransportAddress(new InetSocketTransportAddress("memex1",9300))
+					.addTransportAddress(new InetSocketTransportAddress("memex2", 9300))
+					.addTransportAddress(new InetSocketTransportAddress("memex3", 9300));
+
 			}catch (IllegalArgumentException e){
 				LOGGER.debug("Illegal arguments to Elasticsearch node builder.");
 			}
-
-			Client client = node.client();
-			this.client = client;
-			this.AOIP = new AOITilePyramid(bounds.get(0),bounds.get(1),bounds.get(2),bounds.get(3));
-
 		}
 		else {
-			LOGGER.debug("A node (probably) already exists.");
+			LOGGER.debug("An Elasticsearch client already exists.");
 		}
 	}
 
@@ -191,11 +188,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private Long getHistogramIntervalFromBounds(double start, double end) {
 		long interval = ((long) Math.floor((end - start) / TILE_PIXEL_DIMENSION));
+		// the calculated interval can be less than 1 if the data is sparse
 		// we cannot pass elasticsearch a histogram interval less than 1
+		// so set it to 1 
 		if (interval < 1) {
 			interval = 1;
 		}
-
 		return interval;
 	};
 
@@ -203,8 +201,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	public void shutdown(){
 		try {
 			LOGGER.debug("Shutting down the ES client");
-			this.node.stop();
-			this.node.close();
+//			this.node.stop();
+			this.client.close();
 		}catch(Exception e){
 			LOGGER.error("Couldn't close the elasticsearch connection", e);
 		}
