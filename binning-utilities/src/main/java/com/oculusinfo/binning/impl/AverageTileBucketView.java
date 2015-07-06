@@ -76,9 +76,10 @@ public class AverageTileBucketView<T extends Number> implements TileData<List<T>
 		int binSize = binContents.size();
 		Number result = 0.0;
 		
-		// if the bucket range falls outside of the available bin range, return empty list
-		boolean inRange = _endCompare >= 0 && _startCompare <= binSize;	
- 
+		// if the bucket range falls outside of the available bin range, return empty list.  null values assume full range
+		boolean inRange =  ( _endCompare == null && _startCompare == null )
+					    || ( _endCompare >= 0 && _startCompare <= binSize );
+
 		// If start or end (but not both) fall outside the bin range, constrain the range to available bin range
 		int start = ( _startCompare != null && _startCompare >= 0 ) ? _startCompare : 0;
 		int end = ( _endCompare != null && _endCompare < binSize ) ? _endCompare : binSize;
