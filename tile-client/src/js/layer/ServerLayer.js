@@ -278,8 +278,8 @@
                 maximum = 0,
                 i;
             for ( i=start; i<=stop; i++ ) {
-                minimum += minMax.minimum[i];
-                maximum += minMax.maximum[i];
+                minimum += minMax.minimum[i] || 0;
+                maximum += minMax.maximum[i] || 0;
             }
             return {
                 minimum: minimum,
@@ -459,6 +459,32 @@
     ServerLayer.prototype.getTileTransformType = function () {
         return this.tileTransform.type;
     };
+
+	/**
+     * Set the tile transform data based on the time range passed in
+     * @memberof ServerLayer
+     *
+     * @param {number} start - A unix timestamp representing the start of the time range
+     * @param {number} end - A unix timestamp representing the end of the time range
+     */
+    ServerLayer.prototype.setTileTransformRange = function ( start, end ) {
+        var meta = this.source.meta.meta,
+			rangeMin = meta.rangeMin,
+			rangeMax = meta.rangeMax,
+			numBuckets = meta.bucketCount,
+            bucketSize = ( rangeMax - rangeMin ) / numBuckets;
+        if ( start > rangeMax && end < rangeMin ) {
+            // outside range completely, send empty request
+			this.setTileTransformData({
+    			startBucket: -1,
+    			endBucket: -1
+            });
+		}
+        this.setTileTransformData({
+			startBucket: Math.max( 0, Math.floor( ( start - rangeMin ) / bucketSize ) ),
+			endBucket: Math.min( numBuckets-1, Math.floor( ( end - rangeMin ) / bucketSize ) )
+        });
+	};
 
     /**
      * Set the tile transform data attribute

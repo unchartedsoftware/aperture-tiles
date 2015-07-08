@@ -83,7 +83,7 @@ public class AvgDivBucketTileTransformer<T extends Number> implements TileTransf
 	@Override
 	public TileData<List<T>> transform (TileData<List<T>> inputData) throws Exception {
 		if ( _startBucket != null && _endBucket != null ) {
-			if ( _startBucket < 0 || _startBucket > _endBucket ) {
+			if ( _startBucket > _endBucket ) {
 				throw new IllegalArgumentException("Average filter by time transformer arguments are invalid");
 			}
 		}

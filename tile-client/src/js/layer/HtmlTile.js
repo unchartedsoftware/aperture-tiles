@@ -41,6 +41,10 @@
 
     OpenLayers.Tile.HTML.prototype = Object.create( OpenLayers.Tile.prototype );
 
+    OpenLayers.Tile.HTML.prototype.getTile = function() {
+        return this.div;
+    };
+
     OpenLayers.Tile.HTML.prototype.draw = function() {
         var that = this,
             shouldDraw = OpenLayers.Tile.prototype.draw.apply( this, arguments ),
@@ -56,6 +60,8 @@
                 this.tileIndex = LayerUtil.getTileIndex( this.layer, this.bounds );
                 this.tilekey = this.tileIndex.level + "," + this.tileIndex.xIndex + "," + this.tileIndex.yIndex;
 
+                this.events.triggerEvent( 'beforeload' );
+
                 // new url to render
                 if ( this.isLoading ) {
                     this.dataRequests.forEach( function( request ) {
@@ -63,6 +69,9 @@
                     });
                     this.dataRequests = null;
                     this.isLoading = false;
+                    this._loadEvent = "reload";
+                } else {
+                    this._loadEvent = "loadstart";
                 }
 
                 if ( !this.url ) {
@@ -75,6 +84,8 @@
                 this.isLoading = true;
                 var deferreds = [],
                     requestTilekey = this.tilekey;
+
+                this.events.triggerEvent( this._loadEvent );
 
                 this.dataRequests = dataUrl.map( function( url ) {
                     var deferred = $.Deferred();
@@ -114,6 +125,7 @@
                     }
                 ).always(
                     function() {
+                        that.events.triggerEvent("loadend");
                         that.isLoading = false;
                         that.dataRequest = null;
                     }
@@ -218,16 +230,24 @@
         // if aggregator, aggregate the data
         aggregator = renderer.aggregator;
         if ( aggregator ) {
+            var outOfRangeCount = 0;
             data.forEach( function( datum ) {
                 if ( datum.tile ) {
                     datum.tile.meta = {
                         raw: datum.tile.meta.map.bins,
                         aggregated: aggregator.aggregate( datum.tile.meta.map.bins )
                     };
-                } else {
-                    datum.tile = null;
+                    // check if requested range is outside of available range
+                    if ( datum.tile.meta.aggregated.length === 0 ) {
+                        // no data, flag as out of range
+                        outOfRangeCount++;
+                    }
                 }
             });
+            // if all data is outside the range, exit early
+            if ( outOfRangeCount === data.length ) {
+                return;
+            }
         }
 
         // unwrap if only a single entry

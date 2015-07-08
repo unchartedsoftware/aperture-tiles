@@ -253,12 +253,38 @@
     };
 
     /**
-     * Set the tile transform data attribute
+     * Set the tile transform data based on the time range passed in
+     * @memberof ClientLayer
+     *
+     * @param {number} start - A unix timestamp representing the start of the time range
+     * @param {number} end - A unix timestamp representing the end of the time range
+     */
+    ClientLayer.prototype.setTileTransformRange = function ( start, end ) {
+		var meta = this.source.meta.meta,
+			rangeMin = meta.rangeMin,
+			rangeMax = meta.rangeMax,
+			numBuckets = meta.bucketCount,
+            bucketSize = ( rangeMax - rangeMin ) / numBuckets;
+        if ( start > rangeMax && end < rangeMin ) {
+            // outside range completely, send empty request
+			this.setTileTransformData({
+    			startBucket: -1,
+    			endBucket: -1
+            });
+		}
+		this.setTileTransformData({
+			startBucket: Math.max( 0, Math.floor( ( start - rangeMin ) / bucketSize ) ),
+			endBucket: Math.min( numBuckets - 1, Math.floor( ( end - rangeMin ) / bucketSize ) )
+        });
+	};
+
+    /**
+     * Set the tile transform data attribute internally
      * @memberof ClientLayer
      *
      * @param {Object} transformData - The tile transform data attribute.
      */
-    ClientLayer.prototype.setTileTransformData = function ( transformData ) {
+	ClientLayer.prototype.setTileTransformData = function( transformData ) {
         if ( this.tileTransform.data !== transformData ) {
             this.tileTransform.data = transformData;
             this.redraw();
@@ -335,8 +361,8 @@
                 if ( aggregated instanceof Array ) {
                     // take the first and last index, which correspond to max / min
                     levelMinMax = {
-                        minimum: aggregated[aggregated.length - 1],
-                        maximum: aggregated[0]
+                        minimum: aggregated[aggregated.length - 1] || null,
+                        maximum: aggregated[0] || null
                     };
                 } else {
                     //

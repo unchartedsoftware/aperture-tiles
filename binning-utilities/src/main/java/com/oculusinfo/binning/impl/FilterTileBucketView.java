@@ -52,7 +52,7 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		_startBucket = startBucket;
 		_endBucket = endBucket;
 		if ( _startBucket != null && _endBucket != null ) {
-			if ( _startBucket < 0 || _startBucket > _endBucket ) {
+			if ( _startBucket > _endBucket ) {
 				throw new IllegalArgumentException( "Constructor for FilterTileBucketView: arguments are invalid.  start bucket: " + _startBucket + ", end bucket: " + _endBucket );
 			}
 		}
@@ -71,12 +71,21 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		else {
 			List<T> ourDefault = new ArrayList<>();
 			int binSize = baseDefault.size();
-			int start = ( _startBucket != null ) ? _startBucket : 0;
+			
+			// if the bucket range falls outside of the available bin range, return empty list.  null values assume full range
+			boolean inRange =  ( _endBucket == null && _startBucket == null )
+						    || ( _endBucket >= 0 && _startBucket <= binSize );
+			
+			// If start or end (but not both) fall outside the bin range, constrain the range to available bin range
+			int start = ( _startBucket != null && _startBucket >= 0 ) ? _startBucket : 0;
 			int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
 
 			for(int i = 0; i < binSize; i++) {
-				if (i >= start && i <= end) ourDefault.add(baseDefault.get(i));
-				else ourDefault.add(null);
+				if (i >= start && i <= end && inRange ) {
+					ourDefault.add(baseDefault.get(i));
+				} else {
+					ourDefault.add(null);
+				}
 			}
 			return ourDefault;
 		}
@@ -105,11 +114,16 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 
 		List<T> binContents = _base.getBin(x, y);
 		int binSize = binContents.size();
-		int start = ( _startBucket != null ) ? _startBucket : 0;
+		
+		// if the bucket range falls outside of the available bin range, return empty list.  null values assume full range
+		boolean inRange =  ( _endBucket == null && _startBucket == null )
+					    || ( _endBucket >= 0 && _startBucket <= binSize );
+		
+		int start = ( _startBucket != null && _startBucket >= 0 ) ? _startBucket : 0;
 		int end = ( _endBucket != null && _endBucket < binSize ) ? _endBucket : binSize;
 
 		for(int i = 0; i < binSize; i++) {
-			if ( i >= start && i <= end ) {
+			if ( i >= start && i <= end && inRange ) {
 				binContents.set(i, binContents.get(i));
 			} else {
 				binContents.set(i, null);

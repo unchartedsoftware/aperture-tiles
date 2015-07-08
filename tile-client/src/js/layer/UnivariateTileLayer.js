@@ -269,7 +269,7 @@
      * Override this method to only shift the appropriate row or column
      * of the grid depending the the dimension this layer represents.
      */
-    OpenLayers.Layer.Univariate.prototype.moveGriddedTiles = function(deferred) {
+    OpenLayers.Layer.Univariate.prototype.moveGriddedTiles = function() {
         var buffer = this.buffer + 1;
         while(true) {
             var tlTile = this.grid[0][0];

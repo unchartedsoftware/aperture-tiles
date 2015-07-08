@@ -65,7 +65,7 @@ public interface TileTransformer<T> {
 	 * Computes transformed level extrema from a layer configuration.
 	 *
 	 * @param config
-	 * @return
+	 * @return Pair<Double, Double> - extrema for tile
 	 * @throws ConfigurationException
 	 */
 	Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException;
