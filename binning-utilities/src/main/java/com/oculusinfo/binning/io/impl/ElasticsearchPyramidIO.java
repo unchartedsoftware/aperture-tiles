@@ -59,7 +59,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private List<Double> bounds;
 
-	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String xField, String yField, List<Double> aoi_bounds) {
+	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String xField, String yField, List<Double> aoi_bounds, String esTransportAddress, int esTransportPort) {
 
 		this.index = esIndex;
 		this.xField = xField;
@@ -71,11 +71,11 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			LOGGER.debug("Existing node not found.");
 			try{
 				Settings settings = ImmutableSettings.settingsBuilder()
-					.put("cluster.name",esClusterName).build();
+					.put("cluster.name", esClusterName)
+					.put("client.transport.sniff", true)
+					.put("sniffOnConnection", true).build();
 				this.client = new TransportClient(settings)
-					.addTransportAddress(new InetSocketTransportAddress("memex1",9300))
-					.addTransportAddress(new InetSocketTransportAddress("memex2", 9300))
-					.addTransportAddress(new InetSocketTransportAddress("memex3", 9300));
+					.addTransportAddress(new InetSocketTransportAddress(esTransportAddress, esTransportPort));
 
 			}catch (IllegalArgumentException e){
 				LOGGER.debug("Illegal arguments to Elasticsearch node builder.");
