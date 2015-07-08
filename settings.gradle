@@ -8,6 +8,9 @@ ext.tileGenProjects = [
 		'tile-packaging'
 ] as Set
 
+ext.tileServerProjects = ['tile-server'] as Set
+tileServerProjects.addAll(tileGenProjects)
+
 // tile client/server Projects
 ext.clientServerProjects = [
 		'math-utilities',
@@ -18,6 +21,7 @@ ext.clientServerProjects = [
 		'spark-tile-utilities',
 		'tile-rendering',
 		'tile-service',
+		'tile-server',
 		'annotation-service',
 		'tile-client',
 		'tile-client-template',
@@ -41,11 +45,14 @@ switch (buildProjects) {
 	case "clientServer":
 		ext.projects = clientServerProjects
 		break
+	case "tileServer":
+		ext.projects = tileServerProjects
+		break
 	case "liveTiling":
 		ext.projects = liveTileGenProjects
 		break
 	case "all":
-		ext.projects = tileGenProjects + clientServerProjects
+		ext.projects = tileGenProjects + clientServerProjects + tileServerProjects
 		break
 	default:
 		throw new StopExecutionException("Unsupported build type '$buildProjects' specified")

@@ -1,0 +1,161 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+description = "A Spark-based service that can serve tiles to clients, using RabbitMQ"
+
+// Configure for scala compilation via the scala plugin
+apply plugin: "scala"
+
+// appends scala test functionality to the baseline test task
+test << {
+	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
+	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+		reporter(type: 'file', filename: 'test.output')
+	}
+}
+
+// Task to create a JAR from all source (scala and java)
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource, sourceSets.test.allSource
+}
+
+// Task to create a scaladoc JAR
+task scaladocJar(type: Jar, dependsOn: scaladoc) {
+	classifier = "scaladoc"
+	from scaladoc.destinationDir
+}
+
+// Task to create a javadoc JAR
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+}
+
+// Task to create a jar of test classes
+task testJar(type: Jar) {
+	classifier = "tests"
+	from sourceSets.test.output
+}
+
+// Copy and filter resources files.  This uses a baseline copy task, and applies
+// Ant's token functionality to filter values.
+task copyFilteredResources(type: Copy) {
+	from "src/main/filtered-resources-gradle"
+	into "src/main/resources"
+	filter ReplaceTokens, tokens:[
+			"project-version": version.toString(),
+			"hadoop-core-version": hadoopCoreVersion.toString(),
+			"hbase-version": hbaseVersion.toString()
+	]
+}
+// Make sure the above tasks run before resource processing.
+processResources.dependsOn copyFilteredResources
+
+
+// Configure a jar task to build a fat jar that includes
+// dependencies added ot the assemblyJarReq config.
+task assemblyJar(type: Jar) {
+	classifier = "assembly"
+	from files(sourceSets.main.output.classesDir)
+	from {
+		configurations.assemblyJarReq.collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+}
+assemblyJar.mustRunAfter "jar"
+
+// produce artifacts using the tasks above
+artifacts {
+	archives sourcesJar
+	archives scaladocJar
+	archives javadocJar
+	archives testJar
+	archives assemblyJar
+}
+
+// Add a delete to the clean task that will remove the resource files.
+clean {
+	inputs.file "src/main/resources/build.properties"
+	delete "src/main/resources/build.properties"
+}
+
+// Create a configuration to hold jars that we need to roll into our fat jar.  Disable transitive dependency
+// resolution, since we only want the jars we specifically list.
+configurations {
+	assemblyJarReq {
+		transitive = false
+	}
+	// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
+	// the impl of the servlet api, which ends up generating a security exception.  We force exclude
+	// the signed api jar here, and force include the unsigned api jar below.
+	compile.exclude group: "org.eclipse.jetty.orbit", module: "javax.servlet"
+}
+
+// By default the Gradle scala plugin builds java code before scala code.  This leads to problems
+// in our setup because the scala code in this project is used by the java code (causing
+// compile errors).  We force the plugin to use an empty source set for java, and then set the
+// scala source to both scala and java.  The scala compiler generates class files for both without
+// issue.  This is a bit of hack, and can be fixed by re-organizing our code so that we don't mix
+// scala and java in the same project.
+sourceSets {
+	main {
+		scala {
+			srcDirs = ["src/main/scala", "src/main/java"]
+		}
+		java {
+			srcDirs = []
+		}
+	}
+}
+
+// Jars / projects this project depends on.
+dependencies {
+	// Compile config - needed to build
+	compile "org.apache.spark:spark-core_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-sql_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-streaming_$dependencyScalaVersion:$sparkVersion"
+	compile "org.apache.spark:spark-graphx_$dependencyScalaVersion:$sparkVersion"
+	compile("org.apache.hadoop:hadoop-client:$hadoopCoreVersion"){
+		// The following are excluded by spark, so we exclude them too.
+		exclude group: "asm", module: "asm"
+		exclude group: "org.jboss.netty", module: "netty"
+		exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+		exclude group: "javax.servlet", module: "servlet-api"
+	}
+	compile "org.scala-lang:scala-library:$scalaVersion"
+	compile "org.clapper:grizzled-slf4j_2.10:1.0.2"
+	compile "com.rabbitmq:amqp-client:3.5.3"
+	compile project(":binning-utilities")
+	compile project(":geometric-utilities")
+	compile project(":tile-generation")
+	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
+	testCompile project(path: ':binning-utilities', configuration: 'tests')
+
+	// Spark uses the signed version of the servlet api.  Hadoop uses (unsigned) jetty 8 to provide
+	// the impl of the servlet api, which ends up generating a security exception.  We force include
+	// the unsigned api jar here, and force include the unsigned api jar above.
+	compile "javax.servlet:javax.servlet-api:3.0.1"
+
+	// Call for special handling for hbase dependencies - see top level build file for
+	// definition and explanation.
+	addHBaseDependencies()
+
+	// assemblyJarReq config - these get rolled into the fatjar as they aren't provided by CDH/Spark
+	// at runtime.
+	assemblyJarReq project (":geometric-utilities")
+	assemblyJarReq project (":binning-utilities")
+	assemblyJarReq project (":factory-utilities")
+	assemblyJarReq project (":tile-generation")
+	assemblyJarReq "org.json:json:20090211"
+	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
+	assemblyJarReq "com.rabbitmq:amqp-client:3.5.3"
+	addHBaseDependencies("assemblyJarReq")
+}
+
+afterEvaluate {
+	println "Assembly dependencies"
+	configurations['assemblyJarReq'].allDependencies.each { dep ->
+		println "      ${dep.group}:${dep.name}:${dep.version}"
+	}
+}
