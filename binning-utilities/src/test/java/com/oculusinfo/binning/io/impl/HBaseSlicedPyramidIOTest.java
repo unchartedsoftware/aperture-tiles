@@ -345,7 +345,27 @@ public class HBaseSlicedPyramidIOTest {
 		for (Result rr : scanner) {
 			byte[] key = rr.getRow();
 			String keyName = new String(key);
-			System.out.println(keyName);
+			if (keyName.equals("metadata")) continue;
+			String[] parts = keyName.split(",");
+			int level = Integer.parseInt(parts[0]);
+			while (parts[1].startsWith("0")) parts[1] = parts[1].substring(1);
+			int x = Integer.parseInt(parts[1]);
+			while (parts[2].startsWith("0")) parts[2] = parts[2].substring(1);
+			int y = Integer.parseInt(parts[2]);
+//			if (level > 12) {
+//				int tx = x;
+//				int ty = y;
+//				int tl = level;
+//				while (tl > 12) {
+//					tl--;
+//					tx = (int) Math.floor(tx/2.0);
+//					ty = (int) Math.floor(ty/2.0);
+//				}
+//				if (tx == 1206 && ty == 2556) {
+//					System.out.println(keyName);
+//				}
+//			}
+			if (level > 14) System.out.println(keyName);
 		}
 	}
 
@@ -375,6 +395,137 @@ public class HBaseSlicedPyramidIOTest {
 		return c;
 	}
 
+	private Map<Integer, Map<TileIndex, TileData<List<Integer>>>> data12_1206_2556 (PyramidIO io, TileSerializer<List<Integer>> serializer, String table, int slice) throws Exception {
+		Map<Integer, Map<TileIndex, TileData<List<Integer>>>> result = new HashMap<>();
+		result.put(12, getTileMap(io, serializer, table, slice,
+			                      Arrays.asList(new TileIndex(12, 1206, 2556))));
+		result.put(13, getTileMap(io, serializer, table, slice,
+			                      Arrays.asList(new TileIndex(13,2412,5112),
+									            new TileIndex(13,2412,5113),
+									            new TileIndex(13,2413,5112),
+									            new TileIndex(13,2413,5113))));
+		result.put(14, getTileMap(io, serializer, table, slice,
+			                      Arrays.asList(new TileIndex(14,4824,10224),
+									            new TileIndex(14,4824,10225),
+									            new TileIndex(14,4824,10226),
+									            new TileIndex(14,4824,10227),
+									            new TileIndex(14,4825,10225),
+									            new TileIndex(14,4825,10226),
+									            new TileIndex(14,4825,10227),
+									            new TileIndex(14,4827,10224),
+									            new TileIndex(14,4827,10225),
+									            new TileIndex(14,4827,10226),
+									            new TileIndex(14,4827,10227))));
+
+		return result;
+	}
+
+	private Map<Integer, Map<TileIndex, TileData<List<Integer>>>> dataFull (PyramidIO io, TileSerializer<List<Integer>> serializer, String table, int slice) throws Exception {
+		Map<TileIndex, TileData<List<Integer>>> level8 =
+			getTileMap(io, serializer, table, slice,
+				Arrays.asList(new TileIndex(8, 75, 159)));
+		Map<TileIndex, TileData<List<Integer>>> level9 =
+			getTileMap(io, serializer, table, slice,
+				Arrays.asList(new TileIndex(9, 150, 319), new TileIndex(9, 151, 319)));
+		Map<TileIndex, TileData<List<Integer>>> level10 =
+			getTileMap(io, serializer, table, slice,
+				Arrays.asList(new TileIndex(10, 300, 638), new TileIndex(10, 301, 638),
+					new TileIndex(10, 301, 639), new TileIndex(10, 302, 638),
+					new TileIndex(10, 302, 639)));
+		Map<TileIndex, TileData<List<Integer>>> level11 =
+			getTileMap(io, serializer, table, slice,
+				Arrays.asList(new TileIndex(11, 601, 1276), new TileIndex(11, 601, 1277),
+					new TileIndex(11, 602, 1276), new TileIndex(11, 602, 1277),
+					new TileIndex(11, 602, 1278), new TileIndex(11, 603, 1276),
+					new TileIndex(11, 603, 1277), new TileIndex(11, 603, 1278),
+					new TileIndex(11, 603, 1279), new TileIndex(11, 604, 1276),
+					new TileIndex(11, 604, 1277), new TileIndex(11, 604, 1278),
+					new TileIndex(11, 604, 1279)));
+		Map<TileIndex, TileData<List<Integer>>> level12 =
+			getTileMap(io, serializer, table, slice,
+				Arrays.asList(new TileIndex(12, 1202, 2552), new TileIndex(12, 1202, 2553),
+					new TileIndex(12, 1203, 2552), new TileIndex(12, 1203, 2553),
+					new TileIndex(12, 1203, 2554), new TileIndex(12, 1203, 2555),
+					new TileIndex(12, 1204, 2552), new TileIndex(12, 1204, 2553),
+					new TileIndex(12, 1204, 2554), new TileIndex(12, 1204, 2555),
+					new TileIndex(12, 1205, 2554), new TileIndex(12, 1205, 2555),
+					new TileIndex(12, 1205, 2556), new TileIndex(12, 1206, 2553),
+					new TileIndex(12, 1206, 2554), new TileIndex(12, 1206, 2555),
+					new TileIndex(12, 1206, 2556), new TileIndex(12, 1206, 2557),
+					new TileIndex(12, 1206, 2558), new TileIndex(12, 1207, 2553),
+					new TileIndex(12, 1207, 2554), new TileIndex(12, 1207, 2555),
+					new TileIndex(12, 1207, 2556), new TileIndex(12, 1207, 2557),
+					new TileIndex(12, 1207, 2558), new TileIndex(12, 1208, 2553),
+					new TileIndex(12, 1208, 2554), new TileIndex(12, 1208, 2555),
+					new TileIndex(12, 1208, 2556), new TileIndex(12, 1208, 2557),
+					new TileIndex(12, 1208, 2558), new TileIndex(12, 1209, 2554),
+					new TileIndex(12, 1209, 2555), new TileIndex(12, 1209, 2556)));
+		Map<TileIndex, TileData<List<Integer>>> level13 =
+			getTileMap(io, serializer, table, slice,
+				Arrays.asList(
+					new TileIndex(13, 2405, 5104), new TileIndex(13, 2405, 5105),
+					new TileIndex(13, 2405, 5106), new TileIndex(13, 2406, 5104),
+					new TileIndex(13, 2406, 5105), new TileIndex(13, 2406, 5106),
+					new TileIndex(13, 2406, 5107), new TileIndex(13, 2406, 5108),
+					new TileIndex(13, 2406, 5109), new TileIndex(13, 2407, 5105),
+					new TileIndex(13, 2407, 5106), new TileIndex(13, 2407, 5107),
+					new TileIndex(13, 2407, 5108), new TileIndex(13, 2407, 5109),
+					new TileIndex(13, 2407, 5110), new TileIndex(13, 2408, 5105),
+					new TileIndex(13, 2408, 5106), new TileIndex(13, 2408, 5107),
+					new TileIndex(13, 2408, 5108), new TileIndex(13, 2408, 5109),
+					new TileIndex(13, 2408, 5110), new TileIndex(13, 2409, 5107),
+					new TileIndex(13, 2409, 5108), new TileIndex(13, 2409, 5109),
+					new TileIndex(13, 2409, 5110), new TileIndex(13, 2410, 5108),
+					new TileIndex(13, 2410, 5109), new TileIndex(13, 2410, 5110),
+					new TileIndex(13, 2411, 5108), new TileIndex(13, 2411, 5109),
+					new TileIndex(13, 2411, 5110), new TileIndex(13, 2411, 5111),
+					new TileIndex(13, 2411, 5112), new TileIndex(13, 2411, 5113),
+					new TileIndex(13, 2412, 5107), new TileIndex(13, 2412, 5108),
+					new TileIndex(13, 2412, 5109), new TileIndex(13, 2412, 5110),
+					new TileIndex(13, 2412, 5111), new TileIndex(13, 2412, 5112),
+					new TileIndex(13, 2412, 5113), new TileIndex(13, 2412, 5114),
+					new TileIndex(13, 2412, 5115), new TileIndex(13, 2413, 5107),
+					new TileIndex(13, 2413, 5108), new TileIndex(13, 2413, 5109),
+					new TileIndex(13, 2413, 5110), new TileIndex(13, 2413, 5111),
+					new TileIndex(13, 2413, 5112), new TileIndex(13, 2413, 5113),
+					new TileIndex(13, 2413, 5114), new TileIndex(13, 2413, 5115),
+					new TileIndex(13, 2413, 5116), new TileIndex(13, 2413, 5117),
+					new TileIndex(13, 2414, 5107), new TileIndex(13, 2414, 5109),
+					new TileIndex(13, 2414, 5110), new TileIndex(13, 2414, 5111),
+					new TileIndex(13, 2414, 5112), new TileIndex(13, 2414, 5113),
+					new TileIndex(13, 2414, 5114), new TileIndex(13, 2414, 5115),
+					new TileIndex(13, 2414, 5116), new TileIndex(13, 2414, 5117),
+					new TileIndex(13, 2415, 5107), new TileIndex(13, 2415, 5109),
+					new TileIndex(13, 2415, 5110), new TileIndex(13, 2415, 5111),
+					new TileIndex(13, 2415, 5112), new TileIndex(13, 2415, 5113),
+					new TileIndex(13, 2415, 5114), new TileIndex(13, 2415, 5115),
+					new TileIndex(13, 2415, 5116), new TileIndex(13, 2415, 5117),
+					new TileIndex(13, 2416, 5107), new TileIndex(13, 2416, 5108),
+					new TileIndex(13, 2416, 5109), new TileIndex(13, 2416, 5110),
+					new TileIndex(13, 2416, 5111), new TileIndex(13, 2416, 5112),
+					new TileIndex(13, 2416, 5113), new TileIndex(13, 2416, 5114),
+					new TileIndex(13, 2416, 5115), new TileIndex(13, 2416, 5116),
+					new TileIndex(13, 2416, 5117), new TileIndex(13, 2417, 5107),
+					new TileIndex(13, 2417, 5108), new TileIndex(13, 2417, 5109),
+					new TileIndex(13, 2417, 5110), new TileIndex(13, 2417, 5111),
+					new TileIndex(13, 2417, 5112), new TileIndex(13, 2417, 5113),
+					new TileIndex(13, 2417, 5114), new TileIndex(13, 2418, 5108),
+					new TileIndex(13, 2418, 5109), new TileIndex(13, 2418, 5110),
+					new TileIndex(13, 2418, 5111), new TileIndex(13, 2418, 5112),
+					new TileIndex(13, 2418, 5113)
+				));
+
+		Map<Integer, Map<TileIndex, TileData<List<Integer>>>> allTiles = new HashMap<>();
+		allTiles.put(8, level8);
+		allTiles.put(9, level9);
+		allTiles.put(10, level10);
+		allTiles.put(11, level11);
+		allTiles.put(12, level12);
+		allTiles.put(13, level13);
+
+		return allTiles;
+	}
+
 	// Make sure the various levels match in a weird tile set - i.e., make sure there are no lower-level holes that
 	// don't also exist at upper levels.
 	@Test
@@ -384,57 +535,13 @@ public class HBaseSlicedPyramidIOTest {
 		TileSerializer<List<Integer>> serializer = new KryoSerializer<>(new TypeDescriptor(List.class, new TypeDescriptor(Integer.class)));
 
 		for (int slice = 0; slice < 53; ++slice) {
-			Map<TileIndex, TileData<List<Integer>>> level8 =
-				getTileMap(io, serializer, table, slice,
-					Arrays.asList(new TileIndex(8, 75, 159)));
-			Map<TileIndex, TileData<List<Integer>>> level9 =
-				getTileMap(io, serializer, table, slice,
-					Arrays.asList(new TileIndex(9, 150, 319), new TileIndex(9, 151, 319)));
-			Map<TileIndex, TileData<List<Integer>>> level10 =
-				getTileMap(io, serializer, table, slice,
-					Arrays.asList(new TileIndex(10, 300, 638), new TileIndex(10, 301, 638),
-						new TileIndex(10, 301, 639), new TileIndex(10, 302, 638),
-						new TileIndex(10, 302, 639)));
-			Map<TileIndex, TileData<List<Integer>>> level11 =
-				getTileMap(io, serializer, table, slice,
-					Arrays.asList(new TileIndex(11, 601, 1276), new TileIndex(11, 601, 1277),
-						new TileIndex(11, 602, 1276), new TileIndex(11, 602, 1277),
-						new TileIndex(11, 602, 1278), new TileIndex(11, 603, 1276),
-						new TileIndex(11, 603, 1277), new TileIndex(11, 603, 1278),
-						new TileIndex(11, 603, 1279), new TileIndex(11, 604, 1276),
-						new TileIndex(11, 604, 1277), new TileIndex(11, 604, 1278),
-						new TileIndex(11, 604, 1279)));
-			Map<TileIndex, TileData<List<Integer>>> level12 =
-				getTileMap(io, serializer, table, slice,
-					Arrays.asList(new TileIndex(12, 1202, 2552), new TileIndex(12, 1202, 2553),
-						new TileIndex(12, 1203, 2552), new TileIndex(12, 1203, 2553),
-						new TileIndex(12, 1203, 2554), new TileIndex(12, 1203, 2555),
-						new TileIndex(12, 1204, 2552), new TileIndex(12, 1204, 2553),
-						new TileIndex(12, 1204, 2554), new TileIndex(12, 1204, 2555),
-						new TileIndex(12, 1205, 2554), new TileIndex(12, 1205, 2555),
-						new TileIndex(12, 1205, 2556), new TileIndex(12, 1206, 2553),
-						new TileIndex(12, 1206, 2554), new TileIndex(12, 1206, 2555),
-						new TileIndex(12, 1206, 2556), new TileIndex(12, 1206, 2557),
-						new TileIndex(12, 1206, 2558), new TileIndex(12, 1207, 2553),
-						new TileIndex(12, 1207, 2554), new TileIndex(12, 1207, 2555),
-						new TileIndex(12, 1207, 2556), new TileIndex(12, 1207, 2557),
-						new TileIndex(12, 1207, 2558), new TileIndex(12, 1208, 2553),
-						new TileIndex(12, 1208, 2554), new TileIndex(12, 1208, 2555),
-						new TileIndex(12, 1208, 2556), new TileIndex(12, 1208, 2557),
-						new TileIndex(12, 1208, 2558), new TileIndex(12, 1209, 2554),
-						new TileIndex(12, 1209, 2555), new TileIndex(12, 1209, 2556)));
 
-			Map<Integer, Map<TileIndex, TileData<List<Integer>>>> allTiles = new HashMap<>();
-			allTiles.put(8, level8);
-			allTiles.put(9, level9);
-			allTiles.put(10, level10);
-			allTiles.put(11, level11);
-			allTiles.put(12, level12);
+			for (int t = 8; t < 13; ++t) {
+				Map<Integer, Map<TileIndex, TileData<List<Integer>>>> allTiles = dataFull(io, serializer, table, slice);
 
-			for (int t = 8; t < 12; ++t) {
 				for (TileData<List<Integer>> topTile : allTiles.get(t).values()) {
 					TileIndex topIdx = topTile.getDefinition();
-					for (int b = t + 1; b < 13; ++b) {
+					for (int b = t + 1; b < 14; ++b) {
 						int lf = 1 << (b - t);
 						for (int x = 0; x < 256; ++x) {
 							for (int y = 0; y < 256; ++y) {
