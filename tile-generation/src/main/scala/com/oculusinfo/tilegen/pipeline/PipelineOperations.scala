@@ -37,6 +37,7 @@ import java.util.{GregorianCalendar, Date}
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.datasets.{SchemaTypeUtilities, CSVReader, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
