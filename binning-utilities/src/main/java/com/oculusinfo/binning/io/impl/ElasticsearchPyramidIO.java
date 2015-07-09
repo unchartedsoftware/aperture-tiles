@@ -3,6 +3,7 @@ package com.oculusinfo.binning.io.impl;
 import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
@@ -47,25 +48,26 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchPyramidIO.class);
 
-	public static final int TILE_PIXEL_DIMENSION = 256; //used to calculate histogram aggregation interval to fit into 256x256 pixels
-
-	private AOITilePyramid AOIP; //
-
 	private Client client;
 
 	private String index;
 	private String xField;
 	private String yField;
+	private TilePyramid tilePyramid;
 
-	private List<Double> bounds;
-
-	public ElasticsearchPyramidIO(String esClusterName, String esIndex, String xField, String yField, List<Double> aoi_bounds, String esTransportAddress, int esTransportPort) {
+	public ElasticsearchPyramidIO(
+		String esClusterName,
+		String esIndex,
+		String xField,
+		String yField,
+		String esTransportAddress,
+		int esTransportPort,
+		TilePyramid tilePyramid ) {
 
 		this.index = esIndex;
 		this.xField = xField;
 		this.yField = yField;
-		this.bounds = aoi_bounds;
-		this.AOIP = new AOITilePyramid(bounds.get(0),bounds.get(1),bounds.get(2),bounds.get(3));
+		this.tilePyramid = tilePyramid;
 
 		if ( this.client == null ) {
 			LOGGER.debug("Existing node not found.");
@@ -134,7 +136,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				switch (type){
 					case "terms":
 						Map termsMap = (Map)filter.get("terms");
-						List<String> termsList = new ArrayList();
+						List<String> termsList = new ArrayList<>();
 						for (Object key : termsMap.keySet()){
 							termsList.add((String)termsMap.get(key));
 						}
@@ -187,7 +189,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	}
 
 	private Long getHistogramIntervalFromBounds(double start, double end) {
-		long interval = ((long) Math.floor((end - start) / TILE_PIXEL_DIMENSION));
+		long interval = ((long) Math.floor((end - start) / 256));
 		// the calculated interval can be less than 1 if the data is sparse
 		// we cannot pass elasticsearch a histogram interval less than 1
 		// so set it to 1
@@ -197,11 +199,9 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		return interval;
 	};
 
-
 	public void shutdown(){
 		try {
 			LOGGER.debug("Shutting down the ES client");
-//			this.node.stop();
 			this.client.close();
 		}catch(Exception e){
 			LOGGER.error("Couldn't close the elasticsearch connection", e);
@@ -209,18 +209,24 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	}
 
 	@Override
-	public void initializeForWrite(String pyramidId) throws IOException {}
+	public void initializeForWrite(String pyramidId) throws IOException {
+
+	}
 
 	@Override
 	public <T> void writeTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileData<T>> data) throws IOException {}
 
 	@Override
-	public void writeMetaData(String pyramidId, String metaData) throws IOException {}
+	public void writeMetaData(String pyramidId, String metaData) throws IOException {
+
+	}
 
 	@Override
-	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {}
+	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
 
-	private Map<Integer, Map> aggregationMapParse(Histogram date_agg, TileIndex tileIndex) {
+	}
+
+	private Map<Integer, Map> parseAggregations(Histogram date_agg, TileIndex tileIndex) {
 		List<? extends Histogram.Bucket> dateBuckets = date_agg.getBuckets();
 
 		Map<Integer, Map> result = new HashMap<>();
@@ -231,14 +237,14 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			Histogram cluster_agg = dateBucket.getAggregations().get("yField");
 			List<? extends Histogram.Bucket> clusterBuckets = cluster_agg.getBuckets();
 
-			BinIndex xBinIndex = AOIP.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), 0, tileIndex);
+			BinIndex xBinIndex = tilePyramid.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), 0, tileIndex);
 			int xBin = xBinIndex.getX();
 			Map<Integer,Long> intermediate = new HashMap<>();
 			result.put(xBin, intermediate);
 
 			for( Histogram.Bucket clusterBucket : clusterBuckets) {
 				//given the bin coordinates, see if there's any data in those bins, add values to existing bins
-				BinIndex binIndex = AOIP.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), clusterBucket.getKeyAsNumber().doubleValue(), tileIndex);
+				BinIndex binIndex = tilePyramid.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), clusterBucket.getKeyAsNumber().doubleValue(), tileIndex);
 				int yBin = binIndex.getY();
 
 				if (result.containsKey(xBin) && result.get(xBin).containsKey(yBin)) {
@@ -262,7 +268,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		// iterate over the tile indices
 
 		for (TileIndex tileIndex: tiles) {
-			Rectangle2D rect = AOIP.getTileBounds(tileIndex);
+			Rectangle2D rect = tilePyramid.getTileBounds(tileIndex);
 
 			// get minimum/start time, max/end time
 			double startX = rect.getX();
@@ -272,7 +278,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, properties);
 			Histogram date_agg = sr.getAggregations().get("xField");
-			Map<Integer, Map> tileMap = aggregationMapParse(date_agg, tileIndex);
+			Map<Integer, Map> tileMap = parseAggregations(date_agg, tileIndex);
 			SparseTileData tileData = new SparseTileData(tileIndex,tileMap, 0);
 
 			results.add(tileData);
@@ -294,11 +300,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
 		//TODO find a better way to get bounds + level metadata
+		Rectangle2D bounds = tilePyramid.getBounds();
 		return "{\"bounds\":["+
-			bounds.get(0) + "," +
-			bounds.get(1) + "," +
-			bounds.get(2) + "," +
-			bounds.get(3) + "],"+
+			bounds.getMinX() + "," +
+			bounds.getMinY() + "," +
+			bounds.getMaxX() + "," +
+			bounds.getMaxY() + "],"+
 			"\"maxzoom\":1,\"scheme\":\"TMS\","+
 			"\"description\":\"Elasticsearch test layer\","+
 			"\"projection\":\"EPSG:4326\","+

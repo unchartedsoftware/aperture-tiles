@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -36,9 +36,9 @@ import java.util.Collection;
 /**
  * This interface represents a method of determining and using pyramided tiles
  * on a 2-D coordinate system.
- * 
+ *
  * There are four coordinate systems involved:
- * 
+ *
  * <ul>
  * <li>Root coordinates - the coordinate system of the geometry really being
  * described - typically lon/lat, for world coordinates</li>
@@ -54,13 +54,13 @@ import java.util.Collection;
  * {@link TileIndex#tileBinIndexToUniversalBinIndex(TileIndex, BinIndex)} and
  * {@link TileIndex#universalBinIndexToTileBinIndex(TileIndex, BinIndex)}.</li>
  * </ul>
- * 
+ *
  * @author nkronenfeld
  */
 public interface TilePyramid extends Serializable {
 	/**
 	 * Convert from root to tile coordinates
-	 * 
+	 *
 	 * @param point
 	 *            The coordinate of the point to be transformed, in the root
 	 *            coordinate system
@@ -72,7 +72,7 @@ public interface TilePyramid extends Serializable {
 
 	/**
 	 * Convert from root to tile coordinates
-	 * 
+	 *
 	 * @param point
 	 *            The coordinate of the point to be transformed, in the root
 	 *            coordinate system
@@ -109,7 +109,7 @@ public interface TilePyramid extends Serializable {
 
 	/**
 	 * Convert from root to tile coordinates
-	 * 
+	 *
 	 * @param x
 	 *            The x coordinate of the point to be transformed, in the root
 	 *            coordinate system
@@ -134,7 +134,7 @@ public interface TilePyramid extends Serializable {
 
 	/**
 	 * Convert from root to a particular bin coordinate
-	 * 
+	 *
 	 * @param point
 	 *            the coordinates of the point to be transformed, in the root
 	 *            coordinate system
@@ -147,7 +147,7 @@ public interface TilePyramid extends Serializable {
 
 	/**
 	 * Convert from root to a particular bin coordinate
-	 * 
+	 *
 	 * @param x
 	 *            The x coordinate of the point to be transformed, in the
 	 *            root coordinate system
@@ -163,7 +163,7 @@ public interface TilePyramid extends Serializable {
 
 	/**
 	 * Get the root coordinates of the bounds of a tile
-	 * 
+	 *
 	 * @param tile
 	 *            The tile in question
 	 * @return The root coordinates of the tile's bounds
@@ -172,7 +172,7 @@ public interface TilePyramid extends Serializable {
 
 	/**
 	 * Get the root coordinates of the bounds of a bin
-	 * 
+	 *
 	 * @param tile
 	 *            The tile in which the bin lies
 	 * @param bin
@@ -184,7 +184,7 @@ public interface TilePyramid extends Serializable {
 	/**
 	 * Get the percent of the area of the bin that is overlapped by the given
 	 * root-coordinate area.
-	 * 
+	 *
 	 * @param tile
 	 *            The tile of interest
 	 * @param bin
@@ -202,7 +202,7 @@ public interface TilePyramid extends Serializable {
 	 * Given a set of root bounds, gets the tile or tiles that should be taken
 	 * as the top of the pyramid one would use to investigate data within those
 	 * bounds
-	 * 
+	 *
 	 * @param bounds
 	 *            The bounds of the area of interest, in root coordinates.
 	 * @return A tile or set of tiles best used to look at the area of interest.
@@ -220,4 +220,7 @@ public interface TilePyramid extends Serializable {
 	 * @return Human-readable name for the tile scheme.
 	 */
 	public String getTileScheme ();
+
+
+	public Rectangle2D getBounds();
 }

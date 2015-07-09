@@ -171,7 +171,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
 		addProperty(RANGE_MODE, RENDERER_PATH);
-		addProperty( TILE_COORDINATE);
+		addProperty(TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);
 

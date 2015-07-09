@@ -1,5 +1,6 @@
 package com.oculusinfo.binning.io.impl;
 
+import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.util.JsonUtilities;
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -31,9 +32,6 @@ public class ElasticsearchPyramidIOFactory extends SharedInstanceFactory<Pyramid
 	public static StringProperty ES_INDEX = new StringProperty("es.index","The es index",null);
 	public static StringProperty ES_FIELD_X = new StringProperty("es.field.x","Elasticsearch field for x values",null);
 	public static StringProperty ES_FIELD_Y = new StringProperty("es.field.y","Elasticsearch field for y values",null);
-	public static JSONArrayProperty AOI_BOUNDS = new JSONArrayProperty("aoi.bounds", "elasticsearch AOI bounds", null);
-
-
 
 	public ElasticsearchPyramidIOFactory(ConfigurableFactory<?> parent, List<String> path) {
 		super("elasticsearch", PyramidIO.class, parent, path);
@@ -45,7 +43,6 @@ public class ElasticsearchPyramidIOFactory extends SharedInstanceFactory<Pyramid
 		addProperty(ES_INDEX);
 		addProperty(ES_FIELD_X);
 		addProperty(ES_FIELD_Y);
-		addProperty(AOI_BOUNDS);
 	}
 
 	@Override
@@ -61,21 +58,9 @@ public class ElasticsearchPyramidIOFactory extends SharedInstanceFactory<Pyramid
 			String es_field_x = getPropertyValue(ES_FIELD_X);
 			String es_field_y = getPropertyValue(ES_FIELD_Y);
 
-			JSONArray aoi_array = getPropertyValue(AOI_BOUNDS);
-			List<Double> bounds = new ArrayList<>();
-			try{
-				if (aoi_array != null){
-					List<Object> aoi_bounds = JsonUtilities.jsonArrayToList(aoi_array);
-					for(int i = 0; i < aoi_bounds.size(); i++){
-						bounds.add( (Double) aoi_bounds.get(i));
-					}
-				}
-			} catch (Exception e){
-				throw new ConfigurationException();
-			}
+			TilePyramid tile_pyramid = getRoot().produce( TilePyramid.class );
 
-			return new ElasticsearchPyramidIO(cluster_name, elastic_index, es_field_x, es_field_y, bounds,
-				transport_address,transport_port );
+			return new ElasticsearchPyramidIO(cluster_name, elastic_index, es_field_x, es_field_y, transport_address, transport_port, tile_pyramid );
 
 		}catch (Exception e){
 			LOGGER.error("Error creating ES pyramidio", e);
