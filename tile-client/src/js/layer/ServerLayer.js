@@ -535,6 +535,15 @@
         return this.renderer.coarseness;
     };
 
+    ServerLayer.prototype.setFilterParams = function( filter ) {
+    	this.filterParams = filter;
+    	this.redraw();
+    }
+
+    ServerLayer.prototype.getFilterParams = function(){
+    	return this.filterParams ? this.filterParams : null;
+    }
+
     /**
      * Generate query parameters based on state of layer
      * @memberof ServerLayer
@@ -545,7 +554,8 @@
         var query = {
             renderer: this.renderer,
             tileTransform: this.tileTransform,
-            valueTransform: this.valueTransform
+            valueTransform: this.valueTransform,
+            filter: this.getFilterParams()
         };
         return Util.encodeQueryParams( query );
     };

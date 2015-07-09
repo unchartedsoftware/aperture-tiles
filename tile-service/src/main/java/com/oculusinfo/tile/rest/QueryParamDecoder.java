@@ -26,6 +26,11 @@ package com.oculusinfo.tile.rest;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.*;
 
 public class QueryParamDecoder {
@@ -59,7 +64,14 @@ public class QueryParamDecoder {
      *  </pre>
      */
     static public JSONObject decode( String params ) {
-        if ( params == null ) {
+		final Logger LOGGER = LoggerFactory.getLogger(QueryParamDecoder.class);
+
+		try {
+			params = URLDecoder.decode(params, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			LOGGER.debug("Error URL-decoding query params", e);
+		}
+		if ( params == null ) {
             return null;
         }
         JSONObject query = new JSONObject();

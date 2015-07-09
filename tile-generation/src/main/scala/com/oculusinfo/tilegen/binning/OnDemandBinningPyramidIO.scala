@@ -39,6 +39,7 @@ import java.util.{List => JavaList}
 import java.util.Properties
 
 import org.apache.spark.sql.SQLContext
+import org.json.JSONObject
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.MutableList
@@ -188,6 +189,13 @@ class OnDemandBinningPyramidIO (sqlc: SQLContext) extends PyramidIO {
 			}
 		}
 	}
+
+  def readTiles[BT] (pyramidId: String,
+                     serializer: TileSerializer[BT],
+                     javaTiles: JavaIterable[TileIndex],
+                     properties: JSONObject): JavaList[TileData[BT]] = {
+    readTiles( pyramidId, serializer, javaTiles )
+  }
 
 	def readTiles[BT] (pyramidId: String,
 	                   serializer: TileSerializer[BT],
