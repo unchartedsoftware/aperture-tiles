@@ -40,6 +40,7 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import org.json.JSONObject;
 
 
 public class HBasePyramidIO implements PyramidIO {
@@ -292,6 +293,15 @@ public class HBasePyramidIO implements PyramidIO {
 	                                        Iterable<TileIndex> tiles) throws IOException {
 		return readTiles(tableName, serializer, tiles, TILE_COLUMN);
 	}
+
+	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+											TileSerializer<T> serializer,
+											Iterable<TileIndex> tiles,
+											JSONObject properties ) throws IOException {
+		return readTiles( pyramidId, serializer, tiles, TILE_COLUMN );
+	}
+
 	protected <T> List<TileData<T>> readTiles (String tableName,
 											   TileSerializer<T> serializer,
 											   Iterable<TileIndex> tiles,

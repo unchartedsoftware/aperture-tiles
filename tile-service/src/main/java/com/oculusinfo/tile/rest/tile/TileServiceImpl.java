@@ -30,7 +30,6 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.SubTileDataView;
 import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.impl.ElasticsearchPyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.AvroJSONConverter;
@@ -80,11 +79,7 @@ public class TileServiceImpl implements TileService {
 					( int ) Math.floor( index.getX() / coarsenessFactor ),
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
 
-				if (pyramidIO instanceof ElasticsearchPyramidIO) {
-					tileDatas = ((ElasticsearchPyramidIO) pyramidIO).readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ), tileProperties);
-				} else {
-					tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ) );
-				}
+				tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ), tileProperties );
 
 				if ( tileDatas.size() >= 1 ) {
 					//we got data for this level so use it
@@ -104,12 +99,7 @@ public class TileServiceImpl implements TileService {
 			// No coarseness - use requested tile
 			java.util.List<TileData<T>> tileDatas;
 
-			// Elasticsearch PyramidIO has a different interface for filtering tile data
-			if (pyramidIO instanceof ElasticsearchPyramidIO) {
-				tileDatas = ((ElasticsearchPyramidIO) pyramidIO).readTiles(dataId, serializer, Collections.singleton( index ), tileProperties);
-			} else {
-				tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ) );
-			}
+			tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ), tileProperties );
 
 			if ( !tileDatas.isEmpty() ) {
 				data = tileDatas.get( 0 );
@@ -191,14 +181,7 @@ public class TileServiceImpl implements TileService {
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
 
-		// check for null value when calling in to config.getPropertyvalue
-		JSONObject tileProperties;
-
-		try{
-			tileProperties = config.getPropertyValue(LayerConfiguration.FILTER_PROPS);
-		}catch (Exception e){
-			tileProperties = null;
-		}
+		JSONObject tileProperties = config.getPropertyValue(LayerConfiguration.FILTER_PROPS);
 
 		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness, tileProperties);
 

@@ -289,7 +289,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	@Override
 	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles) throws IOException {
-		return readTiles(pyramidId,serializer,tiles,null);
+		return readTiles(pyramidId,serializer,tiles);
 	}
 
 	@Override

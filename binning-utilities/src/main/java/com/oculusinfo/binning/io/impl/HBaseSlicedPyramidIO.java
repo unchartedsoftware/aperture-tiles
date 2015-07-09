@@ -30,6 +30,7 @@ import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.TypeDescriptor;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Row;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -87,7 +88,13 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 		}
 	}
 
-
+	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+											TileSerializer<T> serializer,
+											Iterable<TileIndex> tiles,
+											JSONObject properties ) throws IOException {
+		return readTiles( pyramidId, serializer, tiles );
+	}
 
 	public static class SlicedHBaseTilePutter extends StandardHBaseTilePutter {
 		@Override
