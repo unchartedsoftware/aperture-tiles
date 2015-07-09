@@ -93,7 +93,8 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
 			return new AvgLogBucketTileTransformer<>(arguments);
 		} else {  // 'identity' or none passed in will give the default transformer
-			return new IdentityTileTransformer<Object>();
+			JSONObject arguments = getPropertyValue(INITIALIZATION_DATA);
+			return new IdentityTileTransformer<>(arguments);
 		}
 	}
 }
