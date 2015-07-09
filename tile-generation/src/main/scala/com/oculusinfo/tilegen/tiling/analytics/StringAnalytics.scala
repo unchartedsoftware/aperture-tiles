@@ -125,7 +125,8 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
                                   scoreName: String = "score",
                                   writeLocations: Set[TileAnalytic.Locations.Value] = TileAnalytic.Locations.values,
                                   aggregationLimit: Option[Int] = None,
-                                  order: Option[((String, T), (String, T)) => Boolean] = None)
+                                  order: Option[((String, T), (String, T)) => Boolean] = None,
+                                  storageLimit: Option[Int] = None)
 		extends StringScoreAnalytic[T](baseAnalytic, aggregationLimit, order)
 		with TileAnalytic[Map[String, T]]
 {
@@ -133,9 +134,10 @@ class StringScoreTileAnalytic[T] (analyticName: Option[String],
 	def name = analyticName.getOrElse(baseAnalytic.name)
 	override def storableValue (value: Map[String, T], location: TileAnalytic.Locations.Value): Option[JSONObject] = {
 		if (writeLocations.contains(location)) {
-			val values = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
+			val allValues = order.map(sorter=>value.toList.sortWith(sorter)).getOrElse(value.toList)
+      val topValues = storageLimit.map(limit => allValues.take(limit)).getOrElse(allValues)
 			val subRes = new JSONArray()
-			values.foreach { case (key, value) =>
+      topValues.foreach { case (key, value) =>
 				baseAnalytic.storableValue(value, location).foreach{bsv =>
 					val entry = new JSONObject()
 					if (bsv.length() > 1) entry.put(scoreName, bsv)

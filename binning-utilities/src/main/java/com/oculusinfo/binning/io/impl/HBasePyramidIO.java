@@ -305,13 +305,13 @@ public class HBasePyramidIO implements PyramidIO {
 	protected <T> List<TileData<T>> readTiles (String tableName,
 											   TileSerializer<T> serializer,
 											   Iterable<TileIndex> tiles,
-											   HBaseColumn column) throws IOException {
+											   HBaseColumn... columns) throws IOException {
 		List<String> rowIds = new ArrayList<String>();
 		for (TileIndex tile: tiles) {
 			rowIds.add(rowIdFromTileIndex(tile));
 		}
 
-		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, column);
+		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, columns);
 
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
@@ -322,10 +322,12 @@ public class HBasePyramidIO implements PyramidIO {
 			Map<HBaseColumn, byte[]> rawResult = iData.next();
 			TileIndex index = indexIterator.next();
 			if (null != rawResult) {
-				byte[] rawData = rawResult.get(column);
-				ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-				TileData<T> data = serializer.deserialize(index, bais);
-				results.add(data);
+				for (HBaseColumn column: columns) {
+					byte[] rawData = rawResult.get(column);
+					ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
+					TileData<T> data = serializer.deserialize(index, bais);
+					results.add(data);
+				}
 			}
 		}
 
