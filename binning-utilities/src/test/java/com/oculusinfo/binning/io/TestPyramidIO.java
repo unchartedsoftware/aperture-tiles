@@ -37,11 +37,12 @@ import java.util.Properties;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import org.json.JSONObject;
 
 
 /**
  * An in-memory storage of pyramids, for use in testing.
- * 
+ *
  * @author nkronenfeld
  */
 public class TestPyramidIO implements PyramidIO {
@@ -108,6 +109,14 @@ public class TestPyramidIO implements PyramidIO {
 	}
 
 	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+											TileSerializer<T> serializer,
+											Iterable<TileIndex> tiles,
+											JSONObject properties ) throws IOException {
+		return readTiles( pyramidId, serializer, tiles );
+	}
+
+	@Override
 	public <T> InputStream getTileStream (String pyramidId,
 	                                      TileSerializer<T> serializer,
 	                                      TileIndex tile) throws IOException {
@@ -130,7 +139,7 @@ public class TestPyramidIO implements PyramidIO {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
 		throw new IOException("removeTiles not currently supported for TestPyramidIO");

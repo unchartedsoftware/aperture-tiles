@@ -234,7 +234,7 @@
 	WordCloudRenderer.prototype.getEntrySelector = function() {
 		return ".word-cloud-label";
 	};
-	
+
     /**
      * Implementation specific rendering function.
      * @memberof WordCloudRenderer
@@ -254,7 +254,6 @@
             sizeFunction = text.sizeFunction || SIZE_FUNCTION,
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
-			countLabel = 'x' + data.index.xIndex + '-y' + data.index.yIndex,
 			$html = $("<div></div>"),
             wordCounts = [],
             entries = [],
@@ -283,22 +282,19 @@
             sizeFunction,
             minFontSize,
             maxFontSize );
-			
-		var $label = $('<div class="count-summary-' + countLabel + ' count-summary"></div>');
+
+		var $label = $('<div class="count-summary"></div>');
 		$html = $html.append( $label );
 
-        cloud.forEach ( function( word ) {
-			var html_string = '';
+        cloud.forEach( function( word ) {
 			entries.push( word.entry );
 
-            html_string += '<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
+            var $wordLabel = $('<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'
                     + 'width:'+word.width+'px;'
-                    + 'height:'+word.height+'px;">'+word.word+'</div>';
-			var $wordLabel = $(html_string);
-			
+                    + 'height:'+word.height+'px;">'+word.word+'</div>');
 			$wordLabel.mouseover(function() {
 				$label.show(); // show label
 				$label.text( word.entry.count );
@@ -310,7 +306,7 @@
 			// add it to the group
 			$html = $html.append( $wordLabel );
         });
-		
+
         return {
             html: $html,
             entries: entries

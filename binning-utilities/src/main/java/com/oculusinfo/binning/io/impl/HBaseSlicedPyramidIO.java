@@ -32,6 +32,7 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 import com.oculusinfo.factory.util.Pair;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Row;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -193,7 +194,6 @@ public class HBaseSlicedPyramidIO extends HBasePyramidIO {
 
 		return ranges;
 	}
-
 
 	public static class SlicedHBaseTilePutter extends StandardHBaseTilePutter {
 		private boolean _doPyramidding;

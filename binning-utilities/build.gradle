@@ -54,6 +54,7 @@ dependencies {
 	compile "com.esotericsoftware.kryo:kryo:2.21"
 	compile "org.slf4j:slf4j-api:1.7.5"
 	compile "com.google.guava:guava:14.0.1"
+	compile 'org.elasticsearch:elasticsearch:1.5.2'
 	testCompile "junit:junit:4.8.1"
 
 	// Call to special handling for hbase dependencies - see top level build file for

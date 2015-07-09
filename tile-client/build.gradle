@@ -35,7 +35,7 @@ task build_full( type: NpmTask ) {
 build_full.inputs.dir "$projectDir/src"
 build_full.outputs.dir "$buildDir"
 build_full.dependsOn 'npmInstall'
-npmInstall.outputs.dir "$projectDir/node_install"
+npmInstall.outputs.dir "$projectDir/node_modules"
 
 // Zip all the relevant files from the build directory
 task zipMinifiedFiles(type: Zip) {
