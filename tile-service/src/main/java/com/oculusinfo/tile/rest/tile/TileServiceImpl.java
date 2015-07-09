@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.SuppressWarnings;
 import java.util.*;
+import java.util.List;
 
 
 @Singleton
@@ -70,8 +71,7 @@ public class TileServiceImpl implements TileService {
 
 
 	private <T> TileData<T> tileDataForIndex( TileIndex index, String dataId, String layer, TileSerializer<T> serializer,
-	                                          PyramidIO pyramidIO, int coarseness,
-	                                          TileTransformer tileTransformer) throws IOException {
+	                                          PyramidIO pyramidIO, int coarseness, JSONObject query) throws IOException {
 		TileData<T> data = null;
 		if ( coarseness > 1 ) {
 			int coarsenessFactor = ( int ) Math.pow( 2, coarseness - 1 );
@@ -86,25 +86,7 @@ public class TileServiceImpl implements TileService {
 				scaleLevelIndex = new TileIndex( index.getLevel() - coarsenessLevel,
 					( int ) Math.floor( index.getX() / coarsenessFactor ),
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
-				if (pyramidIO instanceof HBaseSlicedPyramidIO) {
-					PyramidMetaData metadata = _layerService.getMetaData( layer );
-					int numBuckets = Integer.parseInt(metadata.getCustomMetaData("bucketCount"));
-
-					Integer start = ((BucketTileTransformer) tileTransformer).getStartBucket();
-					Integer end = ((BucketTileTransformer) tileTransformer).getEndBucket();
-
-					String bracket = "[0-" + numBuckets + "]";
-					if (start != null && end != null) {
-						if (end > start) {
-							bracket = "[" + start + "-" + end + "]";
-						} else {
-							bracket = "[" + start + "]";
-						}
-					}
-					tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton( scaleLevelIndex ) );
-				} else {
-					tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ) );
-				}
+				tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, query, scaleLevelIndex);
 				if ( tileDatas.size() >= 1 ) {
 					//we got data for this level so use it
 					break;
@@ -121,13 +103,52 @@ public class TileServiceImpl implements TileService {
 			data = SubTileDataView.fromSourceAbsolute( tileDatas.get( 0 ), index );
 		} else {
 			// No coarseness - use requested tile
-			java.util.List<TileData<T>> tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ) );
+			java.util.List<TileData<T>> tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, query, index);
 			if ( !tileDatas.isEmpty() ) {
 				data = tileDatas.get( 0 );
 			}
 		}
 
 		return data;
+	}
+
+	/**
+	 * TEMPORARY - checks the pyramid IO and modifies the tile name to include the slice range if SliceHBasePyramidIO
+	 * is used.  This needs to be replaced with a more generic request pre-process method can instantiated through
+	 * config.
+	 */
+	private <T> List<TileData<T>> getTileDatas(String layer, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO,
+	                                           JSONObject query, TileIndex scaleLevelIndex) throws IOException {
+		List<TileData<T>> tileDatas;
+
+		if (pyramidIO instanceof HBaseSlicedPyramidIO) {
+			PyramidMetaData metadata = _layerService.getMetaData( layer );
+			Integer numBuckets = Integer.parseInt(metadata.getCustomMetaData("bucketCount"));
+
+			Integer start = 0;
+			Integer end = numBuckets - 1;
+			try {
+				JSONObject renderer = query.getJSONObject("tileTransform");
+				if (renderer.has("data")) {
+					start = renderer.getJSONObject("data").getInt("startBucket");
+					end = renderer.getJSONObject("data").getInt("endBucket");
+				}
+			} catch (Exception e){
+				LOGGER.error("Exception processing range from query", e);
+			}
+			String bracket = "[0]";
+			if (start != null && end != null) {
+				if (end > start) {
+					bracket = "[" + start + "-" + end + "]";
+				} else {
+					bracket = "[" + start + "]";
+				}
+			}
+			tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton(scaleLevelIndex));
+		} else {
+			tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ) );
+		}
+		return tileDatas;
 	}
 
 
@@ -202,7 +223,7 @@ public class TileServiceImpl implements TileService {
 
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
-		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, coarseness, tileTransformer);
+		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, coarseness, query);
 		if (data == null) {
 			return null;
 		}
