@@ -738,4 +738,43 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 			removeRecursively(new File("test.x1.y1.x2.y2.data"))
 		}
 	}
+
+  test("Test Load Parquet File") {
+
+    def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
+      input.srdd.saveAsParquetFile(path)
+      PipelineData(input.sqlContext, input.srdd)
+    }
+
+    val resultList = ListBuffer[Any]()
+    val argMap = Map(
+      "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
+      "ops.columns" -> "num,num_1",
+      "ops.min" -> "2,2",
+      "ops.max" -> "3,3")
+
+    val tempFolder = "./temp-" + System.currentTimeMillis()
+    try
+    {
+      val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
+      rootStage.addChild(PipelineStage("save_parquet", SaveParquetDataOp(tempFolder)))
+        .addChild(PipelineStage("load_parquet", loadParquetDataOp(tempFolder, Some(10))))
+        .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+      PipelineTree.execute(rootStage, sqlc)
+
+      assertResult(List(1, 2, 3))(resultList.toList)
+    } finally {
+      // Remove the tile set we created
+      def removeRecursively (file: File): Unit = {
+        if (file.isDirectory) {
+          file.listFiles().foreach(removeRecursively)
+        }
+        file.delete()
+      }
+      // If you want to look at the tile set (not remove it) comment out this line.
+      removeRecursively(new File(tempFolder))
+    }
+  }
+
 }
