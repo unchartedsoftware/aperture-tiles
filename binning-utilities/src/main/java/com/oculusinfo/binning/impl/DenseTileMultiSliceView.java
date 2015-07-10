@@ -135,23 +135,17 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 
 	public TileData<List<T>> harden () {
 		TileIndex index = getDefinition();
+		TileData<List<T>> hardened;
 		if (isDense()) {
-			DenseTileData<List<T>> hardened = new DenseTileData<>(index);
-			hardened.setDefaultValue(_base.getDefaultValue());
+			hardened = new DenseTileData<List<T>>(index, _base.getDefaultValue());
 
 			for (int x=0; x<index.getXBins(); ++x) {
 				for (int y=0; y<index.getYBins(); ++y) {
 					hardened.setBin(x, y, getBin(x, y));
 				}
 			}
-
-			for (String prop: _base.getMetaDataProperties()) {
-				hardened.setMetaData(prop, _base.getMetaData(prop));
-			}
-
-			return hardened;
 		} else {
-			SparseTileData<List<T>> hardened = new SparseTileData<>(index, _base.getDefaultValue());
+			hardened = new SparseTileData<>(index, _base.getDefaultValue());
 
 			for (int x=0; x<index.getXBins(); ++x) {
 				for (int y=0; y<index.getYBins(); ++y) {
@@ -161,13 +155,13 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 					}
 				}
 			}
-
-			for (String prop: _base.getMetaDataProperties()) {
-				hardened.setMetaData(prop, _base.getMetaData(prop));
-			}
-
-			return hardened;
 		}
+
+		for (String prop: _base.getMetaDataProperties()) {
+			hardened.setMetaData(prop, _base.getMetaData(prop));
+		}
+
+		return hardened;
 	}
 
 	@Override
