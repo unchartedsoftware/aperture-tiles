@@ -69,22 +69,21 @@
      */
     VectorLayer.prototype.activate = function() {
         var layerSpec = {};
-        if (this.strategies) {
+        if ( this.strategies ) {
             layerSpec.strategies = this.strategies;
         }
-        if (this.styleMap) {
+        if ( this.styleMap ) {
             layerSpec.styleMap = this.styleMap;
         }
         this.olLayer = new OpenLayers.Layer.Vector("Vector Layer", layerSpec);
-        this.setOpacity(this.opacity);
-        this.setEnabled(this.enabled);
-        this.setTheme(this.map.getTheme());
-
-        this.map.olMap.addLayer(this.olLayer);
-
-        this.getData(this);
-
-        this.setZIndex(this.zIndex);
+        this.setEnabled( this.isEnabled() );
+        this.setOpacity( this.getOpacity() );
+        this.setBrightness( this.getBrightness() );
+        this.setContrast( this.getContrast() );
+        this.setTheme( this.map.getTheme() );
+        this.map.olMap.addLayer( this.olLayer );
+        this.getData( this );
+        this.setZIndex( this.zIndex );
     };
 
     /**

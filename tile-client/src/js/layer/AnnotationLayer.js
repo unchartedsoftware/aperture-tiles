@@ -133,9 +133,11 @@
             });
         // set whether it is enabled or not before attaching, to prevent
         // needless tile requests
-        this.setEnabled( this.enabled );
+        this.setEnabled( this.isEnabled() );
         this.setTheme( this.map.getTheme() );
-        this.setOpacity( this.opacity );
+        this.setOpacity( this.getOpacity() );
+        this.setBrightness( this.getBrightness() );
+        this.setContrast( this.getContrast() );
         // attach to map
         this.map.olMap.addLayer( this.olLayer );
         // set z-index after
