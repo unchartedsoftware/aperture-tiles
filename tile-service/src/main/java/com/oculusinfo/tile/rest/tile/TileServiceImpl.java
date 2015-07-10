@@ -149,7 +149,12 @@ public class TileServiceImpl implements TileService {
 
 			String bracket = "[0]";
 			if (start != null && end != null) {
-				if (end > start) {
+				if (start == 0 && end == numBuckets - 1) {
+					// If this is uncommented, it will allow us to redirect to a table created as a single bucket,
+					// giving us a big boost in fetch times.
+					// bracket = "__all__";
+					bracket = "";
+				} else if (end > start) {
 					bracket = "[" + start + "-" + end + "]";
 				} else {
 					bracket = "[" + start + "]";
