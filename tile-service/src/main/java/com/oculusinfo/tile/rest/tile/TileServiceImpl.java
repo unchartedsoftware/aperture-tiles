@@ -37,9 +37,9 @@ import com.oculusinfo.binning.util.AvroJSONConverter;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.rendering.transformations.tile.BucketTileTransformer;
+import com.oculusinfo.tile.rendering.transformations.tile.AvgDivBucketTileTransformer;
+import com.oculusinfo.tile.rendering.transformations.tile.AvgDivSliceTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
-import com.oculusinfo.tile.rendering.transformations.tile.TileTransformerFactory;
 import com.oculusinfo.tile.rest.layer.LayerService;
 
 
@@ -71,7 +71,8 @@ public class TileServiceImpl implements TileService {
 
 
 	private <T> TileData<T> tileDataForIndex( TileIndex index, String dataId, String layer, TileSerializer<T> serializer,
-	                                          PyramidIO pyramidIO, int coarseness, JSONObject query) throws IOException {
+	                                          PyramidIO pyramidIO, TileTransformer<T> tileTransformer, int coarseness,
+	                                          JSONObject query) throws IOException {
 		TileData<T> data = null;
 		if ( coarseness > 1 ) {
 			int coarsenessFactor = ( int ) Math.pow( 2, coarseness - 1 );
@@ -86,7 +87,7 @@ public class TileServiceImpl implements TileService {
 				scaleLevelIndex = new TileIndex( index.getLevel() - coarsenessLevel,
 					( int ) Math.floor( index.getX() / coarsenessFactor ),
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
-				tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, query, scaleLevelIndex);
+				tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, tileTransformer, query, scaleLevelIndex);
 				if ( tileDatas.size() >= 1 ) {
 					//we got data for this level so use it
 					break;
@@ -103,7 +104,7 @@ public class TileServiceImpl implements TileService {
 			data = SubTileDataView.fromSourceAbsolute( tileDatas.get( 0 ), index );
 		} else {
 			// No coarseness - use requested tile
-			java.util.List<TileData<T>> tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, query, index);
+			java.util.List<TileData<T>> tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, tileTransformer, query, index);
 			if ( !tileDatas.isEmpty() ) {
 				data = tileDatas.get( 0 );
 			}
@@ -118,7 +119,8 @@ public class TileServiceImpl implements TileService {
 	 * config.
 	 */
 	private <T> List<TileData<T>> getTileDatas(String layer, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO,
-	                                           JSONObject query, TileIndex scaleLevelIndex) throws IOException {
+	                                           TileTransformer<T> tileTransformer, JSONObject query,
+	                                           TileIndex scaleLevelIndex) throws IOException {
 		List<TileData<T>> tileDatas;
 
 		if (pyramidIO instanceof HBaseSlicedPyramidIO) {
@@ -136,6 +138,15 @@ public class TileServiceImpl implements TileService {
 			} catch (Exception e){
 				LOGGER.error("Exception processing range from query", e);
 			}
+
+			if (tileTransformer instanceof AvgDivSliceTileTransformer) {
+				((AvgDivSliceTileTransformer) tileTransformer).setMaxBuckets(numBuckets);
+				int range = ((AvgDivSliceTileTransformer) tileTransformer).getAverageRange();
+				int middle = (end - start) / 2 + start;
+				start = Math.max(0, middle - (range / 2));
+				end = Math.min(numBuckets - 1, middle + (range / 2 + range % 2 ));
+			}
+
 			String bracket = "[0]";
 			if (start != null && end != null) {
 				if (end > start) {
@@ -214,7 +225,7 @@ public class TileServiceImpl implements TileService {
 			return null;
 		}
 		@SuppressWarnings("unchecked")
-		TileSerializer<T> serializer = config.produce( TileSerializer.class );
+		TileSerializer<T> serializer = config.produce(TileSerializer.class);
 		if ( serializer == null ) {
 			LOGGER.error( "Could not produce tile serializer, please confirm that it has been configured correctly." );
 		}
@@ -223,7 +234,7 @@ public class TileServiceImpl implements TileService {
 
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
-		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, coarseness, query);
+		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, tileTransformer, coarseness, query);
 		if (data == null) {
 			return null;
 		}
