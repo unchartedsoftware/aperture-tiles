@@ -125,6 +125,8 @@ dependencies {
 	}
 	compile "org.scala-lang:scala-library:$scalaVersion"
 	compile "org.clapper:grizzled-slf4j_2.10:1.0.2"
+	compile "joda-time:joda-time:2.8.1"
+	compile "org.joda:joda-convert:1.7"
 	compile project(":binning-utilities")
 	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"

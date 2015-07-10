@@ -699,12 +699,12 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     val weeks = ListBuffer[Any]()
     val months = ListBuffer[Any]()
     rootStage.addChild(PipelineStage("ConvertDates", parseDateOp("date", "parsedDate", format)(_)))
-             .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "day", Calendar.DAY_OF_YEAR)(_)))
-             .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "week", Calendar.WEEK_OF_YEAR)(_)))
-             .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "month", Calendar.MONTH)(_)))
-             .addChild(new PipelineStage("output", outputOps(List("day"), days)(_)))
-             .addChild(new PipelineStage("output", outputOps(List("week"), weeks)(_)))
-             .addChild(new PipelineStage("output", outputOps(List("month"), months)(_)))
+      .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "day", Calendar.DAY_OF_YEAR)(_)))
+      .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "week", Calendar.WEEK_OF_YEAR)(_)))
+      .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "month", Calendar.MONTH)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("day"), days)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("week"), weeks)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("month"), months)(_)))
     PipelineTree.execute(rootStage, sqlc)
 
     assert((1 to 365).toList === days)
@@ -712,5 +712,45 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     assert((1 to 53).toList === weeks.map(_.asInstanceOf[Int]).toSet.toList.sorted)
     // months are zero-based for some reason
     assert((0 to 11).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
+  }
+
+  test("Test elapsed date field extraction") {
+    val format = "yyyy DD"
+    def createDataOp(count: Int)(input: PipelineData) = {
+      val formatter = new SimpleDateFormat(format)
+      val pyramid = new WebMercatorTilePyramid
+      val jsonData = (1 to 365).map{day =>
+        val date = new GregorianCalendar()
+        date.set(Calendar.YEAR, 2000)
+        date.set(Calendar.DAY_OF_YEAR, day)
+        val formattedDate = formatter.format(date.getTime)
+        s"""{"x": $day, "y": 1, "date": "$formattedDate"}"""
+      }
+
+      val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+      PipelineData(sqlc, srdd)
+    }
+
+    val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+    val days = ListBuffer[Any]()
+    val weeks = ListBuffer[Any]()
+    val months = ListBuffer[Any]()
+    rootStage.addChild(PipelineStage("ConvertDates", parseDateOp("date", "parsedDate", format)(_)))
+      .addChild(PipelineStage("GetDay", elapsedDateOp("parsedDate", "day", Calendar.DAY_OF_YEAR,
+                                                      new GregorianCalendar(2000, 0, 5).getTime)(_)))
+      .addChild(PipelineStage("GetDay", elapsedDateOp("parsedDate", "week", Calendar.WEEK_OF_YEAR,
+                                                      new GregorianCalendar(2000, 0, 15).getTime)(_)))
+      .addChild(PipelineStage("GetDay", elapsedDateOp("parsedDate", "month", Calendar.MONTH,
+                                                      new GregorianCalendar(2000, 2, 1).getTime)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("day"), days)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("week"), weeks)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("month"), months)(_)))
+    PipelineTree.execute(rootStage, sqlc)
+
+    assert((-4 to 360).toList === days)
+    // 2000 has 53 weeks - only one day in the first week.
+    assert((-2 to 50).toList === weeks.map(_.asInstanceOf[Int]).toSet.toList.sorted)
+    // months are zero-based for some reason
+    assert((-2 to 9).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
   }
 }
