@@ -26,7 +26,10 @@ package com.oculusinfo.tile.rest;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.util.*;
+
+import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.List;
 
 public class QueryParamDecoder {
 
@@ -59,13 +62,16 @@ public class QueryParamDecoder {
      *  </pre>
      */
     static public JSONObject decode( String params ) {
-        if ( params == null ) {
+
+		if ( params == null ) {
             return null;
         }
         JSONObject query = new JSONObject();
-        List<String> paramArray = Arrays.asList( params.split( "&" ) );
         try {
-            for ( String param : paramArray ) {
+			params = URLDecoder.decode(params, "UTF-8");
+			List<String> paramArray = Arrays.asList( params.split( "&" ) );
+
+			for ( String param : paramArray ) {
                 // break param into key value pair
                 List<String> keyValue = Arrays.asList( param.split( "=" ) );
                 String key = keyValue.get( 0 );

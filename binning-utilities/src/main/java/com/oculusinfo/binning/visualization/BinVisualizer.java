@@ -24,11 +24,26 @@
  */
 package com.oculusinfo.binning.visualization;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Image;
+import com.oculusinfo.binning.TileData;
+import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.binning.TilePyramid;
+import com.oculusinfo.binning.impl.AOITilePyramid;
+import com.oculusinfo.binning.impl.DenseTileSliceView;
+import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
+import com.oculusinfo.binning.io.PyramidIO;
+import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
+import com.oculusinfo.binning.metadata.PyramidMetaData;
+import com.oculusinfo.binning.util.TypeDescriptor;
+import org.apache.avro.file.CodecFactory;
+
+import javax.swing.*;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
@@ -43,27 +58,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-
-import com.oculusinfo.binning.impl.DenseTileSliceView;
-import com.oculusinfo.binning.io.serialization.impl.KryoSerializer;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveArrayAvroSerializer;
-import com.oculusinfo.binning.util.TypeDescriptor;
-import org.apache.avro.file.CodecFactory;
-
-import com.oculusinfo.binning.TileData;
-import com.oculusinfo.binning.TileIndex;
-import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
-import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
-import com.oculusinfo.binning.io.PyramidIO;
-import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer;
-import com.oculusinfo.binning.metadata.PyramidMetaData;
 
 
 

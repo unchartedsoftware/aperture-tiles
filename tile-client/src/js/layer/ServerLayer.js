@@ -158,10 +158,12 @@
                 getURL: this.getURL
             });
         // set whether it is enabled or not before attaching, to prevent
-        // needless tile reuqestst
-        this.setEnabled( this.enabled );
-        this.setTheme( this.map.getTheme() ); // sends initial request for ramp image
-        this.setOpacity( this.opacity );
+        // needless tile requests
+        this.setEnabled( this.isEnabled() );
+        this.setTheme( this.map.getTheme() );  // sends initial request for ramp image
+        this.setOpacity( this.getOpacity() );
+        this.setBrightness( this.getBrightness() );
+        this.setContrast( this.getContrast() );
         // attach to map
         this.map.olMap.addLayer( this.olLayer );
         // set z-index after
@@ -535,6 +537,15 @@
         return this.renderer.coarseness;
     };
 
+    ServerLayer.prototype.setFilterParams = function( filter ) {
+    	this.filterParams = filter;
+    	this.redraw();
+    };
+
+    ServerLayer.prototype.getFilterParams = function(){
+    	return this.filterParams ? this.filterParams : null;
+    };
+
     /**
      * Generate query parameters based on state of layer
      * @memberof ServerLayer
@@ -545,7 +556,8 @@
         var query = {
             renderer: this.renderer,
             tileTransform: this.tileTransform,
-            valueTransform: this.valueTransform
+            valueTransform: this.valueTransform,
+            filter: this.getFilterParams()
         };
         return Util.encodeQueryParams( query );
     };
@@ -558,11 +570,13 @@
         if ( this.olLayer ) {
             setLevelMinMax( this );
             this.olLayer.redraw();
-
-            // If we're using the TileManager we need to force it into a refresh.  There is no nice way to
+            // If we're using the TileManager we need to force it into a refresh. There is no nice way to
             // do this as of 2.13.1, so we fake the expiry of the move/zoom timeout.
-            if (this.olLayer.map && this.olLayer.map.tileManager) {
-                this.olLayer.map.tileManager.updateTimeout(this.olLayer.map, this.olLayer.map.tileManager.zoomDelay, true);
+            if ( this.olLayer.map && this.olLayer.map.tileManager ) {
+                this.olLayer.map.tileManager.updateTimeout(
+                    this.olLayer.map,
+                    this.olLayer.map.tileManager.zoomDelay,
+                    true );
             }
         }
     };

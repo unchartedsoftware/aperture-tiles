@@ -37,12 +37,9 @@ import com.oculusinfo.binning.util.AvroJSONConverter;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
-import com.oculusinfo.tile.rendering.transformations.tile.AvgDivBucketTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.AvgDivSliceTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
-
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -53,8 +50,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.SuppressWarnings;
-import java.util.*;
 import java.util.List;
+import java.util.Collections;
 
 
 @Singleton
@@ -72,7 +69,7 @@ public class TileServiceImpl implements TileService {
 
 	private <T> TileData<T> tileDataForIndex( TileIndex index, String dataId, String layer, TileSerializer<T> serializer,
 	                                          PyramidIO pyramidIO, TileTransformer<T> tileTransformer, int coarseness,
-	                                          JSONObject query) throws IOException {
+	                                          JSONObject query, JSONObject tileProperties) throws IOException {
 		TileData<T> data = null;
 		if ( coarseness > 1 ) {
 			int coarsenessFactor = ( int ) Math.pow( 2, coarseness - 1 );
@@ -87,7 +84,7 @@ public class TileServiceImpl implements TileService {
 				scaleLevelIndex = new TileIndex( index.getLevel() - coarsenessLevel,
 					( int ) Math.floor( index.getX() / coarsenessFactor ),
 					( int ) Math.floor( index.getY() / coarsenessFactor ) );
-				tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, tileTransformer, query, scaleLevelIndex);
+				tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, tileTransformer, query, scaleLevelIndex, tileProperties);
 				if ( tileDatas.size() >= 1 ) {
 					//we got data for this level so use it
 					break;
@@ -104,7 +101,7 @@ public class TileServiceImpl implements TileService {
 			data = SubTileDataView.fromSourceAbsolute( tileDatas.get( 0 ), index );
 		} else {
 			// No coarseness - use requested tile
-			java.util.List<TileData<T>> tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, tileTransformer, query, index);
+			java.util.List<TileData<T>> tileDatas = getTileDatas(layer, dataId, serializer, pyramidIO, tileTransformer, query, index, tileProperties);
 			if ( !tileDatas.isEmpty() ) {
 				data = tileDatas.get( 0 );
 			}
@@ -120,7 +117,7 @@ public class TileServiceImpl implements TileService {
 	 */
 	private <T> List<TileData<T>> getTileDatas(String layer, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO,
 	                                           TileTransformer<T> tileTransformer, JSONObject query,
-	                                           TileIndex scaleLevelIndex) throws IOException {
+	                                           TileIndex scaleLevelIndex, JSONObject tileProperties) throws IOException {
 		List<TileData<T>> tileDatas;
 
 		if (pyramidIO instanceof HBaseSlicedPyramidIO) {
@@ -160,9 +157,9 @@ public class TileServiceImpl implements TileService {
 					bracket = "[" + start + "]";
 				}
 			}
-			tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton(scaleLevelIndex));
+			tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton(scaleLevelIndex), tileProperties);
 		} else {
-			tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ) );
+			tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ), tileProperties);
 		}
 		return tileDatas;
 	}
@@ -236,10 +233,11 @@ public class TileServiceImpl implements TileService {
 		}
 
 		int coarseness = config.getPropertyValue( LayerConfiguration.COARSENESS );
+		JSONObject tileProperties = config.getPropertyValue(LayerConfiguration.FILTER_PROPS);
 
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
-		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, tileTransformer, coarseness, query);
+		TileData<T> data = tileDataForIndex(index, dataId, layer, serializer, pyramidIO, tileTransformer, coarseness, query, tileProperties);
 		if (data == null) {
 			return null;
 		}

@@ -38,6 +38,8 @@ import java.lang.{Integer => JavaInt}
 import java.util.{List => JavaList}
 import java.util.Properties
 
+import org.json.JSONObject
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable.{Set => MutableSet}
@@ -147,6 +149,13 @@ class OnDemandAccumulatorPyramidIO (sqlc: SQLContext) extends PyramidIO with Log
 			}
 		}
 	}
+
+  def readTiles[BT] (pyramidId: String,
+                     serializer: TileSerializer[BT],
+                     javaTiles: JavaIterable[TileIndex],
+                     properties: JSONObject): JavaList[TileData[BT]] = {
+    readTiles( pyramidId, serializer, javaTiles )
+  }
 
 	def readTiles[BT] (pyramidId: String,
 	                   serializer: TileSerializer[BT],
