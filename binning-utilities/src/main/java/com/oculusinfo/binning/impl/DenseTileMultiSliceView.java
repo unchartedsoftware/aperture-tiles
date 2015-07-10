@@ -145,6 +145,10 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 				}
 			}
 
+			for (String prop: _base.getMetaDataProperties()) {
+				hardened.setMetaData(prop, _base.getMetaData(prop));
+			}
+
 			return hardened;
 		} else {
 			SparseTileData<List<T>> hardened = new SparseTileData<>(index, _base.getDefaultValue());
@@ -156,6 +160,10 @@ public class DenseTileMultiSliceView<T> implements TileData<List<T>> {
 						hardened.setBin(x, y, getBin(x, y));
 					}
 				}
+			}
+
+			for (String prop: _base.getMetaDataProperties()) {
+				hardened.setMetaData(prop, _base.getMetaData(prop));
 			}
 
 			return hardened;
