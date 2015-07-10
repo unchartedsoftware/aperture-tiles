@@ -366,9 +366,9 @@
         var url = tile.getURL ? tile.getURL() : layer.getURL( tile.bounds );
         var img = this.tileCache[url];
         if ( img &&
-            img.className !== 'olTileImage' &&
-            img.className !== 'olTileHtml' &&
-            img.className !== 'olTileUnivariate' ) {
+            !OpenLayers.Element.hasClass( img, 'olTileImage' ) &&
+            !OpenLayers.Element.hasClass( img, 'olTileHtml' ) &&
+            !OpenLayers.Element.hasClass( img, 'olTileUnivariate' ) ) {
             // cached image no longer valid, e.g. because we're olTileReplacing
             delete this.tileCache[ url ];
             OpenLayers.Util.removeItem( this.tileCacheIndex, url );
