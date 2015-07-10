@@ -34,7 +34,7 @@ import org.apache.spark.sql.types._
 
 import scala.util.Try
 
-import au.com.bytecode.opencsv.CSVParser
+import com.opencsv.CSVParser
 
 /**
  * A class that allows reading a schema file and a CSV file as a DataFrame.

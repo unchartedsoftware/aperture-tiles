@@ -136,7 +136,7 @@ dependencies {
 	compile "javax.servlet:javax.servlet-api:3.0.1"
 
 	// Parser for CSV files
-	compile "au.com.bytecode:opencsv:2.4"
+	compile "com.opencsv:opencsv:3.4"
 
 	// Call for special handling for hbase dependencies - see top level build file for
 	// definition and explanation.
