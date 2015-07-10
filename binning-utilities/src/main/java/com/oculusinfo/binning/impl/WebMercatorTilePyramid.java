@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -43,16 +43,16 @@ import java.util.List;
  * Mercator tile projections using simple mercator (uncorrected for ellipsoidal
  * distortion, which really shouldn't matter anyhow, except very near the
  * equator)
- * 
+ *
  * Sources:
- * 
+ *
  * https://en.wikipedia.org/wiki/Mercator_projection
- * 
+ *
  * http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
- * 
- * 
+ *
+ *
  * Root coordinate system is longitude/latitude, both in degrees.
- * 
+ *
  * @author nkronenfeld
  */
 public class WebMercatorTilePyramid implements TilePyramid, Serializable {
@@ -67,7 +67,7 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
 	// which is 40 thousand kilometers, the coordinate origin is in the middle of extent.
 	// In fact you can calculate the constant as: 2 * math.pi * 6378137 / 2.0
 	//
-	// Polar areas with abs(latitude) bigger then 85.05112878 are clipped off.    
+	// Polar areas with abs(latitude) bigger then 85.05112878 are clipped off.
 	private static final double EPSG_900913_SCALE_FACTOR = 20037508.342789244;
 	private static final double EPSG_900913_LATITUDE	 = 85.05112878;
 
@@ -79,14 +79,18 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
 	// eccentricity squared, semi-major axis
 	public static final double  WGS84_ES                = 0.00669437999013;
 
+	private static double _minX = 180.0;
+	private static double _maxX = -180.0;
+	private static double _minY = -EPSG_900913_LATITUDE;
+	private static double _maxY = EPSG_900913_LATITUDE;
 
 	protected double gudermannian(double y) {
 		// converts a y value from -PI(bottom) to PI(top) into the
-		// mercator projection latitude        
+		// mercator projection latitude
 		return Math.toDegrees(Math.atan( Math.sinh(y) ));
 	}
-    
-    
+
+
 	protected double gudermannianInv (double latitude ) {
 		// converts a latitude value from -EPSG_900913_LATITUDE to EPSG_900913_LATITUDE into
 		// a y value from -PI(bottom) to PI(top)
@@ -94,20 +98,20 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
 			sin = Math.sin(Math.toRadians(latitude) * sign);
 		return sign * (Math.log((1.0 + sin) / (1.0 - sin)) / 2.0);
 	}
-    
-    
-	protected double linearToGudermannian (double value) {  
+
+
+	protected double linearToGudermannian (double value) {
 		// convert linear coordinates into their equivalent gudermannian counterparts
 		return gudermannian( (value / EPSG_900913_LATITUDE) * Math.PI );
 	}
 
-    
-	protected double gudermannianToLinear (double value) {      
+
+	protected double gudermannianToLinear (double value) {
 		// convert gudermannian coordinates into their equivalent linear counterparts
 		return (gudermannianInv( value ) / Math.PI) * EPSG_900913_LATITUDE;
 	}
-    
-    
+
+
 	private Point2D rootToTileMercator (Point2D point, int level) {
 		return rootToTileMercator(point.getX(), point.getY(), level);
 	}
@@ -118,6 +122,11 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
 		double x = (lon+180.0)/360.0 * pow2;
 		double y = (1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * pow2;
 		return new Point2D.Double(x, pow2-y);
+	}
+
+	@Override
+	public Rectangle2D getBounds()  {
+		return new Rectangle2D.Double( _maxX - _minX, _maxY - _minY, _minX, _minY );
 	}
 
 	@Override
@@ -212,7 +221,7 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
 		return Math.toDegrees(Math.atan(Math.sinh(n)));
 	}
 
-    
+
 	@Override
 	public Rectangle2D getTileBounds (TileIndex tile) {
 		int level = tile.getLevel();
@@ -267,14 +276,14 @@ public class WebMercatorTilePyramid implements TilePyramid, Serializable {
 		// TODO Auto-generated method stub
 		return null;
 	}
-    
+
 	public Collection<TileIndex> getTiles (Rectangle2D bounds, int level){
 		TileIterator tileIt = new TileIterator(this, level, bounds);
 		List<TileIndex> results = new ArrayList<TileIndex>();
 		while (tileIt.hasNext()) {
 			results.add(tileIt.next());
 		}
-    	
+
 		return results;
 	}
 

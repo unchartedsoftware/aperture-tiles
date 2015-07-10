@@ -32,7 +32,7 @@ package com.oculusinfo.tilegen.pipeline
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.{GregorianCalendar, Date}
+import java.util.{Calendar, GregorianCalendar, Date}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -44,6 +44,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{TimestampType, IntegerType}
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import org.apache.spark.sql.types.DataType
+import org.joda.time.base.BaseSingleFieldPeriod
+import org.joda.time.{Interval, PeriodType, DateTime, DurationFieldType}
 
 
 /**
@@ -226,6 +228,42 @@ object PipelineOperations {
       val calendar = new GregorianCalendar()
       calendar.setTime(date)
       calendar.get(timeField)
+    }
+    val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
+    PipelineData(input.sqlContext, output)
+  }
+
+  def getJodaTypes (timeField: Int) =
+  timeField match {
+    case Calendar.MILLISECOND          => (PeriodType.millis(), DurationFieldType.millis())
+    case Calendar.SECOND               => (PeriodType.seconds(), DurationFieldType.seconds())
+    case Calendar.MINUTE               => (PeriodType.minutes(), DurationFieldType.minutes())
+    case Calendar.HOUR                 => (PeriodType.hours(), DurationFieldType.hours())
+    case Calendar.HOUR_OF_DAY          => (PeriodType.hours(), DurationFieldType.hours())
+    case Calendar.DAY_OF_WEEK          => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.DAY_OF_WEEK_IN_MONTH => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.DAY_OF_MONTH         => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.DAY_OF_YEAR          => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.WEEK_OF_MONTH        => (PeriodType.weeks(), DurationFieldType.weeks())
+    case Calendar.WEEK_OF_YEAR         => (PeriodType.weeks(), DurationFieldType.weeks())
+    case Calendar.MONTH                => (PeriodType.months(), DurationFieldType.months())
+    case Calendar.YEAR                 => (PeriodType.years(), DurationFieldType.years())
+  }
+  def getIntervalFromJoda (startMoment: Long, currentMoment: Long, intervalType: (PeriodType, DurationFieldType)): Int = {
+    if (currentMoment < startMoment) {
+      -(new Interval(currentMoment, startMoment).toPeriod(intervalType._1).get(intervalType._2))
+    } else {
+      (new Interval(startMoment, currentMoment).toPeriod(intervalType._1).get(intervalType._2))
+    }
+  }
+
+  def elapsedDateOp (timeCol: String, fieldCol: String, timeField: Int, startTime: Date)(input: PipelineData): PipelineData = {
+    val jodaTypes = getJodaTypes(timeField)
+    val startMoment = startTime.getTime
+
+    val fieldExtractor: Array[Any] => Any = row => {
+      val moment = row(0).asInstanceOf[Date].getTime
+      getIntervalFromJoda(startMoment, moment, jodaTypes)
     }
     val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
     PipelineData(input.sqlContext, output)

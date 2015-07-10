@@ -28,20 +28,25 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
-import com.oculusinfo.factory.util.Pair;
-import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
-import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
+import com.oculusinfo.binning.properties.TileIndexProperty;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
+import com.oculusinfo.factory.properties.JSONProperty;
 import com.oculusinfo.factory.properties.StringProperty;
-import com.oculusinfo.binning.properties.TileIndexProperty;
 import com.oculusinfo.factory.providers.FactoryProvider;
+import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
+import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 
@@ -77,7 +82,10 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 
     public static final String DEFAULT_VERSION = "v1.0";
 
-    public static final StringProperty LAYER_ID = new StringProperty("id",
+	public static final JSONProperty FILTER_PROPS = new JSONProperty("filterProps",
+		"Filter properties that will be used in elasticsearch queries",
+		null);
+	public static final StringProperty LAYER_ID = new StringProperty("id",
         "The ID of the layer",
         null);
     public static final StringProperty DATA_ID = new StringProperty("id",
@@ -152,6 +160,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	                           List<String> path) {
 		super( name, LayerConfiguration.class, parent, path );
 
+		addProperty(FILTER_PROPS, FILTER_PATH);
 		addProperty(LAYER_ID);
         addProperty(REST_ENDPOINT, REST_ENDPOINT_PATH);
         addProperty(OUTPUT_WIDTH);
@@ -162,7 +171,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
 		addProperty(RANGE_MODE, RENDERER_PATH);
-		addProperty( TILE_COORDINATE);
+		addProperty(TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);
 

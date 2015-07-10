@@ -40,6 +40,7 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import org.json.JSONObject;
 
 
 public class HBasePyramidIO implements PyramidIO {
@@ -292,16 +293,25 @@ public class HBasePyramidIO implements PyramidIO {
 	                                        Iterable<TileIndex> tiles) throws IOException {
 		return readTiles(tableName, serializer, tiles, TILE_COLUMN);
 	}
+
+	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+											TileSerializer<T> serializer,
+											Iterable<TileIndex> tiles,
+											JSONObject properties ) throws IOException {
+		return readTiles( pyramidId, serializer, tiles, TILE_COLUMN );
+	}
+
 	protected <T> List<TileData<T>> readTiles (String tableName,
 											   TileSerializer<T> serializer,
 											   Iterable<TileIndex> tiles,
-											   HBaseColumn column) throws IOException {
+											   HBaseColumn... columns) throws IOException {
 		List<String> rowIds = new ArrayList<String>();
 		for (TileIndex tile: tiles) {
 			rowIds.add(rowIdFromTileIndex(tile));
 		}
 
-		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, column);
+		List<Map<HBaseColumn, byte[]>> rawResults = readRows(tableName, rowIds, columns);
 
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
@@ -312,10 +322,12 @@ public class HBasePyramidIO implements PyramidIO {
 			Map<HBaseColumn, byte[]> rawResult = iData.next();
 			TileIndex index = indexIterator.next();
 			if (null != rawResult) {
-				byte[] rawData = rawResult.get(column);
-				ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-				TileData<T> data = serializer.deserialize(index, bais);
-				results.add(data);
+				for (HBaseColumn column: columns) {
+					byte[] rawData = rawResult.get(column);
+					ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
+					TileData<T> data = serializer.deserialize(index, bais);
+					results.add(data);
+				}
 			}
 		}
 

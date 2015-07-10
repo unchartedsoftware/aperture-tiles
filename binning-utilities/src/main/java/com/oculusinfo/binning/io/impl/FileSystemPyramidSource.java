@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -39,14 +39,15 @@ import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import org.json.JSONObject;
 
 
 /**
  * Extends the PyramidSource abstract class for file system (directory) based tiles.
- *  
+ *
  */
 public class FileSystemPyramidSource implements PyramidSource {
-	
+
 	private String _rootPath;
 	private String _extension;
 
@@ -56,12 +57,12 @@ public class FileSystemPyramidSource implements PyramidSource {
 		if (rootPath == null || rootPath.trim().length() == 0) {
 			rootPath = "./";
 		}
-		
+
 		//make sure the root path ends with a slash
 		_rootPath = (rootPath.trim().endsWith("/"))? rootPath : rootPath.trim() + "/";
 		_extension = extension;
 	}
-	
+
 	@Override
 	public void initializeForWrite (String basePath) throws IOException {
 		File metaDataFile = getMetaDataFile(basePath);
@@ -137,9 +138,9 @@ public class FileSystemPyramidSource implements PyramidSource {
 		reader.close();
 		return rawMetaData;
 	}
-	
+
 	@Override
-	public void removeTiles (String basePath, Iterable<TileIndex> tiles ) throws IOException {		
+	public void removeTiles (String basePath, Iterable<TileIndex> tiles ) throws IOException {
 		for (TileIndex tile: tiles) {
 			// delete tile
 			File tileFile = getTileFile(basePath, tile);
@@ -157,19 +158,19 @@ public class FileSystemPyramidSource implements PyramidSource {
 
 		}
 	}
-	
-	@Override	
+
+	@Override
 	public void initializeForRead(String pyramidId, int width, int height, Properties dataDescription) {
 		// Not Implemented
 	}
-	
+
 	private File getLevelDir (String basePath, TileIndex tile) {
 		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
 		                              + "/%d/",
 		                              _rootPath + basePath,
 		                              tile.getLevel() ));
 	}
-	
+
 	private File getXDir (String basePath, TileIndex tile) {
 		return new File(String.format("%s/" + PyramidIO.TILES_FOLDERNAME
 		                              + "/%d/%d/",
@@ -187,5 +188,5 @@ public class FileSystemPyramidSource implements PyramidSource {
 	private File getMetaDataFile (String basePath) {
 		return new File(_rootPath + basePath+"/"+PyramidIO.METADATA_FILENAME);
 	}
-    
+
 }

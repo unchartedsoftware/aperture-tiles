@@ -78,6 +78,12 @@ public enum DefaultPyramidIOFactoryProvider implements FactoryProvider<PyramidIO
                 return new SQLitePyramidIOFactory(parent, path);
             }
         }),
+	ELASTICSEARCH(new Constructor() {
+		@Override
+		public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
+			return new ElasticsearchPyramidIOFactory(parent, path);
+		}
+	}),
     DUMMY(new Constructor() {
             @Override
             public ConfigurableFactory<PyramidIO> create(ConfigurableFactory<?> parent, java.util.List<String> path) {
