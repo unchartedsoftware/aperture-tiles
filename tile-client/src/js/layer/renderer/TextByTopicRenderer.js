@@ -33,6 +33,7 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
 		createTopicWordsArrays,
+		filterTopicWords,
         injectCss;
 
     injectCss = function( spec ) {
@@ -71,6 +72,37 @@
 		
 		return topicWordsArray;
 	};
+	
+	/**
+     * Create an array of text words that contain the most occurrences within the array
+	 *  clipped after maxWords
+     */
+	filterTopicWords = function( topicWords, maxWords ) {
+		var counts = {},
+			words = [],
+			uniqueWords = [],
+			i, j;
+		// get the count for each word
+		for ( i = 0; i < topicWords.length; i++ ) {
+			counts[topicWords[i]] = (counts[topicWords[i]] || 0) + 1;
+		}
+		
+		// sort the words by number of occurences
+		for( var key in counts ) {
+			if ( typeof key !== "undefined" ) {
+				words.push( key );
+			}
+		}
+		words.sort( function( a, b ) {
+			return counts[b]-counts[a];
+		});
+		
+		for ( j = 0; j < maxWords; j++ ) {
+			uniqueWords.push( words[j] );
+		}
+		
+		return uniqueWords;
+	};
 
 
     /**
@@ -85,6 +117,7 @@
      *         textKey   {String|Function} - The attribute for the text in the data entry.
      *         themes    {Array}  - The array of RenderThemes to be attached to this component.
 	 *         numTopics {integer} - number of topics to bin the text words under
+	 *		   maxWords  {integer) - maximum number of words to show per tile
      *     }
      * }
      * </pre>
@@ -115,6 +148,7 @@
         var text = this.spec.text,
             textKey = text.textKey,
 			numTopics = text.numTopics,
+			maxWords = text.maxWords,
             entries = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
 			$html = $('<div class="text-by-topic-box"></div>'),
 			topicWords = [],
@@ -123,7 +157,7 @@
         topicWords = createTopicWordsArrays( entries, numTopics, textKey );
 
 		for ( i = 0; i < numTopics; i++ ) {
-			var words = $.unique(topicWords[i]),
+			var words = filterTopicWords( topicWords[i], maxWords ),
 				wordsString = ' ';
 				
 			for ( j = 0; j < words.length; j++ ) {
