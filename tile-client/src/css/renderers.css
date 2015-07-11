@@ -171,11 +171,11 @@
 .text-topic-label {
 	position: relative;
 	text-align: center;
-	font-size: 16px;
-	font-weight: bold;
+	vertical-align: middle;
+	font-size: 18px;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	padding: 10px;
+	padding: 10px 25px;
 	width: 226px;
 	height: 60px;
 	opacity: 0.75;
@@ -183,6 +183,7 @@
 
 .text-topic-label:hover {
 	opacity: 1.0;
+	font-weight: bold;
 }
 
 /********************************************/
