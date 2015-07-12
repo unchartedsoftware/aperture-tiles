@@ -157,7 +157,7 @@ public class TileServiceImpl implements TileService {
 					bracket = "[" + start + "]";
 				}
 			}
-			tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton(scaleLevelIndex), tileProperties);
+			tileDatas = pyramidIO.readTiles(dataId + bracket, serializer, Collections.singleton(scaleLevelIndex));
 		} else {
 			tileDatas = pyramidIO.readTiles(dataId, serializer, Collections.singleton( scaleLevelIndex ), tileProperties);
 		}
