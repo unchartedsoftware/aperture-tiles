@@ -175,9 +175,10 @@
 	font-size: 18px;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	padding: 10px 25px;
-	width: 226px;
-	height: 60px;
+	padding-top: 15px;
+	padding-left: 25px;
+	width: 216px;
+	height: 70px;
 	opacity: 0.75;
 }
 

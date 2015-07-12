@@ -31,9 +31,7 @@
     "use strict";
 
     var Renderer = require('./Renderer'),
-        RendererUtil = require('./RendererUtil'),
 		createTopicWordsArrays,
-		filterTopicWords,
         injectCss;
 
     injectCss = function( spec ) {
@@ -54,7 +52,7 @@
 	/**
      * Create an array of text words for each topic based on the entry's topic number
      */
-	createTopicWordsArrays = function( entries, numTopics, textKey ) {
+	createTopicWordsArrays = function( entries, numTopics ) {
 		var topicWordsArray = [];
 		
 		for ( var i = 0; i < numTopics; i++ ) {
@@ -62,48 +60,11 @@
 		}
 
 		entries.forEach( function( entry ) {
-			if ( entry !== null ) {
-				entry.forEach ( function( word ) {
-					var text = RendererUtil.getAttributeValue( word, textKey );
-					topicWordsArray[ word.topicNumber ].push( text );
-				});
-			}
+			topicWordsArray[ entry.topicNumber ].push( entry.topic );
 		});	
 		
 		return topicWordsArray;
 	};
-	
-	/**
-     * Create an array of text words that contain the most occurrences within the array
-	 *  clipped after maxWords
-     */
-	filterTopicWords = function( topicWords, maxWords ) {
-		var counts = {},
-			words = [],
-			uniqueWords = [],
-			i, j;
-		// get the count for each word
-		for ( i = 0; i < topicWords.length; i++ ) {
-			counts[topicWords[i]] = (counts[topicWords[i]] || 0) + 1;
-		}
-		
-		// sort the words by number of occurences
-		for( var key in counts ) {
-			if ( typeof key !== "undefined" ) {
-				words.push( key );
-			}
-		}
-		words.sort( function( a, b ) {
-			return counts[b]-counts[a];
-		});
-		
-		for ( j = 0; j < maxWords; j++ ) {
-			uniqueWords.push( words[j] );
-		}
-		
-		return uniqueWords;
-	};
-
 
     /**
      * Instantiate a TextByTopicRenderer object.
@@ -117,7 +78,6 @@
      *         textKey   {String|Function} - The attribute for the text in the data entry.
      *         themes    {Array}  - The array of RenderThemes to be attached to this component.
 	 *         numTopics {integer} - number of topics to bin the text words under
-	 *		   maxWords  {integer) - maximum number of words to show per tile
      *     }
      * }
      * </pre>
@@ -147,18 +107,23 @@
 
         var text = this.spec.text,
             textKey = text.textKey,
-			numTopics = text.numTopics,
-			maxWords = text.maxWords,
-            entries = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
+			numTopics = text.numTopics ? text.numTopics : 3,
+            entries = data.tile.meta.raw[0],
 			$html = $('<div class="text-by-topic-box"></div>'),
 			topicWords = [],
+			index = 1,
             i, j;
-
+	
+		// need to get the first non-null array in the raw data
+		while ( entries === null && index < data.tile.meta.raw.length ) {
+			entries = data.tile.meta.raw[index];
+			index++;
+		}
         topicWords = createTopicWordsArrays( entries, numTopics, textKey );
 
 		for ( i = 0; i < numTopics; i++ ) {
-			var words = filterTopicWords( topicWords[i], maxWords ),
-				wordsString = ' ';
+			var words = topicWords[i],
+				wordsString = '';
 				
 			for ( j = 0; j < words.length; j++ ) {
 				wordsString += words[j] + ' ';
