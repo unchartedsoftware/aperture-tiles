@@ -39,4 +39,9 @@ class RabbitMQConnectable (host: String) {
   protected val _connection = _factory.newConnection()
 
   protected val _channel = _connection.createChannel()
+
+  def oneOffDirectMessage (queue: String, message: Array[Byte]): Unit = {
+    _channel.queueDeclare(queue, false, false, false, null)
+    _channel.basicPublish("", queue, null, message)
+  }
 }

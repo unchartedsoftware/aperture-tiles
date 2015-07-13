@@ -34,5 +34,10 @@ package com.uncharted.tile.source
  * if appropriate)
  */
 package object server {
-
+  val TILE_REQUEST_EXCHANGE = "tile-requests"
+  val LOG_EXCHANGE = "tile-request-log"
+  val LOG_ERROR = "error"
+  val LOG_WARNING = "warning"
+  val LOG_INFO = "info"
+  val LOG_DEBUG = "debug"
 }
