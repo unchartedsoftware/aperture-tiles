@@ -831,7 +831,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
       "ops.min" -> "2,2",
       "ops.max" -> "3,3")
 
-    val tempFolder = "./temp-" + System.currentTimeMillis()
+    val tempFolder = "test.parquet.data"
     try
     {
       val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
