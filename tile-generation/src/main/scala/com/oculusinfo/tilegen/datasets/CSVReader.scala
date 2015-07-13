@@ -141,14 +141,10 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 		val rowRDD: RDD[Row] = data.map(record =>
 			Try{
 
-        def getFields(line : String) = {
-          if (quotechar.isEmpty) {
-            val parser = new CSVParser(separator.charAt(0))
-            parser.parseLine(line)
-          } else {
-            val parser = new CSVParser(separator.charAt(0), quotechar.charAt(0))
-            parser.parseLine(line)
-          }
+        def getFields (line: String) = {
+          val parser = new CSVParser(separator.charAt(0),
+            Try(quotechar.charAt(0)).getOrElse(CSVParser.DEFAULT_QUOTE_CHARACTER))
+          parser.parseLine(line)
         }
 
 				val fields = getFields(record)
