@@ -22,29 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.tile.rest.utils;
 
+import org.json.JSONObject;
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.config.ConfigService;
-import com.oculusinfo.tile.rest.config.ConfigServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
-import com.oculusinfo.tile.rest.utils.TileUtilsService;
-import com.oculusinfo.tile.rest.utils.TileUtilsServiceImpl;
+public interface TileUtilsService {
 
-
-public class TileModule extends AbstractModule {
-	@Override
-	protected void configure() {
-        bind( ConfigService.class ).to( ConfigServiceImpl.class );
-        bind( LayerService.class ).to( LayerServiceImpl.class );
-		bind( TileService.class ).to( TileServiceImpl.class );
-		bind( LegendService.class ).to( LegendServiceImpl.class );
-		bind( TileUtilsService.class ).to( TileUtilsServiceImpl.class );
-	}
+    /**
+     * Renders a buffer image for the corresponding layer's ramp configuration
+     * @param layer The layer identification string.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @param renderHorizontally Whether the ramp it is rendered horizontally or vertically
+     * @param query The query parameters JSON object to override server defaults.
+     * @return BufferedImage The buffered image.
+     */
+	public JSONObject getTranslation( JSONObject query );
 }

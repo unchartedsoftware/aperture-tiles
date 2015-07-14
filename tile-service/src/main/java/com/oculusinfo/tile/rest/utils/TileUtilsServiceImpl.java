@@ -22,29 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest;
+package com.oculusinfo.tile.rest.utils;
 
 
-import com.google.inject.AbstractModule;
-import com.oculusinfo.tile.rest.config.ConfigService;
-import com.oculusinfo.tile.rest.config.ConfigServiceImpl;
-import com.oculusinfo.tile.rest.layer.LayerService;
-import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import com.oculusinfo.tile.rest.legend.LegendService;
-import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
-import com.oculusinfo.tile.rest.tile.TileService;
-import com.oculusinfo.tile.rest.tile.TileServiceImpl;
-import com.oculusinfo.tile.rest.utils.TileUtilsService;
-import com.oculusinfo.tile.rest.utils.TileUtilsServiceImpl;
+import com.google.inject.Singleton;
+
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
-public class TileModule extends AbstractModule {
-	@Override
-	protected void configure() {
-        bind( ConfigService.class ).to( ConfigServiceImpl.class );
-        bind( LayerService.class ).to( LayerServiceImpl.class );
-		bind( TileService.class ).to( TileServiceImpl.class );
-		bind( LegendService.class ).to( LegendServiceImpl.class );
-		bind( TileUtilsService.class ).to( TileUtilsServiceImpl.class );
-	}
+
+/**
+ * A service that generates an image coloured using the specified
+ * ramp type. Used for legends.
+ * 
+ * @author dgray
+ *
+ */
+@Singleton
+public class TileUtilsServiceImpl implements TileUtilsService {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(TileUtilsServiceImpl.class);
+
+    /* (non-Javadoc)
+	 * @see LegendService#getLegend(Object, ColorRampParameter, String, int, int, int, boolean, boolean)
+	 */
+	public JSONObject getTranslation( JSONObject query ) {
+		JSONObject translation = new JSONObject();
+		return translation;
+    }
 }
