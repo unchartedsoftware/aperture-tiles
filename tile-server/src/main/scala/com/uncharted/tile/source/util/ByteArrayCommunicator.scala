@@ -45,21 +45,25 @@ trait ByteArrayCommunicator {
   def read[T0: TypeTag, T1: TypeTag] (source: Array[Byte]): (T0, T1)
   def read[T0: TypeTag, T1: TypeTag, T2: TypeTag] (source: Array[Byte]): (T0, T1, T2)
   def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag] (source: Array[Byte]): (T0, T1, T2, T3)
+  def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag, T4: TypeTag] (source: Array[Byte]): (T0, T1, T2, T3, T4)
+  def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag, T4: TypeTag, T5: TypeTag] (source: Array[Byte]): (T0, T1, T2, T3, T4, T5)
+  def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag, T4: TypeTag, T5: TypeTag, T6: TypeTag] (source: Array[Byte]): (T0, T1, T2, T3, T4, T5, T6)
 
   def write (values: Any*): Array[Byte]
 }
 
 class JavaSerializationByteArrayCommunicator extends ByteArrayCommunicator {
   private def readNext[T: TypeTag] (source: ObjectInputStream): T = {
-    val rawValue = implicitly[T] match {
-      case Boolean => source.readBoolean
-      case Byte => source.readByte
-      case Char => source.readChar
-      case Short => source.readShort
-      case Int => source.readInt
-      case Long => source.readLong
-      case Float => source.readFloat
-      case Double => source.readDouble()
+    val tag = scala.reflect.runtime.universe.typeTag[T]
+    val rawValue = tag match {
+      case TypeTag.Boolean => source.readBoolean
+      case TypeTag.Byte => source.readByte
+      case TypeTag.Char => source.readChar
+      case TypeTag.Short => source.readShort
+      case TypeTag.Int => source.readInt
+      case TypeTag.Long => source.readLong
+      case TypeTag.Float => source.readFloat
+      case TypeTag.Double => source.readDouble
       case _ => source.readObject()
     }
     rawValue.asInstanceOf[T]
@@ -96,6 +100,33 @@ class JavaSerializationByteArrayCommunicator extends ByteArrayCommunicator {
     val input = new ObjectInputStream(new ByteArrayInputStream(source))
     try {
       (readNext[T0](input), readNext[T1](input), readNext[T2](input), readNext[T3](input))
+    } finally {
+      input.close()
+    }
+  }
+
+  override def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag, T4: TypeTag](source: Array[Byte]): (T0, T1, T2, T3, T4) =  {
+    val input = new ObjectInputStream(new ByteArrayInputStream(source))
+    try {
+      (readNext[T0](input), readNext[T1](input), readNext[T2](input), readNext[T3](input), readNext[T4](input))
+    } finally {
+      input.close()
+    }
+  }
+
+  override def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag, T4: TypeTag, T5: TypeTag](source: Array[Byte]): (T0, T1, T2, T3, T4, T5) =  {
+    val input = new ObjectInputStream(new ByteArrayInputStream(source))
+    try {
+      (readNext[T0](input), readNext[T1](input), readNext[T2](input), readNext[T3](input), readNext[T4](input), readNext[T5](input))
+    } finally {
+      input.close()
+    }
+  }
+
+  override def read[T0: TypeTag, T1: TypeTag, T2: TypeTag, T3: TypeTag, T4: TypeTag, T5: TypeTag, T6: TypeTag](source: Array[Byte]): (T0, T1, T2, T3, T4, T5, T6) =  {
+    val input = new ObjectInputStream(new ByteArrayInputStream(source))
+    try {
+      (readNext[T0](input), readNext[T1](input), readNext[T2](input), readNext[T3](input), readNext[T4](input), readNext[T5](input), readNext[T6](input))
     } finally {
       input.close()
     }
