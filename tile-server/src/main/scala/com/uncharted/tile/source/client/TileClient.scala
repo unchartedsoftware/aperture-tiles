@@ -48,8 +48,9 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
 class TileClient(host: String,
                  serializerFactoryProvider: FactoryProvider[TileSerializer[_]]) extends RabbitMQConnectable(host) {
   import com.uncharted.tile.source.server
+  import scala.concurrent.ExecutionContext.Implicits.global
 
-  def requestTile (request: ClientTileRequest): Unit = {
+  def requestTile[T] (request: ClientTileRequest[T]): Unit = {
     // Create a unique channel on which to listen for responses
     var replyQueue = UUID.randomUUID.toString
     // Listen on our response channel for our tiles
