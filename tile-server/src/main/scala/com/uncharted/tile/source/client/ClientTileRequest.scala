@@ -22,27 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.uncharted.tile.source.server
+package com.uncharted.tile.source.client
 
-import com.rabbitmq.client.AMQP.BasicProperties
-import com.rabbitmq.client.ConnectionFactory
+
+
+import java.util.{List => JavaList}
+import org.json.JSONObject
+
+import com.oculusinfo.binning.{TileData, TileIndex}
+import com.uncharted.tile.source.server.TileRequest
+
 
 
 /**
- * A simple class to encapsulate the connection to RabbitMQ
+ * This class encapsulates the information and methods needed to process a tile request
  *
- * @param host The hostname of the RabbitMQ
+ * @tparam T The bin type of the tiles to retrieve
  */
-class RabbitMQConnectable (host: String) {
-  protected val _factory = new ConnectionFactory()
-  _factory.setHost(host)
+trait ClientTileRequest[T] extends TileRequest {
+  /** The name of the table from which to retrieve tiles */
+  val table: String
+  /** The tile indices to retrieve */
+  val indices: JavaList[TileIndex]
+  /**
+   * The configuration from which the server should construct relevant PyramidIOs and TileSerializers with which to
+   * request tiles
+   */
+  val configuration: JSONObject
 
-  protected val _connection = _factory.newConnection()
+  /** Called when a tile is retrieved */
+  def onTileRetrieved (tiles: JavaList[TileData[T]])
 
-  protected val _channel = _connection.createChannel()
-
-  def oneOffDirectMessage (queue: String, contentType: String, message: Array[Byte]): Unit = {
-    _channel.queueDeclare(queue, false, false, false, null)
-    _channel.basicPublish("", queue, new BasicProperties.Builder().contentType(contentType).build, message)
-  }
+  /** Called when an error was encountered retrieving tiles */
+  def onError (t: Throwable)
 }

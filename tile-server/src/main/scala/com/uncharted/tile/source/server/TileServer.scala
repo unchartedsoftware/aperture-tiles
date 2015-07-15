@@ -25,18 +25,16 @@
 package com.uncharted.tile.source.server
 
 
-
+import java.io.ByteArrayOutputStream
+import java.util
 import java.util.{Arrays => JavaArrays}
-import java.util.{List => JavaList}
+
+import scala.collection.JavaConverters._
 
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.rabbitmq.client.QueueingConsumer.Delivery
-import org.json.JSONObject
 
-import com.rabbitmq.client.QueueingConsumer
-
-import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.io.{PyramidIO, DefaultPyramidIOFactoryProvider}
+import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.factory.providers.FactoryProvider
 
 import com.uncharted.tile.source.util.ByteArrayCommunicator
@@ -55,7 +53,7 @@ class TileServer(host: String,
                  pyramidIOFactoryProvider: FactoryProvider[PyramidIO],
                  serializerFactoryProvider: FactoryProvider[TileSerializer[_]])
   extends Server(host, TILE_REQUEST_EXCHANGE, LOG_EXCHANGE) {
-  override def processRequest(delivery: Delivery): Option[Array[Byte]] = {
+  override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     // Get the information we need about this request
     val request = ServerTileRequest.fromByteArray(delivery.getBody)
 
@@ -71,7 +69,16 @@ class TileServer(host: String,
     // Get our tiles
     val tiles = pyramidIO.readTiles(request.table, serializer, request.indices)
 
+    // Serialize them all
+    val tileData = new util.ArrayList[Array[Byte]]()
+    tiles.asScala.foreach { tile =>
+      val baos = new ByteArrayOutputStream()
+      serializer.serialize(tile, baos)
+      baos.flush()
+      baos.close()
+      tileData.add(baos.toByteArray)
+    }
 
-    Some(ByteArrayCommunicator.defaultCommunicator.write("TILES", tiles))
+    Some((TILE, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
   }
 }

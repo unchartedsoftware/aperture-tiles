@@ -48,10 +48,16 @@ abstract class Server (host: String, requestExchange: String, logExchange: Strin
     new QueueingConsumer(_channel)
   }
 
-  def processRequest(delivery: Delivery): Option[Array[Byte]]
+  /**
+   * Process a server request
+   * @param delivery The message containing the server request
+   * @return Optionally, a pair containing the content type and the content of the return message.  None if there is
+   *         no return message required.
+   */
+  def processRequest(delivery: Delivery): Option[(String, Array[Byte])]
 
-  def processError(severity: String, throwable: Throwable): Array[Byte] =
-    ByteArrayCommunicator.defaultCommunicator.write(severity, throwable)
+  def processError(throwable: Throwable): Array[Byte] =
+    ByteArrayCommunicator.defaultCommunicator.write(throwable)
 
   private var _shutdown = false;
   def shutdown: Unit = {
@@ -76,14 +82,14 @@ abstract class Server (host: String, requestExchange: String, logExchange: Strin
         val responseQueue = delivery.getProperties.getReplyTo
         try {
           processRequest(delivery).foreach { response =>
-            oneOffDirectMessage(responseQueue, response)
+            oneOffDirectMessage(responseQueue, response._1, response._2)
           }
         } catch {
           case t0: Throwable => {
-            val encodedError = processError(LOG_WARNING, t0)
+            val encodedError = processError(t0)
             _channel.basicPublish(logExchange, LOG_WARNING, null, encodedError)
             try {
-              oneOffDirectMessage(responseQueue, encodedError)
+              oneOffDirectMessage(responseQueue, LOG_WARNING, encodedError)
             } catch {
               case t1: Throwable => {
                 println("Error writing error message")

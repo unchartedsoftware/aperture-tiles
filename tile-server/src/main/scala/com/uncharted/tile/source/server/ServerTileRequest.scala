@@ -32,17 +32,26 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
 import org.json.JSONObject
 
 
+trait TileRequest {
+  val table: String
+  val indices: JavaList[TileIndex]
+  val configuration: JSONObject
+}
 object ServerTileRequest {
-  def fromByteArray (encoded: Array[Byte]): ServerTileRequest = {
+  def fromByteArray (encoded: Array[Byte]): TileRequest = {
     val (table, indices, rawConfiguration) =
       ByteArrayCommunicator.defaultCommunicator.read[String, JavaList[TileIndex], String](encoded)
     new ServerTileRequest(table, indices, new JSONObject(rawConfiguration))
   }
+  def toByteArray (request: TileRequest): Array[Byte] = {
+    ByteArrayCommunicator.defaultCommunicator.write(request.table, request.indices, request.configuration.toString())
+  }
+
 }
 /**
  * Encapsulate all parts of a tile request into one easy-to-use package
  */
-case class ServerTileRequest (table: String, indices: JavaList[TileIndex], configuration: JSONObject) {
+case class ServerTileRequest (table: String, indices: JavaList[TileIndex], configuration: JSONObject) extends TileRequest {
   def toByteArray: Array[Byte] =
     ByteArrayCommunicator.defaultCommunicator.write(table, indices, configuration.toString)
 }
