@@ -66,19 +66,23 @@ class TileServer(host: String,
     tsFactory.readConfiguration(request.configuration)
     val serializer = tsFactory.produce(classOf[TileSerializer[_]])
 
-    // Get our tiles
-    val tiles = pyramidIO.readTiles(request.table, serializer, request.indices)
+    def readTiles[T] (typedSerializer: TileSerializer[T]): Option[(String, Array[Byte])] = {
+      // Get our tiles
+      val tiles = pyramidIO.readTiles(request.table, typedSerializer, request.indices)
 
-    // Serialize them all
-    val tileData = new util.ArrayList[Array[Byte]]()
-    tiles.asScala.foreach { tile =>
-      val baos = new ByteArrayOutputStream()
-      serializer.serialize(tile, baos)
-      baos.flush()
-      baos.close()
-      tileData.add(baos.toByteArray)
+      // Serialize them all
+      val tileData = new util.ArrayList[Array[Byte]]()
+      tiles.asScala.foreach { tile =>
+        val baos = new ByteArrayOutputStream()
+        typedSerializer.serialize(tile, baos)
+        baos.flush()
+        baos.close()
+        tileData.add(baos.toByteArray)
+      }
+
+      Some((TILE, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
     }
 
-    Some((TILE, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
+    readTiles(serializer)
   }
 }

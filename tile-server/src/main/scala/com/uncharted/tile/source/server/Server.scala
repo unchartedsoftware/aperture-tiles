@@ -95,7 +95,7 @@ abstract class Server (host: String, requestExchange: String, logExchange: Strin
                 println("Error writing error message")
                 println(t1)
                 t1.printStackTrace()
-                _channel.basicPublish(logExchange, LOG_ERROR, null, processError(LOG_ERROR, t1))
+                _channel.basicPublish(logExchange, LOG_ERROR, null, processError(t1))
               }
             }
           }

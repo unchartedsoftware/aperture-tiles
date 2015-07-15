@@ -20,12 +20,12 @@ class ServerTestSuite extends FunSuite {
   import ExecutionContext.Implicits.global
 
   class TestServer extends Server("localhost", "test-msg", "test-logs") {
-    override def processRequest(delivery: Delivery): Option[Array[Byte]] = {
+    override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
       val msg = new String(delivery.getBody)
       if ("numbers" == msg)
-        Some(ByteArrayCommunicator.defaultCommunicator.write(1, 2, 3))
+        Some(("int", ByteArrayCommunicator.defaultCommunicator.write(1, 2, 3)))
       else if ("strings" == msg)
-        Some(ByteArrayCommunicator.defaultCommunicator.write("abc", "def", "ghi"))
+        Some(("string", ByteArrayCommunicator.defaultCommunicator.write("abc", "def", "ghi")))
       else if ("error" == msg)
         throw new Exception("Test exception")
       else
@@ -34,6 +34,7 @@ class ServerTestSuite extends FunSuite {
   }
 
   class TestResponseListener (queue: String, channel: Channel) {
+    val responseTypes = new Stack[String]
     val responses = new Stack[Array[Byte]]()
     val consumer = new QueueingConsumer(channel)
     channel.queueDeclare(queue, false, false, false, null)
@@ -41,6 +42,7 @@ class ServerTestSuite extends FunSuite {
     channel.basicConsume(queue, true, consumer)
     val delivery = consumer.nextDelivery()
     responses.push(delivery.getBody)
+    responseTypes.push(delivery.getProperties.getContentType)
   }
 
   class TestClient extends RabbitMQConnectable("localhost") {
@@ -48,22 +50,22 @@ class ServerTestSuite extends FunSuite {
       var replyQueue = UUID.randomUUID.toString
       val response = concurrent.future(new TestResponseListener(replyQueue, _channel))
       _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(replyQueue).build(), "numbers".getBytes())
-      val rawResult = concurrent.Await.result(response, Duration(1000, TimeUnit.MILLISECONDS)).responses.pop
+      val rawResult = concurrent.Await.result(response, Duration(2000, TimeUnit.MILLISECONDS)).responses.pop
       ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](rawResult)
     }
     def sendStringMessage: (String, String, String) = {
       var replyQueue = UUID.randomUUID.toString
       val response = concurrent.future(new TestResponseListener(replyQueue, _channel))
       _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(replyQueue).build(), "strings".getBytes())
-      val rawResult = concurrent.Await.result(response, Duration(1000, TimeUnit.MILLISECONDS)).responses.pop
+      val rawResult = concurrent.Await.result(response, Duration(2000, TimeUnit.MILLISECONDS)).responses.pop
       ByteArrayCommunicator.defaultCommunicator.read[String, String, String](rawResult)
     }
     def sendErrorMessage: (String, Throwable) = {
       var replyQueue = UUID.randomUUID.toString
       val response = concurrent.future(new TestResponseListener(replyQueue, _channel))
       _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(replyQueue).build(), "error".getBytes())
-      val rawResult = concurrent.Await.result(response, Duration(1000, TimeUnit.MILLISECONDS)).responses.pop
-      ByteArrayCommunicator.defaultCommunicator.read[String, Throwable](rawResult)
+      val rawResult = concurrent.Await.result(response, Duration(2000, TimeUnit.MILLISECONDS))
+      (rawResult.responseTypes.pop, ByteArrayCommunicator.defaultCommunicator.read[Throwable](rawResult.responses.pop()))
     }
   }
 
