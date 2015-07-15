@@ -27,6 +27,9 @@ package com.oculusinfo.tile.rest.utils;
 
 import com.google.inject.Singleton;
 
+
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +37,8 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * A service that generates an image coloured using the specified
- * ramp type. Used for legends.
  * 
- * @author dgray
+ * 
  *
  */
 @Singleton
@@ -46,10 +47,29 @@ public class TileUtilsServiceImpl implements TileUtilsService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TileUtilsServiceImpl.class);
 
     /* (non-Javadoc)
-	 * @see LegendService#getLegend(Object, ColorRampParameter, String, int, int, int, boolean, boolean)
+	 * @see TileUtilsServiceImpl#getTranslationGoogle(JSONObject query)
 	 */
-	public JSONObject getTranslation( JSONObject query ) {
-		JSONObject translation = new JSONObject();
-		return translation;
+	public JSONObject getTranslationGoogle( JSONObject query ) {
+		JSONObject result = null;
+		
+		//Translator translator = new Translator(args[0]);
+		
+        try {
+    		String sourceText = query.getString("text");
+    		String targetLang = query.getString("targetLang");
+
+			//Translation translation = translator.translate( sourceText, null, targetLang);
+			
+		} catch (/*TranslatorException*/JSONException e) {
+			LOGGER.error("Google Translate API returned an error " + e.getMessage());
+			e.printStackTrace();
+		} catch ( Exception e) {
+			LOGGER.error("Google Translate API returned an error " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			//translator.close();
+		}
+		
+		return result;
     }
 }

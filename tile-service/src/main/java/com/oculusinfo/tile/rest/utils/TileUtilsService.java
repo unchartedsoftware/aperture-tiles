@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
+ * Copyright (c) 2015 Uncharted Software
  * http://www.oculusinfo.com/
  *
  * Released under the MIT License.
@@ -29,13 +29,10 @@ import org.json.JSONObject;
 public interface TileUtilsService {
 
     /**
-     * Renders a buffer image for the corresponding layer's ramp configuration
-     * @param layer The layer identification string.
-     * @param width The width of the image.
-     * @param height The height of the image.
-     * @param renderHorizontally Whether the ramp it is rendered horizontally or vertically
-     * @param query The query parameters JSON object to override server defaults.
-     * @return BufferedImage The buffered image.
+     * Calls the Google translation service's rest interface to perform translation
+     * 
+     * @param query The query parameters JSON object to configure Google translation rest call.
+     * @return JSONObject - the results of the call to the Google translation service
      */
-	public JSONObject getTranslation( JSONObject query );
+	public JSONObject getTranslationGoogle( JSONObject query );
 }

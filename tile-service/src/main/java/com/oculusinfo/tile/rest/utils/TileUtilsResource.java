@@ -50,7 +50,7 @@ public class TileUtilsResource extends ServerResource {
      * GET request. Returns a tile from a layer at specified level, xIndex, yIndex. Currently
      * supports png/jpg image formats and JSON data tiles.
      */
-	@Get
+	@Get 
 	public JSONObject translateText() throws ResourceException {
 		// get the params from 
 		try {
@@ -61,8 +61,14 @@ public class TileUtilsResource extends ServerResource {
             }
             // decode and build JSONObject from request parameters
             JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
+            JSONObject translationParams = decodedQueryParams.getJSONObject("translation");
             
-            return _service.getTranslation(decodedQueryParams);
+            // as we integrate more translation service we can add a more sophisticated selection mechanism
+            if ( translationParams.getString("service") == "google" ) {
+            	return _service.getTranslationGoogle(decodedQueryParams);
+            } else {            
+            	return null;
+            }
 		} catch ( Exception e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
 			                            "Unable to translate supplied string. Check parameters.", e);
