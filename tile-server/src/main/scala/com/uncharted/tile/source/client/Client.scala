@@ -26,13 +26,14 @@ package com.uncharted.tile.source.client
 
 
 
-import java.util.{List, Arrays, UUID}
+import java.util.UUID
 
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.QueueingConsumer
+import grizzled.slf4j.Logging
+
 import com.uncharted.tile.source.server.RabbitMQConnectable
 import com.uncharted.tile.source.util.ByteArrayCommunicator
-import grizzled.slf4j.Logging
 
 
 
@@ -42,16 +43,16 @@ import grizzled.slf4j.Logging
  * @tparam RT The type of request to be made
  */
 abstract class Client[RT] (host: String, requestExchange: String) extends RabbitMQConnectable(host) with Logging {
-  import com.uncharted.tile.source.server
+  import com.uncharted.tile
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def encodeRequest (request: RT): Array[Byte]
   def processError (request: RT, severity: String, serverError: Throwable): Unit = {
     severity match {
-      case server.LOG_ERROR => error("Major server error", serverError)
-      case server.LOG_WARNING => warn("Server error", serverError)
-      case server.LOG_INFO => info("Minor server error", serverError)
-      case server.LOG_DEBUG => debug("Server debug: ", serverError)
+      case tile.source.LOG_ERROR => error("Major server error", serverError)
+      case tile.source.LOG_WARNING => warn("Server error", serverError)
+      case tile.source.LOG_INFO => info("Minor server error", serverError)
+      case tile.source.LOG_DEBUG => debug("Server debug: ", serverError)
     }
   }
   def processResults (request: RT, contentType: String, contents: Array[Byte])
@@ -79,10 +80,10 @@ abstract class Client[RT] (host: String, requestExchange: String) extends Rabbit
     val delivery = consumer.nextDelivery()
     val contentType = delivery.getProperties.getContentType
     contentType match {
-      case server.LOG_ERROR => onError(request, server.LOG_ERROR, delivery.getBody)
-      case server.LOG_WARNING => onError(request, server.LOG_WARNING, delivery.getBody)
-      case server.LOG_INFO => onError(request, server.LOG_INFO, delivery.getBody)
-      case server.LOG_DEBUG => onError(request, server.LOG_DEBUG, delivery.getBody)
+      case tile.source.LOG_ERROR => onError(request, tile.source.LOG_ERROR, delivery.getBody)
+      case tile.source.LOG_WARNING => onError(request, tile.source.LOG_WARNING, delivery.getBody)
+      case tile.source.LOG_INFO => onError(request, tile.source.LOG_INFO, delivery.getBody)
+      case tile.source.LOG_DEBUG => onError(request, tile.source.LOG_DEBUG, delivery.getBody)
       case _ => processResults(request, contentType, delivery.getBody)
     }
   }

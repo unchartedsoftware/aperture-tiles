@@ -24,9 +24,9 @@
  */
 package com.uncharted.tile.source.util
 
-import java.io.{ObjectOutputStream, ByteArrayInputStream, ObjectInputStream}
 
-import org.apache.commons.io.output.ByteArrayOutputStream
+
+import java.io.{ByteArrayOutputStream, ObjectOutputStream, ByteArrayInputStream, ObjectInputStream}
 
 import scala.reflect.runtime.universe.TypeTag
 

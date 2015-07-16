@@ -25,18 +25,20 @@
 package com.uncharted.tile.source.server
 
 
+
 import java.io.ByteArrayOutputStream
 import java.util
 import java.util.{Arrays => JavaArrays}
 
 import scala.collection.JavaConverters._
 
-import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.rabbitmq.client.QueueingConsumer.Delivery
 
+import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.factory.providers.FactoryProvider
 
+import com.uncharted.tile
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 
 
@@ -52,7 +54,7 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
 class TileServer(host: String,
                  pyramidIOFactoryProvider: FactoryProvider[PyramidIO],
                  serializerFactoryProvider: FactoryProvider[TileSerializer[_]])
-  extends Server(host, TILE_REQUEST_EXCHANGE, LOG_EXCHANGE) {
+  extends Server(host, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) {
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     // Get the information we need about this request
     val request = ServerTileRequest.fromByteArray(delivery.getBody)
@@ -80,7 +82,7 @@ class TileServer(host: String,
         tileData.add(baos.toByteArray)
       }
 
-      Some((TILE, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
+      Some((tile.source.TILE, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
     }
 
     readTiles(serializer)

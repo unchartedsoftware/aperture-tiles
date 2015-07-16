@@ -25,20 +25,17 @@
 package com.uncharted.tile.source.client
 
 
+
 import java.io.ByteArrayInputStream
 import java.util
-import java.util.{List => JavaList, Arrays => JavaArrays, UUID}
-import com.uncharted.tile.source.server
-
-import scala.collection.JavaConverters._
+import java.util.{List => JavaList, Arrays => JavaArrays}
+import com.uncharted.tile
 
 import com.oculusinfo.binning.TileData
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.factory.providers.FactoryProvider
 
-import com.rabbitmq.client.AMQP.BasicProperties
-import com.rabbitmq.client.QueueingConsumer
-import com.uncharted.tile.source.server.{ServerTileRequest, RabbitMQConnectable}
+import com.uncharted.tile.source.server.ServerTileRequest
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 
 
@@ -49,7 +46,7 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  */
 class TileClient(host: String,
                  serializerFactoryProvider: FactoryProvider[TileSerializer[_]])
-extends Client[ClientTileRequest[_]](host, server.TILE_REQUEST_EXCHANGE) {
+extends Client[ClientTileRequest[_]](host, tile.source.TILE_REQUEST_EXCHANGE) {
   def encodeRequest(request: ClientTileRequest[_]): Array[Byte] =
     ServerTileRequest.toByteArray(request)
 

@@ -23,13 +23,15 @@
  * SOFTWARE.
  */
 
-
-
 package com.uncharted.tile.source.server
+
+
 
 import com.rabbitmq.client.QueueingConsumer
 import com.rabbitmq.client.QueueingConsumer.Delivery
+import com.uncharted.tile
 import com.uncharted.tile.source.util.ByteArrayCommunicator
+
 
 
 /**
@@ -87,15 +89,15 @@ abstract class Server (host: String, requestExchange: String, logExchange: Strin
         } catch {
           case t0: Throwable => {
             val encodedError = processError(t0)
-            _channel.basicPublish(logExchange, LOG_WARNING, null, encodedError)
+            _channel.basicPublish(logExchange, tile.source.LOG_WARNING, null, encodedError)
             try {
-              oneOffDirectMessage(responseQueue, LOG_WARNING, encodedError)
+              oneOffDirectMessage(responseQueue, tile.source.LOG_WARNING, encodedError)
             } catch {
               case t1: Throwable => {
                 println("Error writing error message")
                 println(t1)
                 t1.printStackTrace()
-                _channel.basicPublish(logExchange, LOG_ERROR, null, processError(t1))
+                _channel.basicPublish(logExchange, tile.source.LOG_ERROR, null, processError(t1))
               }
             }
           }

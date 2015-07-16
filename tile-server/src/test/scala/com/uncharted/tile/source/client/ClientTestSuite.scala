@@ -25,9 +25,10 @@
 
 package com.uncharted.tile.source.client
 
+
+
 import java.util.concurrent.TimeUnit
 
-import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.QueueingConsumer.Delivery
 import com.uncharted.tile.source.server.Server
 import com.uncharted.tile.source.util.ByteArrayCommunicator
@@ -35,6 +36,7 @@ import org.scalatest.FunSuite
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+
 
 
 class ClientTestSuite extends FunSuite {
@@ -110,7 +112,7 @@ class ClientTestSuite extends FunSuite {
       assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](intResult.contents))
 
       val errorResult = makeRequest(new TestClientMessage("error"))
-      assert(com.uncharted.tile.source.server.LOG_WARNING === errorResult.severity)
+      assert(com.uncharted.tile.source.LOG_WARNING === errorResult.severity)
       assert("Test exception" === errorResult.error.getMessage)
     } finally {
       server.shutdown

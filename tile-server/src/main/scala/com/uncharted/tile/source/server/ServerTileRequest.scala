@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.uncharted.tile.source.server
 
 
@@ -30,6 +31,7 @@ import java.util.{List => JavaList}
 import com.oculusinfo.binning.TileIndex
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 import org.json.JSONObject
+
 
 
 trait TileRequest {

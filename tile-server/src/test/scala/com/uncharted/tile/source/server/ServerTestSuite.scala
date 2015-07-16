@@ -32,12 +32,14 @@ import java.util.concurrent.TimeUnit
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.{QueueingConsumer, Channel}
 import com.rabbitmq.client.QueueingConsumer.Delivery
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+
 import org.scalatest.FunSuite
 
 import scala.collection.mutable.Stack
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+
+import com.uncharted.tile.source.util.ByteArrayCommunicator
 
 
 
@@ -128,7 +130,7 @@ class ServerTestSuite extends FunSuite {
       val runServer = concurrent.future(server.listenForRequests)
       val (severity, error) = (new TestClient).sendErrorMessage
 
-      assert(LOG_WARNING === severity)
+      assert(com.uncharted.tile.source.LOG_WARNING === severity)
       assert("Test exception" === error.getMessage)
     } finally {
       server.shutdown
