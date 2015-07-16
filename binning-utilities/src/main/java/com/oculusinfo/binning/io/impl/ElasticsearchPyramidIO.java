@@ -4,7 +4,6 @@ import com.oculusinfo.binning.BinIndex;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.TilePyramid;
-import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
@@ -25,7 +24,12 @@ import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
+import org.elasticsearch.search.aggregations.metrics.min.Min;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +59,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private String yField;
 	private TilePyramid tilePyramid;
 
+	private final int numZoomlevels;
+
 	public ElasticsearchPyramidIO(
 		String esClusterName,
 		String esIndex,
@@ -62,12 +68,14 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		String yField,
 		String esTransportAddress,
 		int esTransportPort,
-		TilePyramid tilePyramid ) {
+		TilePyramid tilePyramid,
+		int zoomLevelPrecompute) {
 
 		this.index = esIndex;
 		this.xField = xField;
 		this.yField = yField;
 		this.tilePyramid = tilePyramid;
+		this.numZoomlevels = zoomLevelPrecompute;
 
 		if ( this.client == null ) {
 			LOGGER.debug("Existing node not found.");
@@ -168,7 +176,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 				}
 			}
 		}
-		SearchRequestBuilder searchRequestBuilder =
+		SearchRequestBuilder searchRequest =
 			baseQuery(boundaryFilter)
 			.addAggregation(
 				AggregationBuilders.histogram("xField")
@@ -183,7 +191,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 					)
 			);
 
-		return searchRequestBuilder
+		return searchRequest
 				.execute()
 				.actionGet();
 	}
@@ -297,21 +305,161 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		return null;
 	}
 
+	/*
+	* Get the boundaries for the X and Y fields configured for this PyramidIO
+	* could be used to get the AOI tile pyramid bounds
+	*
+	* */
+	private Map<String, Double> getFieldBoundaries(){
+
+		SearchRequestBuilder boundsRequest = this.client.prepareSearch(this.index)
+			.setTypes("datum")
+			.setSearchType(SearchType.COUNT)
+			.addAggregation(
+				AggregationBuilders.min("minX").field(this.xField)
+			).addAggregation(
+				AggregationBuilders.min("minY").field(this.yField)
+			).addAggregation(
+				AggregationBuilders.max("maxX").field(this.xField)
+			).addAggregation(
+				AggregationBuilders.max("maxY").field(this.yField)
+			);
+
+		SearchResponse searchResponse = boundsRequest.execute().actionGet();
+		Aggregations aggregations = searchResponse.getAggregations();
+
+		Min minX = aggregations.get("minX");
+		Min minY = aggregations.get("minY");
+		Max maxX = aggregations.get("maxX");
+		Max maxY = aggregations.get("maxY");
+
+		Map<String, Double> boundsMap = new HashMap<>();
+		boundsMap.put("minX", minX.getValue());
+		boundsMap.put("minY", minY.getValue());
+
+		boundsMap.put("maxX", maxX.getValue());
+		boundsMap.put("maxY", maxY.getValue());
+
+		return boundsMap;
+	}
+
+	private double searchForMaxBucketValue(double intervalX, double intervalY) {
+
+		// build a query with a 2d aggregation on the xField and yField
+		// change the interval
+		SearchRequestBuilder metaDataQuery = this.client.prepareSearch(this.index)
+			.setTypes("datum")
+			.setSearchType(SearchType.COUNT)
+			.addAggregation(
+				AggregationBuilders.histogram("xAgg")
+					.field(this.xField)
+					.interval((long) intervalX)
+					.order(Histogram.Order.COUNT_DESC)
+					.subAggregation(
+						AggregationBuilders.histogram("yAgg")
+							.field(this.yField)
+							.interval((long) intervalY)
+							.order(Histogram.Order.COUNT_DESC)
+					)
+			);
+
+		SearchResponse searchResponse = metaDataQuery.execute().actionGet();
+		Histogram agg = searchResponse.getAggregations().get("xAgg");
+
+		return getMaxValueFrom2DHistogram(agg);
+	}
+
+	// iterate through the aggregation, get the
+	private double getMaxValueFrom2DHistogram(Histogram agg) {
+		double maxValue = 0;
+		for (Histogram.Bucket bucket : agg.getBuckets()) {
+			Histogram yHistogram = bucket.getAggregations().get("yAgg");
+			// don't need to iterate over yAgg buckets because the query has ordered aggregations
+			// take the first one if it's greater than maxValue
+			if (maxValue < yHistogram.getBuckets().get(0).getDocCount() )
+				maxValue = yHistogram.getBuckets().get(0).getDocCount();
+		}
+		return maxValue;
+	}
+
+	private List<Double> readMetaMaxFromElasticsearch() {
+
+		Rectangle2D bounds = tilePyramid.getBounds();
+
+
+
+		List<Double> maxCountList = new ArrayList<>();
+		double pixelsPerTile = 256.0;
+
+		for ( int i = 0; i < this.numZoomlevels ; i++ ){
+
+			// calculated by dividing the entirety of the dataset bounds
+			// by the number of pixels in a tile and the number of tiles at that Zoom level
+			double tilesAtZoomLevel = Math.pow(2, i);
+			double xInterval = bounds.getWidth() / (pixelsPerTile * tilesAtZoomLevel);
+			double yInterval = bounds.getHeight() / (pixelsPerTile * tilesAtZoomLevel);
+			// search ES based off the calculated interval
+			double maxDocCount = searchForMaxBucketValue(xInterval, yInterval);
+			maxCountList.add(i, maxDocCount);
+		}
+		return maxCountList;
+	}
+
+	private JSONObject formatMaxValuesAsMetadataJSONString(List<Double> maxValues) throws JSONException {
+
+		JSONObject metaDataJSON = new JSONObject();
+		JSONObject levelMinMap = new JSONObject();
+		JSONObject levelMaxMap = new JSONObject();
+		for ( int i = 0; i < maxValues.size(); i++ ) {
+			levelMinMap.put(""+i, String.valueOf(0));
+			levelMaxMap.put(""+i, String.valueOf(maxValues.get(i)));
+		}
+		metaDataJSON.put("levelMinimums", levelMinMap);
+		metaDataJSON.put("levelMaximums", levelMaxMap);
+		return metaDataJSON;
+	}
+
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
-		//TODO find a better way to get bounds + level metadata
+
 		Rectangle2D bounds = tilePyramid.getBounds();
-		return "{\"bounds\":["+
-			bounds.getMinX() + "," +
-			bounds.getMinY() + "," +
-			bounds.getMaxX() + "," +
-			bounds.getMaxY() + "],"+
-			"\"maxzoom\":1,\"scheme\":\"TMS\","+
-			"\"description\":\"Elasticsearch test layer\","+
-			"\"projection\":\"EPSG:4326\","+
-			"\"name\":\"ES_SIFT_CROSSPLOT\","+
-			"\"minzoom\":1,\"tilesize\":256,"+
-			"\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
+		try {
+			// read meta max values from Elasticsearch
+			List<Double> maxValues = readMetaMaxFromElasticsearch();
+
+			JSONObject metaDataJSON = new JSONObject();
+
+			JSONArray boundsJSON = new JSONArray();
+			boundsJSON.put(0, bounds.getMinX());
+			boundsJSON.put(1, bounds.getMinY());
+			boundsJSON.put(2, bounds.getMaxX());
+			boundsJSON.put(3, bounds.getMaxY());
+
+			metaDataJSON.put("bounds", boundsJSON);
+			metaDataJSON.put("maxzoom", 1);
+			metaDataJSON.put("description", "Elasticsearch rendered layer");
+			metaDataJSON.put("scheme", "TMS");
+			metaDataJSON.put("projection", "EPSG:4326");
+			metaDataJSON.put("name", "ES_PLOT");
+			metaDataJSON.put("minzoom", 1);
+			metaDataJSON.put("tilesize", 256);
+			metaDataJSON.put("meta", formatMaxValuesAsMetadataJSONString(maxValues));
+
+			return metaDataJSON.toString();
+		} catch (JSONException e) {
+			LOGGER.error("Couldn't build JSON metadata. Defaulting to arbitrary max/mins.");
+			return "{\"bounds\":["+
+				bounds.getMinX() + "," +
+				bounds.getMinY() + "," +
+				bounds.getMaxX() + "," +
+				bounds.getMaxY() + "],"+
+				"\"maxzoom\":1,\"scheme\":\"TMS\","+
+				"\"description\":\"Elasticsearch test layer\","+
+				"\"projection\":\"EPSG:4326\","+
+				"\"name\":\"ES_SIFT_CROSSPLOT\","+
+				"\"minzoom\":1,\"tilesize\":256,"+
+				"\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
+		}
 	}
 
 	@Override
