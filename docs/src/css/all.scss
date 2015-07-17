@@ -587,6 +587,21 @@ hr {
 	border-bottom-width: 0;
 	border-color: $txt-block-border;
 	margin: 18px 0 15px 20px;
+.right {
+	float: right;
+}
+
+.edit {
+	font-size: 14px;
+	padding-top: 30px;
+	margin-bottom: 25px;
+	a {
+		color: #777;
+		&:hover {
+			color: $color-body-link-hover;
+		}
+	}
+}
 }
 
 .copyright {
