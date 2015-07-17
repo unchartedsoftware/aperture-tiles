@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2015 Uncharted Software
- * http://www.oculusinfo.com/
+ * Copyright (c) 2015 Uncharted Software. http://www.uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -29,10 +28,10 @@ import org.json.JSONObject;
 public interface TileUtilsService {
 
     /**
-     * Calls the Google translation service's rest interface to perform translation
+     * Calls the translation service's to perform translation
      * 
-     * @param query The query parameters JSON object to configure Google translation rest call.
-     * @return JSONObject - the results of the call to the Google translation service
+     * @param query The query parameters JSON object to configure translation service.
+     * @return JSONObject - the results of the call to the translation service
      */
-	public JSONObject getTranslationGoogle( JSONObject query );
+	public JSONObject getTranslation( JSONObject query );
 }

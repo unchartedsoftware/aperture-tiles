@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
- * http://www.oculusinfo.com/
+ * Copyright (c) 2015 Uncharted Software. http://www.uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -25,9 +24,17 @@
 package com.oculusinfo.tile.rest.utils;
 
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLEncoder;
+
+import javax.net.ssl.HttpsURLConnection;
+
 import com.google.inject.Singleton;
-
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,8 +44,8 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * 
- * 
+ * A service that will translate given text to a target language based on the parameters 
+ * 	passed in.  Currently only supports the Google Translate Service. 
  *
  */
 @Singleton
@@ -49,27 +56,68 @@ public class TileUtilsServiceImpl implements TileUtilsService {
     /* (non-Javadoc)
 	 * @see TileUtilsServiceImpl#getTranslationGoogle(JSONObject query)
 	 */
-	public JSONObject getTranslationGoogle( JSONObject query ) {
+	public JSONObject getTranslation( JSONObject query ) {
+    	// get the translation arguments from the query
 		JSONObject result = null;
-		
-		//Translator translator = new Translator(args[0]);
-		
-        try {
-    		String sourceText = query.getString("text");
-    		String targetLang = query.getString("targetLang");
-
-			//Translation translation = translator.translate( sourceText, null, targetLang);
-			
-		} catch (/*TranslatorException*/JSONException e) {
-			LOGGER.error("Google Translate API returned an error " + e.getMessage());
-			e.printStackTrace();
-		} catch ( Exception e) {
-			LOGGER.error("Google Translate API returned an error " + e.getMessage());
-			e.printStackTrace();
+		BufferedReader reader = null;
+    	try {
+    		// as we integrate more translation service we can add a more sophisticated selection mechanism
+    		String service = query.getString("service");
+    		if ( service.equals( "google" ) ) {
+    			// get google translate params
+    			String text = query.getString("text");
+        		String target = query.getString("target");
+        		
+        		// get the Google API key from the query
+        		String filepath = query.getString("keypath");
+        		reader = new BufferedReader( new FileReader( filepath ) );            	
+        		String key = reader.readLine();
+        		
+            	result = translateGoogle( text, target, key );
+            }	
+    	} catch ( JSONException e ) {
+    		LOGGER.error( "Incorrect Configuration for Translation API", e );
+		} catch ( IOException e ) {
+			LOGGER.error( "Error with Google API key file path", e );
 		} finally {
-			//translator.close();
-		}
-		
+		    try { if (reader != null) { reader.close(); }
+		    } catch ( IOException e ) { LOGGER.error( "Error closing Google API key file", e ); }
+	    }
 		return result;
+	}
+       
+	/*
+	 * Translates the given text using the Google Translate API
+	 */
+    private JSONObject translateGoogle( String text, String target, String key ) {
+		JSONObject result = null;
+		try {
+			String encodedText = URLEncoder.encode(text, "UTF-8");
+            String urlStr = "https://www.googleapis.com/language/translate/v2?key=" + key + "&q=" + encodedText + "&target=" + target;
+            URL url = new URL( urlStr );
+ 
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            StringBuilder reply = new StringBuilder();
+            InputStream stream;
+            if ( connection.getResponseCode() == 200 ) //success
+            {	
+                stream = connection.getInputStream();
+            } else {
+                stream = connection.getErrorStream();
+            }
+ 
+            BufferedReader reader = new BufferedReader( new InputStreamReader( stream ) );
+            String line;
+            while (( line = reader.readLine() ) != null ) {
+            	reply.append(line);
+            }
+            result = new JSONObject( reply.toString() );
+        } catch ( IOException e ) {
+        	LOGGER.error( "Error reading response from Google Translation Service", e );
+        } catch (JSONException e) {
+        	LOGGER.error( "Error creating JSON Objects from Google Translation Service response", e );
+		}
+ 
+        return result;
     }
 }

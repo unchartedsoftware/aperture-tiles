@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc.
- * http://www.oculusinfo.com/
+ * Copyright (c) 2015 Uncharted Software. http://www.uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -26,6 +25,8 @@ package com.oculusinfo.tile.rest.utils;
 
 import org.json.JSONObject;
 import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
@@ -45,13 +46,11 @@ public class TileUtilsResource extends ServerResource {
 	}
 
 
-
     /**
-     * GET request. Returns a tile from a layer at specified level, xIndex, yIndex. Currently
-     * supports png/jpg image formats and JSON data tiles.
+     * GET request. Returns a JSON response from the translation service specified
      */
 	@Get 
-	public JSONObject translateText() throws ResourceException {
+	public Representation translateText() throws ResourceException {
 		// get the params from 
 		try {
 			// No alternate versions supported. But if we did:
@@ -61,17 +60,11 @@ public class TileUtilsResource extends ServerResource {
             }
             // decode and build JSONObject from request parameters
             JSONObject decodedQueryParams = QueryParamDecoder.decode( getRequest().getResourceRef().getQuery() );
-            JSONObject translationParams = decodedQueryParams.getJSONObject("translation");
-            
-            // as we integrate more translation service we can add a more sophisticated selection mechanism
-            if ( translationParams.getString("service") == "google" ) {
-            	return _service.getTranslationGoogle(decodedQueryParams);
-            } else {            
-            	return null;
-            }
+            return new JsonRepresentation( _service.getTranslation(decodedQueryParams) );
+
 		} catch ( Exception e) {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-			                            "Unable to translate supplied string. Check parameters.", e);
+			                            "Unable to translate text. Check parameters.", e);
 		}
 	}
 }

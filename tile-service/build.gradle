@@ -8,7 +8,6 @@ dependencies {
 	compile "org.restlet.jee:org.restlet:2.1.2"
 	compile "org.restlet.jee:org.restlet.ext.servlet:2.1.2"
 	compile "org.restlet.jee:org.restlet.ext.json:2.1.2"
-	compile "com.google.apis:google-api-services-translate:v2-rev41-1.20.0"
 	compile "com.google.inject:guice:3.0"
 	compile "com.google.inject.extensions:guice-servlet:3.0"
 	compile "com.google.inject.extensions:guice-multibindings:3.0"
