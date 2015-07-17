@@ -5,11 +5,17 @@ layout: default
 {% comment %} Get filename of TOC constructor {% endcomment %}
 		{% capture tocFile %}{{ page.section | slugify }}-{{ page.subsection | slugify }}.html{% endcapture %}
 
-{% include submenu.html %}
+<nav>
+	{% include submenu.html %}
+</nav>
 <div id="content">
 	<div class="content-context">
-		{% include tocs/{{ tocFile }} %}
-		{% include footer.html %}
+		<nav>
+			{% include tocs/{{ tocFile }} %}
+		</nav>
+		<footer>
+			{% include footer.html %}
+		</footer>
 	</div>
 	<div class="content-body">
 		{{ content }}
