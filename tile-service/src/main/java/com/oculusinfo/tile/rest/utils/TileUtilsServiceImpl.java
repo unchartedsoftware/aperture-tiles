@@ -65,7 +65,7 @@ public class TileUtilsServiceImpl implements TileUtilsService {
     		String service = query.getString("service");
     		if ( service.equals( "google" ) ) {
     			// get google translate params
-    			String text = query.getString("text");
+    			String text = query.getString("q");
         		String target = query.getString("target");
         		
         		// get the Google API key from the query
