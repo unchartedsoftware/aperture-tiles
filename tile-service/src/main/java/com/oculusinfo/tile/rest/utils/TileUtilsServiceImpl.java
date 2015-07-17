@@ -30,12 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.net.URLEncoder;
-
 import javax.net.ssl.HttpsURLConnection;
-
 import com.google.inject.Singleton;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -65,7 +61,7 @@ public class TileUtilsServiceImpl implements TileUtilsService {
     		String service = query.getString("service");
     		if ( service.equals( "google" ) ) {
     			// get google translate params
-    			String text = query.getString("q");
+    			String text = query.getString("text");
         		String target = query.getString("target");
         		
         		// get the Google API key from the query
@@ -92,8 +88,8 @@ public class TileUtilsServiceImpl implements TileUtilsService {
     private JSONObject translateGoogle( String text, String target, String key ) {
 		JSONObject result = null;
 		try {
-			String encodedText = URLEncoder.encode(text, "UTF-8");
-            String urlStr = "https://www.googleapis.com/language/translate/v2?key=" + key + "&q=" + encodedText + "&target=" + target;
+			// assumes that the text has already been uri encoded
+            String urlStr = "https://www.googleapis.com/language/translate/v2?key=" + key + "&q=" + text + "&target=" + target;
             URL url = new URL( urlStr );
  
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
