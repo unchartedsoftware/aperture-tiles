@@ -237,8 +237,7 @@ pre {
 .toc-header {
 	font-size: 16px;
 	font-weight: bold;
-	margin: 0 0 5px 30px;
-	text-align: center;
+	margin: 0 0 5px 0;
 }
 
 .toc {
@@ -586,7 +585,9 @@ hr {
 	border-top-width: 1px;
 	border-bottom-width: 0;
 	border-color: $txt-block-border;
-	margin: 18px 0 15px 20px;
+	margin: 18px 0 15px 0;
+}
+
 .right {
 	float: right;
 }
