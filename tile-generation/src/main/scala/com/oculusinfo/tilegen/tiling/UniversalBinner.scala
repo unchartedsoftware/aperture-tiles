@@ -289,6 +289,8 @@ class UniversalBinner extends Logging {
 				val binAggregator = binAnalytic.aggregate(_, _)
 				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
 
+				newAnalyticValue.foreach(analyticValue => dataAnalytics.foreach(analytic => analytic.accumulate(tile, analyticValue)))
+
 				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
 					optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
 			}
