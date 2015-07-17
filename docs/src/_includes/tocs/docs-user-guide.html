@@ -1,6 +1,6 @@
 <div class="toc">
 	{% for chapter in site.data.userGuideTopics %}
-		<div class="toc-header">{{ chapter.label }}</div>
+		<div class="toc-header"><i class="fa fa-{{ chapter.faIcon }}"></i> &nbsp; {{ chapter.label }}</div>
 		<{{ chapter.listType }} class="toc-body">
 			{% for topic in chapter.topics %}
 				<li class="toc-item">
