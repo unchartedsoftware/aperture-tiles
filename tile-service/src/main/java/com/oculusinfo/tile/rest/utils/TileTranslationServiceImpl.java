@@ -45,9 +45,9 @@ import org.slf4j.LoggerFactory;
  *
  */
 @Singleton
-public class TileUtilsServiceImpl implements TileUtilsService {
+public class TileTranslationServiceImpl implements TileTranslationService {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(TileUtilsServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(TileTranslationServiceImpl.class);
 
     /* (non-Javadoc)
 	 * @see TileUtilsServiceImpl#getTranslationGoogle(JSONObject query)

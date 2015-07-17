@@ -25,7 +25,7 @@ package com.oculusinfo.tile.rest.utils;
 
 import org.json.JSONObject;
 
-public interface TileUtilsService {
+public interface TileTranslationService {
 
     /**
      * Calls the translation service's to perform translation

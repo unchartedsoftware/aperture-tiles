@@ -31,7 +31,7 @@ import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.layer.StateResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
-import com.oculusinfo.tile.rest.utils.TileUtilsResource;
+import com.oculusinfo.tile.rest.utils.TileTranslationResource;
 import org.restlet.resource.ServerResource;
 
 import com.google.inject.TypeLiteral;
@@ -67,7 +67,7 @@ public class RestConfigModule extends AbstractModule {
 		resourceBinder.addBinding( "/{version}/legend/{layer}" ).toInstance( LegendResource.class );
 		resourceBinder.addBinding( "/legend/{layer}" ).toInstance( LegendResource.class );
 		
-		resourceBinder.addBinding( "/{version}/utils" ).toInstance( TileUtilsResource.class );
-		resourceBinder.addBinding( "/utils" ).toInstance( TileUtilsResource.class );
+		resourceBinder.addBinding( "/{version}/translate" ).toInstance( TileTranslationResource.class );
+		resourceBinder.addBinding( "/translate" ).toInstance( TileTranslationResource.class );
 	}
 }

@@ -35,13 +35,13 @@ import com.google.inject.Inject;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.QueryParamDecoder;
 
-public class TileUtilsResource extends ServerResource {
+public class TileTranslationResource extends ServerResource {
 
-	private TileUtilsService _service;
+	private TileTranslationService _service;
 
 
 	@Inject
-	public TileUtilsResource(TileUtilsService service) {
+	public TileTranslationResource(TileTranslationService service) {
 		this._service = service;
 	}
 
@@ -50,7 +50,7 @@ public class TileUtilsResource extends ServerResource {
      * GET request. Returns a JSON response from the translation service specified
      */
 	@Get 
-	public Representation translateText() throws ResourceException {
+	public Representation translate() throws ResourceException {
 		// get the params from 
 		try {
 			// No alternate versions supported. But if we did:
