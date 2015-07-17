@@ -38,6 +38,7 @@ import com.oculusinfo.binning.TileIndex
 // (perhaps because of the nested nature of our line functions, because each function is not self-contained?)
 object StandardBinningFunctions
 		extends StandardPointBinningFunctions
+    with StandardGaussianBinningFunctions
 		with StandardLinearBinningFunctions
 		with StandardArcBinningFunctions
 		with Serializable
@@ -100,6 +101,137 @@ trait StandardPointBinningFunctions {
 	 * correct coordinate system.
 	 */
 	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
+
+}
+
+trait StandardGaussianBinningFunctions {
+
+  def makeGaussianKernel(radius : Int, sigma : Double) : Array[Array[Double]] = {
+    val dim = (radius * 2) + 1
+
+    val kernel = Array.ofDim[Double](dim, dim)
+    var sum = 0.0
+
+//    println(kernel.length)
+//    println(kernel(0).length)
+    for (u <- 0 until kernel.length) {
+
+      for (v <- 0 until kernel(0).length) {
+
+        val uc = u - (kernel.length - 1) / 2
+        val vc = v - (kernel(0).length - 1) / 2
+        // Calculate and save
+        val g = Math.exp(-(uc * uc + vc * vc) / (2 * sigma * sigma))
+        sum += g;
+        kernel(u)(v) = g;
+      }
+    }
+    // Normalize the kernel
+    for (u <- 0 until kernel.length - 1) {
+      for (v <- 0 until kernel(0).length - 1) {
+        kernel(u)(v) /= sum
+      }
+    }
+    kernel
+  }
+
+
+
+
+	/**
+	 * Simple function to spread an input point over several levels of tile pyramid.
+	 */
+	def locateIndexOverLevelsGuassian[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                             levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] =
+		index => {
+
+      val kernel = makeGaussianKernel(5,1)
+
+			val (x, y) = indexScheme.toCartesian(index)
+			levels.map{level =>
+
+
+
+				val tile = pyramid.rootToTile(x, y, level, 10, 10)
+
+				val bin = pyramid.rootToBin(x, y, tile)
+        val bin1 = pyramid.rootToBin(0, 0, tile)
+        val bin2 = pyramid.rootToBin(100, -100, tile)
+        val bin3 = pyramid.rootToBin(1, 1, tile)
+        val bin4 = pyramid.rootToBin(50, 1, tile)
+        val bin5 = pyramid.rootToBin(1, -50, tile)
+        val bin6 = pyramid.rootToBin(-1, -2, tile)
+
+        // Current bin and tile if the blur doesn't affect surrounding tiles.
+        var result = List( (tile, Array(bin))  )
+
+        // Potential additional tiles depending on the position of the point and the size of the blur.
+        // if tile.getX = 0 should we wrapped around and add a tile at 255 ?
+        if ((bin.getX < kernel(0).length / 2) && (tile.getX > 0)) {
+          val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY, tile.getXBins, tile.getYBins )
+          result :+  (newTile, Array(bin))
+        }
+
+        if ((bin.getY < kernel.length / 2) && (tile.getY > 0)) {
+          val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY - 1, tile.getXBins, tile.getYBins )
+          result :+  (newTile, Array(bin))
+        }
+
+        // Max x,y values for the current tile. Need to get those from somewhere
+        val maxX = 256
+        val maxY = 256
+
+        if ((bin.getX > (maxX - kernel(0).length / 2)) && (tile.getX < tile.getXBins - 1)) {
+          val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY, tile.getXBins, tile.getYBins )
+          result :+  (newTile, Array(bin))
+        }
+
+        if ((bin.getY > (maxX - kernel(0).length / 2)) && (tile.getY < tile.getYBins - 1)) {
+          val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY + 1, tile.getXBins, tile.getYBins )
+          result :+  (newTile, Array(bin))
+        }
+
+        // default for now to make the function works without changing the signature
+        (tile, Array(bin))
+			}
+		}
+
+
+
+	/**
+	 * Simple function to spread an input point over several levels of tile pyramid, ignoring
+	 * points that are out of bounds
+	 */
+	def locateBoundedIndexOverLevelsGuassian[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                                    levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
+		                                bounds.getMaxX, bounds.getMaxY)
+
+		index => {
+			val (x, y) = indexScheme.toCartesian(index)
+			if (minX <= x && x < maxX && minY <= y && y < maxY) {
+				levels.map{level =>
+					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+					val bin = pyramid.rootToBin(x, y, tile)
+					(tile, Array(bin))
+				}
+			} else {
+				Traversable()
+			}
+		}
+	}
+
+
+
+	/**
+	 * Simple population function that just takes input points and outputs them, as is, in the
+	 * correct coordinate system.
+	 */
+	def populateTileIdentityGuassian[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
 
 }

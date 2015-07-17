@@ -43,7 +43,48 @@ import com.oculusinfo.tilegen.util.ExtendedNumeric
 class StandardBinningFunctionsTestSuite extends FunSuite {
 	import StandardBinningFunctions._
 
+  test("Guassian tiling") {
 
+    def makeKernel(radius : Int, sigma : Double) : Array[Array[Double]] = {
+      //      val rows = 5
+      //      val cols = 5
+      //      val sigma = 1
+
+      val dim = (radius * 2) + 1
+
+      val kernel = Array.ofDim[Double](dim, dim)
+      //int uc, vc;
+      //float g
+      var sum = 0.0
+      //for(int u=0; u<kernel.length; u++) {
+      println(kernel.length)
+      println(kernel(0).length)
+      for (u <- 0 until kernel.length) {
+        //for(int v=0; v<kernel[0].length; v++) {
+        for (v <- 0 until kernel(0).length) {
+
+
+          val uc = u - (kernel.length - 1) / 2
+          val vc = v - (kernel(0).length - 1) / 2
+          // Calculate and save
+          val g = Math.exp(-(uc * uc + vc * vc) / (2 * sigma * sigma))
+          sum += g;
+          kernel(u)(v) = g;
+        }
+      }
+      // Normalize it
+      for (u <- 0 until kernel.length - 1) {
+        for (v <- 0 until kernel(0).length - 1) {
+          kernel(u)(v) /= sum
+        }
+      }
+
+      kernel.map(x => x.map(y => println(y)))
+      kernel
+    }
+
+    makeKernel(3, 1)
+  }
 
 	test("for vs while") {
 		def time (f: () => Unit): Double = {
