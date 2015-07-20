@@ -57,8 +57,8 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 		Double.MIN_VALUE);
 
 	public static final DoubleProperty LOG_MINIMUM = new DoubleProperty("log10DefaultMin",
-			"The minimum value used for the log transform when the input data minimum is <= 0",
-			1);
+		"The minimum value used for the log transform when the input data minimum is <= 0",
+		1.0);
 
 	public static final DoubleProperty TRANSFORM_SCALE = new DoubleProperty("scale",
 		"A scaling factor to apply to a transform",

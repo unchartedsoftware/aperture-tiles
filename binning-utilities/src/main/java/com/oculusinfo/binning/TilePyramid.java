@@ -220,7 +220,4 @@ public interface TilePyramid extends Serializable {
 	 * @return Human-readable name for the tile scheme.
 	 */
 	public String getTileScheme ();
-
-
-	public Rectangle2D getBounds();
 }

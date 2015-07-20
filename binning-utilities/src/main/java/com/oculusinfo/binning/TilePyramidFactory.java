@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,23 +35,22 @@ import java.util.List;
 
 
 public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
-	private StringProperty PYRAMID_TYPE = new StringProperty("type",
+	public static StringProperty PYRAMID_TYPE = new StringProperty("type",
 	                                                         "The type of tile pyramid to be created",
 	                                                         "webmercator",
 	                                                         new String[] {"areaofinterest", "epsg:4326", "webmercator", "epsg:900913", "epsg:3857"});
-	private DoubleProperty MINIMUM_X = new DoubleProperty("minX",
+	public static DoubleProperty MINIMUM_X = new DoubleProperty("minX",
 	                                                      "The lower bound for the X axis in an area-of-interest tile pyramid",
-	                                                      -180.0);
-	private DoubleProperty MAXIMUM_X = new DoubleProperty("maxX",
+	                                                      null );
+	public static DoubleProperty MAXIMUM_X = new DoubleProperty("maxX",
 	                                                      "The upper bound for the X axis in an area-of-interest tile pyramid",
-	                                                      180.0);
-	private DoubleProperty MINIMUM_Y = new DoubleProperty("minY",
+	                                                      null );
+	public static DoubleProperty MINIMUM_Y = new DoubleProperty("minY",
 	                                                      "The lower bound for the Y axis in an area-of-interest tile pyramid",
-	                                                      -80.05);
-	private DoubleProperty MAXIMUM_Y = new DoubleProperty("maxY",
+	                                                      null );
+	public static DoubleProperty MAXIMUM_Y = new DoubleProperty("maxY",
 	                                                      "The upper bound for the Y axis in an area-of-interest tile pyramid",
-	                                                      80.05);
-
+	                                                      null );
 
 
 	public TilePyramidFactory (ConfigurableFactory<?> parent, List<String> path) {

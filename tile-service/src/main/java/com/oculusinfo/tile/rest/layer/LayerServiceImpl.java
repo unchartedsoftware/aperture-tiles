@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest.layer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.oculusinfo.binning.TilePyramidFactory;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.PyramidIOFactory;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
@@ -46,6 +47,7 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -112,15 +114,13 @@ public class LayerServiceImpl implements LayerService {
 		return layers;
 	}
 
-	@Override
-	public PyramidMetaData getMetaData( String layerId ) {
+	private PyramidMetaData getMetaData( String layerId, LayerConfiguration config ) {
 		try {
-			LayerConfiguration config = getLayerConfiguration( layerId, null );
-            String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
-            if ( dataId == null ) {
+			String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			if ( dataId == null ) {
 				LOGGER.error( "Couldn't determine data id for layer: "+layerId+" , please ensure the layer config file is correct." );
-                return null;
-            }
+				return null;
+			}
 			PyramidIO pyramidIO = config.produce( PyramidIO.class );
 			if ( pyramidIO == null ) {
 				LOGGER.error( "Couldn't produce the pyramid io instance for layer: "+layerId+" , this is most likely due to either:\n" +
@@ -133,6 +133,11 @@ public class LayerServiceImpl implements LayerService {
 			LOGGER.error( "Couldn't determine pyramid I/O method for {}", layerId, e );
 			return null;
 		}
+	}
+
+	@Override
+	public PyramidMetaData getMetaData( String layerId ) {
+		return getMetaData(layerId, getLayerConfiguration(layerId, null));
 	}
 
 	private PyramidMetaData getCachedMetaData( String layerId, String dataId, PyramidIO pyramidIO ) {
@@ -196,14 +201,53 @@ public class LayerServiceImpl implements LayerService {
             // produce the layer configuration
 			LayerConfiguration config = factory.produce( LayerConfiguration.class );
 			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
-            if ( initJSON != null ) {
-			    String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
+			PyramidIO pyramidIO;
+			if ( initJSON != null ) {
+				String dataId = config.getPropertyValue(LayerConfiguration.DATA_ID);
 				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
 				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
-                // initialize the PyramidIO for reading
-                PyramidIO pyramidIO = config.produce( PyramidIO.class );
-				pyramidIO.initializeForRead( dataId, width, height, initProps);
+				// initialize the PyramidIO for reading
+				pyramidIO = config.produce(PyramidIO.class);
+				pyramidIO.initializeForRead(dataId, width, height, initProps);
+			}
+
+			if ( config.getPropertyValue( TilePyramidFactory.MINIMUM_X ) == null ||
+				config.getPropertyValue( TilePyramidFactory.MINIMUM_Y ) == null ||
+				config.getPropertyValue( TilePyramidFactory.MAXIMUM_X ) == null ||
+				config.getPropertyValue( TilePyramidFactory.MAXIMUM_Y ) == null ) {
+
+				PyramidMetaData meta = getMetaData(layerId, config);
+				if ( meta != null &&
+					meta.getProjection().toLowerCase().equals( "epsg:4326" ) ) {
+					// get bounds from metadata
+					Rectangle2D bounds = meta.getBounds();
+					// build bounds JSON string
+					JSONObject tilePyramidJSON = new JSONObject();
+					tilePyramidJSON.put( "type", "areaofinterest" );
+					tilePyramidJSON.put( TilePyramidFactory.MINIMUM_X.getName(), bounds.getMinX() );
+					tilePyramidJSON.put( TilePyramidFactory.MINIMUM_Y.getName(), bounds.getMinY() );
+					tilePyramidJSON.put( TilePyramidFactory.MAXIMUM_X.getName(), bounds.getMaxX() );
+					tilePyramidJSON.put( TilePyramidFactory.MAXIMUM_Y.getName(), bounds.getMaxY() );
+					// create overlay object
+					JSONObject overlay = new JSONObject();
+					JSONObject subNode = overlay;
+					String lastKey = LayerConfiguration.TILE_PYRAMID_PATH.get( LayerConfiguration.TILE_PYRAMID_PATH.size() - 1 );
+					for ( String key : LayerConfiguration.TILE_PYRAMID_PATH ) {
+						if ( !key.equals( lastKey ) ) {
+							JSONObject node = new JSONObject();
+							subNode.put( key, node );
+							subNode = node;
+						} else {
+							subNode.put( key, tilePyramidJSON );
+						}
+
+					}
+					// inject it into the config JSON
+					JsonUtilities.overlayInPlace( layerConfig, overlay );
+				}
+				// re-parse and create layer config
+				//return getLayerConfiguration( layerId, requestParams );
 			}
 			return config;
 		} catch ( Exception e ) {

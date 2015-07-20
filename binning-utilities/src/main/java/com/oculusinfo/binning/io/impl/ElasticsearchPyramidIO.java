@@ -9,6 +9,7 @@ import com.oculusinfo.binning.impl.SparseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.util.JsonUtilities;
+import com.oculusinfo.factory.ConfigurableFactory;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -26,6 +27,9 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
+import org.elasticsearch.search.aggregations.metrics.min.Min;
+import org.elasticsearch.search.aggregations.metrics.min.MinAggregator;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +57,8 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private String index;
 	private String xField;
 	private String yField;
-	private TilePyramid tilePyramid;
+
+	private ConfigurableFactory<?> parent;
 
 	public ElasticsearchPyramidIO(
 		String esClusterName,
@@ -62,12 +67,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		String yField,
 		String esTransportAddress,
 		int esTransportPort,
-		TilePyramid tilePyramid ) {
+		ConfigurableFactory<?> parent ) {
 
 		this.index = esIndex;
 		this.xField = xField;
 		this.yField = yField;
-		this.tilePyramid = tilePyramid;
+		this.parent = parent;
 
 		if ( this.client == null ) {
 			LOGGER.debug("Existing node not found.");
@@ -226,7 +231,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	}
 
-	private Map<Integer, Map> parseAggregations(Histogram date_agg, TileIndex tileIndex) {
+	private Map<Integer, Map> parseAggregations(Histogram date_agg, TileIndex tileIndex) throws IOException  {
 		List<? extends Histogram.Bucket> dateBuckets = date_agg.getBuckets();
 
 		Map<Integer, Map> result = new HashMap<>();
@@ -236,7 +241,13 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		for (Histogram.Bucket dateBucket : dateBuckets) {
 			Histogram cluster_agg = dateBucket.getAggregations().get("yField");
 			List<? extends Histogram.Bucket> clusterBuckets = cluster_agg.getBuckets();
-
+			TilePyramid tilePyramid;
+			try {
+				tilePyramid = this.parent.produce(TilePyramid.class);
+			} catch ( Exception e ) {
+				LOGGER.error("Could not produce tile pyramid", e);
+				throw new IOException( e );
+			}
 			BinIndex xBinIndex = tilePyramid.rootToBin(dateBucket.getKeyAsNumber().doubleValue(), 0, tileIndex);
 			int xBin = xBinIndex.getX();
 			Map<Integer,Long> intermediate = new HashMap<>();
@@ -266,6 +277,14 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
 		// iterate over the tile indices
+		TilePyramid tilePyramid;
+		try {
+			// WHY IS THE NODE NOT UPDATED HERE YET?!?!?!
+			tilePyramid = this.parent.produce(TilePyramid.class);
+		} catch ( Exception e ) {
+			LOGGER.error("Could not produce tile pyramid", e);
+			throw new IOException( e );
+		}
 
 		for (TileIndex tileIndex: tiles) {
 			Rectangle2D rect = tilePyramid.getTileBounds(tileIndex);
@@ -299,16 +318,24 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	@Override
 	public String readMetaData(String pyramidId) throws IOException {
-		//TODO find a better way to get bounds + level metadata
-		Rectangle2D bounds = tilePyramid.getBounds();
+		SearchResponse searchResponse = this.client.prepareSearch(this.index)
+			.setTypes("datum")
+			.setSearchType(SearchType.COUNT)
+			.setQuery(QueryBuilders.matchAllQuery())
+			.addAggregation(AggregationBuilders.min("minX").field(this.xField))
+			.addAggregation(AggregationBuilders.max("maxX").field(this.xField))
+			.addAggregation(AggregationBuilders.min("minY").field(this.yField))
+			.addAggregation(AggregationBuilders.max("maxY").field(this.yField))
+			.execute()
+			.actionGet();
 		return "{\"bounds\":["+
-			bounds.getMinX() + "," +
-			bounds.getMinY() + "," +
-			bounds.getMaxX() + "," +
-			bounds.getMaxY() + "],"+
+			((Min)searchResponse.getAggregations().get("minX")).getValue() + "," +
+			((Min)searchResponse.getAggregations().get("minY")).getValue() + "," +
+			((Max)searchResponse.getAggregations().get("maxX")).getValue() + "," +
+			((Max)searchResponse.getAggregations().get("maxY")).getValue() + "],"+
 			"\"maxzoom\":1,\"scheme\":\"TMS\","+
 			"\"description\":\"Elasticsearch test layer\","+
-			"\"projection\":\"EPSG:4326\","+
+			"\"projection\":\"EPSG:4326\","+ // TODO: need a way to determine this from the data, maybe looking at x and y type?
 			"\"name\":\"ES_SIFT_CROSSPLOT\","+
 			"\"minzoom\":1,\"tilesize\":256,"+
 			"\"meta\":{\"levelMinimums\":{\"1\":\"0.0\", \"0\":\"0\"},\"levelMaximums\":{\"1\":\"174\", \"0\":\"2560\"}}}";
