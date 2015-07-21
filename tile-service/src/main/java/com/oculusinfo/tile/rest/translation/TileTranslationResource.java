@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.utils;
+package com.oculusinfo.tile.rest.translation;
 
 import org.json.JSONObject;
 import org.restlet.data.Status;

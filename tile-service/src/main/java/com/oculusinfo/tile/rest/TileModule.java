@@ -34,8 +34,8 @@ import com.oculusinfo.tile.rest.legend.LegendService;
 import com.oculusinfo.tile.rest.legend.LegendServiceImpl;
 import com.oculusinfo.tile.rest.tile.TileService;
 import com.oculusinfo.tile.rest.tile.TileServiceImpl;
-import com.oculusinfo.tile.rest.utils.TileTranslationService;
-import com.oculusinfo.tile.rest.utils.TileTranslationServiceImpl;
+import com.oculusinfo.tile.rest.translation.TileTranslationService;
+import com.oculusinfo.tile.rest.translation.TileTranslationServiceImpl;
 
 
 public class TileModule extends AbstractModule {

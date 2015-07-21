@@ -31,7 +31,8 @@ import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.layer.StateResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
 import com.oculusinfo.tile.rest.tile.TileResource;
-import com.oculusinfo.tile.rest.utils.TileTranslationResource;
+import com.oculusinfo.tile.rest.translation.TileTranslationResource;
+
 import org.restlet.resource.ServerResource;
 
 import com.google.inject.TypeLiteral;

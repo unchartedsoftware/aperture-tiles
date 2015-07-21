@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.oculusinfo.tile.rest.utils;
+package com.oculusinfo.tile.rest.translation;
 
 
 import java.io.BufferedReader;
@@ -63,12 +63,16 @@ public class TileTranslationServiceImpl implements TileTranslationService {
     			// get google translate params
     			String text = query.getString("text");
         		String target = query.getString("target");
-        		
-        		// get the Google API key from the query
-        		String filepath = query.getString("keypath");
-        		reader = new BufferedReader( new FileReader( filepath ) );            	
-        		String key = reader.readLine();
-        		
+        		String pathtype = query.getString("pathtype");
+        		String keypath = query.getString("keypath");
+        		String key = "";
+        		// get Google tranlsation API key
+        		if ( pathtype.equals( "file") ) {     		        		
+	        		reader = new BufferedReader( new FileReader( keypath ) );            	
+	        		key = reader.readLine();
+        		} else if ( pathtype.equals( "envvar") ) {
+        			key = System.getenv(keypath);
+        		}       		
             	result = translateGoogle( text, target, key );
             }	
     	} catch ( JSONException e ) {
