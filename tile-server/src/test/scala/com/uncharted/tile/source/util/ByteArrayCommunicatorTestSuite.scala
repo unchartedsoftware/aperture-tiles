@@ -162,4 +162,14 @@ class ByteArrayCommunicatorTestSuite extends FunSuite {
     assert((3, 4, 5, 6, 7, 8) === com.read[Int, Int, Int, Int, Int, Int](com.write(3, 4, 5, 6, 7, 8)))
     assert((3, 4, 5, 6, 7, 8, 9) === com.read[Int, Int, Int, Int, Int, Int, Int](com.write(3, 4, 5, 6, 7, 8, 9)))
   }
+
+  test("Test reading only some arguments") {
+    val com = new JavaSerializationByteArrayCommunicator
+
+    assert(3 === com.read[Int](com.write(3, 4, 5, 6, 7)))
+    assert((3, 4) === com.read[Int, Int](com.write(3, 4, 5, 6, 7)))
+    assert((3, 4, 5) === com.read[Int, Int, Int](com.write(3, 4, 5, 6, 7)))
+    assert((3, 4, 5, 6) === com.read[Int, Int, Int, Int](com.write(3, 4, 5, 6, 7)))
+    assert((3, 4, 5, 6, 7) === com.read[Int, Int, Int, Int, Int](com.write(3, 4, 5, 6, 7)))
+  }
 }
