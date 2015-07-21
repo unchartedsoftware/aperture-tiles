@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 Uncharted Software. http://www.uncharted.software/
+ * Copyright (c) 2015 Uncharted Software
+ * https://uncharted.software/
  *
  * Released under the MIT License.
  *
@@ -25,13 +26,18 @@ package com.oculusinfo.tile.rest.translation;
 
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Properties;
+
 import javax.net.ssl.HttpsURLConnection;
+
 import com.google.inject.Singleton;
+import com.oculusinfo.tile.rest.config.ConfigException;
+import com.oculusinfo.tile.rest.config.ConfigPropertiesUtil;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -48,6 +54,8 @@ import org.slf4j.LoggerFactory;
 public class TileTranslationServiceImpl implements TileTranslationService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(TileTranslationServiceImpl.class);
+	
+	public static final String TRANSLATE_API_KEY = "translation.api.key";
 
     /* (non-Javadoc)
 	 * @see TileUtilsServiceImpl#getTranslationGoogle(JSONObject query)
@@ -55,7 +63,6 @@ public class TileTranslationServiceImpl implements TileTranslationService {
 	public JSONObject getTranslation( JSONObject query ) {
     	// get the translation arguments from the query
 		JSONObject result = null;
-		BufferedReader reader = null;
     	try {
     		// as we integrate more translation service we can add a more sophisticated selection mechanism
     		String service = query.getString("service");
@@ -63,26 +70,18 @@ public class TileTranslationServiceImpl implements TileTranslationService {
     			// get google translate params
     			String text = query.getString("text");
         		String target = query.getString("target");
-        		String pathtype = query.getString("pathtype");
-        		String keypath = query.getString("keypath");
-        		String key = "";
-        		// get Google tranlsation API key
-        		if ( pathtype.equals( "file") ) {     		        		
-	        		reader = new BufferedReader( new FileReader( keypath ) );            	
-	        		key = reader.readLine();
-        		} else if ( pathtype.equals( "envvar") ) {
-        			key = System.getenv(keypath);
-        		}       		
-            	result = translateGoogle( text, target, key );
+        		
+        		ConfigPropertiesUtil configUtil = new ConfigPropertiesUtil();
+            	Properties properties = configUtil.getConfigProperties();
+        		String translationApiKey = properties.getProperty(TRANSLATE_API_KEY);
+        		
+            	result = translateGoogle( text, target, translationApiKey );
             }	
     	} catch ( JSONException e ) {
     		LOGGER.error( "Incorrect Configuration for Translation API", e );
-		} catch ( IOException e ) {
-			LOGGER.error( "Error with Google API key file path", e );
-		} finally {
-		    try { if (reader != null) { reader.close(); }
-		    } catch ( IOException e ) { LOGGER.error( "Error closing Google API key file", e ); }
-	    }
+		} catch ( ConfigException e ) {
+			LOGGER.error( "Error with internal configuration properties", e );
+		} 
 		return result;
 	}
        

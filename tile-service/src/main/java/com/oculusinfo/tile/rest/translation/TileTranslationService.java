@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 Uncharted Software. http://www.uncharted.software/
+ * Copyright (c) 2015 Uncharted Software
+ * https://uncharted.software/
  *
  * Released under the MIT License.
  *
