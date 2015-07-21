@@ -22,16 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.uncharted.tile.source.server.app
-
-
+package com.uncharted.tile.source.server.io
 
 import java.util.{List => JavaList}
 
-import com.oculusinfo.binning.io.{PyramidIOFactory, PyramidIO}
+import com.oculusinfo.binning.io.{PyramidIO, PyramidIOFactory}
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.properties.EnumProperty
-import com.oculusinfo.tilegen.binning.{LegacyOnDemandBinningPyramidIO, OnDemandBinningPyramidIO, OnDemandAccumulatorPyramidIO}
+import com.oculusinfo.tilegen.binning.{LegacyOnDemandBinningPyramidIO, OnDemandAccumulatorPyramidIO, OnDemandBinningPyramidIO}
+import com.uncharted.tile.source.server.app.SparkContextProvider
 import grizzled.slf4j.Logging
 import org.json.JSONObject
 

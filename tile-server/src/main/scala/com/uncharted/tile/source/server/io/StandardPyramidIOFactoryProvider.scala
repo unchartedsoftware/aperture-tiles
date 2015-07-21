@@ -22,12 +22,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.uncharted.tile.source.server.app;
+package com.uncharted.tile.source.server.io
+
+
+import java.util
+import java.util.{Set => JavaSet}
+
+import com.oculusinfo.binning.io.{PyramidIOFactory, PyramidIO}
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.providers.{FactoryProvider, StandardUberFactoryProvider}
+
+
 
 /**
- * A list of IDs of possible on-demand tiling algorithms.
+ * Just a simple factory provider container for PyramidIOs
  */
-public enum OnDemandAlgorithm {
-	// These correspond to the on-demand PyramidIOs in tile-generation/com.oculusinfo.tilegen.binning
-	Accumulator, Binning, LegacyBinning
+class StandardPyramidIOFactoryProvider (subProviders: JavaSet[FactoryProvider[PyramidIO]])
+  extends StandardUberFactoryProvider[PyramidIO](subProviders)
+{
+  override def createFactory(name: String, parent: ConfigurableFactory[_], path: util.List[String]): ConfigurableFactory[_ <: PyramidIO] = {
+    new PyramidIOFactory(name, parent, path, createChildren(parent, path))
+  }
 }

@@ -27,33 +27,57 @@ package com.uncharted.tile.source.server
 
 
 
-import java.util.{List => JavaList}
-import com.oculusinfo.binning.TileIndex
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import java.lang.{Iterable => JavaIterable}
+
 import org.json.JSONObject
 
+import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.io.serialization.TileSerializer
+import com.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
+import com.uncharted.tile.source.util.ByteArrayCommunicator
 
 
-trait TileRequest {
-  val table: String
-  val indices: JavaList[TileIndex]
-  val configuration: JSONObject
-}
+
 object ServerTileRequest {
   def fromByteArray (encoded: Array[Byte]): TileRequest = {
-    val (table, indices, rawConfiguration) =
-      ByteArrayCommunicator.defaultCommunicator.read[String, JavaList[TileIndex], String](encoded)
-    new ServerTileRequest(table, indices, new JSONObject(rawConfiguration))
-  }
-  def toByteArray (request: TileRequest): Array[Byte] = {
-    ByteArrayCommunicator.defaultCommunicator.write(request.table, request.indices, request.configuration.toString())
-  }
+    val requestType = ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value](encoded)
+    requestType match {
+      case RequestTypes.Initialization => {
+        val (requestType, table, width, height, rawConfiguration) =
+          ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value, String, Int, Int, String](encoded)
+        new ServerTileInitializationRequest(table, width, height, new JSONObject(rawConfiguration))
+      }
+      case RequestTypes.Metadata => {
+        val (requestType, table) =
+          ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value, String](encoded)
+        new ServerTileMetaDataRequest(table)
+      }
+      case RequestTypes.Tiles => {
+        val (requestType, table, serializer, indices) =
+          ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value, String, TileSerializer[_], JavaIterable[TileIndex]](encoded)
 
+        def withTypedSerializer[T] (typedSerializer: TileSerializer[T]): ServerTileDataRequest[T] = {
+          new ServerTileDataRequest[T](table, typedSerializer, indices)
+        }
+        withTypedSerializer(serializer)
+      }
+      case RequestTypes.TileStream => {
+        val (requestType, table, serializer, index) =
+          ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value, String, TileSerializer[_], TileIndex](encoded)
+
+        def withTypedSerializer[T] (typedSerializer: TileSerializer[T]): ServerTileStreamRequest[T] = {
+          new ServerTileStreamRequest[T](table, typedSerializer, index)
+        }
+        withTypedSerializer(serializer)
+      }
+    }
+  }
 }
-/**
- * Encapsulate all parts of a tile request into one easy-to-use package
- */
-case class ServerTileRequest (table: String, indices: JavaList[TileIndex], configuration: JSONObject) extends TileRequest {
-  def toByteArray: Array[Byte] =
-    ByteArrayCommunicator.defaultCommunicator.write(table, indices, configuration.toString)
-}
+
+case class ServerTileInitializationRequest (table: String, width: Int, height: Int, configuration: JSONObject) extends TileInitializationRequest
+
+case class ServerTileMetaDataRequest (table: String) extends TileMetaDataRequest
+
+case class ServerTileDataRequest[T] (table: String, serializer: TileSerializer[T], indices: JavaIterable[TileIndex]) extends TileDataRequest[T]
+
+case class ServerTileStreamRequest[T] (table: String, serializer: TileSerializer[T], index: TileIndex) extends TileStreamRequest[T]

@@ -26,11 +26,14 @@ package com.uncharted.tile.source.server
 
 
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util
 import java.util.{Arrays => JavaArrays}
 
+import com.oculusinfo.binning.util.JsonUtilities
+
 import scala.collection.JavaConverters._
+import scala.collection.mutable.{Map => MutableMap}
 
 import com.rabbitmq.client.QueueingConsumer.Delivery
 
@@ -39,6 +42,7 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.factory.providers.FactoryProvider
 
 import com.uncharted.tile
+import com.uncharted.tile.source.{RequestTypes, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 
 
@@ -49,42 +53,74 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  *
  * @param host The host name of the machine on which resides the RabbitMQ server
  * @param pyramidIOFactoryProvider An object that constructs PyramidIO factories to use to fulfil tile requests.
- * @param serializerFactoryProvider An object tjat cpmstricts TileSerializer factories to use to fulfill tile requests
  */
 class TileServer(host: String,
-                 pyramidIOFactoryProvider: FactoryProvider[PyramidIO],
-                 serializerFactoryProvider: FactoryProvider[TileSerializer[_]])
+                 pyramidIOFactoryProvider: FactoryProvider[PyramidIO])
   extends Server(host, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) {
+  val pyramidIOs = MutableMap[String, PyramidIO]()
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     // Get the information we need about this request
     val request = ServerTileRequest.fromByteArray(delivery.getBody)
 
-    // Construct the pyramidIO and serializer we need to fulfil the request
-    val pioFactory = pyramidIOFactoryProvider.createFactory("", null, JavaArrays.asList[String]())
-    pioFactory.readConfiguration(request.configuration)
-    val pyramidIO = pioFactory.produce(classOf[PyramidIO])
-
-    val tsFactory = serializerFactoryProvider.createFactory("", null, JavaArrays.asList[String]())
-    tsFactory.readConfiguration(request.configuration)
-    val serializer = tsFactory.produce(classOf[TileSerializer[_]])
-
-    def readTiles[T] (typedSerializer: TileSerializer[T]): Option[(String, Array[Byte])] = {
-      // Get our tiles
-      val tiles = pyramidIO.readTiles(request.table, typedSerializer, request.indices)
-
-      // Serialize them all
-      val tileData = new util.ArrayList[Array[Byte]]()
-      tiles.asScala.foreach { tile =>
-        val baos = new ByteArrayOutputStream()
-        typedSerializer.serialize(tile, baos)
-        baos.flush()
-        baos.close()
-        tileData.add(baos.toByteArray)
+    request match {
+      case tir: TileInitializationRequest => {
+        // Construct the pyramidIO we need to fulfil the request
+        val pioFactory = pyramidIOFactoryProvider.createFactory("", null, JavaArrays.asList[String]())
+        pioFactory.readConfiguration(tir.configuration)
+        val pyramidIO = pioFactory.produce(classOf[PyramidIO])
+        pyramidIO.initializeForRead(tir.table, tir.width, tir.height, JsonUtilities.jsonObjToProperties(tir.configuration))
+        pyramidIOs(tir.table) = pyramidIO
+        None
       }
+      case tmr: TileMetaDataRequest => {
+        if (pyramidIOs.get(tmr.table).isEmpty) throw new IllegalArgumentException("Attempt to get metadata for uninitialized pyramid "+tmr.table)
 
-      Some((tile.source.TILE, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
+        val pio = pyramidIOs(tmr.table)
+        Some((RequestTypes.Metadata.toString, pio.readMetaData(tmr.table).getBytes))
+      }
+      case tdrRaw: TileDataRequest[_] => {
+        if (pyramidIOs.get(tdrRaw.table).isEmpty) throw new IllegalArgumentException("Attempt to get tile data for uninitialized pyramid "+tdrRaw.table)
+
+        def doWork[T] (tdr: TileDataRequest[T]) = {
+          val pio = pyramidIOs(tdr.table)
+          val tiles = pio.readTiles(tdr.table, tdr.serializer, tdr.indices)
+
+          // Serialize them all
+          val tileData = new util.ArrayList[Array[Byte]]()
+          tiles.asScala.foreach { tile =>
+            val baos = new ByteArrayOutputStream()
+            tdr.serializer.serialize(tile, baos)
+            baos.flush()
+            baos.close()
+            tileData.add(baos.toByteArray)
+          }
+
+          Some((RequestTypes.Tiles.toString, ByteArrayCommunicator.defaultCommunicator.write(tileData)))
+        }
+        doWork(tdrRaw)
+      }
+      case tsrRaw: TileStreamRequest[_] => {
+        if (pyramidIOs.get(tsrRaw.table).isEmpty) throw new IllegalArgumentException("Attempt to get tile stream for uninitialized pyramid "+tsrRaw.table)
+
+        def doWork[T] (tsr: TileStreamRequest[T]) = {
+          val pio = pyramidIOs(tsr.table)
+          val inputStream = pio.getTileStream(tsr.table, tsr.serializer, tsr.index)
+
+          val outputStream = new ByteArrayOutputStream()
+          var b = inputStream.read
+          while (b != -1) {
+            outputStream.write(b)
+            b = inputStream.read
+          }
+          inputStream.close
+          outputStream.flush
+          outputStream.close
+
+          Some((RequestTypes.TileStream.toString, outputStream.toByteArray))
+        }
+
+        doWork(tsrRaw)
+      }
     }
-
-    readTiles(serializer)
   }
 }

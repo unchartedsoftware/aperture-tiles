@@ -22,38 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.uncharted.tile.source.client
-
-
-
-import java.io.ByteArrayInputStream
-import java.util
-import java.util.{List => JavaList, Arrays => JavaArrays}
-
-import scala.collection.JavaConverters._
-
-import com.uncharted.tile
-
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.factory.providers.FactoryProvider
-
-import com.uncharted.tile.source.server.ServerTileRequest
-import com.uncharted.tile.source.util.ByteArrayCommunicator
-
-
+package com.uncharted.tile.source.server.io;
 
 /**
- * This class handles communications with a tile server, wrapping tile requests appropriately, and letting users know
- * when tiles are completed (or have errored).
+ * A list of IDs of possible on-demand tiling algorithms.
  */
-class TileClient(host: String,
-                 serializerFactoryProvider: FactoryProvider[TileSerializer[_]])
-extends Client[ClientTileRequest](host, tile.source.TILE_REQUEST_EXCHANGE) {
-  def encodeRequest(request: ClientTileRequest): Array[Byte] =
-    request.toByteArray
-
-  def processResults(request: ClientTileRequest, contentType: String, contents: Array[Byte]) = {
-    request.onFinished(contents)
-  }
+public enum OnDemandAlgorithm {
+	// These correspond to the on-demand PyramidIOs in tile-generation/com.oculusinfo.tilegen.binning
+	Accumulator, Binning, LegacyBinning
 }

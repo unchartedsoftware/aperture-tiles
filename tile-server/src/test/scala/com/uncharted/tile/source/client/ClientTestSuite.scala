@@ -25,8 +25,6 @@
 
 package com.uncharted.tile.source.client
 
-
-
 import java.util.concurrent.TimeUnit
 
 import com.rabbitmq.client.QueueingConsumer.Delivery

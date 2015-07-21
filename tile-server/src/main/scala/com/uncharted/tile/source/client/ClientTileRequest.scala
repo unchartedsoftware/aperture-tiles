@@ -26,33 +26,84 @@ package com.uncharted.tile.source.client
 
 
 
+import java.io.ByteArrayInputStream
+import java.lang.{Iterable => JavaIterable}
+import java.util
 import java.util.{List => JavaList}
+
 import org.json.JSONObject
 
+import scala.collection.JavaConverters._
+
+import grizzled.slf4j.Logging
+
+import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.{TileData, TileIndex}
-import com.uncharted.tile.source.server.TileRequest
+import com.uncharted.tile.source.util.ByteArrayCommunicator
+import com.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
 
 
 
-/**
- * This class encapsulates the information and methods needed to process a tile request
- *
- * @tparam T The bin type of the tiles to retrieve
- */
-trait ClientTileRequest[T] extends TileRequest {
-  /** The name of the table from which to retrieve tiles */
-  val table: String
-  /** The tile indices to retrieve */
-  val indices: JavaList[TileIndex]
-  /**
-   * The configuration from which the server should construct relevant PyramidIOs and TileSerializers with which to
-   * request tiles
-   */
-  val configuration: JSONObject
+trait ClientTileRequest extends TileRequest {
+  def isAnswered: Boolean
+  def onError (t: Throwable): Unit
+  def onFinished (data: Array[Byte]): Unit
+}
 
-  /** Called when a tile is retrieved */
-  def onTileRetrieved (tiles: JavaList[TileData[T]])
+case class ClientTileInitializationRequest (table: String, width: Int, height: Int, configuration: JSONObject)
+  extends TileInitializationRequest with ClientTileRequest with Logging
+{
+  def isAnswered: Boolean = true
+  def onError (t: Throwable): Unit = {
+    warn("Error initializing layer "+table, t)
+  }
+  def onFinished (data: Array[Byte]): Unit = {}
+}
 
-  /** Called when an error was encountered retrieving tiles */
-  def onError (t: Throwable)
+case class ClientTileMetaDataRequest (table: String) extends TileMetaDataRequest with ClientTileRequest {
+  var _error: Option[Throwable] = None
+  var _metaData: Option[String] = None
+
+  override def isAnswered: Boolean = _error.isDefined || _metaData.isDefined
+
+  override def onFinished(data: Array[Byte]): Unit =
+    _metaData = Some(new String(data))
+
+  override def onError(t: Throwable): Unit =
+    _error = Some(t)
+}
+
+case class ClientTileDataRequest[T] (table: String, serializer: TileSerializer[T], indices: JavaIterable[TileIndex])
+  extends TileDataRequest[T] with ClientTileRequest {
+  var _error: Option[Throwable] = None
+  var _tiles: Option[JavaList[TileData[T]]] = None
+
+  override def isAnswered: Boolean = _error.isDefined || _tiles.isDefined
+
+  override def onFinished(data: Array[Byte]): Unit = {
+    // Extract our results
+    val encodedTiles = ByteArrayCommunicator.defaultCommunicator.read[JavaList[Array[Byte]]](data)
+    val tiles = new util.ArrayList[TileData[T]]()
+    var n = 0
+    indices.asScala.foreach { index =>
+      val bais = new ByteArrayInputStream(encodedTiles.get(n))
+      tiles.add(serializer.deserialize(index, bais))
+      n = n + 1
+    }
+    _tiles = Some(tiles)
+  }
+
+  override def onError(t: Throwable): Unit = _error = Some(t)
+}
+
+case class ClientTileStreamRequest[T] (table: String, serializer: TileSerializer[T], index: TileIndex)
+  extends TileStreamRequest[T] with ClientTileRequest {
+  var _error: Option[Throwable] = None
+  var _data: Option[Array[Byte]] = None
+
+  override def isAnswered: Boolean = _error.isDefined || _data.isDefined
+
+  override def onFinished(data: Array[Byte]): Unit = _data = Some(data)
+
+  override def onError(t: Throwable): Unit = _error = Some(t)
 }

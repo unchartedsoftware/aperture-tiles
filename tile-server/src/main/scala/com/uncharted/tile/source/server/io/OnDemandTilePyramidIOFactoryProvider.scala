@@ -22,38 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.uncharted.tile.source.client
+package com.uncharted.tile.source.server.io
 
-
-
-import java.io.ByteArrayInputStream
 import java.util
-import java.util.{List => JavaList, Arrays => JavaArrays}
 
-import scala.collection.JavaConverters._
-
-import com.uncharted.tile
-
-import com.oculusinfo.binning.TileData
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.factory.providers.FactoryProvider
-
-import com.uncharted.tile.source.server.ServerTileRequest
-import com.uncharted.tile.source.util.ByteArrayCommunicator
-
-
+import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.providers.AbstractFactoryProvider
+import com.uncharted.tile.source.server.app.SparkContextProvider
 
 /**
- * This class handles communications with a tile server, wrapping tile requests appropriately, and letting users know
- * when tiles are completed (or have errored).
+ * Simple FactoryProvider for an OnDemandTilePyramidIOFactory
  */
-class TileClient(host: String,
-                 serializerFactoryProvider: FactoryProvider[TileSerializer[_]])
-extends Client[ClientTileRequest](host, tile.source.TILE_REQUEST_EXCHANGE) {
-  def encodeRequest(request: ClientTileRequest): Array[Byte] =
-    request.toByteArray
-
-  def processResults(request: ClientTileRequest, contentType: String, contents: Array[Byte]) = {
-    request.onFinished(contents)
+class OnDemandTilePyramidIOFactoryProvider(contextProvider: SparkContextProvider) extends AbstractFactoryProvider[PyramidIO] {
+  override def createFactory(name: String, parent: ConfigurableFactory[_], path: util.List[String]): ConfigurableFactory[_ <: PyramidIO] = {
+    new OnDemandTilePyramidIOFactory(name, parent, path, contextProvider)
   }
 }
