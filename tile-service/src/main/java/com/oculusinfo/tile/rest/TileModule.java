@@ -26,6 +26,8 @@ package com.oculusinfo.tile.rest;
 
 
 import com.google.inject.AbstractModule;
+import com.oculusinfo.tile.rest.config.ConfigPropertiesService;
+import com.oculusinfo.tile.rest.config.ConfigPropertiesServiceImpl;
 import com.oculusinfo.tile.rest.config.ConfigService;
 import com.oculusinfo.tile.rest.config.ConfigServiceImpl;
 import com.oculusinfo.tile.rest.layer.LayerService;
@@ -46,5 +48,6 @@ public class TileModule extends AbstractModule {
 		bind( TileService.class ).to( TileServiceImpl.class );
 		bind( LegendService.class ).to( LegendServiceImpl.class );
 		bind( TileTranslationService.class ).to( TileTranslationServiceImpl.class );
+		bind( ConfigPropertiesService.class ).to( ConfigPropertiesServiceImpl.class );
 	}
 }

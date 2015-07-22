@@ -37,8 +37,9 @@ import org.slf4j.LoggerFactory;
 
 
 
-public class ConfigPropertiesUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigPropertiesUtil.class);
+public class ConfigPropertiesServiceImpl implements ConfigPropertiesService {
+	
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigPropertiesService.class);
 
     public static final String CONFIG_ENV_VAR = "TILE_CONFIG_PROPERTIES";
     public static final String DEFAULT_CONFIG_PROPERTIES = "default-config.properties";

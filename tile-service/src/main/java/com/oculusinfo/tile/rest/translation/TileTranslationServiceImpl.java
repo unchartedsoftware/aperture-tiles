@@ -34,10 +34,12 @@ import java.util.Properties;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.tile.rest.config.ConfigException;
-import com.oculusinfo.tile.rest.config.ConfigPropertiesUtil;
+import com.oculusinfo.tile.rest.config.ConfigPropertiesService;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -56,27 +58,40 @@ public class TileTranslationServiceImpl implements TileTranslationService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TileTranslationServiceImpl.class);
 	
 	public static final String TRANSLATE_API_KEY = "translation.api.key";
+	public static final String TRANSLATE_API_ENDPOINT = "translation.api.endpoint";
+	
+	private ConfigPropertiesService _service;
+
+	@Inject
+	public TileTranslationServiceImpl( ConfigPropertiesService service ) {
+		this._service = service;
+	}
 
     /* (non-Javadoc)
 	 * @see TileUtilsServiceImpl#getTranslationGoogle(JSONObject query)
 	 */
-	public JSONObject getTranslation( JSONObject query ) {
-    	// get the translation arguments from the query
+	public JSONObject getTranslation( JSONObject query ) {   	
 		JSONObject result = null;
     	try {
-    		// as we integrate more translation service we can add a more sophisticated selection mechanism
+    		// get the translation arguments from the query
     		String service = query.getString("service");
-    		if ( service.equals( "google" ) ) {
-    			// get google translate params
-    			String text = query.getString("text");
-        		String target = query.getString("target");
-        		
-        		ConfigPropertiesUtil configUtil = new ConfigPropertiesUtil();
-            	Properties properties = configUtil.getConfigProperties();
+    		String text = query.getString("text");
+        	String target = query.getString("target");
+        	
+    		// as we integrate more translation service we can add a more sophisticated selection mechanism        	
+        	if ( StringUtils.equalsIgnoreCase( service, "google" ) ) {	
+            	Properties properties = _service.getConfigProperties();
         		String translationApiKey = properties.getProperty(TRANSLATE_API_KEY);
+        		String translationApiEndpoint = properties.getProperty(TRANSLATE_API_ENDPOINT);
         		
-            	result = translateGoogle( text, target, translationApiKey );
-            }	
+            	result = translateGoogle( text, target, translationApiKey, translationApiEndpoint );
+            } else {
+            	JSONObject resultErr = new JSONObject();  
+            	resultErr.put("message", "Translation Service Error: Incorrect Configuration");
+            	
+            	result = new JSONObject();
+            	result.put("error", resultErr);
+            }
     	} catch ( JSONException e ) {
     		LOGGER.error( "Incorrect Configuration for Translation API", e );
 		} catch ( ConfigException e ) {
@@ -88,11 +103,11 @@ public class TileTranslationServiceImpl implements TileTranslationService {
 	/*
 	 * Translates the given text using the Google Translate API
 	 */
-    private JSONObject translateGoogle( String text, String target, String key ) {
+    private JSONObject translateGoogle( String text, String target, String key, String endpoint ) {
 		JSONObject result = null;
 		try {
 			// assumes that the text has already been uri encoded
-            String urlStr = "https://www.googleapis.com/language/translate/v2?key=" + key + "&q=" + text + "&target=" + target;
+            String urlStr = endpoint + "?key=" + key + "&q=" + text + "&target=" + target;
             URL url = new URL( urlStr );
  
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();

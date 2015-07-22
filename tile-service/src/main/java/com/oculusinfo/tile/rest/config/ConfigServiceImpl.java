@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.tile.rest.config;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
 import org.slf4j.Logger;
@@ -46,6 +47,13 @@ import java.util.regex.Pattern;
 public class ConfigServiceImpl implements ConfigService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
+    
+    private ConfigPropertiesService _service;
+
+	@Inject
+	public ConfigServiceImpl( ConfigPropertiesService service ) {
+		this._service = service;
+	}
 
     @Override
     public String replaceProperties(File configFile) throws ConfigException {
@@ -81,9 +89,8 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     protected Map<String, String> buildReplacements() throws ConfigException {
-    	ConfigPropertiesUtil configUtil = new ConfigPropertiesUtil();
 		Map<String, String> replacements = new HashMap<>();
-    	Properties properties = configUtil.getConfigProperties();
+    	Properties properties = _service.getConfigProperties();
         Enumeration e = properties.propertyNames();
         while (e.hasMoreElements()) {
             String key = (String) e.nextElement();
