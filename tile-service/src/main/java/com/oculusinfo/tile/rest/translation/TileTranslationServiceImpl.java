@@ -84,10 +84,13 @@ public class TileTranslationServiceImpl implements TileTranslationService {
         		String translationApiKey = properties.getProperty(TRANSLATE_API_KEY);
         		String translationApiEndpoint = properties.getProperty(TRANSLATE_API_ENDPOINT);
         		
-            	result = translateGoogle( text, target, translationApiKey, translationApiEndpoint );
-            } else {
+        		if ( translationApiKey != null && translationApiEndpoint != null ) {
+        			result = translateGoogle( text, target, translationApiKey, translationApiEndpoint );
+        		}
+            } 
+        	if ( result == null ){
             	JSONObject resultErr = new JSONObject();  
-            	resultErr.put("message", "Translation Service Error: Incorrect Configuration");
+            	resultErr.put("message", "Incorrect Translation Service Configuration");
             	
             	result = new JSONObject();
             	result.put("error", resultErr);

@@ -91,11 +91,13 @@ public class ConfigServiceImpl implements ConfigService {
     protected Map<String, String> buildReplacements() throws ConfigException {
 		Map<String, String> replacements = new HashMap<>();
     	Properties properties = _service.getConfigProperties();
-        Enumeration e = properties.propertyNames();
-        while (e.hasMoreElements()) {
-            String key = (String) e.nextElement();
-            replacements.put(key, properties.getProperty(key));
-        }
+    	if ( properties != null ) {
+	        Enumeration e = properties.propertyNames();
+	        while (e.hasMoreElements()) {
+	            String key = (String) e.nextElement();
+	            replacements.put(key, properties.getProperty(key));
+	        }
+    	}
         return replacements;
     }
 
