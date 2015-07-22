@@ -29,15 +29,11 @@ package com.uncharted.tile.source.client.io
 import java.io.{ByteArrayInputStream, IOException, InputStream}
 import java.lang.{Iterable => JavaIterable}
 import java.util.concurrent.TimeUnit
-import java.util.{Collections => JavaCollections}
 import java.util.{List => JavaList}
 import java.util.Properties
 
-import org.json.JSONObject
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.collection.mutable.{Map => MutableMap}
 
 import com.oculusinfo.binning.{TileData, TileIndex}
 import com.oculusinfo.binning.io.PyramidIO
@@ -54,7 +50,6 @@ import com.uncharted.tile.source.client._
  * A tile pyramid IO that acts as a facade for a TileClient
  */
 class TileServerPyramidIO (brokerHostName: String, serializerFactoryProvider: FactoryProvider[TileSerializer[_]], maximumWaitTime: Long = 2000) extends PyramidIO {
-  private val tableConfigurations = MutableMap[String, JSONObject]()
   private val client = new TileClient(brokerHostName, serializerFactoryProvider)
   private val clientTimeout = Duration(maximumWaitTime, TimeUnit.MILLISECONDS)
 
@@ -80,8 +75,6 @@ class TileServerPyramidIO (brokerHostName: String, serializerFactoryProvider: Fa
   }
 
   override def readMetaData(pyramidId: String): String = {
-    if (tableConfigurations.get(pyramidId).isEmpty) throw new IllegalArgumentException("Attempt to read uninitialized pyramid "+pyramidId)
-
     val request = new ClientTileMetaDataRequest(pyramidId)
     submitAndWaitForResponse(request)
 
@@ -90,8 +83,6 @@ class TileServerPyramidIO (brokerHostName: String, serializerFactoryProvider: Fa
   }
 
   override def readTiles[T](pyramidId: String, serializer: TileSerializer[T], tiles: JavaIterable[TileIndex]): JavaList[TileData[T]] = {
-    if (tableConfigurations.get(pyramidId).isEmpty) throw new IllegalArgumentException("Attempt to read uninitialized pyramid "+pyramidId)
-
     val request = new ClientTileDataRequest[T](pyramidId, serializer, tiles)
     submitAndWaitForResponse(request)
 
@@ -100,8 +91,6 @@ class TileServerPyramidIO (brokerHostName: String, serializerFactoryProvider: Fa
   }
 
   override def getTileStream[T](pyramidId: String, serializer: TileSerializer[T], tile: TileIndex): InputStream = {
-    if (tableConfigurations.get(pyramidId).isEmpty) throw new IllegalArgumentException("Attempt to read uninitialized pyramid "+pyramidId)
-
     val request = new ClientTileStreamRequest[T](pyramidId, serializer, tile)
     submitAndWaitForResponse(request)
 

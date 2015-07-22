@@ -48,7 +48,7 @@ object ServerApp extends Logging {
       val jobName = argParser.getString("serverName",
         "The name by which the tile server is known on the spark task web interface",
         Some("On-demand tile server"))
-      val context = argParser.getSparkConnector().createContext()
+      val context = argParser.getSparkConnector().createContext(Some(jobName))
       val contextProvider = new SparkContextProviderImpl(context)
 
       val rabbitMQHost = argParser.getString("rabbitMQHost",
@@ -57,6 +57,7 @@ object ServerApp extends Logging {
       val pyramidIOFactoryProvider = new StandardPyramidIOFactoryProvider((DefaultPyramidIOFactoryProvider.values() :+ new OnDemandTilePyramidIOFactoryProvider(contextProvider)).toSet.asJava)
 
       val server = new TileServer(rabbitMQHost, pyramidIOFactoryProvider)
+      server.listenForRequests
     } catch {
       case mae: MissingArgumentException => {
         error("Argument exception: " + mae.getMessage)

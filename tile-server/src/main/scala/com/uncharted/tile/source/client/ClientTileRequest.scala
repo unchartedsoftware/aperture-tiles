@@ -93,7 +93,8 @@ case class ClientTileDataRequest[T] (table: String, serializer: TileSerializer[T
     _tiles = Some(tiles)
   }
 
-  override def onError(t: Throwable): Unit = _error = Some(t)
+  override def onError(t: Throwable): Unit =
+    _error = Some(t)
 }
 
 case class ClientTileStreamRequest[T] (table: String, serializer: TileSerializer[T], index: TileIndex)

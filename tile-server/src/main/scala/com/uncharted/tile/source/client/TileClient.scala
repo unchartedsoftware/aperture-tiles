@@ -56,4 +56,7 @@ extends Client[ClientTileRequest](host, tile.source.TILE_REQUEST_EXCHANGE) {
   def processResults(request: ClientTileRequest, contentType: String, contents: Array[Byte]) = {
     request.onFinished(contents)
   }
+  override def processError (request: ClientTileRequest, severity: String, serverError: Throwable): Unit = {
+    request.onError(serverError)
+  }
 }

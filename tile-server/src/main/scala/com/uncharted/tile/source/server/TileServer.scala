@@ -65,7 +65,7 @@ class TileServer(host: String,
     request match {
       case tir: TileInitializationRequest => {
         // Construct the pyramidIO we need to fulfil the request
-        val pioFactory = pyramidIOFactoryProvider.createFactory("", null, JavaArrays.asList[String]())
+        val pioFactory = pyramidIOFactoryProvider.createFactory(null, null, JavaArrays.asList[String]())
         pioFactory.readConfiguration(tir.configuration)
         val pyramidIO = pioFactory.produce(classOf[PyramidIO])
         pyramidIO.initializeForRead(tir.table, tir.width, tir.height, JsonUtilities.jsonObjToProperties(tir.configuration))

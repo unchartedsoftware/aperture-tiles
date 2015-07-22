@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,16 +38,9 @@ import com.oculusinfo.factory.providers.StandardUberFactoryProvider;
 
 
 @Singleton
-public class StandardTileSerializerFactoryProvider extends StandardUberFactoryProvider<TileSerializer<?>> {
+public class StandardTileSerializerFactoryProvider extends com.oculusinfo.binning.io.serialization.impl.StandardTileSerializerFactoryProvider {
 	@Inject
 	public StandardTileSerializerFactoryProvider (Set<FactoryProvider<TileSerializer<?>>> providers) {
 		super(providers);
-	}
-
-	@Override
-	public ConfigurableFactory<TileSerializer<?>> createFactory (String name,
-	                                                             ConfigurableFactory<?> parent,
-	                                                             List<String> path) {
-		return new TileSerializerFactory(name, parent, path, createChildren(parent, path));
 	}
 }
