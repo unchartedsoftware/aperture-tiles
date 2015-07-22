@@ -81,12 +81,14 @@ public class TileTranslationServiceImpl implements TileTranslationService {
     		// as we integrate more translation service we can add a more sophisticated selection mechanism        	
         	if ( StringUtils.equalsIgnoreCase( service, "google" ) ) {	
             	Properties properties = _service.getConfigProperties();
-        		String translationApiKey = properties.getProperty(TRANSLATE_API_KEY);
-        		String translationApiEndpoint = properties.getProperty(TRANSLATE_API_ENDPOINT);
-        		
-        		if ( translationApiKey != null && translationApiEndpoint != null ) {
-        			result = translateGoogle( text, target, translationApiKey, translationApiEndpoint );
-        		}
+            	if ( properties != null ) {
+	        		String translationApiKey = properties.getProperty(TRANSLATE_API_KEY);
+	        		String translationApiEndpoint = properties.getProperty(TRANSLATE_API_ENDPOINT);
+	        		
+	        		if ( translationApiKey != null && translationApiEndpoint != null ) {
+	        			result = translateGoogle( text, target, translationApiKey, translationApiEndpoint );
+	        		}
+            	}
             } 
         	if ( result == null ){
             	JSONObject resultErr = new JSONObject();  
