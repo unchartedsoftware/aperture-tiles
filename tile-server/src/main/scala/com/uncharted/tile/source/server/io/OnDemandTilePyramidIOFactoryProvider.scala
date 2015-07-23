@@ -36,6 +36,6 @@ import com.uncharted.tile.source.server.app.SparkContextProvider
  */
 class OnDemandTilePyramidIOFactoryProvider(contextProvider: SparkContextProvider) extends AbstractFactoryProvider[PyramidIO] {
   override def createFactory(name: String, parent: ConfigurableFactory[_], path: util.List[String]): ConfigurableFactory[_ <: PyramidIO] = {
-    new OnDemandTilePyramidIOFactory(name, parent, path, contextProvider)
+    new OnDemandTilePyramidIOFactory(parent, path, contextProvider)
   }
 }

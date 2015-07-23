@@ -27,7 +27,7 @@ package com.uncharted.tile.source.server.io
 import java.util.{List => JavaList}
 
 import com.oculusinfo.binning.io.{PyramidIO, PyramidIOFactory}
-import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.{SharedInstanceFactory, ConfigurableFactory}
 import com.oculusinfo.factory.properties.EnumProperty
 import com.oculusinfo.tilegen.binning.{LegacyOnDemandBinningPyramidIO, OnDemandAccumulatorPyramidIO, OnDemandBinningPyramidIO}
 import com.uncharted.tile.source.server.app.SparkContextProvider
@@ -44,21 +44,17 @@ object OnDemandTilePyramidIOFactory {
 /**
  * Factory for building an on-demand pyramid io
  */
-class OnDemandTilePyramidIOFactory (name: String,
-                                    parent: ConfigurableFactory[_],
+class OnDemandTilePyramidIOFactory (parent: ConfigurableFactory[_],
                                     path: JavaList[String],
                                     contextProvider: SparkContextProvider)
-  extends ConfigurableFactory[PyramidIO](name, classOf[PyramidIO], parent, path) with Logging
+  extends SharedInstanceFactory[PyramidIO]("on-demand", classOf[PyramidIO], parent, path) with Logging
 {
   import OnDemandTilePyramidIOFactory._
 
   addProperty(ON_DEMAND_ALGORITHM)
   addProperty(PyramidIOFactory.INITIALIZATION_DATA)
 
-  def this (parent: ConfigurableFactory[_], path: JavaList[String], contextProvider: SparkContextProvider) =
-    this("on-demand", parent, path, contextProvider)
-
-  protected def create: PyramidIO = {
+  override protected def createInstance: PyramidIO = {
     Try {
       val config: JSONObject = getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA)
       getPropertyValue(ON_DEMAND_ALGORITHM) match {
