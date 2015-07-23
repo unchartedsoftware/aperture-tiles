@@ -5,7 +5,6 @@
 /********************************************/
 
 .axis {
-    cursor: pointer;
 }
 
 .top-axis {
@@ -30,6 +29,7 @@
 
 .axis-header {
     position:absolute;
+    cursor: pointer;
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
             box-sizing: border-box;
@@ -107,11 +107,11 @@
     border-top: 32px solid #333;
 }
 
-.light-theme .axis:hover .top-axis-header {
+.light-theme .top-axis-header:hover {
     border-top: 32px solid #dbdbdb;
 }
 
-.dark-theme .axis:hover .top-axis-header {
+.dark-theme .top-axis-header:hover {
     border-top: 32px solid #222;
 }
 
@@ -131,11 +131,11 @@
     border-bottom: 32px solid #333;
 }
 
-.light-theme .axis:hover .bottom-axis-header {
+.light-theme .bottom-axis-header:hover {
     border-bottom: 32px solid #dbdbdb;
 }
 
-.dark-theme .axis:hover .bottom-axis-header {
+.dark-theme .bottom-axis-header:hover {
     border-bottom: 32px solid #222;
 }
 
@@ -156,11 +156,11 @@
     border-left: 32px solid #333;
 }
 
-.light-theme .axis:hover .left-axis-header {
+.light-theme .left-axis-header:hover {
     border-left: 32px solid #dbdbdb;
 }
 
-.dark-theme .axis:hover .left-axis-header {
+.dark-theme .left-axis-header:hover {
     border-left: 32px solid #222;
 }
 
@@ -181,11 +181,11 @@
     border-right: 32px solid #333;
 }
 
-.light-theme .axis:hover .right-axis-header {
+.light-theme .right-axis-header:hover {
     border-right: 32px solid #dbdbdb;
 }
 
-.dark-theme .axis:hover .right-axis-header {
+.dark-theme .right-axis-header:hover {
     border-right: 32px solid #222;
 }
 
