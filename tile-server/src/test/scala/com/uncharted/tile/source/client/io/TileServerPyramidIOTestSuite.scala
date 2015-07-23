@@ -156,7 +156,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
   // is intended to be run manually when said server is known to be up.
   test("Test on-demand tiling") {
     val tileSerializerProviders: Set[FactoryProvider[TileSerializer[_]]] = DefaultTileSerializerFactoryProvider.values.toSet
-    val io = new TileServerPyramidIO("localhost", new StandardTileSerializerFactoryProvider(tileSerializerProviders.asJava), 1000*60*60)
+    val io = new TileServerPyramidIO("hadoop-s1", new StandardTileSerializerFactoryProvider(tileSerializerProviders.asJava), 1000*60*60)
     try {
       val configuration = new JSONObject(
         s"""{
@@ -222,7 +222,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
            |}""".stripMargin)
 
       val tableName = "bitcoin"
-//      io.initializeForRead(tableName, 256, 256, JsonUtilities.jsonObjToProperties(configuration))
+      io.initializeForRead(tableName, 256, 256, JsonUtilities.jsonObjToProperties(configuration))
       val serializer = new PrimitiveAvroSerializer[JavaInt](classOf[JavaInt], CodecFactory.bzip2Codec())
       val tile000 = io.readTiles[JavaInt](tableName, serializer, JavaArrays.asList(new TileIndex(0, 0, 0)))
       assert(null != tile000)

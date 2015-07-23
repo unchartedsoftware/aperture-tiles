@@ -39,6 +39,8 @@ import com.rabbitmq.client.ConnectionFactory
 class RabbitMQConnectable (host: String) {
   protected val _factory = new ConnectionFactory()
   _factory.setHost(host)
+  _factory.setUsername("tile-server")
+  _factory.setPassword("tile-server")
 
   protected val _connection = _factory.newConnection()
 
