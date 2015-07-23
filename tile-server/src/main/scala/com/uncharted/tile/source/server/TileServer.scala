@@ -31,6 +31,7 @@ import java.util
 import java.util.{Arrays => JavaArrays}
 
 import com.oculusinfo.binning.util.JsonUtilities
+import grizzled.slf4j.Logging
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
@@ -56,14 +57,21 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  */
 class TileServer(host: String,
                  pyramidIOFactoryProvider: FactoryProvider[PyramidIO])
-  extends Server(host, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) {
+  extends Server(host, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) with Logging
+{
   val pyramidIOs = MutableMap[String, PyramidIO]()
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     // Get the information we need about this request
     val request = ServerTileRequest.fromByteArray(delivery.getBody)
 
+    debug("reqquest type: "+request.requestType)
     request match {
       case tir: TileInitializationRequest => {
+        info("Initialization request for tile set "+tir.table)
+        debug("Height: "+tir.height)
+        debug("Width: "+tir.width)
+        debug("Configuration: "+tir.configuration)
+
         // Construct the pyramidIO we need to fulfil the request
         val pioFactory = pyramidIOFactoryProvider.createFactory(null, null, JavaArrays.asList[String]())
         pioFactory.readConfiguration(tir.configuration)
@@ -73,12 +81,18 @@ class TileServer(host: String,
         None
       }
       case tmr: TileMetaDataRequest => {
+        info("Metadata request for tile set "+tmr.table)
+
         if (pyramidIOs.get(tmr.table).isEmpty) throw new IllegalArgumentException("Attempt to get metadata for uninitialized pyramid "+tmr.table)
 
         val pio = pyramidIOs(tmr.table)
         Some((RequestTypes.Metadata.toString, pio.readMetaData(tmr.table).getBytes))
       }
       case tdrRaw: TileDataRequest[_] => {
+        info("Tile request for tile set "+tdrRaw.table)
+        debug("Serializer: "+tdrRaw.serializer.getClass)
+        debug("Tiles: "+tdrRaw.indices.asScala.toList)
+
         if (pyramidIOs.get(tdrRaw.table).isEmpty) throw new IllegalArgumentException("Attempt to get tile data for uninitialized pyramid "+tdrRaw.table)
 
         def doWork[T] (tdr: TileDataRequest[T]) = {
@@ -100,6 +114,10 @@ class TileServer(host: String,
         doWork(tdrRaw)
       }
       case tsrRaw: TileStreamRequest[_] => {
+        info("Tile stream request for tile set "+tsrRaw.table)
+        debug("Serializer: "+(if (tsrRaw.serializer == null) "nul" else tsrRaw.serializer.getClass))
+        debug("Index: "+tsrRaw.index)
+
         if (pyramidIOs.get(tsrRaw.table).isEmpty) throw new IllegalArgumentException("Attempt to get tile stream for uninitialized pyramid "+tsrRaw.table)
 
         def doWork[T] (tsr: TileStreamRequest[T]) = {
