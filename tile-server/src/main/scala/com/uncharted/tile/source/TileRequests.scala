@@ -31,6 +31,8 @@ import java.lang.{Iterable => JavaIterable}
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 import org.json.JSONObject
 
+import scala.collection.JavaConverters._
+
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.serialization.TileSerializer
 
@@ -94,7 +96,16 @@ trait TileDataRequest[T] extends TileRequest {
   val indices: JavaIterable[TileIndex]
 
   def toByteArray: Array[Byte] =
-    ByteArrayCommunicator.defaultCommunicator.write(RequestTypes.Tiles, table, serializer, indices)
+    ByteArrayCommunicator.defaultCommunicator.write(RequestTypes.Tiles, table, serializer,
+      TileDataRequest.indicesToIndexInfoArray(indices))
+}
+object TileDataRequest {
+  def indicesToIndexInfoArray (indices: JavaIterable[TileIndex]): Array[Array[Int]] =
+    indices.asScala.toArray.map(index =>
+      Array[Int](index.getLevel, index.getX, index.getY, index.getXBins, index.getYBins)
+    )
+  def indexInfoArrayToIndices (infoArray: Array[Array[Int]]): JavaIterable[TileIndex] =
+    infoArray.map(info => new TileIndex(info(0), info(1), info(2), info(3), info(4))).toList.asJava
 }
 
 /**

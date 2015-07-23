@@ -92,7 +92,7 @@ case class ClientTileDataRequest[T] (table: String, serializer: TileSerializer[T
         (tile.getDefinition, tile)
       }.toOption
     }.toMap
-    Some(indices.asScala.map(expectedIndex => tilesByIndex.get(expectedIndex).getOrElse(null)).toList.asJava)
+    _tiles = Some(indices.asScala.map(expectedIndex => tilesByIndex.get(expectedIndex).getOrElse(null)).toList.asJava)
   }
 
   override def onError(t: Throwable): Unit =

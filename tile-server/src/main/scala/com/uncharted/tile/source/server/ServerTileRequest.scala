@@ -53,11 +53,11 @@ object ServerTileRequest {
         new ServerTileMetaDataRequest(table)
       }
       case RequestTypes.Tiles => {
-        val (requestType, table, serializer, indices) =
-          ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value, String, TileSerializer[_], JavaIterable[TileIndex]](encoded)
+        val (requestType, table, serializer, indexInfos) =
+          ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value, String, TileSerializer[_], Array[Array[Int]]](encoded)
 
         def withTypedSerializer[T] (typedSerializer: TileSerializer[T]): ServerTileDataRequest[T] = {
-          new ServerTileDataRequest[T](table, typedSerializer, indices)
+          new ServerTileDataRequest[T](table, typedSerializer, TileDataRequest.indexInfoArrayToIndices(indexInfos))
         }
         withTypedSerializer(serializer)
       }
