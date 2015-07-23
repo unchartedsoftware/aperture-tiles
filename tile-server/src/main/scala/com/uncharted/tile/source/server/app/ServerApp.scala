@@ -51,7 +51,10 @@ object ServerApp extends Logging {
         Some("On-demand tile server"))
 
       // Get rid of extraneous spark logging
+      Logger.getLogger("akka").setLevel(Level.WARN)
       Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
+      Logger.getLogger("org.spark-project").setLevel(Level.WARN)
+      Logger.getLogger("org.apache.hadoop").setLevel(Level.WARN)
 
       val context = argParser.getSparkConnector().createContext(Some(jobName))
       val contextProvider = new SparkContextProviderImpl(context)
