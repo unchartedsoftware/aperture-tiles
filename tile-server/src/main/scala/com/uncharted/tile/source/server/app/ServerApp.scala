@@ -25,6 +25,7 @@
 package com.uncharted.tile.source.server.app
 
 
+import org.apache.log4j.{Level, Logger}
 
 import scala.collection.JavaConverters._
 
@@ -48,6 +49,10 @@ object ServerApp extends Logging {
       val jobName = argParser.getString("serverName",
         "The name by which the tile server is known on the spark task web interface",
         Some("On-demand tile server"))
+
+      // Get rid of extraneous spark logging
+      Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
+
       val context = argParser.getSparkConnector().createContext(Some(jobName))
       val contextProvider = new SparkContextProviderImpl(context)
 
