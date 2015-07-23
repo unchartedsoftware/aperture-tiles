@@ -26,10 +26,57 @@ package com.oculusinfo.tile.rest.translation;
 
 import org.json.JSONObject;
 
+
 public interface TileTranslationService {
 
     /**
-     * Calls the translation service's to perform translation
+     * Calls the translation service to perform translation given a query object such as:
+     * {
+     *  	"service": "some-service",   		// currently only supports the google translation service
+     *  	"target": "en",				 		// target language to translate to, can be any that google translation service supports
+     *  	"text": "client%20supplied%20text"	// text to translate. Should be uri encoded before calling translation service (client side)
+     * }
+     *
+     * Note: make sure to add two properties to the client app config .properties file as follows:
+     * 
+     * # for translation services
+	 * translation.api.key=client-supplied-api-key
+	 * translation.api.endpoint=https://www.googleapis.com/language/translate/v2 
+     *
+     * Then this method will return, if successful):
+     * {
+     *  	"data": {
+     *   		"translations": [
+     *      		{
+     *           		"translatedText": "translated text",
+     *           		"detectedSourceLanguage": "ar"
+     *       		}
+     *  		]
+     *		}
+	 * }
+	 * 
+	 * if unsuccessful (from google translate service): 
+	 * {
+	 * 		"error": {
+	 * 			"message":"Bad Request",
+	 * 			"errors": [
+	 * 				{
+	 * 					"message":"Bad Request",
+	 * 					"reason":"keyInvalid",
+	 * 					"domain":"usageLimits"
+	 * 				}
+	 * 			],
+	 * 			"code":400
+	 * 		}
+	 *  }
+	 * 
+	 * if unsuccessful (if tile-service is incorrectly configured):
+	 * {
+	 * 		"error": {
+	 * 			"message":"Incorrect Translation Service Configuration",
+	 * 		}
+	 *  } 
+     *
      * 
      * @param query The query parameters JSON object to configure translation service.
      * @return JSONObject - the results of the call to the translation service
