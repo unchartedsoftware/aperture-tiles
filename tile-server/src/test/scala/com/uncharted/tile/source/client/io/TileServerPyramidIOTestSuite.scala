@@ -28,11 +28,11 @@ package com.uncharted.tile.source.client.io
 import java.awt.geom.Rectangle2D
 import java.io.File
 import java.lang.{Integer => JavaInt}
+import java.util.{List => JavaList}
 import java.util.{Arrays => JavaArrays}
 
-import com.oculusinfo.binning.io.impl.HBasePyramidIO.StandardHBaseTilePutter
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.factory.providers.{StandardUberFactoryProvider, FactoryProvider}
+import com.oculusinfo.factory.providers.FactoryProvider
 
 import scala.collection.JavaConverters._
 import org.scalatest.FunSuite
@@ -56,6 +56,7 @@ import com.uncharted.tile.source.server.TileServer
 import com.uncharted.tile.source.server.io.StandardPyramidIOFactoryProvider
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 
 /**
@@ -162,6 +163,43 @@ class TileServerPyramidIOTestSuite extends FunSuite {
         s"""{
            |  "type": "on-demand",
            |  "algorithm": "binning",
+           |  "oculus": {
+           |    "binning": {
+           |      "source": {
+           |        "location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
+           |        "partitions": 128
+           |      },
+           |      "parsing": {
+           |        "separator": "\t",
+           |        "transaction": {
+           |          "index":  0,
+           |          "fieldType": "int"
+           |        },
+           |        "source": {
+           |          "index": 1,
+           |          "fieldType": "int"
+           |        },
+           |        "destination": {
+           |          "index": 2,
+           |          "fieldType": "int"
+           |        },
+           |        "time": {
+           |          "index": 3,
+           |          "fieldType": "date",
+           |          "dateFormat": "yyyy-MM-dd HH:mm:ss"
+           |        },
+           |        "amount": {
+           |          "index": 4
+           |        },
+           |        "logamount": {
+           |          "index": 4,
+           |          "fieldScaling": "log",
+           |          "fieldAggregation": "log",
+           |          "fieldBase": 10
+           |        }
+           |      }
+           |    }
+           |  },
            |  "data": {
            |    "oculus": {
            |      "binning": {
@@ -182,39 +220,6 @@ class TileServerPyramidIOTestSuite extends FunSuite {
            |        "projection": {
            |          "type": "EPSG:4326",
            |          "autobounds": true
-           |        },
-           |        "source": {
-           |          "location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
-           |          "partitions": 128
-           |        },
-           |        "parsing": {
-           |          "separator": "\t",
-           |          "transaction": {
-           |            "index":  0,
-           |            "fieldType": "int"
-           |          },
-           |          "source": {
-           |            "index": 1,
-           |            "fieldType": "int"
-           |          },
-           |          "destination": {
-           |            "index": 2,
-           |            "fieldType": "int"
-           |          },
-           |          "time": {
-           |            "index": 3,
-           |            "fieldType": "date",
-           |            "dateFormat": "yyyy-MM-dd HH:mm:ss"
-           |          },
-           |          "amount": {
-           |            "index": 4
-           |          },
-           |          "logamount": {
-           |            "index": 4,
-           |            "fieldScaling": "log",
-           |            "fieldAggregation": "log",
-           |            "fieldBase": 10
-           |          }
            |        }
            |      }
            |    }
@@ -224,8 +229,18 @@ class TileServerPyramidIOTestSuite extends FunSuite {
       val tableName = "bitcoin"
       io.initializeForRead(tableName, 256, 256, JsonUtilities.jsonObjToProperties(configuration))
       val serializer = new PrimitiveAvroSerializer[JavaInt](classOf[JavaInt], CodecFactory.bzip2Codec())
-      val tile000 = io.readTiles[JavaInt](tableName, serializer, JavaArrays.asList(new TileIndex(0, 0, 0)))
-      assert(null != tile000)
+      val level0 = Try(io.readTiles[JavaInt](tableName, serializer, JavaArrays.asList(new TileIndex(0, 0, 0))))
+      val level1Indices: JavaList[TileIndex] = (for (x <- 0 to 1; y <- 0 to 1) yield (new TileIndex(1, x, y))).toList.asJava
+      val level1 = Try(io.readTiles[JavaInt](tableName, serializer, level1Indices).asScala)
+      val level2 = Try(io.readTiles[JavaInt](tableName, serializer,
+        (for (x <- 0 to 3; y <- 0 to 3) yield (new TileIndex(2, x, y))).toList.asJava).asScala)
+      val level3 = Try(io.readTiles[JavaInt](tableName, serializer,
+        (for (x <- 0 to 7; y <- 0 to 7) yield (new TileIndex(3, x, y))).toList.asJava).asScala)
+
+      assert(null != level0.get.get(0))
+      assert(level1.get.size === 1)
+      assert(level2.get.size >= 1)
+      assert(level3.get.size >= 1)
     } finally {
     }
   }
