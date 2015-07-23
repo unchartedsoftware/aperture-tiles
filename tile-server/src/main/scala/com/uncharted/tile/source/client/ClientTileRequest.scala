@@ -42,6 +42,7 @@ import com.oculusinfo.binning.{TileData, TileIndex}
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 import com.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
 
+import scala.util.Try
 
 
 trait ClientTileRequest extends TileRequest {
@@ -82,15 +83,16 @@ case class ClientTileDataRequest[T] (table: String, serializer: TileSerializer[T
 
   override def onFinished(data: Array[Byte]): Unit = {
     // Extract our results
-    val encodedTiles = ByteArrayCommunicator.defaultCommunicator.read[JavaList[Array[Byte]]](data)
-    val tiles = new util.ArrayList[TileData[T]]()
-    var n = 0
-    indices.asScala.foreach { index =>
-      val bais = new ByteArrayInputStream(encodedTiles.get(n))
-      tiles.add(serializer.deserialize(index, bais))
-      n = n + 1
-    }
-    _tiles = Some(tiles)
+    val encodedTiles = ByteArrayCommunicator.defaultCommunicator.read[JavaList[Array[Byte]]](data).asScala
+    val tilesByIndex = encodedTiles.flatMap { encodedTile =>
+      Try {
+        val bais = new ByteArrayInputStream(encodedTile)
+        // This will break for legacy serialization - but there's no reason one would ever use that for live tiling.
+        val tile = serializer.deserialize(null, bais)
+        (tile.getDefinition, tile)
+      }.toOption
+    }.toMap
+    Some(indices.asScala.map(expectedIndex => tilesByIndex.get(expectedIndex).getOrElse(null)).toList.asJava)
   }
 
   override def onError(t: Throwable): Unit =
