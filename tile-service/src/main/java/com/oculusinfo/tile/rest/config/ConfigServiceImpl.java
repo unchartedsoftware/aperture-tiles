@@ -24,18 +24,15 @@
  */
 package com.oculusinfo.tile.rest.config;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -50,9 +47,13 @@ import java.util.regex.Pattern;
 public class ConfigServiceImpl implements ConfigService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
+    
+    private ConfigPropertiesService _service;
 
-    public static final String CONFIG_ENV_VAR = "TILE_CONFIG_PROPERTIES";
-    public static final String DEFAULT_CONFIG_PROPERTIES = "default-config.properties";
+	@Inject
+	public ConfigServiceImpl( ConfigPropertiesService service ) {
+		this._service = service;
+	}
 
     @Override
     public String replaceProperties(File configFile) throws ConfigException {
@@ -88,46 +89,16 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     protected Map<String, String> buildReplacements() throws ConfigException {
-        String pathToProperties = getPathToProperties();
-        if (StringUtils.isEmpty(pathToProperties)) {
-            return null;
-        }
-
-        try (InputStream input = new FileInputStream(pathToProperties)) {
-            Map<String, String> replacements = new HashMap<>();
-            Properties properties = new Properties();
-            properties.load(input);
-            Enumeration e = properties.propertyNames();
-            while (e.hasMoreElements()) {
-                String key = (String) e.nextElement();
-                replacements.put(key, properties.getProperty(key));
-            }
-            return replacements;
-        } catch (IOException e) {
-            throw new ConfigException(String.format("Unable to read properties file %s", pathToProperties), e);
-        }
-    }
-
-    protected String getPathToProperties() throws ConfigException {
-        String pathToProperties;
-        String configEnvVar = System.getenv(CONFIG_ENV_VAR);
-        if (StringUtils.isNotEmpty(configEnvVar)) {
-            pathToProperties = configEnvVar;
-            LOGGER.warn("{} environment variable is set, using properties file {} ", CONFIG_ENV_VAR, pathToProperties);
-        } else {
-            pathToProperties = getPathToPropertiesFromClasspath();
-            LOGGER.warn("{} environment variable NOT set, using default file from classpath {}", CONFIG_ENV_VAR, pathToProperties);
-        }
-        return pathToProperties;
-    }
-
-    protected String getPathToPropertiesFromClasspath() {
-        String path = null;
-        URL resource = this.getClass().getClassLoader().getResource(DEFAULT_CONFIG_PROPERTIES);
-        if (resource != null) {
-            path = resource.getPath();
-        }
-        return path;
+		Map<String, String> replacements = new HashMap<>();
+    	Properties properties = _service.getConfigProperties();
+    	if ( properties != null ) {
+	        Enumeration e = properties.propertyNames();
+	        while (e.hasMoreElements()) {
+	            String key = (String) e.nextElement();
+	            replacements.put(key, properties.getProperty(key));
+	        }
+    	}
+        return replacements;
     }
 
     // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string

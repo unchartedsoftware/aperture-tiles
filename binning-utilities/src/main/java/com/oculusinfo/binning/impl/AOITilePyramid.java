@@ -64,7 +64,7 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 
 	@Override
 	public Rectangle2D getBounds()  {
-		return new Rectangle2D.Double( _maxX - _minX, _maxY - _minY, _minX, _minY );
+		return new Rectangle2D.Double( _minX, _minY ,_maxX - _minX, _maxY - _minY);
 	}
 
 	@Override

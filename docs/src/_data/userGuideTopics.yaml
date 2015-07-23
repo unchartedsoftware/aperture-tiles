@@ -1,6 +1,7 @@
 - label: Contents
   path: user-guide
   listType: ul
+  faIcon: question-circle
   topics:
   - label: Overview
     path: 
