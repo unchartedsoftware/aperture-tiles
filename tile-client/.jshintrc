@@ -77,12 +77,13 @@
     // Custom Globals
     "globals"       : {         // additional predefined global variables
         "require"   : false,
-        "module"    : false,       
+        "module"    : false,
         "google"    : false,
         "$"         : false,
         "_"         : false,
         "OpenLayers": false,
         "describe"  : false,
-        "it"        : false
-    }        
+        "it"        : false,
+        "moment"    : false
+    }
 }
