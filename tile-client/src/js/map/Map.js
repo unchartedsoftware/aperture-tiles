@@ -264,7 +264,7 @@
     removeBaseLayer = function( map, baselayer ) {
         var index;
         // if only 1 baselayer available, ignore
-        if ( map.baselayers.length === 1 ) {
+        if ( !map.destroying && map.baselayers.length === 1 ) {
             console.error( 'Error: attempting to remove only baselayer from ' +
                 'map, this destroys the map, use destroy() instead' );
             return;
@@ -439,6 +439,24 @@
     }
 
     Map.prototype = {
+
+        /**
+         * Removes all components and destroys the map.
+         * @memberof Map.prototype
+         */
+        destroy: function() {
+            this.destroying = true;
+            this.layers.forEach( function( layer ) {
+                this.remove( layer );
+            }, this );
+            _.forIn( this.axes, function( axis ) {
+                this.remove( axis );
+            }, this );
+            this.baselayers.forEach( function( baselayer ) {
+                this.remove( baselayer );
+            }, this );
+            this.olMap.destroy();
+        },
 
         /**
          * Adds a component to the map.
