@@ -329,8 +329,10 @@
             // set enable / disable callbacks if collapsible axis
             if ( axis.isXAxis ) {
                 axis.$header.click( verticalSlide );
+                axis.$content.click( verticalSlide );
             } else {
                 axis.$header.click( horizontalSlide );
+                axis.$content.click( horizontalSlide );
             }
         };
         disableSlide = function() {

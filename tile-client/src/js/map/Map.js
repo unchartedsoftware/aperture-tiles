@@ -759,6 +759,7 @@
                 olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
+            this.olMap.zoomToExtent( olBounds );
         },
 
         /**
