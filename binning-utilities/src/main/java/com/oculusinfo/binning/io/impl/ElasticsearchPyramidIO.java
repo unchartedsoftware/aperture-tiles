@@ -51,6 +51,7 @@ import java.util.Set;
 public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchPyramidIO.class);
+	public static final int BINS = 256;
 
 	private Client client;
 
@@ -60,6 +61,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private TilePyramid tilePyramid;
 
 	private final int numZoomlevels;
+	private List<Double> maxValues;
 
 	public ElasticsearchPyramidIO(
 		String esClusterName,
@@ -124,9 +126,9 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 		Map<String, Object> filterMap = null;
 		// transform filter list json to a map
-		try{
+		try {
 			filterMap = JsonUtilities.jsonObjToMap(filterJSON);
-		}catch (Exception e){
+		} catch (Exception e){
 			filterMap = null;
 		}
 
@@ -167,8 +169,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 					case "UDF":
 						// build a user defined facet
 						BoolQueryBuilder boolQuery = new BoolQueryBuilder();
-
-						boolQuery.must(QueryBuilders.matchQuery("body.en", StringEscapeUtils.escapeJavaScript((String) filter.get("query"))));
+						boolQuery.must(QueryBuilders.queryStringQuery(StringEscapeUtils.escapeJavaScript((String) filter.get("query"))).field("body.en"));
 						boundaryFilter.must(FilterBuilders.queryFilter(boolQuery));
 						break;
 					default:
@@ -197,7 +198,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	}
 
 	private Long getHistogramIntervalFromBounds(double start, double end) {
-		long interval = ((long) Math.floor((end - start) / 256));
+		long interval = ((long) Math.floor((end - start) / BINS));
 		// the calculated interval can be less than 1 if the data is sparse
 		// we cannot pass elasticsearch a histogram interval less than 1
 		// so set it to 1
@@ -270,11 +271,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		return result;
 	}
 
-	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles, JSONObject properties) throws IOException {
+	@Override
+	public <T> List<TileData<T>> readTiles(String pyramidId, TileSerializer<T> serializer, Iterable<TileIndex> tiles, JSONObject properties) throws IOException{
+
 		List<TileData<T>> results = new LinkedList<TileData<T>>();
 
 		// iterate over the tile indices
-
 		for (TileIndex tileIndex: tiles) {
 			Rectangle2D rect = tilePyramid.getTileBounds(tileIndex);
 
@@ -369,11 +371,16 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		return getMaxValueFrom2DHistogram(agg);
 	}
 
-	// iterate through the aggregation, get the
+	// iterate through the aggregation, get the max doc count
 	private double getMaxValueFrom2DHistogram(Histogram agg) {
-		double maxValue = 0;
+		double maxValue = 1;
 		for (Histogram.Bucket bucket : agg.getBuckets()) {
 			Histogram yHistogram = bucket.getAggregations().get("yAgg");
+			// there could be no buckets, in which case
+			// there will be no effect on the max value
+			if (yHistogram.getBuckets().size() < 1){
+				continue;
+			}
 			// don't need to iterate over yAgg buckets because the query has ordered aggregations
 			// take the first one if it's greater than maxValue
 			if (maxValue < yHistogram.getBuckets().get(0).getDocCount() )
@@ -385,9 +392,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	private List<Double> readMetaMaxFromElasticsearch() {
 
 		Rectangle2D bounds = tilePyramid.getBounds();
-
-
-
 		List<Double> maxCountList = new ArrayList<>();
 		double pixelsPerTile = 256.0;
 
@@ -398,10 +402,20 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double tilesAtZoomLevel = Math.pow(2, i);
 			double xInterval = bounds.getWidth() / (pixelsPerTile * tilesAtZoomLevel);
 			double yInterval = bounds.getHeight() / (pixelsPerTile * tilesAtZoomLevel);
+			if (xInterval < 1){
+				xInterval = 1;
+			}
+			if (yInterval < 1){
+				yInterval = 1;
+			}
 			// search ES based off the calculated interval
 			double maxDocCount = searchForMaxBucketValue(xInterval, yInterval);
 			maxCountList.add(i, maxDocCount);
 		}
+		while(maxCountList.size() < 15){
+			maxCountList.add(maxCountList.get(maxCountList.size()-1)*0.75);
+		}
+
 		return maxCountList;
 	}
 
@@ -426,6 +440,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 		try {
 			// read meta max values from Elasticsearch
 			List<Double> maxValues = readMetaMaxFromElasticsearch();
+			this.maxValues = maxValues;
 
 			JSONObject metaDataJSON = new JSONObject();
 
