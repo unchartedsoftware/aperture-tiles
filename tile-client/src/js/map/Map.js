@@ -385,7 +385,10 @@
      * {
      *     pyramid {String} - The pyramid type for the map. Defaults to 'WebMercator'
      *     options: {
-     *         numZoomLevels {integer} - The number of zoom levels.
+     *         numZoomLevels {integer} - The number of zoom levels. Default = 18.
+     *         units {integer} - The units used for the map. Default = 'm'.
+     *         zoomDelay {integer} - The delay before requesting tiles on a zoom. Default = 400.
+     *         moveDelay {integer} - The delay before requesting tiles on a pan. Default = 400.
      *     }
      * }
      * </pre>
@@ -429,8 +432,8 @@
                 this.zoomControls
             ],
             tileManager: new OpenLayers.TileManager({
-                moveDelay: 400,
-                zoomDelay: 400
+                moveDelay: spec.options.moveDelay || 400,
+                zoomDelay: spec.options.zoomDelay || 400
             })
         });
 
