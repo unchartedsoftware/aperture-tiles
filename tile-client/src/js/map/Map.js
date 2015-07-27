@@ -264,7 +264,7 @@
     removeBaseLayer = function( map, baselayer ) {
         var index;
         // if only 1 baselayer available, ignore
-        if ( map.baselayers.length === 1 ) {
+        if ( !map.destroying && map.baselayers.length === 1 ) {
             console.error( 'Error: attempting to remove only baselayer from ' +
                 'map, this destroys the map, use destroy() instead' );
             return;
@@ -441,6 +441,24 @@
     Map.prototype = {
 
         /**
+         * Removes all components and destroys the map.
+         * @memberof Map.prototype
+         */
+        destroy: function() {
+            this.destroying = true;
+            this.layers.forEach( function( layer ) {
+                this.remove( layer );
+            }, this );
+            _.forIn( this.axes, function( axis ) {
+                this.remove( axis );
+            }, this );
+            this.baselayers.forEach( function( baselayer ) {
+                this.remove( baselayer );
+            }, this );
+            this.olMap.destroy();
+        },
+
+        /**
          * Adds a component to the map.
          * @memberof Map.prototype
          *
@@ -563,6 +581,9 @@
          * @param {String} theme - The theme identification string of the map.
          */
         setTheme: function( theme ) {
+            if ( this.theme === theme ) {
+                return;
+            }
             var i;
             // toggle theme in html
             if ( theme === 'light' ) {
@@ -570,6 +591,7 @@
             } else {
                 $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
             }
+            this.theme = theme;
             // update theme for all attached layers
             if ( this.layers ) {
                 for ( i=0; i<this.layers.length; i++ ) {
@@ -588,7 +610,7 @@
          * @returns {String} The theme of the map.
          */
         getTheme: function() {
-            return $( 'body' ).hasClass( "light-theme" ) ? 'light' : 'dark';
+            return this.theme;
         },
 
         /**
@@ -737,6 +759,7 @@
                 olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
+            this.olMap.zoomToExtent( olBounds );
         },
 
         /**
