@@ -432,8 +432,8 @@
                 this.zoomControls
             ],
             tileManager: new OpenLayers.TileManager({
-                moveDelay: spec.options.moveDelay || 400,
-                zoomDelay: spec.options.zoomDelay || 400
+                moveDelay: spec.options.moveDelay !== undefined ? spec.options.moveDelay : 400,
+                zoomDelay: spec.options.zoomDelay !== undefined ? spec.options.zoomDelay : 400
             })
         });
 
