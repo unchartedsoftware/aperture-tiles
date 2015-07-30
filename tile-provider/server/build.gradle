@@ -1,6 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 description = "A Spark-based service that can serve tiles to clients, using RabbitMQ"
+group = group + ".tile-provider"
 
 // Configure for scala compilation via the scala plugin
 apply plugin: "scala"

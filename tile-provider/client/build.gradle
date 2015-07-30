@@ -1,6 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 description = "A client (and pieces in common to both client and server) of a RabbitMQ-based tile provider"
+group = group + ".tile-provider"
 
 // Configure for scala compilation via the scala plugin
 apply plugin: "scala"
