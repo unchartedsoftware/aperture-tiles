@@ -34,7 +34,6 @@ import org.json.JSONObject
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
-import scala.util.Try
 
 import org.scalatest.FunSuite
 
@@ -55,6 +54,8 @@ import com.uncharted.tile.source.server.TileServer
 
 /**
  * Test the TileServerPyramidIO to make sure it works.
+ *
+ * Because the tile creation uses Spark, this has to exist in the server project.
  */
 class TileServerPyramidIOTestSuite extends FunSuite {
   import ExecutionContext.Implicits.global
@@ -144,110 +145,6 @@ class TileServerPyramidIOTestSuite extends FunSuite {
       assert(tiles.get(4).getDefinition === new TileIndex(1, 1, 1, 4, 4))
     } finally {
       server.shutdown
-    }
-  }
-
-  // This test uses a remote server, rather than starting one itself.  Consequently, it is of course ignored, and
-  // is intended to be run manually when said server is known to be up.
-  ignore("Test on-demand tiling") {
-    def time[T] (fcn: () => T): (T, Double) = {
-      val start = System.nanoTime()
-      val result = fcn()
-      val end = System.nanoTime()
-      (result, (end-start)/1000000.0)
-    }
-    val tileSerializerProviders: Set[FactoryProvider[TileSerializer[_]]] = DefaultTileSerializerFactoryProvider.values.toSet
-    val io = new TileServerPyramidIO("hadoop-s1", new StandardTileSerializerFactoryProvider(tileSerializerProviders.asJava), 1000*60*60)
-    try {
-      val configuration = new JSONObject(
-        s"""{
-           |  "type": "on-demand",
-           |  "algorithm": "binning",
-           |  "oculus": {
-           |    "binning": {
-           |      "name": "bitcoin",
-           |      "description": "Live demo of bitcoin tiling",
-           |      "levels": "0,1,2,3,4,5,6,7,8,9,10,11,12",
-           |      "tileWidth": 256,
-           |      "tileHeight": 256,
-           |      "partitions": 128,
-           |      "index": {
-           |        "type": "cartesian",
-           |        "field": ["logamount", "time"]
-           |      },
-           |      "value": {
-           |        "type": "count",
-           |        "valueType": "int"
-           |      },
-           |      "projection": {
-           |        "type": "EPSG:4326",
-           |        "autobounds": true
-           |      },
-           |      "source": {
-           |        "location": "hdfs://hadoop-s1/xdata/data/bitcoin/sc2013/Bitcoin_Transactions_Datasets_20130410.tsv",
-           |        "partitions": 128
-           |      },
-           |      "parsing": {
-           |        "separator": "\t",
-           |        "transaction": {
-           |          "index":  0,
-           |          "fieldType": "int"
-           |        },
-           |        "source": {
-           |          "index": 1,
-           |          "fieldType": "int"
-           |        },
-           |        "destination": {
-           |          "index": 2,
-           |          "fieldType": "int"
-           |        },
-           |        "time": {
-           |          "index": 3,
-           |          "fieldType": "date",
-           |          "dateFormat": "yyyy-MM-dd HH:mm:ss"
-           |        },
-           |        "amount": {
-           |          "index": 4
-           |        },
-           |        "logamount": {
-           |          "index": 4,
-           |          "fieldScaling": "log",
-           |          "fieldAggregation": "log",
-           |          "fieldBase": 10
-           |        }
-           |      }
-           |    }
-           |  },
-           |  "data": {
-           |    "oculus": {
-           |      "binning": {
-           |      }
-           |    }
-           |  }
-           |}""".stripMargin)
-
-      val tableName = "bitcoin"
-      io.initializeForRead(tableName, 256, 256, JsonUtilities.jsonObjToProperties(configuration))
-      val serializer = new PrimitiveAvroSerializer[JavaInt](classOf[JavaInt], CodecFactory.bzip2Codec())
-      val level0Indices = JavaArrays.asList(new TileIndex(0, 0, 0))
-      val (level0, level0Time) = time(() => Try(io.readTiles[JavaInt](tableName, serializer, level0Indices).asScala))
-      val level1Indices: JavaList[TileIndex] = (for (x <- 0 to 1; y <- 0 to 1) yield (new TileIndex(1, x, y))).toList.asJava
-      val (level1, level1Time) = time(() => Try(io.readTiles[JavaInt](tableName, serializer, level1Indices).asScala))
-      val level2Indices: JavaList[TileIndex] = (for (x <- 0 to 3; y <- 0 to 3) yield (new TileIndex(2, x, y))).toList.asJava
-      val (level2, level2Time) = time(() => Try(io.readTiles[JavaInt](tableName, serializer, level2Indices).asScala))
-      val level3Indices: JavaList[TileIndex] = (for (x <- 0 to 7; y <- 0 to 7) yield (new TileIndex(3, x, y))).toList.asJava
-      val (level3, level3Time) = time(() => Try(io.readTiles[JavaInt](tableName, serializer, level3Indices).asScala))
-
-      println("Retrieved "+level0.get.size+" tiles for level 0 in "+(level0Time/1000.0)+" seconds")
-      println("Retrieved "+level1.get.size+" tiles for level 1 in "+(level1Time/1000.0)+" seconds")
-      println("Retrieved "+level2.get.size+" tiles for level 2 in "+(level2Time/1000.0)+" seconds")
-      println("Retrieved "+level3.get.size+" tiles for level 3 in "+(level3Time/1000.0)+" seconds")
-
-      assert(level0.get.size === 1)
-      assert(level1.get.size === 4)
-      assert(level2.get.size === 16)
-      assert(level3.get.size === 64)
-    } finally {
     }
   }
 }
