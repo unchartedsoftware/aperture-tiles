@@ -427,7 +427,9 @@
                 medium: [],
                 small: []
             };
-        if ( duration.asMonths() > 16 ) {
+        if ( duration.asMonths() > 32 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "year", 2 );
+        } else if ( duration.asMonths() > 16 ) {
             addTimeAlignedMarkers( axis, markers, start, end, "year", "year", 1 );
         } else if ( duration.asMonths() > 8 ) {
             addTimeAlignedMarkers( axis, markers, start, end, "year", "month", 4 );
