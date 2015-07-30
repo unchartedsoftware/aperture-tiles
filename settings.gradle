@@ -8,7 +8,7 @@ ext.tileGenProjects = [
 		'tile-packaging'
 ] as Set
 
-ext.tileServerProjects = ['tile-server'] as Set
+ext.tileServerProjects = ['tile-provider:client', 'tile-provider:server'] as Set
 tileServerProjects.addAll(tileGenProjects)
 
 // tile client/server Projects
@@ -21,7 +21,7 @@ ext.clientServerProjects = [
 		'spark-tile-utilities',
 		'tile-rendering',
 		'tile-service',
-		'tile-server',
+		'tile-provider:client',
 		'annotation-service',
 		'tile-client',
 		'tile-client-template',

@@ -1,0 +1,4 @@
+description = "Root tile-provider project"
+
+// This project is a place-holder so that Gradle can properly identify its
+// sub-components
