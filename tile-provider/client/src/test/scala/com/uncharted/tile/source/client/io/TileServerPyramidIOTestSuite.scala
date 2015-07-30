@@ -38,10 +38,8 @@ import scala.util.Try
 import org.scalatest.FunSuite
 
 import com.oculusinfo.binning.TileIndex
-import com.oculusinfo.binning.io.serialization.impl.{PrimitiveAvroSerializer, StandardTileSerializerFactoryProvider}
-import com.oculusinfo.binning.io.serialization.{DefaultTileSerializerFactoryProvider, TileSerializer}
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.factory.providers.FactoryProvider
 
 
 
@@ -59,8 +57,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
       val end = System.nanoTime()
       (result, (end-start)/1000000.0)
     }
-    val tileSerializerProviders: Set[FactoryProvider[TileSerializer[_]]] = DefaultTileSerializerFactoryProvider.values.toSet
-    val io = new TileServerPyramidIO("hadoop-s1", new StandardTileSerializerFactoryProvider(tileSerializerProviders.asJava), 1000*60*60)
+    val io = new TileServerPyramidIO("hadoop-s1", 1000*60*60)
     try {
       val configuration = new JSONObject(
         s"""{

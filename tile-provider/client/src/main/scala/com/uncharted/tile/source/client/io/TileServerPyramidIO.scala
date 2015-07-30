@@ -49,8 +49,8 @@ import com.uncharted.tile.source.client._
 /**
  * A tile pyramid IO that acts as a facade for a TileClient
  */
-class TileServerPyramidIO (brokerHostName: String, serializerFactoryProvider: FactoryProvider[TileSerializer[_]], maximumWaitTime: Long = 2000) extends PyramidIO {
-  private val client = new TileClient(brokerHostName, serializerFactoryProvider)
+class TileServerPyramidIO (brokerHostName: String, maximumWaitTime: Long = 2000) extends PyramidIO {
+  private val client = new TileClient(brokerHostName)
   private val clientTimeout = Duration(maximumWaitTime, TimeUnit.MILLISECONDS)
 
   override def initializeForWrite(pyramidId: String): Unit = throw new UnsupportedOperationException("TileServerPyramidIO is read-only")

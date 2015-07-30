@@ -27,7 +27,7 @@ package com.uncharted.tile.source.server.io
 import java.awt.geom.Rectangle2D
 import java.io.File
 import java.lang.{Integer => JavaInt}
-import java.util.{Arrays => JavaArrays, List => JavaList}
+import java.util.{Arrays => JavaArrays}
 
 import org.apache.avro.file.CodecFactory
 import org.json.JSONObject
@@ -40,7 +40,7 @@ import org.scalatest.FunSuite
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.DenseTileData
 import com.oculusinfo.binning.io.impl.{FileBasedPyramidIO, FileSystemPyramidSource}
-import com.oculusinfo.binning.io.serialization.impl.{PrimitiveAvroSerializer, StandardTileSerializerFactoryProvider}
+import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
 import com.oculusinfo.binning.io.serialization.{DefaultTileSerializerFactoryProvider, TileSerializer}
 import com.oculusinfo.binning.io.{DefaultPyramidIOFactoryProvider, PyramidIO}
 import com.oculusinfo.binning.metadata.PyramidMetaData
@@ -106,7 +106,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
     val pioFactoryProvider = new StandardPyramidIOFactoryProvider(pyramidIOProviders.asJava)
     val server = new TileServer("localhost", pioFactoryProvider)
     val tileSerializerProviders: Set[FactoryProvider[TileSerializer[_]]] = DefaultTileSerializerFactoryProvider.values.toSet
-    val io = new TileServerPyramidIO("localhost", new StandardTileSerializerFactoryProvider(tileSerializerProviders.asJava), 1000*60*60)
+    val io = new TileServerPyramidIO("localhost", 1000*60*60)
     try {
       concurrent.future(server.listenForRequests)
 
