@@ -25,66 +25,58 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable
 import scala.util.Try
-
 import org.scalatest.FunSuite
-
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileAndBinIndices
 import com.oculusinfo.tilegen.util.ExtendedNumeric
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.AOITilePyramid
+import org.apache.spark.SharedSparkContext
+import org.apache.spark.rdd.RDD
+
 
 
 
 /**
  * @author nkronenfeld
  */
-class StandardBinningFunctionsTestSuite extends FunSuite {
+class StandardBinningFunctionsTestSuite extends FunSuite with SharedSparkContext {
 	import StandardBinningFunctions._
 
-  test("Guassian tiling") {
-
-    def makeKernel(radius : Int, sigma : Double) : Array[Array[Double]] = {
-      //      val rows = 5
-      //      val cols = 5
-      //      val sigma = 1
-
-      val dim = (radius * 2) + 1
-
-      val kernel = Array.ofDim[Double](dim, dim)
-      //int uc, vc;
-      //float g
-      var sum = 0.0
-      //for(int u=0; u<kernel.length; u++) {
-      println(kernel.length)
-      println(kernel(0).length)
-      for (u <- 0 until kernel.length) {
-        //for(int v=0; v<kernel[0].length; v++) {
-        for (v <- 0 until kernel(0).length) {
-
-
-          val uc = u - (kernel.length - 1) / 2
-          val vc = v - (kernel(0).length - 1) / 2
-          // Calculate and save
-          val g = Math.exp(-(uc * uc + vc * vc) / (2 * sigma * sigma))
-          sum += g;
-          kernel(u)(v) = g;
-        }
-      }
-      // Normalize it
-      for (u <- 0 until kernel.length - 1) {
-        for (v <- 0 until kernel(0).length - 1) {
-          kernel(u)(v) /= sum
-        }
-      }
-
-      kernel.map(x => x.map(y => println(y)))
-      kernel
-    }
-
-    makeKernel(3, 1)
-  }
+	test("Guassian tiling") {
+		val pyramid: TilePyramid = new AOITilePyramid(0.0, 0.0, 8.0, 8.0)
+		val index = new CartesianSchemaIndexScheme
+		val kernel = Array( 
+			Array(0.0, 0.1, 0.2, 0.1, 0.0), 
+			Array(0.1, 0.2, 0.3, 0.2, 0.1), 
+			Array(0.2, 0.3, 0.4, 0.3, 0.2), 
+			Array(0.1, 0.2, 0.3, 0.2, 0.1), 
+			Array(0.0, 0.1, 0.2, 0.1, 0.0)
+		)
+		
+		// Create our locate function
+		val locateFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])] =
+		    locateIndexOverLevelsWithKernel[Seq[Any]](kernel, index, pyramid, List(0), 8, 8)
+		
+		// Create our populate function
+		val populateFcn: (TileIndex, Array[BinIndex], Double) => MutableMap[BinIndex, Double] =
+		    populateTileGaussian[Double](kernel)
+		
+		// Create some data with which to test them
+		// One point firmly in bin (3, 3) of tile (0, 0, 0, 8, 8)
+		val inputData1: RDD[(Seq[Any], Double)] = sc.parallelize(List((Seq[Any](3.5, 3.5), 1.0)))
+		
+		// Run our input data through our functions to get individual bin values
+		val output = inputData1.flatMap{case (index, value) =>
+		    locateFcn(index).flatMap{case (tile, ubins) =>
+		        populateFcn(tile, ubins, value).map{case (bin, value) => (tile, bin, value)}
+		    }
+		}
+	}
 
 	test("for vs while") {
 		def time (f: () => Unit): Double = {
