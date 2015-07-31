@@ -226,4 +226,32 @@ class CSVReaderTestSuite extends FunSuite with SharedSparkContext {
 			failReader.asDataFrame.select(new Column("testMap")).map(_(0).asInstanceOf[String]).first()
 		}
 	}
+
+  test("CSV parse string enclosed in quotes") {
+    val configuration = new Properties()
+    configuration.setProperty("oculus.binning.parsing.test.index",     "0")
+    configuration.setProperty("oculus.binning.parsing.test.fieldType", "String")
+    configuration.setProperty("oculus.binning.parsing.quotechar", "'")
+    val data = sc.parallelize(List("'test result'"))
+    val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
+    import reader.sqlc._
+
+    val result = reader.asDataFrame.select(new Column("test")).map(_(0).asInstanceOf[String]).first()
+    assertResult("test result")(result)
+  }
+
+  test("CSV parse string enclosed in quotes with separator in text") {
+    val configuration = new Properties()
+    configuration.setProperty("oculus.binning.parsing.test.index",     "0")
+    configuration.setProperty("oculus.binning.parsing.test.fieldType", "String")
+
+    configuration.setProperty("oculus.binning.parsing.separator", ",")
+    configuration.setProperty("oculus.binning.parsing.quotechar", "'")
+    val data = sc.parallelize(List("'One, field'"))
+    val reader = new CSVReader(sqlc, data, new PropertiesWrapper(configuration))
+    import reader.sqlc._
+
+    val result = reader.asDataFrame.select(new Column("test")).map(_(0).asInstanceOf[String]).first()
+    assertResult("One, field")(result)
+  }
 }

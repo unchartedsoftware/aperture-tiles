@@ -125,6 +125,8 @@ dependencies {
 	}
 	compile "org.scala-lang:scala-library:$scalaVersion"
 	compile "org.clapper:grizzled-slf4j_2.10:1.0.2"
+	compile "joda-time:joda-time:2.8.1"
+	compile "org.joda:joda-convert:1.7"
 	compile project(":binning-utilities")
 	compile project(":geometric-utilities")
 	testCompile "org.scalatest:scalatest_$dependencyScalaVersion:2.1.1"
@@ -134,6 +136,9 @@ dependencies {
 	// the impl of the servlet api, which ends up generating a security exception.  We force include
 	// the unsigned api jar here, and force include the unsigned api jar above.
 	compile "javax.servlet:javax.servlet-api:3.0.1"
+
+	// Parser for CSV files
+	compile "com.opencsv:opencsv:3.4"
 
 	// Call for special handling for hbase dependencies - see top level build file for
 	// definition and explanation.
@@ -146,6 +151,7 @@ dependencies {
 	assemblyJarReq project (":factory-utilities")
 	assemblyJarReq "org.json:json:20090211"
 	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
+	assemblyJarReq "com.opencsv:opencsv:3.4"
 	addHBaseDependencies("assemblyJarReq")
 }
 

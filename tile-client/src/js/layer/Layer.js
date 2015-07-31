@@ -44,6 +44,8 @@
         this.domain = spec.domain;
         this.map = spec.map;
         this.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
+        this.brightness = ( spec.brightness !== undefined ) ? spec.brightness : 1.0;
+        this.contrast = ( spec.brightness !== undefined ) ? spec.brightness : 1.0;
         this.enabled = ( spec.enabled !== undefined ) ? spec.enabled : true;
     }
 
@@ -71,6 +73,54 @@
          */
         getOpacity: function() {
             return this.opacity;
+        },
+
+        /**
+         * Set the brightness of the layer.
+         * @memberof Layer.prototype
+         *
+         * @param {float} brightness - normalized brightness value.
+         */
+        setBrightness: function( brightness ) {
+            this.brightness = brightness;
+            if ( this.olLayer ) {
+                $( this.olLayer.div ).css( '-webkit-filter', "brightness("+ (this.brightness*100) +"%) contrast("+ (this.contrast*100) +"%)" );
+            }
+            PubSub.publish( this.getChannel(), { field: 'brightness', value: brightness } );
+        },
+
+        /**
+         * Returns the brightness of the layer.
+         * @memberof Layer.prototype
+         *
+         * @returns {float} The brightness of the layer.
+         */
+        getBrightness: function() {
+            return this.brightness;
+        },
+
+        /**
+         * Set the contrast of the layer.
+         * @memberof Layer.prototype
+         *
+         * @param {float} contrast - normalized contrast value.
+         */
+        setContrast: function( contrast ) {
+            this.contrast = contrast;
+            if ( this.olLayer ) {
+                $( this.olLayer.div ).css( '-webkit-filter', "brightness("+ (this.brightness*100) +"%) contrast("+ (this.contrast*100) +"%)" );
+            }
+            PubSub.publish( this.getChannel(), { field: 'contrast', value: contrast } );
+        },
+
+        /**
+         * Returns the contrast of the layer.
+         * @memberof Layer.prototype
+         *
+         * @returns {float} The contrast of the layer.
+         */
+        getContrast: function() {
+            return this.contrast;
         },
 
         /**

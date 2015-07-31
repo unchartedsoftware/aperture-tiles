@@ -120,6 +120,8 @@
         // reset visibility / opacity
         this.setOpacity( this.getOpacity() );
         this.setEnabled( this.isEnabled() );
+        this.setBrightness( this.getBrightness() );
+        this.setContrast( this.getContrast() );
 		PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
     };
 

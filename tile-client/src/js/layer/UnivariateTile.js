@@ -69,24 +69,36 @@
      * Override this method to inject the 'olUnivariateTile' class instead
      * of the usual olHtmlTile.
      */
-    OpenLayers.Tile.Univariate.prototype.positionTile = function() {
-
-        if ( !this.div ) {
-            this.div = document.createElement( 'div' );
-            this.div.style.position = 'absolute';
-            this.div.style.opacity = 0;
-            this.div.className = 'olTileUnivariate';
-            this.layer.div.appendChild( this.div );
+    OpenLayers.Tile.Univariate.prototype.getImage = function() {
+        if ( !this.imgDiv ) {
+            this.imgDiv = document.createElement( 'div' );
+            this.imgDiv.className = 'olTileUnivariate';
+            var style = this.imgDiv.style;
+            style.visibility = "hidden";
+            style.opacity = 0;
+            if ( this.layer.opacity < 1 ) {
+                style.filter = 'alpha(opacity=' + (this.layer.opacity * 100) + ')';
+            }
+            style.position = "absolute";
         }
+        return this.imgDiv;
+    };
 
-        var style = this.div.style,
-            size = this.layer.getImageSize( this.bounds ),
+    /**
+     * Override this method to inject the 'olUnivariateTile' class instead
+     * of the usual olHtmlTile.
+     */
+    OpenLayers.Tile.Univariate.prototype.positionTile = function() {
+        var style = this.getTile().style,
+            size = this.layer.getImageSize(this.bounds),
+            ratio = 1;
+        if ( this.layer instanceof OpenLayers.Layer.Grid ) {
             ratio = this.layer.getServerResolution() / this.layer.map.getResolution();
-
-        style.left = this.position.x + 'px';
-        style.top = this.position.y + 'px';
-        style.width = Math.round( ratio * size.w ) + 'px';
-        style.height = Math.round( ratio * size.h ) + 'px';
+        }
+        style.left = this.position.x + "px";
+        style.top = "-256px";
+        style.width = Math.round(ratio * size.w) + "px";
+        style.height = Math.round(ratio * size.h) + "px";
     };
 
     module.exports = OpenLayers.Tile.Univariate;

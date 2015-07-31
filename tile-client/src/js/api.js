@@ -65,6 +65,7 @@
         PointRenderer: require('./layer/renderer/PointRenderer'),
         TextByFrequencyRenderer: require('./layer/renderer/TextByFrequencyRenderer'),
         TextScoreWeightedRenderer: require('./layer/renderer/TextScoreWeightedRenderer'),
+		TextByTopicRenderer: require('./layer/renderer/TextByTopicRenderer'),
         WordCloudRenderer: require('./layer/renderer/WordCloudRenderer'),
         RenderTheme: require('./layer/renderer/RenderTheme'),
 

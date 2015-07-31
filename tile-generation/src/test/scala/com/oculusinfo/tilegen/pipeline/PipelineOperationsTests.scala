@@ -409,6 +409,69 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assert(schema.fieldNames.contains("num"))
 	}
 
+  test("Test column type conversion") {
+    var schema: StructType = null
+    def schemaOp()(input: PipelineData) = {
+      schema = input.srdd.schema
+      input
+    }
+    val resultListInt = ListBuffer[Any]()
+    val resultListString = ListBuffer[Any]()
+
+    try {
+      // pipeline stage to create test data
+      def createDataOp(count: Int)(input: PipelineData) = {
+        val jsonData = for (x <- 0 until count; y <- 0 until count / 2) yield {
+          val lon = -180.0 + (x / count.toFloat * 360.0)
+          val lat = -45.0 + (y * 90.0 / (count / 2))
+          var data = (x * count + y).toDouble
+          if (x == 0 && y == 0){data = Double.MaxValue}
+          if (x == 0 && y == 1){data = data + 0.5}
+
+          s"""{"x":$lon, "y":$lat, "data":$data}\n"""
+        }
+        val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+        PipelineData(sqlc, srdd)
+      }
+
+      // Run the tile job
+      val args = Map(
+        "ops.xColumn" -> "x",
+        "ops.yColumn" -> "y",
+        "ops.name" -> "test.{i}.{v}",
+        "ops.description" -> "a test description",
+        "ops.prefix" -> "test_prefix",
+        "ops.levels.0" -> "0",
+        "ops.tileWidth" -> "4",
+        "ops.tileHeight" -> "4",
+        "ops.valueColumn" -> "data",
+        "ops.valueType" -> "double",
+        "ops.aggregationType" -> "sum")
+
+      val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+      rootStage.addChild(PipelineStage("convert_int", convertColumnTypeOp("data", x => x(0).asInstanceOf[Double].toInt, IntegerType)(_)))
+        .addChild(PipelineStage("output_schema", schemaOp()(_)))
+        .addChild(PipelineStage("output_int", outputOp("data", resultListInt)(_)))
+        .addChild(PipelineStage("convert_string", convertColumnTypeOp("data", x => x(0).asInstanceOf[Int].toString, StringType)(_)))
+        .addChild(PipelineStage("output_string", outputOp("data", resultListString)(_)))
+      PipelineTree.execute(rootStage, sqlc)
+
+      // Check schema
+      assertResult(schema.fields.size)(3)
+      assert(schema.fields(2).name == "data")
+      assert(schema.fields(2).dataType == IntegerType)
+
+      // Double to Int
+      assert(resultListInt(0) == Integer.MAX_VALUE) // Double to int conversion is capped at max int
+      assert(resultListInt(1) == 1) // Double to int conversion takes only the integer part of the number
+      assert(resultListInt(2) == 2)
+
+      // Int to String
+      assert(resultListString(3) == "3")
+
+    }
+  }
+
 	test("Test geo heatmap parse and operation") {
 
 		try {
@@ -699,12 +762,12 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     val weeks = ListBuffer[Any]()
     val months = ListBuffer[Any]()
     rootStage.addChild(PipelineStage("ConvertDates", parseDateOp("date", "parsedDate", format)(_)))
-             .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "day", Calendar.DAY_OF_YEAR)(_)))
-             .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "week", Calendar.WEEK_OF_YEAR)(_)))
-             .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "month", Calendar.MONTH)(_)))
-             .addChild(new PipelineStage("output", outputOps(List("day"), days)(_)))
-             .addChild(new PipelineStage("output", outputOps(List("week"), weeks)(_)))
-             .addChild(new PipelineStage("output", outputOps(List("month"), months)(_)))
+      .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "day", Calendar.DAY_OF_YEAR)(_)))
+      .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "week", Calendar.WEEK_OF_YEAR)(_)))
+      .addChild(PipelineStage("GetDay", dateFieldOp("parsedDate", "month", Calendar.MONTH)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("day"), days)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("week"), weeks)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("month"), months)(_)))
     PipelineTree.execute(rootStage, sqlc)
 
     assert((1 to 365).toList === days)
@@ -712,5 +775,83 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     assert((1 to 53).toList === weeks.map(_.asInstanceOf[Int]).toSet.toList.sorted)
     // months are zero-based for some reason
     assert((0 to 11).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
+  }
+
+  test("Test elapsed date field extraction") {
+    val format = "yyyy DD"
+    def createDataOp(count: Int)(input: PipelineData) = {
+      val formatter = new SimpleDateFormat(format)
+      val pyramid = new WebMercatorTilePyramid
+      val jsonData = (1 to 365).map{day =>
+        val date = new GregorianCalendar()
+        date.set(Calendar.YEAR, 2000)
+        date.set(Calendar.DAY_OF_YEAR, day)
+        val formattedDate = formatter.format(date.getTime)
+        s"""{"x": $day, "y": 1, "date": "$formattedDate"}"""
+      }
+
+      val srdd = sqlc.jsonRDD(sc.parallelize(jsonData))
+      PipelineData(sqlc, srdd)
+    }
+
+    val rootStage = PipelineStage("create_data", createDataOp(8)(_))
+    val days = ListBuffer[Any]()
+    val weeks = ListBuffer[Any]()
+    val months = ListBuffer[Any]()
+    rootStage.addChild(PipelineStage("ConvertDates", parseDateOp("date", "parsedDate", format)(_)))
+      .addChild(PipelineStage("GetDay", elapsedDateOp("parsedDate", "day", Calendar.DAY_OF_YEAR,
+                                                      new GregorianCalendar(2000, 0, 5).getTime)(_)))
+      .addChild(PipelineStage("GetDay", elapsedDateOp("parsedDate", "week", Calendar.WEEK_OF_YEAR,
+                                                      new GregorianCalendar(2000, 0, 15).getTime)(_)))
+      .addChild(PipelineStage("GetDay", elapsedDateOp("parsedDate", "month", Calendar.MONTH,
+                                                      new GregorianCalendar(2000, 2, 1).getTime)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("day"), days)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("week"), weeks)(_)))
+      .addChild(new PipelineStage("output", outputOps(List("month"), months)(_)))
+    PipelineTree.execute(rootStage, sqlc)
+
+    assert((-4 to 360).toList === days)
+    // 2000 has 53 weeks - only one day in the first week.
+    assert((-2 to 50).toList === weeks.map(_.asInstanceOf[Int]).toSet.toList.sorted)
+    // months are zero-based for some reason
+    assert((-2 to 9).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
+  }
+
+  test("Test Load Parquet File") {
+
+    def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
+      input.srdd.saveAsParquetFile(path)
+      PipelineData(input.sqlContext, input.srdd)
+    }
+
+    val resultList = ListBuffer[Any]()
+    val argMap = Map(
+      "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
+      "ops.columns" -> "num,num_1",
+      "ops.min" -> "2,2",
+      "ops.max" -> "3,3")
+
+    val tempFolder = "test.parquet.data"
+    try
+    {
+      val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
+      rootStage.addChild(PipelineStage("save_parquet", SaveParquetDataOp(tempFolder)))
+        .addChild(PipelineStage("load_parquet", loadParquetDataOp(tempFolder, Some(10))))
+        .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+      PipelineTree.execute(rootStage, sqlc)
+
+      assertResult(List(1, 2, 3))(resultList.toList)
+    } finally {
+      // Remove the tile set we created
+      def removeRecursively (file: File): Unit = {
+        if (file.isDirectory) {
+          file.listFiles().foreach(removeRecursively)
+        }
+        file.delete()
+      }
+      // If you want to look at the tile set (not remove it) comment out this line.
+      removeRecursively(new File(tempFolder))
+    }
   }
 }

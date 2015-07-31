@@ -92,8 +92,10 @@
 			this.olLayers.push( kml.olLayer );
 		}, this );
 
-		this.setOpacity( this.opacity );
-		this.setEnabled( this.enabled );
+        this.setEnabled( this.isEnabled() );
+        this.setOpacity( this.getOpacity() );
+        this.setBrightness( this.getBrightness() );
+        this.setContrast( this.getContrast() );
 
 		this.olLayers.forEach( function( olLayer ) {
 			this.map.olMap.addLayer( olLayer );

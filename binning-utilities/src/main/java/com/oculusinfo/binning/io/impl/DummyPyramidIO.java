@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -37,12 +37,13 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import org.json.JSONObject;
 
 /** A dummy pyramid IO that doesn't actually read anything, just returns empty tiles */
 public class DummyPyramidIO implements PyramidIO {
     private String _metaData;
     public DummyPyramidIO (double minX, double maxX, double minY, double maxY, int minZ, int maxZ) {
-        String metaData = 
+        String metaData =
                 "{"+
                 "  \"name\":\"dummy\",\n"+
                 "  \"description\":\"dummy layer\",\n"+
@@ -105,6 +106,14 @@ public class DummyPyramidIO implements PyramidIO {
 
         return results;
     }
+
+	@Override
+	public <T> List<TileData<T>> readTiles (String pyramidId,
+											TileSerializer<T> serializer,
+											Iterable<TileIndex> tiles,
+											JSONObject properties ) throws IOException {
+		return readTiles( pyramidId, serializer, tiles );
+	}
 
     @Override
     public <T> InputStream getTileStream (String pyramidId,

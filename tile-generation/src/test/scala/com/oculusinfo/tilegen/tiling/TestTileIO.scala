@@ -35,6 +35,8 @@ import java.util.{List => JavaList}
 import java.util.Properties
 import java.io.IOException
 
+import org.json.JSONObject
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{Map => MutableMap}
 
@@ -87,6 +89,13 @@ class TestPyramidIO extends PyramidIO with Serializable {
 	                       tileWidth: Int,
 	                       tileHeight: Int,
 	                       dataDescription: Properties): Unit = {}
+
+  def readTiles[T] (pyramidId: String,
+                     serializer: TileSerializer[T],
+                     javaTiles: JavaIterable[TileIndex],
+                     properties: JSONObject): JavaList[TileData[T]] = {
+    readTiles( pyramidId, serializer, javaTiles )
+  }
 
 	def readTiles[T] (pyramidId: String,
 	                  serializer: TileSerializer[T],

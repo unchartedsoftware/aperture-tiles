@@ -363,7 +363,13 @@ class MeanValueExtractor[T: ClassTag] (field: String, analytic: NumericMeanBinni
 	override def convert: (Seq[Any]) => (T, Int) = s => (s(0).asInstanceOf[T], 1)
 	override def binningAnalytic: BinningAnalytic[(T, Int), JavaDouble] = analytic
 	def getTileAnalytics: Seq[AnalysisDescription[TileData[JavaDouble], _]] = {
-		val convertFcn: JavaDouble => T = bt => numeric.fromDouble(bt.doubleValue())
+		val convertFcn: JavaDouble => T = bt => {
+      if (null == bt) {
+        numeric.fromDouble(analytic.finish(analytic.defaultProcessedValue))
+      } else {
+        numeric.fromDouble(bt.doubleValue())
+      }
+    }
 		Seq(new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMinTileAnalytic[T]()),
 		    new AnalysisDescriptionTileWrapper[JavaDouble, T](convertFcn, new NumericMaxTileAnalytic[T]()))
 	}
