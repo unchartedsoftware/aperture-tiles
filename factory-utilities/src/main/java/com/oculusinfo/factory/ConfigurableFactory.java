@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,11 +36,11 @@ import org.slf4j.LoggerFactory;
 /**
  * This class provides a basis for factories that are configurable via JSON or
  * java property files.
- * 
+ *
  * This provides the standard glue of getting properties consistently in either
  * case, of documenting the properties needed by a factory, and, potentially, of
  * writing out a configuration.
- * 
+ *
  * @param <T> The type of object constructed by this factory.
  *
  * @author nkronenfeld
@@ -77,7 +77,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Create a factory
-	 * 
+	 *
 	 * @param factoryType The type of object to be constructed by this factory.
 	 *            Can not be null.
 	 * @param parent The parent factory; all configuration nodes of this factory
@@ -91,7 +91,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Create a factory
-	 * 
+	 *
 	 * @param factoryType The type of object to be constructed by this factory.
 	 *            Can not be null.
 	 * @param parent The parent factory; all configuration nodes of this factory
@@ -107,10 +107,10 @@ abstract public class ConfigurableFactory<T> {
 	protected ConfigurableFactory (Class<T> factoryType, ConfigurableFactory<?> parent, List<String> path, boolean isSingleton) {
 		this(null, factoryType, parent, path, isSingleton);
 	}
-    
+
 	/**
 	 * Create a factory
-	 * 
+	 *
 	 * @param name A name by which this factory can be known, to be used to
 	 *            differentiate it from other child factories of this factory's
 	 *            parent that return the same type.
@@ -127,7 +127,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Create a factory
-	 * 
+	 *
 	 * @param name A name by which this factory can be known, to be used to
 	 *            differentiate it from other child factories of this factory's
 	 *            parent that return the same type.
@@ -154,10 +154,10 @@ abstract public class ConfigurableFactory<T> {
 		_defaultValues = new HashMap<>();
 		_isSingleton = isSingleton;
 		_singletonProduct = null;
-        
+
 		//NOTE: this should not be set to the parent passed in cause the parent won't necessarily
 		//be created before the children if you're doing a bottom up approach for some reason.
-		_parent = null; 
+		_parent = null;
 	}
 
 	/**
@@ -170,14 +170,14 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Get the root path for configuration information for this factory.
-	 * 
+	 *
 	 * @return A list of strings describing the path to this factory's
 	 *         configuration information. Guaranteed not to be null.
 	 */
 	public List<String> getRootPath () {
 		return new ArrayList<>( _rootPath );
 	}
-	
+
 	/**
 	 * Get the name associated with the factory.
 	 * @return A string name if provided upon construction, or else null if none was provided.
@@ -195,7 +195,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Add a property to the list of properties used by this factory
-	 * 
+	 *
 	 * @param property
 	 * @param path
 	 */
@@ -252,7 +252,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Indicates if an actual value is recorded for the given property.
-	 * 
+	 *
 	 * @param property The property of interest.
 	 * @return True if the property is listed and non-default in the factory.
 	 */
@@ -262,7 +262,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Get the value read at configuration time for the given property.
-	 * 
+	 *
 	 * The behavior of this function is undefined if called before
 	 * readConfiguration (either version).
 	 */
@@ -274,19 +274,21 @@ abstract public class ConfigurableFactory<T> {
 		try {
 			return property.unencodeJSON( new JSONNode( getPropertyNode( property ) , property.getName() ) );
 		} catch (JSONException e) {
-			// Must not have been there.  Ignore, leaving as default. 
-			LOGGER.info("Property {} from configuration {} not found. Using default", property, _configurationNode);
+			// Must not have been there.  Ignore, leaving as default.
+			LOGGER.info("Property {} with path {} from configuration {} not found. Using default",
+				new Object[]{property, mkString(_pathsByProperty.get(property), ", "), _configurationNode});
 		} catch (ConfigurationException e) {
 			// Error within configuration.
 			// Use default, but also warn about it.
-			LOGGER.warn("Error reading property {} from configuration {}", property, _configurationNode);
+			LOGGER.warn("Error reading property {} with path {} from configuration {}",
+				new Object[]{property, mkString(_pathsByProperty.get(property), ", "), _configurationNode});
 		}
 		return getDefaultValue(property);
 	}
 
 	/**
 	 * Add a child factory, to be used by this factory.
-	 * 
+	 *
 	 * @param child The child to add.
 	 */
 	public void addChildFactory (ConfigurableFactory<?> child) {
@@ -296,15 +298,15 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Create the object provided by this factory.
-	 * @return The object 
+	 * @return The object
 	 */
 	protected abstract T create();
 
 	/**
 	 * Get one of the goods managed by this factory.
-	 * 
+	 *
 	 * This version returns a new instance each time it is called.
-	 * 
+	 *
 	 * @param goodsType The type of goods desired.
 	 */
 	public <GT> GT produce (Class<GT> goodsType) throws ConfigurationException {
@@ -313,9 +315,9 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Get one of the goods managed by this factory.
-	 * 
+	 *
 	 * This version returns a new instance each time it is called.
-	 * 
+	 *
 	 * @param name The name of the factory from which to obtain the needed
 	 *            goods. Null indicates that the factory name doesn't matter.
 	 * @param goodsType The type of goods desired.
@@ -371,7 +373,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Initialize needed construction values from a properties list.
-	 * 
+	 *
 	 * @param rootNode The root node of all configuration information for this
 	 *            factory.
 	 * @throws ConfigurationException If something goes wrong in configuration.
@@ -458,7 +460,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/*
 	 * Gets the JSON node with all this factory's configuration information
-	 * 
+	 *
 	 * @param rootNode The root JSON node containing all configuration
 	 * information.
 	 */
@@ -468,7 +470,7 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Get the sub-node of a root node specified by a given path.
-	 * 
+	 *
 	 * @param rootNode The root JSON object whose sub-node is desired.
 	 * @param path A list of keys to follow from the root node to find the
 	 *            desired leaf.
