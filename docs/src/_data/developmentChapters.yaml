@@ -1,6 +1,7 @@
 - label: Getting Started
   path: getting-started
   listType: ul
+  faIcon: play-circle
   topics:
     - label: Installation
       path: installation
@@ -53,6 +54,7 @@
 - label: How-To
   path: how-to
   listType: ol
+  faIcon: question-circle
   topics:
     - label: Run Standard Tiling Jobs
       path: standard-tiling
@@ -102,6 +104,7 @@
 - label: Advanced
   path: advanced
   listType: ul
+  faIcon: cogs
   topics:
     - label: Standard Tiling Jobs
       path: standard-tiling
@@ -148,6 +151,7 @@
 - label: API
   path: api
   listType: ul
+  faIcon: code
   topics:
     - label: Overview
       path: 

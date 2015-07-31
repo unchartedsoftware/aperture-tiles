@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit
 import java.util.{List => JavaList}
 import java.util.Properties
 
+import org.json.JSONObject
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
@@ -83,6 +85,15 @@ class TileServerPyramidIO (brokerHostName: String, maximumWaitTime: Long = 2000)
   }
 
   override def readTiles[T](pyramidId: String, serializer: TileSerializer[T], tiles: JavaIterable[TileIndex]): JavaList[TileData[T]] = {
+    val request = new ClientTileDataRequest[T](pyramidId, serializer, tiles)
+    submitAndWaitForResponse(request)
+
+    if (request._error.isDefined) throw new IOException("Server error", request._error.get)
+    request._tiles.get
+  }
+
+  override def readTiles[T](pyramidId: String, serializer: TileSerializer[T], tiles: JavaIterable[TileIndex], properties: JSONObject): JavaList[TileData[T]] = {
+    // TODO: Add properties to the tile request
     val request = new ClientTileDataRequest[T](pyramidId, serializer, tiles)
     submitAndWaitForResponse(request)
 

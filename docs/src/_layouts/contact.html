@@ -4,11 +4,17 @@ layout: default
 
 <div id="content">
 	<div class="content-context">
-		{% include_relative sidebar.html %}
-		<br>
-		<a href="http://uncharted.software/" class="copyright">&#169;2013-{{ site.time | date: '%Y'}} Uncharted Software Inc.</a>
+		<aside>
+			{% include_relative sidebar.html %}
+			<br>
+		</aside>
+		<footer>
+			<a href="http://uncharted.software/" class="copyright">&#169;2013-{{ site.time | date: '%Y'}} Uncharted Software Inc.</a>
+		</footer>
 	</div>
 	<div class="content-body">
-		{{ content }}
+		<article>
+			{{ content }}
+		</article>
 	</div>
 </div>

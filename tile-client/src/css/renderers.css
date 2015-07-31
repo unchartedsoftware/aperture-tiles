@@ -161,6 +161,32 @@
 }
 
 /********************************************/
+/* 		     Text By Topic Renderer  	     	*/
+/********************************************/
+.text-by-topic-box {
+	width: 256px;
+	height: 256px;
+}
+
+.text-topic-label {
+	position: relative;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 18px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding-top: 15px;
+	padding-left: 25px;
+	width: 216px;
+	height: 70px;
+	opacity: 0.75;
+}
+
+.text-topic-label:hover {
+	opacity: 1.0;
+}
+
+/********************************************/
 /* 		    Graph Node Renderer    	    	*/
 /********************************************/
 

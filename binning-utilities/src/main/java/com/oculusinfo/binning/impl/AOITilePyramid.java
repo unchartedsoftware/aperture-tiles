@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -35,10 +35,10 @@ import java.util.Collection;
 
 /**
  * Area-of-Interest tile pyramid
- * 
+ *
  * A tile pyramid that represents a predefined area, breaking it up linearly and
  * evenly.
- * 
+ *
  * @author Jesse McGeachie
  */
 public class AOITilePyramid implements TilePyramid, Serializable {
@@ -60,6 +60,11 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 		_maxY = maxY;
 		_recipDiffX = 1.0/(_maxX-_minX);
 		_recipDiffY = 1.0/(_maxY-_minY);
+	}
+
+	@Override
+	public Rectangle2D getBounds()  {
+		return new Rectangle2D.Double( _minX, _minY ,_maxX - _minX, _maxY - _minY);
 	}
 
 	@Override
@@ -92,7 +97,7 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 		long numDivs = 1L << level;
 
 		int tileX = (int) Math.floor(numDivs*(x-_minX)*_recipDiffX);
-		int tileY = (int) Math.floor(numDivs*(y-_minY)*_recipDiffY);		
+		int tileY = (int) Math.floor(numDivs*(y-_minY)*_recipDiffY);
 		//		int tileX = (int) Math.floor(numDivs*(x-_minX)/(_maxX - _minX));
 		//		int tileY = (int) Math.floor(numDivs*(y-_minY)/(_maxY - _minY));
 
@@ -106,12 +111,12 @@ public class AOITilePyramid implements TilePyramid, Serializable {
 
 	@Override
 	public BinIndex rootToBin (double x, double y, TileIndex tile) {
-	
+
 		long numDivs = 1L << tile.getLevel();
-		
+
 		int binX = (int) Math.floor((numDivs*(x-_minX)*_recipDiffX - tile.getX())*tile.getXBins());
-		int binY = (int) Math.floor((numDivs*(y-_minY)*_recipDiffY - tile.getY())*tile.getYBins());		
-		
+		int binY = (int) Math.floor((numDivs*(y-_minY)*_recipDiffY - tile.getY())*tile.getYBins());
+
 		//		int pow2 = 1 << tile.getLevel();
 		//		double tileXSize = (_maxX-_minX)/pow2;
 		//		double tileYSize = (_maxY-_minY)/pow2;

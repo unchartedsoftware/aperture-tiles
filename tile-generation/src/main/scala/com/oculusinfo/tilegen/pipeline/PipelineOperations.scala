@@ -32,17 +32,20 @@ package com.oculusinfo.tilegen.pipeline
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.{GregorianCalendar, Date}
+import java.util.{Calendar, GregorianCalendar, Date}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.datasets.{SchemaTypeUtilities, CSVReader, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{TimestampType, IntegerType}
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
-
+import org.apache.spark.sql.types.DataType
+import org.joda.time.base.BaseSingleFieldPeriod
+import org.joda.time.{Interval, PeriodType, DateTime, DurationFieldType}
 
 
 /**
@@ -95,6 +98,19 @@ object PipelineOperations {
 	def loadJsonDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
 		val context = data.sqlContext
 		val srdd = coalesce(context, context.jsonFile(path), partitions)
+		PipelineData(data.sqlContext, srdd)
+	}
+
+	/**
+	 *
+	 * @param path Valid HDFS path to the data.
+	 * @param partitions Number of partitions to load data into.
+	 * @param data Not used.
+	 * @return PipelineData with a schema RDD populated from the Parquet file.
+	 */
+	def loadParquetDataOp(path: String, partitions: Option[Int] = None)(data: PipelineData): PipelineData = {
+		val context = data.sqlContext
+		val srdd = coalesce(context, context.parquetFile(path), partitions)
 		PipelineData(data.sqlContext, srdd)
 	}
 
@@ -217,6 +233,42 @@ object PipelineOperations {
     PipelineData(input.sqlContext, output)
   }
 
+  def getJodaTypes (timeField: Int) =
+  timeField match {
+    case Calendar.MILLISECOND          => (PeriodType.millis(), DurationFieldType.millis())
+    case Calendar.SECOND               => (PeriodType.seconds(), DurationFieldType.seconds())
+    case Calendar.MINUTE               => (PeriodType.minutes(), DurationFieldType.minutes())
+    case Calendar.HOUR                 => (PeriodType.hours(), DurationFieldType.hours())
+    case Calendar.HOUR_OF_DAY          => (PeriodType.hours(), DurationFieldType.hours())
+    case Calendar.DAY_OF_WEEK          => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.DAY_OF_WEEK_IN_MONTH => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.DAY_OF_MONTH         => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.DAY_OF_YEAR          => (PeriodType.days(), DurationFieldType.days())
+    case Calendar.WEEK_OF_MONTH        => (PeriodType.weeks(), DurationFieldType.weeks())
+    case Calendar.WEEK_OF_YEAR         => (PeriodType.weeks(), DurationFieldType.weeks())
+    case Calendar.MONTH                => (PeriodType.months(), DurationFieldType.months())
+    case Calendar.YEAR                 => (PeriodType.years(), DurationFieldType.years())
+  }
+  def getIntervalFromJoda (startMoment: Long, currentMoment: Long, intervalType: (PeriodType, DurationFieldType)): Int = {
+    if (currentMoment < startMoment) {
+      -(new Interval(currentMoment, startMoment).toPeriod(intervalType._1).get(intervalType._2))
+    } else {
+      (new Interval(startMoment, currentMoment).toPeriod(intervalType._1).get(intervalType._2))
+    }
+  }
+
+  def elapsedDateOp (timeCol: String, fieldCol: String, timeField: Int, startTime: Date)(input: PipelineData): PipelineData = {
+    val jodaTypes = getJodaTypes(timeField)
+    val startMoment = startTime.getTime
+
+    val fieldExtractor: Array[Any] => Any = row => {
+      val moment = row(0).asInstanceOf[Date].getTime
+      getIntervalFromJoda(startMoment, moment, jodaTypes)
+    }
+    val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
+    PipelineData(input.sqlContext, output)
+  }
+
 	/**
 	 * Pipeline op to cache data - this allows for subsequent stages in the pipeline to run against computed
 	 * results, rather than the input data set.
@@ -308,6 +360,30 @@ object PipelineOperations {
 	 */
 	def columnSelectOp(colSpecs: Seq[String])(input: PipelineData) = {
 		PipelineData(input.sqlContext, input.srdd.selectExpr(colSpecs:_*))
+	}
+
+	/**
+	 * Convert the data type of a column
+	 *
+	 * @param sourceColSpec name of the colum to be converted
+	 * @param columnFcn function doing the type conversion
+	 * @param columnType target data type
+	 * @param input PipelineData from previous stage
+	 * @return PipelineData containing updated Dataframe
+	 */
+	def convertColumnTypeOp (sourceColSpec: String, columnFcn: Array[Any] => Any, columnType: DataType)(input: PipelineData) = {
+
+		// Make sure the temp column name is unique
+		val tempCol = "temp-column-" + System.currentTimeMillis()
+
+		val columnAdded = addColumn(input.srdd, tempCol, columnType, c => columnFcn(c) , sourceColSpec)
+
+		val result = columnAdded.select(columnAdded.columns
+			.filter(_ != sourceColSpec)
+			.map(colName => new Column(colName)) : _ *
+		).withColumnRenamed(tempCol, sourceColSpec)
+
+		PipelineData(input.sqlContext, result)
 	}
 
 	/**

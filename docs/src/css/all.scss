@@ -237,8 +237,7 @@ pre {
 .toc-header {
 	font-size: 16px;
 	font-weight: bold;
-	margin: 0 0 5px 30px;
-	text-align: center;
+	margin: 0 0 5px 0;
 }
 
 .toc {
@@ -265,11 +264,11 @@ pre {
 	position: absolute;
 	right: 0px;
 	font-family: $family-standard;
-	font-size: 18px;
+	font-size: 14px;
 	margin: 5px 0 20px;
 	a {
 		color: $color-main-nav;
-		line-height: 25px;
+		line-height: 28px;
 		padding: 5px 6px 15px 6px;
 		text-decoration: none;
 		text-transform: uppercase;
@@ -586,7 +585,24 @@ hr {
 	border-top-width: 1px;
 	border-bottom-width: 0;
 	border-color: $txt-block-border;
-	margin: 18px 0 15px 20px;
+	margin: 18px 0 15px 0;
+}
+
+.right {
+	float: right;
+}
+
+.edit {
+	font-size: 14px;
+	padding-top: 30px;
+	margin-bottom: 25px;
+	a {
+		color: #777;
+		&:hover {
+			color: $color-body-link-hover;
+		}
+	}
+}
 }
 
 .copyright {

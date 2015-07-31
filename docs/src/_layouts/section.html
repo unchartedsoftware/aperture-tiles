@@ -4,10 +4,16 @@ layout: default
 
 <div id="content">
 	<div class="content-context">
-		{% include_relative sidebar.html %}
-		{% include footer.html %}
+		<aside>
+			{% include_relative sidebar.html %}
+		</aside>
+		<footer>
+			{% include footer.html %}
+		</footer>
 	</div>
 	<div class="content-body">
-		{{ content }}
+		<article>
+			{{ content }}
+		</article>
 	</div>
 </div>
