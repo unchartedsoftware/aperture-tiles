@@ -128,6 +128,14 @@ public class LayerServiceImpl implements LayerService {
 					"\t2) The layer files are unavailable. Please confirm that the database is available, or the files are in the correct directory Default='res://'." );
 				return null;
 			}
+
+			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
+			if (null != initJSON) {
+				int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+				int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+				Properties initProps = JsonUtilities.jsonObjToProperties(initJSON);
+				pyramidIO.initializeForRead(dataId, width, height, initProps);
+			}
 			return getCachedMetaData( layerId, dataId, pyramidIO );
 		} catch (ConfigurationException e) {
 			LOGGER.error( "Couldn't determine pyramid I/O method for {}", layerId, e );
@@ -192,7 +200,8 @@ public class LayerServiceImpl implements LayerService {
 			// override the server configuration with supplied query parameters, this simply overlays
             // the query parameter JSON over the server default JSON, then sets the factory upp
             // to build our layer configuration object.
-            factory.readConfiguration( mergeQueryConfigOptions( layerConfig, requestParams ) );
+			JSONObject mergedConfiguration = mergeQueryConfigOptions(layerConfig, requestParams);
+            factory.readConfiguration( mergedConfiguration );
             // produce the layer configuration
 			LayerConfiguration config = factory.produce( LayerConfiguration.class );
 			JSONObject initJSON = config.getProducer( PyramidIO.class ).getPropertyValue( PyramidIOFactory.INITIALIZATION_DATA );
