@@ -22,30 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.uncharted.tile.source.client
+package com.uncharted.tile.source.client.io
 
+import java.util
 
-
-import com.uncharted.tile
-
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.factory.providers.FactoryProvider
-
-
+import com.oculusinfo.binning.io.PyramidIO
+import com.oculusinfo.factory.ConfigurableFactory
+import com.oculusinfo.factory.providers.AbstractFactoryProvider
 
 /**
- * This class handles communications with a tile server, wrapping tile requests appropriately, and letting users know
- * when tiles are completed (or have errored).
+ * Simple FactoryProvider for a TileServerPyramidIOFactory
  */
-class TileClient(host: String)
-extends Client[ClientTileRequest](host, tile.source.TILE_REQUEST_EXCHANGE) {
-  def encodeRequest(request: ClientTileRequest): Array[Byte] =
-    request.toByteArray
-
-  def processResults(request: ClientTileRequest, contentType: String, contents: Array[Byte]) = {
-    request.onFinished(contents)
-  }
-  override def processError (request: ClientTileRequest, severity: String, serverError: Throwable): Unit = {
-    request.onError(serverError)
+class TileServerPyramidIOFactoryProvider extends AbstractFactoryProvider[PyramidIO] {
+  override def createFactory(name: String, parent: ConfigurableFactory[_], path: util.List[String]): ConfigurableFactory[_ <: PyramidIO] = {
+    new TileServerPyramidIOFactory(parent, path)
   }
 }

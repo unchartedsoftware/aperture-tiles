@@ -102,13 +102,10 @@ abstract class Server (host: String, requestExchange: String, logExchange: Strin
       val delivery = _consumer.nextDelivery(100)
       if (null != delivery) {
         val responseQueue = delivery.getProperties.getReplyTo
-        info("RabbitMQ server got a delivery. Replying on channel "+responseQueue)
         try {
           processRequest(delivery).foreach { response =>
-            info("RabbitMQ server responding on channel "+responseQueue)
             oneOffDirectMessage(responseQueue, response._1, response._2)
           }
-          info("RabbitMQ server finished processing message for channel "+responseQueue)
         } catch {
           case t0: Throwable => {
             info("RabbitMQ server got an error processing message for channel "+responseQueue, t0)
