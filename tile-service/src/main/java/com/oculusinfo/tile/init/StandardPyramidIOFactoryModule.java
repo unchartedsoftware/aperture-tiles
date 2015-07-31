@@ -25,12 +25,19 @@
 package com.oculusinfo.tile.init;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
+import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.tile.init.providers.StandardPyramidIOFactoryProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
 
 public class StandardPyramidIOFactoryModule extends AbstractModule {
 
@@ -45,5 +52,5 @@ public class StandardPyramidIOFactoryModule extends AbstractModule {
 
 		bind(new TypeLiteral<FactoryProvider<PyramidIO>>() {}).to(StandardPyramidIOFactoryProvider.class);
 	}
-	
+
 }

@@ -98,6 +98,7 @@ public class LayerResource extends ServerResource {
 			layer.put( "tms", host + config.getPropertyValue( LayerConfiguration.REST_ENDPOINT ) + "/" );
 			return layer;
 		} catch ( JSONException e ) {
+			LOGGER.warn("Bad layer request, layer " + layerId + " does not exist", e);
 			throw new JSONException( "Bad layer request, layer " + layerId + " does not exist" );
 		}
 	}
