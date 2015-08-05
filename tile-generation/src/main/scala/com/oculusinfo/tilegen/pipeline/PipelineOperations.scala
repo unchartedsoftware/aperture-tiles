@@ -30,7 +30,7 @@ package com.oculusinfo.tilegen.pipeline
 
 
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.text.{DateFormat, SimpleDateFormat}
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.{Calendar, GregorianCalendar, Date}
 
@@ -47,6 +47,13 @@ import org.apache.spark.sql.types.DataType
 import org.joda.time.base.BaseSingleFieldPeriod
 import org.joda.time.{Interval, PeriodType, DateTime, DurationFieldType}
 
+import java.io.{FileWriter, BufferedWriter, File}
+
+import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{CustomCollector, ErrorCollectorAccumulableParam, ErrorCollector, ErrorCollectorAccumulable}
+import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
+import org.apache.spark.{Accumulable, AccumulableParam}
+
+import scala.collection.mutable.ListBuffer
 
 /**
  * Provides operations that can be bound into a TilePipeline
@@ -133,6 +140,8 @@ object PipelineOperations {
 		PipelineData(reader.sqlc, dataFrame)
 	}
 
+
+
 	/**
 	 * Pipeline op to filter records to a specific date range.
 	 *
@@ -156,7 +165,58 @@ object PipelineOperations {
 		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
-	/**
+  /**
+   * Load data from a CSV file using CSVReader.
+   * The arguments map will be passed through to that object, so all arguments required
+   * for its configuration should be set in the map.
+   *
+   * Outputs error results file to Aperture-tiles/
+   *
+   * @param path HDSF path to the data object.
+   * @param argumentSource Arguments to forward to the CSVReader.
+   * @param partitions Number of partitions to load data into.
+   * @param data Not used.
+   * @return PipelineData with a schema RDD populated from the CSV file.
+   *
+   * Created by llay on 28/7/2015.
+   */
+  def loadCsvDataWithErrorsOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
+                             (data: PipelineData): PipelineData = {
+
+    val context = data.sqlContext
+    val reader = new CSVReader(context, path, argumentSource)
+    val dataFrame = coalesce(context, reader.asDataFrame, partitions)
+    val today = Calendar.getInstance().getTime
+    val df:DateFormat = new SimpleDateFormat("dd:MM:yyyy:HH:mm:ss")
+
+    //     Do the magic. Fire off the accumulator
+    val accumulator = new ErrorCollectorAccumulable(ListBuffer(new ErrorCollector))
+    //    val errorCollector = ListBuffer(new ErrorCollector) // TODO fix type errors here.
+    //    val param = new ErrorCollectorAccumulableParam()
+    //    val accumulator = context.sparkContext.accumulable(errorCollector)(param)
+
+    reader.readErrors.foreach(r => accumulator.add(r))
+    // create output file
+    val file:File = new File("BadDataCharacterization-" + df.format(today) + ".txt")
+    if (!file.exists()) { // if file doesn't exists, create it
+      file.createNewFile()
+    }
+    val bw:BufferedWriter = new BufferedWriter(new FileWriter(file.getAbsoluteFile))
+    // Write results to file
+    accumulator.value.foreach{e =>
+      bw.write(e.getError.toString())
+    }
+    bw.flush()
+    bw.close()
+    PipelineData(reader.sqlc, dataFrame)
+    val reader = new CSVReader(data.sqlContext, path, argumentSource)
+    val srdd = reader.asSchemaRDD
+    val partitioned = partitions.map(n => srdd.coalesce(n, n > srdd.partitions.size)).getOrElse(srdd)
+    PipelineData(reader.sqlc, partitioned)
+  }
+
+
+  /**
 	 * Pipeline op to filter records to a specific date range.
 	 *
 	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.

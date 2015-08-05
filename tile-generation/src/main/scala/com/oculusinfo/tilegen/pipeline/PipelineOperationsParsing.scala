@@ -100,6 +100,27 @@ object PipelineOperationsParsing extends Logging {
 		loadCsvDataOp(path, argParser, partitions)(_)
 	}
 
+  /**
+   * Parses arguments for the CSV load operation, and creates an instance
+   * of a pipeline operation with those arguments applied to it.
+   * Produces a file of each parse error and its count, titled BadDataCharacterization<timestamp>
+   *
+   * Arguments:
+   *    ops.path - Valid HDFS path to data.
+   *    ops.partitions - Number of partitions
+   *
+   * @see com.oculusinfo.tilegen.datasets.CSVReader for arguments passed into the CSV reader.
+   *
+   * Created by llay on 28/7/2015.
+   */
+  def parseLoadCsvDataWithErrorsOp(args: Map[String, String]) = {
+    logger.debug(s"Parsing loadCSVDataOp with args $args")
+    val argParser = KeyValuePassthrough(args)
+    val path = argParser.getString("ops.path", "HDFS path to data")
+    val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
+    loadCsvDataWithErrorsOp(path, argParser, partitions)(_)
+  }
+
 	/**
 	 * Parse start / end times from args for the date filter op, and creates an instance
 	 * of a pipeline operation with those arguments applied to it.

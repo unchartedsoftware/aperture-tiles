@@ -123,6 +123,8 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 	def schema = _schema
 
+  def readErrors  = _parseErrors
+
 	// Get some simple parsing info we'll need
 	private val _separator = configuration.getString("oculus.binning.parsing.separator",
 	                                                 "The separator to use between fields in the input data",
@@ -132,28 +134,34 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
                                                     "The character to use for quoted fields in the input data",
                                                     Some(""))
 
-	private lazy val _parsed: DataFrame = {
-		val separator = _separator
+  private lazy val _parseUnfiltered: RDD[(String, Try[Row])] = {
+    val separator = _separator
     val quotechar = _quotechar
-		val parsers = _parsers
-		val indices = _indices
-		val N = _fields
-		val rowRDD: RDD[Row] = data.map(record =>
-			Try{
-
+    val parsers = _parsers
+    val indices = _indices
+    val N = _fields
+    val rowRDD:RDD[(String, Try[Row])] = data.map(record =>
+      (record, Try{
         def getFields (line: String) = {
           val parser = new CSVParser(separator.charAt(0),
             Try(quotechar.charAt(0)).getOrElse(CSVParser.DEFAULT_QUOTE_CHARACTER))
           parser.parseLine(line)
         }
 
-				val fields = getFields(record)
-				val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
-				row(values:_*)
-			}
-		).filter(_.isSuccess).map(_.get)
-		sqlc.createDataFrame(rowRDD, _schema)
-	}
+        val fields = getFields(record)
+        val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
+        row(values:_*)
+      })
+    )
+    rowRDD
+  }
+
+  private lazy val _parseErrors: RDD[(String, Throwable)] = _parseUnfiltered.filter(_._2.isFailure).map(r => (r._1, r._2.failed.get))
+
+  private lazy val _parsed: DataFrame = {
+    val r = _parseUnfiltered.filter(_._2.isSuccess).map(_._2.get)
+    sqlc.createDataFrame(r, _schema)
+  }
 
 	// _schema: the schema of our CSV file, as specified by our configuration
 	// _indices: The column index of each field in the schema, in order
