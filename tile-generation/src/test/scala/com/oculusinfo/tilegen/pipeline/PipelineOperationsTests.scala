@@ -121,6 +121,34 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 			             "three", "2015-01-03 10:15:30"))(resultList.toList)
 	}
 
+  /**
+   * Outputs file to /aperture-tiles
+   */
+	test("Test load CSV error output") {
+    val resultList = ListBuffer[Any]()
+
+    val resPath = getClass.getResource("/csv_bad_data_test.data").toURI.getPath
+    val argsMap = Map(
+      "ops.path" -> resPath,
+      "ops.partitions" -> "1",
+      "oculus.binning.parsing.separator" -> " *, *",
+      "oculus.binning.parsing.vAl.index" -> "0",
+      "oculus.binning.parsing.vAl.fieldType" -> "string", // use mixed case fieldname to test case sensitivity
+      "oculus.binning.parsing.num.index" -> "1",
+      "oculus.binning.parsing.num.fieldType" -> "long",
+      "oculus.binning.parsing.num_1.index" -> "2",
+      "oculus.binning.parsing.num_1.fieldType" -> "double",
+      "oculus.binning.parsing.time.index" -> "3",
+      "oculus.binning.parsing.time.fieldType" -> "string",
+      "oculus.binning.parsing.desc.index" -> "4",
+      "oculus.binning.parsing.desc.fieldType" -> "string"
+    )
+
+    val loadStage = PipelineStage("load", parseLoadCsvDataWithErrorsOp(argsMap))
+    loadStage.addChild(PipelineStage("output", outputOps(List("vAl", "time"), resultList)(_)))
+    PipelineTree.execute(loadStage, sqlc)
+  }
+
 	test("Test cache operation") {
 		def checkTableName(count: Int, clearTableName: Boolean)(input: PipelineData) = {
 			assertResult(Some(s"cached_table_$count"))(input.tableName)
