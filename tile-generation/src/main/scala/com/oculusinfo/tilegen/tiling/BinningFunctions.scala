@@ -105,64 +105,9 @@ trait StandardPointBinningFunctions {
 
 
 	/**
-	 * Simple function to spread an input point over several levels of tile pyramid.
-	 *//*
-	def locateIndexOverLevelsWithKernel[T]( kernel: Array[Array[Double]], indexScheme: IndexScheme[T], pyramid: TilePyramid, 
-									levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] =
-		index => {
-
-		val (x, y) = indexScheme.toCartesian(index)
-		levels.map{level =>
-
-			val tile = pyramid.rootToTile(x, y, level, 10, 10)
-			val bin = pyramid.rootToBin(x, y, tile)
-	        val bin1 = pyramid.rootToBin(0, 0, tile)
-	        val bin2 = pyramid.rootToBin(100, -100, tile)
-	        val bin3 = pyramid.rootToBin(1, 1, tile)
-	        val bin4 = pyramid.rootToBin(50, 1, tile)
-	        val bin5 = pyramid.rootToBin(1, -50, tile)
-	        val bin6 = pyramid.rootToBin(-1, -2, tile)
-	
-	        // Current bin and tile if the blur doesn't affect surrounding tiles.
-	        var result = List( (tile, Array(bin))  )
-	
-	        // Potential additional tiles depending on the position of the point and the size of the blur.
-	        // if tile.getX = 0 should we wrapped around and add a tile at 255 ?
-	        if ((bin.getX < kernel(0).length / 2) && (tile.getX > 0)) {
-				val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY, tile.getXBins, tile.getYBins )
-				result :+  (newTile, Array(bin))
-	        }
-	
-	        if ((bin.getY < kernel.length / 2) && (tile.getY > 0)) {
-				val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY - 1, tile.getXBins, tile.getYBins )
-				result :+  (newTile, Array(bin))
-	        }
-	
-	        // Max x,y values for the current tile. Need to get those from somewhere
-	        val maxX = 256
-	        val maxY = 256
-	
-	        if ((bin.getX > (maxX - kernel(0).length / 2)) && (tile.getX < tile.getXBins - 1)) {
-				val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY, tile.getXBins, tile.getYBins )
-				result :+  (newTile, Array(bin))
-	        }
-	
-	        if ((bin.getY > (maxX - kernel(0).length / 2)) && (tile.getY < tile.getYBins - 1)) {
-				val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY + 1, tile.getXBins, tile.getYBins )
-				result :+  (newTile, Array(bin))
-	        }
-	
-	        // default for now to make the function works without changing the signature
-	        (tile, Array(bin))
-		}
-	}*/
-
-
-
-	/**
 	 * Simple function to spread an input point over several levels of tile pyramid, ignoring
-	 * points that are out of bounds
+	 * points that are out of bounds.  Also needs to collect tiles that may overlap with the index
+	 * when computing effects from the kernel matrix applied.
 	 */
 	def locateIndexOverLevelsWithKernel[T](kernel: Array[Array[Double]], indexScheme: IndexScheme[T], pyramid: TilePyramid,
 	                                    levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
@@ -174,10 +119,56 @@ trait StandardPointBinningFunctions {
 		index => {
 			val (x, y) = indexScheme.toCartesian(index)
 			if (minX <= x && x < maxX && minY <= y && y < maxY) {
-				levels.map{level =>
+				levels.flatMap{level =>
+					// base result if kernel does not affect other tiles
 					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
 					val bin = pyramid.rootToBin(x, y, tile)
-					(tile, Array(bin))
+					var result = List((tile, Array(bin)) )
+					
+					// now check to see if the kernel effects other tiles.  If so, add the new tiles and bins to the result
+					
+					// check for tiles that are to the left
+					if ((bin.getX < kernel(0).length / 2) && (tile.getX > 0)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY, tile.getXBins, tile.getYBins )
+						result :+  (newTile, Array(bin))
+						// now check for tiles above to the left
+						if ((bin.getY < kernel.length / 2) && (tile.getY > 0)) {
+							val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY - 1, tile.getXBins, tile.getYBins )
+							result :+  (newTile, Array(bin))
+				        }
+						// and finally check for tiles below and to the left
+						if ((bin.getY > (maxX - kernel(0).length / 2)) && (tile.getY < tile.getYBins - 1)) {
+							val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY + 1, tile.getXBins, tile.getYBins )
+							result :+  (newTile, Array(bin))
+						}
+			        }
+					//check for tiles to the right
+			        if ((bin.getX > (maxX - kernel(0).length / 2)) && (tile.getX < tile.getXBins - 1)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY, tile.getXBins, tile.getYBins )
+						result :+  (newTile, Array(bin))
+						// now check for tiles above and to the right
+						if ((bin.getY < kernel.length / 2) && (tile.getY > 0)) {
+							val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY - 1, tile.getXBins, tile.getYBins )
+							result :+  (newTile, Array(bin))
+				        }
+						// and finally check for tiles below and to the right
+						if ((bin.getY > (maxX - kernel(0).length / 2)) && (tile.getY < tile.getYBins - 1)) {
+							val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY + 1, tile.getXBins, tile.getYBins )
+							result :+  (newTile, Array(bin))
+						}
+			        }			        
+					// check for tiles immediately above
+			        if ((bin.getY < kernel.length / 2) && (tile.getY > 0)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY - 1, tile.getXBins, tile.getYBins )
+						result :+  (newTile, Array(bin))
+			        }			        
+			        // check for tiles immediately below
+			        if ((bin.getY > (maxX - kernel(0).length / 2)) && (tile.getY < tile.getYBins - 1)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY + 1, tile.getXBins, tile.getYBins )
+						result :+  (newTile, Array(bin))
+			        }
+			        
+			        result
 				}
 			} else {
 				Traversable()
