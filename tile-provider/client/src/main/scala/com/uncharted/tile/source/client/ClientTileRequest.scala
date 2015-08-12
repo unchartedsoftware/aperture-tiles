@@ -54,11 +54,16 @@ trait ClientTileRequest extends TileRequest {
 case class ClientTileInitializationRequest (table: String, width: Int, height: Int, configuration: JSONObject)
   extends TileInitializationRequest with ClientTileRequest with Logging
 {
-  def isAnswered: Boolean = true
+  var _error: Option[Throwable] = None
+  var _answered = false
+
+  def isAnswered: Boolean = _answered || _error.isDefined
   def onError (t: Throwable): Unit = {
-    warn("Error initializing layer "+table, t)
+    _error = Some(t)
   }
-  def onFinished (data: Array[Byte]): Unit = {}
+  def onFinished (data: Array[Byte]): Unit = {
+    _answered = true
+  }
 }
 
 case class ClientTileMetaDataRequest (table: String) extends TileMetaDataRequest with ClientTileRequest {

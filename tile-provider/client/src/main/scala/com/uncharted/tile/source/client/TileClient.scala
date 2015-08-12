@@ -28,9 +28,6 @@ package com.uncharted.tile.source.client
 
 import com.uncharted.tile
 
-import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.oculusinfo.factory.providers.FactoryProvider
-
 
 
 /**

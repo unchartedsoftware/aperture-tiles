@@ -40,4 +40,7 @@ package object source {
   val LOG_WARNING = "warning"
   val LOG_INFO = "info"
   val LOG_DEBUG = "debug"
+
+  val UNIT_TYPE = "no-response"
+  val UNIT_RESPONSE = Array[Byte]()
 }

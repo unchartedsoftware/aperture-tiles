@@ -27,13 +27,16 @@ package com.uncharted.tile.source.client
 
 import java.util.concurrent.TimeUnit
 
-import com.rabbitmq.client.QueueingConsumer.Delivery
-import com.uncharted.tile.source.server.Server
-import com.uncharted.tile.source.util.ByteArrayCommunicator
 import org.scalatest.FunSuite
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+
+import com.rabbitmq.client.QueueingConsumer.Delivery
+
+import com.uncharted.tile.source
+import com.uncharted.tile.source.server.Server
+import com.uncharted.tile.source.util.ByteArrayCommunicator
 
 
 
@@ -42,8 +45,9 @@ class ClientTestSuite extends FunSuite {
   val maxResponseTime = 5000
 
   class TestServer extends Server("localhost", "test-msg", "test-logs") {
+    var requests = 0
     override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
-      println("Processing request (ClientTestSuite)")
+      requests = requests + 1
       val msg = new String(delivery.getBody)
       if ("numbers" == msg)
         Some(("int", ByteArrayCommunicator.defaultCommunicator.write(1, 2, 3)))
@@ -89,18 +93,13 @@ class ClientTestSuite extends FunSuite {
     val server = new TestServer
     val client = new TestClient
     val runServer = server.startRequestThread
-//    val runServer = concurrent.future(server.listenForRequests)
 
-//    println("In client, request thread started in server")
     try {
       def makeRequest (request: TestClientMessage): TestClientMessage = {
-//        println("Making request")
         client.makeRequest(request)
-//        println("request made")
         val response = concurrent.future {
           while (!request.answered) Thread.sleep(100)
         }
-//        println("response received")
         concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
         request
       }
@@ -119,6 +118,33 @@ class ClientTestSuite extends FunSuite {
       val errorResult = makeRequest(new TestClientMessage("error"))
       assert(com.uncharted.tile.source.LOG_WARNING === errorResult.severity)
       assert("Test exception" === errorResult.error.getMessage)
+    } finally {
+      server.shutdown
+    }
+    concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+  }
+
+  test("Test no-response messages") {
+    val server = new TestServer
+    val client = new TestClient
+    val runServer = server.startRequestThread
+    try {
+      def makeRequest (request: TestClientMessage): TestClientMessage = {
+        client.makeRequest(request)
+        val response = concurrent.future {
+          while (!request.answered) Thread.sleep(100)
+        }
+        concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+        request
+      }
+
+      (1 to 100).foreach { n =>
+        assert(source.UNIT_TYPE === makeRequest(new TestClientMessage("no-response-"+n)).contentType)
+      }
+      val answered = makeRequest(new TestClientMessage("numbers"))
+      assert("int" === answered.contentType)
+      assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](answered.contents))
+      assert(101 === server.requests)
     } finally {
       server.shutdown
     }
