@@ -34,6 +34,7 @@ import com.rabbitmq.client.QueueingConsumer
 import com.rabbitmq.client.QueueingConsumer.Delivery
 
 import com.uncharted.tile
+import com.uncharted.tile.source
 import com.uncharted.tile.source.RabbitMQConnectable
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 
@@ -103,8 +104,11 @@ abstract class Server (host: String, requestExchange: String, logExchange: Strin
       if (null != delivery) {
         val responseQueue = delivery.getProperties.getReplyTo
         try {
-          processRequest(delivery).foreach { response =>
-            oneOffDirectMessage(responseQueue, response._1, response._2)
+          val response = processRequest(delivery)
+          if (response.isDefined) {
+            oneOffDirectMessage(responseQueue, response.get._1, response.get._2)
+          } else {
+            oneOffDirectMessage(responseQueue, source.UNIT_TYPE, source.UNIT_RESPONSE)
           }
         } catch {
           case t0: Throwable => {

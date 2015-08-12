@@ -97,8 +97,11 @@ class TileServerPyramidIO (brokerHostName: String, maximumWaitTime: Long = 2000)
     val request = new ClientTileDataRequest[T](pyramidId, serializer, tiles)
     submitAndWaitForResponse(request)
 
-    if (request._error.isDefined) throw new IOException("Server error", request._error.get)
-    request._tiles.get
+    if (request._error.isDefined) {
+      throw new IOException("Server error", request._error.get)
+    } else {
+      request._tiles.get
+    }
   }
 
   override def getTileStream[T](pyramidId: String, serializer: TileSerializer[T], tile: TileIndex): InputStream = {
