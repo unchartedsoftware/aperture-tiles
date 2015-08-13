@@ -123,7 +123,7 @@ trait StandardPointBinningFunctions {
 					// base result if kernel does not affect other tiles
 					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
 					val bin = pyramid.rootToBin(x, y, tile)
-					var result = List((tile, Array(bin)) )
+					var result = List((tile, Array(bin)))
 					
 					// now check to see if the kernel effects other tiles.  If so, add the new tiles and bins to the result
 					
@@ -183,7 +183,39 @@ trait StandardPointBinningFunctions {
 	 * correct coordinate system.
 	 */
 	def populateTileGaussian[T: Numeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
-		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
+		(tile, bins, value) => {
+            // bins.map probably needs to change to bins.flatMap
+            MutableMap(bins.flatMap{bin =>
+                // This just puts in the bin it's passed literally.
+                // You want, instead, to take the value, and spread it around several bins, as per the directions of the kernel
+            	val kernelDimX = kernel(0).length
+            	val kernelDimY = kernel.length
+            	
+            	var result: List[(BinIndex, T)] = List()
+            	
+            	for ( j <- 0 to kernelDimY; i <- 0 to kernelDimX ) {
+            		// for each element in the kernel, determine if it is in the tile
+            		// first we must convert the kernel element position to global coordinates
+            		val kernelX = i + bin.getX()
+            		val kernelY = j + bin.getY()
+            		// if kernelX && kernelY fall inside the tile, get the kernel value at x,y and apply it to the bin
+            		if ( (tile.getX <= kernelX && (tile.getX + tile.getXBins()) > kernelX)
+            		  && (tile.getY <= kernelY && (tile.getY + tile.getYBins()) > kernelY) ) {
+            			// compute value of bin after kernel applied in bin and convert bin to tile coordinates
+            			val currbin = TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin
+		            	
+		            	val num: Numeric[T] = implicitly[Numeric[T]]
+		            	import num.mkNumericOps
+		            	
+		            	val kernelVal = kernel(kernelDimY / 2)(kernelDimX /2)
+		            	val currvalue = num.toDouble(value) * kernelVal
+		            	
+		            	result = (currbin, value) :: result
+		            }
+            	}
+                result
+            }: _*)
+        }
 
 }
 
