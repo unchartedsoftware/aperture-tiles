@@ -32,6 +32,21 @@ package com.uncharted.tile
  * The client/server communications for this external server is handles using RabbitMQ, but these communications
  * should all be encapsulated within the client, so users need not know that (except for configuration details,
  * of course).
+ *
+ * TODO:
+ *   (1) Currently, I use the default exchange with a unique queue for each response.  This requires a lot of
+ *       extraneous queue creation, and holds the possiblility of getting poluted by other messengers using the
+ *       default exchange (the latter probably being the more problematic of the two).
+ *       Instead, use a specific response exchange, and have each client register a queue with a random routing key,
+ *       used to filter in only the appropriate responses, and also add a random request ID to each request to
+ *       to distinguish responses from the same client.
+ *   (2) Make request waiting use concurrency better - no thread.sleep, rather, await the proper results.
+ *   (3) Put in server-side request combinations -
+ *       a. separate request processing thread from tile generation thread
+ *       b. have requests add to the pending queues on its pyramid
+ *   (4) Parameterize RabbitMQ connect details - server, user, password, etc.
+ *   (5) (eventually, not immediately) - add Redis or Memcached or something similar to store tiles outside of
+ *       RabbitMQ - message just returns cache key, tile goes into cache.
  */
 package object source {
   val TILE_REQUEST_EXCHANGE = "tile-requests"
