@@ -27,10 +27,10 @@ package com.oculusinfo.tilegen.tiling
 
 
 import scala.collection.mutable.{Map => MutableMap}
-
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.tilegen.util.ExtendedNumeric
 
 
 
@@ -182,7 +182,7 @@ trait StandardPointBinningFunctions {
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
-	def populateTileGaussian[T: Numeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+	def populateTileGaussian[T: ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => {
             // bins.map probably needs to change to bins.flatMap
             MutableMap(bins.flatMap{bin =>
@@ -205,13 +205,12 @@ trait StandardPointBinningFunctions {
             			// compute value of bin after kernel applied in bin and convert bin to tile coordinates
             			var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
 
-		            	val num: Numeric[T] = implicitly[Numeric[T]]
-		            	import num.mkNumericOps
-		            	
+            			val sNumeric = implicitly[ExtendedNumeric[T]]
+
 		            	val kernelVal = kernel(j)(i)
-		            	val currvalue = num.toDouble(value) * kernelVal
-		            	
-		            	result = (currBin, value) :: result
+		            	val currvalue = sNumeric.toDouble(value) * kernelVal
+
+		            	result = (currBin, sNumeric.fromDouble(currvalue)) :: result
 		            }
             	}
                 result
