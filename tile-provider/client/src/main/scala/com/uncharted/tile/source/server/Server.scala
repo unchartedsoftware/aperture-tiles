@@ -45,8 +45,8 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  *
  * @param host The host name of the machine on which resides the RabbitMQ server
  */
-abstract class Server (host: String, requestExchange: String, logExchange: String)
-  extends RabbitMQConnectable(host) with Logging
+abstract class Server (host: String, user: String, pswd: String, requestExchange: String, logExchange: String)
+  extends RabbitMQConnectable(host, user, pswd) with Logging
 {
   import ExecutionContext.Implicits.global
 

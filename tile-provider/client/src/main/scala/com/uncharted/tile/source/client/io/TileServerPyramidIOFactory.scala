@@ -38,7 +38,9 @@ import scala.util.Try
 
 
 object TileServerPyramidIOFactory {
-  val BROKER_HOST_NAME = new StringProperty("brokerHost", "The host name of the RabbitMQ message broker", "localhost")
+  val BROKER_HOST = new StringProperty("brokerHost", "The host name of the RabbitMQ message broker", "localhost")
+  val BROKER_USER = new StringProperty("brokerUser", "The user name with which to log in to the RabbitMQ message broker", "")
+  val BROKER_PASSWORD  = new StringProperty("brokerPassword", "The password with which to log in to the RabbitMQ message broker", "")
   val MAXIMUM_WAIT_TIME = new IntegerProperty("maxWaitTime", "The maximum amount of time to wait for a tile, in milliseconds", 2000)
 }
 /**
@@ -51,15 +53,19 @@ class TileServerPyramidIOFactory  (parent: ConfigurableFactory[_],
   import TileServerPyramidIOFactory._
 
   addProperty(PyramidIOFactory.INITIALIZATION_DATA)
-  addProperty(BROKER_HOST_NAME)
+  addProperty(BROKER_HOST)
+  addProperty(BROKER_USER)
+  addProperty(BROKER_PASSWORD)
   addProperty(MAXIMUM_WAIT_TIME)
 
   override protected def createInstance: PyramidIO = {
     Try {
       val config: JSONObject = getPropertyValue(PyramidIOFactory.INITIALIZATION_DATA)
-      val brokerHostName = getPropertyValue(BROKER_HOST_NAME)
+      val brokerHost = getPropertyValue(BROKER_HOST)
+      val brokerUser = getPropertyValue(BROKER_USER)
+      val brokerPassword = getPropertyValue(BROKER_PASSWORD)
       val maxWaitTime = getPropertyValue(MAXIMUM_WAIT_TIME).toLong
-      new TileServerPyramidIO(brokerHostName, maxWaitTime)
+      new TileServerPyramidIO(brokerHost, brokerUser, brokerPassword, maxWaitTime)
     }.recover {
       case t: Throwable => {
         error("Error trying to create FileBasedPyramidIO", t)

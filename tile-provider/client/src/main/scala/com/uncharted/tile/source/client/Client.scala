@@ -41,7 +41,9 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  *
  * @tparam RT The type of request to be made
  */
-abstract class Client[RT] (host: String, requestExchange: String) extends RabbitMQConnectable(host) with Logging {
+abstract class Client[RT] (host: String, user: String, pswd: String, requestExchange: String)
+  extends RabbitMQConnectable(host, user, pswd) with Logging
+{
   import com.uncharted.tile
   import scala.concurrent.ExecutionContext.Implicits.global
 

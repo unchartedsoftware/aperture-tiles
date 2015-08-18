@@ -34,8 +34,8 @@ import com.uncharted.tile
  * This class handles communications with a tile server, wrapping tile requests appropriately, and letting users know
  * when tiles are completed (or have errored).
  */
-class TileClient(host: String)
-extends Client[ClientTileRequest](host, tile.source.TILE_REQUEST_EXCHANGE) {
+class TileClient(host: String, user: String, pswd: String)
+extends Client[ClientTileRequest](host, user, pswd, tile.source.TILE_REQUEST_EXCHANGE) {
   def encodeRequest(request: ClientTileRequest): Array[Byte] =
     request.toByteArray
 

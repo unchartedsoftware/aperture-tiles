@@ -51,8 +51,9 @@ import com.uncharted.tile.source.client._
 /**
  * A tile pyramid IO that acts as a facade for a TileClient
  */
-class TileServerPyramidIO (brokerHostName: String, maximumWaitTime: Long = 2000) extends PyramidIO {
-  private val client = new TileClient(brokerHostName)
+class TileServerPyramidIO (brokerHostName: String, brokerUserName: String, brokerPassword: String,
+                           maximumWaitTime: Long = 2000) extends PyramidIO {
+  private val client = new TileClient(brokerHostName, brokerUserName, brokerHostName)
   private val clientTimeout = Duration(maximumWaitTime, TimeUnit.MILLISECONDS)
 
   override def initializeForWrite(pyramidId: String): Unit = throw new UnsupportedOperationException("TileServerPyramidIO is read-only")

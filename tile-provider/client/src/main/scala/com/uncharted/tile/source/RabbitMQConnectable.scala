@@ -34,14 +34,14 @@ import com.rabbitmq.client.ConnectionFactory
  *
  * @param host The hostname of the RabbitMQ
  */
-class RabbitMQConnectable (host: String) {
+class RabbitMQConnectable (host: String, user: String, pswd: String) {
   // The user for this connectable is created via:
   // rabbitmqctl add_user tile-server tile-server
   // rabbitmqctl set_permissions -p / tile-server ".*" ".*" ".*"
   protected val _factory = new ConnectionFactory()
   _factory.setHost(host)
-  _factory.setUsername("tile-server")
-  _factory.setPassword("tile-server")
+  _factory.setUsername(user)
+  _factory.setPassword(pswd)
 
   protected val _connection = _factory.newConnection()
 
