@@ -188,29 +188,30 @@ trait StandardPointBinningFunctions {
             MutableMap(bins.flatMap{bin =>
                 // This just puts in the bin it's passed literally.
                 // You want, instead, to take the value, and spread it around several bins, as per the directions of the kernel
-            	val kernelDimX = kernel(0).length
-            	val kernelDimY = kernel.length
+            	val kernelDimX = kernel(0).length - 1 	// zero based
+            	val kernelDimY = kernel.length - 1		// zero based
             	
             	var result: List[(BinIndex, T)] = List()
             	
+            	// j is the current local y position in the kernel; i is current local x position in the kernel.
             	for ( j <- 0 to kernelDimY; i <- 0 to kernelDimX ) {
             		// for each element in the kernel, determine if it is in the tile
             		// first we must convert the kernel element position to global coordinates
-            		val kernelX = i + bin.getX()
-            		val kernelY = j + bin.getY()
+            		val currBinX = bin.getX + i - kernelDimX/2
+            		val currBinY = bin.getY + j - kernelDimY/2
             		// if kernelX && kernelY fall inside the tile, get the kernel value at x,y and apply it to the bin
-            		if ( (tile.getX <= kernelX && (tile.getX + tile.getXBins()) > kernelX)
-            		  && (tile.getY <= kernelY && (tile.getY + tile.getYBins()) > kernelY) ) {
+            		if ( (tile.getX <= currBinX && (tile.getX + tile.getXBins) > currBinX)
+            		  && (tile.getY <= currBinY && (tile.getY + tile.getYBins) > currBinY) ) {
             			// compute value of bin after kernel applied in bin and convert bin to tile coordinates
-            			val currbin = TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin
-		            	
+            			var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
+
 		            	val num: Numeric[T] = implicitly[Numeric[T]]
 		            	import num.mkNumericOps
 		            	
-		            	val kernelVal = kernel(kernelDimY / 2)(kernelDimX /2)
+		            	val kernelVal = kernel(j)(i)
 		            	val currvalue = num.toDouble(value) * kernelVal
 		            	
-		            	result = (currbin, value) :: result
+		            	result = (currBin, value) :: result
 		            }
             	}
                 result

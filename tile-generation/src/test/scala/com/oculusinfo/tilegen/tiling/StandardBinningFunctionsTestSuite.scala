@@ -44,7 +44,7 @@ import org.apache.spark.rdd.RDD
 /**
  * @author nkronenfeld
  */
-class StandardBinningFunctionsTestSuite extends FunSuite with SharedSparkContext {
+class StandardBinningFunctionsTestSuite extends FunSuite {
 	import StandardBinningFunctions._
 
 	test("Guassian tiling") {
@@ -68,7 +68,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite with SharedSparkContext
 		
 		// Create some data with which to test them
 		// One point firmly in bin (3, 3) of tile (0, 0, 0, 8, 8)
-		val inputData1: RDD[(Seq[Any], Double)] = sc.parallelize(List((Seq[Any](3.5, 3.5), 1.0)))
+		val inputData1 = List((Seq[Any](3.5, 3.5), 1.0))
 		
 		// Run our input data through our functions to get individual bin values
 		val output = inputData1.flatMap{case (index, value) =>
@@ -76,6 +76,9 @@ class StandardBinningFunctionsTestSuite extends FunSuite with SharedSparkContext
 		        populateFcn(tile, ubins, value).map{case (bin, value) => (tile, bin, value)}
 		    }
 		}
+		// compare output to expected values based on Guassian kernel
+		assert( !output.isEmpty )
+
 	}
 
 	test("for vs while") {
