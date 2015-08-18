@@ -64,7 +64,7 @@ class TileServer(host: String,
     // Get the information we need about this request
     val request = ServerTileRequest.fromByteArray(delivery.getBody)
 
-    debug("request type: "+request.requestType)
+    info("request type: "+request.requestType)
     request match {
       case tir: TileInitializationRequest => {
         info("Initialization request for tile set "+tir.table)
