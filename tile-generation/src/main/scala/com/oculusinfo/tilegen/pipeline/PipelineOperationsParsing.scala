@@ -229,11 +229,15 @@ object PipelineOperationsParsing extends Logging {
 	 * Arguments:
 	 *  ops.columns - Sequence of column specs denoting the columns to select.
 	 */
-	def parseColumnSelectOp(args: Map[String, String]) = {
+	def parseColumnSelectOp(args: Map[String, String], distinct:Boolean=false) = {
 		logger.debug(s"Parsing columnSelectOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val colSpecs = argParser.getStringSeq("ops.columns", "Col specs denoting columns to select")
-		columnSelectOp(colSpecs)(_)
+    if (distinct)	{
+      columnSelectDistinctOp(colSpecs)(_)
+    } else {
+      columnSelectOp(colSpecs)(_)
+    }
 	}
 
 	/**

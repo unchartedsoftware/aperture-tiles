@@ -419,6 +419,17 @@ object PipelineOperations {
 	}
 
 	/**
+	 * Operation to create a new schema RDD from selected columns with only distinct rows.
+	 *
+	 * @param colSpecs Sequence of column specs denoting the columns to select.
+	 * @param input Pipeline data to select columns from.
+	 * @return Pipeline data containing a schema RDD with only the selected columns with only distinct rows.
+	 */
+	def columnSelectDistinctOp(colSpecs: Seq[String])(input: PipelineData) = {
+		PipelineData(input.sqlContext, input.srdd.selectExpr(colSpecs:_*).distinct)
+	}
+
+	/**
 	 * Convert the data type of a column
 	 *
 	 * @param sourceColSpec name of the colum to be converted
