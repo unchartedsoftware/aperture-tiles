@@ -23,6 +23,7 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -110,6 +111,12 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 	}
 
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, JSONObject filterJSON){
+
+		// temp debug
+		Long xInterval = getHistogramIntervalFromBounds(startX, endX);
+		Long yInterval = getHistogramIntervalFromBounds(startY, endY);
+		LOGGER.info("startX = " + startX + ", endX = " + endX + ", xIntrval = " + xInterval +
+			", startY = " + startY + ", endY = " + endY + ", yInterval = " + yInterval);
 
 		// the first filter added excludes everything outside of the tile boundary
 		// on both the xField and the yField
@@ -287,14 +294,21 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double endY = rect.getY();
 
 			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, properties);
-			Histogram date_agg = sr.getAggregations().get("xField");
-			Map<Integer, Map> tileMap = parseAggregations(date_agg, tileIndex);
-			SparseTileData tileData = new SparseTileData(tileIndex,tileMap, 0);
-
-			results.add(tileData);
+			if (responseHasData(sr)) {
+				Histogram date_agg = sr.getAggregations().get("xField");
+				Map<Integer, Map> tileMap = parseAggregations(date_agg, tileIndex);
+				SparseTileData tileData = new SparseTileData(tileIndex,tileMap, 0);
+				results.add(tileData);
+			}
 		}
 
 		return results;
+	}
+
+	protected boolean responseHasData(SearchResponse sr) {
+		SearchHits hits = sr.getHits();
+		long totalHits = hits.getTotalHits();
+		return (totalHits > 0);
 	}
 
 	@Override
