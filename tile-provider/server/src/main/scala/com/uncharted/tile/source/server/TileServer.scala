@@ -55,9 +55,9 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  * @param host The host name of the machine on which resides the RabbitMQ server
  * @param pyramidIOFactoryProvider An object that constructs PyramidIO factories to use to fulfil tile requests.
  */
-class TileServer(host: String,
+class TileServer(host: String, user: String, password: String,
                  pyramidIOFactoryProvider: FactoryProvider[PyramidIO])
-  extends Server(host, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) with Logging
+  extends Server(host, user, password, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) with Logging
 {
   val pyramidIOs = MutableMap[String, PyramidIO]()
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {

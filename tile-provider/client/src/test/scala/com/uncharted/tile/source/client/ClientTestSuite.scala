@@ -27,7 +27,9 @@ package com.uncharted.tile.source.client
 
 import java.util.concurrent.TimeUnit
 
-import org.scalatest.FunSuite
+import grizzled.slf4j.Logging
+import org.scalatest.exceptions.TestCanceledException
+import org.scalatest.{Outcome, FunSuite, Canceled}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -38,116 +40,123 @@ import com.uncharted.tile.source
 import com.uncharted.tile.source.server.Server
 import com.uncharted.tile.source.util.ByteArrayCommunicator
 
+import scala.util.Try
 
 
-class ClientTestSuite extends FunSuite {
-  import ExecutionContext.Implicits.global
+object ClientTestSuite {
+  val TEST_BROKER="hadoop-s1"
+  val TEST_USER="test"
+  val TEST_PSWD="test"
   val maxResponseTime = 5000
+}
+class ClientTestSuite extends FunSuite with Logging {
+  import ClientTestSuite._
+  import ExecutionContext.Implicits.global
 
-  class TestServer extends Server("localhost", "test-msg", "test-logs") {
-    var requests = 0
-    override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
-      requests = requests + 1
-      val msg = new String(delivery.getBody)
-      if ("numbers" == msg)
-        Some(("int", ByteArrayCommunicator.defaultCommunicator.write(1, 2, 3)))
-      else if ("strings" == msg)
-        Some(("string", ByteArrayCommunicator.defaultCommunicator.write("abc", "def", "ghi")))
-      else if ("error" == msg)
-        throw new Exception("Test exception")
-      else
-        None
+  var server: TestServer = null
+  var client: TestClient = null
+
+  override def withFixture(test: NoArgTest): Outcome = {
+    // We do a couple things in here:
+    // First, we consolidate server and client construction so it doesn't have to be done individually in each test.
+    // Second, we wrap test calls so that they don't get called at all if the server can't be reached.♦
+    try {
+      server = new TestServer
+      val runServer = server.startRequestThread
+      var outcome =
+        try {
+          client = new TestClient
+          super.withFixture(test)
+        } finally {
+          server.shutdown
+        }
+      concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+      outcome
+    } catch {
+      case t: Throwable => new Canceled(new TestCanceledException(Some("Error constructing server"), Some(t), 1))
     }
   }
 
-  class TestClientMessage(val requestType: String) {
-    var answered: Boolean = false
-    var contentType: String = null
-    var contents: Array[Byte] = null
-    var severity: String = null
-    var error: Throwable = null
-  }
-  class TestClient extends Client[TestClientMessage]("localhost", "test-msg") {
-    override def encodeRequest(request: TestClientMessage): Array[Byte] = request.requestType.getBytes
-
-    override def processResults(request: TestClientMessage, contentType: String, contents: Array[Byte]): Unit = {
-      if (request.answered) throw new Exception("Two answers to one request")
-
-      request.contentType = contentType
-      request.contents = contents
-      request.answered = true
+  def makeRequest(request: TestClientMessage): TestClientMessage = {
+    client.makeRequest(request)
+    val response = concurrent.future {
+      while (!request.answered) Thread.sleep(100)
     }
-
-    override def processError(request: TestClientMessage, severity: String, serverError: Throwable): Unit = {
-      if (request.answered) throw new Exception("Two answers to one request")
-
-      request.severity = severity
-      request.error = serverError
-      request.answered = true
-    }
+    concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+    request
   }
-
-
 
   test("Test normal client functioning") {
-    val server = new TestServer
-    val client = new TestClient
-    val runServer = server.startRequestThread
+    val stringResult = makeRequest(new TestClientMessage("strings"))
+    assert("string" === stringResult.contentType)
+    assert(("abc", "def", "ghi") ===
+      ByteArrayCommunicator.defaultCommunicator.read[String, String, String](stringResult.contents))
 
-    try {
-      def makeRequest (request: TestClientMessage): TestClientMessage = {
-        client.makeRequest(request)
-        val response = concurrent.future {
-          while (!request.answered) Thread.sleep(100)
-        }
-        concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
-        request
-      }
+    val intResult = makeRequest(new TestClientMessage("numbers"))
+    assert("int" === intResult.contentType)
+    assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](intResult.contents))
 
-
-
-      val stringResult = makeRequest(new TestClientMessage("strings"))
-      assert("string" === stringResult.contentType)
-      assert(("abc", "def", "ghi") ===
-        ByteArrayCommunicator.defaultCommunicator.read[String, String, String](stringResult.contents))
-
-      val intResult = makeRequest(new TestClientMessage("numbers"))
-      assert("int" === intResult.contentType)
-      assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](intResult.contents))
-
-      val errorResult = makeRequest(new TestClientMessage("error"))
-      assert(com.uncharted.tile.source.LOG_WARNING === errorResult.severity)
-      assert("Test exception" === errorResult.error.getMessage)
-    } finally {
-      server.shutdown
-    }
-    concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+    val errorResult = makeRequest(new TestClientMessage("error"))
+    assert(com.uncharted.tile.source.LOG_WARNING === errorResult.severity)
+    assert("Test exception" === errorResult.error.getMessage)
   }
 
   test("Test no-response messages") {
-    val server = new TestServer
-    val client = new TestClient
-    val runServer = server.startRequestThread
-    try {
-      def makeRequest (request: TestClientMessage): TestClientMessage = {
-        client.makeRequest(request)
-        val response = concurrent.future {
-          while (!request.answered) Thread.sleep(100)
-        }
-        concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
-        request
-      }
-
-      (1 to 100).foreach { n =>
-        assert(source.UNIT_TYPE === makeRequest(new TestClientMessage("no-response-"+n)).contentType)
-      }
-      val answered = makeRequest(new TestClientMessage("numbers"))
-      assert("int" === answered.contentType)
-      assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](answered.contents))
-      assert(101 === server.requests)
-    } finally {
-      server.shutdown
+    (1 to 100).foreach { n =>
+      assert(source.UNIT_TYPE === makeRequest(new TestClientMessage("no-response-" + n)).contentType)
     }
-    concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+    val answered = makeRequest(new TestClientMessage("numbers"))
+    assert("int" === answered.contentType)
+    assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](answered.contents))
+    assert(101 === server.requests)
+  }
+}
+
+
+class TestClientMessage(val requestType: String) {
+  var answered: Boolean = false
+  var contentType: String = null
+  var contents: Array[Byte] = null
+  var severity: String = null
+  var error: Throwable = null
+}
+
+class TestServer extends Server(ClientTestSuite.TEST_BROKER, ClientTestSuite.TEST_USER, ClientTestSuite.TEST_PSWD,
+  "test-msg", "test-logs") {
+  var requests = 0
+  override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
+    requests = requests + 1
+    val msg = new String(delivery.getBody)
+    if ("numbers" == msg)
+      Some(("int", ByteArrayCommunicator.defaultCommunicator.write(1, 2, 3)))
+    else if ("strings" == msg)
+      Some(("string", ByteArrayCommunicator.defaultCommunicator.write("abc", "def", "ghi")))
+    else if ("error" == msg)
+      throw new Exception("Test exception")
+    else
+      None
+  }
+}
+
+class TestClient extends Client[TestClientMessage](
+  ClientTestSuite.TEST_BROKER, ClientTestSuite.TEST_USER, ClientTestSuite.TEST_PSWD,
+  "test-msg")
+{
+  override def encodeRequest(request: TestClientMessage): Array[Byte] = request.requestType.getBytes
+
+  override def processResults(request: TestClientMessage, contentType: String, contents: Array[Byte]): Unit = {
+    if (request.answered) throw new Exception("Two answers to one request")
+
+    request.contentType = contentType
+    request.contents = contents
+    request.answered = true
+  }
+
+  override def processError(request: TestClientMessage, severity: String, serverError: Throwable): Unit = {
+    if (request.answered) throw new Exception("Two answers to one request")
+
+    request.severity = severity
+    request.error = serverError
+    request.answered = true
   }
 }

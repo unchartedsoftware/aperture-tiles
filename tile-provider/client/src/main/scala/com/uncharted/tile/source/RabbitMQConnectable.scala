@@ -35,9 +35,9 @@ import com.rabbitmq.client.ConnectionFactory
  * @param host The hostname of the RabbitMQ
  */
 class RabbitMQConnectable (host: String, user: String, pswd: String) {
-  // The user for this connectable is created via:
-  // rabbitmqctl add_user tile-server tile-server
-  // rabbitmqctl set_permissions -p / tile-server ".*" ".*" ".*"
+  // To create a user:
+  // rabbitmqctl add_user <user-name> <password>
+  // rabbitmqctl set_permissions -p / <user-name> ".*" ".*" ".*"
   protected val _factory = new ConnectionFactory()
   _factory.setHost(host)
   _factory.setUsername(user)

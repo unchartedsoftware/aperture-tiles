@@ -27,15 +27,18 @@ package com.uncharted.tile.source.client.io
 
 
 import java.lang.{Integer => JavaInt}
+import java.util.concurrent.TimeUnit
 import java.util.{Arrays => JavaArrays, List => JavaList}
 
 import org.apache.avro.file.CodecFactory
 import org.json.JSONObject
+import org.scalatest.exceptions.TestCanceledException
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
-import org.scalatest.FunSuite
+import org.scalatest.{Canceled, Outcome, FunSuite}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
@@ -44,10 +47,30 @@ import com.oculusinfo.binning.util.JsonUtilities
 
 
 
+object TileServerPyramidIOTestSuite {
+  val BROKER_HOST = "hadoop-s1"
+  val BROKER_USER = "test"
+  val BROKER_PASSWORD = "test"
+}
 /**
  * Test the TileServerPyramidIO to make sure it works.
  */
 class TileServerPyramidIOTestSuite extends FunSuite {
+  import TileServerPyramidIOTestSuite._
+
+  var io: TileServerPyramidIO = null
+  override def withFixture(test: NoArgTest): Outcome = {
+    // We do a couple things in here:
+    // First, we consolidate server and client construction so it doesn't have to be done individually in each test.
+    // Second, we wrap test calls so that they don't get called at all if the server can't be reached.
+    try {
+      io = new TileServerPyramidIO(BROKER_HOST, BROKER_USER, BROKER_PASSWORD, 1000 * 60 * 60)
+      super.withFixture(test)
+    } catch {
+      case t: Throwable => new Canceled(new TestCanceledException(Some("Error constructing server"), Some(t), 1))
+    }
+  }
+
   // This test uses a remote server, rather than starting one itself.  Consequently, it is of course ignored, and
   // is intended to be run manually when said server is known to be up.
   ignore("Test on-demand tiling") {
@@ -57,7 +80,6 @@ class TileServerPyramidIOTestSuite extends FunSuite {
       val end = System.nanoTime()
       (result, (end-start)/1000000.0)
     }
-    val io = new TileServerPyramidIO("hadoop-s1", 1000*60*60)
     try {
       val configuration = new JSONObject(
         s"""{

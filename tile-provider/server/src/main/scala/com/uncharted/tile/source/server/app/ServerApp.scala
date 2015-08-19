@@ -60,11 +60,17 @@ object ServerApp extends Logging {
       val contextProvider = new SparkContextProviderImpl(context)
 
       val rabbitMQHost = argParser.getString("rabbitMQHost",
-        "The host name of the machine on which the RabbitMQ server is running",
+        "The host name of the machine on which the RabbitMQ broker is running",
         Some("localhost"))
+      val rabbitMQUser = argParser.getString("rabbitMQUser",
+        "The user name with which to log in to the RabbitMQ broker",
+        None)
+      val rabbitMQPassword = argParser.getString("rabbitMQPassword",
+        "The password with which to log in to the RabbitMQ broker",
+        None)
       val pyramidIOFactoryProvider = new StandardPyramidIOFactoryProvider((DefaultPyramidIOFactoryProvider.values() :+ new OnDemandTilePyramidIOFactoryProvider(contextProvider)).toSet.asJava)
 
-      val server = new TileServer(rabbitMQHost, pyramidIOFactoryProvider)
+      val server = new TileServer(rabbitMQHost, rabbitMQUser, rabbitMQPassword, pyramidIOFactoryProvider)
       server.listenForRequests
     } catch {
       case mae: MissingArgumentException => {

@@ -27,15 +27,17 @@ package com.uncharted.tile.source.server.io
 import java.awt.geom.Rectangle2D
 import java.io.File
 import java.lang.{Integer => JavaInt}
+import java.util.concurrent.TimeUnit
 import java.util.{Arrays => JavaArrays}
 
 import org.apache.avro.file.CodecFactory
 import org.json.JSONObject
+import org.scalatest.exceptions.TestCanceledException
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-import org.scalatest.FunSuite
+import org.scalatest.{Canceled, Outcome, FunSuite}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.DenseTileData
@@ -50,8 +52,15 @@ import com.oculusinfo.factory.util.Pair
 import com.uncharted.tile.source.client.io.TileServerPyramidIO
 import com.uncharted.tile.source.server.TileServer
 
+import scala.concurrent.duration.Duration
 
 
+object TileServerPyramidIOTestSuite {
+  val BROKER_HOST = "hadoop-s1"
+  val BROKER_USER = "test"
+  val BROKER_PASSWORD = "test"
+  val maxResponseTime = 5000
+}
 /**
  * Test the TileServerPyramidIO to make sure it works.
  *
@@ -61,8 +70,9 @@ class TileServerPyramidIOTestSuite extends FunSuite {
   import ExecutionContext.Implicits.global
   def getRootPath: String =
     new File(".").getCanonicalFile.getName match {
-      case "tile-server" => "./src/test/resources/tilesets"
-      case "aperture-tiles" => "./tile-server/src/test/resources/tilesets"
+      case "server" => "./src/test/resources/tilesets"
+      case "tile-provider" => "./server/src/test/resources/tilesets"
+      case "aperture-tiles" => "./tile-provider/server/src/test/resources/tilesets"
       case _ => throw new Exception("Create data run in invalid directory")
     }
 
@@ -99,52 +109,69 @@ class TileServerPyramidIOTestSuite extends FunSuite {
     writeIO.writeTiles[JavaInt](table, serializer, JavaArrays.asList(tile000, tile100, tile110, tile101, tile111))
   }
 
+  val pyramidIOProviders: Set[FactoryProvider[PyramidIO]] = DefaultPyramidIOFactoryProvider.values.toSet
+  val pioFactoryProvider = new StandardPyramidIOFactoryProvider(pyramidIOProviders.asJava)
+  var server: TileServer = null
+  var io: TileServerPyramidIO = null
+
+  override def withFixture(test: NoArgTest): Outcome = {
+    import TileServerPyramidIOTestSuite._
+    // We do a couple things in here:
+    // First, we consolidate server and client construction so it doesn't have to be done individually in each test.
+    // Second, we wrap test calls so that they don't get called at all if the server can't be reached.
+    try {
+      server = new TileServer(BROKER_HOST, BROKER_USER, BROKER_PASSWORD, pioFactoryProvider)
+      val runServer = server.startRequestThread
+      var outcome =
+        try {
+          io = new TileServerPyramidIO(BROKER_HOST, BROKER_USER, BROKER_PASSWORD, 1000 * 60 * 60)
+          super.withFixture(test)
+        } finally {
+          server.shutdown
+        }
+      concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+      outcome
+    } catch {
+      case t: Throwable => new Canceled(new TestCanceledException(Some("Error constructing server"), Some(t), 1))
+    }
+  }
+
   // This require RabbitMQ on the building machine, which is not guaranteed to be installed,
   // so we set it to ignore by default.
-  ignore("Test tile-client-based PyramidIO") {
-    val pyramidIOProviders: Set[FactoryProvider[PyramidIO]] = DefaultPyramidIOFactoryProvider.values.toSet
-    val pioFactoryProvider = new StandardPyramidIOFactoryProvider(pyramidIOProviders.asJava)
-    val server = new TileServer("localhost", pioFactoryProvider)
-    val tileSerializerProviders: Set[FactoryProvider[TileSerializer[_]]] = DefaultTileSerializerFactoryProvider.values.toSet
-    val io = new TileServerPyramidIO("localhost", 1000*60*60)
-    try {
-      concurrent.future(server.listenForRequests)
-
-
-      val rootPath = getRootPath
-      val configuration = new JSONObject(
-        s"""{
+  test("Test tile-client-based PyramidIO") {
+    val rootPath = getRootPath
+    val configuration = new JSONObject(
+      s"""{
            |  "type": "file",
-           |  "rootpath": "$rootPath",
+           |  "rootpath": "$rootPath
+",
            |  "extension": "avro"
            |}""".stripMargin)
-      val tableName = "read-test"
-      io.initializeForRead(tableName, 4, 4, JsonUtilities.jsonObjToProperties(configuration))
-      val serializer = new PrimitiveAvroSerializer[JavaInt](classOf[JavaInt], CodecFactory.bzip2Codec())
+      val
+      tableName = "read-test"
+    io.initializeForRead(tableName, 4, 4, JsonUtilities.jsonObjToProperties(configuration))
+    val serializer = new PrimitiveAvroSerializer[JavaInt](classOf[JavaInt], CodecFactory.bzip2Codec())
 
-      val metaData = new PyramidMetaData(io.readMetaData(tableName))
-      val tiles = io.readTiles[JavaInt](tableName, serializer,
-        JavaArrays.asList(new TileIndex(0, 0, 0, 4, 4), new TileIndex(1, 0, 0, 4, 4), new TileIndex(1, 1, 0, 4, 4),
-          new TileIndex(1, 0, 1, 4, 4), new TileIndex(1, 1, 1, 4, 4)))
+    val metaData = new PyramidMetaData(io.readMetaData(tableName))
+    val tiles = io.readTiles[JavaInt](tableName, serializer,
+      JavaArrays.asList(new TileIndex(0, 0, 0, 4, 4), new TileIndex(1, 0, 0, 4, 4), new TileIndex(1, 1, 0, 4, 4),
+        new TileIndex(1, 0, 1, 4, 4), new TileIndex(1, 1, 1, 4, 4)))
 
-      assert(metaData.getName === "test data")
-      assert(metaData.getDescription === "test description")
-      assert(metaData.getMinZoom === 0)
-      assert(metaData.getMaxZoom === 1)
-      assert(metaData.getScheme === "TMS")
-      assert(metaData.getProjection === "EPSG:4326")
-      assert(metaData.getBounds.getMinX === 0.0)
-      assert(metaData.getBounds.getMinY === 0.0)
-      assert(metaData.getBounds.getMaxX === 1.0)
-      assert(metaData.getBounds.getMaxY === 1.0)
+    assert(metaData.getName === "test data")
+    assert(metaData.getDescription === "test description")
+    assert(metaData.getMinZoom === 0)
+    assert(metaData.getMaxZoom === 1)
+    assert(metaData.getScheme === "TMS")
+    assert(metaData.getProjection === "EPSG:4326")
+    assert(metaData.getBounds.getMinX === 0.0)
+    assert(metaData.getBounds.getMinY === 0.0)
+    assert(metaData.getBounds.getMaxX === 1.0)
+    assert(metaData.getBounds.getMaxY === 1.0)
 
-      assert(tiles.get(0).getDefinition === new TileIndex(0, 0, 0, 4, 4))
-      assert(tiles.get(1).getDefinition === new TileIndex(1, 0, 0, 4, 4))
-      assert(tiles.get(2).getDefinition === new TileIndex(1, 1, 0, 4, 4))
-      assert(tiles.get(3).getDefinition === new TileIndex(1, 0, 1, 4, 4))
-      assert(tiles.get(4).getDefinition === new TileIndex(1, 1, 1, 4, 4))
-    } finally {
-      server.shutdown
-    }
+    assert(tiles.get(0).getDefinition === new TileIndex(0, 0, 0, 4, 4))
+    assert(tiles.get(1).getDefinition === new TileIndex(1, 0, 0, 4, 4))
+    assert(tiles.get(2).getDefinition === new TileIndex(1, 1, 0, 4, 4))
+    assert(tiles.get(3).getDefinition === new TileIndex(1, 0, 1, 4, 4))
+    assert(tiles.get(4).getDefinition === new TileIndex(1, 1, 1, 4, 4))
   }
 }

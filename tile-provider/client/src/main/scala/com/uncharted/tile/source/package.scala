@@ -44,7 +44,7 @@ package com.uncharted.tile
  *   (3) Put in server-side request combinations -
  *       a. separate request processing thread from tile generation thread
  *       b. have requests add to the pending queues on its pyramid
- *   (4) Parameterize RabbitMQ connect details - server, user, password, etc.
+ *   (4) Parameterize RabbitMQ connect details - server, user, password, etc. (DONE)
  *   (5) (eventually, not immediately) - add Redis or Memcached or something similar to store tiles outside of
  *       RabbitMQ - message just returns cache key, tile goes into cache.
  */
