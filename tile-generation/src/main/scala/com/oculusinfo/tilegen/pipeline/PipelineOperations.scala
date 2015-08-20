@@ -38,6 +38,7 @@ import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.datasets.{SchemaTypeUtilities, CSVReader, TilingTask, TilingTaskParameters}
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
+import com.oculusinfo.tilegen.pipeline.PipelineTree._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
@@ -153,17 +154,12 @@ object PipelineOperations {
       case _ => None
     }
 
-    println("\n***\n" + errorLog.getOrElse("nothing passed"))
     if (outStream.isDefined) {
       accumulator.value.foreach{ e =>
-        outStream.get.write(e.getError.toString().getBytes)
-        for ((k,v) <- e.getError) printf("key: %s, value: %s\n", k, v)
+        for ((k,v) <- e.getError) printf("%s -> %s\n", k, v)
         outStream.get.flush()
       }
     }
-
-
-    println("\n***\n")
 
 		PipelineData(reader.sqlc, dataFrame)
 	}
