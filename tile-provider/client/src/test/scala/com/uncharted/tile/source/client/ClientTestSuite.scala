@@ -59,7 +59,7 @@ class ClientTestSuite extends FunSuite with Logging {
   override def withFixture(test: NoArgTest): Outcome = {
     // We do a couple things in here:
     // First, we consolidate server and client construction so it doesn't have to be done individually in each test.
-    // Second, we wrap test calls so that they don't get called at all if the server can't be reached.♦
+    // Second, we wrap test calls so that they don't get called at all if the server can't be reached.
     try {
       server = new TestServer
       val runServer = server.startRequestThread

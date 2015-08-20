@@ -106,16 +106,20 @@ abstract class Client[RT] (host: String, user: String, pswd: String,
       _started = true
       val delivery = consumer.nextDelivery(100)
       if (null != delivery) {
-        val messageId = delivery.getProperties.getMessageId
-        _pending.remove(messageId).map{request =>
-          val contentType = delivery.getProperties.getContentType
-          contentType match {
-            case tile.source.LOG_ERROR => onError(request, tile.source.LOG_ERROR, delivery.getBody)
-            case tile.source.LOG_WARNING => onError(request, tile.source.LOG_WARNING, delivery.getBody)
-            case tile.source.LOG_INFO => onError(request, tile.source.LOG_INFO, delivery.getBody)
-            case tile.source.LOG_DEBUG => onError(request, tile.source.LOG_DEBUG, delivery.getBody)
-            case _ => processResults(request, contentType, delivery.getBody)
+        try {
+          val messageId = delivery.getProperties.getMessageId
+          _pending.remove(messageId).map { request =>
+            val contentType = delivery.getProperties.getContentType
+            contentType match {
+              case tile.source.LOG_ERROR => onError(request, tile.source.LOG_ERROR, delivery.getBody)
+              case tile.source.LOG_WARNING => onError(request, tile.source.LOG_WARNING, delivery.getBody)
+              case tile.source.LOG_INFO => onError(request, tile.source.LOG_INFO, delivery.getBody)
+              case tile.source.LOG_DEBUG => onError(request, tile.source.LOG_DEBUG, delivery.getBody)
+              case _ => processResults(request, contentType, delivery.getBody)
+            }
           }
+        } finally {
+          _channel.basicAck(delivery.getEnvelope.getDeliveryTag, false)
         }
       }
     }
