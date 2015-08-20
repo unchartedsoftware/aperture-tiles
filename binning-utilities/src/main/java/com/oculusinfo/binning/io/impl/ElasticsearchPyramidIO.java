@@ -23,6 +23,7 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -287,14 +288,21 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			double endY = rect.getY();
 
 			SearchResponse sr = timeFilteredRequest(startX, endX, startY, endY, properties);
-			Histogram date_agg = sr.getAggregations().get("xField");
-			Map<Integer, Map> tileMap = parseAggregations(date_agg, tileIndex);
-			SparseTileData tileData = new SparseTileData(tileIndex,tileMap, 0);
-
-			results.add(tileData);
+			if (responseHasData(sr)) {
+				Histogram date_agg = sr.getAggregations().get("xField");
+				Map<Integer, Map> tileMap = parseAggregations(date_agg, tileIndex);
+				SparseTileData tileData = new SparseTileData(tileIndex,tileMap, 0);
+				results.add(tileData);
+			}
 		}
 
 		return results;
+	}
+
+	protected boolean responseHasData(SearchResponse sr) {
+		SearchHits hits = sr.getHits();
+		long totalHits = hits.getTotalHits();
+		return (totalHits > 0);
 	}
 
 	@Override
