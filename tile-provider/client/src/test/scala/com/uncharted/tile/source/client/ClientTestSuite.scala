@@ -63,14 +63,17 @@ class ClientTestSuite extends FunSuite with Logging {
     try {
       server = new TestServer
       val runServer = server.startRequestThread
+      client = new TestClient
+      val runClient = client.startResponseThread
       var outcome =
         try {
-          client = new TestClient
           super.withFixture(test)
         } finally {
           server.shutdown
+          client.shutdown
         }
       concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+      concurrent.Await.result(runClient, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
       outcome
     } catch {
       case t: Throwable => new Canceled(new TestCanceledException(Some("Error constructing server"), Some(t), 1))
@@ -122,7 +125,7 @@ class TestClientMessage(val requestType: String) {
 }
 
 class TestServer extends Server(ClientTestSuite.TEST_BROKER, ClientTestSuite.TEST_USER, ClientTestSuite.TEST_PSWD,
-  "test-msg", "test-logs") {
+  "test-msg", "test-rsp", "test-logs") {
   var requests = 0
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     requests = requests + 1
@@ -140,7 +143,7 @@ class TestServer extends Server(ClientTestSuite.TEST_BROKER, ClientTestSuite.TES
 
 class TestClient extends Client[TestClientMessage](
   ClientTestSuite.TEST_BROKER, ClientTestSuite.TEST_USER, ClientTestSuite.TEST_PSWD,
-  "test-msg")
+  "test-msg", "test-rsp")
 {
   override def encodeRequest(request: TestClientMessage): Array[Byte] = request.requestType.getBytes
 

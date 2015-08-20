@@ -26,6 +26,7 @@
 package com.uncharted.tile.source.server
 
 
+import com.rabbitmq.client.AMQP.BasicProperties
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,15 +46,22 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  *
  * @param host The host name of the machine on which resides the RabbitMQ server
  */
-abstract class Server (host: String, user: String, pswd: String, requestExchange: String, logExchange: String)
+abstract class Server (host: String, user: String, pswd: String,
+                       requestExchange: String, responseExchange: String, logExchange: String)
   extends RabbitMQConnectable(host, user, pswd) with Logging
 {
   import ExecutionContext.Implicits.global
 
+  // Whether or not this server has had its request thread started.
+  private var _started = false
+  // Whether or not this server has been shut down
+  private var _shutdown = false
   // The RabbitMQ message consumer that listens for tile requests
   private val _consumer = {
-    // Create a tile request channel, on which we will listen for tile requests.
+    // Create a request channel, on which we will listen for requests.
     _channel.exchangeDeclare(requestExchange, "fanout", false, true, false, null)
+    // Create a response channel, to which we publish responses to requests.
+    _channel.exchangeDeclare(responseExchange, "direct", false, true, false, null)
     // Create a channel to which to send log messages
     _channel.exchangeDeclare(logExchange, "direct", false, true, false, null)
     // Create a consumer to handle tile requests
@@ -61,22 +69,12 @@ abstract class Server (host: String, user: String, pswd: String, requestExchange
   }
 
   /**
-   * Process a server request
-   * @param delivery The message containing the server request
-   * @return Optionally, a pair containing the content type and the content of the return message.  None if there is
-   *         no return message required.
+   * Starts up the request thread of this server, so it listens for requests.
+   *
+   * This is really just a convenient wrapper for {@link #listenForRequests}
+   *
+   * @return A future that can be watched to see when the server has been shut down.
    */
-  def processRequest(delivery: Delivery): Option[(String, Array[Byte])]
-
-  def processError(throwable: Throwable): Array[Byte] =
-    ByteArrayCommunicator.defaultCommunicator.write(throwable)
-
-  private var _shutdown = false
-  private var _started = false
-  def shutdown: Unit = {
-    _shutdown = true
-  }
-
   def startRequestThread: Future[Unit] = {
     val requestFuture = concurrent.future(listenForRequests)
     while (!_started) {
@@ -86,7 +84,14 @@ abstract class Server (host: String, user: String, pswd: String, requestExchange
   }
 
   /**
-   * Listen for tile requests messages, and attempt to fil them, indefinitely.
+   * Schedule the request thread to shut down at its earliest convenience.
+   */
+  def shutdown: Unit = {
+    _shutdown = true
+  }
+
+  /**
+   * Listen for tile requests messages, and attempt to fill them, indefinitely.
    */
   def listenForRequests: Unit = {
     info("RabbitMQ request server listening")
@@ -102,21 +107,28 @@ abstract class Server (host: String, user: String, pswd: String, requestExchange
       _started = true
       val delivery = _consumer.nextDelivery(100)
       if (null != delivery) {
-        val responseQueue = delivery.getProperties.getReplyTo
+        val requesterId = delivery.getProperties.getReplyTo
+        val messageId = delivery.getProperties.getMessageId
         try {
           val response = processRequest(delivery)
           if (response.isDefined) {
-            oneOffDirectMessage(responseQueue, response.get._1, response.get._2)
+            _channel.basicPublish(responseExchange, requesterId,
+              new BasicProperties.Builder().contentType(response.get._1).messageId(messageId).build,
+              response.get._2)
           } else {
-            oneOffDirectMessage(responseQueue, source.UNIT_TYPE, source.UNIT_RESPONSE)
+            _channel.basicPublish(responseExchange, requesterId,
+              new BasicProperties.Builder().contentType(source.UNIT_TYPE).messageId(messageId).build,
+              source.UNIT_RESPONSE)
           }
         } catch {
           case t0: Throwable => {
-            info("RabbitMQ server got an error processing message for channel "+responseQueue, t0)
+            info("RabbitMQ server got an error processing message for requester "+requesterId+" for message "+messageId, t0)
             val encodedError = processError(t0)
             _channel.basicPublish(logExchange, tile.source.LOG_WARNING, null, encodedError)
             try {
-              oneOffDirectMessage(responseQueue, tile.source.LOG_WARNING, encodedError)
+              _channel.basicPublish(responseExchange, requesterId,
+                new BasicProperties.Builder().contentType(tile.source.LOG_WARNING).messageId(messageId).build,
+                encodedError)
             } catch {
               case t1: Throwable => {
                 error("Error writing error message", t1)
@@ -130,5 +142,19 @@ abstract class Server (host: String, user: String, pswd: String, requestExchange
       }
     }
   }
+
+  /**
+   * Process a server request
+   * @param delivery The message containing the server request
+   * @return Optionally, a pair containing the content type and the content of the return message.  None if there is
+   *         no return message required.
+   */
+  def processRequest(delivery: Delivery): Option[(String, Array[Byte])]
+
+  /**
+   * Process an error thrown by request processing.
+   */
+  def processError(throwable: Throwable): Array[Byte] =
+    ByteArrayCommunicator.defaultCommunicator.write(throwable)
 }
 

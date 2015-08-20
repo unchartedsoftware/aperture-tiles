@@ -35,7 +35,8 @@ import com.uncharted.tile
  * when tiles are completed (or have errored).
  */
 class TileClient(host: String, user: String, pswd: String)
-extends Client[ClientTileRequest](host, user, pswd, tile.source.TILE_REQUEST_EXCHANGE) {
+  extends Client[ClientTileRequest](host, user, pswd, tile.source.TILE_REQUEST_EXCHANGE, tile.source.TILE_RESPONSE_EXCHANGE)
+{
   def encodeRequest(request: ClientTileRequest): Array[Byte] =
     request.toByteArray
 

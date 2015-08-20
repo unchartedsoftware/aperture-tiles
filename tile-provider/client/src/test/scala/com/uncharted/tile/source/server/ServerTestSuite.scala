@@ -37,7 +37,7 @@ import org.scalatest.exceptions.TestCanceledException
 
 import org.scalatest.{Canceled, Outcome, FunSuite}
 
-import scala.collection.mutable.Stack
+import scala.collection.mutable.{HashMap, SynchronizedMap}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
@@ -64,14 +64,17 @@ class ServerTestSuite extends FunSuite {
     try {
       server = new TestServer
       val runServer = server.startRequestThread
+      client = new TestClient
+      val runClient = client.startResponseThread
       val outcome =
         try {
-          client = new TestClient
           super.withFixture(test)
         } finally {
           server.shutdown
+          client.shutdown
         }
       concurrent.Await.result(runServer, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
+      concurrent.Await.result(runClient, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
       outcome
     } catch {
       case t: Throwable => new Canceled(new TestCanceledException(Some("Error constructing server"), Some(t), 1))
@@ -103,7 +106,7 @@ class ServerTestSuite extends FunSuite {
 }
 
 import ServerTestSuite._
-class TestServer extends Server(TEST_BROKER, TEST_USER, TEST_PSWD, "test-msg", "test-logs") {
+class TestServer extends Server(TEST_BROKER, TEST_USER, TEST_PSWD, "test-msg", "test-rsp", "test-logs") {
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     println("Processing request (Server test suite)")
     val msg = new String(delivery.getBody)
@@ -118,40 +121,72 @@ class TestServer extends Server(TEST_BROKER, TEST_USER, TEST_PSWD, "test-msg", "
   }
 }
 
-class TestResponseListener (queue: String, channel: Channel) {
-  val responseTypes = new Stack[String]
-  val responses = new Stack[Array[Byte]]()
-  val consumer = new QueueingConsumer(channel)
-  channel.queueDeclare(queue, false, false, true, null)
-  channel.basicQos(1)
-  channel.basicConsume(queue, true, consumer)
-  val delivery = consumer.nextDelivery()
-  responses.push(delivery.getBody)
-  responseTypes.push(delivery.getProperties.getContentType)
-}
-
 class TestClient extends RabbitMQConnectable(TEST_BROKER, TEST_USER, TEST_PSWD) {
+
   import ExecutionContext.Implicits.global
 
-  def sendIntMessage: (Int, Int, Int) = {
-    var replyQueue = UUID.randomUUID.toString
-    val response = concurrent.future(new TestResponseListener(replyQueue, _channel))
-    _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(replyQueue).build(), "numbers".getBytes())
-    val rawResult = concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS)).responses.pop
-    ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](rawResult)
+  var _started = false
+  var _shutdown = false
+  val _requesterId = "test-requester"
+  val _response = new HashMap[String, (String, Array[Byte])] with SynchronizedMap[String, (String, Array[Byte])]
+
+  def startResponseThread = {
+    val responseFuture = concurrent.future(listenForResponses)
+    while (!_started) {
+      Thread.sleep(10)
+    }
+    responseFuture
   }
+
+  def listenForResponses: Unit = {
+    // Create a response channel, to which we publish responses to requests.
+    _channel.exchangeDeclare("test-rsp", "direct", false, true, false, null)
+
+    // Set up a private queue on which to listen for requests
+    val queueName = _channel.queueDeclare().getQueue
+    _channel.queueBind(queueName, "test-rsp", _requesterId)
+    _channel.basicQos(1)
+    // Create a consumer to handle tile requests
+    val consumer = new QueueingConsumer(_channel)
+    _channel.basicConsume(queueName, false, consumer)
+
+    // Loop continually, accepting tile requests, until told to shut down
+    while (!_shutdown) {
+      _started = true
+      val delivery = consumer.nextDelivery(100)
+      if (null != delivery) {
+        val messageId = delivery.getProperties.getMessageId
+        _response(messageId) = (delivery.getProperties.getContentType, delivery.getBody)
+      }
+    }
+  }
+  def shutdown: Unit = {
+    _shutdown = true
+  }
+
+  private def sendMessage (messageId: String, message: Array[Byte]): (String, Array[Byte]) = {
+    _response.remove(messageId)
+    _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(_requesterId).messageId(messageId).build(), message)
+
+    val startWait = System.currentTimeMillis()
+    var curTime = startWait
+    do {
+      Thread.sleep(100)
+    } while ((curTime-startWait) < ServerTestSuite.maxResponseTime && _response.get(messageId).isEmpty)
+    _response(messageId)
+  }
+
+  def sendIntMessage: (Int, Int, Int) = {
+    val response = sendMessage(UUID.randomUUID.toString, "numbers".getBytes())
+    ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](response._2)
+  }
+
   def sendStringMessage: (String, String, String) = {
-    var replyQueue = UUID.randomUUID.toString
-    val response = concurrent.future(new TestResponseListener(replyQueue, _channel))
-    _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(replyQueue).build(), "strings".getBytes())
-    val rawResult = concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS)).responses.pop
-    ByteArrayCommunicator.defaultCommunicator.read[String, String, String](rawResult)
+    val response = sendMessage(UUID.randomUUID.toString, "strings".getBytes())
+    ByteArrayCommunicator.defaultCommunicator.read[String, String, String](response._2)
   }
   def sendErrorMessage: (String, Throwable) = {
-    var replyQueue = UUID.randomUUID.toString
-    val response = concurrent.future(new TestResponseListener(replyQueue, _channel))
-    _channel.basicPublish("test-msg", "", new BasicProperties.Builder().replyTo(replyQueue).build(), "error".getBytes())
-    val rawResult = concurrent.Await.result(response, Duration(maxResponseTime, TimeUnit.MILLISECONDS))
-    (rawResult.responseTypes.pop, ByteArrayCommunicator.defaultCommunicator.read[Throwable](rawResult.responses.pop()))
+    val response = sendMessage(UUID.randomUUID.toString, "error".getBytes())
+    (response._1, ByteArrayCommunicator.defaultCommunicator.read[Throwable](response._2))
   }
 }

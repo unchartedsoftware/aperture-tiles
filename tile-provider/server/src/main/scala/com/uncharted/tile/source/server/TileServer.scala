@@ -57,7 +57,8 @@ import com.uncharted.tile.source.util.ByteArrayCommunicator
  */
 class TileServer(host: String, user: String, password: String,
                  pyramidIOFactoryProvider: FactoryProvider[PyramidIO])
-  extends Server(host, user, password, tile.source.TILE_REQUEST_EXCHANGE, tile.source.LOG_EXCHANGE) with Logging
+  extends Server(host, user, password,
+    tile.source.TILE_REQUEST_EXCHANGE, tile.source.TILE_RESPONSE_EXCHANGE, tile.source.LOG_EXCHANGE) with Logging
 {
   val pyramidIOs = MutableMap[String, PyramidIO]()
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
