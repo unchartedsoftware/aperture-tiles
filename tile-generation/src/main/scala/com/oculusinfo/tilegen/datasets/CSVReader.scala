@@ -24,14 +24,17 @@
  */
 package com.oculusinfo.tilegen.datasets
 
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.TimeZone
 
+import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCollectorAccumulable}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 
+import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 import com.opencsv.CSVParser

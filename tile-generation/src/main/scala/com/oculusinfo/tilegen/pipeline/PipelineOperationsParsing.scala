@@ -97,7 +97,8 @@ object PipelineOperationsParsing extends Logging {
 		val argParser = KeyValuePassthrough(args)
 		val path = argParser.getString("ops.path", "HDFS path to data")
 		val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
-		loadCsvDataOp(path, argParser, partitions)(_)
+    val errorLog = argParser.getStringOption("ops.errorLog", "File stream to output load parse errors", None)
+		loadCsvDataOp(path, argParser, partitions, errorLog)(_)
 	}
 
   /**

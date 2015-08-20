@@ -47,7 +47,7 @@ import org.apache.spark.sql.types.DataType
 import org.joda.time.base.BaseSingleFieldPeriod
 import org.joda.time.{Interval, PeriodType, DateTime, DurationFieldType}
 
-import java.io.{FileWriter, BufferedWriter, File}
+import java.io.{OutputStream, FileWriter, BufferedWriter, File}
 
 import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{CustomCollector, ErrorCollectorAccumulableParam, ErrorCollector, ErrorCollectorAccumulable}
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
@@ -132,11 +132,39 @@ object PipelineOperations {
 	 * @param data Not used.
 	 * @return PipelineData with a schema RDD populated from the CSV file.
 	 */
-	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
+	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None, errorLog: Option[String] = None)
 	                 (data: PipelineData): PipelineData = {
 		val context = data.sqlContext
 		val reader = new CSVReader(context, path, argumentSource)
 		val dataFrame = coalesce(context, reader.asDataFrame, partitions)
+
+    val accumulator = new ErrorCollectorAccumulable(ListBuffer(new ErrorCollector))
+    //    val errorCollector = ListBuffer(new ErrorCollector) // TODO fix type errors here.
+    //    val param = new ErrorCollectorAccumulableParam()
+    //    val accumulator = context.sparkContext.accumulable(errorCollector)(param)
+
+    // add lines into error accumulator
+    reader.readErrors.foreach(r => accumulator.add(r))
+
+    val outStream: Option[OutputStream] = errorLog match {
+      case Some("stdout") => Some(System.out)
+      case Some("stderr") => Some(System.err)
+      case Some(name) => Some(new java.io.FileOutputStream(new java.io.File(name)))
+      case _ => None
+    }
+
+    println("\n***\n" + errorLog.getOrElse("nothing passed"))
+    if (outStream.isDefined) {
+      accumulator.value.foreach{ e =>
+        outStream.get.write(e.getError.toString().getBytes)
+        for ((k,v) <- e.getError) printf("key: %s, value: %s\n", k, v)
+        outStream.get.flush()
+      }
+    }
+
+
+    println("\n***\n")
+
 		PipelineData(reader.sqlc, dataFrame)
 	}
 
@@ -167,9 +195,9 @@ object PipelineOperations {
 
     //     Do the magic. Fire off the accumulator
     val accumulator = new ErrorCollectorAccumulable(ListBuffer(new ErrorCollector))
-    //    val errorCollector = ListBuffer(new ErrorCollector) // TODO fix type errors here.
-    //    val param = new ErrorCollectorAccumulableParam()
-    //    val accumulator = context.sparkContext.accumulable(errorCollector)(param)
+//        val errorCollector = ListBuffer(new ErrorCollector) // TODO fix type errors here.
+//        val param = new ErrorCollectorAccumulableParam()
+//        val accumulator = context.sparkContext.accumulable(errorCollector)(param)
 
     reader.readErrors.foreach(r => accumulator.add(r))
     // create output file

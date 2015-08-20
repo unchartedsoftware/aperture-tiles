@@ -102,7 +102,9 @@ object ErrorAccumulator {
     val errors = collection.mutable.Map[String, Int]().withDefaultValue(0)
 
     override def addRow(r: (String, Throwable)): Unit = {
-      errors(r._2.toString) += 1
+      // remove source line. E.g. remove "2013-01-06gnbaT19:00:50" from java.text.ParseException: Unparseable date: "2013-01-06gnbaT19:00:50"
+      val error = r._2.toString.replaceAll(": \".*?\"", "")
+      errors(error) += 1
     }
 
     override def getError = {
