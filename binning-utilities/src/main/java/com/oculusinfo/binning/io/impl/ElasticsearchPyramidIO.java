@@ -112,12 +112,6 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 	private SearchResponse timeFilteredRequest(double startX, double endX, double startY, double endY, JSONObject filterJSON){
 
-		// temp debug
-		Long xInterval = getHistogramIntervalFromBounds(startX, endX);
-		Long yInterval = getHistogramIntervalFromBounds(startY, endY);
-		LOGGER.info("startX = " + startX + ", endX = " + endX + ", xIntrval = " + xInterval +
-			", startY = " + startY + ", endY = " + endY + ", yInterval = " + yInterval);
-
 		// the first filter added excludes everything outside of the tile boundary
 		// on both the xField and the yField
 		BoolFilterBuilder boundaryFilter = FilterBuilders.boolFilter();
