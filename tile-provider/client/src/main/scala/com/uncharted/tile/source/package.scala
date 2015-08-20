@@ -39,7 +39,7 @@ package com.uncharted.tile
  *       default exchange (the latter probably being the more problematic of the two).
  *       Instead, use a specific response exchange, and have each client register a queue with a random routing key,
  *       used to filter in only the appropriate responses, and also add a random request ID to each request to
- *       to distinguish responses from the same client.
+ *       to distinguish responses from the same client. (DONE)
  *   (2) Make request waiting use concurrency better - no thread.sleep, rather, await the proper results.
  *   (3) Put in server-side request combinations -
  *       a. separate request processing thread from tile generation thread
