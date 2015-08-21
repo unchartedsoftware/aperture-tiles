@@ -52,12 +52,70 @@ import com.oculusinfo.geometry.quadtree.QuadNode
  *  - isolatedDegreeThres = threshold to determine whether or not a community/node is considered 'isolated'.  Isolated nodes are laid out in an outer radial/spiral pattern   
  * 
  *  - Format of output array is (node ID, x, y, radius, numInternalNodes, metaData)
- **/ 
+ **/
+
+object ForceDirected {
+	//----- Static members of ForceDirected
+
+	/**
+	 * Used to create a new Quad Tree object and insert all nodes into it
+	 * 
+	 * @param nodes = Array of nodes data to be inserted. Format is (node ID, x, y, radius, numInternalNodes, metaData).
+	 * 
+	 **/ 
+	def createQuadTree(nodes: Array[(Long, Double, Double, Double, Long, Int, String)], numNodes: Int): QuadTree = {
+		// find bounding box for the current node positions
+		var minX = Double.MaxValue
+		var maxX = Double.MinValue;
+		var minY = Double.MaxValue;
+		var maxY = Double.MinValue;
+		for (n <- 0 until numNodes) {
+			val (x,y) = (nodes(n)._2, nodes(n)._3)
+			minX = Math.min(x, minX)
+			maxX = Math.max(x, maxX)
+			minY = Math.min(y, minY)
+			maxY = Math.max(y, maxY)
+		}
+		
+		//insert all nodes into quadtree
+		val qt = new QuadTree((minX, minY, maxX-minX, maxY-minY))
+		for (n <- 0 until numNodes) {
+			val (x,y) = (nodes(n)._2, nodes(n)._3)
+			val r = nodes(n)._4
+			qt.insert(x, y, n, r)	//note: use 'nodes' array index as quadNode 'ID', and node radius as quadNode 'size'
+		}
+
+		qt
+	}
+	
+	/**
+	 * Used to decide whether to recurse inside this quad node or just use its center of mass as
+	 * an approximate 'pseudo node'
+	 * 
+	 * If qnLen/dist <= theta, then dist is big compared to qnLen and we should just consider this a 'pseudo node'
+	 **/
+	def useAsPseudoNode(qn: QuadNode, currentpos: (Double, Double), r: Double, theta: Double): Boolean = {
+		
+		val qnLen = Math.min(qn.getBounds._3, qn.getBounds._4); // min of quadNode's width, height
+		val (xC,yC) = qn.getCenterOfMass
+		val rC = qn.getSize
+		val (deltaX,deltaY) = (currentpos._1 - xC, currentpos._2 - yC)
+		
+		val dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY) - rC	// distance between current node and quadnode's CofMass
+		// Notes: 	-account for quadNode's radius too to minimize the chance of all pseudonode's children causing over-repulsion
+		//			-technically, it would be more accurate to also subtract the target node's radius above too, but the trade-off would be less efficient QuadTree usage
+		//			 (due to extra recursion into child quadnodes)
+
+		if (dist > 0) (qnLen <= theta*dist)
+		else false
+	}	
+}
+
 class ForceDirected extends Serializable {
 
 	val QT_NODE_THRES = 20		// num of nodes threshold for whether or not to use quadtree decomposition
 	val QT_THETA = 1.0			// theta value for quadtree decomposition
-				// (>= 0; lower value gives more accurate repulsion force results, but is less efficient)
+								// (>= 0; lower value gives more accurate repulsion force results, but is less efficient)
 	var _bNodesOverlapping = false	// boolean for whether community circles overlap or not
 	var _nodeOverlapRepulsionFactor = Math.pow(1000.0/256, 2.0)	// constant used for extra strong repulsion if node 'circles' overlap
 	
@@ -199,7 +257,6 @@ class ForceDirected extends Serializable {
 		//----- Main Force-directed algorithm...
 		var bDone = false
 		var iterations = 1
-		var runCount = 1
 		println("Starting Force Directed layout on " + numNodes + " nodes and " + numEdges + " edges...")
 		
 		while (!bDone) {
@@ -213,7 +270,7 @@ class ForceDirected extends Serializable {
 			// (Also, account for node sizes, by adjusting distance between nodes by node radii)
 			if (bUseQTDecomp) {
 				// Use Quadtree Decomposition for repulsion force calculation
-				val qt = createQuadTree(nodeCoords, numNodes)
+				val qt = ForceDirected.createQuadTree(nodeCoords, numNodes)
 				
 				for (n1 <- 0 until numNodes) {
 					val (x,y,r) = (nodeCoords(n1)._2, nodeCoords(n1)._3, nodeCoords(n1)._4)
@@ -235,31 +292,6 @@ class ForceDirected extends Serializable {
 							deltaXY(n1) = (deltaXY(n1)._1 + nodeDeltaXY._1, deltaXY(n1)._2 + nodeDeltaXY._2)
 						}
 					}
-				}
-			}
-			
-			// Calculate Node to Node repulsion force
-			def calcRepulsionDelta(target: (Double, Double, Double), repulsor: (Double, Double, Double), k2: Double): (Double, Double) = {
-				
-				//format for 'point' is assumed to be (x,y,radius)
-				var xDist = target._1 - repulsor._1
-				var yDist = target._2 - repulsor._2
-				val r1 = target._3
-				val r2 = repulsor._3
-				// calc distance between two nodes (corrected for node radii)
-				val dist = Math.sqrt(xDist*xDist + yDist*yDist) - r1 - r2	// distance minus node radii
-				if (dist > 0.0) {
-					val repulseForce = k2/(dist*dist)	// repulsion force
-					(xDist*repulseForce, yDist*repulseForce)
-				}
-				else {
-					_bNodesOverlapping = true
-					val repulseForce = _nodeOverlapRepulsionFactor*k2	// extra strong repulsion force if node circles overlap!
-					if ((xDist == 0) && (yDist == 0)) {
-						xDist = r1*0.01	// force xDist and yDist to be 1% of radius so repulse calc below doesn't == 0
-						yDist = r2*0.01	// TODO need random directions here!
-					}
-					(xDist*repulseForce, yDist*repulseForce)
 				}
 			}
 			
@@ -352,24 +384,24 @@ class ForceDirected extends Serializable {
 					temperature *= alphaCool		// cool at the regular rate
 			}
 			
-			//---- Check if system has adequately converged
-			if ( ((iterations >= 2*maxIterations) || (!_bNodesOverlapping && (iterations >= maxIterations))) ||
+			//---- Check if system has adequately converged (note: we allow iterations to go higher than maxIterations here, due to adaptive cooling routine)
+			if ( ((iterations >= 1.5f*maxIterations) || (!_bNodesOverlapping && (iterations >= maxIterations))) ||
 				    (temperature <= 0.0) ||
 				    (largestStepSq <= stepLimitSq) ) {
 				println("Finished layout algorithm in " + iterations + " iterations.")
 				bDone = true
-				if (_bNodesOverlapping && (runCount < 2)) {
-					println("...but communities still overlapping so re-trying layout.")
-					runCount += 1	// communities still overlapping, so reset temperature and re-try layout
-					temperature = temperature0
-					energySum = Double.MaxValue
-					progressCount = 0
-					bDone = false
-					iterations = 0
-				}
 			}
 
 			iterations += 1
+		}
+		
+		//---- Use Anti-Overlap algo to tune layout if needed
+		if (_bNodesOverlapping) {
+			println("...but communities still overlapping so using Anti-Overlap algorithm to fine-tune layout")
+			val antiOverlap = new AntiOverlap
+			val dampenFactor = 0.5f	//0 to 1; lower value == slower, but more precise anti-overlap calc
+			val maxDelta = boundingBoxFinal._3*(0.001/100.0) //use 0.001% of parent width as maxDelta
+			nodeCoords = antiOverlap.run(nodeCoords, parentID, maxIterations/2, dampenFactor, maxDelta)	// run anti-overlap algorithm (use half of maxIterations)
 		}
 		
 		//---- Do final scaling of XY co-ordinates to fit within bounding area
@@ -483,31 +515,6 @@ class ForceDirected extends Serializable {
 		nodeResults
 	}
 	
-	def createQuadTree(nodes: Array[(Long, Double, Double, Double, Long, Int, String)], numNodes: Int): QuadTree = {
-		// find bounding box for the current node positions
-		var minX = Double.MaxValue
-		var maxX = Double.MinValue;
-		var minY = Double.MaxValue;
-		var maxY = Double.MinValue;
-		for (n <- 0 until numNodes) {
-			val (x,y) = (nodes(n)._2, nodes(n)._3)
-			minX = Math.min(x, minX)
-			maxX = Math.max(x, maxX)
-			minY = Math.min(y, minY)
-			maxY = Math.max(y, maxY)
-		}
-		
-		//insert all nodes into quadtree
-		val qt = new QuadTree((minX, minY, maxX-minX, maxY-minY))
-		for (n <- 0 until numNodes) {
-			val (x,y) = (nodes(n)._2, nodes(n)._3)
-			val r = nodes(n)._4
-			qt.insert(x, y, n, r)	//note: use 'nodes' array index as quadNode 'ID', and node radius as quadNode 'size'
-		}
-
-		qt
-	}
-	
 	// Calculate Node to Node repulsion force
 	def calcRepulsionDelta(target: (Double, Double, Double), repulsor: (Double, Double, Double), k2: Double): (Double, Double) = {
 		
@@ -548,7 +555,7 @@ class ForceDirected extends Serializable {
 		if (qn.getNumChildren == 1) { // leaf
 
 			val qnData = qn.getData
-			if (qnData.getId == index) {
+			if (qnData.getId == index) {	// no repulsion for node compared to itself
 				return (0.0, 0.0)
 			}
 			val currentLeafPosition = qnData
@@ -556,7 +563,7 @@ class ForceDirected extends Serializable {
 			return xyDelta
 		}
 		
-		if (useAsPseudoNode(qn, (x,y), r, theta)) {	// consider current quadnode as a 'pseudo node'?
+		if (ForceDirected.useAsPseudoNode(qn, (x,y), r, theta)) {	// consider current quadnode as a 'pseudo node'?
 			val (xC, yC) = qn.getCenterOfMass									// use quadnode's Centre of Mass as repulsor's coords
 			val rC = qn.getSize													// and use average radius of all underlying nodes, for this pseudo node
 			val xyDelta = calcRepulsionDelta((x,y,r), (xC, yC, rC), k2)
@@ -571,23 +578,5 @@ class ForceDirected extends Serializable {
 
 		(xyDeltaNW._1 + xyDeltaNE._1 + xyDeltaSW._1 + xyDeltaSE._1,
 		 xyDeltaNW._2 + xyDeltaNE._2 + xyDeltaSW._2 + xyDeltaSE._2)
-	}
-	
-	/**
-	 * Used to decide whether to recurse inside this quad node or just use its center of mass as
-	 * an approximate 'pseudo node'
-	 * 
-	 * If qnLen/dist <= theta, then dist is big compared to qnLen and we should just consider this a pseudo node
-	 */
-	def useAsPseudoNode(qn: QuadNode, currentpos: (Double, Double), r: Double, theta: Double): Boolean = {
-		
-		val qnLen = Math.min(qn.getBounds._3, qn.getBounds._4); // min of quadNode's width, height
-		val (xC,yC) = qn.getCenterOfMass
-		val rC = qn.getSize
-		val (deltaX,deltaY) = (currentpos._1 - xC, currentpos._2 - yC)
-		val dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY) - r	- rC	// distance between current node and quadnode's CofMass (minus their radii)
-
-		if (dist > 0) ((qnLen/dist) <= theta)
-		else false
 	}
 }
