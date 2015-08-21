@@ -220,14 +220,17 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the minimum bin length of drawn segments, for line tiling */
 	def getMinimumSegmentLength = config.minimumSegmentLength
 
+	/** Get the maximum bin length of drawn segments, for line tiling */
+	def getMaximumSegmentLength = config.maximumSegmentLength
+
 	/** Get the maximum number of bins to draw on the ends of segments, for line tiling */
 	def getMaximumLeaderLength = config.maximumLeaderLength
 
 	/** Get the maximum number of bins to draw on the ends of segments, disallowing the ability not to specify. */
 	def getDefiniteMaximumLeaderLength = config.getDefiniteMaximumLeaderLength
 
-	/** Get whether or not segments should be drawn as arcs */
-	def drawArcs = config.drawArcs
+	/** The type of line to draw for when doing line tiling */
+	def lineType = config.lineType
 
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
@@ -308,19 +311,35 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
 				rdd => {
-					val locateFcn =
-						if (drawArcs) StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
-						                                                  getMinimumSegmentLength, getMaximumLeaderLength,
-						                                                  getNumXBins, getNumYBins)
-						else StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
-						                                                getMinimumSegmentLength, getDefiniteMaximumLeaderLength,
-						                                                getNumXBins, getNumYBins)
-
-					val populateFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT] =
-						if (drawArcs) StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
-						                                                            StandardScalingFunctions.identityScale)
-						else StandardBinningFunctions.populateTileWithLineLeaders(getDefiniteMaximumLeaderLength,
-						                                                          StandardScalingFunctions.identityScale)
+					val (locateFcn, populateFcn): (Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
+					                               (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
+						lineType match {
+							case LineDrawingType.Lines => {
+								(
+									StandardBinningFunctions.locateLine(getIndexScheme, getTilePyramid, levels,
+									                                    getMinimumSegmentLength, getMaximumSegmentLength, getNumXBins, getNumYBins),
+									StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
+								)
+							}
+							case LineDrawingType.LeaderLines => {
+								(
+									StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
+									                                           getMinimumSegmentLength, getDefiniteMaximumLeaderLength,
+									                                           getNumXBins, getNumYBins),
+									StandardBinningFunctions.populateTileWithLineLeaders(getDefiniteMaximumLeaderLength,
+									                                                     StandardScalingFunctions.identityScale)
+								)
+							}
+							case LineDrawingType.Arcs => {
+								(
+									StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
+									                                    getMinimumSegmentLength, getMaximumLeaderLength,
+									                                    getNumXBins, getNumYBins),
+									StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
+									                                              StandardScalingFunctions.identityScale)
+								)
+							}
+						}
 
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
 					                                                         locateFcn, populateFcn,
@@ -439,6 +458,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)
 
 			val data = sqlc.sql(selectStmt)
+      val checkData = data.collect
 
 			val indexFields = indexer.fields.length
 			val valueFields = valuer.fields.length
