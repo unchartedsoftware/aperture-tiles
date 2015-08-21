@@ -126,6 +126,11 @@ object PipelineOperations {
 	 * Load data from a CSV file using CSVReader.
 	 * The arguments map will be passed through to that object, so all arguments required
 	 * for its configuration should be set in the map.
+   *
+   * To get a report on rejected lines supply this argument in your script "-errorLog <output-stream>"
+   * Permissible output streams: "stdout"
+   *                             "stderr"
+   *                             "<file-path>"
 	 *
 	 * @param path HDSF path to the data object.
 	 * @param argumentSource Arguments to forward to the CSVReader.

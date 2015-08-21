@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.datasets
 
 import org.apache.spark.{AccumulableParam, Accumulable}
 import scala.collection.mutable.ListBuffer
+import scala.util.matching.Regex
 
 
 /**
@@ -102,9 +103,15 @@ object ErrorAccumulator {
     val errors = collection.mutable.Map[String, Int]().withDefaultValue(0)
 
     override def addRow(r: (String, Throwable)): Unit = {
-      // remove source line. E.g. remove "2013-01-06gnbaT19:00:50" from java.text.ParseException: Unparseable date: "2013-01-06gnbaT19:00:50"
-      val error = r._2.toString.replaceAll(": \".*?\"", "")
-      errors(error) += 1
+      // strip source line from number exception
+      val prefix = """^java.lang.NumberFormatException: For input string: (.*)""".r
+      try {
+        val prefix(suffix) = r._2.toString
+        errors("java.lang.NumberFormatException") += 1
+      } catch {
+        case e: scala.MatchError =>
+          errors(r._2.toString) += 1
+      }
     }
 
     override def getError = {
