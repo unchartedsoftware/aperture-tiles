@@ -86,7 +86,6 @@ object PipelineTree extends Logging {
 	def execute(start: PipelineStage, sqlContext: SQLContext, input: Option[PipelineData] = None) = {
 		// TODO: Should run a check for cycles here (tsort?)
 		def ex(stage: PipelineStage, result: PipelineData): Unit = {
-      logger.info(s"Number of rows: ${result.srdd.count()}")
 			logger.info(s"Executing pipeline stage [${stage.name}]")
 			val stageResult = stage.op(result)
 			stage.children.foreach(ex(_, stageResult))
