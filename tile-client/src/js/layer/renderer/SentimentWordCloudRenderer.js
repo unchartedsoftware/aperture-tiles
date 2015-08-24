@@ -43,22 +43,7 @@
         overlapTest,
         intersectWord,
         getWordDimensions,
-        createWordCloud,
-        injectCss;
-
-    injectCss = function( spec ) {
-    //    var i;
-    //    if ( spec.text.themes ) {
-    //        for ( i = 0; i < spec.text.themes.length; i++ ) {
-    //            spec.text.themes[i].injectTheme({
-    //                selector: ".word-cloud-label"
-    //            });
-    //            spec.text.themes[i].injectTheme({
-    //                selector: ".count-summary"
-    //            });
-    //        }
-    //    }
-    };
+        createWordCloud;
 
     /**
      * Given an initial position, return a new position, incrementally spiralled
@@ -152,7 +137,7 @@
             },
             cloud = [],
             percent,
-            sentiment,
+            sentiment, colour,
             i, word, count, dim,
             fontSize, pos;
         // sort words by frequency
@@ -163,7 +148,23 @@
         for ( i=0; i<wordCounts.length; i++ ) {
             word = wordCounts[i].word;
             count = wordCounts[i].count;
+
+            // get colour based on sentiment
             sentiment = wordCounts[i].sentiment;
+            switch (sentiment) {
+                case "positive":
+                    colour = "orange"
+                    break;
+                case "negative":
+                    colour = "blue"
+                    break;
+                case "neutral":
+                    colour = "grey"
+                    break;
+                default:
+                    // no sentiment associated with this word
+                    break;
+            }
             // get font size based on font size function
             fontSize = RendererUtil.getFontSize( count, min, max, {
                 maxFontSize: maxFontSize,
@@ -200,7 +201,7 @@
                         y:pos.y,
                         width: dim.width,
                         height: dim.height,
-                        sentiment: sentiment
+                        colour: colour
                     });
                     break;
                 }
@@ -296,12 +297,14 @@
         cloud.forEach( function( word ) {
             entries.push( word.entry );
 
-            var $wordLabel = $('<div class="word-cloud-label word-cloud-label-'+word.percentLabel+' word-cloud-label-'+word.sentiment+'" style="'
+            var $wordLabel = $('<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'
                     + 'width:'+word.width+'px;'
-                    + 'height:'+word.height+'px;">'+word.word+'</div>');
+                    + 'colour:'+word.colour
+                    + 'height:'+word.height+'px;">'+word.word
+                    + '</div>');
 
             $wordLabel.mouseover(function() {
                 $label.show(); // show label
