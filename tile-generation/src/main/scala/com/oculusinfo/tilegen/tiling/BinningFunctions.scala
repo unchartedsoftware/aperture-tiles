@@ -216,9 +216,9 @@ trait StandardLinearBinningFunctions {
 	 */
 	def populateTileWithLineSegments[T] (scaler: (Array[BinIndex], BinIndex, T) => T)
 	                                (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
-		MutableMap(linearBinsForTile(bins(0), bins(1), tile).map(bin =>
-			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toSeq: _*)
+		val valuer: BinIndex => T = bin => scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value)
+
+		linearBinsForTile(bins(0), bins(1), tile, valuer)
 	}
 
 	/**
@@ -229,9 +229,9 @@ trait StandardLinearBinningFunctions {
 	 */
 	def populateTileWithLineLeaders[T] (leaderLength: Int, scaler: (Array[BinIndex], BinIndex, T) => T)
 	                               (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
-		MutableMap(closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength).map(bin =>
-			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toSeq: _*)
+		val valuer: BinIndex => T = bin => scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value)
+
+		closeLinearBinsForTile(bins(0), bins(1), tile, leaderLength, valuer)
 	}
 
 
@@ -322,8 +322,8 @@ trait StandardLinearBinningFunctions {
 	 * @param tile The tile whose bins are desired
 	 * @return Each bin in the given tile on this line, in tile coordinates.
 	 */
-	def linearBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex): Traversable[BinIndex] = {
-		closeLinearBinsForTile(start, end, tile, Int.MaxValue)
+	def linearBinsForTile[T] (start: BinIndex, end: BinIndex, tile: TileIndex, valuer: BinIndex => T): MutableMap[BinIndex, T] = {
+		closeLinearBinsForTile(start, end, tile, Int.MaxValue, valuer)
 	}
 
 
@@ -447,7 +447,8 @@ trait StandardLinearBinningFunctions {
 	 *                       distance.
 	 * @return Each bin in the given tile on this line, in tile coordinates.
 	 */
-	def closeLinearBinsForTile (start: BinIndex, end: BinIndex, tile: TileIndex, maxBinDistance: Int): Traversable[BinIndex] = {
+	def closeLinearBinsForTile[T] (start: BinIndex, end: BinIndex, tile: TileIndex, maxBinDistance: Int,
+	                               valuer: BinIndex => T): MutableMap[BinIndex, T] = {
 		val (steep, x0, y0, x1, y1) = initializeBresenham(start, end)
 
 		val deltax: Long = x1 - x0
@@ -480,7 +481,8 @@ trait StandardLinearBinningFunctions {
 		var baseY = if (steep) tileMin.getX else tileMax.getY
 
 		// And iterate over our range
-		Iterable.range(xx0, xx1).flatMap{x =>
+		val result = MutableMap[BinIndex, T]()
+		Range(xx0, xx1).foreach{x =>
 			val curY = y
 			error = error - deltay
 			if (error < 0) {
@@ -492,11 +494,14 @@ trait StandardLinearBinningFunctions {
 				val uBin = if (steep) new BinIndex(curY, x) else new BinIndex(x, curY)
 
 				if (maxBinDistance == Int.MaxValue || axialDistance(uBin, start) <= maxBinDistance || axialDistance(uBin, end) <= maxBinDistance) {
-					Some(TileIndex.universalBinIndexToTileBinIndex(tile, uBin).getBin)
+					val bin = TileIndex.universalBinIndexToTileBinIndex(tile, uBin).getBin
+					result(bin) = valuer(bin)
 				} else None
 			}
 			else None
 		}
+
+		result
 	}
 }
 
@@ -570,8 +575,8 @@ trait StandardArcBinningFunctions {
 	def populateTileWithArcs[T] (distance: Option[Int], scaler: (Array[BinIndex], BinIndex, T) => T)
 	                        (tile: TileIndex, bins: Array[BinIndex], value: T): MutableMap[BinIndex, T] = {
 		MutableMap(arcBinsForTile(bins(0), bins(1), tile, distance).map(bin =>
-			(bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
-		).toSeq: _*)
+			           (bin, scaler(bins, TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value))
+		           ).toSeq: _*)
 	}
 
 	/**
