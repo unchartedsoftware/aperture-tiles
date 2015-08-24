@@ -1,7 +1,7 @@
 /**
- * Copyright © 2013-2015 Uncharted Software Inc.
+ * Copyright Â© 2013-2015 Uncharted Software Inc.
  *
- * Property of Uncharted™, formerly Oculus Info Inc.
+ * Property of Unchartedâ„¢, formerly Oculus Info Inc.
  * http://uncharted.software/
  *
  * Released under the MIT License.
@@ -33,17 +33,18 @@ import com.oculusinfo.tilegen.util.MissingArgumentException
 import org.apache.spark.sql.SQLContext
 
 /**
- * Pipeline to generate a geo heatmap with a time filter applied prior to tiling.  See
- * PipelineOperations for additional operations that can be tied into the pipeline.
+ * Pipeline to generate a geo heatmap with a time filter applied prior to tiling.  Requires
+ * columns named x, y and value.  See PipelineOperations for additional operations that can
+ * be tied into the pipeline.
  */
-class CrossplotHeatmapPipelineApp(args: Array[String]) extends PipelineApp("Crossplot Heatmap Pipeline", args) {
+class CrossplotPipelineApp(args: Array[String]) extends PipelineApp("Crossplot Pipeline", args) {
 	try {
 		// Stage that load and maps the input CSV data to field name/type tuples.  Only take those that
 		// are needed.
 		val loadStage = PipelineStage("load", loadCsvDataOp(source, new KeyValuePassthrough(columnMap)))
 
-		// Stage to filter data by date range.
-		val filterDateStage = PipelineStage("time_filter", dateFilterOp(startTime, endTime, "createdAt")(_))
+		// Stage to cache data after filtering operations have been applied.
+		val cacheStage = PipelineStage("cache", cacheDataOp())
 
 		// Stage to generate heatmap tiles.  Needs columns in CSV defined as "x", "y", "value".
 		val tilingParams = new TilingTaskParameters(name, description, None, levelSets, 256, 256, Some(partitions), None)
@@ -51,9 +52,8 @@ class CrossplotHeatmapPipelineApp(args: Array[String]) extends PipelineApp("Cros
 			crossplotHeatMapOp("x", "y", tilingParams, hbaseParameters, OperationType.SUM, Some("value"), Some("double")))
 
 		// Instantiate and execute pipeline
-		loadStage.addChild(filterMapStage)
-			.addChild(filterDateStage)
-			.addChild(PipelineStage("cache", cacheDataOp()(_)))
+		loadStage.addChild(new PipelineStage("debug0", takeAndPrintOp(10, "LOADED ==> ")))
+			.addChild(cacheStage)
 			.addChild(heatmapStage)
 		PipelineTree.execute(loadStage, new SQLContext(sc))
 
@@ -66,8 +66,8 @@ class CrossplotHeatmapPipelineApp(args: Array[String]) extends PipelineApp("Cros
 	}
 }
 
-object CrossplotHeatmapPipelineApp {
+object CrossplotPipelineApp {
 	def main(args: Array[String]) {
-		new CrossplotHeatmapPipelineApp(args)
+		new CrossplotPipelineApp(args)
 	}
 }

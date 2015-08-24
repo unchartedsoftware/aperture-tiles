@@ -36,20 +36,46 @@ import com.oculusinfo.tilegen.util.{ArgumentParser, MissingArgumentException}
 import grizzled.slf4j.Logger
 
 /**
- * Base class for pipeline operations.  Performs parsing of a core set of arguments and instantiates
- * relevant objects for use by subclasses.
+ * Base class for pipeline applications.  Performs parsing of a core set of arguments and instantiates
+ * relevant objects for use by subclasses.  If HBase parameters are not supplied, file IO is assumed.
  *
  * @param jobType  Name of the job - will be passed along to the spark context and used as the logging
  *                 tag.
+ *
+ *  @param args Command line arguments.
+ *              <dl>
+ *              <dt>source</dt>
+ *              <dd>Required. File system or HDFS path to the data location</dd>
+ *              <dt>name</dt>
+ *              <dd>Required. Name of produced tile set</dd>
+ *              <dt>description</dt>
+ *              <dd>Required. Description of produced tile set</dd>
+ *              <dt>partitions</dt>
+ *              <dd>The number of partitions into which to read the raw data</dd>
+ *              <dt>levels</dt>
+ *              <dd>Required. The level sets (;-separated) of ,-separated levels to bin.</dd>
+ *              <dt>columnMap</dt>
+ *              <dd>Required. Properties defining column mapping</dd>
+ *              <dt>hbasemaster</dt>
+ *              <dd>Address of hbase master</dd>
+ *              <dt>zookeeperquorum</dt>
+ *              <dd>Address of zookeeper quorum</dd>
+ *              <dt>zookeeperport</dt>
+ *              <dd>Address of zookeeper quorum</dd>
+ *              <dt>start</dt>
+ *              <dd>The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz</dd>
+ *              <dt>end</dt>
+ *              <dd>The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz</dd>
+ *              </dl>
  */
 abstract class PipelineApp(val jobType: String, val args: Array[String]) {
 
-	val logger = Logger(jobType)
-	val argParser = new ArgumentParser(args)
+	protected val logger = Logger(jobType)
+	protected val argParser = new ArgumentParser(args)
 
 	// Parse input arguments - no really clean way to handle exceptions in val init, below is what is suggested
 	// by the scala community.
-	val (
+	protected val (
 		source: String,
 		name: String,
 		description: String,
@@ -58,26 +84,24 @@ abstract class PipelineApp(val jobType: String, val args: Array[String]) {
 		columnMap: Map[String, String] @unchecked,
 		hbaseParameters: Option[HBaseParameters] @unchecked,
 		startTime: Date,
-		endTime: Date,
+		endTime: Date
 		) = try {
 		(
-			argParser.getString("source", "The source location at which to find twitter data"),
-			argParser.getString("name", "A name with which to label the finished pyramid").replace("\\W", "_"),
-			argParser.getString("description", "A description with which to present the finished pyramid").replace("_", " "),
+			argParser.getString("source", "File system or HDFS path to the data location"),
+			argParser.getString("name", "Name of produced tile set").replace("\\W", "_"),
+			argParser.getString("description", "Description of produced tile set").replace("_", " "),
 			argParser.getInt("partitions", "The number of partitions into which to read the raw data", Some(200)),
 			parseLevels(argParser.getString("levels", "The level sets (;-separated) of ,-separated levels to bin.")),
 			parseColumnMap(argParser.getString("columnMap", "Properties defining column mapping",
-			                                   Some("/uncharted-twitter-columns.properties"))),
+				Some("/uncharted-twitter-columns.properties"))),
 			parseHBaseParams(argParser.getStringOption("hbasemaster", "Address of hbase master", None),
 			                 argParser.getStringOption("zookeeperquorum", "Address of zookeeper quorum", None),
-			                 argParser.getStringOption("zookeeperport", "Address of zookeeper quorum", None),
-			                 argParser.getBooleanOption("slicing", "Whether sliced tiles are stored as one column or as separate columns", Some(false))),
+			                 argParser.getStringOption("zookeeperport", "Address of zookeeper quorum", None)),
 			parseDate(argParser.getStringOption("start",
 			                                    "The start time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz", None)),
 			parseDate(argParser.getStringOption("end",
-			                                    "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz", None)),
+			                                    "The end time for binning.  Format is yyyy/MM/dd.HH:mm:ss.+zzzz", None))
       )
-
   } catch {
 		case e: MissingArgumentException =>
 			logger.error("Argument exception: " + e.getMessage, e)
@@ -88,6 +112,7 @@ abstract class PipelineApp(val jobType: String, val args: Array[String]) {
 			System.exit(-1)
 	}
 
+	// Always produce arg list output
 	if (logger.isInfoEnabled) {
 		logger.info("Arguments: " + argParser.properties.map(p => s"${p._1}: ${p._2}").mkString("\n\t", "\n\t", ""))
 	} else {
@@ -95,10 +120,10 @@ abstract class PipelineApp(val jobType: String, val args: Array[String]) {
 	}
 
 	// Create our context
-	val sc = argParser.getSparkConnector().createContext(Some(s"$jobType: $name"))
+	protected val sc = argParser.getSparkConnector().createContext(Some(s"$jobType: $name"))
 
-	// Instantiate tile
-	val tileIO: TileIO = parseHBaseArgs(hbaseParameters)
+	// Instantiate tileIO
+	protected val tileIO: TileIO = parseHBaseArgs(hbaseParameters)
 
 	// Parse start/end times
 	private def parseDate(date: Option[String]) = {
@@ -112,16 +137,16 @@ abstract class PipelineApp(val jobType: String, val args: Array[String]) {
 	}
 
 	// Setup hbase params for ops that take the args rather than the constructed tileIO
-	private def parseHBaseParams(master: Option[String], quorum: Option[String], port: Option[String], slicing: Option[Boolean]) = {
+	private def parseHBaseParams(master: Option[String], quorum: Option[String], port: Option[String]) = {
 		if (List(quorum, port, master).flatten.size == 3)
-			new Some(HBaseParameters(quorum.get, port.get, master.get, slicing.get))
+			new Some(HBaseParameters(quorum.get, port.get, master.get))
 		else None
 	}
 
 	// Parse column string into a sequence of level sequences
 	private def parseLevels(levels: String) = levels.split(";").toSeq.map(_.split(",").toSeq.map(_.toInt))
 
-	// Loads a column file
+	// Load a column file
 	private def parseColumnMap(columnPath: String) = {
 		import scala.collection.JavaConverters._
 		val inputStream = new FileInputStream(columnPath)
