@@ -230,7 +230,6 @@
         spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         spec.text = spec.text || {};
         Renderer.call( this, spec );
-        injectCss( this.spec );
     }
 
     SentimentWordCloudRenderer.prototype = Object.create( Renderer.prototype );

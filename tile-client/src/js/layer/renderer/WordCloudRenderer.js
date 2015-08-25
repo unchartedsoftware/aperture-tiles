@@ -38,6 +38,7 @@
         SIZE_FUNCTION = 'log',
         MIN_FONT_SIZE = 13,
         MAX_FONT_SIZE = 28,
+        MAX_FONT_SIZE = 28,
         spiralPosition,
         intersectTest,
         overlapTest,
@@ -244,8 +245,7 @@
      * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
      */
     WordCloudRenderer.prototype.render = function( data ) {
-        console.log("\n\ndata")
-        console.log(data)
+
         var text = this.spec.text,
             textKey = text.textKey,
             countKey = text.countKey,
@@ -263,10 +263,6 @@
             max,
             i,
             cloud;
-        console.log("values")
-        console.log(values)
-        console.log("text")
-        console.log(text)
 
         for ( i=0; i<numEntries; i++ ) {
             value = values[i];
