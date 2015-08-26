@@ -21,7 +21,7 @@ spark-submit \
     --jars /opt/cloudera/parcels/CDH/lib/hbase/lib/htrace-core-3.1.0-incubating.jar \
     --master ${JOB_MASTER} \
     --class ${MAIN_CLASS} ${MAIN_JAR} \
-    -columnMap ./crossplot_columns.properties \
+    -columnMap ./geo_columns.properties \
     -start 2015/01/01.00:00:00.+0000 \
     -end 2015/08/01.00:00:00.+0000 \
     -levels '0,1,2,3,4,5,6,7,8,9' \
