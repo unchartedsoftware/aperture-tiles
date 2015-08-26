@@ -251,9 +251,9 @@ public class JsonUtilities {
 			// Overlay elements in both or just in the overlay
 			for (int i=0; i<overlay.length(); ++i) {
 				Object value = overlay.opt(i);
+				Object baseValue = base.opt(i);
 				if (JSON_NULL.equals(value)) {
 					// Null array element; ignore, don't everlay
-					Object baseValue = base.get(i);
 					if (baseValue instanceof JSONObject) {
 						result.put(i, deepClone((JSONObject) baseValue));
 					} else if (baseValue instanceof JSONArray) {
@@ -262,14 +262,14 @@ public class JsonUtilities {
 						result.put(i, baseValue);
 					}
 				} else if (value instanceof JSONObject) {
-					if (base.length() > i && base.get(i) instanceof JSONObject) {
-						result.put(i, overlayInPlace((JSONObject) base.get(i), (JSONObject) value));
+					if (null != baseValue && baseValue instanceof JSONObject) {
+						result.put(i, overlayInPlace((JSONObject) baseValue, (JSONObject) value));
 					} else {
 						result.put(i, deepClone((JSONObject) value));
 					}
 				} else if (value instanceof JSONArray) {
-					if (base.length() > i && base.get(i) instanceof JSONArray) {
-						result.put(i, overlay((JSONArray) base.get(i), (JSONArray) value));
+					if (null != baseValue && baseValue instanceof JSONArray) {
+						result.put(i, overlay((JSONArray) baseValue, (JSONArray) value));
 					} else {
 						result.put(i, deepClone((JSONArray) value));
 					}
@@ -280,7 +280,7 @@ public class JsonUtilities {
 
 			return result;
 		} catch (JSONException e) {
-			LOGGER.error("Weird JSON exception overlaying object", e);
+			LOGGER.error("Weird JSON exception overlaying "+overlay+" on "+base, e);
 			return null;
 		}
 	}
