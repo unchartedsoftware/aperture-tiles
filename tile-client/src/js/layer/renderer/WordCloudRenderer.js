@@ -313,11 +313,5 @@
         };
     };
 
-    WordCloudRenderer.spiralPosition = spiralPosition;
-    WordCloudRenderer.intersectTest = intersectTest;
-    WordCloudRenderer.overlapTest = overlapTest;
-    WordCloudRenderer.intersectWord = intersectWord;
-    WordCloudRenderer.getWordDimensions = getWordDimensions;
-
     module.exports = WordCloudRenderer;
 }());
