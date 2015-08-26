@@ -41,23 +41,20 @@
         var aggregation,
             score,
             total,
-            bucket,
             i;
         // set base aggregator
         aggregation = {
             topic: buckets[0].topic,
             topicEnglish: aggregator.translateTopic( buckets[0].topic ),
-            count: 0,
-            sentiment: undefined
+            count: 0
         };
         // for each bucket of data
         for ( i=0; i<buckets.length; i++ ) {
-            bucket = buckets[i];
             // add to total count
             score = buckets[i].score;
             if (score !== undefined) {
                 total = ( typeof score === "number" ) ? score : score.total;
-                aggregation.count += total
+                aggregation.count += total;
             }
         }
         return aggregation;

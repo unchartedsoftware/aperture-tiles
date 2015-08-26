@@ -42,8 +42,8 @@
         var aggregation,
             score,
             total,
-            texts, parsed,
-            bucket,
+            texts,
+            parsed,
             i, j, k;
         // set base aggregator
         aggregation = {
@@ -51,13 +51,11 @@
             topicEnglish: aggregator.translateTopic( buckets[0].topic ),
             counts: Util.fillArray(buckets[0].score instanceof Array ?
 	            buckets[0].score.length : buckets[0].score.total.length ),
-            total: 0,  // FIXME should be 'count'. Inconsistent w use of TopicCountAggregator
-            sentiment: undefined
+            total: 0
         };
         // for each bucket of data
         for ( i=0; i<buckets.length; i++ ) {
-            bucket = buckets[i];
-            score = bucket.score;
+            score = buckets[i].score;
             total = ( score instanceof Array ) ? score : score.total;
             // add to total count
             for ( j=0; j<total.length; j++ ) {
@@ -65,8 +63,8 @@
                 aggregation.total += total[j];
             }
             // get sentiment. 'negative', 'positive', or 'neutral'
-            texts = bucket.score.texts;
-            if (texts) {
+            texts = score.texts;
+            if ( texts ) {
                 for ( k=0; k<texts.length; k++ ) {
                     parsed = JSON.parse( texts[k].text );
                     aggregation.sentiment = parseSentiment( parsed[2] );
