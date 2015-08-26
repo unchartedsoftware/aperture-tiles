@@ -38,7 +38,6 @@
         SIZE_FUNCTION = 'log',
         MIN_FONT_SIZE = 13,
         MAX_FONT_SIZE = 28,
-        MAX_FONT_SIZE = 28,
         spiralPosition,
         intersectTest,
         overlapTest,
@@ -313,6 +312,12 @@
             entries: entries
         };
     };
+
+    WordCloudRenderer.spiralPosition = spiralPosition;
+    WordCloudRenderer.intersectTest = intersectTest;
+    WordCloudRenderer.overlapTest = overlapTest;
+    WordCloudRenderer.intersectWord = intersectWord;
+    WordCloudRenderer.getWordDimensions = getWordDimensions;
 
     module.exports = WordCloudRenderer;
 }());

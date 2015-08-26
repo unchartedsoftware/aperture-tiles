@@ -67,6 +67,7 @@
         TextScoreWeightedRenderer: require('./layer/renderer/TextScoreWeightedRenderer'),
 		TextByTopicRenderer: require('./layer/renderer/TextByTopicRenderer'),
         WordCloudRenderer: require('./layer/renderer/WordCloudRenderer'),
+        SentimentWordCloudRenderer: require('./layer/renderer/SentimentWordCloudRenderer'),
         RenderTheme: require('./layer/renderer/RenderTheme'),
 
         // Map

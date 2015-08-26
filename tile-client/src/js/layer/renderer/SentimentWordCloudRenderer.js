@@ -32,98 +32,17 @@
 
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
+        WordCloudRenderer = require('./WordCloudRenderer'),
         MAX_WORDS_DISPLAYED = 10,
         HORIZONTAL_OFFSET = 10,
         VERTICAL_OFFSET = 24,
         SIZE_FUNCTION = 'log',
         MIN_FONT_SIZE = 13,
         MAX_FONT_SIZE = 28,
-        spiralPosition,
-        intersectTest,
-        overlapTest,
-        intersectWord,
-        getWordDimensions,
+        spiralPosition = WordCloudRenderer.spiralPosition,
+        intersectWord = WordCloudRenderer.intersectWord,
+        getWordDimensions = WordCloudRenderer.getWordDimensions,
         createWordCloud;
-
-    /**
-     * Given an initial position, return a new position, incrementally spiralled
-     * outwards.
-     */
-    spiralPosition = function( pos ) {
-        var pi2 = 2 * Math.PI,
-            circ = pi2 * pos.radius,
-            inc = ( pos.arcLength > circ/10) ? circ/10 : pos.arcLength,
-            da = inc / pos.radius,
-            nt = (pos.t+da);
-        if (nt > pi2) {
-            nt = nt % pi2;
-            pos.radius = pos.radius + pos.radiusInc;
-        }
-        pos.t = nt;
-        pos.x = pos.radius * Math.cos(nt);
-        pos.y = pos.radius * Math.sin(nt);
-        return pos;
-    };
-
-    /**
-     *  Returns true if bounding box a intersects bounding box b
-     */
-    intersectTest = function( a, b ) {
-        return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
-               (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
-    };
-
-    /**
-     *  Returns true if bounding box a is not fully contained inside bounding box b
-     */
-    overlapTest = function( a, b ) {
-        return ( a.x + a.width/2 > b.x+b.width/2 ||
-                 a.x - a.width/2 < b.x-b.width/2 ||
-                 a.y + a.height/2 > b.y+b.height/2 ||
-                 a.y - a.height/2 < b.y-b.height/2 );
-    };
-
-    /**
-     * Check if a word intersects another word, or is not fully contained in the
-     * tile bounding box
-     */
-    intersectWord = function( position, dimensions, cloud, bb ) {
-        var box = {
-                x: position.x,
-                y: position.y,
-                height: dimensions.height,
-                width: dimensions.width
-            },
-            i;
-        for ( i=0; i<cloud.length; i++ ) {
-            if ( intersectTest( box, cloud[i] ) ) {
-                return true;
-            }
-        }
-        // make sure it doesn't intersect the border;
-        if ( overlapTest( box, bb ) ) {
-            // if it hits a border, increment collision count
-            // and extend arc length
-            position.collisions++;
-            position.arcLength = position.radius;
-            return true;
-        }
-        return false;
-    };
-
-    /**
-     * Returns the pixel dimensions of the label
-     */
-    getWordDimensions = function( str, fontSize ) {
-        var $temp,
-            dimension = {};
-        $temp = $('<div class="word-cloud-label-temp" style="font-size:'+fontSize+'px;">'+str+'</div>');
-        $('body').append( $temp );
-        dimension.width = $temp.outerWidth();
-        dimension.height = $temp.outerHeight();
-        $temp.remove();
-        return dimension;
-    };
 
     /**
      * Returns the word cloud words containing font size and x and y coordinates
@@ -137,7 +56,7 @@
             },
             cloud = [],
             percent,
-            sentiment, colour,
+            sentiment, color,
             i, word, count, dim,
             fontSize, pos;
         // sort words by frequency
@@ -149,28 +68,30 @@
             word = wordCounts[i].word;
             count = wordCounts[i].count;
 
-            // get colour based on sentiment
+            // get color based on sentiment
             sentiment = wordCounts[i].sentiment;
             switch (sentiment) {
                 case "positive":
-                    colour = "orange"
+                    color = "#ADFF00";
                     break;
                 case "negative":
-                    colour = "blue"
+                    color = "#FF00C2";
                     break;
                 case "neutral":
-                    colour = "grey"
+                    color = "rgba(190, 190, 190, 0.85)";
                     break;
                 default:
                     // no sentiment associated with this word
                     break;
             }
+
             // get font size based on font size function
             fontSize = RendererUtil.getFontSize( count, min, max, {
                 maxFontSize: maxFontSize,
                 minFontSize: minFontSize,
                 type: sizeFunction
             });
+
             // frequency percent
             percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
             // get dimensions of word
@@ -201,7 +122,7 @@
                         y:pos.y,
                         width: dim.width,
                         height: dim.height,
-                        colour: colour
+                        color: color
                     });
                     break;
                 }
@@ -221,6 +142,7 @@
      *     text: {
      *         textKey  {String|Function} - The attribute for the text in the data entry.
      *         countKey {String|Function} - The attribute for the count in the data entry.
+     *         sentimentKey {String|Function} - The attribute for the sentiment in the data entry.
      *         themes   {Array}  - The array of RenderThemes to be attached to this component.
      *     }
      * }
@@ -232,7 +154,7 @@
         Renderer.call( this, spec );
     }
 
-    SentimentWordCloudRenderer.prototype = Object.create( Renderer.prototype );
+    SentimentWordCloudRenderer.prototype = Object.create( WordCloudRenderer.prototype );
 
     SentimentWordCloudRenderer.prototype.getEntrySelector = function() {
 		return ".word-cloud-label";
@@ -251,7 +173,7 @@
         var text = this.spec.text,
             textKey = text.textKey,
             countKey = text.countKey,
-            sentimentKey = this.spec.sentiment,
+            sentimentKey = text.sentimentKey,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, text.maxWords || MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
@@ -266,7 +188,6 @@
             max,
             i,
             cloud;
-
 
         for ( i=0; i<numEntries; i++ ) {
             value = values[i];
@@ -301,13 +222,13 @@
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'
                     + 'width:'+word.width+'px;'
-                    + 'colour:'+word.colour
+                    + 'color:'+word.color+';'
                     + 'height:'+word.height+'px;">'+word.word
                     + '</div>');
 
             $wordLabel.mouseover(function() {
                 $label.show(); // show label
-                $label.text( word.entry.count );
+                $label.text( word.entry.total ); // 'word.entry.count' when using TopicCountAggregator
             });
 
             $wordLabel.mouseout(function() {
