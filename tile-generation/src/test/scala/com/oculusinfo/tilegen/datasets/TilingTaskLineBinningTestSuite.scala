@@ -37,7 +37,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 /**
  * Created by nkronenfeld on 8/21/2015.
  */
-class TilingTaskLineBinningTestSuite  extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
+class TilingTaskLineBinningTestSuite	extends FunSuite with SharedSparkContext with BeforeAndAfterAll with TileAssertions {
 	val pyramidId = "segmentTest"
 	val tileIO = new TestTileIO
 	var props: Properties = null
@@ -94,7 +94,7 @@ class TilingTaskLineBinningTestSuite  extends FunSuite with SharedSparkContext w
 		props.setProperty("oculus.binning.tileWidth", "4")
 		props.setProperty("oculus.binning.tileHeight", "4")
 
-		val parseConfiguration =  new PropertiesWrapper(props)
+		val parseConfiguration =	new PropertiesWrapper(props)
 		val reader = new CSVReader(sqlc, rawData, parseConfiguration)
 		val data = reader.asDataFrame
 		data.registerTempTable(pyramidId)
@@ -144,17 +144,17 @@ class TilingTaskLineBinningTestSuite  extends FunSuite with SharedSparkContext w
 		assert(tile230.isEmpty)
 
 		assertTileContents(List(
-			                   1.0, 1.0, 1.0, 1.0,
-			                   1.0, 1.0, 1.0, 1.0,
-			                   1.0, 1.0, 1.0, 1.0,
-			                   1.0, 1.0, 1.0, 1.0
-		                   ), tile201.get)
+												 1.0, 1.0, 1.0, 1.0,
+												 1.0, 1.0, 1.0, 1.0,
+												 1.0, 1.0, 1.0, 1.0,
+												 1.0, 1.0, 1.0, 1.0
+											 ), tile201.get)
 		assertTileContents(List(
-			                   1.0, 1.0, 1.0, 1.0,
-			                   1.0, 1.0, 1.0, 0.0,
-			                   1.0, 1.0, 0.0, 0.0,
-			                   1.0, 0.0, 0.0, 0.0
-		                   ), tile211.get)
+												 1.0, 1.0, 1.0, 1.0,
+												 1.0, 1.0, 1.0, 0.0,
+												 1.0, 1.0, 0.0, 0.0,
+												 1.0, 0.0, 0.0, 0.0
+											 ), tile211.get)
 		assert(tile221.isEmpty)
 		assert(tile231.isEmpty)
 

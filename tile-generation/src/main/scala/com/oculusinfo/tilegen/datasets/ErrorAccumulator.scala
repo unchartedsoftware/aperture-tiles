@@ -46,86 +46,85 @@ import scala.util.matching.Regex
  */
 object ErrorAccumulator {
 
-  /**
-   * Accumulator for bad data characterization
-   *
-   * To add a new custom collector to this accumulator:
-   *  - create concrete class that extends CustomCollector
-   *  - when instantiating a StatCollectorAccumulable ensure an instance of your class is passed into the initialValue parameter
-   *
-   * See https://spark.apache.org/docs/1.0.0/api/scala/index.html#org.apache.spark.Accumulable (/AccumulableParam) for more info
-   */
-  class ErrorCollectorAccumulable(val initialValue: ListBuffer[CustomCollector]) extends Accumulable[ListBuffer[CustomCollector], (String, Throwable)](initialValue, new ErrorCollectorAccumulableParam) {
-  }
+	/**
+	 * Accumulator for bad data characterization
+	 *
+	 * To add a new custom collector to this accumulator:
+	 *	- create concrete class that extends CustomCollector
+	 *	- when instantiating a StatCollectorAccumulable ensure an instance of your class is passed into the initialValue parameter
+	 *
+	 * See https://spark.apache.org/docs/1.0.0/api/scala/index.html#org.apache.spark.Accumulable (/AccumulableParam) for more info
+	 */
+	class ErrorCollectorAccumulable(val initialValue: ListBuffer[CustomCollector]) extends Accumulable[ListBuffer[CustomCollector], (String, Throwable)](initialValue, new ErrorCollectorAccumulableParam) {
+	}
 
-  /**
-   * A helper for ErrorCollectorAccumulable.
-   */
-  class ErrorCollectorAccumulableParam extends AccumulableParam[ListBuffer[CustomCollector], (String, Throwable)]() {
-    // Add additional data to the accumulator value.
-    override def addAccumulator(r: ListBuffer[CustomCollector], t: (String, Throwable)): ListBuffer[CustomCollector] = {
-      r.foreach(s => s.addRow(t))
-      r
-    }
+	/**
+	 * A helper for ErrorCollectorAccumulable.
+	 */
+	class ErrorCollectorAccumulableParam extends AccumulableParam[ListBuffer[CustomCollector], (String, Throwable)]() {
+		// Add additional data to the accumulator value.
+		override def addAccumulator(r: ListBuffer[CustomCollector], t: (String, Throwable)): ListBuffer[CustomCollector] = {
+			r.foreach(s => s.addRow(t))
+			r
+		}
 
-    // Merge two accumulated values together.
-    override def addInPlace(r1: ListBuffer[CustomCollector], r2: ListBuffer[CustomCollector]): ListBuffer[CustomCollector] = {
-      for (i <- 0 until r1.length) {
-        r1(i).merge(r2(i))
-      }
-      r1
-    }
+		// Merge two accumulated values together.
+		override def addInPlace(r1: ListBuffer[CustomCollector], r2: ListBuffer[CustomCollector]): ListBuffer[CustomCollector] = {
+			for (i <- 0 until r1.length) {
+				r1(i).merge(r2(i))
+			}
+			r1
+		}
 
-    // Return the "zero" (identity) value for an accumulator type, given its initial value.
-    override def zero(initialValue: ListBuffer[CustomCollector]): ListBuffer[CustomCollector] = {
-      initialValue
-    }
-  }
+		// Return the "zero" (identity) value for an accumulator type, given its initial value.
+		override def zero(initialValue: ListBuffer[CustomCollector]): ListBuffer[CustomCollector] = {
+			initialValue
+		}
+	}
 
-  /**
-   * The base class for custom error info generation.
-   * Accumulated by ErrorCollectorAccumulable
-   */
-  abstract class CustomCollector extends Serializable {
-    def addRow(r: (String, Throwable)): Unit
+	/**
+	 * The base class for custom error info generation.
+	 * Accumulated by ErrorCollectorAccumulable
+	 */
+	abstract class CustomCollector extends Serializable {
+		def addRow(r: (String, Throwable)): Unit
 
-    // Add a row of the rdd into this stat collector
-    def merge(accum: CustomCollector): Unit
+		// Add a row of the rdd into this stat collector
+		def merge(accum: CustomCollector): Unit
 
-    // merge two SummaryErrors of the same type together (for parallel processing)
-    def getError: collection.mutable.Map[String, Int]
-  }
+		// merge two SummaryErrors of the same type together (for parallel processing)
+		def getError: collection.mutable.Map[String, Int]
+	}
 
-  /**
-   * Custom stat collector: Aggregates the errors and provides a count for each one
-   */
-  class ErrorCollector extends CustomCollector {
-    val errors = collection.mutable.Map[String, Int]().withDefaultValue(0)
+	/**
+	 * Custom stat collector: Aggregates the errors and provides a count for each one
+	 */
+	class ErrorCollector extends CustomCollector {
+		val errors = collection.mutable.Map[String, Int]().withDefaultValue(0)
 
-    override def addRow(r: (String, Throwable)): Unit = {
-      // strip source line from number exception
-      val prefix = """^java.lang.NumberFormatException: For input string: (.*)""".r
-      try {
-        val prefix(suffix) = r._2.toString
-        errors("java.lang.NumberFormatException") += 1
-      } catch {
-        case e: scala.MatchError =>
-          errors(r._2.toString) += 1
-      }
-    }
+		override def addRow(r: (String, Throwable)): Unit = {
+			// strip source line from number exception
+			val prefix = """^java.lang.NumberFormatException: For input string: (.*)""".r
+			try {
+				val prefix(suffix) = r._2.toString
+				errors("java.lang.NumberFormatException") += 1
+			} catch {
+				case e: scala.MatchError =>
+					errors(r._2.toString) += 1
+			}
+		}
 
-    override def getError = {
-      errors
-    }
+		override def getError = {
+			errors
+		}
 
-    override def merge(accum: CustomCollector) = {
-      // Since scala won't let you pass in a subclass, we have to do this ugly casting
-      // Would much prefer "accum: NumRecordsError"
-      val a: ErrorCollector = accum.asInstanceOf[ErrorCollector]
-      a.errors.foreach { case (error, count) =>
-        errors(error) += count
-      }
-    }
-  }
+		override def merge(accum: CustomCollector) = {
+			// Since scala won't let you pass in a subclass, we have to do this ugly casting
+			// Would much prefer "accum: NumRecordsError"
+			val a: ErrorCollector = accum.asInstanceOf[ErrorCollector]
+			a.errors.foreach { case (error, count) =>
+				errors(error) += count
+			}
+		}
+	}
 }
-

@@ -47,61 +47,61 @@ import com.opencsv.CSVParser
  * The schema file is, essentially, a big properties file, with the following properties:
  *
  * <dl>
- *   <dt> oculus.binning.parsing.separator </dt>
- *   <dd> The character or string to use as a separator between columns. Default is a tab </dd>
- *   <dt> oculus.binning.parsing.&lt;field&gt;.index </dt>
- *   <dd> The column number of the described field. This field is mandatory for every field type to be used. </dd>
- *   <dt> oculus.binning.parsing.&lt;field&gt;.fieldType </dt>
- *   <dd> The type of value expected in the column specified by oculus.binning.parsing.&lt;field&gt;.index.  Default
- *        is to treat the column as containing real, double-precision values.  Other possible types are:
- *     <dl>
- *       <dt> constant or zero </dt>
- *       <dd> Treat the column as containing 0.0 (the column doesn't actually have to exist) </dd>
- *       <dt> boolean </dt>
- *       <dd> Treat the column as containing boolean values (true/false, yes/no) </dd>
- *       <dt> byte </dt>
- *       <dd> Treat the column as containing bytes </dd>
- *       <dt> shoft </dt>
- *       <dd> Treat the column as containing short integers </dd>
- *       <dt> int </dt>
- *       <dd> Treat the column as containing integers </dd>
- *       <dt> long </dt>
- *       <dd> Treat the column as containing double-precision integers </dd>
- *       <dt> float </dt>
- *       <dd> Treat the column as containing floating-point numbers </dd>
- *       <dt> double (the default) </dt>
- *       <dd> Treat the column as containing double-precision floating-point numbers </dd>
- *       <dt> ipv4 </dt>
- *       <dd> Treat the column as an IP address.  It will be treated as a  4-digit base 256 number, and just turned
- *            into a double </dd>
- *       <dt> date </dt>
- *       <dd> Treat the column as containing a date.  The date will be parsed and transformed into milliseconds
- *            since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but
- *            this can be overridden using the oculus.binning.parsing.&lt;field&gt;.dateFormat. </dd>
- *       <dt> propertyMap </dt>
- *       <dd> Treat the column as a property map.  Further information is then needed to get the specific property.
- *            All four of the following properties must be present to read the property.
- *         <dl>
- *           <dt> oculus.binning.parsing.&lt;field&gt;.property </dt>
- *           <dd> The name of the property to read </dd>
- *           <dt> oculus.binning.parsing.&lt;field&gt;.propertyType </dt>
- *           <dd> equivalent to fieldType </dd>
- *           <dt> oculus.binning.parsing.&lt;field&gt;.propertySeparator </dt>
- *           <dd> The character or string to use to separate one property from the next </dd>
- *           <dt> oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator </dt>
- *           <dd> The character or string used to separate a property key from its value </dd>
- *         </dl>
- *       </dd>
- *     </dl>
- *   </dd>
- *   <dt> oculus.binning.parsing.&lt;field&gt;.fieldScaling </dt>
- *   <dd> How the field values should be scaled.  Default is to leave values as they are.  Other possibilities are:
- *     <dl>
- *       <dt> log </dt>
- *       <dd> Take the log of the value.  The base of the logarithm is taken from
- *            <code>oculus.binning.parsing,%lt;field&gt;.fieldBase</code>. </dd>
- *     </dl>
- *   </dd>
+ *	 <dt> oculus.binning.parsing.separator </dt>
+ *	 <dd> The character or string to use as a separator between columns. Default is a tab </dd>
+ *	 <dt> oculus.binning.parsing.&lt;field&gt;.index </dt>
+ *	 <dd> The column number of the described field. This field is mandatory for every field type to be used. </dd>
+ *	 <dt> oculus.binning.parsing.&lt;field&gt;.fieldType </dt>
+ *	 <dd> The type of value expected in the column specified by oculus.binning.parsing.&lt;field&gt;.index.	Default
+ *				is to treat the column as containing real, double-precision values.	Other possible types are:
+ *		 <dl>
+ *			 <dt> constant or zero </dt>
+ *			 <dd> Treat the column as containing 0.0 (the column doesn't actually have to exist) </dd>
+ *			 <dt> boolean </dt>
+ *			 <dd> Treat the column as containing boolean values (true/false, yes/no) </dd>
+ *			 <dt> byte </dt>
+ *			 <dd> Treat the column as containing bytes </dd>
+ *			 <dt> shoft </dt>
+ *			 <dd> Treat the column as containing short integers </dd>
+ *			 <dt> int </dt>
+ *			 <dd> Treat the column as containing integers </dd>
+ *			 <dt> long </dt>
+ *			 <dd> Treat the column as containing double-precision integers </dd>
+ *			 <dt> float </dt>
+ *			 <dd> Treat the column as containing floating-point numbers </dd>
+ *			 <dt> double (the default) </dt>
+ *			 <dd> Treat the column as containing double-precision floating-point numbers </dd>
+ *			 <dt> ipv4 </dt>
+ *			 <dd> Treat the column as an IP address.	It will be treated as a	4-digit base 256 number, and just turned
+ *						into a double </dd>
+ *			 <dt> date </dt>
+ *			 <dd> Treat the column as containing a date.	The date will be parsed and transformed into milliseconds
+ *						since the standard java start date (using SimpleDateFormatter). Default format is yyMMddHHmm, but
+ *						this can be overridden using the oculus.binning.parsing.&lt;field&gt;.dateFormat. </dd>
+ *			 <dt> propertyMap </dt>
+ *			 <dd> Treat the column as a property map.	Further information is then needed to get the specific property.
+ *						All four of the following properties must be present to read the property.
+ *				 <dl>
+ *					 <dt> oculus.binning.parsing.&lt;field&gt;.property </dt>
+ *					 <dd> The name of the property to read </dd>
+ *					 <dt> oculus.binning.parsing.&lt;field&gt;.propertyType </dt>
+ *					 <dd> equivalent to fieldType </dd>
+ *					 <dt> oculus.binning.parsing.&lt;field&gt;.propertySeparator </dt>
+ *					 <dd> The character or string to use to separate one property from the next </dd>
+ *					 <dt> oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator </dt>
+ *					 <dd> The character or string used to separate a property key from its value </dd>
+ *				 </dl>
+ *			 </dd>
+ *		 </dl>
+ *	 </dd>
+ *	 <dt> oculus.binning.parsing.&lt;field&gt;.fieldScaling </dt>
+ *	 <dd> How the field values should be scaled.	Default is to leave values as they are.	Other possibilities are:
+ *		 <dl>
+ *			 <dt> log </dt>
+ *			 <dd> Take the log of the value.	The base of the logarithm is taken from
+ *						<code>oculus.binning.parsing,%lt;field&gt;.fieldBase</code>. </dd>
+ *		 </dl>
+ *	 </dd>
  * </dl>
  *
  * Created by nkronenfeld on 12/16/2014.
@@ -115,8 +115,8 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 	def this (sqlc: SQLContext, files: Array[String], configuration: KeyValueArgumentSource) =
 		this(sqlc,
-		     files.map(sqlc.sparkContext.textFile(_)).fold(sqlc.sparkContext.emptyRDD[String])(_ union _),
-		     configuration)
+				 files.map(sqlc.sparkContext.textFile(_)).fold(sqlc.sparkContext.emptyRDD[String])(_ union _),
+				 configuration)
 
 
 	/**
@@ -126,45 +126,45 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 	def schema = _schema
 
-  def readErrors  = _parseErrors
+	def readErrors	= _parseErrors
 
 	// Get some simple parsing info we'll need
 	private val _separator = configuration.getString("oculus.binning.parsing.separator",
-	                                                 "The separator to use between fields in the input data",
-	                                                 Some("\t"))
+																									 "The separator to use between fields in the input data",
+																									 Some("\t"))
 
-  private val _quotechar = configuration.getString("oculus.binning.parsing.quotechar",
-                                                    "The character to use for quoted fields in the input data",
-                                                    Some(""))
+	private val _quotechar = configuration.getString("oculus.binning.parsing.quotechar",
+																										"The character to use for quoted fields in the input data",
+																										Some(""))
 
-  private lazy val _parseUnfiltered: RDD[(String, Try[Row])] = {
-    val separator = _separator
-    val quotechar = _quotechar
-    val parsers = _parsers
-    val indices = _indices
-    val N = _fields
-    val rowRDD:RDD[(String, Try[Row])] = data.map(record =>
-      (record, Try{
-        def getFields (line: String) = {
-          val parser = new CSVParser(separator.charAt(0),
-            Try(quotechar.charAt(0)).getOrElse(CSVParser.DEFAULT_QUOTE_CHARACTER))
-          parser.parseLine(line)
-        }
+	private lazy val _parseUnfiltered: RDD[(String, Try[Row])] = {
+		val separator = _separator
+		val quotechar = _quotechar
+		val parsers = _parsers
+		val indices = _indices
+		val N = _fields
+		val rowRDD:RDD[(String, Try[Row])] = data.map(record =>
+			(record, Try{
+				def getFields (line: String) = {
+					val parser = new CSVParser(separator.charAt(0),
+						Try(quotechar.charAt(0)).getOrElse(CSVParser.DEFAULT_QUOTE_CHARACTER))
+					parser.parseLine(line)
+				}
 
-        val fields = getFields(record)
-        val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
-        row(values:_*)
-      })
-    )
-    rowRDD
-  }
+				val fields = getFields(record)
+				val values = (0 until N).map(n => parsers(n)(fields(indices(n))))
+				row(values:_*)
+			})
+		)
+		rowRDD
+	}
 
-  private lazy val _parseErrors: RDD[(String, Throwable)] = _parseUnfiltered.filter(_._2.isFailure).map(r => (r._1, r._2.failed.get))
+	private lazy val _parseErrors: RDD[(String, Throwable)] = _parseUnfiltered.filter(_._2.isFailure).map(r => (r._1, r._2.failed.get))
 
-  private lazy val _parsed: DataFrame = {
-    val r = _parseUnfiltered.filter(_._2.isSuccess).map(_._2.get)
-    sqlc.createDataFrame(r, _schema)
-  }
+	private lazy val _parsed: DataFrame = {
+		val r = _parseUnfiltered.filter(_._2.isSuccess).map(_._2.get)
+		sqlc.createDataFrame(r, _schema)
+	}
 
 	// _schema: the schema of our CSV file, as specified by our configuration
 	// _indices: The column index of each field in the schema, in order
@@ -192,13 +192,13 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 				case "double" => (DoubleType, s => s.trim.toDouble)
 				case "string" => (StringType, s => s)
 				case "ipv4" => (ArrayType(ByteType), s => {
-					                s.trim.split("\\.").map(_.trim.toShort.toByte).toSeq
-				                })
+													s.trim.split("\\.").map(_.trim.toShort.toByte).toSeq
+												})
 				case "date" => {
 					val format = new SimpleDateFormat(
 						configuration.getString("oculus.binning.parsing." + fieldName + ".dateFormat",
-						                        "The date format of the "+fieldName+" field",
-						                        Some("yyMMddHHmm")))
+																		"The date format of the "+fieldName+" field",
+																		Some("yyMMddHHmm")))
 					format.setTimeZone(TimeZone.getTimeZone("GMT"))
 					(TimestampType, s => new java.sql.Timestamp(format.parse(s.trim).getTime()) )
 				}
@@ -237,7 +237,7 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 			.map(indexProperty =>
 			{
 				val fieldName = indexProperty.substring("oculus.binning.parsing.".length,
-				                                        indexProperty.length - ".index".length)
+																								indexProperty.length - ".index".length)
 				val fieldIndex = configuration.getInt(indexProperty, "The column number of the " + fieldName + " field")
 				val fieldType = getFieldType(fieldName)
 				val (dataType, parser) = getParseFunction(fieldName, fieldType)
