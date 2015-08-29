@@ -250,27 +250,34 @@ class UniversalBinner extends Logging {
 	{
 		// First, within each partition, group data by tile
 		val consolidatedByPartition: RDD[(TileIndex, Array[BinIndex], PT, Option[DT])] =
-			data.mapPartitions{iter =>
-				val partitionResults = MutableMap[(TileIndex, Array[BinIndex]), (PT, Option[DT])]()
-
-				// Map each input record in this partition into tile coordinates, ...
-				iter.flatMap(record =>
-					locateIndexFcn(record._1).map(index => (index, (record._2, record._3)))
-				).foreach{case (key, newValue) =>
-						// ... and consolidate identical input records in this partition.
-						if (partitionResults.contains(key)) {
-							val oldValue = partitionResults(key)
-							val analyticAggregator =
-								dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
-							partitionResults(key) = (binAnalytic.aggregate(newValue._1, oldValue._1),
-							                         optAggregate(analyticAggregator,
-							                                      newValue._2, oldValue._2))
-						} else {
-							partitionResults(key) = newValue
-						}
-				}
-				partitionResults.iterator.map(results => (results._1._1, results._1._2, results._2._1, results._2._2))
-			}
+//			data.mapPartitions{iter =>
+//				val partitionResults = MutableMap[(TileIndex, Array[BinIndex]), (PT, Option[DT])]()
+//
+//				// Map each input record in this partition into tile coordinates, ...
+//				iter.flatMap(record =>
+//					locateIndexFcn(record._1).map(index => (index, (record._2, record._3)))
+//				).foreach{case (key, newValue) =>
+//						// ... and consolidate identical input records in this partition.
+//						if (partitionResults.contains(key)) {
+//							val oldValue = partitionResults(key)
+//							val analyticAggregator =
+//								dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
+//							partitionResults(key) = (binAnalytic.aggregate(newValue._1, oldValue._1),
+//							                         optAggregate(analyticAggregator,
+//							                                      newValue._2, oldValue._2))
+//						} else {
+//							partitionResults(key) = newValue
+//						}
+//				}
+//				partitionResults.iterator.map(results => (results._1._1, results._1._2, results._2._1, results._2._2))
+//			}
+    // Or don't - too much of a memory hog, trust Spark to do it for us.
+    data.flatMap { record =>
+      val indices: Traversable[(TileIndex, Array[BinIndex])] = locateIndexFcn(record._1)
+      val value: PT = record._2
+      val analyticValue: Option[DT] = record._3
+      indices.map(index => (index._1, index._2, value, analyticValue))
+    }
 
 		// TODO: If this works, look at using MutableMaps instead of Maps as the first output
 		// value, and adding in place.
