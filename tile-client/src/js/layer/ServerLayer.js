@@ -119,7 +119,8 @@
         Layer.call( this, spec );
         // set reasonable defaults
         this.zIndex = ( spec.zIndex !== undefined ) ? parseInt( spec.zIndex, 10 ) : 1;
-        this.renderer = spec.renderer || {};
+        spec.renderer = spec.renderer || {};
+        this.renderer = spec.renderer;
         this.renderer.coarseness = ( spec.renderer.coarseness !== undefined ) ? parseInt( spec.renderer.coarseness, 10 ) : 1;
         this.renderer.rangeMin = ( spec.renderer.rangeMin !== undefined ) ? parseInt( spec.renderer.rangeMin, 10 ) : 0;
         this.renderer.rangeMax = ( spec.renderer.rangeMax !== undefined ) ? parseInt( spec.renderer.rangeMax, 10 ) : 100;
@@ -495,7 +496,7 @@
      * @param {Object} transformData - The tile transform data attribute.
      */
     ServerLayer.prototype.setTileTransformData = function ( transformData ) {
-        if ( this.tileTransform.data !== transformData ) {
+        if ( !_.isEqual( this.tileTransform.data, transformData ) ) {
             this.tileTransform.data = transformData;
             this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
