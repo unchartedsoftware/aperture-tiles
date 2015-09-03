@@ -137,4 +137,10 @@ class TestTileIO extends TileIO {
 			None
 		}
 	}
+  def getPyramid (pyramidId: String) = TestPyramidIO.datas.get(pyramidId)
+  def getMetaData (pyramidId: String) = TestPyramidIO.metaDatas.get(pyramidId)
+  def clearPyramid (pyramidId: String): Unit = {
+    TestPyramidIO.datas.remove(pyramidId)
+    TestPyramidIO.metaDatas.remove(pyramidId)
+  }
 }

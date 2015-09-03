@@ -4,6 +4,8 @@ package com.oculusinfo.tilegen.datasets
 
 import java.util.{List => JavaList}
 
+import scala.collection.JavaConverters._
+
 import org.scalatest.Assertions
 
 import com.oculusinfo.binning.TileData
@@ -29,6 +31,32 @@ trait TileAssertions extends Assertions {
 			assert(expected(i) === tile.getBin(x, y))
 		}
 	}
+
+  protected def assertTileContents[T] (expected: TileData[T], actual: TileData[_]): Unit = {
+    assert(expected.getDefinition === actual.getDefinition)
+    assert(expected.getDefaultValue === actual.getDefaultValue)
+    // Check contents
+    val index = expected.getDefinition
+    val xBins = index.getXBins
+    val yBins = index.getYBins
+    for (x <- 0 until xBins; y <- 0 until yBins) {
+      val expectedBin = expected.getBin(x, y)
+      val actualBin = actual.getBin(x, y)
+      assert(expectedBin === actualBin)
+    }
+    // Check metadata
+    if (null == expected.getMetaDataProperties)
+      assert(null == actual.getMetaDataProperties)
+    else {
+      val expectedProperties = expected.getMetaDataProperties.asScala.toSet
+      val actualProperties = actual.getMetaDataProperties.asScala.toSet
+      assert((expectedProperties -- actualProperties).isEmpty)
+      assert((actualProperties -- expectedProperties).isEmpty)
+      expectedProperties.map(prop =>
+        assert(expected.getMetaData(prop) === actual.getMetaData(prop))
+      )
+    }
+  }
 
 	protected def assertListTileContents[T] (expected: List[List[T]], tile: TileData[_]): Unit = {
 		val index = tile.getDefinition
