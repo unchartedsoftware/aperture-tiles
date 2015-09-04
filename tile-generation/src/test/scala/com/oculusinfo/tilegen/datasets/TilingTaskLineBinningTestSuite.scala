@@ -44,7 +44,8 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 
 
-case class LineBinningTestRecord (x1: Double, y1: Double, x2: Double, y2: Double);
+case class LineBinningTestRecord (x1: Double, y1: Double, x2: Double, y2: Double)
+case class LineBinningValuedTestRecord (x1: Double, y1: Double, x2: Double, y2: Double, value: Double)
 
 class TilingTaskLineBinningTestSuite extends FunSuite with SharedSparkContext with TileAssertions {
   def testAoILine (pt1: (Double, Double), pt2: (Double, Double), level: Int, expected: Map[TileIndex, Option[TileData[JavaDouble]]]): Unit = {
@@ -227,6 +228,50 @@ class TilingTaskLineBinningTestSuite extends FunSuite with SharedSparkContext wi
         )
       ),
       Map("oculus.binning.minimumSegmentLength" -> "4", "oculus.binning.maximumSegmentLength" -> "8")
+    )
+  }
+
+
+  // Test line binning with non-sum values
+  test("Line binning with non-sum valuation") {
+    // +----+----+
+    // |0000|0000|
+    // |0003|0500|
+    // |0223|2520|
+    // |0003|0500|
+    // +----+----+
+    // |0444|4540|
+    // |0003|0500|
+    // |0003|0500|
+    // |0000|0000|
+    // +----+----+
+    val rawData = Seq(
+      LineBinningValuedTestRecord(1.5, 3.5, 6.5, 3.5, 4.0),
+      LineBinningValuedTestRecord(1.5, 5.5, 6.5, 5.5, 2.0),
+      LineBinningValuedTestRecord(3.5, 1.5, 3.5, 6.5, 3.0),
+      LineBinningValuedTestRecord(5.5, 1.5, 5.5, 6.5, 5.0)
+    )
+    testAoILine(
+      rawData, 2,
+      Map(
+        createTile(new TileIndex(2, 0, 0, 4, 4), 0.0,
+          List(0.0, 4.0, 4.0, 4.0,  0.0, 0.0, 0.0, 3.0,  0.0, 0.0, 0.0, 3.0,  0.0, 0.0, 0.0, 0.0)
+        ),
+        createTile(new TileIndex(2, 1, 0, 4, 4), 0.0,
+          List(4.0, 5.0, 4.0, 0.0,  0.0, 5.0, 0.0, 0.0,  0.0, 5.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0)
+        ),
+        createTile(new TileIndex(2, 0, 1, 4, 4), 0.0,
+          List(0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 3.0,  0.0, 2.0, 2.0, 3.0,  0.0, 0.0, 0.0, 3.0)
+        ),
+        createTile(new TileIndex(2, 1, 1, 4, 4), 0.0,
+          List(0.0, 0.0, 0.0, 0.0,  0.0, 5.0, 0.0, 0.0,  2.0, 5.0, 2.0, 0.0,  0.0, 5.0, 0.0, 0.0)
+        )
+      ),
+      Map[String, String](
+        "oculus.binning.value.type" -> "field",
+        "oculus.binning.value.field" -> "value",
+        "oculus.binning.value.aggregation" -> "max"
+      )
     )
   }
 }

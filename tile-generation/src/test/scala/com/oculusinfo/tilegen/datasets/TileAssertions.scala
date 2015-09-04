@@ -32,6 +32,18 @@ trait TileAssertions extends Assertions {
 		}
 	}
 
+  private def dataString[T] (tile: TileData[T]): String = {
+    val yStrings: Seq[String] =
+      for (y <- 0 until tile.getDefinition.getYBins) yield {
+        val xStrings: Seq[String] =
+          for (x <- 0 until tile.getDefinition.getXBins) yield {
+            tile.getBin(x, y).toString
+          }
+        xStrings.mkString("[", ", ", "]")
+      }
+    yStrings.mkString("\n")
+  }
+
   protected def assertTileContents[T] (expected: TileData[T], actual: TileData[_]): Unit = {
     assert(expected.getDefinition === actual.getDefinition)
     assert(expected.getDefaultValue === actual.getDefaultValue)
@@ -39,10 +51,11 @@ trait TileAssertions extends Assertions {
     val index = expected.getDefinition
     val xBins = index.getXBins
     val yBins = index.getYBins
+    val inequalityMessage = index+" expected:\n"+dataString(expected)+"\n\nactual:\n"+dataString(actual)+"\n"
     for (x <- 0 until xBins; y <- 0 until yBins) {
       val expectedBin = expected.getBin(x, y)
       val actualBin = actual.getBin(x, y)
-      assert(expectedBin === actualBin)
+      assert(expectedBin === actualBin, inequalityMessage)
     }
     // Check metadata
     if (null == expected.getMetaDataProperties)
