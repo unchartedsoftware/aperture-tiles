@@ -87,7 +87,6 @@
             if ( map.olMap.panTween ) {
                 map.olMap.panTween.callbacks = null;
                 map.olMap.panTween.stop();
-                map.olMap.panTween = null;
             }
         }, true );
         // set resize callback
@@ -424,7 +423,6 @@
                 20037508.342789244
             ]),
             zoomMethod: null,
-            panMethod: null,
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
             controls: [
