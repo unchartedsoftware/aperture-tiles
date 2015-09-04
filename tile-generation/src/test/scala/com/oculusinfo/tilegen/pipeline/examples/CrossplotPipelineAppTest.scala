@@ -15,7 +15,7 @@ class CrossplotPipelineAppTest extends FunSuite {
 		 file.delete()
 	 }
 
-	 test("Test crossplot pipeline") {
+	 test("Test crossplot pipeline basic sanity") {
 
 		 val sourcePath = classOf[CrossplotPipelineAppTest].getResource("/tweets.csv").toURI.getPath
 		 val columnPath = classOf[CrossplotPipelineAppTest].getResource("/tweets-columns-cross.properties").toURI.getPath

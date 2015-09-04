@@ -4,7 +4,6 @@ import com.oculusinfo.tilegen.tiling.LocalTileIO
 import java.io.File
 import org.scalatest.FunSuite
 
-
 class GeoHeatmapPipelineAppTest extends FunSuite {
 
 	def removeRecursively (file: File): Unit = {
@@ -14,10 +13,10 @@ class GeoHeatmapPipelineAppTest extends FunSuite {
 		file.delete()
 	}
 
-	test("Test heatmap pipeline") {
+	test("Test heatmap pipeline basic sanity") {
 
-		val sourcePath = classOf[GeoHeatmapPipelineAppTest].getResource("/timestamp_geo.csv").toURI.getPath
-		val columnPath = classOf[GeoHeatmapPipelineAppTest].getResource("/geo_columns.properties").toURI.getPath
+		val sourcePath = classOf[GeoHeatmapPipelineAppTest].getResource("/tweets.csv").toURI.getPath
+		val columnPath = classOf[GeoHeatmapPipelineAppTest].getResource("/tweets-columns-geo.properties").toURI.getPath
 		val properties = System.getProperties
 		properties.setProperty("spark.master", "local[4]")
 
