@@ -24,7 +24,7 @@
  */
 package software.uncharted.tile.source.client
 
-import com.uncharted.tile
+import software.uncharted.tile
 
 
 

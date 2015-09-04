@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.{QueueingConsumer, Channel}
 import com.rabbitmq.client.QueueingConsumer.Delivery
-import com.uncharted.tile.source.RabbitMQConnectable
 import org.scalatest.exceptions.TestCanceledException
 
 import org.scalatest.{Canceled, Outcome, FunSuite}
@@ -39,7 +38,8 @@ import scala.collection.mutable.{HashMap, SynchronizedMap}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source.RabbitMQConnectable
 
 
 
@@ -98,7 +98,7 @@ class ServerTestSuite extends FunSuite {
   test("Test error response") {
     val (severity, error) = client.sendErrorMessage
 
-    assert(com.uncharted.tile.source.LOG_WARNING === severity)
+    assert(software.uncharted.tile.source.LOG_WARNING === severity)
     assert("Test exception" === error.getMessage)
   }
 }

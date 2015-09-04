@@ -40,7 +40,7 @@ import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.factory.providers.FactoryProvider
-import com.uncharted.tile.source.client._
+import software.uncharted.tile.source.client._
 
 
 

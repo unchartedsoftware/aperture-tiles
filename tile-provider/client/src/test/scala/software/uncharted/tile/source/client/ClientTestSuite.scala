@@ -36,9 +36,9 @@ import scala.concurrent.duration.Duration
 
 import com.rabbitmq.client.QueueingConsumer.Delivery
 
-import com.uncharted.tile.source
-import com.uncharted.tile.source.server.Server
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source
+import software.uncharted.tile.source.server.Server
+import software.uncharted.tile.source.util.ByteArrayCommunicator
 
 import scala.util.Try
 
@@ -100,7 +100,7 @@ class ClientTestSuite extends FunSuite with Logging {
     assert((1, 2, 3) === ByteArrayCommunicator.defaultCommunicator.read[Int, Int, Int](intResult.contents))
 
     val errorResult = makeRequest(new TestClientMessage("error"))
-    assert(com.uncharted.tile.source.LOG_WARNING === errorResult.severity)
+    assert(software.uncharted.tile.source.LOG_WARNING === errorResult.severity)
     assert("Test exception" === errorResult.error.getMessage)
   }
 

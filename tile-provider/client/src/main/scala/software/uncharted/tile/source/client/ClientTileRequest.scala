@@ -38,8 +38,8 @@ import grizzled.slf4j.Logging
 
 import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.{TileData, TileIndex}
-import com.uncharted.tile.source.util.ByteArrayCommunicator
-import com.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
+import software.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
 
 import scala.util.Try
 

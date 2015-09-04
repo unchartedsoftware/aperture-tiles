@@ -49,8 +49,8 @@ import com.oculusinfo.binning.metadata.PyramidMetaData
 import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.factory.providers.FactoryProvider
 import com.oculusinfo.factory.util.Pair
-import com.uncharted.tile.source.client.io.TileServerPyramidIO
-import com.uncharted.tile.source.server.TileServer
+import software.uncharted.tile.source.client.io.TileServerPyramidIO
+import software.uncharted.tile.source.server.TileServer
 
 import scala.concurrent.duration.Duration
 

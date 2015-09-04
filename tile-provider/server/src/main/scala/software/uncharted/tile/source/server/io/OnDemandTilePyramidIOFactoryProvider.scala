@@ -29,7 +29,7 @@ import java.util
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.factory.ConfigurableFactory
 import com.oculusinfo.factory.providers.AbstractFactoryProvider
-import com.uncharted.tile.source.server.app.SparkContextProvider
+import software.uncharted.tile.source.server.app.SparkContextProvider
 import software.uncharted.tile.source.server.app.SparkContextProvider
 
 /**

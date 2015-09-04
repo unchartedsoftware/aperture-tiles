@@ -33,10 +33,10 @@ import grizzled.slf4j.Logging
 import com.rabbitmq.client.QueueingConsumer
 import com.rabbitmq.client.QueueingConsumer.Delivery
 
-import com.uncharted.tile
-import com.uncharted.tile.source
-import com.uncharted.tile.source.RabbitMQConnectable
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile
+import software.uncharted.tile.source
+import software.uncharted.tile.source.RabbitMQConnectable
+import software.uncharted.tile.source.util.ByteArrayCommunicator
 
 
 

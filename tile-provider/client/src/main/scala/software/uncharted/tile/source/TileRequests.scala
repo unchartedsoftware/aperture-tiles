@@ -26,7 +26,7 @@ package software.uncharted.tile.source
 
 import java.lang.{Iterable => JavaIterable}
 
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source.util.ByteArrayCommunicator
 import org.json.JSONObject
 
 import scala.collection.JavaConverters._

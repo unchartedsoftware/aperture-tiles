@@ -34,8 +34,8 @@ import grizzled.slf4j.Logging
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.QueueingConsumer
 
-import com.uncharted.tile.source.RabbitMQConnectable
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source.RabbitMQConnectable
+import software.uncharted.tile.source.util.ByteArrayCommunicator
 
 
 /**
@@ -47,7 +47,7 @@ abstract class Client[RT] (host: String, user: String, pswd: String,
                            requestExchange: String, responseExchange: String)
   extends RabbitMQConnectable(host, user, pswd) with Logging
 {
-  import com.uncharted.tile
+  import software.uncharted.tile
   import ExecutionContext.Implicits.global
 
   // Whether or not this client has had its response thread started.

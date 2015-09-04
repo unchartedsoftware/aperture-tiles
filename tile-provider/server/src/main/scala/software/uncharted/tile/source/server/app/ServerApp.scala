@@ -33,8 +33,8 @@ import grizzled.slf4j.Logging
 import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider
 import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider
 import com.oculusinfo.tilegen.util.{MissingArgumentException, ArgumentParser}
-import com.uncharted.tile.source.server.io.{OnDemandTilePyramidIOFactoryProvider, StandardPyramidIOFactoryProvider}
-import com.uncharted.tile.source.server.TileServer
+import software.uncharted.tile.source.server.io.{OnDemandTilePyramidIOFactoryProvider, StandardPyramidIOFactoryProvider}
+import software.uncharted.tile.source.server.TileServer
 import scala.reflect.runtime.universe
 
 /**

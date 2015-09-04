@@ -31,16 +31,15 @@ import org.json.JSONObject
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.io.serialization.TileSerializer
-import com.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile.source.{RequestTypes, TileRequest, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
+import software.uncharted.tile.source.util.ByteArrayCommunicator
 import software.uncharted.tile.source.{TileRequest, TileDataRequest, TileInitializationRequest}
 
-import scala.Enumeration.Value
 
 
 object ServerTileRequest {
   def fromByteArray (encoded: Array[Byte]): TileRequest = {
-    val requestType = ByteArrayCommunicator.defaultCommunicator.read[Value](encoded)
+    val requestType = ByteArrayCommunicator.defaultCommunicator.read[RequestTypes.Value](encoded)
     requestType match {
       case RequestTypes.Initialization => {
         val (requestType, table, width, height, rawConfiguration) =

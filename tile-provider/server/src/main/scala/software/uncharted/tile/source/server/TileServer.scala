@@ -40,9 +40,9 @@ import com.oculusinfo.binning.io.serialization.TileSerializer
 import com.oculusinfo.binning.io.PyramidIO
 import com.oculusinfo.factory.providers.FactoryProvider
 
-import com.uncharted.tile
-import com.uncharted.tile.source.{RequestTypes, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
-import com.uncharted.tile.source.util.ByteArrayCommunicator
+import software.uncharted.tile
+import software.uncharted.tile.source.{RequestTypes, TileInitializationRequest, TileMetaDataRequest, TileDataRequest, TileStreamRequest}
+import software.uncharted.tile.source.util.ByteArrayCommunicator
 
 
 

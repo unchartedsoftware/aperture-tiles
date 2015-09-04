@@ -30,7 +30,7 @@ import com.oculusinfo.binning.io.{PyramidIO, PyramidIOFactory}
 import com.oculusinfo.factory.{SharedInstanceFactory, ConfigurableFactory}
 import com.oculusinfo.factory.properties.EnumProperty
 import com.oculusinfo.tilegen.binning.{LegacyOnDemandBinningPyramidIO, OnDemandAccumulatorPyramidIO, OnDemandBinningPyramidIO}
-import com.uncharted.tile.source.server.app.SparkContextProvider
+import software.uncharted.tile.source.server.app.SparkContextProvider
 import grizzled.slf4j.Logging
 import org.json.JSONObject
 
