@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.pipeline
 
 
 
+import java.io.OutputStream
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
@@ -36,8 +37,9 @@ import java.util.{Calendar, Date, GregorianCalendar}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
+import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCollectorAccumulable}
 import com.oculusinfo.tilegen.datasets.{CSVReader, SchemaTypeUtilities, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
@@ -45,6 +47,7 @@ import org.apache.spark.sql.types.{DataType, IntegerType, TimestampType}
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import org.joda.time.{DurationFieldType, Interval, PeriodType}
 
+import scala.collection.mutable.ListBuffer
 
 /**
  * Provides operations that can be bound into a TilePipeline
@@ -86,7 +89,7 @@ object PipelineOperations {
 	}
 
 	/**
-	 * Load data from a JSON file.  The schema is derived from the first json record.
+	 * Load data from a JSON file.	The schema is derived from the first json record.
 	 *
 	 * @param path Valid HDFS path to the data.
 	 * @param partitions Number of partitions to load data into.
@@ -117,17 +120,42 @@ object PipelineOperations {
 	 * The arguments map will be passed through to that object, so all arguments required
 	 * for its configuration should be set in the map.
 	 *
+	 * To get a report on rejected lines supply this argument in your script "-errorLog <output-stream>"
+	 * Permissible output streams: "stdout"
+	 *														 "stderr"
+	 *														 "<file-path>"
+	 *
 	 * @param path HDSF path to the data object.
 	 * @param argumentSource Arguments to forward to the CSVReader.
 	 * @param partitions Number of partitions to load data into.
-	 * @param data Not used.
+	 * @param errorLog The filestream to output the results of the error accumulator to.
 	 * @return PipelineData with a schema RDD populated from the CSV file.
 	 */
-	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None)
-	                 (data: PipelineData): PipelineData = {
+	def loadCsvDataOp(path: String, argumentSource: KeyValueArgumentSource, partitions: Option[Int] = None, errorLog: Option[String] = None)
+									 (data: PipelineData): PipelineData = {
 		val context = data.sqlContext
 		val reader = new CSVReader(context, path, argumentSource)
 		val dataFrame = coalesce(context, reader.asDataFrame, partitions)
+
+		val accumulator = new ErrorCollectorAccumulable(ListBuffer(new ErrorCollector))
+
+		// add lines into error accumulator
+		reader.readErrors.foreach(r => accumulator.add(r))
+
+		val outStream: Option[OutputStream] = errorLog match {
+			case Some("stdout") => Some(System.out)
+			case Some("stderr") => Some(System.err)
+			case Some(name) => Some(new java.io.FileOutputStream(new java.io.File(name)))
+			case _ => None
+		}
+
+		if (outStream.isDefined) {
+			accumulator.value.foreach{ e =>
+				for ((k,v) <- e.getError) printf("%s -> %s\n", k, v)
+				outStream.get.flush()
+			}
+		}
+
 		PipelineData(reader.sqlc, dataFrame)
 	}
 
@@ -137,8 +165,8 @@ object PipelineOperations {
 	 * @param minDate Start date for the range.
 	 * @param maxDate End date for the range.
 	 * @param format Date parsing string, expressed according to java.text.SimpleDateFormat.
-	 * @param timeCol Column spec denoting name of time column in input schema RDD.  Column is expected
-	 *                to be a string.
+	 * @param timeCol Column spec denoting name of time column in input schema RDD.	Column is expected
+	 *								to be a string.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
 	 */
@@ -148,9 +176,9 @@ object PipelineOperations {
 		val maxTime = maxDate.getTime
 
 		val filterFcn = udf((value: String) => {
-			                    val time = formatter.parse(value).getTime
-			                    minTime <= time && time <= maxTime
-		                    })
+													val time = formatter.parse(value).getTime
+													minTime <= time && time <= maxTime
+												})
 		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
@@ -176,8 +204,8 @@ object PipelineOperations {
 	 *
 	 * @param minDate Start date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
 	 * @param maxDate End date for the range, expressed in a format parsable by java.text.SimpleDateFormat.
-	 * @param timeCol Column spec denoting name of time column in input DataFrame.  In this case time column
-	 *                is expected to store a Date.
+	 * @param timeCol Column spec denoting name of time column in input DataFrame.	In this case time column
+	 *								is expected to store a Date.
 	 * @param input Input pipeline data to filter.
 	 * @return Transformed pipeline data, where records outside the specified time range have been removed.
 	 */
@@ -185,87 +213,87 @@ object PipelineOperations {
 		val minTime = minDate.getTime
 		val maxTime = maxDate.getTime
 		val filterFcn = udf((time: Timestamp) => {
-			                    minTime <= time.getTime && time.getTime <= maxTime
-		                    })
+													minTime <= time.getTime && time.getTime <= maxTime
+												})
 		PipelineData(input.sqlContext, input.srdd.filter(filterFcn(new Column(timeCol))))
 	}
 
-  /**
-   * Pipeline op to parse a string date into a timestamp
-   * @param stringDateCol The column from which to get the date (as a string)
-   * @param dateCol The column into which to put the date (as a timestamp)
-   * @param format The expected format of the date
-   * @param input Input pipeline data to transform
-   * @return Transformed pipeline data with the new time field column.
-   */
-  def parseDateOp (stringDateCol: String, dateCol: String, format: String)(input: PipelineData): PipelineData = {
-    val formatter = new SimpleDateFormat(format);
-    val fieldExtractor: Array[Any] => Any = row => {
-      val date = formatter.parse(row(0).toString)
-      new Timestamp(date.getTime)
-    }
-    val output = SchemaTypeUtilities.addColumn(input.srdd, dateCol, TimestampType, fieldExtractor, stringDateCol)
-    PipelineData(input.sqlContext, output)
-  }
+	/**
+	 * Pipeline op to parse a string date into a timestamp
+	 * @param stringDateCol The column from which to get the date (as a string)
+	 * @param dateCol The column into which to put the date (as a timestamp)
+	 * @param format The expected format of the date
+	 * @param input Input pipeline data to transform
+	 * @return Transformed pipeline data with the new time field column.
+	 */
+	def parseDateOp (stringDateCol: String, dateCol: String, format: String)(input: PipelineData): PipelineData = {
+		val formatter = new SimpleDateFormat(format);
+		val fieldExtractor: Array[Any] => Any = row => {
+			val date = formatter.parse(row(0).toString)
+			new Timestamp(date.getTime)
+		}
+		val output = SchemaTypeUtilities.addColumn(input.srdd, dateCol, TimestampType, fieldExtractor, stringDateCol)
+		PipelineData(input.sqlContext, output)
+	}
 
-  /**
-   * Pipeline op to get a single field out of a date, and create a new column with that field
-   *
-   * For instance, this can take a date, and transform it to a week of the year, or a day of the month.
-   *
-   * @param timeCol Column spec denoting the name of a time column in the input DataFrame.  In this case,
-   *                the column is expected to store a Date.
-   * @param fieldCol The name of the column to create with the time field value
-   * @param timeField The field of the date to retrieve
-   * @param input Input pipeline data to transform
-   * @return Transformed pipeline data with the new time field column.
-   */
-  def dateFieldOp (timeCol: String, fieldCol: String, timeField: Int)(input: PipelineData): PipelineData = {
-    val fieldExtractor: Array[Any] => Any = row => {
-      val date = row(0).asInstanceOf[Date]
-      val calendar = new GregorianCalendar()
-      calendar.setTime(date)
-      calendar.get(timeField)
-    }
-    val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
-    PipelineData(input.sqlContext, output)
-  }
+	/**
+	 * Pipeline op to get a single field out of a date, and create a new column with that field
+	 *
+	 * For instance, this can take a date, and transform it to a week of the year, or a day of the month.
+	 *
+	 * @param timeCol Column spec denoting the name of a time column in the input DataFrame.	In this case,
+	 *								the column is expected to store a Date.
+	 * @param fieldCol The name of the column to create with the time field value
+	 * @param timeField The field of the date to retrieve
+	 * @param input Input pipeline data to transform
+	 * @return Transformed pipeline data with the new time field column.
+	 */
+	def dateFieldOp (timeCol: String, fieldCol: String, timeField: Int)(input: PipelineData): PipelineData = {
+		val fieldExtractor: Array[Any] => Any = row => {
+			val date = row(0).asInstanceOf[Date]
+			val calendar = new GregorianCalendar()
+			calendar.setTime(date)
+			calendar.get(timeField)
+		}
+		val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
+		PipelineData(input.sqlContext, output)
+	}
 
-  def getJodaTypes (timeField: Int) =
-  timeField match {
-    case Calendar.MILLISECOND          => (PeriodType.millis(), DurationFieldType.millis())
-    case Calendar.SECOND               => (PeriodType.seconds(), DurationFieldType.seconds())
-    case Calendar.MINUTE               => (PeriodType.minutes(), DurationFieldType.minutes())
-    case Calendar.HOUR                 => (PeriodType.hours(), DurationFieldType.hours())
-    case Calendar.HOUR_OF_DAY          => (PeriodType.hours(), DurationFieldType.hours())
-    case Calendar.DAY_OF_WEEK          => (PeriodType.days(), DurationFieldType.days())
-    case Calendar.DAY_OF_WEEK_IN_MONTH => (PeriodType.days(), DurationFieldType.days())
-    case Calendar.DAY_OF_MONTH         => (PeriodType.days(), DurationFieldType.days())
-    case Calendar.DAY_OF_YEAR          => (PeriodType.days(), DurationFieldType.days())
-    case Calendar.WEEK_OF_MONTH        => (PeriodType.weeks(), DurationFieldType.weeks())
-    case Calendar.WEEK_OF_YEAR         => (PeriodType.weeks(), DurationFieldType.weeks())
-    case Calendar.MONTH                => (PeriodType.months(), DurationFieldType.months())
-    case Calendar.YEAR                 => (PeriodType.years(), DurationFieldType.years())
-  }
-  def getIntervalFromJoda (startMoment: Long, currentMoment: Long, intervalType: (PeriodType, DurationFieldType)): Int = {
-    if (currentMoment < startMoment) {
-      -(new Interval(currentMoment, startMoment).toPeriod(intervalType._1).get(intervalType._2))
-    } else {
-      (new Interval(startMoment, currentMoment).toPeriod(intervalType._1).get(intervalType._2))
-    }
-  }
+	def getJodaTypes (timeField: Int) =
+	timeField match {
+		case Calendar.MILLISECOND					=> (PeriodType.millis(), DurationFieldType.millis())
+		case Calendar.SECOND							 => (PeriodType.seconds(), DurationFieldType.seconds())
+		case Calendar.MINUTE							 => (PeriodType.minutes(), DurationFieldType.minutes())
+		case Calendar.HOUR								 => (PeriodType.hours(), DurationFieldType.hours())
+		case Calendar.HOUR_OF_DAY					=> (PeriodType.hours(), DurationFieldType.hours())
+		case Calendar.DAY_OF_WEEK					=> (PeriodType.days(), DurationFieldType.days())
+		case Calendar.DAY_OF_WEEK_IN_MONTH => (PeriodType.days(), DurationFieldType.days())
+		case Calendar.DAY_OF_MONTH				 => (PeriodType.days(), DurationFieldType.days())
+		case Calendar.DAY_OF_YEAR					=> (PeriodType.days(), DurationFieldType.days())
+		case Calendar.WEEK_OF_MONTH				=> (PeriodType.weeks(), DurationFieldType.weeks())
+		case Calendar.WEEK_OF_YEAR				 => (PeriodType.weeks(), DurationFieldType.weeks())
+		case Calendar.MONTH								=> (PeriodType.months(), DurationFieldType.months())
+		case Calendar.YEAR								 => (PeriodType.years(), DurationFieldType.years())
+	}
+	def getIntervalFromJoda (startMoment: Long, currentMoment: Long, intervalType: (PeriodType, DurationFieldType)): Int = {
+		if (currentMoment < startMoment) {
+			-(new Interval(currentMoment, startMoment).toPeriod(intervalType._1).get(intervalType._2))
+		} else {
+			(new Interval(startMoment, currentMoment).toPeriod(intervalType._1).get(intervalType._2))
+		}
+	}
 
-  def elapsedDateOp (timeCol: String, fieldCol: String, timeField: Int, startTime: Date)(input: PipelineData): PipelineData = {
-    val jodaTypes = getJodaTypes(timeField)
-    val startMoment = startTime.getTime
+	def elapsedDateOp (timeCol: String, fieldCol: String, timeField: Int, startTime: Date)(input: PipelineData): PipelineData = {
+		val jodaTypes = getJodaTypes(timeField)
+		val startMoment = startTime.getTime
 
-    val fieldExtractor: Array[Any] => Any = row => {
-      val moment = row(0).asInstanceOf[Date].getTime
-      getIntervalFromJoda(startMoment, moment, jodaTypes)
-    }
-    val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
-    PipelineData(input.sqlContext, output)
-  }
+		val fieldExtractor: Array[Any] => Any = row => {
+			val moment = row(0).asInstanceOf[Date].getTime
+			getIntervalFromJoda(startMoment, moment, jodaTypes)
+		}
+		val output = SchemaTypeUtilities.addColumn(input.srdd, fieldCol, IntegerType, fieldExtractor, timeCol)
+		PipelineData(input.sqlContext, output)
+	}
 
 	/**
 	 * Pipeline op to cache data - this allows for subsequent stages in the pipeline to run against computed
@@ -361,6 +389,17 @@ object PipelineOperations {
 	}
 
 	/**
+	 * Operation to create a new schema RDD from selected columns with only distinct rows.
+	 *
+	 * @param colSpecs Sequence of column specs denoting the columns to select.
+	 * @param input Pipeline data to select columns from.
+	 * @return Pipeline data containing a schema RDD with only the selected columns with only distinct rows.
+	 */
+	def columnSelectDistinctOp(colSpecs: Seq[String])(input: PipelineData) = {
+		PipelineData(input.sqlContext, input.srdd.selectExpr(colSpecs:_*).distinct)
+	}
+
+	/**
 	 * Convert the data type of a column
 	 *
 	 * @param sourceColSpec name of the colum to be converted
@@ -392,23 +431,23 @@ object PipelineOperations {
 	 * @param xColSpec Colspec denoting data x column
 	 * @param yColSpec Colspec denoting data y column
 	 * @param tilingParams Parameters to forward to the tiling task.
-	 * @param operation Aggregating operation.  Defaults to type Count if unspecified.
-	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
-	 *                     if the default type of Count is used.
-	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default
-	 *                     type of count is used for the operation.
+	 * @param operation Aggregating operation.	Defaults to type Count if unspecified.
+	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.	None
+	 *										 if the default type of Count is used.
+	 * @param valueColType Type to interpret colspec value as - float, double, int, long.	None if the default
+	 *										 type of count is used for the operation.
 	 * @param hbaseParameters HBase connection configuration.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
 	 */
 	def geoHeatMapOp(xColSpec: String,
-	                 yColSpec: String,
-	                 tilingParams: TilingTaskParameters,
-	                 hbaseParameters: Option[HBaseParameters],
-	                 operation: OperationType = COUNT,
-	                 valueColSpec: Option[String] = None,
-	                 valueColType: Option[String] = None)
-	                (input: PipelineData) = {
+									 yColSpec: String,
+									 tilingParams: TilingTaskParameters,
+									 hbaseParameters: Option[HBaseParameters],
+									 operation: OperationType = COUNT,
+									 valueColSpec: Option[String] = None,
+									 valueColType: Option[String] = None)
+									(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
@@ -426,24 +465,24 @@ object PipelineOperations {
 	 * @param xColSpec Colspec denoting data x column
 	 * @param yColSpec Colspec denoting data y column
 	 * @param tilingParams Parameters to forward to the tiling task.
-	 * @param operation Aggregating operation.  Defaults to type Count if unspecified.
-	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.  None
-	 *                     if the default type of Count is used.
-	 * @param valueColType Type to interpret colspec value as - float, double, int, long.  None if the default type
+	 * @param operation Aggregating operation.	Defaults to type Count if unspecified.
+	 * @param valueColSpec Colspec denoting the value column to use for the aggregating operation.	None
+	 *										 if the default type of Count is used.
+	 * @param valueColType Type to interpret colspec value as - float, double, int, long.	None if the default type
 	 count is used for the operation.
-	 * @param bounds The bounds for the crossplot.  None indicates that bounds will be auto-generated based on input data.
+	 * @param bounds The bounds for the crossplot.	None indicates that bounds will be auto-generated based on input data.
 	 * @param input Pipeline data to tile.
 	 * @return Unmodified input data.
 	 */
 	def crossplotHeatMapOp(xColSpec: String,
-	                       yColSpec: String,
-	                       tilingParams: TilingTaskParameters,
-	                       hbaseParameters: Option[HBaseParameters],
-	                       operation: OperationType = COUNT,
-	                       valueColSpec: Option[String] = None,
-	                       valueColType: Option[String] = None,
-	                       bounds: Option[Bounds] = None)
-	                      (input: PipelineData) = {
+												 yColSpec: String,
+												 tilingParams: TilingTaskParameters,
+												 hbaseParameters: Option[HBaseParameters],
+												 operation: OperationType = COUNT,
+												 valueColSpec: Option[String] = None,
+												 valueColType: Option[String] = None,
+												 bounds: Option[Bounds] = None)
+												(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
@@ -453,26 +492,26 @@ object PipelineOperations {
 		val properties = Map("oculus.binning.projection.type" -> "areaofinterest")
 		val boundsProps = bounds match {
 			case Some(b) => Map("oculus.binning.projection.autobounds" -> "false",
-			                    "oculus.binning.projection.minX" -> b.minX.toString,
-			                    "oculus.binning.projection.minY" -> b.minY.toString,
-			                    "oculus.binning.projection.maxX" -> b.maxX.toString,
-			                    "oculus.binning.projection.maxY" -> b.maxY.toString)
+													"oculus.binning.projection.minX" -> b.minX.toString,
+													"oculus.binning.projection.minY" -> b.minY.toString,
+													"oculus.binning.projection.maxX" -> b.maxX.toString,
+													"oculus.binning.projection.maxY" -> b.maxY.toString)
 			case None => Map("oculus.binning.projection.autobounds" -> "true")
 		}
 
 		heatMapOpImpl(xColSpec, yColSpec, operation, valueColSpec, valueColType, tilingParams, tileIO,
-		              properties ++ boundsProps)(input)
+									properties ++ boundsProps)(input)
 	}
 
 	private def heatMapOpImpl(xColSpec: String,
-	                          yColSpec: String,
-	                          operation: OperationType,
-	                          valueColSpec: Option[String],
-	                          valueColType: Option[String],
-	                          taskParameters: TilingTaskParameters,
-	                          tileIO: TileIO,
-	                          properties: Map[String, String])
-	                         (input: PipelineData) = {
+														yColSpec: String,
+														operation: OperationType,
+														valueColSpec: Option[String],
+														valueColType: Option[String],
+														taskParameters: TilingTaskParameters,
+														tileIO: TileIO,
+														properties: Map[String, String])
+													 (input: PipelineData) = {
 		// Populate baseline args
 		val args = Map(
 			"oculus.binning.name" -> taskParameters.name,
@@ -486,14 +525,14 @@ object PipelineOperations {
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
 				Map("oculus.binning.value.type" -> "field",
-				    "oculus.binning.value.field" -> valueColSpec.get,
-				    "oculus.binning.value.valueType" -> valueColType.get,
-				    "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
-				    "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+						"oculus.binning.value.field" -> valueColSpec.get,
+						"oculus.binning.value.valueType" -> valueColType.get,
+						"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+						"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
 			case _ =>
 				Map("oculus.binning.value.type" -> "count",
-				    "oculus.binning.value.valueType" -> "int",
-				    "oculus.binning.value.serializer" -> "[int]-a")
+						"oculus.binning.value.valueType" -> "int",
+						"oculus.binning.value.serializer" -> "[int]-a")
 		}
 
 		// Parse bounds and level args
@@ -508,15 +547,15 @@ object PipelineOperations {
 	}
 
 	def geoSegmentTilingOp(x1ColSpec: String,
-	                       y1ColSpec: String,
-	                       x2ColSpec: String,
-	                       y2ColSpec: String,
-	                       tilingParams: TilingTaskParameters,
-	                       hbaseParameters: Option[HBaseParameters],
-	                       operation: OperationType = COUNT,
-	                       valueColSpec: Option[String] = None,
-	                       valueColType: Option[String] = None)
-	                      (input: PipelineData) = {
+												 y1ColSpec: String,
+												 x2ColSpec: String,
+												 y2ColSpec: String,
+												 tilingParams: TilingTaskParameters,
+												 hbaseParameters: Option[HBaseParameters],
+												 operation: OperationType = COUNT,
+												 valueColSpec: Option[String] = None,
+												 valueColType: Option[String] = None)
+												(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
@@ -524,20 +563,20 @@ object PipelineOperations {
 		val properties = Map("oculus.binning.projection.type" -> "webmercator")
 
 		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType,
-		                    tilingParams, tileIO, properties)(input)
+												tilingParams, tileIO, properties)(input)
 	}
 
 	private def segmentTilingOpImpl(x1ColSpec: String,
-	                                y1ColSpec: String,
-	                                x2ColSpec: String,
-	                                y2ColSpec: String,
-	                                operation: OperationType,
-	                                valueColSpec: Option[String],
-	                                valueColType: Option[String],
-	                                taskParameters: TilingTaskParameters,
-	                                tileIO: TileIO,
-	                                properties: Map[String, String])
-	                               (input: PipelineData) = {
+																	y1ColSpec: String,
+																	x2ColSpec: String,
+																	y2ColSpec: String,
+																	operation: OperationType,
+																	valueColSpec: Option[String],
+																	valueColType: Option[String],
+																	taskParameters: TilingTaskParameters,
+																	tileIO: TileIO,
+																	properties: Map[String, String])
+																 (input: PipelineData) = {
 		// Populate baseline args
 		val args: Map[String, String] = Map(
 			"oculus.binning.name" -> taskParameters.name,
@@ -548,10 +587,11 @@ object PipelineOperations {
 			"oculus.binning.index.field.0" -> x1ColSpec,
 			"oculus.binning.index.field.1" -> y1ColSpec,
 			"oculus.binning.index.field.2" -> x2ColSpec,
-			"oculus.binning.index.field.3" -> y2ColSpec,
-			"oculus.binning.drawArcs" -> taskParameters.drawArcs.toString
+			"oculus.binning.lineType" -> taskParameters.lineType.toString
 		) ++ taskParameters.minimumSegmentLength.map(len =>
 			Map("oculus.binning.minimumSegmentLength" -> len.toString)
+		).getOrElse(Map[String, String]()) ++ taskParameters.maximumSegmentLength.map(len =>
+			Map("oculus.binning.maximumSegmentLength" -> len.toString)
 		).getOrElse(Map[String, String]()) ++ taskParameters.maximumLeaderLength.map(len =>
 			Map("oculus.binning.maximumLeaderLength" -> len.toString)
 		).getOrElse(Map[String, String]())
@@ -559,14 +599,14 @@ object PipelineOperations {
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
 				Map("oculus.binning.value.type" -> "field",
-				    "oculus.binning.value.field" -> valueColSpec.get,
-				    "oculus.binning.value.valueType" -> valueColType.get,
-				    "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
-				    "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
+						"oculus.binning.value.field" -> valueColSpec.get,
+						"oculus.binning.value.valueType" -> valueColType.get,
+						"oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+						"oculus.binning.value.serializer" -> s"[${valueColType.get}]-a")
 			case _ =>
 				Map("oculus.binning.value.type" -> "count",
-				    "oculus.binning.value.valueType" -> "int",
-				    "oculus.binning.value.serializer" -> "[int]-a")
+						"oculus.binning.value.valueType" -> "int",
+						"oculus.binning.value.serializer" -> "[int]-a")
 		}
 
 		// Parse bounds and level args
@@ -639,7 +679,7 @@ case class HBaseParameters(zookeeperQuorum: String, zookeeperPort: String, hbase
 case class Bounds(minX: Double, minY: Double, maxX: Double, maxY: Double)
 
 /**
- * Supported heatmap aggregation types.  Count assigns a value of 1 to for each record and sums,
+ * Supported heatmap aggregation types.	Count assigns a value of 1 to for each record and sums,
  * Sum extracts a value from each record and sums, Max/Min extracts a value from each record and takes
  * the max/min, mean extracts a value and computes a mean.
  */
@@ -647,5 +687,3 @@ object OperationType extends Enumeration {
 	type OperationType = Value
 	val COUNT, SUM, MIN, MAX, MEAN = Value
 }
-
-

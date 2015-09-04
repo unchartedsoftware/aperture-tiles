@@ -286,7 +286,7 @@
      * @param {Object} transformData - The tile transform data attribute.
      */
 	ClientLayer.prototype.setTileTransformData = function( transformData ) {
-        if ( this.tileTransform.data !== transformData ) {
+        if ( !_.isEqual( this.tileTransform.data, transformData ) ) {
             this.tileTransform.data = transformData;
             this.redraw();
             PubSub.publish( this.getChannel(), {field: 'tileTransformData', value: transformData} );
