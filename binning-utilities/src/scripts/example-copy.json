@@ -1,12 +1,12 @@
 {
-    "comments": [
-        "This configuration is for use with the class ",
-        "com.oculusinfo.binning.util.CopyPyramid, and copies the table ",
-        "'twitter_heatmap' from HBase to the local file system.",
-        "",
-        "It limits the area copied to tiles that overlap or are included ",
-        "in tile [4, 7, 8] and [4, 8, 8]."
-    ],
+	"comments": [
+		"This configuration is for use with the class ",
+		"com.oculusinfo.binning.util.CopyPyramid, and copies the table ",
+		"'twitter_heatmap' from HBase to the local file system.",
+		"",
+		"It limits the area copied to tiles that overlap or are included ",
+		"in tile [4, 7, 8] and [4, 8, 8]."
+	],
 	"source": {
 		"type": "hbase",
 		"hbase.zookeeper.quorum": "hadoop-s1,hadoop-s3,hadoop-s4",
@@ -21,29 +21,29 @@
 	"serializer": {
 		"type": "integer-a"
 	},
-    "copy": {
-	    "sourceId": "twitter_heatmap",
-	    "destinationId": "twitter_heatmap",
-        "indices": [
-            {
-                "level": 4,
-                "xIndex": 7,
-                "yIndex": 8,
-                "xBinCount": 256,
-                "yBinCount": 256
-            },
-            {
-                "level": 4,
-                "xIndex": 8,
-                "yIndex": 8,
-                "xBinCount": 256,
-                "yBinCount": 256
-            }
-        ],
-        "level": {
-            "minimum": 0,
-            "maximum": 16
-        },
-        "blockSize": 1000
-    }
+	"copy": {
+		"sourceId": "twitter_heatmap",
+		"destinationId": "twitter_heatmap",
+		"indices": [
+			{
+				"level": 4,
+				"xIndex": 7,
+				"yIndex": 8,
+				"xBinCount": 256,
+				"yBinCount": 256
+			},
+			{
+				"level": 4,
+				"xIndex": 8,
+				"yIndex": 8,
+				"xBinCount": 256,
+				"yBinCount": 256
+			}
+		],
+		"level": {
+			"minimum": 0,
+			"maximum": 16
+		},
+		"blockSize": 1000
+	}
 }

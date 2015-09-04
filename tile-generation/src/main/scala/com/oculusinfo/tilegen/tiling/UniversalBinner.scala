@@ -63,8 +63,8 @@ object UniversalBinner {
 	 * @return The number of partitions that should be used for this dataset.
 	 */
 	def getNumSplits[T: ClassTag](dataSet: RDD[T],
-																minPartitions: Option[Int],
-																maxPartitions: Option[Int]): Int =
+	                              minPartitions: Option[Int],
+	                              maxPartitions: Option[Int]): Int =
 		dataSet.partitions.size
 			.max(minPartitions.getOrElse(0))
 			.min(maxPartitions.getOrElse(Int.MaxValue))
@@ -78,7 +78,7 @@ object UniversalBinner {
 	 * @tparam T The type of value to aggregate
 	 */
 	def optAggregate[T](aggFcn: Option[(T, T) => T],
-											value1: Option[T], value2: Option[T]): Option[T] =
+	                    value1: Option[T], value2: Option[T]): Option[T] =
 		aggFcn.map(fcn => (value1 ++ value2).reduceLeftOption(fcn)).getOrElse(None)
 
 	/**
@@ -105,9 +105,9 @@ object UniversalBinner {
 		}
 	}
 
-//	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
-//		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map { case (k, v) => (k, v.map(_._2).reduce(aggFcn)) }
-//	}
+	//	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
+	//		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map { case (k, v) => (k, v.map(_._2).reduce(aggFcn)) }
+	//	}
 }
 
 
@@ -189,7 +189,7 @@ class UniversalBinner extends Logging {
 				                    name, description)
 				val levelEndTime = System.currentTimeMillis()
 				info("Finished binning levels ["+levels.mkString(", ")+"] of data set "
-					    + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
+					     + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
 			}
 		)
 
@@ -197,9 +197,9 @@ class UniversalBinner extends Logging {
 
 		val endTime = System.currentTimeMillis()
 		info("Finished binning data set " + name + " into "
-			    + levelSets.map(_.size).reduce(_+_)
-			    + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
-			    + ((endTime-startTime)/60000.0) + " minutes")
+			     + levelSets.map(_.size).reduce(_+_)
+			     + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
+			     + ((endTime-startTime)/60000.0) + " minutes")
 	}
 
 	/** Helper function to mimic RDDBinner interface */
@@ -248,14 +248,14 @@ class UniversalBinner extends Logging {
 		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT],
 		 parameters: BinningParameters = new BinningParameters()): RDD[TileData[BT]] =
 	{
-    // Convert raw indices into tiles and bins
+		// Convert raw indices into tiles and bins
 		val consolidatedByPartition: RDD[(TileIndex, Array[BinIndex], PT, Option[DT])] =
-      data.flatMap { record =>
-        val indices: Traversable[(TileIndex, Array[BinIndex])] = locateIndexFcn(record._1)
-        val value: PT = record._2
-        val analyticValue: Option[DT] = record._3
-        indices.map(index => (index._1, index._2, value, analyticValue))
-      }
+			data.flatMap { record =>
+				val indices: Traversable[(TileIndex, Array[BinIndex])] = locateIndexFcn(record._1)
+				val value: PT = record._2
+				val analyticValue: Option[DT] = record._3
+				indices.map(index => (index._1, index._2, value, analyticValue))
+			}
 
 		// Combine all information from a single tile
 		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
@@ -274,7 +274,7 @@ class UniversalBinner extends Logging {
 				newAnalyticValue.foreach(analyticValue => dataAnalytics.foreach(analytic => analytic.accumulate(tile, analyticValue)))
 
 				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
-					optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
+				 optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
 			}
 		val mergeCombiners: ((MutableMap[BinIndex, PT], Option[DT]),
 		                     (MutableMap[BinIndex, PT], Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =

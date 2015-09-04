@@ -90,12 +90,12 @@ class TestPyramidIO extends PyramidIO with Serializable {
 	                       tileHeight: Int,
 	                       dataDescription: Properties): Unit = {}
 
-  def readTiles[T] (pyramidId: String,
-                     serializer: TileSerializer[T],
-                     javaTiles: JavaIterable[TileIndex],
-                     properties: JSONObject): JavaList[TileData[T]] = {
-    readTiles( pyramidId, serializer, javaTiles )
-  }
+	def readTiles[T] (pyramidId: String,
+	                  serializer: TileSerializer[T],
+	                  javaTiles: JavaIterable[TileIndex],
+	                  properties: JSONObject): JavaList[TileData[T]] = {
+		readTiles( pyramidId, serializer, javaTiles )
+	}
 
 	def readTiles[T] (pyramidId: String,
 	                  serializer: TileSerializer[T],
@@ -137,10 +137,10 @@ class TestTileIO extends TileIO {
 			None
 		}
 	}
-  def getPyramid (pyramidId: String) = TestPyramidIO.datas.get(pyramidId)
-  def getMetaData (pyramidId: String) = TestPyramidIO.metaDatas.get(pyramidId)
-  def clearPyramid (pyramidId: String): Unit = {
-    TestPyramidIO.datas.remove(pyramidId)
-    TestPyramidIO.metaDatas.remove(pyramidId)
-  }
+	def getPyramid (pyramidId: String) = TestPyramidIO.datas.get(pyramidId)
+	def getMetaData (pyramidId: String) = TestPyramidIO.metaDatas.get(pyramidId)
+	def clearPyramid (pyramidId: String): Unit = {
+		TestPyramidIO.datas.remove(pyramidId)
+		TestPyramidIO.metaDatas.remove(pyramidId)
+	}
 }

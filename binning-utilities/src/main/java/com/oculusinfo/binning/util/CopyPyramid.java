@@ -125,8 +125,8 @@ public class CopyPyramid<T> {
 			System.out.println("\tserializer: The tile serializer's characteristics");
 			System.out.println("\tlevels: A list of levels to copy.");
 			System.out.println("\tindices: An optional list of tile indices to use to restrict the "+
-				"area of copied tiles.   Tiles that don't intersect any of the indicated indices are "+
-				"not exported.");
+			                   "area of copied tiles.   Tiles that don't intersect any of the indicated indices are "+
+			                   "not exported.");
 			System.out.println("tileWidth and tileHeight may also be specified, but default to 256.");
 		}
 	}
@@ -237,7 +237,7 @@ public class CopyPyramid<T> {
 		int _maxLevel;
 		int _blockSize;
 		CopyParameters (String sourceId, String destinationId, List<TileIndex> indices,
-						int width, int height, int minLevel, int maxLevel, int blockSize) {
+		                int width, int height, int minLevel, int maxLevel, int blockSize) {
 			_sourceId = sourceId;
 			_destinationId = destinationId;
 			if (null == indices || indices.isEmpty()) {
@@ -258,15 +258,15 @@ public class CopyPyramid<T> {
 		private static StringProperty DESTINATION_ID = new StringProperty("destinationId", "The id of the destination pyramid", "");
 		private static ConfigurationProperty<List<TileIndex>> INDICES =
 			new ListProperty<TileIndex>(
-				new TileIndexProperty(
-					"index",
-					"The index of a root tile from which to look up and down the pyramid",
-					new TileIndex(0, 0, 0)
-				),
-				"indices",
-				"A list of root tiles that describe a necessary containment area of what is to be "+
-					"exported.  Default is to export the whole pyramid."
-			);
+			                            new TileIndexProperty(
+			                                                  "index",
+			                                                  "The index of a root tile from which to look up and down the pyramid",
+			                                                  new TileIndex(0, 0, 0)
+			                                                  ),
+			                            "indices",
+			                            "A list of root tiles that describe a necessary containment area of what is to be "+
+			                            "exported.  Default is to export the whole pyramid."
+			                            );
 		private static IntegerProperty WIDTH = new IntegerProperty("width", "The tile width, in bins", 256);
 		private static IntegerProperty HEIGHT = new IntegerProperty("height", "The tile height, in bins", 256);
 		private static IntegerProperty MIN_LEVEL = new IntegerProperty("minimum", "The numerically minimum level to copy", 0);
@@ -292,15 +292,15 @@ public class CopyPyramid<T> {
 		@Override
 		protected CopyParameters create() {
 			return new CopyParameters(
-				getPropertyValue(SOURCE_ID),
-				getPropertyValue(DESTINATION_ID),
-				getPropertyValue(INDICES),
-				getPropertyValue(WIDTH),
-				getPropertyValue(HEIGHT),
-				getPropertyValue(MIN_LEVEL),
-				getPropertyValue(MAX_LEVEL),
-				getPropertyValue(BLOCK_SIZE)
-			);
+			                          getPropertyValue(SOURCE_ID),
+			                          getPropertyValue(DESTINATION_ID),
+			                          getPropertyValue(INDICES),
+			                          getPropertyValue(WIDTH),
+			                          getPropertyValue(HEIGHT),
+			                          getPropertyValue(MIN_LEVEL),
+			                          getPropertyValue(MAX_LEVEL),
+			                          getPropertyValue(BLOCK_SIZE)
+			                          );
 		}
 	}
 }
