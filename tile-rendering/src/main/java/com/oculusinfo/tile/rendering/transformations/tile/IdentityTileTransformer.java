@@ -35,6 +35,8 @@ import com.oculusinfo.binning.TileData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 
 /**
  * A TileTransformer is an interface that can take a JSON representation of
@@ -44,9 +46,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author tlachapelle
  */
-public class IdentityTileTransformer<T> implements TileTransformer<T> {
+public class IdentityTileTransformer<T> extends BucketTileTransformer<T> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IdentityTileTransformer.class);
+	public IdentityTileTransformer(JSONObject arguments) {
+		super(arguments);
+	}
 
 	/**
 	 * Transforms the tile data in JSON format based on transform type and returns result
@@ -65,26 +69,8 @@ public class IdentityTileTransformer<T> implements TileTransformer<T> {
 	 * @throws Exception
 	 */
 	//takes tile data x returns tile data x generified on function level
-	public TileData<T> transform(TileData<T> data) throws Exception {
+	public TileData<List<T>> transform(TileData<List<T>> data) throws Exception {
 		return data;
-	}
-
-	@Override
-	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
-		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
-		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
-		return new Pair<>(minimumValue,  maximumValue);
-	}
-
-	private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
-		String rawValue = parameter.getPropertyValue(property);
-		try {
-			return Double.parseDouble(rawValue);
-		} catch (NumberFormatException|NullPointerException e) {
-			LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
-			return def;
-		}
 	}
 }
 

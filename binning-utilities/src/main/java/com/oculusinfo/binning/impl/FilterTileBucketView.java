@@ -27,6 +27,7 @@ package com.oculusinfo.binning.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
@@ -113,6 +114,10 @@ public class FilterTileBucketView<T> implements TileData<List<T>> {
 		}
 
 		List<T> binContents = _base.getBin(x, y);
+		if (binContents == null) {
+			binContents = Collections.emptyList();
+		}
+
 		int binSize = binContents.size();
 		
 		// if the bucket range falls outside of the available bin range, return empty list.  null values assume full range

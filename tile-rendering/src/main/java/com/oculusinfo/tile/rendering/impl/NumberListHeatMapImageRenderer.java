@@ -24,6 +24,7 @@
  */
 package com.oculusinfo.tile.rendering.impl;
 
+import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -39,10 +40,7 @@ import org.slf4j.LoggerFactory;
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
-import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.binning.util.TypeDescriptor;
-import com.oculusinfo.factory.ConfigurationException;
-import com.oculusinfo.factory.properties.StringProperty;
 
 /**
  * A server side to render List<Pair<String, Int>> tiles.
@@ -56,6 +54,7 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 
 	private final Logger LOGGER = LoggerFactory.getLogger( getClass() );
 	private static final Color COLOR_BLANK = new Color( 255, 255, 255, 0 );
+	private static final boolean DEBUG = false;
 
 	private static final double pow2( double x ) {
 		return x * x;
@@ -94,9 +93,9 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 
 			ColorRamp colorRamp = config.produce( ColorRamp.class );
 
-			bi = renderImage( data, t, scaledMin, scaledMax, rangeMode, colorRamp, bi, pixelShape );
+			bi = renderImage( data, t, scaledMin, scaledMax, rangeMode, colorRamp, bi, pixelShape);
 		} catch ( Exception e ) {
-			LOGGER.warn( "Configuration error: ", e );
+			LOGGER.error("Configuration error: ", e);
 			return null;
 		}
 		return bi;
@@ -104,7 +103,7 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 
 	protected BufferedImage renderImage( TileData<List<Number>> data,
 										 ValueTransformer<Number> t, double valueMin, double valueMax,
-										 String mode, ColorRamp colorRamp, BufferedImage bi, String pixelShape ) {
+										 String mode, ColorRamp colorRamp, BufferedImage bi, String pixelShape) {
 
 		int outWidth = bi.getWidth();
 		int outHeight = bi.getHeight();
@@ -126,11 +125,14 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 			for ( int ty = 0; ty < yBins; ty++ ) {
 				for ( int tx = 0; tx < xBins; tx++ ) {
 					List<Number> binContents = data.getBin( tx, ty );
+
 					// sum buckets for bin count
 					double binCount = 0;
-					for ( int i = 0; i < binContents.size(); i++ ) {
-						if ( binContents.get( i ) != null ) {
-							binCount += binContents.get( i ).doubleValue();
+					if (binContents != null) {
+						for ( int i = 0; i < binContents.size(); i++ ) {
+							if ( binContents.get( i ) != null ) {
+								binCount += binContents.get( i ).doubleValue();
+							}
 						}
 					}
 					// transform value
@@ -220,6 +222,17 @@ public class NumberListHeatMapImageRenderer implements TileDataImageRenderer<Lis
 				}
 			}
 		}
+
+		if (DEBUG) {
+			TileIndex tidx = data.getDefinition();
+			int x = tidx.getX();
+			int y = tidx.getY();
+			Graphics g = bi.getGraphics();
+			g.setColor(Color.CYAN);
+			g.drawRect(0, 0, bi.getWidth() - 1, bi.getHeight() - 1);
+			g.drawString(tidx.getLevel() + "_" + tidx.getX() + "_" + tidx.getY(), 15, 15);
+		}
+
 		return bi;
 	}
 

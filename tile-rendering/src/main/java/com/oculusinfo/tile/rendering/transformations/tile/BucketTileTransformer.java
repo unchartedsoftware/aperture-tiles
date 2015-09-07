@@ -55,8 +55,6 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 			// get the start and end time range
 			_startBucket = arguments.optInt("startBucket");
 			_endBucket = arguments.optInt("endBucket");
-		} else {
-			LOGGER.warn("No arguments passed in to transformer " + getClass().getSimpleName());
 		}
 	}
 

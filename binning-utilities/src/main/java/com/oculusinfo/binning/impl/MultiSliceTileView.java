@@ -83,7 +83,7 @@ public class MultiSliceTileView<T> implements TileData<List<T>> {
 			if (null == componentBin)
 				// Because we don't know the standard bin length of each component, if any are null, we have to give
 				// up.
-				return null;
+				return Collections.emptyList();
 			else
 				binValue.addAll(componentBin);
 		}
