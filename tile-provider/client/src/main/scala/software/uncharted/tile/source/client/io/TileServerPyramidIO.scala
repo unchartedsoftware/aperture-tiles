@@ -51,8 +51,9 @@ import software.uncharted.tile.source.client._
  */
 class TileServerPyramidIO (brokerHostName: String, brokerUserName: String, brokerPassword: String,
                            maximumWaitTime: Long = 2000) extends PyramidIO {
-  private val client = new TileClient(brokerHostName, brokerUserName, brokerHostName)
+  private val client = new TileClient(brokerHostName, brokerUserName, brokerPassword)
   private val clientTimeout = Duration(maximumWaitTime, TimeUnit.MILLISECONDS)
+  client.startResponseThread
 
   override def initializeForWrite(pyramidId: String): Unit = throw new UnsupportedOperationException("TileServerPyramidIO is read-only")
   override def writeTiles[T](pyramidId: String, serializer: TileSerializer[T], data: JavaIterable[TileData[T]]): Unit = throw new UnsupportedOperationException("TileServerPyramidIO is read-only")
@@ -63,7 +64,8 @@ class TileServerPyramidIO (brokerHostName: String, brokerUserName: String, broke
     val configuration = JsonUtilities.propertiesObjToJSON(dataDescription)
     val request = ClientTileInitializationRequest(pyramidId, width, height, configuration)
 
-    client.makeRequest(request)
+    submitAndWaitForResponse(request)
+//    client.makeRequest(request)
   }
 
   private def submitAndWaitForResponse (request: ClientTileRequest): Unit = {
