@@ -9,6 +9,11 @@ distributions {
 			into ("examples"){
 				from("src/examples")
 			}
+
+			// Copy the contents of the datsets directory over
+			into ("datasets") {
+				from ("src/datasets")
+			}
 			// Copy binary, source and doc jars into their subdirectories, stripping off the
 			// version info.
 			into("lib") {
