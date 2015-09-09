@@ -158,7 +158,6 @@
             img.style.opacity = 0;
             img.setAttribute( "data-url", url );
             var pendingRequests = urls.map( function( url ) {
-                img._lastRequest = Date.now();
                 var deferred = $.Deferred();
                 $.ajax({
                     url: url

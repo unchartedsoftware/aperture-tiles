@@ -29,30 +29,23 @@ package com.oculusinfo.tilegen.pipeline
 
 
 
+import java.io.OutputStream
 import java.sql.Timestamp
-import java.text.{DateFormat, SimpleDateFormat}
+import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.{Calendar, GregorianCalendar, Date}
+import java.util.{Calendar, Date, GregorianCalendar}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
-import com.oculusinfo.tilegen.datasets.{SchemaTypeUtilities, CSVReader, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCollectorAccumulable}
+import com.oculusinfo.tilegen.datasets.{CSVReader, SchemaTypeUtilities, TilingTask, TilingTaskParameters}
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
-import com.oculusinfo.tilegen.pipeline.PipelineTree._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{TimestampType, IntegerType}
+import org.apache.spark.sql.types.{DataType, IntegerType, TimestampType}
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
-import org.apache.spark.sql.types.DataType
-import org.joda.time.base.BaseSingleFieldPeriod
-import org.joda.time.{Interval, PeriodType, DateTime, DurationFieldType}
-
-import java.io.{OutputStream, FileWriter, BufferedWriter, File}
-
-import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{CustomCollector, ErrorCollectorAccumulableParam, ErrorCollector, ErrorCollectorAccumulable}
-import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
-import org.apache.spark.{Accumulable, AccumulableParam}
+import org.joda.time.{DurationFieldType, Interval, PeriodType}
 
 import scala.collection.mutable.ListBuffer
 
@@ -625,6 +618,20 @@ object PipelineOperations {
 		tilingTask.doLineTiling(tileIO)
 
 		PipelineData(input.sqlContext, input.srdd, Option(tableName))
+	}
+
+	/**
+	 * Debug op that will run a take operation on the RDD and print the data out to the console.
+	 * Output has a prefix attached to it to allow for filtering through a tool like AWK.
+	 *
+	 * @param count Number of records to take
+	 * @param prefix String to prepend
+	 * @param input Pipeline data from previous stage
+	 * @return Unmodified input data
+	 */
+	def takeAndPrintOp(count: Int, prefix: String = "")(input: PipelineData) = {
+		input.srdd.take(count).foreach(s => println(s"$prefix: $s"))
+		input
 	}
 
 	/**
