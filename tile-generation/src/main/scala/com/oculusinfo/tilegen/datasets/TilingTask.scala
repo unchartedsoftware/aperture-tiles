@@ -464,7 +464,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val valueFields = valuer.fields.length
 			val localDataAnalytics = dataAnalytics
 			val localValuer = valuer
-			data.map(row =>
+			val mappedData: RDD[(Seq[Any], PT, Option[DT])] = data.map(row =>
 				{
 					val index = (0 until indexFields).map(n => row(n))
 
@@ -477,6 +477,20 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 					(index, value, analysis)
 				}
 			)
+
+			// If set, filter bins that are out of the level 0 tile bounds
+			if (config.filterToRegion) {
+				val iScheme = indexer.indexScheme
+				val area = getTilePyramid.getTileBounds(new TileIndex(0, 0, 0))
+
+				mappedData.filter(lineSeq => {
+					val (x, y) = iScheme.toCartesian(lineSeq._1)
+
+					y >= area.getMinY && y < area.getMaxY
+				})
+			} else {
+				mappedData
+			}
 		}
 
 		override def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
