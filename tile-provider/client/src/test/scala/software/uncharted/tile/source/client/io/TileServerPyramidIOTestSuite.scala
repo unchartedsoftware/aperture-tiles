@@ -71,7 +71,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
 
   // This test uses a remote server, rather than starting one itself.  Consequently, it is of course ignored, and
   // is intended to be run manually when said server is known to be up.
-  test("Test on-demand tiling") {
+  ignore("Test on-demand tiling") {
     def time[T] (fcn: () => T): (T, Double) = {
       val start = System.nanoTime()
       val result = fcn()

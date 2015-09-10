@@ -25,8 +25,7 @@
 package software.uncharted.tile.source.server
 
 import java.io.ByteArrayOutputStream
-import java.util
-import java.util.{Arrays => JavaArrays}
+import java.util.{Arrays => JavaArrays, ArrayList}
 
 import grizzled.slf4j.Logging
 
@@ -101,7 +100,7 @@ class SimpleTileServer(host: String, user: String, password: String,
           val tiles = pio.readTiles(tdr.table, tdr.serializer, tdr.indices)
 
           // Serialize them all
-          val tileData = new util.ArrayList[Array[Byte]]()
+          val tileData = new ArrayList[Array[Byte]]()
           tiles.asScala.foreach { tile =>
             val baos = new ByteArrayOutputStream()
             tdr.serializer.serialize(tile, baos)

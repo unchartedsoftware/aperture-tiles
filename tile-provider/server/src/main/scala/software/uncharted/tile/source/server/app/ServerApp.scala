@@ -31,11 +31,9 @@ import scala.collection.JavaConverters._
 import grizzled.slf4j.Logging
 
 import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider
-import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider
 import com.oculusinfo.tilegen.util.{MissingArgumentException, ArgumentParser}
 import software.uncharted.tile.source.server.io.{OnDemandTilePyramidIOFactoryProvider, StandardPyramidIOFactoryProvider}
-import software.uncharted.tile.source.server.SimpleTileServer
-import scala.reflect.runtime.universe
+import software.uncharted.tile.source.server.MultiTileServer
 
 /**
  * A stand-alone application that starts a spark context, and sets up a tile server to run on it, so as to server
@@ -69,7 +67,7 @@ object ServerApp extends Logging {
         None)
       val pyramidIOFactoryProvider = new StandardPyramidIOFactoryProvider((DefaultPyramidIOFactoryProvider.values() :+ new OnDemandTilePyramidIOFactoryProvider(contextProvider)).toSet.asJava)
 
-      val server = new SimpleTileServer(rabbitMQHost, rabbitMQUser, rabbitMQPassword, pyramidIOFactoryProvider)
+      val server = new MultiTileServer(rabbitMQHost, rabbitMQUser, rabbitMQPassword, pyramidIOFactoryProvider)
       server.listenForRequests
     } catch {
       case mae: MissingArgumentException => {
