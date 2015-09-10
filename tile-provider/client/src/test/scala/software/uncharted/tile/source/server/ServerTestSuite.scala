@@ -44,7 +44,7 @@ import software.uncharted.tile.source.RabbitMQConnectable
 
 
 object ServerTestSuite {
-  val TEST_BROKER="hadoop-s1"
+  val TEST_BROKER="localhost"
   val TEST_USER="test"
   val TEST_PSWD="test"
   val maxResponseTime = 5000
@@ -104,7 +104,8 @@ class ServerTestSuite extends FunSuite {
 }
 
 import ServerTestSuite._
-class TestServer extends Server(TEST_BROKER, TEST_USER, TEST_PSWD, "test-msg", "test-rsp", "test-logs") {
+class TestServer extends Server(TEST_BROKER, TEST_USER, TEST_PSWD, "test-msg", "test-rsp", "test-logs", 100)
+with SimpleServer {
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     println("Processing request (Server test suite)")
     val msg = new String(delivery.getBody)

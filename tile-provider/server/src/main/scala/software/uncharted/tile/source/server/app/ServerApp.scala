@@ -34,7 +34,7 @@ import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider
 import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider
 import com.oculusinfo.tilegen.util.{MissingArgumentException, ArgumentParser}
 import software.uncharted.tile.source.server.io.{OnDemandTilePyramidIOFactoryProvider, StandardPyramidIOFactoryProvider}
-import software.uncharted.tile.source.server.TileServer
+import software.uncharted.tile.source.server.SimpleTileServer
 import scala.reflect.runtime.universe
 
 /**
@@ -69,7 +69,7 @@ object ServerApp extends Logging {
         None)
       val pyramidIOFactoryProvider = new StandardPyramidIOFactoryProvider((DefaultPyramidIOFactoryProvider.values() :+ new OnDemandTilePyramidIOFactoryProvider(contextProvider)).toSet.asJava)
 
-      val server = new TileServer(rabbitMQHost, rabbitMQUser, rabbitMQPassword, pyramidIOFactoryProvider)
+      val server = new SimpleTileServer(rabbitMQHost, rabbitMQUser, rabbitMQPassword, pyramidIOFactoryProvider)
       server.listenForRequests
     } catch {
       case mae: MissingArgumentException => {

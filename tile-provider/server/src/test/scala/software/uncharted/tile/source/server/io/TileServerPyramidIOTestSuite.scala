@@ -50,7 +50,7 @@ import com.oculusinfo.binning.util.JsonUtilities
 import com.oculusinfo.factory.providers.FactoryProvider
 import com.oculusinfo.factory.util.Pair
 import software.uncharted.tile.source.client.io.TileServerPyramidIO
-import software.uncharted.tile.source.server.TileServer
+import software.uncharted.tile.source.server.SimpleTileServer
 
 import scala.concurrent.duration.Duration
 
@@ -111,7 +111,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
 
   val pyramidIOProviders: Set[FactoryProvider[PyramidIO]] = DefaultPyramidIOFactoryProvider.values.toSet
   val pioFactoryProvider = new StandardPyramidIOFactoryProvider(pyramidIOProviders.asJava)
-  var server: TileServer = null
+  var server: SimpleTileServer = null
   var io: TileServerPyramidIO = null
 
   override def withFixture(test: NoArgTest): Outcome = {
@@ -120,7 +120,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
     // First, we consolidate server and client construction so it doesn't have to be done individually in each test.
     // Second, we wrap test calls so that they don't get called at all if the server can't be reached.
     try {
-      server = new TileServer(BROKER_HOST, BROKER_USER, BROKER_PASSWORD, pioFactoryProvider)
+      server = new SimpleTileServer(BROKER_HOST, BROKER_USER, BROKER_PASSWORD, pioFactoryProvider)
       val runServer = server.startRequestThread
       var outcome =
         try {

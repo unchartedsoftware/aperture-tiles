@@ -43,6 +43,9 @@ trait TileRequest {
   /** The type of request being made */
   val requestType: RequestTypes.Value
 
+  /** The table with which this request is associated */
+  val table: String
+
   /** Convert the tile request into a transmitable byte array */
   def toByteArray: Array[Byte]
 }

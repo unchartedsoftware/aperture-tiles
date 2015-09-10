@@ -37,14 +37,14 @@ import scala.concurrent.duration.Duration
 import com.rabbitmq.client.QueueingConsumer.Delivery
 
 import software.uncharted.tile.source
-import software.uncharted.tile.source.server.Server
+import software.uncharted.tile.source.server.{SimpleServer, Server}
 import software.uncharted.tile.source.util.ByteArrayCommunicator
 
 import scala.util.Try
 
 
 object ClientTestSuite {
-  val TEST_BROKER="hadoop-s1"
+  val TEST_BROKER="localhost"
   val TEST_USER="test"
   val TEST_PSWD="test"
   val maxResponseTime = 5000
@@ -125,7 +125,7 @@ class TestClientMessage(val requestType: String) {
 }
 
 class TestServer extends Server(ClientTestSuite.TEST_BROKER, ClientTestSuite.TEST_USER, ClientTestSuite.TEST_PSWD,
-  "test-msg", "test-rsp", "test-logs") {
+  "test-msg", "test-rsp", "test-logs", 100) with SimpleServer {
   var requests = 0
   override def processRequest(delivery: Delivery): Option[(String, Array[Byte])] = {
     requests = requests + 1
