@@ -141,7 +141,6 @@ class MultiTileServer(host: String, user: String, password: String,
       }
 
     if (0 == requests.size) {
-      info("Empty tile request")
       // Make sure further cases always have a request to deal with.
       Array()
     } else if (requests.size > 1 && requests.map(c => choose(_.table, _.table)(c._1)).sliding(2).map(tables => tables(0) != tables(1)).reduce(_ || _)) {
