@@ -141,14 +141,20 @@ class MultiTileServer(host: String, user: String, password: String,
       }
 
     if (0 == requests.size) {
+      info("Empty tile request")
       // Make sure further cases always have a request to deal with.
       Array()
     } else if (requests.size > 1 && requests.map(c => choose(_.table, _.table)(c._1)).sliding(2).map(tables => tables(0) != tables(1)).reduce(_ || _)) {
       // Multiple tables given in a single call.  This shouldn't happen - each table should be in its own queue - so
       // seeing this error should be very weird and very bad.
       val tables = requests.map(c => choose(_.table, _.table)(c._1)).toSet.toList.sorted
+      error(tables.mkString("Multiple simultaneous tables: ", ", ", ""))
       requests.map(r => (Right(new MismatchedRequestsException(tables.mkString("Multiple simultaneous tables: ", ", ", ""))), r._2))
     } else if (requests.size > 1 && requests.map(c => choose(_.serializer, _.serializer)(c._1)).sliding(2).map(serializers => serializers(0) != serializers(1)).reduce(_ || _)) {
+      // Multiple serializers given in a single call.  This shouldn't happen - each table should be in its own queue -
+      // so seeing this error should be very weird and bad.
+      val serializers = requests.map(c => choose(_.serializer.getClass.getName, _.serializer.getClass.getName)(c._1)).toSet.toList.sorted
+      error(serializers.mkString("Multiple simultaneous serializers: ", ", ", ""))
       requests.map(r => (Right(new MismatchedRequestsException("Different requests have different serializers")), r._2))
     } else {
       val sampleRequest = requests(0)._1
