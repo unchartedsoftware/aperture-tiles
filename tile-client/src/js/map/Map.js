@@ -28,6 +28,7 @@
     "use strict";
 
     var Axis = require('./Axis'),
+        PendingLayer = require('../layer/PendingLayer'),
         MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
         Carousel = require('../layer/Carousel'),
@@ -175,6 +176,12 @@
             map.olMap.zoomToMaxExtent();
             // set mouse callbacks
             setMapCallbacks( map );
+            // create pending layer now
+            if ( map.showPendingTiles ) {
+                map.pendingLayer = new PendingLayer();
+                map.pendingLayer.map = map;
+                map.pendingLayer.activate();
+            }
             if ( map.deferreds ) {
                 activateDeferredComponents( map );
             }
@@ -191,6 +198,10 @@
     addLayer = function( map, layer ) {
         // add map to layer
         layer.map = map;
+        // track layer
+        if ( map.showPendingTiles ) {
+            map.pendingLayer.register( layer );
+        }
         // activate the layer
         layer.activate();
         // add to layer array
@@ -301,6 +312,10 @@
             delete map.layersById[ layer.getUUID() ];
             // remove it from layer array
             map.layers.splice( index, 1 );
+            // track layer
+            if ( map.showPendingTiles ) {
+                map.pendingLayer.unregister( layer );
+            }
             // deactivate it
             layer.deactivate();
             layer.map = null;
@@ -434,6 +449,8 @@
                 zoomDelay: spec.options.zoomDelay !== undefined ? spec.options.zoomDelay : 400
             })
         });
+
+        this.showPendingTiles = spec.showPendingTiles ? spec.showPendingTiles : true;
 
         // set theme, default to 'dark' theme
         this.setTheme( spec.theme );
