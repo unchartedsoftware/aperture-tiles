@@ -66,8 +66,8 @@ case class TilingTaskParameters (name: String,
 																 minimumSegmentLength: Option[Int] = None,
 																 maximumSegmentLength: Option[Int] = None,
 																 maximumLeaderLength: Option[Int] = None,
-																 lineType: LineDrawingType = LineDrawingType.Lines,
-																 filterToRegion: Boolean = false)
+																 filterToRegion: Boolean = false,
+																 lineType: LineDrawingType = LineDrawingType.Lines)
 {
 	def getDefiniteMaximumLeaderLength: Int = maximumLeaderLength.getOrElse(TilingTaskParametersFactory.MAXIMUM_LEADER_LENGTH.getDefaultValue)
 }
@@ -86,8 +86,8 @@ object TilingTaskParametersFactory {
 	val MINIMUM_SEGMENT_LENGTH = new IntegerProperty("minimumSegmentLength", "The minimum length of a segment (in bins) before it is drawn", 4)
 	val MAXIMUM_SEGMENT_LENGTH = new IntegerProperty("maximumSegmentLength", "The maximum length of a segment (in bins) before it is no longer drawn", 1024)
 	val MAXIMUM_LEADER_LENGTH = new IntegerProperty("maximumLeaderLength", "The maximum number of bins to draw at each end of a segment.	Bins farther than this distance from both endpoints will be ignored.", 1024)
+	val FILTER_TO_REGION = new BooleanProperty("filterToRegion", "Filters out data outside of valid level 0 tile", false)
 	val LINE_DRAWING_METHOD = new EnumProperty[LineDrawingType]("lineType", "The line type to use", classOf[LineDrawingType], LineDrawingType.Lines)
-	val FILTER_TO_REGION = new BooleanProperty("filterToRegion", "Filters out bins outside of valid level 0 tile", false)
 }
 class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
@@ -139,8 +139,8 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 														 optionalGet(MINIMUM_SEGMENT_LENGTH).map(_.intValue()),
 														 optionalGet(MAXIMUM_SEGMENT_LENGTH).map(_.intValue()),
 														 optionalGet(MAXIMUM_LEADER_LENGTH).map(_.intValue()),
-														 getPropertyValue(LINE_DRAWING_METHOD),
-														 getPropertyValue(FILTER_TO_REGION)
+														 getPropertyValue(FILTER_TO_REGION),
+														 getPropertyValue(LINE_DRAWING_METHOD)
 		)
 	}
 }

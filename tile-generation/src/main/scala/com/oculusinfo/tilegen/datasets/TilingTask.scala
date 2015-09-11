@@ -486,7 +486,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 				mappedData.filter(lineSeq => {
 					val (x, y) = iScheme.toCartesian(lineSeq._1)
 
-					y >= area.getMinY && y < area.getMaxY
+					area.contains(x, y)
 				})
 			} else {
 				mappedData
