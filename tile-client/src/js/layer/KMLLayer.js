@@ -91,17 +91,18 @@
 			});
 			this.olLayers.push( kml.olLayer );
 		}, this );
-
         this.setEnabled( this.isEnabled() );
         this.setOpacity( this.getOpacity() );
         this.setBrightness( this.getBrightness() );
         this.setContrast( this.getContrast() );
-
+    	// publish activate event before appending to map
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
 		this.olLayers.forEach( function( olLayer ) {
 			this.map.olMap.addLayer( olLayer );
 		}, this );
-
 		this.setZIndex( this.zIndex );
+        // publish add event
+        PubSub.publish( this.getChannel(), { field: 'add', value: true } );
 	};
 
 	/**
@@ -116,11 +117,13 @@
 				olLayer.destroy();
 				olLayer = null;
 			}, this );
+            PubSub.publish( this.getChannel(), { field: 'remove', value: true } );
 			this.kml.forEach( function( kml ) {
 				kml.olLayer = null;
 			});
 			this.olLayers = [];
-		}
+		}	
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
 	};
 
 	/**
