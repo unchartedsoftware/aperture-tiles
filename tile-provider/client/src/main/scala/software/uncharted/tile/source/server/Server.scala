@@ -113,7 +113,13 @@ abstract class Server(host: String, user: String, password: String,
     // Loop continually, accepting tile requests, until told to shut down
     while (!_shutdown) {
       _started = true
-      onDelivery(_consumer.nextDelivery(granularity))
+      try {
+        val delivery = _consumer.nextDelivery(granularity)
+        onDelivery(delivery)
+      } catch {
+        case t: Throwable =>
+          error("Error processing delivery", t)
+      }
     }
   }
 

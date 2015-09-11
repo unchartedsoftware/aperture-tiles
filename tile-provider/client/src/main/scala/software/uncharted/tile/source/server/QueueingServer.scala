@@ -90,6 +90,7 @@ trait QueueingServer extends ServerPublications with Logging {
     if (!_queuesByAge.isEmpty) {
       val dequeueTest: ((Any, Long)) => Boolean = q => (System.currentTimeMillis() - q._2) >= getWaitTime(q._1)
       _queuesByAge.dequeueFirst(dequeueTest).foreach { case (queueId, time) =>
+        info("Executing queue "+queueId)
         onQueueRipe(_queues.remove(queueId).get.toArray)
       }
     }

@@ -85,7 +85,7 @@ abstract class Client[RT] (host: String, user: String, pswd: String,
    * Listen for tile requests messages, and attempt to fill them, indefinitely.
    */
   def listenForResponses: Unit = {
-    info("RabbitMQ client listening for responses")
+    info("RabbitMQ client listening for responses on channel "+responseExchange+" with routing key "+_requesterId)
     // Create a request channel, on which we will listen for requests.
     _channel.exchangeDeclare(requestExchange, "fanout", false, true, false, null)
     // Create a response channel, to which we publish responses to requests.
@@ -115,6 +115,10 @@ abstract class Client[RT] (host: String, user: String, pswd: String,
               case tile.source.LOG_DEBUG => onError(request, tile.source.LOG_DEBUG, delivery.getBody)
               case _ => processResults(request, contentType, delivery.getBody)
             }
+          }
+        } catch {
+          case t: Throwable => {
+            warn("Error processing response", t)
           }
         } finally {
           _channel.basicAck(delivery.getEnvelope.getDeliveryTag, false)

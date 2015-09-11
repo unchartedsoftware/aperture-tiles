@@ -143,12 +143,12 @@ class MultiTileServer(host: String, user: String, password: String,
     if (0 == requests.size) {
       // Make sure further cases always have a request to deal with.
       Array()
-    } else if (requests.map(c => choose(_.table, _.table)(c._1)).sliding(2).map(tables => tables(0) != tables(1)).reduce(_ || _)) {
+    } else if (requests.size > 1 && requests.map(c => choose(_.table, _.table)(c._1)).sliding(2).map(tables => tables(0) != tables(1)).reduce(_ || _)) {
       // Multiple tables given in a single call.  This shouldn't happen - each table should be in its own queue - so
       // seeing this error should be very weird and very bad.
       val tables = requests.map(c => choose(_.table, _.table)(c._1)).toSet.toList.sorted
       requests.map(r => (Right(new MismatchedRequestsException(tables.mkString("Multiple simultaneous tables: ", ", ", ""))), r._2))
-    } else if (requests.map(c => choose(_.serializer, _.serializer)(c._1)).sliding(2).map(serializers => serializers(0) != serializers(1)).reduce(_ || _)) {
+    } else if (requests.size > 1 && requests.map(c => choose(_.serializer, _.serializer)(c._1)).sliding(2).map(serializers => serializers(0) != serializers(1)).reduce(_ || _)) {
       requests.map(r => (Right(new MismatchedRequestsException("Different requests have different serializers")), r._2))
     } else {
       val sampleRequest = requests(0)._1
@@ -176,19 +176,23 @@ class MultiTileServer(host: String, user: String, password: String,
         val tileData = doWork(rawSerializer)
 
         requests.map { case (request, requestIndex) =>
-          choose(
-            request => {
-              val tileIndices = request.indices.asScala.toArray
-              val data = new ArrayList(tileIndices.map(index => tileData.get(index)).toList.asJava)
+          try {
+            choose(
+              request => {
+                val tileIndices = request.indices.asScala.toArray
+                val data = new ArrayList(tileIndices.map(index => tileData.get(index).getOrElse(null)).toList.asJava)
 
-              (Left(Some((RequestTypes.Tiles.toString, ByteArrayCommunicator.defaultCommunicator.write(data)))), requestIndex)
-            },
-            request => {
-              val tile = tileData.get(request.index).getOrElse(null)
+                (Left(Some((RequestTypes.Tiles.toString, ByteArrayCommunicator.defaultCommunicator.write(data)))), requestIndex)
+              },
+              request => {
+                val tile = tileData.get(request.index).getOrElse(null)
 
-              (Left(Some((RequestTypes.TileStream.toString, tile))), requestIndex)
-            }
-          )(request)
+                (Left(Some((RequestTypes.TileStream.toString, tile))), requestIndex)
+              }
+            )(request)
+          } catch {
+            case t: Throwable => (Right(t), requestIndex)
+          }
         }
       }
     }
