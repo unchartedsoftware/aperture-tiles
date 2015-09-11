@@ -12,6 +12,6 @@ dependencies {
 	compile project(":math-utilities")
 	compile project(":binning-utilities")
 	
-	testCompile "junit:junit:4.8.1"
+	testCompile "junit:junit:4.11"
 	testCompile "org.mockito:mockito-all:1.9.5"
 }

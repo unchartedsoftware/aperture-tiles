@@ -26,5 +26,5 @@ dependencies {
 	compile "org.json:json:20090211"
 	compile "commons-codec:commons-codec:1.5"
 	compile "org.slf4j:slf4j-api:1.6.4"
-	testCompile "junit:junit:4.8.1"
+	testCompile "junit:junit:4.11"
 }

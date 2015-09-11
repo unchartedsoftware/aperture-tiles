@@ -23,5 +23,5 @@ artifacts {
 
 // Dependencies on other projects / jars
 dependencies {
-	testCompile "junit:junit:4.8.1"
+	testCompile "junit:junit:4.11"
 }

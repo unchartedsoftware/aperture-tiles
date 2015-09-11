@@ -56,5 +56,5 @@ sourceSets {
 dependencies {	
 	compile project(":math-utilities")
 	compile "org.scala-lang:scala-library:$scalaVersion"
-	testCompile "junit:junit:4.8.1"
+	testCompile "junit:junit:4.11"
 }
