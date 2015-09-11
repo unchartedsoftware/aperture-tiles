@@ -37,6 +37,9 @@ import com.oculusinfo.binning.TileIndex;
 import com.oculusinfo.binning.impl.DenseTileData;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.util.Pair;
+
+
+
 public class PairAvroSerializerTests {
     @SafeVarargs
     final <S, T> void testRoundTrip(Class<? extends S> keyType, Class<? extends T> valueType,
@@ -189,4 +192,18 @@ public class PairAvroSerializerTests {
                 p("0", 1), p("1", 1), p("2", 1),
                 p("0", 2), p("1", 2), p("2", 2));
     }
+
+	@Test
+	public void testEquality () {
+		TileSerializer<Pair<Double, Integer>> di1 = new PairAvroSerializer<>(Double.class, Integer.class, CodecFactory.nullCodec());
+		TileSerializer<Pair<Double, Integer>> di2 = new PairAvroSerializer<>(Double.class, Integer.class, CodecFactory.nullCodec());
+		TileSerializer<Pair<Double, Integer>> di3 = new PairAvroSerializer<>(Double.class, Integer.class, CodecFactory.bzip2Codec());
+		TileSerializer<Pair<Integer, Double>> id1 = new PairAvroSerializer<>(Integer.class, Double.class, CodecFactory.nullCodec());
+		TileSerializer<Pair<Integer, Double>> id2 = new PairAvroSerializer<>(Integer.class, Double.class, CodecFactory.nullCodec());
+
+		Assert.assertEquals(di1, di2);
+		Assert.assertEquals(id1, id2);
+		Assert.assertNotEquals(di1, id1);
+		Assert.assertNotEquals(di1, di3);
+	}
 }

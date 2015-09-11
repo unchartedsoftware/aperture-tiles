@@ -1,18 +1,18 @@
 /*
  * Copyright (c) 2014 Oculus Info Inc. http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -389,5 +389,34 @@ public class KryoSerializationTests extends SerializerTestUtils {
 		TileData<List<Integer>> output = serializer.deserialize(index, bais);
 
 		assertListTilesEqual(input, output);
+	}
+
+
+	@Test
+	public void testEquality () {
+		TileSerializer<Double> d1 = new KryoSerializer<Double>(new TypeDescriptor(Double.class));
+		TileSerializer<Double> d2 = new KryoSerializer<Double>(new TypeDescriptor(Double.class));
+		TileSerializer<Double> d3 = new KryoSerializer<Double>(new TypeDescriptor(Double.class), KryoSerializationTests.class);
+		TileSerializer<Double> d4 = new KryoSerializer<Double>(new TypeDescriptor(Double.class), KryoSerializer.Codec.DEFLATE);
+		TileSerializer<Double> d5 = new KryoSerializer<Double>(new TypeDescriptor(Double.class), KryoSerializer.Codec.DEFLATE, KryoSerializationTests.class);
+
+		Assert.assertEquals(d1, d2);
+		Assert.assertNotEquals(d1, d3);
+		Assert.assertNotEquals(d1, d4);
+		Assert.assertNotEquals(d1, d5);
+		Assert.assertNotEquals(d3, d5);
+		Assert.assertNotEquals(d4, d5);
+
+		TileSerializer<List<Double>> dl1 = new KryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)));
+		TileSerializer<List<Double>> dl2 = new KryoSerializer<List<Double>>(new TypeDescriptor(List.class, new TypeDescriptor(Double.class)));
+
+		Assert.assertNotEquals(d1, dl1);
+		Assert.assertEquals(dl1, dl2);
+
+		TileSerializer<Integer> i1 = new KryoSerializer<Integer>(new TypeDescriptor(Integer.class));
+		TileSerializer<Integer> i2 = new KryoSerializer<Integer>(new TypeDescriptor(Integer.class));
+
+		Assert.assertNotEquals(d1, i1);
+		Assert.assertEquals(i1, i2);
 	}
 }

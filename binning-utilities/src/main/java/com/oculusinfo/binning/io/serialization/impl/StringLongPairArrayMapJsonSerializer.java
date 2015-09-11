@@ -1,9 +1,9 @@
 /**
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -46,49 +46,57 @@ public class StringLongPairArrayMapJsonSerializer extends GenericJSONSerializer<
 	}
 
 	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof StringLongPairArrayMapJsonSerializer)) return false;
+		return true;
+	}
+
+	@Override
 	public TypeDescriptor getBinTypeDescription () {
 		return TYPE_DESCRIPTOR;
 	}
 
 	@Override
-	
+
 	/**
 	 * 		{
-	 * 			string : {  
-	 * 				string : long, 
+	 * 			string : {
+	 * 				string : long,
 	 * 				string : long,
 	 * 			    string : long
 	 * 				...
 	 * 			},
-	 * 			string : {  
-	 * 				string : long, 
+	 * 			string : {
+	 * 				string : long,
 	 * 				string : long,
 	 * 			    string : long
 	 * 				...
 	 * 			}
 	 * 			...
 	 * 		}
-	 * 
+	 *
 	 */
-	
+
 	public Object translateToJSON (Map<String, List<Pair<String, Long>>> value) {
 
 		JSONObject output = new JSONObject();
 		try {
-			
-			for (Map.Entry<String, List<Pair<String, Long>>> entry : value.entrySet() ) {		    	
-		    	
+
+			for (Map.Entry<String, List<Pair<String, Long>>> entry : value.entrySet() ) {
+
 		    	String key = entry.getKey();
 		    	List<Pair<String, Long>> list = entry.getValue();
-		    	
-		    	//JSONArray pairMap = new JSONArray();	
+
+		    	//JSONArray pairMap = new JSONArray();
 		    	JSONObject entryObj = new JSONObject();
-		    	for ( Pair<String, Long> pair : list ) {	    		
-		    		
+		    	for ( Pair<String, Long> pair : list ) {
+
 					entryObj.put(pair.getFirst(), pair.getSecond());
 					//pairMap.put(entryObj);
 		    	}
-		    	output.put( key, entryObj );		    	
+		    	output.put( key, entryObj );
 		    }
 
 		} catch (JSONException e) {
@@ -97,41 +105,41 @@ public class StringLongPairArrayMapJsonSerializer extends GenericJSONSerializer<
 		return output;
 	}
 
-	
+
 	@Override
 	protected Map<String, List<Pair<String, Long>>> getValue(Object obj) throws JSONException {
-		
+
 		JSONObject entry = (JSONObject) obj;
-		
+
 		if (entry.length() == 0) {
 			return null;
 		}
-		
-		Map<String, List<Pair<String, Long>>> result = new LinkedHashMap<>(); 
+
+		Map<String, List<Pair<String, Long>>> result = new LinkedHashMap<>();
 
 		@SuppressWarnings("unchecked")
 		Iterator<String> keys = entry.keys();
 		while (keys.hasNext()){
-			
+
 			String key = keys.next();
 			// for each priority
 			List<Pair<String, Long>> list = new ArrayList<>();
 
 			JSONObject jsonMap = entry.getJSONObject(key);
-			
+
 			@SuppressWarnings("unchecked")
 			Iterator<String> moreKeys = jsonMap.keys();
 			while (moreKeys.hasNext()){
-		
-				String anotherKey = moreKeys.next();				
+
+				String anotherKey = moreKeys.next();
 				Long anotherVal = jsonMap.getLong(anotherKey);
-				
+
 				list.add( new Pair<String, Long>(anotherKey, anotherVal) );
 			}
-			
+
 			result.put( key, list );
 		}
-		
+
 		return result;
 	}
 }

@@ -66,6 +66,15 @@ public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<
 	}
 
 	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof PrimitiveArrayAvroSerializer)) return false;
+		PrimitiveArrayAvroSerializer<?> that = (PrimitiveArrayAvroSerializer<?>) other;
+		if (!(this._type.equals(that._type))) return false;
+		return super.equals(other);
+	}
+	@Override
 	protected String getEntrySchemaFile() {
 		throw new UnsupportedOperationException("Primitive types have standard schema; schema files should not be required.");
 	}
@@ -79,9 +88,9 @@ public class PrimitiveArrayAvroSerializer<T> extends GenericAvroArraySerializer<
 		return _schema;
 	}
 
-	// This doesn't need to be checked because 
+	// This doesn't need to be checked because
 	//  (a) One can't create a serializer for which it theoreticallly won't work.
-	//  (b) It is possible to use the wrong serializer for a given tile, in which 
+	//  (b) It is possible to use the wrong serializer for a given tile, in which
 	//      case it will fail - but it should fail in that case.
 	@SuppressWarnings("unchecked")
 	@Override

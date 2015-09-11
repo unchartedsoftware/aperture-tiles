@@ -74,6 +74,22 @@ public class PairAvroSerializer<S, T> extends GenericAvroSerializer<Pair<S, T>> 
 		_valueToString = (String.class.equals(valueType));
 	}
 
+	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof PairAvroSerializer)) return false;
+		PairAvroSerializer<?, ?> that = (PairAvroSerializer<?, ?>) other;
+
+		if (!objectsEqual(this._keyType, that._keyType)) return false;
+		if (!objectsEqual(this._valueType, that._valueType)) return false;
+		return super.equals(other);
+	}
+
+	private static boolean objectsEqual (Object a, Object b) {
+		if (null == a) return null == b;
+		return a.equals(b);
+	}
 
 	@Override
 	protected String getRecordSchemaFile () {

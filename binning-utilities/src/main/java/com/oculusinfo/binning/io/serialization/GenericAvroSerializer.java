@@ -87,6 +87,17 @@ abstract public class GenericAvroSerializer<T> implements TileSerializer<T> {
 		_recordSchema = null;
 	}
 
+	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof GenericAvroSerializer)) return false;
+		GenericAvroSerializer<?> that = (GenericAvroSerializer<?>) other;
+		if (!this._compressionCodec.equals(that._compressionCodec)) return false;
+		if (!this._typeDescription.equals(that._typeDescription)) return false;
+		return true;
+	}
+
 	abstract protected String getRecordSchemaFile ();
 	abstract protected T getValue (GenericRecord bin);
 	abstract protected void setValue (GenericRecord bin, T value) throws IOException ;

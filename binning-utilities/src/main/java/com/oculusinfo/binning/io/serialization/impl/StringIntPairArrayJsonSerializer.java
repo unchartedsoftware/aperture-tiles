@@ -1,9 +1,9 @@
 /**
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -49,11 +49,19 @@ public class StringIntPairArrayJsonSerializer extends GenericJSONSerializer<List
 	}
 
 	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof  StringIntPairArrayJsonSerializer)) return false;
+		return true;
+	}
+
+	@Override
 	public TypeDescriptor getBinTypeDescription () {
 		return TYPE_DESCRIPTOR;
 	}
 
-	
+
 	@Override
 	public Object translateToJSON (List<Pair<String, Integer>> value) {
 		JSONArray outputMap = new JSONArray();
@@ -73,8 +81,8 @@ public class StringIntPairArrayJsonSerializer extends GenericJSONSerializer<List
 	@Override
 	protected List<Pair<String, Integer>> getValue(Object obj) throws JSONException {
 		JSONArray bin = (JSONArray) obj;
-	
-		List<Pair<String, Integer>> result = new ArrayList<Pair<String,Integer>>(); 
+
+		List<Pair<String, Integer>> result = new ArrayList<Pair<String,Integer>>();
 
 		for (int j=0; j < bin.length(); j++){
 			JSONObject entry = bin.getJSONObject(j);
@@ -85,7 +93,7 @@ public class StringIntPairArrayJsonSerializer extends GenericJSONSerializer<List
 				result.add(new Pair<String, Integer>(key, entry.getInt(key)));
 			}
 		}
-		
+
 		return result;
 	}
 }

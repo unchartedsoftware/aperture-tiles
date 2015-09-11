@@ -117,6 +117,16 @@ public class PrimitiveAvroSerializer<T> extends GenericAvroSerializer<T> {
 	}
 
 	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof PrimitiveAvroSerializer)) return false;
+		PrimitiveAvroSerializer<?> that = (PrimitiveAvroSerializer<?>) other;
+		if (!(this._type.equals(that._type))) return false;
+		return super.equals(other);
+	}
+
+	@Override
 	protected String getRecordSchemaFile () {
 		throw new UnsupportedOperationException("Primitive types have standard schema; schema files should not be required.");
 	}

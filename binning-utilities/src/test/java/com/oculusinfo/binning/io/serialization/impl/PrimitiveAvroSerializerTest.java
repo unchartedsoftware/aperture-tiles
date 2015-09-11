@@ -168,4 +168,30 @@ public class PrimitiveAvroSerializerTest {
 		Assert.assertTrue(denseSize < sparseSize * 10);
 		Assert.assertTrue(sparseSize < denseSize * 10);
 	}
+
+	@Test
+	public void testEquality () {
+		TileSerializer<Double> d1 = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.nullCodec());
+		TileSerializer<Double> d2 = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.nullCodec());
+		TileSerializer<Double> d3 = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
+		TileSerializer<Double> d4 = new PrimitiveAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
+		Assert.assertEquals(d1, d2);
+		Assert.assertEquals(d3, d4);
+		Assert.assertNotEquals("", d1, d3);
+		Assert.assertNotEquals("", d2, d4);
+
+		TileSerializer<Integer> i1 = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		TileSerializer<Integer> i2 = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		TileSerializer<Integer> i3 = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
+		TileSerializer<Integer> i4 = new PrimitiveAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
+		Assert.assertEquals(i1, i2);
+		Assert.assertEquals(i3, i4);
+		Assert.assertNotEquals(i1, i3);
+		Assert.assertNotEquals(i2, i4);
+
+		Assert.assertNotEquals(i1, d1);
+		Assert.assertNotEquals(i2, d2);
+		Assert.assertNotEquals(i3, d3);
+		Assert.assertNotEquals(i4, d4);
+	}
 }

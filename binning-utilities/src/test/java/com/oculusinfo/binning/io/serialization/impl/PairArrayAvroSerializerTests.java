@@ -204,4 +204,18 @@ public class PairArrayAvroSerializerTests {
 		              p("0", 1), p("1", 1), p("2", 1),
 		              p("0", 2), p("1", 2), p("2", 2));
 	}
+
+	@Test
+	public void testEquality () {
+		TileSerializer<List<Pair<Double, Integer>>> di1 = new PairArrayAvroSerializer<>(Double.class, Integer.class, CodecFactory.nullCodec());
+		TileSerializer<List<Pair<Double, Integer>>> di2 = new PairArrayAvroSerializer<>(Double.class, Integer.class, CodecFactory.nullCodec());
+		TileSerializer<List<Pair<Double, Integer>>> di3 = new PairArrayAvroSerializer<>(Double.class, Integer.class, CodecFactory.bzip2Codec());
+		TileSerializer<List<Pair<Integer, Double>>> id1 = new PairArrayAvroSerializer<>(Integer.class, Double.class, CodecFactory.nullCodec());
+		TileSerializer<List<Pair<Integer, Double>>> id2 = new PairArrayAvroSerializer<>(Integer.class, Double.class, CodecFactory.nullCodec());
+
+		Assert.assertEquals(di1, di2);
+		Assert.assertEquals(id1, id2);
+		Assert.assertNotEquals(di1, id1);
+		Assert.assertNotEquals(di1, di3);
+	}
 }

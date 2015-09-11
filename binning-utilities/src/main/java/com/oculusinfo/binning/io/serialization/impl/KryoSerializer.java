@@ -74,6 +74,31 @@ public class KryoSerializer<T> implements TileSerializer<T> {
 		_classesToRegister = classesToRegister;
 	}
 
+	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof KryoSerializer)) return false;
+		KryoSerializer<?> that = (KryoSerializer<?>) other;
+
+		if (!objectsEqual(this._typeDesc, that._typeDesc)) return false;
+		if (!objectsEqual(this._codec, that._codec)) return false;
+		if (null == this._classesToRegister || this._classesToRegister.length == 0) {
+			return (null == that._classesToRegister || that._classesToRegister.length == 0);
+		} else {
+			if (this._classesToRegister.length != that._classesToRegister.length) return false;
+			for (int i=0; i<this._classesToRegister.length; ++i) {
+				if (!objectsEqual(this._classesToRegister[i], that._classesToRegister[i])) return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean objectsEqual (Object a, Object b) {
+		if (null == a) return null == b;
+		else return a.equals(b);
+	}
+
 	// Get the kryo instance for this thread.
 	private Kryo kryo () {
 		if (null == _localKryo)

@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014 Oculus Info Inc. 
+ * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -40,12 +40,12 @@ import com.oculusinfo.binning.util.TypeDescriptor;
 /**
  * A very generic tile serializer that can serialize or deserialize any tile
  * using java serialization instead of avro or json.
- * 
+ *
  * Note that because this is a generic type, the type descriptor must be passed
  * in upon creation.
- * 
+ *
  * @author nkronenfeld
- * 
+ *
  * @param <T>
  *            The bin type of the tiles to be serialized/deserialized
  */
@@ -59,9 +59,26 @@ public class GenericJavaSerializer<T> implements TileSerializer<T> {
 		_typeDescriptor = typeDescriptor;
 		_compress = compress;
 	}
-	
+
 	public GenericJavaSerializer (TypeDescriptor typeDescriptor) {
 		_typeDescriptor = typeDescriptor;
+	}
+
+	@Override
+	public boolean equals (Object other) {
+		if (this == other) return true;
+		if (null == other) return false;
+		if (!(other instanceof GenericJavaSerializer)) return false;
+		GenericJavaSerializer<?> that = (GenericJavaSerializer<?>) other;
+
+		if (!objectsEqual(this._typeDescriptor, that._typeDescriptor)) return false;
+		if (this._compress != that._compress) return false;
+		return true;
+	}
+
+	private static boolean objectsEqual (Object a, Object b) {
+		if (null == a) return null == b;
+		return a.equals(b);
 	}
 
 	@Override
@@ -77,12 +94,12 @@ public class GenericJavaSerializer<T> implements TileSerializer<T> {
 		ObjectInputStream ois = null;
 		if (_compress) {
 			zis = new GZIPInputStream(rawData);
-			ois = new ObjectInputStream(zis);			
+			ois = new ObjectInputStream(zis);
 		} else {
 			ois = new ObjectInputStream(rawData);
 		}
 		try {
-			return (TileData<T>) ois.readObject();			
+			return (TileData<T>) ois.readObject();
 		} catch (ClassNotFoundException e) {
 			throw new IOException("Error reading tile", e);
 		} finally {
@@ -95,14 +112,14 @@ public class GenericJavaSerializer<T> implements TileSerializer<T> {
 			throws IOException {
 		GZIPOutputStream zos = null;
 		ObjectOutputStream oos = null;
-		if (_compress) {			
+		if (_compress) {
 			zos = new GZIPOutputStream(output);
 			oos = new ObjectOutputStream(zos);
 		} else {
 			oos = new ObjectOutputStream(output);
 		}
 		try {
-			oos.writeObject(data);			
+			oos.writeObject(data);
 		} finally {
 			oos.close();
 		}

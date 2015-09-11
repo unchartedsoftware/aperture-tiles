@@ -277,4 +277,30 @@ public class PrimitiveArrayAvroSerializerTest {
 			}
 		}
 	}
+
+	@Test
+	public void testEquality () {
+		TileSerializer<List<Double>> d1 = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.nullCodec());
+		TileSerializer<List<Double>> d2 = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.nullCodec());
+		TileSerializer<List<Double>> d3 = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
+		TileSerializer<List<Double>> d4 = new PrimitiveArrayAvroSerializer<>(Double.class, CodecFactory.bzip2Codec());
+		Assert.assertEquals(d1, d2);
+		Assert.assertEquals(d3, d4);
+		Assert.assertNotEquals("", d1, d3);
+		Assert.assertNotEquals("", d2, d4);
+
+		TileSerializer<List<Integer>> i1 = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		TileSerializer<List<Integer>> i2 = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.nullCodec());
+		TileSerializer<List<Integer>> i3 = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
+		TileSerializer<List<Integer>> i4 = new PrimitiveArrayAvroSerializer<>(Integer.class, CodecFactory.bzip2Codec());
+		Assert.assertEquals(i1, i2);
+		Assert.assertEquals(i3, i4);
+		Assert.assertNotEquals(i1, i3);
+		Assert.assertNotEquals(i2, i4);
+
+		Assert.assertNotEquals(i1, d1);
+		Assert.assertNotEquals(i2, d2);
+		Assert.assertNotEquals(i3, d3);
+		Assert.assertNotEquals(i4, d4);
+	}
 }
