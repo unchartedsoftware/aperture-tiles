@@ -449,9 +449,8 @@
                 zoomDelay: spec.options.zoomDelay !== undefined ? spec.options.zoomDelay : 400
             })
         });
-
-        this.showPendingTiles = spec.showPendingTiles ? spec.showPendingTiles : true;
-
+        // show animation on pending tiles
+        this.showPendingTiles = ( spec.showPendingTiles !== undefined ) ? spec.showPendingTiles : true;
         // set theme, default to 'dark' theme
         this.setTheme( spec.theme );
     }
