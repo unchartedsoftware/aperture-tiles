@@ -4,19 +4,8 @@
 
 <web-app>
 	<display-name>Data Tile Server</display-name>
-
-	<!-- stop windows from memory mapping the files, which locks them -->
-	<servlet>
-	    <servlet-name>default</servlet-name>
-	    <servlet-class>org.mortbay.jetty.servlet.DefaultServlet</servlet-class>
-	    <init-param>
-	      	<param-name>useFileMappedBuffer</param-name>
-	      	<param-value>false</param-value>
-	    </init-param>
-	    <load-on-startup>0</load-on-startup>
-  	</servlet>
-
-	<!-- Module Configuration -->
+  
+  <!-- Module Configuration -->
 	<!-- If you have your own Guice module(s), put them here as a colon-separated
 	     list. -->
 	<context-param>
