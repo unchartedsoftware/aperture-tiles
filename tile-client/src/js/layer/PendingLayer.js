@@ -62,7 +62,7 @@
 
     function trackTiles( layer ) {
         return function( message ) {
-            if ( message.field === "activate" ) {
+            if ( layer.olLayer && message.field === "activate" ) {
                 layer.olLayer.events.register( 'addtile', layer.olLayer, function( data ) {
                     // Add listeners to tile
                     data.tile.events.register( 'loadstart', data.tile, function( arg ) {
