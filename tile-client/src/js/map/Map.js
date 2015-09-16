@@ -90,10 +90,12 @@
                 map.olMap.panTween.stop();
             }
         }, true );
-        // set resize callback
-        $( window ).resize( function() {
+        // create resize callback
+        map.resizeCallback = function() {
             map.olMap.updateSize();
-        });
+        };
+        // set resize callback
+        $( window ).on( 'resize', map.resizeCallback );
     };
 
     /**
@@ -463,6 +465,17 @@
          */
         destroy: function() {
             this.destroying = true;
+            // remove pending layer
+            if ( this.pendingLayer ) {
+                this.pendingLayer.deactivate();
+                this.pendingLayer.map = null;
+                this.pendingLayer = null;
+            }
+            // remove marker layer
+            if ( this.olMarkers ) {
+                this.olMap.removeLayer( this.olMarkers );
+                this.olMarkers = null;
+            }
             this.layers.forEach( function( layer ) {
                 this.remove( layer );
             }, this );
@@ -472,6 +485,9 @@
             this.baselayers.forEach( function( baselayer ) {
                 this.remove( baselayer );
             }, this );
+            // remove window resize callback
+            $( window ).off( 'resize', this.resizeCallback );
+            // destroy map
             this.olMap.destroy();
         },
 
