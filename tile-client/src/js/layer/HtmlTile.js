@@ -126,7 +126,6 @@
         this.imgDiv = img;
     };
 
-    /**/
     OpenLayers.Tile.HTML.prototype.initImage = function() {
         if ( !this.url && !this.imgDiv ) {
             // fast path out - if there is no tile url and no previous image
@@ -158,7 +157,6 @@
             img.style.opacity = 0;
             img.setAttribute( "data-url", url );
             var pendingRequests = urls.map( function( url ) {
-                img._lastRequest = Date.now();
                 var deferred = $.Deferred();
                 $.ajax({
                     url: url
@@ -308,8 +306,8 @@
             // render the data
             this.renderHtml();
             // trigger load end
-            this.events.triggerEvent("loadend");
             this.isLoading = false;
+            this.events.triggerEvent("loadend");
         }
     };
 
@@ -340,51 +338,55 @@
      * OpenLayers overrides
      */
 
-    OpenLayers.TileManager.prototype.addTile = function(evt) {
-        if ( evt.tile instanceof OpenLayers.Tile.Image ||
-            evt.tile instanceof OpenLayers.Tile.HTML ||
-            evt.tile instanceof OpenLayers.Tile.Univariate ) {
-          if ( !evt.tile.layer.singleTile ) {
-            evt.tile.events.on({
-                beforedraw: this.queueTileDraw,
-                beforeload: this.manageTileCache,
-                loadend: this.addToCache,
-                unload: this.unloadTile,
-                scope: this
-            });
-          }
-        } else {
-            // Layer has the wrong tile type, so don't handle it any longer
-            this.removeLayer({layer: evt.tile.layer});
-        }
-    };
+    if ( OpenLayers.TileManager ) {
 
-    OpenLayers.TileManager.prototype.queueTileDraw = function( evt ) {
-        var tile = evt.object;
-        var queued = false;
-        var layer = tile.layer;
-        var url = tile.getURL ? tile.getURL() : layer.getURL( tile.bounds );
-        var img = this.tileCache[url];
-        if ( img &&
-            !OpenLayers.Element.hasClass( img, 'olTileImage' ) &&
-            !OpenLayers.Element.hasClass( img, 'olTileHtml' ) &&
-            !OpenLayers.Element.hasClass( img, 'olTileUnivariate' ) ) {
-            // cached image no longer valid, e.g. because we're olTileReplacing
-            delete this.tileCache[ url ];
-            OpenLayers.Util.removeItem( this.tileCacheIndex, url );
-            img = null;
-        }
-        // queue only if image with same url not cached already
-        if ( layer.url && ( layer.async || !img ) ) {
-            // add to queue only if not in queue already
-            var tileQueue = this.tileQueue[ layer.map.id ];
-            if ( !~OpenLayers.Util.indexOf( tileQueue, tile ) ) {
-                tileQueue.push(tile);
+        OpenLayers.TileManager.prototype.addTile = function(evt) {
+            if ( evt.tile instanceof OpenLayers.Tile.Image ||
+                evt.tile instanceof OpenLayers.Tile.HTML ||
+                evt.tile instanceof OpenLayers.Tile.Univariate ) {
+                if ( !evt.tile.layer.singleTile ) {
+                    evt.tile.events.on({
+                        beforedraw: this.queueTileDraw,
+                        beforeload: this.manageTileCache,
+                        loadend: this.addToCache,
+                        unload: this.unloadTile,
+                        scope: this
+                    });
+                }
+            } else {
+                // Layer has the wrong tile type, so don't handle it any longer
+                this.removeLayer({layer: evt.tile.layer});
             }
-            queued = true;
-        }
-        return !queued;
-    };
+        };
+
+        OpenLayers.TileManager.prototype.queueTileDraw = function( evt ) {
+            var tile = evt.object;
+            var queued = false;
+            var layer = tile.layer;
+            var url = tile.getURL ? tile.getURL() : layer.getURL( tile.bounds );
+            var img = this.tileCache[url];
+            if ( img &&
+                !OpenLayers.Element.hasClass( img, 'olTileImage' ) &&
+                !OpenLayers.Element.hasClass( img, 'olTileHtml' ) &&
+                !OpenLayers.Element.hasClass( img, 'olTileUnivariate' ) ) {
+                // cached image no longer valid, e.g. because we're olTileReplacing
+                delete this.tileCache[ url ];
+                OpenLayers.Util.removeItem( this.tileCacheIndex, url );
+                img = null;
+            }
+            // queue only if image with same url not cached already
+            if ( layer.url && ( layer.async || !img ) ) {
+                // add to queue only if not in queue already
+                var tileQueue = this.tileQueue[ layer.map.id ];
+                if ( !~OpenLayers.Util.indexOf( tileQueue, tile ) ) {
+                    tileQueue.push(tile);
+                }
+                queued = true;
+            }
+            return !queued;
+        };
+
+    }
 
     OpenLayers.Tile.Image.prototype.createBackBuffer = function() {
         return;

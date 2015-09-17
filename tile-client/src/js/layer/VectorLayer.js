@@ -81,9 +81,13 @@
         this.setBrightness( this.getBrightness() );
         this.setContrast( this.getContrast() );
         this.setTheme( this.map.getTheme() );
+        // publish activate event before appending to map
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
         this.map.olMap.addLayer( this.olLayer );
         this.getData( this );
         this.setZIndex( this.zIndex );
+        // publish add event
+        PubSub.publish( this.getChannel(), { field: 'add', value: true } );
     };
 
     /**
@@ -101,10 +105,12 @@
             }
             this.olLayer.strategies = [];
             this.map.olMap.removeLayer(this.olLayer);
+            PubSub.publish( this.getChannel(), { field: 'remove', value: true } );
             this.olLayer.destroyFeatures();
             this.olLayer.destroy();
             this.olLayer = null;
-        }
+        }    
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
     /**

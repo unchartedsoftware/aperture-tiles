@@ -68,19 +68,19 @@ object TilingTask {
 	 * @return A tiling task that can be used to take the data and produce a tile pyramid
 	 */
 	def apply (sqlc: SQLContext,
-	           table: String,
-	           config: Properties):
+						 table: String,
+						 config: Properties):
 			TilingTask[_, _, _, _] = {
 		val jsonConfig = JsonUtilities.propertiesObjToJSON(config)
 
 		val indexerFactory = IndexExtractorFactory(null,
-		                                           java.util.Arrays.asList("oculus", "binning", "index"),
-		                                           IndexExtractorFactory.defaultFactory)
+																							 java.util.Arrays.asList("oculus", "binning", "index"),
+																							 IndexExtractorFactory.defaultFactory)
 		indexerFactory.readConfiguration(jsonConfig)
 
 		val valuerFactory = ValueExtractorFactory(null,
-		                                          java.util.Arrays.asList("oculus", "binning", "value"),
-		                                          ValueExtractorFactory.defaultFactory)
+																							java.util.Arrays.asList("oculus", "binning", "value"),
+																							ValueExtractorFactory.defaultFactory)
 		valuerFactory.readConfiguration(jsonConfig)
 
 		val deferredPyramidFactory = new DeferredTilePyramidFactory(null, java.util.Arrays.asList("oculus", "binning", "projection"))
@@ -108,10 +108,10 @@ object TilingTask {
 
 			// Tell the tiling task constructor about the analytic type tags
 			def withTilingTags[AT: ClassTag, DT: ClassTag] (dataAnalytics: AnalysisWithTag[Seq[Any], DT],
-			                                                tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
+																											tileAnalytics: AnalysisWithTag[TileData[JT], AT]):
 					TilingTask[T, DT, AT, JT] = {
 				new StaticTilingTask[T, DT, AT, JT](sqlc, table, taskConfig, indexer, valuer, deferredPyramid,
-				                                    dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis).initialize()
+																						dataAnalyticFields, dataAnalytics.analysis, tileAnalytics.analysis).initialize()
 			}
 			withTilingTags(dataAnalytics, tileAnalytics)
 		}
@@ -128,7 +128,7 @@ object TilingTask {
  * Future tasks:
  * <ul>
  * <li> Eliminate IndexExtractor - just take the index columns and pass them to the IndexingScheme, which will have to
- * take Array[Any].  The configuration will have to specify the IndexingScheme instead. </li>
+ * take Array[Any].	The configuration will have to specify the IndexingScheme instead. </li>
  * <li> Eliminate ValueExtractor - again, just take value columns and pass them to the BinningAnalytic. The binning
  * analytic will have to be specified instead. We may need some standard transformers to prepare input for the
  * binning analytic.</li>
@@ -256,14 +256,14 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			new TileIndex(0, 0, 0, getNumXBins, getNumYBins)
 		)
 		new PyramidMetaData(pyramidId,
-		                    getDescription,
-		                    getNumXBins, getNumYBins,
-		                    tilePyramid.getTileScheme(),
-		                    tilePyramid.getProjection(),
-		                    null,
-		                    fullBounds,
-		                    new ArrayList[Pair[JavaInt, String]](),
-		                    new ArrayList[Pair[JavaInt, String]]())
+												getDescription,
+												getNumXBins, getNumYBins,
+												tilePyramid.getTileScheme(),
+												tilePyramid.getProjection(),
+												null,
+												fullBounds,
+												new ArrayList[Pair[JavaInt, String]](),
+												new ArrayList[Pair[JavaInt, String]]())
 	}
 
 	/**
@@ -283,12 +283,12 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-					                                                         StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, levels, getNumXBins, getNumYBins),
-					                                                         StandardBinningFunctions.populateTileIdentity,
-					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+																																	 StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, levels, getNumXBins, getNumYBins),
+																																	 StandardBinningFunctions.populateTileIdentity,
+																																	 BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-					                    tileAnalytics, dataAnalytics, getName, getDescription)
+															tileAnalytics, dataAnalytics, getName, getDescription)
 				}
 
 			process(procFcn, None)
@@ -312,41 +312,41 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
 				rdd => {
 					val (locateFcn, populateFcn): (Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
-					                               (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
+																				 (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
 						lineType match {
 							case LineDrawingType.Lines => {
 								(
 									StandardBinningFunctions.locateLine(getIndexScheme, getTilePyramid, levels,
-									                                    getMinimumSegmentLength, getMaximumSegmentLength, getNumXBins, getNumYBins),
+																											getMinimumSegmentLength, getMaximumSegmentLength, getNumXBins, getNumYBins),
 									StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
 								)
 							}
 							case LineDrawingType.LeaderLines => {
 								(
 									StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
-									                                           getMinimumSegmentLength, getDefiniteMaximumLeaderLength,
-									                                           getNumXBins, getNumYBins),
+																														 getMinimumSegmentLength, getDefiniteMaximumLeaderLength,
+																														 getNumXBins, getNumYBins),
 									StandardBinningFunctions.populateTileWithLineLeaders(getDefiniteMaximumLeaderLength,
-									                                                     StandardScalingFunctions.identityScale)
+																																			 StandardScalingFunctions.identityScale)
 								)
 							}
 							case LineDrawingType.Arcs => {
 								(
 									StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
-									                                    getMinimumSegmentLength, getMaximumLeaderLength,
-									                                    getNumXBins, getNumYBins),
+																											getMinimumSegmentLength, getMaximumLeaderLength,
+																											getNumXBins, getNumYBins),
 									StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
-									                                              StandardScalingFunctions.identityScale)
+																																StandardScalingFunctions.identityScale)
 								)
 							}
 						}
 
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-					                                                         locateFcn, populateFcn,
-					                                                         BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+																																	 locateFcn, populateFcn,
+																																	 BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-					                    tileAnalytics, dataAnalytics, getName, getDescription)
+															tileAnalytics, dataAnalytics, getName, getDescription)
 				}
 			}
 
@@ -420,7 +420,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * parameters must be serializable
 	 */
 	def process[OUTPUT] (fcn: (RDD[(Seq[Any], PT, Option[DT])]) => OUTPUT,
-	                     completionCallback: Option[OUTPUT => Unit]): Unit = {
+											 completionCallback: Option[OUTPUT => Unit]): Unit = {
 		if (null == strategy) {
 			throw new Exception("Attempt to process uninitialized tiling task "+getName)
 		} else {
@@ -439,7 +439,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 dataAnalytics: Option[AnalysisDescription[Seq[Any], DT]],
 	 tileAnalytics: Option[AnalysisDescription[TileData[BT], AT]])
 		extends TilingTask[PT, DT, AT, BT](sqlc, table, config, indexer, valuer, deferredPyramid,
-		                                   dataAnalyticFields, dataAnalytics, tileAnalytics)
+																			 dataAnalyticFields, dataAnalytics, tileAnalytics)
 {
 	type STRATEGY_TYPE = StaticTilingTaskProcessingStrategy
 	override protected var strategy: STRATEGY_TYPE = null
@@ -452,13 +452,13 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	{
 		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
 			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
-			val allFieldsEscaped = allFields.map(v => if(v.forall(_.isDigit)) { v } else { "`" + v + "`"  })
+			val allFieldsEscaped = allFields.map(v => if(v.forall(_.isDigit)) { v } else { "`" + v + "`"	})
 
 			val selectStmt =
 				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)
 
 			val data = sqlc.sql(selectStmt)
-      val checkData = data.collect
+			val checkData = data.collect
 
 			val indexFields = indexer.fields.length
 			val valueFields = valuer.fields.length
@@ -487,4 +487,3 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 object StandardScalingFunctions {
 	def identityScale[T]: (Array[BinIndex], BinIndex, T) => T = (endpoints, bin, value) => value
 }
-
