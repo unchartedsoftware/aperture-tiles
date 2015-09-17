@@ -70,8 +70,8 @@ object PipelineOperationsParsing extends Logging {
 	 * of a pipeline operation with those arguments applied to it.
 	 *
 	 * Arguments:
-	 *    ops.path - Valid HDFS path to data.
-	 *    ops.partitions - Number of partitions
+	 *		ops.path - Valid HDFS path to data.
+	 *		ops.partitions - Number of partitions
 	 */
 	def parseLoadJsonDataOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing loadJsonDataOp with args $args")
@@ -86,8 +86,8 @@ object PipelineOperationsParsing extends Logging {
 	 * of a pipeline operation with those arguments applied to it.
 	 *
 	 * Arguments:
-	 *    ops.path - Valid HDFS path to data.
-	 *    ops.partitions - Number of partitions
+	 *		ops.path - Valid HDFS path to data.
+	 *		ops.partitions - Number of partitions
 	 *
 	 * @see com.oculusinfo.tilegen.datasets.CSVReader for arguments passed into the CSV reader.
 	 *
@@ -97,7 +97,8 @@ object PipelineOperationsParsing extends Logging {
 		val argParser = KeyValuePassthrough(args)
 		val path = argParser.getString("ops.path", "HDFS path to data")
 		val partitions = argParser.getIntOption("ops.partitions", "Number of data partitions")
-		loadCsvDataOp(path, argParser, partitions)(_)
+		val errorLog = argParser.getStringOption("ops.errorLog", "File stream to output load parse errors", None)
+		loadCsvDataOp(path, argParser, partitions, errorLog)(_)
 	}
 
 	/**
@@ -105,10 +106,10 @@ object PipelineOperationsParsing extends Logging {
 	 * of a pipeline operation with those arguments applied to it.
 	 *
 	 * Arguments:
-	 *    ops.column - Column spec denoting the time field in input data
-	 *    ops.start - Start date string
-	 *    ops.end - End date string
-	 *    ops.format - Date format string (based on java.text.SimpleDateFormat)
+	 *		ops.column - Column spec denoting the time field in input data
+	 *		ops.start - Start date string
+	 *		ops.end - End date string
+	 *		ops.format - Date format string (based on java.text.SimpleDateFormat)
 	 */
 	def parseDateFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing dateFilterOp with args $args")
@@ -121,7 +122,7 @@ object PipelineOperationsParsing extends Logging {
 	}
 
 	/**
-	 * Parses args for cache data operation.  No arguments required.
+	 * Parses args for cache data operation.	No arguments required.
 	 */
 	def parseCacheDataOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing cacheDataOp with args $args")
@@ -132,7 +133,7 @@ object PipelineOperationsParsing extends Logging {
 	 * Parses args for a filter to the valid range of a mercator geographic projection.
 	 *
 	 * Arguments:
-	 *  ops.latitude - the column containing the latitude value
+	 *	ops.latitude - the column containing the latitude value
 	 */
 	def parseMercatorFilterOp (args: Map[String, String]) = {
 		logger.debug(s"Parsing mercatorFilterOp with args $args")
@@ -143,14 +144,14 @@ object PipelineOperationsParsing extends Logging {
 
 	/**
 	 * Parses args for an integral n-dimensional range filter and returns an instance of the filter
-	 * with those arguments applied to it.  The dimensionality is consistent across the min, max and
+	 * with those arguments applied to it.	The dimensionality is consistent across the min, max and
 	 * columns arguments.
 	 *
 	 * Arguments:
-	 *  ops.min - sequence of min values, 1 for each dimension of the data
-	 *  ops.max - sequence of max values, 1 for each dimension of the data
-	 *  ops.exclude - boolean indicating whether values in the range are excluded or included.
-	 *  ops.columns - sequence of column specs, 1 for each dimension of the data
+	 *	ops.min - sequence of min values, 1 for each dimension of the data
+	 *	ops.max - sequence of max values, 1 for each dimension of the data
+	 *	ops.exclude - boolean indicating whether values in the range are excluded or included.
+	 *	ops.columns - sequence of column specs, 1 for each dimension of the data
 	 */
 	def parseIntegralRangeFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing integralRangeFilterOp with args $args")
@@ -164,14 +165,14 @@ object PipelineOperationsParsing extends Logging {
 
 	/**
 	 * Parses args for a fractional n-dimensional range filter and returns an instance of the filter
-	 * with those arguments applied to it.  The dimensionality is consistent across the min, max and
+	 * with those arguments applied to it.	The dimensionality is consistent across the min, max and
 	 * columns arguments.
 	 *
 	 * Arguments:
-	 *  ops.min - sequence of min values, 1 for each dimension of the data
-	 *  ops.max - sequence of max values, 1 for each dimension of the data
-	 *  ops.exclude - boolean indicating whether values in the range are excluded or included.
-	 *  ops.columns - sequence of column specs, 1 for each dimension of the data
+	 *	ops.min - sequence of min values, 1 for each dimension of the data
+	 *	ops.max - sequence of max values, 1 for each dimension of the data
+	 *	ops.exclude - boolean indicating whether values in the range are excluded or included.
+	 *	ops.columns - sequence of column specs, 1 for each dimension of the data
 	 */
 	def parseFractionalRangeFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing fractionalRangeFilterOp with args $args")
@@ -188,9 +189,9 @@ object PipelineOperationsParsing extends Logging {
 	 * arguments applied.
 	 *
 	 * Arguments:
-	 *  ops.regex - Regex string to use as filter
-	 *  ops.column - Column spec denoting the column to test the regex against.
-	 *  ops.exclude - Boolean indicating whether to exclude or include values that match
+	 *	ops.regex - Regex string to use as filter
+	 *	ops.column - Column spec denoting the column to test the regex against.
+	 *	ops.exclude - Boolean indicating whether to exclude or include values that match
 	 */
 	def parseRegexFilterOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing regexFilterOp with args $args")
@@ -206,67 +207,72 @@ object PipelineOperationsParsing extends Logging {
 	 * an instance of that operation with those arguments applied.
 	 *
 	 * Arguments:
-	 *  ops.columns - Sequence of column specs denoting the columns to select.
+	 *	ops.columns - Sequence of column specs denoting the columns to select.
+	 *	distinct - Boolean indicating whether or not the selected columns should contain only distinct values
 	 */
-	def parseColumnSelectOp(args: Map[String, String]) = {
+	def parseColumnSelectOp(args: Map[String, String], distinct:Boolean=false) = {
 		logger.debug(s"Parsing columnSelectOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val colSpecs = argParser.getStringSeq("ops.columns", "Col specs denoting columns to select")
-		columnSelectOp(colSpecs)(_)
+		if (distinct)	{
+			columnSelectDistinctOp(colSpecs)(_)
+		} else {
+			columnSelectOp(colSpecs)(_)
+		}
 	}
 
 	/**
 	 * Parse args for basic heatmap tile generator operation that writes to HDFS, and return an instance of that
-	 * operation with those arguments applied.  If HBase properties are not set, file based IO is used.
+	 * operation with those arguments applied.	If HBase properties are not set, file based IO is used.
 	 *
 	 * Arguments:
-	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
-	 *    hbase.zookeeper.port - Zookeeper port. (optional)
-	 *    hbase.master - HBase master address. (optional)
-	 *    ops.xColumn - Colspec denoting data x column
-	 *    ops.yColumn - Colspec denoting data y column
-	 *    ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
-	 *                          "sum", "mean", "max"
-	 *    ops.valueColumn - Colspec denoting data column to use as aggregation source.  Not required when type is
+	 *		hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
+	 *		hbase.zookeeper.port - Zookeeper port. (optional)
+	 *		hbase.master - HBase master address. (optional)
+	 *		ops.xColumn - Colspec denoting data x column
+	 *		ops.yColumn - Colspec denoting data y column
+	 *		ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
+	 *													"sum", "mean", "max"
+	 *		ops.valueColumn - Colspec denoting data column to use as aggregation source.	Not required when type is
 	 *
-	 *    Tiling task consumes a TilingTaskParameters object that
-	 *    is populated via an argument map.  The argument map passed to this function will be used for that
-	 *    purpose, so all arguments required by that object should be set.
+	 *		Tiling task consumes a TilingTaskParameters object that
+	 *		is populated via an argument map.	The argument map passed to this function will be used for that
+	 *		purpose, so all arguments required by that object should be set.
 	 */
 	def parseGeoHeatMapOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing hbaseHeatmapOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
 		geoHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
-		             heatmapParams._6, heatmapParams._7)(_)
+								 heatmapParams._6, heatmapParams._7)(_)
 	}
 
 	/**
 	 * Parse args for basic heatmap tile generator operation that writes to the local file system, and return an
-	 * instance of that operation with those arguments applied.  If hbase parameters are unset, file IO will be used.
+	 * instance of that operation with those arguments applied.	If hbase parameters are unset, file IO will be used.
 	 * Likewise, if bounds are not set, auto bounds will be used.
 	 *
 	 * Arguments:
-	 *    ops.xColumn - Colspec denoting data x column
-	 *    ops.yColumn - Colspec denoting data y column
+	 *		ops.xColumn - Colspec denoting data x column
+	 *		ops.yColumn - Colspec denoting data y column
 	 *
-	 *    ops.bounds.minX - Bounds minX value (optional)
-	 *    ops.bounds.minY - Bounds minX value (optional)
-	 *    ops.bounds.maxX - Bounds minX value (optional)
-	 *    ops.bounds.maxT - Bounds minX value (optional)
+	 *		ops.bounds.minX - Bounds minX value (optional)
+	 *		ops.bounds.minY - Bounds minX value (optional)
+	 *		ops.bounds.maxX - Bounds minX value (optional)
+	 *		ops.bounds.maxT - Bounds minX value (optional)
 	 *
-	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
-	 *    hbase.zookeeper.port - Zookeeper port. (optional)
-	 *    hbase.master - HBase master address. (optional)
+	 *		hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
+	 *		hbase.zookeeper.port - Zookeeper port. (optional)
+	 *		hbase.master - HBase master address. (optional)
 	 *
-	 *    ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
-	 *                           "sum", "mean", "max"
+	 *		ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
+	 *													 "sum", "mean", "max"
 	 *
-	 *    ops.valueColumn - Colspec denoting data column to use as aggregation source.  Not required when type is
+	 *		ops.valueColumn - Colspec denoting data column to use as aggregation source.	Not required when type is
 	 *
-	 *    Tiling task consumes a TilingTaskParameters object that
-	 *    is populated via an argument map.  The argument map passed to this function will be used for that
-	 *    purpose, so all arguments required by that object should be set.
+	 *		Tiling task consumes a TilingTaskParameters object that
+	 *		is populated via an argument map.	The argument map passed to this function will be used for that
+	 *		purpose, so all arguments required by that object should be set.
 	 */
 	def parseCrossplotHeatmapOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing fileHeatmapOp with args $args")
@@ -275,16 +281,16 @@ object PipelineOperationsParsing extends Logging {
 		val heatmapParams = parseHeatMapOpImpl(args, argParser)
 
 		val parsedBounds = List(argParser.getDoubleOption("ops.bounds.minX", "Bounds min X", None),
-		                        argParser.getDoubleOption("ops.bounds.minY", "Bounds min Y", None),
-		                        argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
-		                        argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
+														argParser.getDoubleOption("ops.bounds.minY", "Bounds min Y", None),
+														argParser.getDoubleOption("ops.bounds.maxX", "Bounds max X", None),
+														argParser.getDoubleOption("ops.bounds.maxY", "Bounds max Y", None))
 		val aoiBounds = if (parsedBounds.flatten.length == parsedBounds.length) {
 			Some(Bounds(parsedBounds.head.get, parsedBounds(1).get, parsedBounds(1).get, parsedBounds(3).get))
 		} else {
 			None
 		}
 		crossplotHeatMapOp(heatmapParams._1, heatmapParams._2, heatmapParams._3, heatmapParams._4, heatmapParams._5,
-		                   heatmapParams._6, heatmapParams._7, aoiBounds)(_)
+											 heatmapParams._6, heatmapParams._7, aoiBounds)(_)
 	}
 
 	private def parseHeatMapOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -295,8 +301,8 @@ object PipelineOperationsParsing extends Logging {
 		val valueColType = argParser.getStringOption("ops.valueType", "", None)
 
 		val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
-		                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
-		                      argParser.getStringOption("hbase.master", "HBase master address", None))
+													argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+													argParser.getStringOption("hbase.master", "HBase master address", None))
 		val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
 			Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
 		} else {
@@ -314,28 +320,28 @@ object PipelineOperationsParsing extends Logging {
 
 	/**
 	 * Parse args for basic line tile generation operation that writes to HDFS, and return an instance of that
-	 * operation with those arguments applied.  If HBase properties are not set, file based IO is used.
+	 * operation with those arguments applied.	If HBase properties are not set, file based IO is used.
 	 *
 	 * Arguments:
-	 *    hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
-	 *    hbase.zookeeper.port - Zookeeper port. (optional)
-	 *    hbase.master - HBase master address. (optional)
-	 *    ops.xColumn - Colspec denoting data x column
-	 *    ops.yColumn - Colspec denoting data y column
-	 *    ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
-	 *                          "sum", "mean", "max"
-	 *    ops.valueColumn - Colspec denoting data column to use as aggregation source.  Not required when type is
+	 *		hbase.zookeeper.quorum - Zookeeper quorum addresses specified as a comma separated list. (optional)
+	 *		hbase.zookeeper.port - Zookeeper port. (optional)
+	 *		hbase.master - HBase master address. (optional)
+	 *		ops.xColumn - Colspec denoting data x column
+	 *		ops.yColumn - Colspec denoting data y column
+	 *		ops.aggregationType - Aggregation operation applied during tiling - allowed values are "count",
+	 *													"sum", "mean", "max"
+	 *		ops.valueColumn - Colspec denoting data column to use as aggregation source.	Not required when type is
 	 *
-	 *    Tiling task consumes a TilingTaskParameters object that
-	 *    is populated via an argument map.  The argument map passed to this function will be used for that
-	 *    purpose, so all arguments required by that object should be set.
+	 *		Tiling task consumes a TilingTaskParameters object that
+	 *		is populated via an argument map.	The argument map passed to this function will be used for that
+	 *		purpose, so all arguments required by that object should be set.
 	 */
 	def parseGeoSegmentTilingOp(args: Map[String, String]) = {
 		logger.debug(s"Parsing hbaseSegmentTilingOp with args $args")
 		val argParser = KeyValuePassthrough(args)
 		val params = parseSegmentTilingOpImpl(args, argParser)
 		geoSegmentTilingOp(params._1, params._2, params._3, params._4, params._5,
-		                   params._6, params._7, params._8, params._9)(_)
+											 params._6, params._7, params._8, params._9)(_)
 		}
 
 		private def parseSegmentTilingOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -347,8 +353,8 @@ object PipelineOperationsParsing extends Logging {
 			val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
 			val valueColType = argParser.getStringOption("ops.valueType", "", None)
 			val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
-			                      argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
-			                      argParser.getStringOption("hbase.master", "HBase master address", None))
+														argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
+														argParser.getStringOption("hbase.master", "HBase master address", None))
 			val hbaseArgs = if (parsedArgs.flatten.length == parsedArgs.length) {
 				Some(HBaseParameters(parsedArgs.head.get, parsedArgs(1).get, parsedArgs(2).get))
 			} else {
@@ -365,4 +371,3 @@ object PipelineOperationsParsing extends Logging {
 		}
 
 	}
-

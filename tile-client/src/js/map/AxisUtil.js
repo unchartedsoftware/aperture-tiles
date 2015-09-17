@@ -251,7 +251,7 @@
     function formatTime( axis, value, verbose ) {
         var time = moment.utc( value );
         if ( verbose ) {
-            return time.format( "MMM D, hh:mm:ssa" );
+            return time.format( "MMM D, h:mm:ssa" );
         }
         var duration = moment.duration( ( axis.max - axis.min ) / Math.pow( 2, axis.map.getZoom() ) );
         if ( duration.asMonths() > 16 ) {

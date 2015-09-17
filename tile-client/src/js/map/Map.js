@@ -28,6 +28,7 @@
     "use strict";
 
     var Axis = require('./Axis'),
+        PendingLayer = require('../layer/PendingLayer'),
         MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
         Carousel = require('../layer/Carousel'),
@@ -87,13 +88,14 @@
             if ( map.olMap.panTween ) {
                 map.olMap.panTween.callbacks = null;
                 map.olMap.panTween.stop();
-                map.olMap.panTween = null;
             }
         }, true );
-        // set resize callback
-        $( window ).resize( function() {
+        // create resize callback
+        map.resizeCallback = function() {
             map.olMap.updateSize();
-        });
+        };
+        // set resize callback
+        $( window ).on( 'resize', map.resizeCallback );
     };
 
     /**
@@ -176,6 +178,12 @@
             map.olMap.zoomToMaxExtent();
             // set mouse callbacks
             setMapCallbacks( map );
+            // create pending layer now
+            if ( map.showPendingTiles ) {
+                map.pendingLayer = new PendingLayer();
+                map.pendingLayer.map = map;
+                map.pendingLayer.activate();
+            }
             if ( map.deferreds ) {
                 activateDeferredComponents( map );
             }
@@ -192,6 +200,10 @@
     addLayer = function( map, layer ) {
         // add map to layer
         layer.map = map;
+        // track layer
+        if ( map.showPendingTiles ) {
+            map.pendingLayer.register( layer );
+        }
         // activate the layer
         layer.activate();
         // add to layer array
@@ -302,6 +314,10 @@
             delete map.layersById[ layer.getUUID() ];
             // remove it from layer array
             map.layers.splice( index, 1 );
+            // track layer
+            if ( map.showPendingTiles ) {
+                map.pendingLayer.unregister( layer );
+            }
             // deactivate it
             layer.deactivate();
             layer.map = null;
@@ -424,19 +440,20 @@
                 20037508.342789244
             ]),
             zoomMethod: null,
-            panMethod: null,
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
+            fallThrough: true,
             controls: [
                 this.navigationControls,
                 this.zoomControls
             ],
-            tileManager: new OpenLayers.TileManager({
+            tileManager: OpenLayers.TileManager ? new OpenLayers.TileManager({
                 moveDelay: spec.options.moveDelay !== undefined ? spec.options.moveDelay : 400,
                 zoomDelay: spec.options.zoomDelay !== undefined ? spec.options.zoomDelay : 400
-            })
+            }) : undefined
         });
-
+        // show animation on pending tiles
+        this.showPendingTiles = ( spec.showPendingTiles !== undefined ) ? spec.showPendingTiles : true;
         // set theme, default to 'dark' theme
         this.setTheme( spec.theme );
     }
@@ -449,6 +466,17 @@
          */
         destroy: function() {
             this.destroying = true;
+            // remove pending layer
+            if ( this.pendingLayer ) {
+                this.pendingLayer.deactivate();
+                this.pendingLayer.map = null;
+                this.pendingLayer = null;
+            }
+            // remove marker layer
+            if ( this.olMarkers ) {
+                this.olMap.removeLayer( this.olMarkers );
+                this.olMarkers = null;
+            }
             this.layers.forEach( function( layer ) {
                 this.remove( layer );
             }, this );
@@ -458,6 +486,9 @@
             this.baselayers.forEach( function( baselayer ) {
                 this.remove( baselayer );
             }, this );
+            // remove window resize callback
+            $( window ).off( 'resize', this.resizeCallback );
+            // destroy map
             this.olMap.destroy();
         },
 
