@@ -442,14 +442,15 @@
             zoomMethod: null,
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
+            fallThrough: true,
             controls: [
                 this.navigationControls,
                 this.zoomControls
             ],
-            tileManager: new OpenLayers.TileManager({
+            tileManager: OpenLayers.TileManager ? new OpenLayers.TileManager({
                 moveDelay: spec.options.moveDelay !== undefined ? spec.options.moveDelay : 400,
                 zoomDelay: spec.options.zoomDelay !== undefined ? spec.options.zoomDelay : 400
-            })
+            }) : undefined
         });
         // show animation on pending tiles
         this.showPendingTiles = ( spec.showPendingTiles !== undefined ) ? spec.showPendingTiles : true;
