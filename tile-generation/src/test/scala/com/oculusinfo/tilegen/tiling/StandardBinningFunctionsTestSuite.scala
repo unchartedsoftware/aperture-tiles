@@ -91,7 +91,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 			tiles.map{tile =>
 				val subsetBins = bins.filter(_.getTile == tile).map(_.getBin).toList.sortWith(sortBins)
-				val tileBins = linearBinsForTile(start, end, tile).toList.sortWith(sortBins)
+				val tileBins = linearBinsForTile(start, end, tile, bin => 1.0).toList.map(_._1).sortWith(sortBins)
 
 				assert(subsetBins == tileBins)
 			}
@@ -170,10 +170,10 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 		val distance = 1912
 
 		val closeBins = closeLinearTiles(start, end, sample, distance).flatMap(tile =>
-			closeLinearBinsForTile(start, end, tile, distance).map(bin => (bin, tile))
+			closeLinearBinsForTile(start, end, tile, distance, bin => 1.0).map(binValue => (binValue._1, tile))
 		).toList
 		val allBins = linearTiles(start, end, sample).flatMap(tile =>
-			linearBinsForTile(start, end, tile).map(bin => (bin, tile))
+			linearBinsForTile(start, end, tile, bin => 1.0).map(binValue => (binValue._1, tile))
 		).toSet
 
 		def axialDistance (a: BinIndex, b: BinIndex): Int =
