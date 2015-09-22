@@ -201,7 +201,7 @@
         // add map to layer
         layer.map = map;
         // track layer
-        if ( map.showPendingTiles ) {
+        if ( map.showPendingTiles && layer.showPendingTiles ) {
             map.pendingLayer.register( layer );
         }
         // activate the layer
