@@ -1,8 +1,8 @@
-/* * Copyright (c) 2014 Oculus Info Inc. 
+/* * Copyright (c) 2014 Oculus Info Inc.
  * http://www.oculusinfo.com/
- * 
+ *
  * Released under the MIT License.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -24,13 +24,13 @@
 package com.oculusinfo.binning;
 
 import java.io.Serializable;
-
+import java.util.Arrays;
 
 
 /**
  * Simple immutable tile index representation, assuming a tile tree with double
  * the number of tiles in each dimension each level.
- * 
+ *
  * @author nkronenfeld
  */
 public class TileIndex implements Serializable, Comparable<TileIndex> {
@@ -48,7 +48,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 
 	/**
 	 * Create a tile index representation.  The number of bins per axis is defaulted to 256.
-	 * 
+	 *
 	 * @param level
 	 *            The level of the tile
 	 * @param x
@@ -67,7 +67,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 
 	/**
 	 * Create a tile index representation
-	 * 
+	 *
 	 * @param level
 	 *            The level of the tile
 	 * @param x
@@ -90,7 +90,7 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	/**
 	 * Create a new tile index representation, identical but for the number of
 	 * bins in the tile
-	 * 
+	 *
 	 * @param base
 	 *            The base tile representation being copied
 	 * @param xBins
@@ -142,9 +142,43 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	}
 
 	/**
+	 * Get the tile one level up from a given tile.
+	 * @param child The tile from which to search
+	 * @return The tile one level up (lower level number) containing the child tile
+	 */
+	public static TileIndex getParent (TileIndex child) {
+		return new TileIndex(
+		                     child.getLevel() - 1,
+		                     child.getX() / 2,
+		                     child.getY() / 2,
+		                     child.getXBins(),
+		                     child.getYBins()
+		                     );
+	}
+
+	/**
+	 * Get the tiles one level down from a given tile.
+	 * @param parent The tile from which to search
+	 * @return The four tiles one level down (higher level number) contained by the parent tile
+	 */
+	public static Iterable<TileIndex> getChildren (TileIndex parent) {
+		int level = parent.getLevel()+1;
+		int x = parent.getX()*2;
+		int y = parent.getY()*2;
+		int xBins = parent.getXBins();
+		int yBins = parent.getYBins();
+		return Arrays.asList(
+		                     new TileIndex(level, x+0, y+0, xBins, yBins),
+		                     new TileIndex(level, x+1, y+0, xBins, yBins),
+		                     new TileIndex(level, x+0, y+1, xBins, yBins),
+		                     new TileIndex(level, x+1, y+1, xBins, yBins)
+		                     );
+	}
+
+	/**
 	 * Translates from a bin relative to the root position of this tile, to a
 	 * bin relative to the root position of the entire data set.
-	 * 
+	 *
 	 * @param tile
 	 *            The tile in which this bin falls
 	 * @param bin
@@ -154,26 +188,26 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	 *         (with coordinates [0 to getXBins()*2^level, 0 to
 	 *         getYBins()*2^level])
 	 */
-    public static BinIndex tileBinIndexToUniversalBinIndex (TileIndex tile, BinIndex bin) {
-        // Tiles go from lower left to upper right
-        // Bins go from upper left to lower right
-        int pow2 = 1 << tile.getLevel();
+	public static BinIndex tileBinIndexToUniversalBinIndex (TileIndex tile, BinIndex bin) {
+		// Tiles go from lower left to upper right
+		// Bins go from upper left to lower right
+		int pow2 = 1 << tile.getLevel();
 
-        int tileLeft, tileTop;
+		int tileLeft, tileTop;
 
-        int xBins = tile.getXBins();
-        tileLeft = tile.getX() * xBins;
+		int xBins = tile.getXBins();
+		tileLeft = tile.getX() * xBins;
 
-        int yBins = tile.getYBins();
-        tileTop = (pow2 - tile.getY() - 1) * yBins;
+		int yBins = tile.getYBins();
+		tileTop = (pow2 - tile.getY() - 1) * yBins;
 
-        return new BinIndex(tileLeft + bin.getX(), tileTop + bin.getY());
-    }
+		return new BinIndex(tileLeft + bin.getX(), tileTop + bin.getY());
+	}
 
 	/**
 	 * Translates from the root position of the entire data set to a bin
 	 * relative to the root position of this tile, to a bin relative.
-	 * 
+	 *
 	 * @param sampleTile
 	 *            a sample tile specifying the level and number of x and y bins
 	 *            per tile required
@@ -185,34 +219,34 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	 *         tile), and bin relative to the root position of this tile (with
 	 *         coordinates [0 to getXBins(), 0 to getYBins()])
 	 */
-    public static TileAndBinIndices universalBinIndexToTileBinIndex (TileIndex sampleTile,
-                                                                     BinIndex bin) {
-        // Tiles go from lower left to upper right
-        // Bins go from upper left to lower right
-        int level = sampleTile.getLevel();
-        int pow2 = 1 << level;
+	public static TileAndBinIndices universalBinIndexToTileBinIndex (TileIndex sampleTile,
+	                                                                 BinIndex bin) {
+		// Tiles go from lower left to upper right
+		// Bins go from upper left to lower right
+		int level = sampleTile.getLevel();
+		int pow2 = 1 << level;
 
-        int tileX, tileY, tileLeft, tileTop;
+		int tileX, tileY, tileLeft, tileTop;
 
-        int xBins = sampleTile.getXBins();
-        tileX = bin.getX()/xBins;
-        tileLeft = tileX * xBins;
+		int xBins = sampleTile.getXBins();
+		tileX = bin.getX()/xBins;
+		tileLeft = tileX * xBins;
 
-        int yBins = sampleTile.getYBins();
-        tileY = pow2 - bin.getY()/yBins - 1;
-        tileTop = (pow2 - tileY - 1) * yBins;
+		int yBins = sampleTile.getYBins();
+		tileY = pow2 - bin.getY()/yBins - 1;
+		tileTop = (pow2 - tileY - 1) * yBins;
 
-        BinIndex tileBin = new BinIndex(bin.getX() - tileLeft, bin.getY() - tileTop);
-        TileIndex tile = new TileIndex(level, tileX, tileY, xBins, yBins);
+		BinIndex tileBin = new BinIndex(bin.getX() - tileLeft, bin.getY() - tileTop);
+		TileIndex tile = new TileIndex(level, tileX, tileY, xBins, yBins);
 
-        return new TileAndBinIndices(tile, tileBin);
-    }
-    
+		return new TileAndBinIndices(tile, tileBin);
+	}
+
 	/**
 	 * Translates from the root position of the entire data set to a bin
 	 * relative to the root position of this tile, to a bin relative.  Also
 	 * clips data points to be within valid tile/bin range for a given level.
-	 * 
+	 *
 	 * @param sampleTile
 	 *            a sample tile specifying the level and number of x and y bins
 	 *            per tile required
@@ -223,37 +257,37 @@ public class TileIndex implements Serializable, Comparable<TileIndex> {
 	 * @return The tile (with level, xbins, and ybins matching the input sample
 	 *         tile), and bin relative to the root position of this tile (with
 	 *         coordinates [0 to getXBins(), 0 to getYBins()])
-	 */ 
-    public static TileAndBinIndices universalBinIndexToTileBinIndexClipped (TileIndex sampleTile,
-            BinIndex bin) {
+	 */
+	public static TileAndBinIndices universalBinIndexToTileBinIndexClipped (TileIndex sampleTile,
+		  BinIndex bin) {
 		// Tiles go from lower left to upper right
 		// Bins go from upper left to lower right
 		int level = sampleTile.getLevel();
 		int pow2 = 1 << level;
-		
+
 		int tileX, tileY, tileLeft, tileTop;
-		
+
 		int xBins = sampleTile.getXBins();
 		int uniBinX = Math.min(Math.max(bin.getX(), 0), pow2*xBins-1);	// restrict uni X bin to valid range
 		tileX = uniBinX/xBins;
 		tileLeft = tileX * xBins;
-		
+
 		int yBins = sampleTile.getYBins();
 		int uniBinY = Math.min(Math.max(bin.getY(), 0), pow2*yBins-1);	// restrict uni Y bin to valid range
 		tileY = pow2 - uniBinY/yBins - 1;
 		tileTop = (pow2 - tileY - 1) * yBins;
-		
+
 		BinIndex tileBin = new BinIndex(uniBinX - tileLeft, uniBinY - tileTop);
 		TileIndex tile = new TileIndex(level, tileX, tileY, xBins, yBins);
-		
+
 		return new TileAndBinIndices(tile, tileBin);
-	}   
+	}
 
 
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * This tile is less than that tile if it is below that tile or directly
 	 * left from it.
 	 */

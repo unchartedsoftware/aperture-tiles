@@ -134,7 +134,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 	 */
 	test("Basic line binning") {
 		val pyramidId = "basic line binning"
-		val tileIO = runNewLineBinning(pyramidId, 512, true)
+		val tileIO = runNewLineBinning(pyramidId, 513, true)
 
 		val tile00 = tileIO.getTile(pyramidId, new TileIndex(1, 0, 0, 256, 256))
 		assert(tile00.isDefined)
@@ -271,23 +271,24 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			if (wholeLine) {
 				val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => value
 
-				(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, List(1), None, None)(_),
-					StandardBinningFunctions.populateTileWithLineSegments(valueScaler)(_, _, _))
+				(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, List(1), Some(1), Some(maxLength))(_),
+				 StandardBinningFunctions.populateTileWithLineSegments(valueScaler)(_, _, _))
 			} else {
 				val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => {
 					val d0 = math.abs(endpoints(0).getX - bin.getX) max math.abs(endpoints(0).getY - bin.getY)
 					val d1 = math.abs(endpoints(1).getX - bin.getX) max math.abs(endpoints(1).getY - bin.getY)
 					val d = d0 min d1
 					val scale = (1.0 - (d.toDouble / maxLength.toDouble)).max(0.0).min(1.0) // Limit to from 0 to 1.
+
 					value*scale
 				}
 
 				(StandardBinningFunctions.locateLineLeaders(new SegmentIndexScheme, pyramid, List(1), None, maxLength)(_),
-					StandardBinningFunctions.populateTileWithLineLeaders(maxLength, valueScaler)(_, _, _))
+				 StandardBinningFunctions.populateTileWithLineLeaders(maxLength, valueScaler)(_, _, _))
 			}
 		val tiles = binner.processData[Segment, Double, Double, Double, JavaDouble](data,
-			new NumericSumBinningAnalytic[Double, JavaDouble](), tileAnalytics, dataAnalytics,
-			locateFcn, populateFcn)
+			      new NumericSumBinningAnalytic[Double, JavaDouble](), tileAnalytics, dataAnalytics,
+			      locateFcn, populateFcn)
 
 		tileIO.writeTileSet(pyramid, pyramidId, tiles,
 		                    new PrimitiveAvroSerializer(classOf[JavaDouble], CodecFactory.bzip2Codec()),
