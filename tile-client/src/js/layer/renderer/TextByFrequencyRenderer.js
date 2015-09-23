@@ -155,7 +155,7 @@
         if ( levelMinMax.maximum ) {
             max = getHighestCount( levelMinMax.maximum, countKey );
         } else {
-            values.forEach ( function( value ) {
+            values.forEach( function( value ) {
                 max = Math.max( max, RendererUtil.getAttributeValue( value, countKey ) );
             });
         }
