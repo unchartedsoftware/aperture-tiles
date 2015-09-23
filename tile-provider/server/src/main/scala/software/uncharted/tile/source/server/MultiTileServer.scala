@@ -98,9 +98,9 @@ class MultiTileServer(host: String, user: String, password: String,
     requests.map { case (request, index) =>
       try {
         info("Initialization request for tile set " + request.table)
-        debug("Height: " + request.height)
-        debug("Width: " + request.width)
-        debug("Configuration: " + request.configuration)
+        info("Height: " + request.height)
+        info("Width: " + request.width)
+        info("Configuration: " + request.configuration)
 
         // Construct the pyramidIO we need to fulfil the request
         val pioFactory = pyramidIOFactoryProvider.createFactory(null, null, JavaArrays.asList[String]())
@@ -161,8 +161,8 @@ class MultiTileServer(host: String, user: String, password: String,
       val rawSerializer = choose(_.serializer, _.serializer)(sampleRequest)
       val indices: Iterable[TileIndex] = requests.flatMap(c => choose(dr => dr.indices.asScala, sr => Iterable(sr.index))(c._1)).toSet
       info("Tile request for tile set " + table)
-      debug("Serializer: " + rawSerializer.getClass)
-      debug("Tiles: " + indices.toList)
+      info("Serializer: " + rawSerializer.getClass)
+      info("Tiles: " + indices.toList)
 
       if (pyramidIOs.get(table).isEmpty) {
         requests.map(r => (Right(new IllegalArgumentException("Attempt to get tile data for uninitialized pyramid " + table)), r._2))
