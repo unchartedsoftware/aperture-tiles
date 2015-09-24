@@ -254,26 +254,38 @@
             sizeFunction = text.sizeFunction || SIZE_FUNCTION,
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
+            min = Number.MAX_VALUE,
+            max = 0,
 			$html = $("<div></div>"),
             wordCounts = [],
             entries = [],
             value,
-            min,
-            max,
+            word,
+            count,
             i,
             cloud;
 
         for ( i=0; i<numEntries; i++ ) {
             value = values[i];
+            word = RendererUtil.getAttributeValue( value, textKey );
+            count = RendererUtil.getAttributeValue( value, countKey );
+            min = Math.min( min, count );
+            max = Math.max( max, count );
             wordCounts.push({
-                word: RendererUtil.getAttributeValue( value, textKey ),
-                count: RendererUtil.getAttributeValue( value, countKey ),
+                word: word,
+                count: count,
                 entry: value
             });
         }
 
-        min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
-        max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
+        // if the min for the zoom level is specified in the meta, use it
+        if ( levelMinMax.minimum ) {
+            min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
+        }
+        // if the max for the zoom level is specified in the meta, use it
+        if ( levelMinMax.maximum ) {
+            max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
+        }
 
         cloud = createWordCloud(
             wordCounts,
@@ -288,7 +300,6 @@
 
         cloud.forEach( function( word ) {
 			entries.push( word.entry );
-
             var $wordLabel = $('<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
@@ -302,7 +313,6 @@
 			$wordLabel.mouseout(function() {
 				$label.hide(); // hide label
 			});
-
 			// add it to the group
 			$html = $html.append( $wordLabel );
         });
