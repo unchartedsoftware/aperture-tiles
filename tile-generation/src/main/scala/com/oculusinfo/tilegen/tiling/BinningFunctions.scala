@@ -25,6 +25,7 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import com.oculusinfo.tilegen.util.ExtendedNumeric.ExtendedDouble
 
 import scala.collection.mutable.{Map => MutableMap}
 import com.oculusinfo.binning.TilePyramid
@@ -188,13 +189,36 @@ trait StandardPointBinningFunctions {
 		}
 	}
 
+	def populateArrayTileGaussian[T : ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], Seq[T]) => MutableMap[BinIndex, Seq[T]] = {
+		val popFunction = populateTileGaussian[T](kernel)
 
+		(tile, bins, values) => {
+			var results: MutableMap[BinIndex, Seq[T]] = MutableMap()
+
+			// Calculate all the maps
+			for (value <- values) {
+				val map = popFunction(tile, bins, value)
+
+				// Aggregate the values into the results
+				map.foreach{ case (bin, value) => {
+					var values: Seq[T] = results.getOrElse[Seq[T]](bin, Seq[T]())
+
+					values = values :+ value
+					results.put(bin, values)
+				}}
+			}
+
+			results
+		}
+	}
 
 	/**
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
-	def populateTileGaussian[T: ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+	//def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+		//(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
+	def populateTileGaussian[T: ExtendedNumeric ](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => {
 
             MutableMap(bins.flatMap{bin =>
@@ -220,6 +244,7 @@ trait StandardPointBinningFunctions {
 				            // compute value of bin after kernel applied in bin and convert bin to tile coordinates
 				            var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
 
+
 				            val sNumeric = implicitly[ExtendedNumeric[T]]
 
 				            val kernelVal = kernel(j)(i)
@@ -229,7 +254,7 @@ trait StandardPointBinningFunctions {
 			            }
 		            }
             	}
-                result
+              result
             }: _*)
         }
 
