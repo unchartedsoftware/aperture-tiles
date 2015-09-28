@@ -290,7 +290,7 @@ public class CopyPyramid<T> {
 		}
 
 		@Override
-		protected CopyParameters create() {
+		protected CopyParameters create() throws ConfigurationException {
 			return new CopyParameters(
 			                          getPropertyValue(SOURCE_ID),
 			                          getPropertyValue(DESTINATION_ID),

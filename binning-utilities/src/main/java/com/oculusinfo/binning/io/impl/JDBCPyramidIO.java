@@ -62,7 +62,7 @@ public class JDBCPyramidIO implements PyramidIO {
 
 	private Connection _connection;
 
-	public JDBCPyramidIO(String driverClassName, String dbUrl) throws Exception {
+	public JDBCPyramidIO(String driverClassName, String dbUrl) throws ClassNotFoundException, SQLException {
 		Class.forName(driverClassName);
 		_connection = DriverManager.getConnection(dbUrl);
 	}

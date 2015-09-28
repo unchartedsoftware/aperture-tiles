@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.oculusinfo.factory.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,7 @@ public class KryoSerializerFactory<T> extends ConfigurableFactory<TileSerializer
 	}
 
 	@Override
-	protected TileSerializer<T> create () {
+	protected TileSerializer<T> create () throws ConfigurationException {
 		// Check class registrations
 		List<String> classNames = getPropertyValue(NEEDED_CLASSES);
 		Codec codec = getPropertyValue(CODEC);

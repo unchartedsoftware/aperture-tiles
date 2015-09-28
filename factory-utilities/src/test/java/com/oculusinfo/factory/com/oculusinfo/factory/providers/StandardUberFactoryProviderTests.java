@@ -118,7 +118,7 @@ public class StandardUberFactoryProviderTests {
         }
 
         @Override
-        protected TestConstruct create() {
+        protected TestConstruct create() throws ConfigurationException {
             int value = getPropertyValue(VALUE);
             return new TestConstruct(getName(), getRootPath(), value);
         }

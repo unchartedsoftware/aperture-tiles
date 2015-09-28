@@ -96,16 +96,16 @@ public class ThemedGradientFactory extends ConfigurableFactory<ThemedGradient> {
 	 * Returns the theme name.
 	 * @return the theme name
 	 */
-	public String getTheme() {
+	public String getTheme() throws ConfigurationException {
 		return getPropertyValue(THEME);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.factory.ConfigurableFactory#create()
 	 */
 	@Override
-	protected ThemedGradient create() {
-		
+	protected ThemedGradient create() throws ConfigurationException {
+
 		final String theme = getTheme();
 		final List<Color> colors = new ArrayList<Color>();
 		final JSONArray jcolors = getPropertyValue(COLORS);

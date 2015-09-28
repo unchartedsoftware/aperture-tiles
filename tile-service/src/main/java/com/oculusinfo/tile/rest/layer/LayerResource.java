@@ -99,6 +99,8 @@ public class LayerResource extends ServerResource {
 			return layer;
 		} catch ( JSONException e ) {
 			throw new JSONException( "Bad layer request, layer " + layerId + " does not exist" );
+		} catch ( ConfigurationException e ) {
+			throw new JSONException( "Bad layer request, layer " + layerId + " has no rest endpoint." );
 		}
 	}
 

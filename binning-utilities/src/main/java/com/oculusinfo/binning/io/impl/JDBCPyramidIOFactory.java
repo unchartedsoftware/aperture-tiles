@@ -26,11 +26,13 @@ package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.List;
 
 
@@ -38,7 +40,7 @@ public class JDBCPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JDBCPyramidIOFactory.class);
 
 
-	
+
 	public static StringProperty ROOT_PATH              = new StringProperty("root.path",
 		   "Indicates the root path of the tile pyramid - the URL of the database.  There is no default for this property.",
 		   null);
@@ -54,15 +56,13 @@ public class JDBCPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	}
 
 	@Override
-	protected PyramidIO create() {
+	protected PyramidIO create() throws ConfigurationException {
 		try {
 			String driver = getPropertyValue(JDBC_DRIVER);
 			String rootPath = getPropertyValue(ROOT_PATH);
 			return new JDBCPyramidIO(driver, rootPath);
+		} catch (ClassNotFoundException | SQLException e) {
+			throw new ConfigurationException("Error creating JDBCPyramidIO", e);
 		}
-		catch (Exception e) {
-			LOGGER.error("Error trying to create JDBCPyramidIO", e);
-		}
-		return null;
 	}
 }

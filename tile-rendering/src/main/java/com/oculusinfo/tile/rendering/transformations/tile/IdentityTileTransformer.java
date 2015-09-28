@@ -78,11 +78,16 @@ public class IdentityTileTransformer<T> implements TileTransformer<T> {
 	}
 
 	private double parseExtremum (LayerConfiguration parameter, StringProperty property, String propName, String layer, double def) {
-		String rawValue = parameter.getPropertyValue(property);
 		try {
-			return Double.parseDouble(rawValue);
-		} catch (NumberFormatException|NullPointerException e) {
-			LOGGER.warn("Bad "+propName+" value "+rawValue+" for "+layer+", defaulting to "+def);
+			String rawValue = parameter.getPropertyValue(property);
+			try {
+				return Double.parseDouble(rawValue);
+			} catch (NumberFormatException | NullPointerException e) {
+				LOGGER.warn("Bad " + propName + " value " + rawValue + " for " + layer + ", defaulting to " + def);
+				return def;
+			}
+		} catch (ConfigurationException e) {
+			LOGGER.warn("Could not determine value for property " + propName + " for " + layer + ", defaulting to " + def);
 			return def;
 		}
 	}

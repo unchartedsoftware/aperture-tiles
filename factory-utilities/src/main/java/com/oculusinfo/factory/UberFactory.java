@@ -88,7 +88,7 @@ public class UberFactory<T> extends ConfigurableFactory<T> {
 	}
 
 	@Override
-	protected T create () {
+	protected T create () throws ConfigurationException {
 		String subType = getPropertyValue(FACTORY_TYPE);
 		try {
 			return super.produce(subType, getFactoryType());

@@ -27,6 +27,7 @@ package com.oculusinfo.binning;
 import com.oculusinfo.binning.impl.AOITilePyramid;
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 
@@ -70,7 +71,7 @@ public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
 	}
 
 	@Override
-	protected TilePyramid create () {
+	protected TilePyramid create () throws ConfigurationException {
 		String pyramidType = getPropertyValue(PYRAMID_TYPE).toLowerCase();
 
 		if ("webmercator".equals(pyramidType) || "epsg:900913".equals(pyramidType) || "epsg:3857".equals(pyramidType)) {
@@ -82,7 +83,7 @@ public class TilePyramidFactory extends ConfigurableFactory<TilePyramid> {
 			double maxY = getPropertyValue(MAXIMUM_Y);
 			return new AOITilePyramid(minX, minY, maxX, maxY);
 		} else {
-			return null;
+			throw new ConfigurationException("Unrecognized pyramid type "+pyramidType);
 		}
 	}
 }

@@ -141,8 +141,14 @@ public class TileServiceImpl implements TileService {
 
 		// always return a blank tile if there is no data
 		if ( bi == null ) {
-			int outputWidth = config.getPropertyValue( LayerConfiguration.OUTPUT_WIDTH );
-			int outputHeight = config.getPropertyValue( LayerConfiguration.OUTPUT_HEIGHT );
+			int outputWidth = 256;
+			int outputHeight = 256;
+			try {
+				outputWidth = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
+				outputHeight = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);
+			} catch (ConfigurationException e) {
+				LOGGER.warn("Error reading image height or width; defaulting to "+outputWidth+" x "+outputHeight, e);
+			}
 			bi = new BufferedImage( outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB );
 			Graphics2D g = bi.createGraphics();
 			g.setColor( COLOR_BLANK );
