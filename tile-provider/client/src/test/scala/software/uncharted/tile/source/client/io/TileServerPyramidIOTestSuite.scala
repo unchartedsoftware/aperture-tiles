@@ -185,7 +185,7 @@ class TileServerPyramidIOTestSuite extends FunSuite {
       val configuration = new JSONObject(
         s"""{
            |  "type": "on-demand",
-           |  "algorithm": "binning",
+           |  "algorithm": "Binning",
            |  "oculus": {
            |    "binning": {
            |      "name": "bitcoin",
