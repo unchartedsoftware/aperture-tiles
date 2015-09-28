@@ -50,14 +50,15 @@
         // call base constructor
         Layer.call(this, spec);
         // set reasonable defaults
-        this.zIndex = (spec.zIndex !== undefined) ? spec.zIndex : 749;
-        this.domain = "vector";
+        this.zIndex = spec.zIndex || 749;
+        this.domain = spec.domain || "vector";
         this.source = spec.source;
         this.styleMap = spec.styleMap;
         this.strategies = spec.strategies;
         this.getData = spec.getData;
         this.teardown = spec.teardown;
         this.olFeatures = spec.olFeatures || [];
+        this.group = spec.group || "";
     }
 
     VectorLayer.prototype = Object.create(Layer.prototype);
@@ -81,9 +82,18 @@
         this.setBrightness( this.getBrightness() );
         this.setContrast( this.getContrast() );
         this.setTheme( this.map.getTheme() );
+        // publish activate event before appending to map
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
         this.map.olMap.addLayer( this.olLayer );
-        this.getData( this );
+        if ( this.getData ) {
+            this.getData( this );
+        }
+        if ( this.olFeatures ) {
+            this.setFeatures( this.olFeatures );
+        }
         this.setZIndex( this.zIndex );
+        // publish add event
+        PubSub.publish( this.getChannel(), { field: 'add', value: true } );
     };
 
     /**
@@ -92,7 +102,9 @@
      * @private
      */
     VectorLayer.prototype.deactivate = function() {
-        this.teardown();
+        if (this.teardown) {
+            this.teardown();
+        }
         if (this.olLayer) {
             if (this.olLayer.strategies) {
                 this.olLayer.strategies.forEach(function(strategy) {
@@ -101,10 +113,12 @@
             }
             this.olLayer.strategies = [];
             this.map.olMap.removeLayer(this.olLayer);
+            PubSub.publish( this.getChannel(), { field: 'remove', value: true } );
             this.olLayer.destroyFeatures();
             this.olLayer.destroy();
             this.olLayer = null;
         }
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
     };
 
     /**

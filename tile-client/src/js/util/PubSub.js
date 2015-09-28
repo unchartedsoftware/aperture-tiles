@@ -112,6 +112,41 @@
         },
 
         /**
+         * Unsubscribe a listener function from the specific channel path.
+         * @memberof PubSub
+         *
+         * @param channelPath {string}   A '.' delimited channel path.
+         * @param subscriber  {Function} The subscriber function associated with the provided path.
+         */
+        unsubscribe: function( channelPath, subscriber ) {
+
+            var paths = channelPath.split('.'),
+                path,
+                currentPath = '',
+                channel;
+
+            this.channels = this.channels || {
+                subscribers : [],
+                children : {}
+            };
+
+            channel = this.channels;
+
+            while ( paths.length > 0 ) {
+                path = paths.shift();
+                currentPath += ( currentPath.length > 0 ) ? '.' + path : path;
+                if ( !channel.children[ path ] ) {
+                    channel.children[ path ] = createChannel( currentPath );
+                }
+                channel = channel.children[ path ];
+            }
+            var index = channel.subscribers.indexOf( subscriber );
+            if ( index !== -1 ) {
+                channel.subscribers.splice( index, 1 );
+            }
+        },
+
+        /**
          * Publish a message to a channel path. Publishing to a target channel will propagate the message
          * breadth first from the root of the hierarchy to the target channel, then from the target channel
          * to all existing sub-channels

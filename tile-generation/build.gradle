@@ -8,7 +8,7 @@ apply plugin: "scala"
 // appends scala test functionality to the baseline test task
 test << {
 	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
-	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+	ant.scalatest(runpath: testClassesDir, haltonfailure: 'false', fork: 'false') {
 		reporter(type: 'file', filename: 'test.output')
 	}
 }

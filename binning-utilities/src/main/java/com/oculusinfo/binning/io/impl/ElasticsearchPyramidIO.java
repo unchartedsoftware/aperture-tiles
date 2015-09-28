@@ -85,7 +85,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 			try{
 				Settings settings = ImmutableSettings.settingsBuilder()
 					.put("cluster.name", esClusterName)
-					.put("client.transport.sniff", true)
+					.put("client.transport.sniff", false)
 					.put("sniffOnConnection", true).build();
 				this.client = new TransportClient(settings)
 					.addTransportAddress(new InetSocketTransportAddress(esTransportAddress, esTransportPort));

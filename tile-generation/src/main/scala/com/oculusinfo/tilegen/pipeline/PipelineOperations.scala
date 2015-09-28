@@ -587,6 +587,7 @@ object PipelineOperations {
 			"oculus.binning.index.field.0" -> x1ColSpec,
 			"oculus.binning.index.field.1" -> y1ColSpec,
 			"oculus.binning.index.field.2" -> x2ColSpec,
+			"oculus.binning.index.field.3" -> y2ColSpec,
 			"oculus.binning.lineType" -> taskParameters.lineType.toString
 		) ++ taskParameters.minimumSegmentLength.map(len =>
 			Map("oculus.binning.minimumSegmentLength" -> len.toString)
