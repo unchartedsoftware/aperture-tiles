@@ -161,6 +161,10 @@
         // assemble word cloud
         for ( i=0; i<wordCounts.length; i++ ) {
             word = wordCounts[i].word;
+            // strip hashtag
+            if ( word.charAt(0) === '#' ) {
+                word = word.substr(1);
+            }
             count = wordCounts[i].count;
             // get font size based on font size function
             fontSize = RendererUtil.getFontSize( count, min, max, {
