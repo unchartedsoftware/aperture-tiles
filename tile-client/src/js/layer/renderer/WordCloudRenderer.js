@@ -135,7 +135,7 @@
         $temp = $('<div class="word-cloud-label-temp" style="font-size:'+fontSize+'px;">'+str+'</div>');
         $('body').append( $temp );
         dimension.width = $temp.outerWidth();
-        dimension.height = $temp.outerHeight();
+        dimension.height = Math.round(0.9* $temp.outerHeight());
         $temp.remove();
         return dimension;
     };

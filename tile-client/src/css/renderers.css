@@ -146,6 +146,8 @@
 	overflow: hidden;
 	padding: 2px 5px 2px 5px;
 	text-overflow: ellipsis;
+	font-family: 'Proxima Nova';
+	text-transform: uppercase;
 }
 
 .word-cloud-label-temp {
@@ -158,6 +160,8 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	font-family: 'Proxima Nova';
+	text-transform: uppercase;
 }
 
 /********************************************/

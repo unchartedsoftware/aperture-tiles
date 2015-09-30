@@ -167,12 +167,15 @@
         var css,
             blendSpec,
             from,
+            mid,
             to,
             i;
         css = '<style class="render-theme" type="text/css">';
         if ( this.spec.from && this.spec.to ) {
             from = this.spec.from;
             to = this.spec.to;
+            mid = this.spec.mid;
+
             for ( i=10; i>=0; i-- ) {
                 blendSpec = {};
                 if ( from['background-color'] && to['background-color'] ) {
@@ -181,7 +184,19 @@
                          from['background-color'],
                          i/10 );
                 }
-                if ( from.color && to.color ) {
+                if ( from.color && to.color && mid && mid.color ) {
+                    if (i >= 3) {
+                        blendSpec.color = RendererUtil.hexBlend(
+                            to.color,
+                            mid.color,
+                            Math.min(1, (i-3) / 3.5));//5);
+                    } else {
+                        blendSpec.color = RendererUtil.hexBlend(
+                            mid.color,
+                            from.color,
+                            i / 3);
+                    }
+                } else if ( from.color && to.color ) {
                      blendSpec.color = RendererUtil.hexBlend(
                          to.color,
                          from.color,
