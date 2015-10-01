@@ -140,19 +140,17 @@
 
 .word-cloud-label {
 	cursor: pointer;
-    font-weight: bold;
+  font-weight: bold;
 	position:absolute;
 	white-space: nowrap;
 	overflow: hidden;
 	padding: 2px 5px 2px 5px;
 	text-overflow: ellipsis;
-	font-family: 'Proxima Nova';
-	text-transform: uppercase;
 }
 
 .word-cloud-label-temp {
 	position:relative;
-    font-weight: bold;
+  font-weight: bold;
 	visibility:hidden;
 	display: inline-block;
 	padding: 2px 5px 2px 5px;
@@ -160,8 +158,6 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	font-family: 'Proxima Nova';
-	text-transform: uppercase;
 }
 
 /********************************************/

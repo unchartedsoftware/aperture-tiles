@@ -169,6 +169,10 @@
             from,
             mid,
             to,
+            iPt,
+            minRangePt,
+            midRangePt,
+            maxRangePt,
             i;
         css = '<style class="render-theme" type="text/css">';
         if ( this.spec.from && this.spec.to ) {
@@ -184,17 +188,27 @@
                          from['background-color'],
                          i/10 );
                 }
+                // note only the tri-color option supports rangePoint. should be generalized more fully.
                 if ( from.color && to.color && mid && mid.color ) {
-                    if (i >= 3) {
+                    minRangePt = Math.min(0.9999, Math.max(0, from.rangePoint || 0));
+                    maxRangePt = Math.min(1, Math.max(minRangePt, to.rangePoint || 1));
+                    midRangePt = Math.min(maxRangePt-0.0001, Math.max(minRangePt+0.0001,
+                            mid.rangePoint || (minRangePt+ 0.5*(maxRangePt-minRangePt))));
+
+                    iPt = i/10;
+
+                    if (iPt >= midRangePt) {
                         blendSpec.color = RendererUtil.hexBlend(
                             to.color,
                             mid.color,
-                            Math.min(1, (i-3) / 3.5));//5);
+                            Math.min(1, Math.max(0, (iPt-midRangePt) / (maxRangePt-midRangePt)))
+                        );
                     } else {
                         blendSpec.color = RendererUtil.hexBlend(
                             mid.color,
                             from.color,
-                            i / 3);
+                            Math.min(1, Math.max(0, (iPt-minRangePt) / (midRangePt-minRangePt)))
+                        );
                     }
                 } else if ( from.color && to.color ) {
                      blendSpec.color = RendererUtil.hexBlend(
