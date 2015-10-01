@@ -458,7 +458,6 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)
 
 			val data = sqlc.sql(selectStmt)
-			val checkData = data.collect
 
 			val indexFields = indexer.fields.length
 			val valueFields = valuer.fields.length
