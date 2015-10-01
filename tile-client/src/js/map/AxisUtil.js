@@ -93,7 +93,8 @@
                 small: []
             },
             i = Util.mod( startingMarkerTypeIndex, MARKER_TYPE_ORDER.length ),
-            value;
+            value,
+            marker;
         // reduce sub increment by epsilon to prevent precision errors culling max point
         if ( axis.units.type !== 'time' &&
             axis.units.type !== 'date' &&
@@ -103,10 +104,13 @@
             subIncrement -= EPSILON;
         }
         for ( value=start; value<=end; value+=subIncrement ) {
-            markers[ MARKER_TYPE_ORDER[i] ].push({
-                label: getMarkerRollover( axis, value ),
+            marker = {
                 pixel: getPixelPosition( axis, value )
-            });
+            };
+            if ( MARKER_TYPE_ORDER[i] === "large" ) {
+                marker.label = getMarkerRollover( axis, value );
+            }
+            markers[ MARKER_TYPE_ORDER[i] ].push( marker );
             i = (i + 1) % MARKER_TYPE_ORDER.length;
         }
         return markers;
@@ -238,91 +242,24 @@
     }
 
     /**
-     * Maps a number returns from Date.getMonth() to is full string name.
-     *
-     * @param {number} num - The month number.
-     *
-     * @returns {String} The month string.
-     */
-    function numToMonth( num ) {
-        switch( num ) {
-            case 0: return "January";
-            case 1: return "February";
-            case 2: return "March";
-            case 3: return "April";
-            case 4: return "May";
-            case 5: return "June";
-            case 6: return "July";
-            case 7: return "August";
-            case 8: return "September";
-            case 9: return "October";
-            case 10: return "November";
-            case 11: return "December";
-        }
-        return null;
-    }
-
-    /**
-     * Returns a string of the format "Month DD, YYYY:" from a unix timestamp.
-     *
-     * @param {number} timestamp - A unix timestamp.
-     *
-     * @returns {String} The day string in the form: "Month DD, YYYY"
-     */
-     function getDayString( timestamp ) {
-        var date = new Date( timestamp ),
-            month = numToMonth( date.getUTCMonth() ),
-            day = date.getUTCDate();
-        return month + " " + day;
-    }
-
-    /**
-     * Returns a string of the format "HH:MM:SS xm" from a unix timestamp.
-     *
-     * @param {number} timestamp - A unix timestamp.
-     *
-     * @returns {String} The day string in the form: "HH:MM:SS xm"
-     */
-    function getTimeString( timestamp ) {
-        function padZero( num ) {
-            return ("0" + num).slice(-2);
-        }
-        var date = new Date( timestamp ),
-            hours = date.getUTCHours(),
-            minutes = padZero( date.getUTCMinutes() ),
-            seconds = padZero( date.getUTCSeconds() ),
-            suffix = (hours >= 12) ? 'pm' : 'am';
-        // ensure hour is correct
-        hours = ( hours === 0 || hours === 12 ) ? 12 : hours % 12;
-        return hours + ':' + minutes + ':' + seconds + " " + suffix;
-    }
-
-    /**
-     * From a timestamp returns the format YYYY-MM-DD.
-     *
-     * @param {number} timestamp - A unix timestamp.
-     *
-     * @returns {String} The day string in the form: "YYYY-MM-DD"
-     */
-     function getYYYYMMDD( timestamp ) {
-        var date = new Date( timestamp );
-        return date.getUTCFullYear() + "-" +
-            ("0" + (date.getUTCMonth()+1) ).slice(-2) + "-" +
-            ("0" + date.getUTCDate() ).slice(-2);
-    }
-
-    /**
      * Private: Formats a timestamp into a date.
      *
      * @param value {int} unix timestamp.
      * @param verbose {boolean} format to a longer more human readable date
      * @returns {string}
      */
-    function formatTime( value, verbose ) {
+    function formatTime( axis, value, verbose ) {
+        var time = moment.utc( value );
         if ( verbose ) {
-            return getDayString( value ) + ", " + getTimeString( value );
+            return time.format( "MMM D, h:mm:ssa" );
         }
-        return getYYYYMMDD( value );
+        var duration = moment.duration( ( axis.max - axis.min ) / Math.pow( 2, axis.map.getZoom() ) );
+        if ( duration.asMonths() > 16 ) {
+            return time.format( "YYYY" );
+        } else if ( duration.asMonths() > 2 ) {
+            return time.format( "MMM YYYY" );
+        }
+        return time.format( "MMM D, YYYY" );
     }
 
     /**
@@ -356,6 +293,162 @@
         return subIncrement * powerOfTwo;
     }
 
+    /**
+     * Private: Adds a time based marker to the markers array.
+     *
+     * @param {Axis} axis - The axis object.
+     * @param {number} start - The first visible value on the axis.
+     * @param {number} end - The last visible value on the axis.
+     * @param {Array} markers - The markers array.
+     * @param {number} timestamp - The timestamp value to add.
+     * @param {boolean} addLabel - Whether or not to add a label to the marker.
+     */
+    function addTimeMarker( axis, start, end, markers, timestamp, addLabel ) {
+        if ( timestamp >= start && timestamp <= end ) {
+            var marker = {
+                pixel: getPixelPosition( axis, timestamp )
+            };
+            if ( addLabel ) {
+                marker.label = timestamp;
+            }
+            markers.push( marker );
+        }
+    }
+
+    /**
+     * Private: Splits the time unit into non floating point units.
+     *
+     * @param {string} unit - The unit type.
+     * @param {number} count - The number of units.
+     */
+    function splitTimeUnit( unit, count ) {
+        // if unit is already a non floating point count, return early
+        if ( count % 1 === 0 ) {
+            return {
+                unit: unit,
+                count: count
+            };
+        }
+        // split unit to next subunit
+        var result = {};
+        switch ( unit ) {
+            case "year":
+                result = {
+                    unit: "month",
+                    count: count * 12
+                };
+                break;
+            case "month":
+                result = {
+                    unit: "week",
+                    count: count * 4
+                };
+                break;
+            case "week":
+                result = {
+                    unit: "day",
+                    count: count * 7
+                };
+                break;
+            case "day":
+                result = {
+                    unit: "hour",
+                    count: count * 24
+                };
+                break;
+            default:
+                console.error("Cannot split time units evenly");
+                return null;
+        }
+        // if unit still isn't split evenly, recurse further
+        if ( result.count % 1 !== 0 ) {
+            return splitTimeUnit( result.unit, result.count );
+        }
+        return result;
+    }
+
+    /**
+     * Private: Adds time based markers based on some alignment.
+     *
+     * @param {Axis} axis - The axis object.
+     * @param {Array} markers - The markers array.
+     * @param {number} start - The first visible value on the axis.
+     * @param {number} end - The last visible value on the axis.
+     * @param {string} alignBy - The unit to align the markers by.
+     * @param {string} unit - The unit by which to step by.
+     * @param {number} countPerLabel - The number of units per label.
+     */
+    function addTimeAlignedMarkers( axis, markers, start, end, alignBy, unit, countPerLabel ) {
+        var alignedStart = moment.utc( start ).startOf( alignBy ).valueOf(),
+            duration = moment.duration( end - alignedStart ),
+            numUnits = duration.as( unit + "s" ),
+            step = countPerLabel >= 1 ? countPerLabel : 1,
+            subUnit,
+            aligned,
+            large,
+            medium,
+            small,
+            i, j;
+        for ( i=0; i<numUnits; i+=step ) {
+            // get timestamp of aligned unit
+            aligned = moment.utc( alignedStart ).add( i, unit ).valueOf();
+            // determine number of sub divisions
+            var numSubDivisions = 1/countPerLabel;
+            for ( j=0; j<numSubDivisions; j++ ) {
+                var subDivided = splitTimeUnit( unit, countPerLabel );
+                large = moment.utc( aligned ).add( j*subDivided.count, subDivided.unit ).valueOf();
+                // add large marker
+                addTimeMarker( axis, start, end, markers.large, large, true );
+                // add medium marker
+                subUnit = splitTimeUnit( subDivided.unit, subDivided.count / 2 );
+                medium = moment.utc( large ).add( subUnit.count, subUnit.unit + "s" ).valueOf();
+                addTimeMarker( axis, start, end, markers.medium, medium );
+                // add small marker
+                subUnit = splitTimeUnit( subDivided.unit, subDivided.count / 4 );
+                small = moment.utc( large ).add( subUnit.count, subUnit.unit + "s" ).valueOf();
+                addTimeMarker( axis, start, end, markers.small, small );
+                small = moment.utc( large ).add( subUnit.count * 3, subUnit.unit + "s" ).valueOf();
+                addTimeMarker( axis, start, end, markers.small, small );
+            }
+        }
+    }
+
+    /**
+     * Private: Fills an array of markers by time based sub increments.
+     *
+     * @param axis      {Axis}   axis object.
+     * @param start     {number} start increment.
+     * @param end       {number} end increment
+     */
+    function fillArrayByTimeIncrement( axis, start, end ) {
+        var duration = moment.duration( ( axis.max - axis.min ) / Math.pow( 2, axis.map.getZoom() ) ),
+            markers = {
+                large: [],
+                medium: [],
+                small: []
+            };
+        if ( duration.asMonths() > 16 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "year", 1 );
+        } else if ( duration.asMonths() > 8 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "month", 4 );
+        } else if ( duration.asMonths() > 4 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "month", 2 );
+        } else if ( duration.asMonths() > 2 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "month", 1 );
+        } else if ( duration.asMonths() > 1 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "month", 0.5 );
+        } else if ( duration.asWeeks() > 2 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "month", 0.25 );
+        } else if ( duration.asWeeks() > 1 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "day", 4 );
+        } else if ( duration.asDays() > 4 ) {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "day", 2 );
+        } else {
+            addTimeAlignedMarkers( axis, markers, start, end, "year", "day", 1 );
+        }
+        return markers;
+    }
+
     module.exports = {
 
         /**
@@ -365,7 +458,7 @@
          * @param units {Object} unit specification of the axis.
          * @param verbose {boolean} format to a more verbose format, if available.
          */
-        formatText: function( value, units, verbose ) {
+        formatText: function( axis, value, units, verbose ) {
 
             if ( !units ) {
                 return formatNumber( value, 2 );
@@ -382,7 +475,7 @@
                 case 'time':
                 case 'date':
 
-                    return formatTime( value, verbose );
+                    return formatTime( axis, value, verbose );
 
                 case 'k':
                 case 'thousand':
@@ -443,6 +536,21 @@
                 increment,
                 minIncrement,
                 maxIncrement;
+
+            // time based axis partitions aren't 'even', they should correspond based
+            // on the scale at which the data is currently being shown, therefore these
+            // markers will be generated as their own edge case
+            if ( axis.units.type === "time" ) {
+                minIncrement = getMinIncrement( axis, {
+                    pivot: axis.min,
+                    subIncrement: 1000 * 60 * 60
+                });
+                maxIncrement = getMaxIncrement( axis, {
+                    pivot: axis.min,
+                    subIncrement: 1000 * 60 * 60
+                });
+                return fillArrayByTimeIncrement( axis, minIncrement, maxIncrement );
+            }
 
             switch ( axis.intervals.type ) {
 

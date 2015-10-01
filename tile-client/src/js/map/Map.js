@@ -28,6 +28,7 @@
     "use strict";
 
     var Axis = require('./Axis'),
+        PendingLayer = require('../layer/PendingLayer'),
         MapUtil = require('./MapUtil'),
         Layer = require('../layer/Layer'),
         Carousel = require('../layer/Carousel'),
@@ -87,13 +88,14 @@
             if ( map.olMap.panTween ) {
                 map.olMap.panTween.callbacks = null;
                 map.olMap.panTween.stop();
-                map.olMap.panTween = null;
             }
         }, true );
-        // set resize callback
-        $( window ).resize( function() {
+        // create resize callback
+        map.resizeCallback = function() {
             map.olMap.updateSize();
-        });
+        };
+        // set resize callback
+        $( window ).on( 'resize', map.resizeCallback );
     };
 
     /**
@@ -176,6 +178,12 @@
             map.olMap.zoomToMaxExtent();
             // set mouse callbacks
             setMapCallbacks( map );
+            // create pending layer now
+            if ( map.showPendingTiles ) {
+                map.pendingLayer = new PendingLayer();
+                map.pendingLayer.map = map;
+                map.pendingLayer.activate();
+            }
             if ( map.deferreds ) {
                 activateDeferredComponents( map );
             }
@@ -192,6 +200,10 @@
     addLayer = function( map, layer ) {
         // add map to layer
         layer.map = map;
+        // track layer
+        if ( map.showPendingTiles && layer.showPendingTiles ) {
+            map.pendingLayer.register( layer );
+        }
         // activate the layer
         layer.activate();
         // add to layer array
@@ -264,7 +276,7 @@
     removeBaseLayer = function( map, baselayer ) {
         var index;
         // if only 1 baselayer available, ignore
-        if ( map.baselayers.length === 1 ) {
+        if ( !map.destroying && map.baselayers.length === 1 ) {
             console.error( 'Error: attempting to remove only baselayer from ' +
                 'map, this destroys the map, use destroy() instead' );
             return;
@@ -302,6 +314,10 @@
             delete map.layersById[ layer.getUUID() ];
             // remove it from layer array
             map.layers.splice( index, 1 );
+            // track layer
+            if ( map.showPendingTiles ) {
+                map.pendingLayer.unregister( layer );
+            }
             // deactivate it
             layer.deactivate();
             layer.map = null;
@@ -385,7 +401,10 @@
      * {
      *     pyramid {String} - The pyramid type for the map. Defaults to 'WebMercator'
      *     options: {
-     *         numZoomLevels {integer} - The number of zoom levels.
+     *         numZoomLevels {integer} - The number of zoom levels. Default = 18.
+     *         units {integer} - The units used for the map. Default = 'm'.
+     *         zoomDelay {integer} - The delay before requesting tiles on a zoom. Default = 400.
+     *         moveDelay {integer} - The delay before requesting tiles on a pan. Default = 400.
      *     }
      * }
      * </pre>
@@ -421,24 +440,57 @@
                 20037508.342789244
             ]),
             zoomMethod: null,
-            panMethod: null,
             units: spec.options.units || "m",
             numZoomLevels: spec.options.numZoomLevels || 18,
+            fallThrough: true,
             controls: [
                 this.navigationControls,
                 this.zoomControls
             ],
-            tileManager: new OpenLayers.TileManager({
-                moveDelay: 400,
-                zoomDelay: 400
-            })
+            tileManager: OpenLayers.TileManager ? new OpenLayers.TileManager({
+                moveDelay: spec.options.moveDelay !== undefined ? spec.options.moveDelay : 400,
+                zoomDelay: spec.options.zoomDelay !== undefined ? spec.options.zoomDelay : 400
+            }) : undefined
         });
-
+        // show animation on pending tiles
+        this.showPendingTiles = ( spec.showPendingTiles !== undefined ) ? spec.showPendingTiles : true;
         // set theme, default to 'dark' theme
         this.setTheme( spec.theme );
     }
 
     Map.prototype = {
+
+        /**
+         * Removes all components and destroys the map.
+         * @memberof Map.prototype
+         */
+        destroy: function() {
+            this.destroying = true;
+            // remove pending layer
+            if ( this.pendingLayer ) {
+                this.pendingLayer.deactivate();
+                this.pendingLayer.map = null;
+                this.pendingLayer = null;
+            }
+            // remove marker layer
+            if ( this.olMarkers ) {
+                this.olMap.removeLayer( this.olMarkers );
+                this.olMarkers = null;
+            }
+            this.layers.forEach( function( layer ) {
+                this.remove( layer );
+            }, this );
+            _.forIn( this.axes, function( axis ) {
+                this.remove( axis );
+            }, this );
+            this.baselayers.forEach( function( baselayer ) {
+                this.remove( baselayer );
+            }, this );
+            // remove window resize callback
+            $( window ).off( 'resize', this.resizeCallback );
+            // destroy map
+            this.olMap.destroy();
+        },
 
         /**
          * Adds a component to the map.
@@ -563,6 +615,9 @@
          * @param {String} theme - The theme identification string of the map.
          */
         setTheme: function( theme ) {
+            if ( this.theme === theme ) {
+                return;
+            }
             var i;
             // toggle theme in html
             if ( theme === 'light' ) {
@@ -570,6 +625,7 @@
             } else {
                 $( 'body' ).removeClass( "light-theme" ).addClass( "dark-theme" );
             }
+            this.theme = theme;
             // update theme for all attached layers
             if ( this.layers ) {
                 for ( i=0; i<this.layers.length; i++ ) {
@@ -588,7 +644,7 @@
          * @returns {String} The theme of the map.
          */
         getTheme: function() {
-            return $( 'body' ).hasClass( "light-theme" ) ? 'light' : 'dark';
+            return this.theme;
         },
 
         /**
@@ -737,6 +793,7 @@
                 olBounds = new OpenLayers.Bounds();
             olBounds.extend( minLonLat );
             olBounds.extend( maxLonLat );
+            this.olMap.zoomToExtent( olBounds );
         },
 
         /**

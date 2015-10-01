@@ -123,6 +123,8 @@
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             minFontSize = 13,
             maxFontSize = 18,
+            min = Number.MAX_VALUE,
+            max = 0,
             entries = [],
             html = '',
             desaturate,
@@ -143,8 +145,25 @@
 
         yOffset = RendererUtil.getYOffset( numEntries, ENTRY_HEIGHT+BAR_HEIGHT, 122 );
 
-        for (i=0; i<numEntries; i++) {
+        // if the min for the zoom level is specified in the meta, use it
+        if ( levelMinMax.minimum ) {
+            min = RendererUtil.getAttributeValue( levelMinMax.minimum, countKey );
+        } else {
+            values.forEach( function( value ) {
+                min = Math.min( min, RendererUtil.getAttributeValue( value, countKey ) );
+            });
+        }
 
+        // if the max for the zoom level is specified in the meta, use it
+        if ( levelMinMax.maximum ) {
+            max = RendererUtil.getAttributeValue( levelMinMax.maximum, countKey );
+        } else {
+            values.forEach( function( value ) {
+                max = Math.max( max, RendererUtil.getAttributeValue( value, countKey ) );
+            });
+        }
+
+        for (i=0; i<numEntries; i++) {
             value = values[i];
             entries.push( value );
             text = RendererUtil.getAttributeValue( value, textKey );
@@ -152,8 +171,8 @@
             desaturate = ( count < threshold ) ? "de-saturate" : "";
             fontSize = RendererUtil.getFontSize(
                 count,
-                RendererUtil.getAttributeValue( levelMinMax.minimum, countKey ),
-                RendererUtil.getAttributeValue( levelMinMax.maximum, countKey ),
+                min,
+                max,
                 {
                     minFontSize: minFontSize,
                     maxFontSize: maxFontSize,

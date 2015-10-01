@@ -103,6 +103,8 @@
 				this.attribution +
 				'</div>' );
 		}
+        // publish activate event before appending to map
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
 		// create baselayer and set as baselayer
         this.map.olMap.addLayer( this.olLayer );
         this.map.olMap.setBaseLayer( this.olLayer );
@@ -122,7 +124,8 @@
         this.setEnabled( this.isEnabled() );
         this.setBrightness( this.getBrightness() );
         this.setContrast( this.getContrast() );
-		PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
+        // publish add event
+        PubSub.publish( this.getChannel(), { field: 'add', value: true } );
     };
 
     /**
@@ -133,6 +136,7 @@
     BaseLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
+            PubSub.publish( this.getChannel(), { field: 'remove', value: true } );
             this.olLayer.destroy();
         }
 		if ( this.attribution ) {

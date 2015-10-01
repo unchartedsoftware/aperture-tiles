@@ -42,7 +42,9 @@
         var aggregation,
             score,
             total,
-            i, j;
+            texts,
+            parsed,
+            i, j, k;
         // set base aggregator
         aggregation = {
             topic: buckets[0].topic,
@@ -59,6 +61,14 @@
             for ( j=0; j<total.length; j++ ) {
                 aggregation.counts[j] += total[j];
                 aggregation.total += total[j];
+            }
+            // get sentiment. 'negative', 'positive', or 'neutral'
+            texts = score.texts;
+            if ( texts ) {
+                for ( k=0; k<texts.length; k++ ) {
+                    parsed = JSON.parse( texts[k].text );
+                    aggregation.sentiment = parseSentiment( parsed[2] );
+                }
             }
         }
         return aggregation;
@@ -112,6 +122,25 @@
         });
         return aggBuckets;
     };
+
+    /**
+     * Returns the sentiment id string based on the numerical value.
+     *
+     * @param {number} value - The sentiment value.
+     *
+     * @returns {String} The sentiment id.
+     */
+    function parseSentiment( value ) {
+        if ( value === undefined ) {
+            return undefined;
+        }
+        if ( value === -1 ) {
+            return 'negative';
+        } else if ( value === 1 ) {
+            return 'positive';
+        }
+        return 'neutral';
+    }
 
     module.exports = TopicCountArrayAggregator;
 

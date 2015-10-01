@@ -96,11 +96,14 @@
         this.setOpacity( this.getOpacity() );
         this.setBrightness( this.getBrightness() );
         this.setContrast( this.getContrast() );
+        // publish activate event before appending to map
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
         // attach to map
         this.map.olMap.addLayer( this.olLayer );
         // set z-index after
         this.setZIndex( this.zIndex );
-        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
+        // publish add event
+        PubSub.publish( this.getChannel(), { field: 'add', value: true } );
     };
 
     /**
@@ -111,6 +114,7 @@
     AxisLayer.prototype.deactivate = function() {
         if ( this.olLayer ) {
             this.map.olMap.removeLayer( this.olLayer );
+            PubSub.publish( this.getChannel(), { field: 'remove', value: true } );
             this.olLayer.destroy();
             this.olLayer = null;
         }

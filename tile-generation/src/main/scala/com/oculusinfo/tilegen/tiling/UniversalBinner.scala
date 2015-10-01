@@ -63,8 +63,8 @@ object UniversalBinner {
 	 * @return The number of partitions that should be used for this dataset.
 	 */
 	def getNumSplits[T: ClassTag](dataSet: RDD[T],
-																minPartitions: Option[Int],
-																maxPartitions: Option[Int]): Int =
+	                              minPartitions: Option[Int],
+	                              maxPartitions: Option[Int]): Int =
 		dataSet.partitions.size
 			.max(minPartitions.getOrElse(0))
 			.min(maxPartitions.getOrElse(Int.MaxValue))
@@ -78,7 +78,7 @@ object UniversalBinner {
 	 * @tparam T The type of value to aggregate
 	 */
 	def optAggregate[T](aggFcn: Option[(T, T) => T],
-											value1: Option[T], value2: Option[T]): Option[T] =
+	                    value1: Option[T], value2: Option[T]): Option[T] =
 		aggFcn.map(fcn => (value1 ++ value2).reduceLeftOption(fcn)).getOrElse(None)
 
 	/**
@@ -105,9 +105,9 @@ object UniversalBinner {
 		}
 	}
 
-//	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
-//		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map { case (k, v) => (k, v.map(_._2).reduce(aggFcn)) }
-//	}
+	//	def oldAggregateMaps[K, V](aggFcn: (V, V) => V, map1: MutableMap[K, V], map2: MutableMap[K, V]): MutableMap[K, V] = {
+	//		(map1.toSeq ++ map2.toSeq).groupBy(_._1).map { case (k, v) => (k, v.map(_._2).reduce(aggFcn)) }
+	//	}
 }
 
 
@@ -189,7 +189,7 @@ class UniversalBinner extends Logging {
 				                    name, description)
 				val levelEndTime = System.currentTimeMillis()
 				info("Finished binning levels ["+levels.mkString(", ")+"] of data set "
-					    + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
+					     + name + " in " + ((levelEndTime-levelStartTime)/60000.0) + " minutes")
 			}
 		)
 
@@ -197,9 +197,9 @@ class UniversalBinner extends Logging {
 
 		val endTime = System.currentTimeMillis()
 		info("Finished binning data set " + name + " into "
-			    + levelSets.map(_.size).reduce(_+_)
-			    + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
-			    + ((endTime-startTime)/60000.0) + " minutes")
+			     + levelSets.map(_.size).reduce(_+_)
+			     + " levels (" + levelSets.map(_.mkString(",")).mkString(";") + ") in "
+			     + ((endTime-startTime)/60000.0) + " minutes")
 	}
 
 	/** Helper function to mimic RDDBinner interface */
@@ -248,33 +248,15 @@ class UniversalBinner extends Logging {
 		 populateTileFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT],
 		 parameters: BinningParameters = new BinningParameters()): RDD[TileData[BT]] =
 	{
-		// First, within each partition, group data by tile
+		// Convert raw indices into tiles and bins
 		val consolidatedByPartition: RDD[(TileIndex, Array[BinIndex], PT, Option[DT])] =
-			data.mapPartitions{iter =>
-				val partitionResults = MutableMap[(TileIndex, Array[BinIndex]), (PT, Option[DT])]()
-
-				// Map each input record in this partition into tile coordinates, ...
-				iter.flatMap(record =>
-					locateIndexFcn(record._1).map(index => (index, (record._2, record._3)))
-				).foreach{case (key, newValue) =>
-						// ... and consolidate identical input records in this partition.
-						if (partitionResults.contains(key)) {
-							val oldValue = partitionResults(key)
-							val analyticAggregator =
-								dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
-							partitionResults(key) = (binAnalytic.aggregate(newValue._1, oldValue._1),
-							                         optAggregate(analyticAggregator,
-							                                      newValue._2, oldValue._2))
-						} else {
-							partitionResults(key) = newValue
-						}
-				}
-				partitionResults.iterator.map(results => (results._1._1, results._1._2, results._2._1, results._2._2))
+			data.flatMap { record =>
+				val indices: Traversable[(TileIndex, Array[BinIndex])] = locateIndexFcn(record._1)
+				val value: PT = record._2
+				val analyticValue: Option[DT] = record._3
+				indices.map(index => (index._1, index._2, value, analyticValue))
 			}
 
-		// TODO: If this works, look at using MutableMaps instead of Maps as the first output
-		// value, and adding in place.
-		// TODO: If that works, look into getting rid of the mutable map in the previous step
 		// Combine all information from a single tile
 		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			c => {
@@ -292,7 +274,7 @@ class UniversalBinner extends Logging {
 				newAnalyticValue.foreach(analyticValue => dataAnalytics.foreach(analytic => analytic.accumulate(tile, analyticValue)))
 
 				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
-					optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
+				 optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))
 			}
 		val mergeCombiners: ((MutableMap[BinIndex, PT], Option[DT]),
 		                     (MutableMap[BinIndex, PT], Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =

@@ -8,7 +8,7 @@ apply plugin: "scala"
 // appends scala test functionality to the baseline test task
 test << {
 	ant.taskdef(name: 'scalatest', classname: 'org.scalatest.tools.ScalaTestAntTask', classpath: classpath.asPath)
-	ant.scalatest(runpath: testClassesDir, haltonfailure: 'true', fork: 'false') {
+	ant.scalatest(runpath: testClassesDir, haltonfailure: 'false', fork: 'false') {
 		reporter(type: 'file', filename: 'test.output')
 	}
 }
@@ -36,21 +36,6 @@ task testJar(type: Jar) {
 	classifier = "tests"
 	from sourceSets.test.output
 }
-
-// Copy and filter resources files.  This uses a baseline copy task, and applies
-// Ant's token functionality to filter values.
-task copyFilteredResources(type: Copy) {
-	from "src/main/filtered-resources-gradle"
-	into "src/main/resources"
-	filter ReplaceTokens, tokens:[
-			"project-version": version.toString(),
-			"hadoop-core-version": hadoopCoreVersion.toString(),
-			"hbase-version": hbaseVersion.toString()
-	]
-}
-// Make sure the above tasks run before resource processing.
-processResources.dependsOn copyFilteredResources
-
 
 // Configure a jar task to build a fat jar that includes
 // dependencies added ot the assemblyJarReq config.

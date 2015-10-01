@@ -46,6 +46,12 @@
 		this.domain = "kml";
 		this.source = spec.source;
 		this.kml = spec.kml || [];
+
+    // If KML data is time filterable initialize to most recent
+    if (this.source.facets && this.source.facets.indexOf("time") != -1) {
+      this.kmlDate = this.source.meta.meta.rangeMax;
+      this.updateKMLData(false);
+    }
 	}
 
 	KMLLayer.prototype = Object.create(Layer.prototype);
@@ -60,7 +66,13 @@
 
 		this.kml.forEach( function( kml ) {
 			var projection;
-			switch ( kml.units ) {
+			var units = kml.units;
+
+			if (typeof units === "object") {
+				units = units[kml.url];
+			}
+
+			switch ( units ) {
 				case "meter":
 				case "meters":
 				case "metres":
@@ -72,7 +84,7 @@
 				case "degree":
 					projection = new OpenLayers.Projection("EPSG:4326");
 					break;
-				case "default":
+				default:
 					projection = new OpenLayers.Projection("EPSG:4326");
 					break;
 			}
@@ -91,17 +103,18 @@
 			});
 			this.olLayers.push( kml.olLayer );
 		}, this );
-
         this.setEnabled( this.isEnabled() );
         this.setOpacity( this.getOpacity() );
         this.setBrightness( this.getBrightness() );
         this.setContrast( this.getContrast() );
-
+    	// publish activate event before appending to map
+        PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
 		this.olLayers.forEach( function( olLayer ) {
 			this.map.olMap.addLayer( olLayer );
 		}, this );
-
 		this.setZIndex( this.zIndex );
+        // publish add event
+        PubSub.publish( this.getChannel(), { field: 'add', value: true } );
 	};
 
 	/**
@@ -116,11 +129,13 @@
 				olLayer.destroy();
 				olLayer = null;
 			}, this );
+            PubSub.publish( this.getChannel(), { field: 'remove', value: true } );
 			this.kml.forEach( function( kml ) {
 				kml.olLayer = null;
 			});
 			this.olLayers = [];
 		}
+        PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
 	};
 
 	/**
@@ -186,6 +201,49 @@
 			}, this );
 		}
 		PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
+	};
+
+	KMLLayer.prototype.setTileTransformRange = function (start, end) {
+		var kmlDate = end;
+
+		if (end >= this.source.meta.meta.rangeMax) {
+			kmlDate = this.source.meta.meta.rangeMax;
+		} else if (end <= this.source.meta.meta.rangeMin) {
+			kmlDate = this.source.meta.meta.rangeMin;
+		}
+
+		if (kmlDate != this.kmlDate) {
+			this.kmlDate = kmlDate;
+			this.updateKMLData(true);
+		}
+	};
+
+	KMLLayer.prototype.setTileTransformData = function (options) {
+		// Set kml data to the most recent
+		if (this.source.meta.meta.rangeMax != this.kmlDate) {
+			this.kmlDate = this.source.meta.meta.rangeMax;
+			this.updateKMLData(true);
+		}
+	};
+
+	KMLLayer.prototype.updateKMLData = function (updateView) {
+		var date = new Date(this.kmlDate);
+		var stringParts = date.toDateString().split(" ");
+
+		if (updateView)
+			this.deactivate();
+
+		this.name = this.source.name + " (" + stringParts[1] + ", " + stringParts[3] + ")";
+
+		this.kml.forEach( function( kml ) {
+			if (kml.urlTemplate) {
+				kml.url = kml.urlTemplate.replace("{mm}", ("0" + (date.getMonth() + 1)).slice(-2));
+				kml.url = kml.url.replace("{yyyy}", date.getFullYear());
+			}
+		});
+
+		if (updateView)
+			this.activate();
 	};
 
 	module.exports = KMLLayer;

@@ -77,6 +77,22 @@
                 this.olMarker = null;
                 this.$elem = null;
             }
+        },
+
+        /**
+         * Moves the marker to a new x and y coordinate.
+         * @memberof HtmlMarker
+         *
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         */
+        moveTo: function( x, y ) {
+            this.x = x;
+            this.y = y;
+            var viewportPx = MapUtil.getViewportPixelFromCoord( this.map, this.x, this.y ),
+                lonlat = this.map.olMap.getLonLatFromViewPortPx( viewportPx ),
+                px = this.map.olMap.getLayerPxFromLonLat( lonlat );
+            this.olMarker.moveTo( px );
         }
 
     };

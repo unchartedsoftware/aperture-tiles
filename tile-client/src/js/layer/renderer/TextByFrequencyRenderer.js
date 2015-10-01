@@ -110,7 +110,7 @@
 	TextByFrequencyRenderer.prototype.getEntrySelector = function() {
 		return ".text-by-frequency-label";
 	};
-	
+
     /**
      * Implementation specific rendering function.
      * @memberof TextByFrequencyRenderer
@@ -135,6 +135,8 @@
             percentLabel,
             $html = $("<div></div>"),
             entries = [],
+            min = 0,
+            max = 0,
             text,
             highestCount,
             counts,
@@ -143,11 +145,20 @@
             visibility,
             index,
             height,
-            i = 0, 
-			j = 0;	
-		
+            i = 0,
+			j = 0;
+
 		var $label = $('<div class="count-summary"></div>');
-		$html = $html.append( $label );	
+		$html = $html.append( $label );
+
+        // if zoom level max is in meta, use it, otherwise calc it from tile
+        if ( levelMinMax.maximum ) {
+            max = getHighestCount( levelMinMax.maximum, countKey );
+        } else {
+            values.forEach( function( value ) {
+                max = Math.max( max, RendererUtil.getAttributeValue( value, countKey ) );
+            });
+        }
 
 		values = values.slice( 0, numEntries );
         values.forEach ( function( value ) {
@@ -160,8 +171,8 @@
             // scale the height based on level min / max
             height = RendererUtil.getFontSize(
                 highestCount,
-                0,
-                getHighestCount( levelMinMax.maximum, countKey ),
+                min,
+                max,
                 {
                     minFontSize: minFontSize,
                     maxFontSize: maxFontSize,
@@ -175,7 +186,7 @@
                   + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
                   + 'height:' + height + 'px"></div>';
 			var $entry = $(html_string);
-			
+
 			$entry.mouseover(function() {
 				$label.show(); // show label
 				$label.text( value.count );
@@ -183,7 +194,7 @@
 			$entry.mouseout(function() {
 				$label.hide(); // hide label
 			});
-            
+
             // create chart
 			var $chart = $('<div class="text-by-frequency-left"></div>');
             counts.forEach ( function( count ) {
@@ -219,7 +230,7 @@
 			var $labelText = $(label_string);
 			$labelTag.append( $labelText );
 			$entry.append( $labelTag );
-			
+
 			$html.append($entry);
 			i += 1;
         });

@@ -43,6 +43,7 @@
         this.name = spec.name || "Unnamed Layer";
         this.domain = spec.domain;
         this.map = spec.map;
+        this.showPendingTiles = spec.showPendingTiles !== undefined ? spec.showPendingTiles : true;
         this.opacity = ( spec.opacity !== undefined ) ? spec.opacity : 1.0;
         this.brightness = ( spec.brightness !== undefined ) ? spec.brightness : 1.0;
         this.contrast = ( spec.brightness !== undefined ) ? spec.brightness : 1.0;
