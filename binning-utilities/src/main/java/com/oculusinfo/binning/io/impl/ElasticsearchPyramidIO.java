@@ -118,7 +118,7 @@ public class ElasticsearchPyramidIO implements PyramidIO {
 
 		boundaryFilter.must(
 			FilterBuilders.rangeFilter(this.xField)
-				.gt(startX) //startx is min val
+				.gte(startX) //startx is min val
 				.lte(endX),
 			FilterBuilders.rangeFilter(this.yField)
 				.gte(endY) //endy is min val
