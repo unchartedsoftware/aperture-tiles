@@ -88,7 +88,8 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assertResult(List(
 			             "one", "2015-01-01 10:15:30",
 			             "two", "2015-01-02 8:15:30",
-			             "three", "2015-01-03 10:15:30"))(resultList.toList)
+			             "three", "2015-01-03 10:15:30",
+			             "four", "2015-01-04 8:15:30"))(resultList.toList)
 	}
 
 	test("Test load CSV data parse and operation") {
@@ -98,6 +99,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		val argsMap = Map(
 			"ops.path" -> resPath,
 			"ops.partitions" -> "1",
+      "ops.errorLog" -> "stdout",
 			"oculus.binning.parsing.separator" -> " *, *",
 			"oculus.binning.parsing.vAl.index" -> "0",
 			"oculus.binning.parsing.vAl.fieldType" -> "string", // use mixed case fieldname to test case sensitivity
@@ -118,7 +120,8 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assertResult(List(
 			             "one", "2015-01-01 10:15:30",
 			             "two", "2015-01-02 8:15:30",
-			             "three", "2015-01-03 10:15:30"))(resultList.toList)
+			             "three", "2015-01-03 10:15:30",
+			             "four", "2015-01-04 8:15:30"))(resultList.toList)
 	}
 
 	test("Test cache operation") {
@@ -274,7 +277,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 
 		PipelineTree.execute(rootStage, sqlc)
 
-		assertResult(List(1))(resultList.toList)
+		assertResult(List(1, 4))(resultList.toList)
 	}
 
 	test("Test fractional range filter parse and operation") {
@@ -345,7 +348,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 
 		PipelineTree.execute(rootStage, sqlc)
 
-		assertResult(List(1))(resultList.toList)
+		assertResult(List(1, 4))(resultList.toList)
 	}
 
 	test("Test regex filter parse and operation") {
@@ -364,7 +367,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 
 		PipelineTree.execute(rootStage, sqlc)
 
-		assertResult(List("aabb.?cc", "ab99.?xx"))(resultList.toList)
+		assertResult(List("aabb.?cc", "ab99.?xx", "ab66.?xx"))(resultList.toList)
 	}
 
 	test("Test regex filter parse and operation with exclude") {
@@ -817,7 +820,10 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     assert((-2 to 9).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
   }
 
-  test("Test Load Parquet File") {
+  // This test only works on systems with hadoop installed properly - which isn't most development machines
+  // (i.e., windows machins without HADOOP_HOME set and winutils.exe present).  Therefore we leave this off
+  // by default.
+  ignore("Test Load Parquet File") {
 
     def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
       input.srdd.saveAsParquetFile(path)
