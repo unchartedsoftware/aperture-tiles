@@ -32,6 +32,8 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, GregorianCalendar, Date}
 
+import org.apache.hadoop.util.Shell
+
 import scala.collection.JavaConverters._
 
 import com.oculusinfo.binning.{BinIndex, TileIndex}
@@ -820,44 +822,46 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     assert((-2 to 9).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
   }
 
-  // This test only works on systems with hadoop installed properly - which isn't most development machines
-  // (i.e., windows machins without HADOOP_HOME set and winutils.exe present).  Therefore we leave this off
-  // by default.
-  ignore("Test Load Parquet File") {
-
-    def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
-      input.srdd.saveAsParquetFile(path)
-      PipelineData(input.sqlContext, input.srdd)
-    }
-
-    val resultList = ListBuffer[Any]()
-    val argMap = Map(
-      "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
-      "ops.columns" -> "num,num_1",
-      "ops.min" -> "2,2",
-      "ops.max" -> "3,3")
-
-    val tempFolder = "test.parquet.data"
-    try
-    {
-      val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
-      rootStage.addChild(PipelineStage("save_parquet", SaveParquetDataOp(tempFolder)))
-        .addChild(PipelineStage("load_parquet", loadParquetDataOp(tempFolder, Some(10))))
-        .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
-
-      PipelineTree.execute(rootStage, sqlc)
-
-      assertResult(List(1, 2, 3))(resultList.toList)
-    } finally {
-      // Remove the tile set we created
-      def removeRecursively (file: File): Unit = {
-        if (file.isDirectory) {
-          file.listFiles().foreach(removeRecursively)
-        }
-        file.delete()
+  // This test is going to fail on windows if hadoop isn't properly installed. therefore, test to see if we're on
+  // windows and that hadoop is properly installed (actually, let hadoop do those tests, and piggy-back on the
+  // results), and if not, skip this test
+  test("Test Load Parquet File") {
+    if (!Shell.WINDOWS || null != Shell.WINUTILS) {
+      // not on windows, or on windows with a properly installed hadoop - test can proceed.
+      def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
+        input.srdd.saveAsParquetFile(path)
+        PipelineData(input.sqlContext, input.srdd)
       }
-      // If you want to look at the tile set (not remove it) comment out this line.
-      removeRecursively(new File(tempFolder))
+
+      val resultList = ListBuffer[Any]()
+      val argMap = Map(
+        "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
+        "ops.columns" -> "num,num_1",
+        "ops.min" -> "2,2",
+        "ops.max" -> "3,3")
+
+      val tempFolder = "test.parquet.data"
+      try
+      {
+        val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
+        rootStage.addChild(PipelineStage("save_parquet", SaveParquetDataOp(tempFolder)))
+          .addChild(PipelineStage("load_parquet", loadParquetDataOp(tempFolder, Some(10))))
+          .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+        PipelineTree.execute(rootStage, sqlc)
+
+        assertResult(List(1, 2, 3))(resultList.toList)
+      } finally {
+        // Remove the tile set we created
+        def removeRecursively(file: File): Unit = {
+          if (file.isDirectory) {
+            file.listFiles().foreach(removeRecursively)
+          }
+          file.delete()
+        }
+        // If you want to look at the tile set (not remove it) comment out this line.
+        removeRecursively(new File(tempFolder))
+      }
     }
   }
 }
