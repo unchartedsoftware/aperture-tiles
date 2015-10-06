@@ -37,6 +37,8 @@ import com.oculusinfo.factory.properties.JSONProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.util.Pair;
+import com.oculusinfo.tile.rendering.transformations.combine.TileCombiner;
+import com.oculusinfo.tile.rendering.transformations.combine.TileCombinerFactory;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import org.slf4j.Logger;
@@ -66,6 +68,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     /**
      * public configuration paths, properties under these paths are accessible to the client.
      */
+	public static final List<String> TILE_COMBINE_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileCombiner"));
 	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileTransform"));
     public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
     public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
@@ -91,6 +94,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
     public static final StringProperty DATA_ID = new StringProperty("id",
         "The ID of the data source of the layer; exact format depends on how the layer is stored.",
         null);
+	public static final StringProperty NORMALIZATION_DATA_ID = new StringProperty("id", "Stuff", null);
     public static final StringProperty REST_ENDPOINT = new StringProperty("restEndpoint",
 	    "The REST endpoint used for the layer, defaults to 'tile'",
 	    "tile");
@@ -183,6 +187,11 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         addChildFactory( serializationFactoryProvider.createFactory(this, SERIALIZER_PATH) );
         addChildFactory( tileTransformerFactoryProvider.createFactory(this, TILE_TRANSFORM_PATH) );
 		addChildFactory( tilePyramidFactoryProvider.createFactory(this, TILE_PYRAMID_PATH) );
+
+		addChildFactory( new TileCombinerFactory(pyramidIOFactoryProvider,
+												serializationFactoryProvider,
+												this,
+												TILE_COMBINE_PATH));
 	}
 
 	@Override
