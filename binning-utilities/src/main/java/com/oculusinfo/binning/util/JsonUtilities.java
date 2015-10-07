@@ -120,7 +120,9 @@ public class JsonUtilities {
 		if (null == base) return deepClone(overlay);
 
 		try {
-			for (String key: JSONObject.getNames(overlay)) {
+			String[] names = JSONObject.getNames(overlay);
+			if (null == names) names = new String[0];
+			for (String key: names) {
 				Object value = overlay.opt(key);
 				if (value instanceof JSONObject) {
 					if (base.has(key) && base.get(key) instanceof JSONObject) {
@@ -166,7 +168,9 @@ public class JsonUtilities {
 	 * @throws JSONException
 	 */
 	public static JSONObject expandKeysInPlace (JSONObject base) throws JSONException {
-		for (String key: JSONObject.getNames(base)) {
+		String[] names = JSONObject.getNames(base);
+		if (null == names) names = new String[0];
+		for (String key: names) {
 			Object value = base.get(key);
 
 			// If our value is a JSON object or array, expend recursively
