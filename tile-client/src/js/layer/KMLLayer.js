@@ -236,9 +236,10 @@
 		this.name = this.source.name + " (" + stringParts[1] + ", " + stringParts[3] + ")";
 
 		this.kml.forEach( function( kml ) {
-			if (kml.urlTemplate) {
-				kml.url = kml.urlTemplate.replace("{mm}", ("0" + (date.getMonth() + 1)).slice(-2));
-				kml.url = kml.url.replace("{yyyy}", date.getFullYear());
+			if (kml.urls) {
+			  // Find closest date
+
+				kml.url = kml.urls[0];
 			}
 		});
 
