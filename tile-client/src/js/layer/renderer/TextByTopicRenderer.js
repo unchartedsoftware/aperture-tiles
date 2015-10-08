@@ -23,15 +23,12 @@
  * SOFTWARE.
  */
 
-/**
- * A word cloud renderer. Uses a set of words and their counts to generate a word cloud.
- */
 ( function() {
 
     "use strict";
 
     var Renderer = require('./Renderer'),
-		createTopicWordsArrays,
+		getTopics,
         injectCss;
 
     injectCss = function( spec ) {
@@ -52,18 +49,13 @@
 	/**
      * Create an array of text words for each topic based on the entry's topic number
      */
-	createTopicWordsArrays = function( entries, numTopics ) {
-		var topicWordsArray = [];
-		
-		for ( var i = 0; i < numTopics; i++ ) {
-			topicWordsArray[i] = [];
-		}
-
+	getTopics = function( entries ) {
+		var topics = [];
 		entries.forEach( function( entry ) {
-			topicWordsArray[ entry.topicNumber ].push( entry.topic );
-		});	
-		
-		return topicWordsArray;
+            topics[ entry.topicNumber ] = topics[ entry.topicNumber ] || [];
+			topics[ entry.topicNumber ].push( entry.topic );
+		});
+		return topics;
 	};
 
     /**
@@ -106,30 +98,27 @@
     TextByTopicRenderer.prototype.render = function( data ) {
 
         var text = this.spec.text,
-            textKey = text.textKey,
 			numTopics = text.numTopics ? text.numTopics : 3,
             entries = data.tile.meta.raw[0],
 			$html = $('<div class="text-by-topic-box"></div>'),
-			topicWords = [],
+			topics = [],
 			index = 1,
             i, j;
-	
+
 		// need to get the first non-null array in the raw data
 		while ( entries === null && index < data.tile.meta.raw.length ) {
 			entries = data.tile.meta.raw[index];
 			index++;
 		}
-        topicWords = createTopicWordsArrays( entries, numTopics, textKey );
+        topics = getTopics( entries );
 
 		for ( i = 0; i < numTopics; i++ ) {
-			var words = topicWords[i],
+			var words = topics[i],
 				wordsString = '';
-				
 			for ( j = 0; j < words.length; j++ ) {
 				wordsString += words[j] + ' ';
 			}
 			var $words_html = $('<div class="text-topic-' + i + '-label text-topic-label">' + wordsString + '</div>');
-
 			// add it to the group
 			$html = $html.append( $words_html );
         }

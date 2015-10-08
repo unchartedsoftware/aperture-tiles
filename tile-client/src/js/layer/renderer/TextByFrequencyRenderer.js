@@ -100,7 +100,6 @@
      */
     function TextByFrequencyRenderer( spec ) {
         spec.rootKey = spec.rootKey || "tile.meta.aggregated";
-        spec.frequency.invertOrder = spec.frequency.invertOrder || false;
         Renderer.call( this, spec );
         injectCss( this.spec );
     }
@@ -110,7 +109,7 @@
 	TextByFrequencyRenderer.prototype.getEntrySelector = function() {
 		return ".text-by-frequency-label";
 	};
-	
+
     /**
      * Implementation specific rendering function.
      * @memberof TextByFrequencyRenderer
@@ -128,37 +127,25 @@
             textKey = this.spec.text.textKey,
             frequency = this.spec.frequency,
             countKey = frequency.countKey,
-            invertOrder = frequency.invertOrder,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
-            percentLabel,
             $html = $("<div></div>"),
-            entries = [],
-            text,
-            highestCount,
-            counts,
-            relativePercent,
-            chartSize,
-            visibility,
-            index,
-            height,
-            i = 0, 
-			j = 0;	
-		
+            entries = [];
+
 		var $label = $('<div class="count-summary"></div>');
-		$html = $html.append( $label );	
+		$html = $html.append( $label );
 
 		values = values.slice( 0, numEntries );
-        values.forEach ( function( value ) {
+        values.forEach( function( value, index ) {
             entries.push( value );
-            counts = RendererUtil.getAttributeValue( value, countKey );
-            text = RendererUtil.getAttributeValue( value, textKey );
-            chartSize = counts.length;
+            var counts = RendererUtil.getAttributeValue( value, countKey );
+            var text = RendererUtil.getAttributeValue( value, textKey );
+            var chartSize = counts.length;
             // highest count for the topic
-            highestCount = getHighestCount( value, countKey );
+            var highestCount = getHighestCount( value, countKey );
             // scale the height based on level min / max
-            height = RendererUtil.getFontSize(
+            var height = RendererUtil.getFontSize(
                 highestCount,
                 0,
                 getHighestCount( levelMinMax.maximum, countKey ),
@@ -169,13 +156,12 @@
                 });
 
 			// create container 'entry' for chart and hashtag
-			var html_string = '';
-            html_string += '<div class="text-by-frequency-entry" style="'
+			var html = '<div class="text-by-frequency-entry" style="'
                 // ensure constant spacing independent of height
-                  + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
+                  + 'top:' + ( getYOffset( index, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
                   + 'height:' + height + 'px"></div>';
-			var $entry = $(html_string);
-			
+			var $entry = $(html);
+
 			$entry.mouseover(function() {
 				$label.show(); // show label
 				$label.text( value.count );
@@ -183,45 +169,42 @@
 			$entry.mouseout(function() {
 				$label.hide(); // hide label
 			});
-            
+
             // create chart
 			var $chart = $('<div class="text-by-frequency-left"></div>');
-            counts.forEach ( function( count ) {
-                // if invertOrder is true, invert the order of iteration
-                index = ( invertOrder ) ? chartSize - j - 1 : j;
+            counts.forEach( function( count ) {
                 // get the percent relative to the highest count in the tile
-                relativePercent = ( count / highestCount ) * 100;
+                var relativePercent = ( count / highestCount ) * 100;
                 // if percent === 0, hide bar
-                visibility = ( relativePercent > 0 ) ? '' : 'hidden';
+                var visibility = ( relativePercent > 0 ) ? '' : 'hidden';
                 // class percent in increments of 10
-                percentLabel = Math.round( relativePercent / 10 ) * 10;
+                var percentLabel = Math.round( relativePercent / 10 ) * 10;
                 // set minimum bar length
                 relativePercent = Math.max( relativePercent, 20 );
+                // get width
+                var width = Math.floor( (105+chartSize)/chartSize );
+                var borderStr = ( width < 3 ) ? 'border: none;' : '';
                 // create bar
-				var bar_string = '';
-                bar_string += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
+				var bar_string = '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
                     + 'visibility:'+visibility+';'
                     + 'height:'+relativePercent+'%;'
-                    + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
+                    + 'width:'+ width +'px;'
+                    + borderStr
                     + 'top:'+(100-relativePercent)+'%;"></div>';
 				var $chartBar = $(bar_string);
 				$chart.append($chartBar);
-				j += 1;
             });
 			$entry.append( $chart );
             // create tag label
 			var $labelTag = $('<div class="text-by-frequency-right"></div>');
-			var label_string = '';
-            label_string += '<div class="text-by-frequency-label" style="' +
+			var label = '<div class="text-by-frequency-label" style="' +
                 'font-size:'+height+'px;' +
                 'line-height:'+height+'px;' +
                 'height:'+height+'px">'+text+'</div>';
-			var $labelText = $(label_string);
+			var $labelText = $(label);
 			$labelTag.append( $labelText );
 			$entry.append( $labelTag );
-			
 			$html.append($entry);
-			i += 1;
         });
 
         return {

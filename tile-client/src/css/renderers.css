@@ -170,16 +170,18 @@
 
 .text-topic-label {
 	position: relative;
+	display: inline-block;
 	text-align: center;
 	vertical-align: middle;
 	font-size: 18px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	padding-top: 15px;
-	padding-left: 25px;
-	width: 216px;
-	height: 70px;
+	padding-left: 48px;
+	width: 160px;
+	height: 42px;
 	opacity: 0.75;
+	top: 35px;
 }
 
 .text-topic-label:hover {
