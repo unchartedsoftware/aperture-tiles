@@ -39,7 +39,6 @@ import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.config.ConfigException;
 import com.oculusinfo.tile.rest.config.ConfigService;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
-import com.oculusinfo.tile.servlet.RestletServlet;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -345,14 +344,13 @@ public class LayerServiceImpl implements LayerService {
 
 				if (resourceDir != null) {
 					// Scan this directory for kml files
-
-					File dir = new File(LayerServiceImpl.class.getResource(resourceDir).getFile());
-					FileFilter filter = new WildcardFileFilter("");
+					File dir = new File(getClass().getClassLoader().getResource(resourceDir).getFile());
+					FileFilter filter = new WildcardFileFilter(kmlSet.getString("fileTemplate"));
 					File[] kmlFiles = dir.listFiles(filter);
-					JSONArray urls = new JSONArray();
+					JSONArray files = new JSONArray();
 
 					for (int j = 0; j < kmlFiles.length; j++) {
-						File kmlFile = kmlFiles[i];
+						File kmlFile = kmlFiles[j];
 
 						// Extract month and year from file name. For now always expect file to be named
 						// MM-yyyy*
@@ -362,9 +360,9 @@ public class LayerServiceImpl implements LayerService {
 
 						JSONObject urlObject = new JSONObject();
 
-						urlObject.put("url", resourceDir + "/" + kmlFile.getName());
+						urlObject.put("fileName", kmlFile.getName());
 						urlObject.put("date", dateTime);
-						urls.put(urlObject);
+						files.put(urlObject);
 
 						if (dateTime < minTime) {
 							minTime = dateTime;
@@ -376,16 +374,16 @@ public class LayerServiceImpl implements LayerService {
 					}
 
 					// Set URL to JSONArray of URL date pairs
-					kmlSet.put("urls", urls);
+					kmlSet.put("files", files);
 				}
 			}
 
 			// Update the layer meta information
-			JSONObject metaL1 = kmlLayer.optJSONObject("meta");
+			JSONObject metaL1 = publicObj.optJSONObject("meta");
 
 			if (metaL1 == null) {
 				metaL1 = new JSONObject();
-				kmlLayer.put("meta", metaL1);
+				publicObj.put("meta", metaL1);
 			}
 
 			JSONObject metaL2 = metaL1.optJSONObject("meta");

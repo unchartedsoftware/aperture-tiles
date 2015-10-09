@@ -45,6 +45,7 @@
 		this.zIndex = ( spec.zIndex !== undefined ) ? spec.zIndex : 749;
 		this.domain = "kml";
 		this.source = spec.source;
+		this.id = spec.id;
 		this.kml = spec.kml || [];
 
     // If KML data is time filterable initialize to most recent
@@ -69,7 +70,7 @@
 			var units = kml.units;
 
 			if (typeof units === "object") {
-				units = units[kml.url];
+				units = units[kml.url.split("/").pop()];
 			}
 
 			switch ( units ) {
@@ -204,11 +205,11 @@
 	};
 
 	KMLLayer.prototype.setTileTransformRange = function (start, end) {
-		var kmlDate = end;
+		var kmlDate = start;
 
-		if (end >= this.source.meta.meta.rangeMax) {
+		if (kmlDate >= this.source.meta.meta.rangeMax) {
 			kmlDate = this.source.meta.meta.rangeMax;
-		} else if (end <= this.source.meta.meta.rangeMin) {
+		} else if (kmlDate <= this.source.meta.meta.rangeMin) {
 			kmlDate = this.source.meta.meta.rangeMin;
 		}
 
@@ -226,26 +227,36 @@
 		}
 	};
 
-	KMLLayer.prototype.updateKMLData = function (updateView) {
-		var date = new Date(this.kmlDate);
-		var stringParts = date.toDateString().split(" ");
+  KMLLayer.prototype.updateKMLData = function (updateView) {
+    var self = this;
+    var date = this.kmlDate;
 
-		if (updateView)
-			this.deactivate();
+    if (updateView)
+      this.deactivate();
 
-		this.name = this.source.name + " (" + stringParts[1] + ", " + stringParts[3] + ")";
+    this.kml.forEach( function( kml, kmlIndex ) {
+      if (kml.files) {
+        // Find closest month before
+        var smallestFile = null;
+        var minDiff;
 
-		this.kml.forEach( function( kml ) {
-			if (kml.urls) {
-			  // Find closest date
+        kml.files.forEach(function (file) {
+          if (!smallestFile || Math.abs(file.date - date) < minDiff) {
+            minDiff = Math.abs(file.date - date);
+            smallestFile = file;
+          }
+        });
+        self.name = self.source.name + " (" + moment(smallestFile.date).format("MMM YYYY") + ")";
 
-				kml.url = kml.urls[0];
-			}
-		});
+        if (smallestFile) {
+          kml.url = "rest/layers/" + self.id + "/kml/" + kmlIndex + "/" + smallestFile.fileName;
+        }
+      }
+    });
 
-		if (updateView)
-			this.activate();
-	};
+    if (updateView)
+      this.activate();
+  };
 
 	module.exports = KMLLayer;
 }());
