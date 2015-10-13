@@ -47,12 +47,6 @@
 		this.source = spec.source;
 		this.id = spec.id;
 		this.kml = spec.kml || [];
-
-	    // If KML data is time filterable initialize to most recent
-	    if ( this.source.facets && this.source.facets.indexOf("time") !== -1 ) {
-	    	this.kmlDate = this.source.meta.meta.rangeMax;
-	    	this.updateKMLData(false);
-	    }
 	}
 
 	KMLLayer.prototype = Object.create(Layer.prototype);
