@@ -32,6 +32,8 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, GregorianCalendar, Date}
 
+import org.apache.hadoop.util.Shell
+
 import scala.collection.JavaConverters._
 
 import com.oculusinfo.binning.{BinIndex, TileIndex}
@@ -88,7 +90,8 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assertResult(List(
 			             "one", "2015-01-01 10:15:30",
 			             "two", "2015-01-02 8:15:30",
-			             "three", "2015-01-03 10:15:30"))(resultList.toList)
+			             "three", "2015-01-03 10:15:30",
+			             "four", "2015-01-04 8:15:30"))(resultList.toList)
 	}
 
 	test("Test load CSV data parse and operation") {
@@ -98,6 +101,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		val argsMap = Map(
 			"ops.path" -> resPath,
 			"ops.partitions" -> "1",
+      "ops.errorLog" -> "stdout",
 			"oculus.binning.parsing.separator" -> " *, *",
 			"oculus.binning.parsing.vAl.index" -> "0",
 			"oculus.binning.parsing.vAl.fieldType" -> "string", // use mixed case fieldname to test case sensitivity
@@ -118,7 +122,8 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 		assertResult(List(
 			             "one", "2015-01-01 10:15:30",
 			             "two", "2015-01-02 8:15:30",
-			             "three", "2015-01-03 10:15:30"))(resultList.toList)
+			             "three", "2015-01-03 10:15:30",
+			             "four", "2015-01-04 8:15:30"))(resultList.toList)
 	}
 
 	test("Test cache operation") {
@@ -274,7 +279,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 
 		PipelineTree.execute(rootStage, sqlc)
 
-		assertResult(List(1))(resultList.toList)
+		assertResult(List(1, 4))(resultList.toList)
 	}
 
 	test("Test fractional range filter parse and operation") {
@@ -345,7 +350,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 
 		PipelineTree.execute(rootStage, sqlc)
 
-		assertResult(List(1))(resultList.toList)
+		assertResult(List(1, 4))(resultList.toList)
 	}
 
 	test("Test regex filter parse and operation") {
@@ -364,7 +369,7 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
 
 		PipelineTree.execute(rootStage, sqlc)
 
-		assertResult(List("aabb.?cc", "ab99.?xx"))(resultList.toList)
+		assertResult(List("aabb.?cc", "ab99.?xx", "ab66.?xx"))(resultList.toList)
 	}
 
 	test("Test regex filter parse and operation with exclude") {
@@ -817,41 +822,46 @@ class PipelineOperationsTests extends FunSuite with SharedSparkContext with Tile
     assert((-2 to 9).toList === months.map(_.asInstanceOf[Int]).toSet.toList.sorted)
   }
 
+  // This test is going to fail on windows if hadoop isn't properly installed. therefore, test to see if we're on
+  // windows and that hadoop is properly installed (actually, let hadoop do those tests, and piggy-back on the
+  // results), and if not, skip this test
   test("Test Load Parquet File") {
-
-    def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
-      input.srdd.saveAsParquetFile(path)
-      PipelineData(input.sqlContext, input.srdd)
-    }
-
-    val resultList = ListBuffer[Any]()
-    val argMap = Map(
-      "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
-      "ops.columns" -> "num,num_1",
-      "ops.min" -> "2,2",
-      "ops.max" -> "3,3")
-
-    val tempFolder = "test.parquet.data"
-    try
-    {
-      val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
-      rootStage.addChild(PipelineStage("save_parquet", SaveParquetDataOp(tempFolder)))
-        .addChild(PipelineStage("load_parquet", loadParquetDataOp(tempFolder, Some(10))))
-        .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
-
-      PipelineTree.execute(rootStage, sqlc)
-
-      assertResult(List(1, 2, 3))(resultList.toList)
-    } finally {
-      // Remove the tile set we created
-      def removeRecursively (file: File): Unit = {
-        if (file.isDirectory) {
-          file.listFiles().foreach(removeRecursively)
-        }
-        file.delete()
+    if (!Shell.WINDOWS || null != Shell.WINUTILS) {
+      // not on windows, or on windows with a properly installed hadoop - test can proceed.
+      def SaveParquetDataOp(path: String)(input: PipelineData): PipelineData = {
+        input.srdd.saveAsParquetFile(path)
+        PipelineData(input.sqlContext, input.srdd)
       }
-      // If you want to look at the tile set (not remove it) comment out this line.
-      removeRecursively(new File(tempFolder))
+
+      val resultList = ListBuffer[Any]()
+      val argMap = Map(
+        "ops.path" -> getClass.getResource("/json_test.data").toURI.getPath,
+        "ops.columns" -> "num,num_1",
+        "ops.min" -> "2,2",
+        "ops.max" -> "3,3")
+
+      val tempFolder = "test.parquet.data"
+      try
+      {
+        val rootStage = PipelineStage("load_json", parseLoadJsonDataOp(argMap))
+        rootStage.addChild(PipelineStage("save_parquet", SaveParquetDataOp(tempFolder)))
+          .addChild(PipelineStage("load_parquet", loadParquetDataOp(tempFolder, Some(10))))
+          .addChild(PipelineStage("output", outputOp("num", resultList)(_)))
+
+        PipelineTree.execute(rootStage, sqlc)
+
+        assertResult(List(1, 2, 3))(resultList.toList)
+      } finally {
+        // Remove the tile set we created
+        def removeRecursively(file: File): Unit = {
+          if (file.isDirectory) {
+            file.listFiles().foreach(removeRecursively)
+          }
+          file.delete()
+        }
+        // If you want to look at the tile set (not remove it) comment out this line.
+        removeRecursively(new File(tempFolder))
+      }
     }
   }
 }

@@ -27,11 +27,14 @@ package com.oculusinfo.tilegen.tiling
 
 
 
-import java.lang.{Double => JavaDouble}
+import java.lang.{Double => JavaDouble, Integer => JavaInt}
 
 import com.oculusinfo.binning.TileData.StorageType
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializer
+import com.oculusinfo.binning.util.JSONUtilitiesTests
 import com.oculusinfo.tilegen.datasets.TileAssertions
+import org.apache.spark.rdd.RDD
+import org.json.JSONObject
 
 import scala.collection.JavaConverters._
 import scala.util.{Try, Success, Failure}
@@ -47,9 +50,7 @@ import com.oculusinfo.binning._
 import com.oculusinfo.binning.impl.DenseTileData
 import com.oculusinfo.binning.impl.SparseTileData
 
-import com.oculusinfo.tilegen.tiling.analytics.AnalysisDescription
-import com.oculusinfo.tilegen.tiling.analytics.NumericSumBinningAnalytic
-
+import com.oculusinfo.tilegen.tiling.analytics.{MonolithicAnalysisDescription, NumericSumTileAnalytic, AnalysisDescription, NumericSumBinningAnalytic}
 
 
 class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAssertions {
@@ -226,6 +227,42 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 		assert(tileIOSparse.getTile(sparseId, new TileIndex(1, 1, 1, 4, 4)).get.isInstanceOf[SparseTileData[_]])
 	}
 
+
+	test("Test data analytics") {
+		val data: RDD[((Double, Double), Int, Option[Int])] =
+			sc.parallelize(List(((1.0, 1.0), 1, Some(1)),
+			                    ((2.0, 2.0), 1, Some(2)),
+			                    ((1.0, 1.0), 1, Some(3)),
+			                    ((2.0, 2.0), 1, Some(4))
+			               ))
+		val binner = new UniversalBinner
+		val pyramid = new AOITilePyramid(0, 0, 3.9999, 3.9999)
+		val indexer = new CartesianIndexScheme
+
+		val tileAnalytic: AnalysisDescription[Int, Int] =
+			new MonolithicAnalysisDescription[Int, Int](
+				n => n,
+				new NumericSumTileAnalytic[Int](Some("sum"))
+			)
+		// Just to make sure things work properly, tile over levels 0 and 1 (for double the global sum), but don't record
+		// level 1, and do try to record level 2, just to make sure the missing one isn't written, and the present one
+		// has no data.
+		tileAnalytic.addGlobalAccumulator(sc)
+		tileAnalytic.addLevelAccumulator(sc, 0)
+		tileAnalytic.addLevelAccumulator(sc, 2)
+
+		val tiles = binner.processData(
+			data,
+			new NumericSumBinningAnalytic[Int, JavaInt](),
+			None,
+			Some(tileAnalytic),
+			StandardBinningFunctions.locateIndexOverLevels(indexer, pyramid, List(0, 1), 4, 4),
+			StandardBinningFunctions.populateTileIdentity,
+			new BinningParameters(true, 4, 4)
+		).collect
+		JSONUtilitiesTests.assertJsonEqual(new JSONObject("""{"0": {"sum": 10}, "2": {"sum": 0}, "global": {"sum": 20}}"""),
+		                                   tileAnalytic.accumulatedResults)
+	}
 
 	// Test the tiling speed of the universal binner versus the old RDDBinner.
 	ignore("Test tiling speed") {

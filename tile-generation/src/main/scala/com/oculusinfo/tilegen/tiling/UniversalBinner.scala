@@ -261,6 +261,14 @@ class UniversalBinner extends Logging {
 		val createCombiner: ((TileIndex, Array[BinIndex], PT, Option[DT])) => (MutableMap[BinIndex, PT], Option[DT]) =
 			c => {
 				val (tile, bins, value, analyticValue) = c
+
+				// Accumulate data analytic metadata
+				analyticValue.foreach(av =>
+					dataAnalytics.foreach(analytic =>
+						analytic.accumulate(tile, av)
+					)
+				)
+
 				(populateTileFcn(tile, bins, value), analyticValue)
 			}
 		val mergeValue: ((MutableMap[BinIndex, PT], Option[DT]),
@@ -271,7 +279,8 @@ class UniversalBinner extends Logging {
 				val binAggregator = binAnalytic.aggregate(_, _)
 				val analyticAggregator = dataAnalytics.map(analytic => analytic.analytic.aggregate(_, _))
 
-				newAnalyticValue.foreach(analyticValue => dataAnalytics.foreach(analytic => analytic.accumulate(tile, analyticValue)))
+        // Accumulate data analytic metadata
+				newAnalyticValue.foreach(av => dataAnalytics.foreach(analytic => analytic.accumulate(tile, av)))
 
 				(aggregateMaps(binAggregator, binValues, populateTileFcn(tile, bins, value)),
 				 optAggregate(analyticAggregator, curAnalyticValue, newAnalyticValue))

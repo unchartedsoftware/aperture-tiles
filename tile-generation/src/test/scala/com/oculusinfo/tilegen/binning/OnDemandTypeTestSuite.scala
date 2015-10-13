@@ -52,7 +52,7 @@ class OnDemandTypeTestSuite extends FunSuite with SharedSparkContext with Before
 	var pyramidIoA: OnDemandAccumulatorPyramidIO = null
 	var pyramidIoB: OnDemandBinningPyramidIO = null
 	var properties: Properties = null
-  
+
 	override def beforeAll = {
 		super.beforeAll
 		createDataset(sc)
@@ -64,7 +64,7 @@ class OnDemandTypeTestSuite extends FunSuite with SharedSparkContext with Before
 	}
 
 	private def createDataset (sc: SparkContext): Unit = {
-		dataFile = File.createTempFile("non-double-live-tile-test", "csv")
+		dataFile = File.createTempFile("non-double-live-tile-test", ".csv")
 		println("Creating temporary data file "+dataFile.getAbsolutePath)
 		val writer = new FileWriter(dataFile)
 		(0 to 7).foreach(n => writer.write("%d\t%d\t%d\n".format(n, n, n)))
@@ -80,7 +80,7 @@ class OnDemandTypeTestSuite extends FunSuite with SharedSparkContext with Before
 		properties.setProperty("oculus.binning.projection.maxX", "7.9999")
 		properties.setProperty("oculus.binning.projection.minY", "0.0")
 		properties.setProperty("oculus.binning.projection.maxY", "7.9999")
-		properties.setProperty("oculus.binning.parsing.separator", "\\t")
+		properties.setProperty("oculus.binning.parsing.separator", "\t")
 		properties.setProperty("oculus.binning.parsing.x.index", "0")
 		properties.setProperty("oculus.binning.parsing.x.fieldType", "long")
 		properties.setProperty("oculus.binning.parsing.y.index", "1")
@@ -95,7 +95,7 @@ class OnDemandTypeTestSuite extends FunSuite with SharedSparkContext with Before
 		properties.setProperty("oculus.binning.value.valueType", "long")
 		properties.setProperty("oculus.binning.levels.0", "1")
 	}
-	
+
 	private def cleanupDataset: Unit = {
 		if (null != dataFile && dataFile.exists) {
 			println("Deleting temporary data file " + dataFile)
