@@ -94,8 +94,6 @@ trait StandardPointBinningFunctions {
 		}
 	}
 
-
-
 	/**
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
@@ -103,7 +101,33 @@ trait StandardPointBinningFunctions {
 	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
 
+  /**
+   * Returns a two dimensional array with diameter radius*2+1 and given then standard deviation
+   */
+  def makeGaussianKernel(radius : Int, sigma : Double) : Array[Array[Double]] = {
+    val dim = (radius * 2) + 1
+    val kernel = Array.ofDim[Double](dim, dim)
+    var sum = 0.0
 
+    for (u <- 0 until kernel.length) {
+      for (v <- 0 until kernel(0).length) {
+        val uc = u - (kernel.length - 1) / 2
+        val vc = v - (kernel(0).length - 1) / 2
+        // Calculate and save
+        val g = Math.exp(-(uc * uc + vc * vc) / (2 * sigma * sigma))
+        sum += g
+        kernel(u)(v) = g
+      }
+    }
+
+    // Normalize the kernel
+    for (u <- 0 until kernel.length - 1) {
+      for (v <- 0 until kernel(0).length - 1) {
+        kernel(u)(v) /= sum
+      }
+    }
+    kernel
+  }
 
 	/**
 	 * Simple function to spread an input point over several levels of tile pyramid, ignoring

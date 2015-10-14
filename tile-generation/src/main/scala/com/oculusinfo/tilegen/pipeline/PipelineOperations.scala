@@ -615,7 +615,7 @@ object PipelineOperations {
 			task.getLevels.foreach { levels =>
 				tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
 				dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-				val kernel = makeGaussianKernel(4, 3)
+				val kernel = StandardBinningFunctions.makeGaussianKernel(4, 3)
 
 				task.doParameterizedTiling(tileIO,
 					StandardBinningFunctions.locateIndexOverLevelsWithKernel(kernel, task.getIndexScheme, task.getTilePyramid, levels, task.getNumXBins, task.getNumYBins),
@@ -627,32 +627,6 @@ object PipelineOperations {
 		}
 
 		withValueType(tilingTask)
-	}
-
-
-	def makeGaussianKernel(radius : Int, sigma : Double) : Array[Array[Double]] = {
-		val dim = (radius * 2) + 1
-		val kernel = Array.ofDim[Double](dim, dim)
-		var sum = 0.0
-
-		for (u <- 0 until kernel.length) {
-			for (v <- 0 until kernel(0).length) {
-				val uc = u - (kernel.length - 1) / 2
-				val vc = v - (kernel(0).length - 1) / 2
-				// Calculate and save
-				val g = Math.exp(-(uc * uc + vc * vc) / (2 * sigma * sigma))
-				sum += g
-				kernel(u)(v) = g
-			}
-		}
-
-		// Normalize the kernel
-		for (u <- 0 until kernel.length - 1) {
-			for (v <- 0 until kernel(0).length - 1) {
-				kernel(u)(v) /= sum
-			}
-		}
-		kernel
 	}
 
 	def geoSegmentTilingOp(x1ColSpec: String,
