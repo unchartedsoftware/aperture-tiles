@@ -4,6 +4,7 @@ ext.tileGenProjects = [
 		'geometric-utilities',
 		'factory-utilities',
 		'binning-utilities',
+        'spark-pipeline',
 		'tile-generation',
 		'tile-packaging'
 ] as Set
@@ -14,6 +15,7 @@ ext.clientServerProjects = [
 		'geometric-utilities',
 		'factory-utilities',
 		'binning-utilities',
+        'spark-pipeline',
 		'tile-generation',
 		'spark-tile-utilities',
 		'tile-rendering',
