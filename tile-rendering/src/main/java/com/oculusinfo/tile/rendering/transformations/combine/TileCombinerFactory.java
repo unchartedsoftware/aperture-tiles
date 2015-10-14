@@ -38,7 +38,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Created by wmayo on 2015-10-02.
+ * Factory class to create the standard types of Tile Combiners
+ *
  */
 public class TileCombinerFactory extends ConfigurableFactory<TileCombiner<?>> {
 
@@ -47,7 +48,7 @@ public class TileCombinerFactory extends ConfigurableFactory<TileCombiner<?>> {
 	public static final List<String> SERIALIZER_PATH = Collections.unmodifiableList( Arrays.asList( "data","serializer" ) );
 
 	public static StringProperty TILE_COMBINER_TYPE = new StringProperty("type",
-		"The type of Transformer desired.",
+		"The type of Combiner desired.",
 		"identity");
 
 	public static final StringProperty DATA_ID = new StringProperty("id",

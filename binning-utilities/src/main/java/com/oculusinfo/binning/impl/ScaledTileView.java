@@ -34,7 +34,7 @@ import java.util.List;
  * Implementation of TileData that scales the number of bin values to a desired bin size by making duplicates
  * of the value where needed. Allows operations to be performed on two datasets with a different number of bin values.
  */
-public class ScaledTileView<T extends Number> implements TileData<List<T>> {
+public class ScaledTileView<T> implements TileData<List<T>> {
 
 	TileData<List<T>> _data;
 	int _desiredBuckets;

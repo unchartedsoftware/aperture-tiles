@@ -49,14 +49,11 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 		"Data to be passed to the tile transformer for read initialization",
 		null);
 
-
-
 	// There is no way to produce a Class<TileTransformer<?>> directly; the best one can do is fake it through erasure.
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static Class<TileTransformer<?>> getFactoryClass () {
 		return (Class) TileTransformer.class;
 	}
-
 
 
 	public TileTransformerFactory( ConfigurableFactory<?> parent,

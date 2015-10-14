@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Allows you to view a tile with single values bins as one with bins of multiple values
  */
-public class ListTileView<T extends Number> implements TileData<List<T>> {
+public class ListTileView<T> implements TileData<List<T>> {
 	TileData<T> _data;
 
 	public ListTileView(TileData<T> data) {

@@ -50,6 +50,14 @@ public class NormalizeTileCombiner<T> implements TileCombiner<T> {
 	PyramidIO _pyramidIO = null;
 	private String _dataId = null;
 
+	/**
+	 * Constructor to normalize data against another data set
+	 *
+	 * @param pyramidIO The PyramidIO used to fetch the tiles
+	 * @param serializer The TileSerializer for tile source
+	 * @param dataId The id of the tile set
+	 *
+	 */
 	public NormalizeTileCombiner(PyramidIO pyramidIO, TileSerializer<?> serializer, String dataId){
 		_dataId = dataId;
 		_pyramidIO = pyramidIO;
@@ -62,16 +70,15 @@ public class NormalizeTileCombiner<T> implements TileCombiner<T> {
 		if (size == 0) {
 			// Try to get from metadata
 			String maxArray = data.getMetaData("maximum array");
-
 			if (maxArray != null) {
 				size = new JSONArray(maxArray).length();
 			}
 		}
-
 		return size;
 	}
 
-	public TileData<T> combine(TileData<T> data, TileIndex index, TileSerializer<T> serializer, int coarseness, JSONObject tileProperties) throws IOException, JSONException {
+	@Override
+	public TileData<T> combine(TileData<T> data, TileIndex index, int coarseness, JSONObject tileProperties) throws IOException, JSONException {
 		TileData normalizingData = TileIOUtils.tileDataForIndex(index, _dataId, _serializer, _pyramidIO, coarseness, tileProperties);
 
 		// Need to make sure TileData is of type List<?> for use with BinaryOperationTileView

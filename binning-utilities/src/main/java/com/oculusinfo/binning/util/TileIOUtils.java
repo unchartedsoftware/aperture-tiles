@@ -41,6 +41,18 @@ import java.util.Collections;
 public class TileIOUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TileIOUtils.class);
 
+	/**
+	 * Fetch a desired tile
+	 *
+	 * @param index The TileIndex of the tile to fetch
+	 * @param dataId The id of the tile set
+	 * @param serializer The TileSerializer for tile source
+	 * @param pyramidIO The PyramidIO used to fetch the tiles
+	 * @param coarseness The coarseness/resolution of the fetched bins
+	 * @param tileProperties Additional tile properties used to read the tile
+	 *
+	 * @return TileData object for the requested TileIndex
+	 */
 	public static <T> TileData<T> tileDataForIndex(TileIndex index, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO, int coarseness, JSONObject tileProperties) throws IOException {
 		TileData<T> data = null;
 		if ( coarseness > 1 ) {

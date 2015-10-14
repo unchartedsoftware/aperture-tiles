@@ -37,6 +37,16 @@ import org.json.JSONObject;
  */
 public interface TileCombiner<T> {
 
-	TileData<T> combine(TileData<T> data, TileIndex index, TileSerializer<T> serializer, int coarseness, JSONObject tileProperties) throws Exception;
+	/**
+	 * Function to combine to different sets of TileData in some way
+	 *
+	 * @param data The TileData of the first set to combiner
+	 * @param index The TileIndex of the tile to combine
+	 * @param coarseness The coarseness/resolution of the fetched bins
+	 * @param tileProperties Additional tile properties used to read the tile
+	 *
+	 * @return TileData object containing the combined data
+	 */
+	TileData<T> combine(TileData<T> data, TileIndex index, int coarseness, JSONObject tileProperties) throws Exception;
 
 }
