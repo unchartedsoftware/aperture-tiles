@@ -48,11 +48,11 @@
 		this.id = spec.id;
 		this.kml = spec.kml || [];
 
-    // If KML data is time filterable initialize to most recent
-    if (this.source.facets && this.source.facets.indexOf("time") != -1) {
-      this.kmlDate = this.source.meta.meta.rangeMax;
-      this.updateKMLData(false);
-    }
+	    // If KML data is time filterable initialize to most recent
+	    if ( this.source.facets && this.source.facets.indexOf("time") !== -1 ) {
+	    	this.kmlDate = this.source.meta.meta.rangeMax;
+	    	this.updateKMLData(false);
+	    }
 	}
 
 	KMLLayer.prototype = Object.create(Layer.prototype);
@@ -213,15 +213,15 @@
 			kmlDate = this.source.meta.meta.rangeMin;
 		}
 
-		if (kmlDate != this.kmlDate) {
+		if ( kmlDate !== this.kmlDate ) {
 			this.kmlDate = kmlDate;
-			this.updateKMLData(true);
+			this.updateKMLData( true );
 		}
 	};
 
-	KMLLayer.prototype.setTileTransformData = function (options) {
+	KMLLayer.prototype.setTileTransformData = function() {
 		// Set kml data to the most recent
-		if (this.source.meta.meta.rangeMax != this.kmlDate) {
+		if ( this.source.meta.meta.rangeMax !== this.kmlDate ) {
 			this.kmlDate = this.source.meta.meta.rangeMax;
 			this.updateKMLData(true);
 		}
