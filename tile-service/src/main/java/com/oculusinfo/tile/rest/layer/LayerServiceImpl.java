@@ -39,6 +39,7 @@ import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rest.config.ConfigException;
 import com.oculusinfo.tile.rest.config.ConfigService;
 import com.oculusinfo.tile.rest.tile.caching.CachingPyramidIO.LayerDataChangedListener;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,13 +48,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Singleton
 public class LayerServiceImpl implements LayerService {
@@ -303,6 +303,8 @@ public class LayerServiceImpl implements LayerService {
                 for ( int i=0; i<contents.length(); i++ ) {
                     if( contents.get(i) instanceof JSONObject ) {
                         JSONObject layerJSON = contents.getJSONObject(i);
+
+						layerJSON = addLayerContext(layerJSON);
                         _layersById.put( layerJSON.getString( LayerConfiguration.LAYER_ID.getName() ), layerJSON );
                         _layers.add( layerJSON );
                     }
@@ -315,4 +317,89 @@ public class LayerServiceImpl implements LayerService {
         }
 	}
 
+	protected JSONObject addLayerContext(JSONObject layer) throws JSONException {
+		JSONObject publicObj = layer.optJSONObject("public");
+
+		if (publicObj != null) {
+			switch (publicObj.optString("domain")) {
+				case "kml":
+					layer = addKMLLayerContext(layer);
+					break;
+			}
+		}
+
+		return layer;
+	}
+
+	protected JSONObject addKMLLayerContext(JSONObject kmlLayer) {
+		try {
+			JSONObject publicObj = kmlLayer.optJSONObject("public");
+			JSONArray kmlSets = publicObj.getJSONArray("kml");
+			long minTime = Long.MAX_VALUE;
+			long maxTime = Long.MIN_VALUE;
+
+			for (int i = 0; i < kmlSets.length(); i++) {
+				JSONObject kmlSet = kmlSets.getJSONObject(i);
+				String resourceDir = kmlSet.optString("dir", null);
+
+				if (resourceDir != null) {
+					// Scan this directory for kml files
+					File dir = new File(getClass().getClassLoader().getResource(resourceDir).getFile());
+					FileFilter filter = new WildcardFileFilter(kmlSet.getString("fileTemplate"));
+					File[] kmlFiles = dir.listFiles(filter);
+					JSONArray files = new JSONArray();
+
+					for (int j = 0; j < kmlFiles.length; j++) {
+						File kmlFile = kmlFiles[j];
+
+						// Extract month and year from file name. For now always expect file to be named
+						// MM-yyyy*
+						String dateText = kmlFile.getName().substring(0,7);
+						DateFormat format = new SimpleDateFormat("MM-yyyy");
+						long dateTime = format.parse(dateText).getTime();
+
+						JSONObject urlObject = new JSONObject();
+
+						urlObject.put("fileName", kmlFile.getName());
+						urlObject.put("date", dateTime);
+						files.put(urlObject);
+
+						if (dateTime < minTime) {
+							minTime = dateTime;
+						}
+
+						if (dateTime > maxTime) {
+							maxTime = dateTime;
+						}
+					}
+
+					// Set URL to JSONArray of URL date pairs
+					kmlSet.put("files", files);
+				}
+			}
+
+			// Update the layer meta information
+			JSONObject metaL1 = publicObj.optJSONObject("meta");
+
+			if (metaL1 == null) {
+				metaL1 = new JSONObject();
+				publicObj.put("meta", metaL1);
+			}
+
+			JSONObject metaL2 = metaL1.optJSONObject("meta");
+
+			if (metaL2 == null) {
+				metaL2 = new JSONObject();
+				metaL1.put("meta", metaL2);
+			}
+
+			metaL2.put("rangeMax", maxTime);
+			metaL2.put("rangeMin", minTime);
+
+		} catch (Exception e) {
+			LOGGER.error("There was a problem reading kml files", e);
+		}
+
+		return kmlLayer;
+	}
 }
