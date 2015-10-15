@@ -150,7 +150,10 @@ sealed class PDNil extends PipelineData
   type Fun[T] = T
   def apply[T](t: Fun[T]) = t
 }
-case object PDNil extends PDNil
+// One must be careful with use of this - it is a slightly different type than class PDNil; if one can specifically
+// assign the type, that's fine, but where the type is inferred, and there is a warning of PDNil.type vs. PDNil, just
+// use new PDNil instead..
+object PDNil extends PDNil
 
 
 

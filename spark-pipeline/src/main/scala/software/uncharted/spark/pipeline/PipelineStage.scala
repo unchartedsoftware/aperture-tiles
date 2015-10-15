@@ -12,72 +12,103 @@ import software.uncharted.spark.pipeline.PipelineData._
  * @tparam O the type of output data produced by this stage
  */
 sealed trait PipelineStage[O <: PipelineData] {
-  def execute (): O
+  def execute: O
 }
-
-class PSNil extends PipelineStage[PDNil] {
-  def execute (): PDNil = PDNil
-}
-
-class PSSingle[I <: PipelineData, O <: PipelineData] (fcn: I => O)
-                                                     (parent: PipelineStage[I])
-  extends PipelineStage[O]
-{
-  def execute (): O = {
-    fcn(parent.execute())
-  }
-}
-
-class PSCollection[I1 <: PipelineData, I2 <: PipelineData, O <: PipelineData] (fcn: I1 :: I2 => O)
-                                                                              (parent1: PipelineStage[I1],
-                                                                               parent2: PipelineStage[I2])
-  extends PipelineStage[O]
-{
-  def execute (): O = {
-    fcn(parent1.execute() :: parent2.execute())
-  }
-}
-
-
-
 object PipelineStage {
+  def apply[O <: PipelineData] (data: O): PipelineStage[O] = {
+    new ZeroInputPipelineStage[O](data)
+  }
+
+  def apply[I <: PipelineData, O <: PipelineData] (fcn: I => O, parent: PipelineStage[I]): PipelineStage[O] = {
+    new OneInputPipelineStage[I, O](fcn)(parent)
+  }
+
+  def apply[I <: PipelineData, O <: PipelineData] (fcn: I => O, parents: PipelineStageInputContainer[I]): PipelineStage[O] = {
+    new MultiInputPipelineStage[I, O](fcn)(parents)
+  }
+
   // Just some compilation tests
-  def testCompilation: Unit = {
-    val n1a = new PSNil
-    val n1b = new PSNil
-    val n1c = new PSNil
-    val n1d = new PSNil
+  def testComplexExample: Unit = {
+    //  complex example:
+    //     1a      1b  1c      1d
+    //       \    /      \    /
+    //        \  /        \  /
+    //         2a          2b
+    //        /  \__    __/  \____
+    //       /      \  /      \   \
+    //     3a        3b        3c  3d
+    //
+    //    val node2a = new Node(2a) from new Node(1a) andFrom new Node(1b) to new Node(3a)
+    //    val node2b = new Node(2b) from new Node(1c) andFrom new Node(1d) to new Node(3c) andTo new Node(3d)
+    //    val node3b = new Node(3b) from node2a andFrom node2b
+    val n1a = PipelineStage(1 :: PDNil)
+    val n1b = PipelineStage("1" :: PDNil)
+    val n1c = PipelineStage(1.2 :: PDNil)
+    val n1d: PipelineStage[PDNil] = PipelineStage(PDNil)
 
-    val n2a = new PSNil
-//    val n2a = new PSCollection2[PDNil :: PDNil :: PDNil, PDNil](
-//      (i: PDNil :: PDNil :: PDNil) => PDNil)
-//    (n1a and_: n1b and_: PRNil)
-//    val n2a = new PSCollection[PDNil, PDNil, PDNil](i => PDNil)(n1a, n1b)
-    val n2b = new PSCollection[PDNil, PDNil, PDNil](i => PDNil)(n1c, n1d)
+    val n2a = PipelineStage((input: (Int :: PDNil) :: (String :: PDNil) :: PDNil) => {
+      val (aI :: aN) :: (bS :: bN) :: cN = input
+      ((aI * 3) + "=" + bS) :: PDNil
+    }, n1a :: n1b :: PSINil)
+    val n2b = PipelineStage((input: (Double :: PDNil) :: PDNil :: PDNil) => {
+      val (aD :: aN) :: bN :: cN = input
+      (aD * 4.5) :: PDNil
+    }, n1c :: n1d :: PSINil)
 
-    val n3a = new PSSingle[PDNil, PDNil](i => PDNil)(n2a)
-    val n3b = new PSCollection[PDNil, PDNil, PDNil](i => PDNil)(n2a, n2b)
-    val n3c = new PSSingle[PDNil, PDNil](i => PDNil)(n2b)
-    val n3d = new PSSingle[PDNil, PDNil](i => PDNil)(n2b)
+    val n3a = PipelineStage((input: String :: PDNil) => {
+      val value :: endnil = input
+      (value + value) :: PDNil
+    }, n2a)
+    val n3b = PipelineStage((input: (String :: PDNil) :: (Double :: PDNil) :: PDNil) => {
+      val (aS :: aN) :: (dD :: dN) :: n = input
+      """{"string-value": "%s", "double-value": %f}""".format(aS, dD) :: PDNil
+    }, n2a :: n2b :: PSINil)
+    val n3c = PipelineStage((input: Double :: PDNil) => {
+      val value :: endnil = input
+      (value + ":" + value) :: PDNil
+    }, n2b)
+    val nfc = PipelineStage((input: Double :: PDNil) => {
+      val value :: endnil = input
+      (value + value) :: PDNil
+    }, n2b)
+
   }
 }
+class ZeroInputPipelineStage[O <: PipelineData](output: O) extends PipelineStage[O] {
+  def execute: O = output
+}
+class OneInputPipelineStage[I <: PipelineData, O <: PipelineData] (fcn: I => O)(parent: PipelineStage[I]) extends PipelineStage[O] {
+  def execute: O = fcn(parent.execute)
+}
+class MultiInputPipelineStage[I <: PipelineData, O <: PipelineData] (fcn: I => O)
+                                                                    (parents: PipelineStageInputContainer[I])
+  extends PipelineStage[O] {
+  def execute: O = fcn(parents.get)
+}
+
+sealed trait PipelineStageInputContainer[D <: PipelineData] {
+  type Head = D#Head
+  type Tail = PipelineStageInputContainer[D#Tail]
+  type Data = D
+
+  def get: D
+
+  def ::[H <: PipelineData] (head: PipelineStage[H]): PipelineStageInputContainer[H :: D] = PSICons[H, D](head, this)
+}
+sealed class PSINil extends PipelineStageInputContainer[PDNil] {
+  def get = PDNil
+}
+case object PSINil extends PSINil
+
+final case class PSICons[H <: PipelineData, T <: PipelineData] (headStage: PipelineStage[H], tail: PipelineStageInputContainer[T]) extends PipelineStageInputContainer[PDCons[H, T]] {
+  def get = PDCons[H, T](headStage.execute, tail.get)
+}
+
 
 
 // Ideal code:
 //  attempted structures:
 //
-//  complex example:
-//     1a      1b  1c      1d
-//       \    /      \    /
-//        \  /        \  /
-//         2a          2b
-//        /  \__    __/  \____
-//       /      \  /      \   \
-//     3a        3b        3c  3d
-//
-//    val node2a = new Node(2a) from new Node(1a) andFrom new Node(1b) to new Node(3a)
-//    val node2b = new Node(2b) from new Node(1c) andFrom new Node(1d) to new Node(3c) andTo new Node(3d)
-//    val node3b = new Node(3b) from node2a andFrom node2b
 //
 //  simple example:
 //     a --> b --> c --> d
