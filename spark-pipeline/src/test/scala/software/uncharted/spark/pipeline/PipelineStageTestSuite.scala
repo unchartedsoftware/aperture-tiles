@@ -79,13 +79,13 @@ class PipelineStageTestSuite extends FunSuite {
     val n1c = PipelineStage(1.2 :: PDNil)
     val n1d: PipelineStage[PDNil] = PipelineStage(PDNil)
 
-    val n2a = PipelineStage((input: (Int :: PDNil) :: (String :: PDNil) :: PDNil) => {
-      val (aI :: aN) :: (bS :: bN) :: cN = input
+    val n2a = PipelineStage((input: Int :: String :: PDNil) => {
+      val aI :: bS :: endNil = input
       ((aI * 3) + "=" + bS) :: PDNil
     }, n1a :: n1b :: PSINil)
     testResult("3=1")(n2a)
-    val n2b = PipelineStage((input: (Double :: PDNil) :: PDNil :: PDNil) => {
-      val (aD :: aN) :: bN :: cN = input
+    val n2b = PipelineStage((input:Double :: PDNil) => {
+      val aD :: endNil = input
       val newValue = (aD*45).round/10.0
       newValue :: PDNil
     }, n1c :: n1d :: PSINil)
@@ -96,8 +96,8 @@ class PipelineStageTestSuite extends FunSuite {
       (value + value) :: PDNil
     }, n2a)
     testResult("3=13=1")(n3a)
-    val n3b = PipelineStage((input: (String :: PDNil) :: (Double :: PDNil) :: PDNil) => {
-      val (aS :: aN) :: (dD :: dN) :: n = input
+    val n3b = PipelineStage((input: String :: Double :: PDNil) => {
+      val aS :: dD :: endNil = input
       """{"string-value": "%s", "double-value": %.1f}""".format(aS, dD) :: PDNil
     }, n2a :: n2b :: PSINil)
     testResult("""{"string-value": "3=1", "double-value": 5.4}""")(n3b)

@@ -46,15 +46,15 @@ sealed trait PipelineStageInputContainer[D <: PipelineData] {
 
   def get: D
 
-  def ::[H <: PipelineData] (head: PipelineStage[H]): PipelineStageInputContainer[H :: D] = PSICons[H, D](head, this)
+  def ::[H <: PipelineData] (head: PipelineStage[H]): PipelineStageInputContainer[H ::: D] = PSICons[H, D](head, this)
 }
 sealed class PSINil extends PipelineStageInputContainer[PDNil] {
   def get = PDNil
 }
 case object PSINil extends PSINil
 
-final case class PSICons[H <: PipelineData, T <: PipelineData] (headStage: PipelineStage[H], tail: PipelineStageInputContainer[T]) extends PipelineStageInputContainer[PDCons[H, T]] {
-  def get = PDCons[H, T](headStage.execute, tail.get)
+final case class PSICons[H <: PipelineData, T <: PipelineData] (headStage: PipelineStage[H], tail: PipelineStageInputContainer[T]) extends PipelineStageInputContainer[H ::: T] {
+  def get = headStage.execute ::: tail.get
 }
 
 
