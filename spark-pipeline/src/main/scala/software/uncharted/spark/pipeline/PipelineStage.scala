@@ -26,53 +26,6 @@ object PipelineStage {
   def apply[I <: PipelineData, O <: PipelineData] (fcn: I => O, parents: PipelineStageInputContainer[I]): PipelineStage[O] = {
     new MultiInputPipelineStage[I, O](fcn)(parents)
   }
-
-  // Just some compilation tests
-  def testComplexExample: Unit = {
-    //  complex example:
-    //     1a      1b  1c      1d
-    //       \    /      \    /
-    //        \  /        \  /
-    //         2a          2b
-    //        /  \__    __/  \____
-    //       /      \  /      \   \
-    //     3a        3b        3c  3d
-    //
-    //    val node2a = new Node(2a) from new Node(1a) andFrom new Node(1b) to new Node(3a)
-    //    val node2b = new Node(2b) from new Node(1c) andFrom new Node(1d) to new Node(3c) andTo new Node(3d)
-    //    val node3b = new Node(3b) from node2a andFrom node2b
-    val n1a = PipelineStage(1 :: PDNil)
-    val n1b = PipelineStage("1" :: PDNil)
-    val n1c = PipelineStage(1.2 :: PDNil)
-    val n1d: PipelineStage[PDNil] = PipelineStage(PDNil)
-
-    val n2a = PipelineStage((input: (Int :: PDNil) :: (String :: PDNil) :: PDNil) => {
-      val (aI :: aN) :: (bS :: bN) :: cN = input
-      ((aI * 3) + "=" + bS) :: PDNil
-    }, n1a :: n1b :: PSINil)
-    val n2b = PipelineStage((input: (Double :: PDNil) :: PDNil :: PDNil) => {
-      val (aD :: aN) :: bN :: cN = input
-      (aD * 4.5) :: PDNil
-    }, n1c :: n1d :: PSINil)
-
-    val n3a = PipelineStage((input: String :: PDNil) => {
-      val value :: endnil = input
-      (value + value) :: PDNil
-    }, n2a)
-    val n3b = PipelineStage((input: (String :: PDNil) :: (Double :: PDNil) :: PDNil) => {
-      val (aS :: aN) :: (dD :: dN) :: n = input
-      """{"string-value": "%s", "double-value": %f}""".format(aS, dD) :: PDNil
-    }, n2a :: n2b :: PSINil)
-    val n3c = PipelineStage((input: Double :: PDNil) => {
-      val value :: endnil = input
-      (value + ":" + value) :: PDNil
-    }, n2b)
-    val nfc = PipelineStage((input: Double :: PDNil) => {
-      val value :: endnil = input
-      (value + value) :: PDNil
-    }, n2b)
-
-  }
 }
 class ZeroInputPipelineStage[O <: PipelineData](output: O) extends PipelineStage[O] {
   def execute: O = output
