@@ -63,19 +63,8 @@ final case class PSICons[H <: PipelineData, T <: PipelineData] (headStage: Pipel
 //  attempted structures:
 //
 //
-//  simple example:
-//     a --> b --> c --> d
 //
 //    val pipeline = new Node(a) to (new Node(b) to (new Node(c) to (new Node(d))))
 //
-//  tree example:
-//
-//        1a
-//       /  \
-//      /    \
-//    2a      2b
-//     |     /  \
-//     |    /    \
-//    3a  3b      3c
 //
 //    val root = new Node(1a) to (new Node(2a) to new Node(3a)) andTo (new Node(2b) to new Node(3b) andTo new Node(3c))
