@@ -51,7 +51,6 @@ object PipelineData extends PipelineDataApplyOps
   import PipelineDataIndex._
 
   type :::[A <: PipelineData, B <: PipelineData] = A#FoldR[PipelineData, AppPDCons.type, B]
-  type Reverse[A <: PipelineData] = A#FoldL[PipelineData, AppPDCons.type, PDNil]
 
   object Concat extends Foldable[PipelineData, PipelineData] {
     type Apply[N <: PipelineData, H <: PipelineData] = N ::: H
@@ -61,7 +60,6 @@ object PipelineData extends PipelineDataApplyOps
   implicit def pdlistOps[B <: PipelineData](b: B): PDListOps[B] =
     new PDListOps[B] {
       def length = b.foldR(Length, 0)
-      def reverse = b.foldL[PipelineData, AppPDCons.type, PDNil](AppPDCons, PDNil)
       def :::[A <: PipelineData](a: A): A#FoldR[PipelineData, AppPDCons.type, B] = a.foldR[PipelineData, AppPDCons.type, B](AppPDCons, b)
       def ::[A](a: A) = PDCons(a, b)
     }
@@ -105,7 +103,7 @@ object PipelineData extends PipelineDataApplyOps
 
 
 /*
- * Standard single pipeline datum, with link to next
+ * Standard chain pipeline datum, with link to next
  */
 final case class PDCons[H, T <: PipelineData](head : H, tail : T) extends PipelineData
 {
@@ -184,7 +182,6 @@ sealed trait PDConsOps[H, T <: PipelineData] {
 sealed trait PDListOps[B <: PipelineData] {
   def length: Int
   def :::[A <: PipelineData](a: A): A ::: B
-  def reverse: Reverse[B]
   def ::[A](b: A): A :: B
 }
 sealed class TipDummy[S, PD <: PipelineData](val pd: PD)
