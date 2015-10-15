@@ -59,7 +59,6 @@ object PipelineData extends PipelineDataApplyOps
 
   implicit def pdlistOps[B <: PipelineData](b: B): PDListOps[B] =
     new PDListOps[B] {
-      def length = b.foldR(Length, 0)
       def :::[A <: PipelineData](a: A): A#FoldR[PipelineData, AppPDCons.type, B] = a.foldR[PipelineData, AppPDCons.type, B](AppPDCons, b)
       def ::[A](a: A) = PDCons(a, b)
     }
@@ -69,35 +68,11 @@ object PipelineData extends PipelineDataApplyOps
     def apply[A,B <: PipelineData](a: A, b: B) = PDCons(a, b)
   }
 
-  object Length extends Foldable[Any, Int] {
-    type Apply[N <: Any, Acc <: Int] = Int
-    def apply[A,B <: Int](a: A, b: B) = b+1
-  }
   implicit def pdconsOps[H, T <: PipelineData](pd: H :: T): PDConsOps[H, T] =
     new PDConsOps[H, T] {
       def pipelinedata = pd
-      def last = pd.tail.foldL[Any, Last.type, H](Last, pd.head)
       def i[N <: TypeOrdinal](implicit i: H::T => Ind[N]) = i(pd)
-      def t[S] = new TipDummy[S, H :: T](pd)
     }
-
-  sealed trait Tip[S, HL <: PipelineData, Ind <: PipelineDataIndex] {
-    def apply(hl: HL): Ind
-  }
-  implicit def tindexed0[S, H, T <: PipelineData](implicit ev: S =:= H): Tip[S, H :: T, PipelineDataIndex0[H, T]] =
-    new Tip[S, H :: T, PipelineDataIndex0[H,T]] {
-      def apply(pdc: H :: T) = new PipelineDataIndex0[H, T](pdc)
-    }
-  implicit def tindexedN[H, T <: PipelineData, I <: PipelineDataIndex, S](implicit iTail: Tip[S, T, I] ): Tip[S, H :: T, PipelineDataIndexN[H, I]] =
-    new Tip[S, H :: T, PipelineDataIndexN[H, I]] {
-      def apply(pdc: H :: T) = new PipelineDataIndexN[H, I](pdc.head, iTail(pdc.tail))
-    }
-  implicit def tipToInd[S, PD <: PipelineData, I <: PipelineDataIndex](dummy: TipDummy[S, PD])(implicit tip: Tip[S, PD, I]): I = tip(dummy.pd)
-
-  object Last extends Foldable[Any, Any] {
-    type Apply[N <: Any, H <: Any] = N
-    def apply[A,B](a: A, b: B) = a
-  }
 }
 
 
@@ -157,7 +132,7 @@ object PDNil extends PDNil
 
 sealed trait PipelineDataApplyOps
 {
-  implicit def happlyNil(h: PDNil) : PDNil => PDNil =
+  implicit def pdApplyNil(h: PDNil) : PDNil => PDNil =
     _ => PDNil
 
   implicit def happlyCons[InH, OutH, TF <: PipelineData, TIn <: PipelineData, TOut <: PipelineData]
@@ -172,15 +147,11 @@ sealed trait PipelineDataApplyOps
     toApply(h)(in)
 }
 sealed trait PDConsOps[H, T <: PipelineData] {
-  def last: Last
   def pipelinedata: H :: T
-  type Last = T#FoldL[Any, Last.type, H]
   def i[N <: TypeOrdinal](implicit it: H::T => Ind[N]): Ind[N]
-  def t[S]: TipDummy[S, H :: T]
   type Ind[N <: TypeOrdinal] = PDCons[H, T]#toI[N]
 }
 sealed trait PDListOps[B <: PipelineData] {
-  def length: Int
   def :::[A <: PipelineData](a: A): A ::: B
   def ::[A](b: A): A :: B
 }
