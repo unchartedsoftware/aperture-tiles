@@ -52,14 +52,4 @@ class ExecutionGraphDataTestSuite extends FunSuite {
     assert(3 === c)
     assert(4 === d)
   }
-  test("Test retrieval of a single datum") {
-    val eg = 1 :: "2" :: 3.0 :: EGDNil
-    import software.uncharted.spark.execution.graph.typesupport.TypeOrdinal._
-
-
-    val pd = 1 :: "2" :: 3.0 :: PDNil
-    assert(pd.i[_0].at === 1)
-    assert(pd.i[_1].at === "2")
-    assert(pd.i[_2].at === 3.0)
-  }
 }
