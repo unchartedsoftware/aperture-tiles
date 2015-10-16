@@ -1,4 +1,4 @@
-package software.uncharted.spark.pipeline
+package software.uncharted.spark.execution.graph
 
 import org.scalatest.FunSuite
 

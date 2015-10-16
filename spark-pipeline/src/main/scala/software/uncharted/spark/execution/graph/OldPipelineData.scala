@@ -1,6 +1,6 @@
-package software.uncharted.spark.pipeline
+package software.uncharted.spark.execution.graph
 
-
+import software.uncharted.spark.execution.graph.typesupport.Foldable
 
 import scala.language.higherKinds
 import scala.language.implicitConversions

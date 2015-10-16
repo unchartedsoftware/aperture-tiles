@@ -1,7 +1,7 @@
-package software.uncharted.spark.pipeline.typesupport
+package software.uncharted.spark.execution.graph.typesupport
 
 import scala.language.higherKinds
-import software.uncharted.spark.pipeline.typesupport.TypeOrdinal._
+import TypeOrdinal._
 
 
 

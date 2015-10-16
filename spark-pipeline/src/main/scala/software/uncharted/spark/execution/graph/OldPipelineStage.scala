@@ -1,10 +1,8 @@
-package software.uncharted.spark.pipeline
-
-
+package software.uncharted.spark.execution.graph
 
 import scala.language.implicitConversions
 
-import software.uncharted.spark.pipeline.PipelineData._
+import PipelineData._
 
 
 

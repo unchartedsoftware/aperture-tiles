@@ -1,4 +1,4 @@
-package software.uncharted.spark.pipeline.typesupport
+package software.uncharted.spark.execution.graph.typesupport
 
 import scala.language.higherKinds
 

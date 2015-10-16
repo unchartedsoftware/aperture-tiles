@@ -1,7 +1,7 @@
-package software.uncharted.spark.pipeline
+package software.uncharted.spark.execution.graph
 
 import org.scalatest.FunSuite
-import software.uncharted.spark.pipeline.ExecutionGraphData._
+import ExecutionGraphData._
 
 /**
  * Created by nkronenfeld on 10/15/2015.

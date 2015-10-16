@@ -1,6 +1,4 @@
-package software.uncharted.spark.pipeline
-
-
+package software.uncharted.spark.execution.graph
 
 import software.uncharted.spark.pipeline.ExecutionGraphData._
 
