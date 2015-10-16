@@ -2,69 +2,91 @@ package software.uncharted.spark.pipeline
 
 
 
-import scala.language.implicitConversions
-
-import software.uncharted.spark.pipeline.PipelineData._
+import software.uncharted.spark.pipeline.ExecutionGraphData._
 
 
 
 /**
+ * A trait representing a single node in an execution graph
+ *
  * @tparam O the type of output data produced by this stage
  */
-sealed trait PipelineStage[O <: PipelineData] {
+sealed trait ExecutionGraphNode[O <: ExecutionGraphData] {
   def execute: O
 }
-object PipelineStage {
-  def apply[O <: PipelineData] (data: O): PipelineStage[O] = {
-    new ZeroInputPipelineStage[O](data)
+object ExecutionGraphNode {
+  def apply[O <: ExecutionGraphData] (data: O): ExecutionGraphNode[O] = {
+    new NoInputExecutionGraphNode[O](data)
   }
 
-  def apply[I <: PipelineData, O <: PipelineData] (fcn: I => O, parent: PipelineStage[I]): PipelineStage[O] = {
-    new OneInputPipelineStage[I, O](fcn)(parent)
+  def apply[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O, parent: ExecutionGraphNode[I]): ExecutionGraphNode[O] = {
+    new SingleInputExecutionGraphNode[I, O](fcn)(parent)
   }
 
-  def apply[I <: PipelineData, O <: PipelineData] (fcn: I => O, parents: PipelineStageInputContainer[I]): PipelineStage[O] = {
-    new MultiInputPipelineStage[I, O](fcn)(parents)
+  def apply[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O, parents: ExecutionGraphNodeInputContainer[I]): ExecutionGraphNode[O] = {
+    new MultiInputExecutionGraphNode[I, O](fcn)(parents)
   }
 }
-class ZeroInputPipelineStage[O <: PipelineData](output: O) extends PipelineStage[O] {
+
+/**
+ * An implementation of ExecutionGraphNode which requires no input.
+ *
+ * Technically, this is extraneous; one could use a MultiInputExecutionGraphNode for everything, in this case, with
+ * an input type of EGDNil.  This class is here just for convenience.
+ *
+ * @param output The output to be passed to any child nodes when this node is executed.
+ * @tparam O The type of output data produced by this stage
+ */
+class NoInputExecutionGraphNode[O <: ExecutionGraphData](output: O) extends ExecutionGraphNode[O] {
   def execute: O = output
 }
-class OneInputPipelineStage[I <: PipelineData, O <: PipelineData] (fcn: I => O)(parent: PipelineStage[I]) extends PipelineStage[O] {
+
+/**
+ * An implementation of ExecutionGraphNode which requires a single other node as input.
+ *
+ * Technically, this is extraneous; one could use a MultiInputExecutionGraphNode for everything, in this case, with
+ * an ExecutionGraphData with only one datum.
+ *
+ * @param fcn The function to run when this graph node is asked to execute
+ * @param parent The parent node, from which this node gets its input data
+ * @tparam I The type of input data expected by this stage.
+ * @tparam O The type of output data produced by this stage
+ */
+class SingleInputExecutionGraphNode[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O)(parent: ExecutionGraphNode[I]) extends ExecutionGraphNode[O] {
   def execute: O = fcn(parent.execute)
 }
-class MultiInputPipelineStage[I <: PipelineData, O <: PipelineData] (fcn: I => O)
-                                                                    (parents: PipelineStageInputContainer[I])
-  extends PipelineStage[O] {
+
+/**
+ * An implementation of ExecutionGraphNode which can handle an arbitrary list of input nodes feeding into it.
+ *
+ * @param fcn The function to run on the output of all nodes feeding into this node when it is called upon to execute.
+ * @param parents The parent nodes from which this node requires data.
+ * @tparam I The conglomerated
+ * @tparam O the type of output data produced by this stage
+ */
+class MultiInputExecutionGraphNode[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O)
+                                                                                     (parents: ExecutionGraphNodeInputContainer[I])
+  extends ExecutionGraphNode[O] {
   def execute: O = fcn(parents.get)
 }
 
-sealed trait PipelineStageInputContainer[D <: PipelineData] {
+sealed trait ExecutionGraphNodeInputContainer[D <: ExecutionGraphData] {
   type Head = D#Head
-  type Tail = PipelineStageInputContainer[D#Tail]
+  type Tail = ExecutionGraphNodeInputContainer[D#Tail]
   type Data = D
 
   def get: D
 
-  def ::[H <: PipelineData] (head: PipelineStage[H]): PipelineStageInputContainer[H ::: D] = PSICons[H, D](head, this)
+  def ::[H <: ExecutionGraphData] (head: ExecutionGraphNode[H]): ExecutionGraphNodeInputContainer[H ::: D] = EGNICons[H, D](head, this)
 }
-sealed class PSINil extends PipelineStageInputContainer[PDNil] {
-  def get = PDNil
+sealed class EGNINil extends ExecutionGraphNodeInputContainer[EGDNil] {
+  def get = EGDNil
 }
-case object PSINil extends PSINil
+case object EGNINil extends EGNINil
 
-final case class PSICons[H <: PipelineData, T <: PipelineData] (headStage: PipelineStage[H], tail: PipelineStageInputContainer[T]) extends PipelineStageInputContainer[H ::: T] {
-  def get = headStage.execute ::: tail.get
+final case class EGNICons[H <: ExecutionGraphData, T <: ExecutionGraphData] (headNode: ExecutionGraphNode[H],
+                                                                             tail: ExecutionGraphNodeInputContainer[T])
+  extends ExecutionGraphNodeInputContainer[H ::: T]
+{
+  def get = headNode.execute ::: tail.get
 }
-
-
-
-// Ideal code:
-//  attempted structures:
-//
-//
-//
-//    val pipeline = new Node(a) to (new Node(b) to (new Node(c) to (new Node(d))))
-//
-//
-//    val root = new Node(1a) to (new Node(2a) to new Node(3a)) andTo (new Node(2b) to new Node(3b) andTo new Node(3c))
