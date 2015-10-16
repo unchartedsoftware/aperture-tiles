@@ -22,9 +22,11 @@ package software.uncharted.spark.execution
  * ExecutionGraphNodeInputContainer is an even further simplified version, modified to allow another level of
  * indirection - to allow conglomerations of stages with proper typing of the conglomerations of their outputs.
  * Furthermore, Harrah's HList contains examples of numerous further functionality that could be added to this data
- * class.  I don't think the rest of this functionality is needed, but I can see potential uses for some of it
- * (for instance, the indexing, which would allow one to pull out a specific element from the conglomerated data,
- * or even sub-conglomerates).
+ * class.
+ *
+ * In particular, the more functions I get requiring multiple signatures, one for each length of argument list, I get,
+ * the more it argues that we should pull in the apply/map functionality (see notably the node(...) constructors, in
+ * the ExecutionGraphNode object, and the wrappedOrderRecorder methods in ExecutionGraphTestSuite).
  */
 package object graph {
 
