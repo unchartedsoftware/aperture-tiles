@@ -29,11 +29,12 @@ package com.oculusinfo.tilegen.pipeline
 
 
 
-import java.io.OutputStream
+import java.io.{OutputStream, OutputStreamWriter, BufferedWriter, FileNotFoundException}
+import java.net.URI
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.{Calendar, Date, GregorianCalendar}
+import java.util.{Calendar, GregorianCalendar, Date, TimeZone}
 
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
@@ -42,19 +43,34 @@ import com.oculusinfo.tilegen.datasets.{CSVReader, SchemaTypeUtilities, TilingTa
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.io.compress.CompressionCodecFactory
+import org.apache.hadoop.io.compress.GzipCodec
+import org.apache.spark.TaskContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataType, IntegerType, TimestampType}
-import org.apache.spark.sql.{Column, DataFrame, SQLContext}
-import org.joda.time.{DurationFieldType, Interval, PeriodType}
-
+import org.apache.spark.sql.{Column, DataFrame, SQLContext, SaveMode}
 import scala.collection.mutable.ListBuffer
+import org.apache.spark.rdd.RDD
+import org.joda.time.base.BaseSingleFieldPeriod
+import org.joda.time.{Interval, PeriodType, DateTime, DurationFieldType}
+
+import org.json.{JSONObject, JSONArray}
+import grizzled.slf4j.Logger
+
+import scala.reflect.ClassTag
 
 /**
  * Provides operations that can be bound into a TilePipeline
  * tree.
  */
 object PipelineOperations {
+
 	import OperationType._
+
+	private val logger = Logger("PipelineOperations")
 
 	protected var tableIdCount = new AtomicInteger(0)
 
@@ -103,6 +119,24 @@ object PipelineOperations {
 	}
 
 	/**
+	 * Load data from rows of JSON.
+	 *
+	 * @param records An RDD containing lines of text (JSON records).
+	 * @param partitions Number of partitions to load data into.
+	 * @param data Used for the SQL context only. There should be no data at this stage.
+	 * @return PipelineData with a schema RDD populated from the CSV file.
+	 */
+	def loadJsonDataOp(records: RDD[String], partitions: Option[Int])(data: PipelineData): PipelineData = {
+		if (logger.isDebugEnabled)
+			logger.debug("loadJsonDataOp: Enter with " + records.count + " strings in RDD")
+		val context = data.sqlContext
+		val jsonRdd = context.jsonRDD(records)
+		val dataFrame = coalesce(context, jsonRdd, partitions)
+		PipelineData(context, dataFrame)
+	}
+
+	/**
+	 * Load data from Parquet file(s)
 	 *
 	 * @param path Valid HDFS path to the data.
 	 * @param partitions Number of partitions to load data into.
@@ -113,6 +147,297 @@ object PipelineOperations {
 		val context = data.sqlContext
 		val srdd = coalesce(context, context.parquetFile(path), partitions)
 		PipelineData(data.sqlContext, srdd)
+	}
+
+	/**
+	 * Load data from Parquet file(s) that are in directories corresponding to the specified
+	 * date range.
+	 *
+	 * @param hdfsUri HDFS URI
+	 * @param path Valid HDFS top-level directory to the data.
+	 * @param startDate The earliest date to consider, inclusive
+	 * @param endDate The latest date to consider, inclusive
+	 * @param partitions Number of partitions to load data into.
+	 * @param data Not used.
+	 * @return PipelineData with a schema RDD populated from the Parquet file.
+	 */
+	def loadParquetDataByDateOp(hdfsUri: String, path: String, startDate: Date, endDate: Date, partitions: Option[Int] = None)
+		(data: PipelineData): PipelineData = {
+
+		val fname = "loadParquetDataByDateOp: "
+		var dirList = Array[String]()
+
+		// Create HDFS file system
+		val uri = new URI(hdfsUri)
+		val hdfs = FileSystem.get(uri, new Configuration())
+
+		// Convert start and end dates to a more appropriate format
+		val loopDate = new GregorianCalendar()
+		loopDate.setTimeZone(TimeZone.getTimeZone("GMT"))
+		loopDate.setTime(startDate)
+		val endCalendar = new GregorianCalendar()
+		loopDate.setTimeZone(TimeZone.getTimeZone("GMT"))
+		endCalendar.setTime(endDate)
+
+		// Loop over all dates within range
+		while (loopDate.compareTo(endCalendar) <= 0) {
+
+			// Construct the directory name based on the date
+			val dateStr = loopDate.get(Calendar.YEAR) +
+				"/" + Integer.toString(loopDate.get(Calendar.MONTH) + 1) +
+				"/" + loopDate.get(Calendar.DAY_OF_MONTH)
+			val directoryName = path + "/" + dateStr
+
+			// Append directory name to the directory list if the directory exists
+			val pathObj = new Path(directoryName)
+			if (hdfs.isDirectory(pathObj))
+				dirList = dirList :+ directoryName
+			else
+				logger.warn(fname + "Directory for date " + loopDate + " in specified date range does not exist: " + directoryName)
+
+			// Move to the next day
+			loopDate.add(Calendar.DATE, 1)
+
+		} // while
+
+		// Read the data from the list of comma separated files/directories
+		logger.debug(fname + "Attempting to read data from " + dirList.mkString(","))
+		val resultDataFrame = data.sqlContext.parquetFile(dirList: _*)
+		if (logger.isDebugEnabled)
+			logger.debug(fname + "Read in " + resultDataFrame.count + " records")
+
+		// Coalesce and return the result
+		val context = data.sqlContext
+		val srdd = coalesce(data.sqlContext, resultDataFrame, partitions)
+		PipelineData(data.sqlContext, srdd)
+	}
+
+	/**
+	 * Writes data by date-specific directories
+	 * @param dayOfMonthColName The name of the day-of-month column in the input DataFrame
+	 * @param monthColName The name of the month column in the input DataFrame
+	 * @param yearColName The name of the year column in the input DataFrame
+	 * @param writeFields The columns to write. Empty set, if all columns should be written.
+	 *                    If non-empty, the excludeFields set must be empty.
+	 * @param excludeFields The columns to exclude. Empty set, if no columns should be excluded.
+	 *                      If non-empty, the writeFields set must be empty.
+	 * @param applyFiltersToPipelineDataSet Flag indicating whether to apply the write/exclude
+	 *                                      filters to the resultant pipeline dataset
+	 * @param writeOp User-defined write function to write data. Input to function is a
+	 *                DataFrame that contains one day of data with the specified
+	 *                writeFields/excludeFields filters applied,
+	 *                followed by day-of-month, month (1-indexed, not 0-indexed), and year integers.
+	 * @param input The pipeline data
+	 * @return
+	 */
+	def writeDataByDateOp(description: String,
+		                    dayOfMonthColName: String,
+		                    monthColName: String,
+		                    yearColName: String,
+		                    writeOp: (DataFrame, Int /*day*/, Int /*month*/, Int /*year*/) => Unit,
+		                    writeFields: Set[String] = Set(),
+												excludeFields: Set[String] = Set(),
+		                    applyFiltersToPipelineDataSet: Boolean = false)
+		                   (input: PipelineData) : PipelineData = {
+
+		val fname = "writeDataByDateOp(" + description + "): "
+
+		// Validate input
+		if (writeFields == null)
+			throw new IllegalArgumentException("writeFields argument must not be null")
+		if (excludeFields == null)
+			throw new IllegalArgumentException("excludeFields argument must not be null")
+		if (!writeFields.isEmpty && !excludeFields.isEmpty)
+			throw new IllegalArgumentException("Only one of writeFields or excludeFields must be non-empty")
+
+		// Only write if there are records
+		if (input.srdd.take(1).length > 0) {
+
+			// Create a filter for all desired columns
+			var includeFilter: Seq[Column] = Seq()
+			if (!writeFields.isEmpty) {
+				for (field <- input.srdd.schema.fields)
+					if (writeFields.contains(field.name))
+						includeFilter = includeFilter :+ new Column(field.name)
+			}
+			else if (!excludeFields.isEmpty) {
+				for (field <- input.srdd.schema.fields)
+					if (!excludeFields.contains(field.name))
+						includeFilter = includeFilter :+ new Column(field.name)
+			}
+			logger.debug(fname + "Write fields filter: " + includeFilter.mkString(", "))
+
+			// Get the distinct days in this data set
+			val tableName = getOrGenTableName(input, "writeDataByDateOp")
+			val selectDistinctDaysSql = "SELECT DISTINCT " +
+				dayOfMonthColName + "," + monthColName + "," + yearColName +
+				" FROM " + tableName + " WHERE " +
+				dayOfMonthColName + " IS NOT NULL AND " +
+				monthColName + " IS NOT NULL AND " +
+				yearColName + " IS NOT NULL"
+			val distinctDays = input.sqlContext.sql(selectDistinctDaysSql).collect()
+			logger.debug(fname + "Found " + distinctDays.length + " distinct days")
+
+			// Find all of the records for each unique day and write them to a date-specific folder
+			for (loopDate <- distinctDays) {
+				// Only look at records that have a proper date
+				if (loopDate != null && loopDate.length == 3 &&
+					!(loopDate.isNullAt(0) || loopDate.isNullAt(1) || loopDate.isNullAt(2))) {
+
+					val dateStr = loopDate(2) + 								// year
+						"/" + (loopDate.getInt(1)+1).toString + 	// month (+1 because Java indexes from 0)
+						"/" + loopDate(0)													// day
+					logger.debug(fname + "Looping over date " + dateStr)
+
+					// Create the date specific filter
+					val selectRowsByDaySql = "SELECT *" +
+						" FROM " + tableName + " WHERE " +
+						dayOfMonthColName + "=" + loopDate(0) + " AND " +
+						monthColName + "=" + loopDate(1) + " AND " +
+						yearColName + "=" + loopDate(2)
+					logger.debug(fname + "Applying date filter: " + selectRowsByDaySql)
+					val dayDataFrame = input.srdd.sqlContext.sql(selectRowsByDaySql)
+					if (logger.isTraceEnabled)
+						logger.trace(fname + "Unfiltered write data contains " + dayDataFrame.collect().length + " rows")
+					logger.debug(fname + "Unfiltered write data contains " + dayDataFrame.schema.fields.length + " columns")
+
+					// Filter for only the desired columns, if a filter was specified
+					val filteredDayDataFrame =
+						if (includeFilter.isEmpty)
+							dayDataFrame
+						else
+							dayDataFrame.select(includeFilter: _*)
+						if (logger.isTraceEnabled)
+							logger.trace(fname + "Filtered write data contains " + filteredDayDataFrame.collect().length + " rows")
+						logger.debug(fname + "Filtered write data contains " + filteredDayDataFrame.schema.fields.length + " columns")
+
+					// Execute the write function
+					logger.debug(fname + "Writing data for date " + dateStr)
+					writeOp(filteredDayDataFrame, loopDate.getInt(0), loopDate.getInt(1)+1, loopDate.getInt(2))
+					logger.debug(fname + "Finished writing data for date " + dateStr)
+				}
+			} // foreach
+
+			// Filter the result dataset, if desired
+			if (applyFiltersToPipelineDataSet && !includeFilter.isEmpty) {
+				val filteredDataSet = input.srdd.select(includeFilter: _*)
+				if (logger.isTraceEnabled)
+					logger.trace(fname + "Filtered pipeline data contains " + filteredDataSet.collect().length + " rows")
+				logger.debug(fname + "Filtered pipeline data contains " + filteredDataSet.schema.fields.length + " columns")
+				PipelineData(input.sqlContext, filteredDataSet)
+			}
+			else {
+				if (logger.isTraceEnabled)
+					logger.trace(fname + "Unfiltered pipeline data contains " + input.srdd.collect().length + " rows")
+				logger.debug(fname + "Unfiltered pipeline data contains " + input.srdd.schema.fields.length + " columns")
+				input
+			}
+		} // if records
+		else {
+			// No records. Return the original input
+			logger.debug(fname + "No records. Just returning original pipeline data")
+			input
+		}
+	}
+
+	/*
+	 * Writes the date-specific DataFrame as parquet
+	 *
+	 * @param basePath Destination base path
+	 * @param partitions Number of partitions to use to coalesce the data
+	 *
+	 * @param dayDataFrame Date-specific data
+	 * @param dayOfMonth The day-of-month
+	 * @param month The month
+	 * @param year The year
+	 */
+	def writeDateSpecificParquet(basePath: String,
+		                           partitions: Option[Int])
+		                          (dayDataFrame: DataFrame,
+		                           dayOfMonth: Int,
+		                           month: Int,
+		                           year: Int) : Unit = {
+
+		val fname = "writeDateSpecificParquet: "
+
+		// Coalesce the data to be written to avoid writing lots of small files
+		val coalescedDayDataFrame = coalesce(dayDataFrame.sqlContext, dayDataFrame, partitions)
+
+		// Write the records for this date to a date-specific folder (year-month-day)
+		// DataFrame.saveAsParquetFile doesn't allow specifying SaveMode.
+		// save() is an experimental API in Spark 1.3.0.
+		// save() is deprecated in Spark 1.4.0 and replaced by another experimental API: write().parquet()[.mode()]
+		val path = basePath + "/" + year + "/" + month.toString + "/" + dayOfMonth.toString
+		logger.debug(fname + "Coalesced data to " + partitions + " partitions. Writing data to: " + path)
+		coalescedDayDataFrame.save(path, SaveMode.Append)
+	}
+
+	/**
+	 * Write date-specific data to HDFS.
+	 *
+	 * Only the content of the first column of each record will be appended to the text file,
+	 * newline-separated, and compressed using Gzip.
+	 *
+	 * @param hdfsUri The URI to HDFS
+	 * @param path The destination base directory to write the data
+	 * @param dayDataFrame The day-specific data to write.
+	 * @param dayOfMonth The day-of-month
+	 * @param month The month
+	 * @param year The year
+	 */
+	def writeDateSpecificDataToHdfs(hdfsUri: String, path: String, partitions: Option[Int] = None)
+		(dayDataFrame: DataFrame,
+			dayOfMonth: Int,
+			month: Int,
+			year: Int) : Unit = {
+
+		val fname = "writeDaySpecificDataToHdfs: "
+		val dateDir = path + "/" + year + "/" + month + "/" + dayOfMonth
+
+		// Coalesce the data to be written to avoid writing lots of small files
+		val coalescedDayDataFrame = coalesce(dayDataFrame.sqlContext, dayDataFrame, partitions)
+		logger.debug(fname + "Coalesced data to " + partitions + " partitions")
+
+		// Write all of the records to HDFS, using partition-specific files to ensure
+		// every writer can get a lease.
+		coalescedDayDataFrame.foreachPartition { partitionRecords =>
+
+			val taskLogger = Logger(this.getClass.getName)
+
+			// Connect to HDFS file system
+			taskLogger.debug(fname + "Attempting to connect to HDFS at URI: " + hdfsUri)
+			val uri = new URI(hdfsUri)
+			val configuration = new Configuration()
+			val hdfs = FileSystem.get(uri, configuration)
+			val codecFactory = new CompressionCodecFactory(configuration)
+			taskLogger.debug(fname + "Successfully connected to HDFS at URI: " + hdfsUri)
+
+			// Create an HDFS compressed writer for this partition
+			val codec = codecFactory.getCodecByClassName(classOf[GzipCodec].getName)
+			val fileName = dateDir + "/part-" + TaskContext.get().partitionId() + codec.getDefaultExtension()
+			val pathObj = new Path(fileName)
+			val dataOs =
+				if (hdfs.exists(pathObj)) {
+					taskLogger.debug(fname + "File: " + fileName + " already exists. Append to it.")
+					hdfs.append(pathObj)
+				}
+				else {
+					taskLogger.debug(fname + "File: " + fileName + " does not exist. Create a new file")
+					hdfs.create(pathObj, false /*throw if file exists*/)
+				}
+			val os = codec.createOutputStream(dataOs)
+			val writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"))
+
+			// Write all the records for this partition and close the file
+			var counter = 0
+			partitionRecords.foreach( record => {
+				counter += 1
+				val content = record(0).asInstanceOf[String] + "\n"
+				writer.write(content)
+			})
+			writer.close()
+			taskLogger.debug(fname + "Finished writing " + counter + " records to file: " + fileName)
+		} // foreachpartition
 	}
 
 	/**
@@ -157,6 +482,187 @@ object PipelineOperations {
 		}
 
 		PipelineData(reader.sqlc, dataFrame)
+	}
+
+	/**
+	 * Load data from lines of text using CSVReader.
+	 * The arguments map will be passed through to that object, so all arguments required
+	 * for its configuration should be set in the map.
+	 *
+	 * @param records An RDD containing lines of text (CSV records).
+	 * @param argumentSource Arguments to forward to the CSVReader.
+	 * @param partitions Number of partitions to load data into.
+	 * @param data Not used.
+	 * @return PipelineData with a schema RDD populated from the CSV file.
+	 */
+	def loadCsvDataOp(records: RDD[String], argumentSource: KeyValueArgumentSource, partitions: Option[Int])(data: PipelineData): PipelineData = {
+		val context = data.sqlContext
+		val reader = new CSVReader(context, records, argumentSource)
+		val dataFrame = coalesce(context, reader.asDataFrame, partitions)
+		PipelineData(reader.sqlc, dataFrame)
+	}
+
+	/**
+	 * Check whether this JSON array is empty / all elements are null.
+	 * If any of the elements in the array are JSON objects or are comprised of JSON Objects:
+	 * - This will strip those JSON objects of any null fields, modifying the content of the array.
+	 * - If all of these JSON objects have all null fields, the array is considered to be null as well
+	 *
+	 * @param jsonArray The JSON array
+	 * @return True if the array is empty or all elements are null, false otherwise.
+	 */
+	private def purgeNullFieldsFromJsonArray(jsonArray: JSONArray): Boolean = {
+		// Return true if it's an empty array
+		if (jsonArray.length == 0)
+			true
+		else {
+			// Determine if all of the fields of this array are null
+			var isAllNull = true
+			var index = 0
+			while (isAllNull && index < jsonArray.length) {
+				if (!jsonArray.isNull(index)) {
+					var element = jsonArray.get(index)
+
+					// If the element is a JSON object, check whether this
+					// JSON object is null
+					if (element.isInstanceOf[JSONObject]) {
+						val isNull = purgeNullFieldsFromJsonObject(element.asInstanceOf[JSONObject])
+						if (!isNull)
+							isAllNull = false
+					}
+					// If the element is a nested JSON array, check whether
+					// this JSON array is null / empty
+					else if (element.isInstanceOf[JSONArray]) {
+						val isNull = purgeNullFieldsFromJsonArray(element.asInstanceOf[JSONArray])
+						if (!isNull)
+							isAllNull = false
+					}
+					else {
+						// Else it is a primitive type
+						isAllNull = false
+					}
+				}
+				index += 1
+			} // while
+
+			// Return whether all of the fields of this array are null
+			isAllNull
+		}
+	}
+
+	/**
+	 * Purge null fields from the JSON Object.
+	 * This method will modify the input object.
+	 *
+	 * @param jsonObject The JSON object
+	 * @return True if all of the fields in the object are null, false otherwise.
+	 */
+	private def purgeNullFieldsFromJsonObject(jsonObject: JSONObject): Boolean = {
+		// Iterate all of the keys of this JSONObject and
+		// remove keys will null values
+		var keyIterator = jsonObject.keys()
+		while (keyIterator.hasNext()) {
+
+			var shouldRemoveKey = false
+			val key: String = keyIterator.next().asInstanceOf[String]
+			if (jsonObject.isNull(key)) {
+				// If key has a null value, just remove it.
+				shouldRemoveKey = true
+			}
+			else {
+				// The value for this key is not null.
+				// If the value is a JSONObject, recursively check its fields for
+				// null and strip them.
+				val child: Object = jsonObject.get(key)
+				if (child.isInstanceOf[JSONObject])
+					shouldRemoveKey = purgeNullFieldsFromJsonObject(child.asInstanceOf[JSONObject])
+				// If the value is a JSONArray, remove it if it's empty or all elements
+				// are null. If any elements are JSONObjects or are comprised of
+				// JSONObjects, this will strip those of null fields as well
+				else if (child.isInstanceOf[JSONArray])
+					shouldRemoveKey = purgeNullFieldsFromJsonArray(child.asInstanceOf[JSONArray])
+				// Else it is a primitive type. Leave it.
+			}
+
+			// Remove key-value if null
+			if (shouldRemoveKey) {
+				keyIterator.remove()
+				jsonObject.remove(key)
+			}
+		}
+
+		// We have stripped all of the nulls from this JSONObject.
+		// If there are no keys left, return true - the object is null.
+		// Otherwise, return false.
+		!jsonObject.keys().hasNext()
+	}
+
+	/**
+	 * Purge null fields from the JSON string
+	 * Note that we lose the distinction between "null" and "unspecified" by applying this method.
+	 * However, this method is required to work around an issue where Spark interprets null fields
+	 * as String data type:
+	 * https://mail-archives.apache.org/mod_mbox/spark-user/201507.mbox/%3CCABtLTB=P-U8Rrjg8r0YHrSFO+9bgQ6OsSwrkT8v=DBWUep6h4A@mail.gmail.com%3E
+	 *
+	 * @param jsonString The JSON string
+	 * @return The JSON string, stripped of any null fields. Empty string if all fields are null.
+	 */
+	def purgeNullFieldsFromJsonString(jsonString: String): String = {
+
+		// If the JSON string is null or empty, return empty string
+		if (jsonString == null || jsonString.isEmpty)
+			return ""
+
+		// Otherwise, do a more thorough inspection on the string
+		val jsonObject = new JSONObject(jsonString)
+		val isNull = purgeNullFieldsFromJsonObject(jsonObject)
+		if (isNull)
+			""
+		else
+			jsonObject.toString
+	}
+
+	/**
+	 * Purge null fields from the JSON strings.
+	 * Note that we lose the distinction between "null" and "unspecified" by applying this method.
+	 * However, this method is required to work around an issue where Spark interprets null fields
+	 * as String data type:
+	 * https://mail-archives.apache.org/mod_mbox/spark-user/201507.mbox/%3CCABtLTB=P-U8Rrjg8r0YHrSFO+9bgQ6OsSwrkT8v=DBWUep6h4A@mail.gmail.com%3E
+	 *
+	 * @param jsonStrings RDD of JSON strings, where each string is a record / JSON Object
+	 * @return RDD of JSON strings that have non-null values in all of the specified fields.
+	 */
+	def purgeNullFieldsFromJson(jsonStrings: RDD[String]): RDD[String] = {
+		if (logger.isDebugEnabled)
+			logger.debug("purgeNullFieldsFromJson: Enter with " + jsonStrings.count + " strings in RDD")
+		jsonStrings.map(x => purgeNullFieldsFromJsonString(x))
+	}
+
+	/**
+	 * Pipeline op to add a new column to the PipelineData DataFrame
+	 * Note that the PipelineData DataFrame and the RDD must have the
+	 * same number of partitions.
+	 *
+	 * @param columnName The name of the column to add
+	 * @param columnValues The values of the column to add
+	 * @param input Input pipeline data to transform
+	 * @return Transformed pipeline data with the new columns and values.
+	 */
+	def addColumnOp[T: ClassTag] (columnName: String, columnValues: RDD[T])
+		              (input: PipelineData): PipelineData = {
+		PipelineData(input.sqlContext, SchemaTypeUtilities.zip[T](input.srdd, columnValues, columnName))
+	}
+
+	/**
+	 * Pipeline op to remove columns from the PipelineData DataFrame
+	 *
+	 * @param columnNames The names of the columns to remove
+	 * @param input Input pipeline data to transform
+	 * @return Transformed pipeline data with the specified columns removed.
+	 */
+	def removeColumnOp (columnNames: Set[String])
+		                 (input: PipelineData): PipelineData = {
+		PipelineData(input.sqlContext, SchemaTypeUtilities.removeColumns(input.srdd, columnNames))
 	}
 
 	/**
@@ -315,7 +821,10 @@ object PipelineOperations {
 		val inputTable = getOrGenTableName(input, "mercator_filter_op")
 		val pyramid = new WebMercatorTilePyramid
 		val area = pyramid.getTileBounds(new TileIndex(0, 0, 0))
-		val selectStatement = "SELECT * FROM "+inputTable+" WHERE `" + latCol + "` >= "+area.getMinY+" AND `" + latCol + "` < "+area.getMaxY
+		// Don't backtick-quote the column names.
+		// When using a schema with nested arrays, using backtick-quotes around the element access will fail.
+		// E.g. `array[0]` will fail. It must be array[0] or `array`[0]
+		val selectStatement = "SELECT * FROM " + inputTable + " WHERE " + latCol + " >= " + area.getMinY + " AND " + latCol + " < " + area.getMaxY
 		val outputTable = input.sqlContext.sql(selectStatement)
 		PipelineData(input.sqlContext, outputTable)
 	}

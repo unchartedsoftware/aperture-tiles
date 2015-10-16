@@ -30,6 +30,7 @@ import java.lang.{Long => JavaLong}
 import java.lang.{Double => JavaDouble}
 
 import org.apache.spark.SharedSparkContext
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types.ArrayType
 import org.scalatest.FunSuite
 
@@ -339,4 +340,70 @@ class SchemaTypeUtilitiesSparkTestSuite extends FunSuite with SharedSparkContext
 			assert(d === (1.0 + a) * c)
 		}
 	}
+
+	test("Column removal") {
+
+		val localSqlc = sqlc
+		import localSqlc._
+
+		// Generate test data
+		val jsonData = sc.parallelize(1 to 10).map(n => "{\"a\": %d, \"b\": %d, \"c\": %d}".format(n, n*n, 11-n))
+		val data = localSqlc.jsonRDD(jsonData)
+
+		// Remove columns
+		val resultDf = removeColumns(data, Set("a", "c"))
+
+		// Check the output
+		assert(resultDf.schema.fieldNames.length == 1)
+		assert(resultDf.schema.fieldNames(0) == "b")
+		var counter = 1
+		resultDf.collect().foreach { row =>
+			assert(row.getLong(0) == counter*counter)
+			counter += 1
+		}
+	}
+
+	test("Zip") {
+		val localSqlc = sqlc
+		import localSqlc._
+
+		// Generate test data
+		val jsonData = sc.parallelize(1 to 10).map(n => "{\"a\": %d, \"b\": %d, \"c\": %d}".format(n, n*n, 11-n))
+		val data = localSqlc.jsonRDD(jsonData)
+
+		// Add a string column
+		val stringRdd : RDD[String] = sc.parallelize(1 to 10).map(n => n.toString)
+		val resultDf1 = zip[String](data, stringRdd, "d")
+
+		// Add an integer column
+		val intRdd : RDD[Integer] = sc.parallelize(1 to 10).map(n => 2 * n)
+		val resultDf2 = zip[Integer](resultDf1, intRdd, "e")
+
+		// Add a double column
+		val doubleRdd : RDD[Double] = sc.parallelize(1 to 10).map(n => n * 0.1)
+		val resultDf3 = zip[Double](resultDf2, doubleRdd, "f")
+
+		val resultDf = resultDf3
+
+		// Check the schema
+		assert(resultDf.schema.fieldNames.length == 6)
+		var counter = 0
+		for (c <- 'a' to 'f') {
+			assert(resultDf.schema.fieldNames(counter) == c.toString)
+			counter += 1
+		}
+
+		// Check the data
+		counter = 1
+		resultDf.collect().foreach { row =>
+			assert(row.getLong(0) == counter)
+			assert(row.getLong(1) == counter*counter)
+			assert(row.getLong(2) == 11-counter)
+			assert(row.getString(3) == counter.toString)
+			assert(row.getInt(4) == 2 * counter)
+			assert((row.getDouble(5) - (counter * 0.1)).abs < 0.000000001)
+			counter += 1
+		}
+	}
+
 }
