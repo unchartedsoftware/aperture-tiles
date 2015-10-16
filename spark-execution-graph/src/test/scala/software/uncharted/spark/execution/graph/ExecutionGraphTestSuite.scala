@@ -28,6 +28,7 @@ package software.uncharted.spark.execution.graph
 
 
 
+import scala.collection.mutable.Buffer
 import org.scalatest.FunSuite
 import ExecutionGraphData._
 
@@ -120,7 +121,7 @@ class ExecutionGraphTestSuite extends FunSuite {
       val aD :: endNil = input
       val newValue = (aD*45).round/10.0
       newValue :: EGDNil
-    }, n1c :: n1d :: EGNINil)
+    }, n1c :: n1d :: UncachedNil)
 
     val n3a = node((s: String) => s + s, n2a)
     val n3b = node((s: String, d: Double) =>
@@ -134,5 +135,63 @@ class ExecutionGraphTestSuite extends FunSuite {
     testResult("""{"string-value": "3=1", "double-value": 5.4}""")(n3b)
     testResult("5.4:5.4")(n3c)
     testResult(10.8)(n3d)
+  }
+
+  def wrapOrderRecorder0[T, O] (orderRecord: Buffer[T], orderNode: T)(fcn: () => O): () => O = () => {
+    orderRecord += orderNode
+    fcn()
+  }
+
+  def wrapOrderRecorder1[T, A, O] (orderRecord: Buffer[T], orderNode: T)(fcn: A => O): A => O = a => {
+    orderRecord += orderNode
+    fcn(a)
+  }
+
+  def wrapOrderRecorder2[T, A, B, O] (orderRecord: Buffer[T], orderNode: T)(fcn: (A, B) => O): (A, B) => O = (a, b) => {
+    orderRecord += orderNode
+    fcn(a, b)
+  }
+
+  test("Test execution without caching") {
+    // Make sure source nodes are called repeatedly if no caching is requested
+    val order = Buffer[String]()
+
+    val a = node(wrapOrderRecorder0(order, "a")(() => 1))
+    val b = node(wrapOrderRecorder1(order, "b")((n: Int) => n + 1), a)
+    val c = node(wrapOrderRecorder1(order, "c")((n: Int) => n + 1), b)
+    val d = node(wrapOrderRecorder1(order, "d")((n: Int) => n + 1), b)
+    val e = node(wrapOrderRecorder2(order, "e")((n1: Int, n2: Int) => n1 + n2), c, d)
+
+    testResult(6)(e)
+    assert(List("a", "b", "c", "a", "b", "d", "e") === order.toList)
+  }
+
+  test("Test execution output caching") {
+    // Make sure two nodes branched off the same input node only call it once.
+    val order = Buffer[String]()
+
+    val a = node(wrapOrderRecorder0(order, "a")(() => 1))
+    val b = node(wrapOrderRecorder1(order, "b")((n: Int) => n + 1), a, CacheType.CACHE_OUTPUT)
+    val c = node(wrapOrderRecorder1(order, "c")((n: Int) => n + 1), b)
+    val d = node(wrapOrderRecorder1(order, "d")((n: Int) => n + 1), b)
+    val e = node(wrapOrderRecorder2(order, "e")((n1: Int, n2: Int) => n1 + n2), c, d)
+
+    testResult(6)(e)
+    assert(List("a", "b", "c", "d", "e") === order.toList)
+  }
+
+  test("Test execution input caching") {
+    // Make sure two nodes branched off the same input node call it twice (but only call its parent once) if its
+    // input, but not its output, is cached.
+    val order = Buffer[String]()
+
+    val a = node(wrapOrderRecorder0(order, "a")(() => 1))
+    val b = node(wrapOrderRecorder1(order, "b")((n: Int) => n + 1), a, CacheType.CACHE_INPUT)
+    val c = node(wrapOrderRecorder1(order, "c")((n: Int) => n + 1), b)
+    val d = node(wrapOrderRecorder1(order, "d")((n: Int) => n + 1), b)
+    val e = node(wrapOrderRecorder2(order, "e")((n1: Int, n2: Int) => n1 + n2), c, d)
+
+    testResult(6)(e)
+    assert(List("a", "b", "c", "b", "d", "e") === order.toList)
   }
 }
