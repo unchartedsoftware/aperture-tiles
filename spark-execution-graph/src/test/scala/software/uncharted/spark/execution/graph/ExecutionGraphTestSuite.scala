@@ -34,29 +34,30 @@ import ExecutionGraphData._
 
 
 class ExecutionGraphTestSuite extends FunSuite {
+  import ExecutionGraphNode._
   /** Helper function to simplify and clarify checking execution results */
   def testResult[D](expected: D)(stage: ExecutionGraphNode[D :: EGDNil]): Unit = {
     val result :: endNil = stage.execute
     assert(result === expected)
   }
 
-  /** Simple helper function to simplify creation of no-input graph nodes */
-  def toPD[T] (t: T): T :: EGDNil = t :: EGDNil
-
-  /** Simple helper function to simplify creation of single-input graph nodes */
-  def fcn1[I, O] (baseFcn: I => O): I :: EGDNil => O :: EGDNil =
-    inputWithNil => {
-      val input :: endNil = inputWithNil
-      baseFcn(input) :: EGDNil
-    }
+//  /** Simple helper function to simplify creation of no-input graph nodes */
+//  def toPD[T] (t: T): T :: EGDNil = t :: EGDNil
+//
+//  /** Simple helper function to simplify creation of single-input graph nodes */
+//  def fcn1[I, O] (baseFcn: I => O): I :: EGDNil => O :: EGDNil =
+//    inputWithNil => {
+//      val input :: endNil = inputWithNil
+//      baseFcn(input) :: EGDNil
+//    }
 
   test("Linear pipeline example") {
     //  simple example:
     //     a --> b --> c --> d
-    val stageA = ExecutionGraphNode(toPD(1))
-    val stageB = ExecutionGraphNode(fcn1((n: Int) => n + 4), stageA)
-    val stageC = ExecutionGraphNode(fcn1((n: Int) => n*1.5), stageB)
-    val stageD = ExecutionGraphNode(fcn1((d: Double) => (d*2).toInt), stageC)
+    val stageA = node(() => 1)
+    val stageB = node((n: Int) => n+4, stageA)
+    val stageC = node((n: Int) => n*1.5, stageB)
+    val stageD = node((d: Double) => (d*2).toInt, stageC)
 
     testResult(1)(stageA)
     testResult(5)(stageB)
@@ -74,15 +75,14 @@ class ExecutionGraphTestSuite extends FunSuite {
     //     |     /  \
     //     |    /    \
     //    3a  3b      3c
+    val stage1A = node(() => "abcd")
 
-    val stage1A = ExecutionGraphNode(toPD("abcd"))
+    val stage2A = node((s: String) => s + ": efgh", stage1A)
+    val stage2B = node((s: String) => s.length, stage1A)
 
-    val stage2A = ExecutionGraphNode(fcn1((s: String) => s + ": efgh"), stage1A)
-    val stage2B = ExecutionGraphNode(fcn1((s: String) => s.length), stage1A)
-
-    val stage3A = ExecutionGraphNode(fcn1((s: String) => s.split(":").map(_.trim).toList), stage2A)
-    val stage3B = ExecutionGraphNode(fcn1((n: Int) => "length was "+n), stage2B)
-    val stage3C = ExecutionGraphNode(fcn1((n: Int) => n*1.5), stage2B)
+    val stage3A = node((s: String) => s.split(":").map(_.trim).toList, stage2A)
+    val stage3B = node((n: Int) => "length was "+n, stage2B)
+    val stage3C = node((n: Int) => n*1.5, stage2B)
 
     testResult("abcd")(stage1A)
     testResult("abcd: efgh")(stage2A)
@@ -105,42 +105,34 @@ class ExecutionGraphTestSuite extends FunSuite {
     //    val node2a = new Node(2a) from new Node(1a) andFrom new Node(1b) to new Node(3a)
     //    val node2b = new Node(2b) from new Node(1c) andFrom new Node(1d) to new Node(3c) andTo new Node(3d)
     //    val node3b = new Node(3b) from node2a andFrom node2b
-    val n1a = ExecutionGraphNode(1 :: EGDNil)
-    val n1b = ExecutionGraphNode("1" :: EGDNil)
-    val n1c = ExecutionGraphNode(1.2 :: EGDNil)
-    val n1d: ExecutionGraphNode[EGDNil] = ExecutionGraphNode(EGDNil)
+    val n1a = node(() => 1)
+    val n1b = node(() => "1")
+    val n1c = node(() => 1.2)
+    // Standard helper functions won't construct a nil-output node.
+    // We use "new EGDNil" instead of "EGDNil" because the latter has type EGDNil.type, instead of type EGDNil
+    // (because it is a case object that inherits EGDNil, instead of being a plain EGDNil).
+    val n1d = advancedNode(new EGDNil)
 
-    val n2a = ExecutionGraphNode((input: Int :: String :: EGDNil) => {
-      val aI :: bS :: endNil = input
-      ((aI * 3) + "=" + bS) :: EGDNil
-    }, n1a :: n1b :: EGNINil)
-    testResult("3=1")(n2a)
-    val n2b = ExecutionGraphNode((input:Double :: EGDNil) => {
+    val n2a = node((n: Int, s: String) => (n*3) + "=" + s, n1a, n1b)
+
+    // Because one input has no output, this can't use our standard helper functions
+    val n2b = advancedNode((input:Double :: EGDNil) => {
       val aD :: endNil = input
       val newValue = (aD*45).round/10.0
       newValue :: EGDNil
     }, n1c :: n1d :: EGNINil)
-    testResult(5.4)(n2b)
 
-    val n3a = ExecutionGraphNode((input: String :: EGDNil) => {
-      val value :: endnil = input
-      (value + value) :: EGDNil
-    }, n2a)
+    val n3a = node((s: String) => s + s, n2a)
+    val n3b = node((s: String, d: Double) =>
+      """{"string-value": "%s", "double-value": %.1f}""".format(s, d), n2a, n2b)
+    val n3c = node((d: Double) => d+":"+d, n2b)
+    val n3d = node((d: Double) => d+d, n2b)
+
+    testResult("3=1")(n2a)
+    testResult(5.4)(n2b)
     testResult("3=13=1")(n3a)
-    val n3b = ExecutionGraphNode((input: String :: Double :: EGDNil) => {
-      val aS :: dD :: endNil = input
-      """{"string-value": "%s", "double-value": %.1f}""".format(aS, dD) :: EGDNil
-    }, n2a :: n2b :: EGNINil)
     testResult("""{"string-value": "3=1", "double-value": 5.4}""")(n3b)
-    val n3c = ExecutionGraphNode((input: Double :: EGDNil) => {
-      val value :: endnil = input
-      (value + ":" + value) :: EGDNil
-    }, n2b)
     testResult("5.4:5.4")(n3c)
-    val n3d = ExecutionGraphNode((input: Double :: EGDNil) => {
-      val value :: endnil = input
-      (value + value) :: EGDNil
-    }, n2b)
     testResult(10.8)(n3d)
   }
 }

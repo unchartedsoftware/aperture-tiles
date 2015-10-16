@@ -41,17 +41,65 @@ sealed trait ExecutionGraphNode[O <: ExecutionGraphData] {
   def execute: O
 }
 object ExecutionGraphNode {
-  def apply[O <: ExecutionGraphData] (data: O): ExecutionGraphNode[O] = {
+  // Old, possibly obsolete construction helpers; see the node(...) alternatives below.
+  // These versions are required to handle output of other than 1 (0 or (2 or more)) nodes.  It's not clear to me
+  // if that's a useful thing to have or not.  If not, we can get rid of the NoInput... and SingleInput
+  // ExecutionGraphNodes.
+  def advancedNode[O <: ExecutionGraphData] (data: O): ExecutionGraphNode[O] = {
     new NoInputExecutionGraphNode[O](data)
   }
-
-  def apply[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O, parent: ExecutionGraphNode[I]): ExecutionGraphNode[O] = {
+  def advancedNode[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O, parent: ExecutionGraphNode[I]): ExecutionGraphNode[O] = {
     new SingleInputExecutionGraphNode[I, O](fcn)(parent)
   }
-
-  def apply[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O, parents: ExecutionGraphNodeInputContainer[I]): ExecutionGraphNode[O] = {
+  def advancedNode[I <: ExecutionGraphData, O <: ExecutionGraphData] (fcn: I => O, parents: ExecutionGraphNodeInputContainer[I]): ExecutionGraphNode[O] = {
     new MultiInputExecutionGraphNode[I, O](fcn)(parents)
   }
+
+
+  // Alternate construction method, possibly easier to use
+  // These helper functions all assume single-valued output
+  def node[O] (fcn: () => O): ExecutionGraphNode[O :: EGDNil] =
+    new MultiInputExecutionGraphNode[EGDNil, O :: EGDNil](input => fcn() :: EGDNil)(EGNINil)
+  def node[A, O] (fcn: A => O,
+                  parentA: ExecutionGraphNode[A :: EGDNil]): ExecutionGraphNode[O :: EGDNil] =
+    new MultiInputExecutionGraphNode[A :: EGDNil, O :: EGDNil]((input: A :: EGDNil) => {
+      val a :: endNil = input
+      fcn(a) :: EGDNil
+    })(parentA :: EGNINil)
+  def node[A, B, O] (fcn: (A, B) => O,
+                     parentA: ExecutionGraphNode[A :: EGDNil],
+                     parentB: ExecutionGraphNode[B :: EGDNil]): ExecutionGraphNode[O :: EGDNil] =
+    new MultiInputExecutionGraphNode[A :: B :: EGDNil, O :: EGDNil]((input: A :: B :: EGDNil) => {
+      val a :: b :: endNil = input
+      fcn(a, b) :: EGDNil
+    })(parentA :: parentB :: EGNINil)
+  def node[A, B, C, O] (fcn: (A, B, C) => O,
+                        parentA: ExecutionGraphNode[A :: EGDNil],
+                        parentB: ExecutionGraphNode[B :: EGDNil],
+                        parentC: ExecutionGraphNode[C :: EGDNil]): ExecutionGraphNode[O :: EGDNil] =
+    new MultiInputExecutionGraphNode[A :: B :: C :: EGDNil, O :: EGDNil]((input: A :: B :: C :: EGDNil) => {
+      val a :: b :: c :: endNil = input
+      fcn(a, b, c) :: EGDNil
+    })(parentA :: parentB :: parentC :: EGNINil)
+  def node[A, B, C, D, O] (fcn: (A, B, C, D) => O,
+                           parentA: ExecutionGraphNode[A :: EGDNil],
+                           parentB: ExecutionGraphNode[B :: EGDNil],
+                           parentC: ExecutionGraphNode[C :: EGDNil],
+                           parentD: ExecutionGraphNode[D :: EGDNil]): ExecutionGraphNode[O :: EGDNil] =
+    new MultiInputExecutionGraphNode[A :: B :: C :: D :: EGDNil, O :: EGDNil]((input: A :: B :: C :: D :: EGDNil) => {
+      val a :: b :: c :: d :: endNil = input
+      fcn(a, b, c, d) :: EGDNil
+    })(parentA :: parentB :: parentC :: parentD :: EGNINil)
+  def node[A, B, C, D, E, O] (fcn: (A, B, C, D, E) => O,
+                              parentA: ExecutionGraphNode[A :: EGDNil],
+                              parentB: ExecutionGraphNode[B :: EGDNil],
+                              parentC: ExecutionGraphNode[C :: EGDNil],
+                              parentD: ExecutionGraphNode[D :: EGDNil],
+                              parentE: ExecutionGraphNode[E :: EGDNil]): ExecutionGraphNode[O :: EGDNil] =
+    new MultiInputExecutionGraphNode[A :: B :: C :: D :: E :: EGDNil, O :: EGDNil]((input: A :: B :: C :: D :: E:: EGDNil) => {
+      val a :: b :: c :: d :: e :: endNil = input
+      fcn(a, b, c, d, e) :: EGDNil
+    })(parentA :: parentB :: parentC :: parentD :: parentE :: EGNINil)
 }
 
 /**
