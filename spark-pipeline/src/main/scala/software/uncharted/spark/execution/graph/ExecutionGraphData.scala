@@ -1,16 +1,58 @@
+/*
+ * Copyright © 2013-2015 Uncharted Software Inc.
+ *
+ * Property of Uncharted™, formerly Oculus Info Inc.
+ * http://uncharted.software/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package software.uncharted.spark.execution.graph
 
-import software.uncharted.spark.execution.graph.typesupport.Foldable
+
 
 import scala.language.higherKinds
 import scala.language.implicitConversions
 import ExecutionGraphData._
 
+import software.uncharted.spark.execution.graph.typesupport.Foldable
+
 
 
 /**
+ * A trait describing the data passed from one or more nodes of an execution graph to a single subsequent node.  Using
+ * a container type rather than a simple type allows us to form graphs, where a node takes input from not one, but
+ * from an arbitrary number of input nodes.
+ *
+ * Essentially, this type is a linked meta-list of the individual datum types required by a node.
+ *
  * Created by nkronenfeld on 10/15/2015.
  */
+sealed trait ExecutionGraphData {
+  type Head
+  type Tail <: ExecutionGraphData
+
+  type FoldR[Value, F <: Foldable[Any, Value], I <: Value] <: Value
+  def foldR[Value, F <: Foldable[Any, Value], I <: Value](f: F, i: I): FoldR[Value, F, I]
+}
+
 object ExecutionGraphData {
   // type alias for writing EGDCons[H, T] as H :: T
   type ::[H, T <: ExecutionGraphData] = EGDCons[H, T]
@@ -33,14 +75,13 @@ object ExecutionGraphData {
   }
 }
 
-sealed trait ExecutionGraphData {
-  type Head
-  type Tail <: ExecutionGraphData
-
-  type FoldR[Value, F <: Foldable[Any, Value], I <: Value] <: Value
-  def foldR[Value, F <: Foldable[Any, Value], I <: Value](f: F, i: I): FoldR[Value, F, I]
-}
-
+/**
+ * An single cons cell in the linked meta-list that is an ExecutionGraphData
+ * @param head The first element
+ * @param tail The rest of the elements
+ * @tparam H The type of the first element
+ * @tparam T The conglomerated type of the rest of the elements
+ */
 final case class EGDCons[H, T <: ExecutionGraphData] (head: H, tail: T) extends ExecutionGraphData {
   type Head = H
   type Tail = T
@@ -52,6 +93,9 @@ final case class EGDCons[H, T <: ExecutionGraphData] (head: H, tail: T) extends 
   def ::[HH] (newHead: HH) = EGDCons(newHead, this)
 }
 
+/**
+ * A representation of an empty input
+ */
 sealed class EGDNil extends ExecutionGraphData {
   type Head = Nothing
   type Tail = EGDNil
@@ -66,6 +110,10 @@ sealed class EGDNil extends ExecutionGraphData {
 // use new EGDNil instead..
 object EGDNil extends EGDNil
 
+/**
+ * An operations type representing operations that can be performed on ExecutionGraphNodes
+ * @tparam B The type of the element on the right-hand side of these operations.
+ */
 sealed trait EGDataOps[B <: ExecutionGraphData] {
   def :::[A <: ExecutionGraphData](a: A): A ::: B
   def ::[A](b: A): A :: B

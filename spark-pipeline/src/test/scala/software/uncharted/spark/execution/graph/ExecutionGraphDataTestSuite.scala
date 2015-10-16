@@ -1,3 +1,29 @@
+/*
+ * Copyright © 2013-2015 Uncharted Software Inc.
+ *
+ * Property of Uncharted™, formerly Oculus Info Inc.
+ * http://uncharted.software/
+ *
+ * Released under the MIT License.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package software.uncharted.spark.execution.graph
 
 import org.scalatest.FunSuite
@@ -25,5 +51,15 @@ class ExecutionGraphDataTestSuite extends FunSuite {
     assert(2 === b)
     assert(3 === c)
     assert(4 === d)
+  }
+  test("Test retrieval of a single datum") {
+    val eg = 1 :: "2" :: 3.0 :: EGDNil
+    import software.uncharted.spark.execution.graph.typesupport.TypeOrdinal._
+
+
+    val pd = 1 :: "2" :: 3.0 :: PDNil
+    assert(pd.i[_0].at === 1)
+    assert(pd.i[_1].at === "2")
+    assert(pd.i[_2].at === 3.0)
   }
 }
