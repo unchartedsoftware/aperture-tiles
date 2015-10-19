@@ -80,10 +80,11 @@ public class NumberStatisticImageRenderer implements TileDataImageRenderer<Numbe
 	@Override
 	public BufferedImage render(TileData<Number> data, LayerConfiguration config) {
 		BufferedImage bi;
-		String layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
-		TileIndex index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
+		String layerId = null;
+		TileIndex index = null;
 
 		try {
+			layerId = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 			index = config.getPropertyValue(LayerConfiguration.TILE_COORDINATE);
 			int width = config.getPropertyValue(LayerConfiguration.OUTPUT_WIDTH);
 			int height = config.getPropertyValue(LayerConfiguration.OUTPUT_HEIGHT);

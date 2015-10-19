@@ -27,6 +27,7 @@ package com.oculusinfo.binning.io.serialization.impl;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class PrimitiveAvroSerializerFactory<T> extends ConfigurableFactory<TileS
 	}
 
 	@Override
-	protected TileSerializer<T> create () {
+	protected TileSerializer<T> create () throws ConfigurationException {
 		return new PrimitiveAvroSerializer<>(_type, TileSerializerFactory.getCodecFactory(this));
 	}
 }

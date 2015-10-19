@@ -27,6 +27,7 @@ import com.oculusinfo.binning.io.DefaultPyramidIOFactoryProvider;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.DefaultTileSerializerFactoryProvider;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardImageRendererFactoryProvider;
 import com.oculusinfo.tile.init.providers.StandardLayerConfigurationProvider;
@@ -120,7 +121,7 @@ public class LayerServiceTests {
 	}
 
 	@Test
-	public void getLayerConfigurationTest() {
+	public void getLayerConfigurationTest() throws ConfigurationException {
 		LayerConfiguration layerConfig0 = _layerService.getLayerConfiguration( "test-layer0", null );
 		LayerConfiguration layerConfig1 = _layerService.getLayerConfiguration( "test-layer1", null );
 		System.out.println( layerConfig0.getPropertyValue( LayerConfiguration.LAYER_ID ) );

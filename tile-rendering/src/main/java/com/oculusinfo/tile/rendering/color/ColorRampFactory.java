@@ -104,7 +104,7 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 	}
 
 	@Override
-	protected ColorRamp create () {
+	protected ColorRamp create () throws ConfigurationException {
 		final String rampType = getPropertyValue(RAMP_TYPE);
 		final double opacity = 1.0; //getPropertyValue(OPACITY);
 		final String theme = getPropertyValue(THEME);
@@ -159,11 +159,11 @@ public class ColorRampFactory extends ConfigurableFactory<ColorRamp> {
 		// FLAT
 		} else if (rampType.equalsIgnoreCase("flat")) {
 			Color color = hasPropertyValue(COLOR1)?
-					ColorRampParameter.getColor(getPropertyValue(COLOR1)) : 
+					ColorRampParameter.getColor(getPropertyValue(COLOR1)) :
 						islight? new Color(55,55,55) : Color.WHITE;
-						
+
 			ramp = new FlatColorRamp(color, opacity);
-			
+
 		// LEGACY GRADIENT
 		} else if (rampType.equalsIgnoreCase("single-gradient")) {
 			int alpha1 = getPropertyValue(ALPHA1);

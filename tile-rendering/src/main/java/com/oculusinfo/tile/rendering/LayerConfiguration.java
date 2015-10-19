@@ -191,7 +191,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	}
 
 	@Override
-	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) throws ConfigurationException {
 		if (LOCAL_PROPERTIES.contains(property)) {
             if (TILE_COORDINATE.equals(property)) {
 				return property.getType().cast(_tileCoordinate);
@@ -222,8 +222,14 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 				Pair<Double, Double> extrema = tileTransformer.getTransformedExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
 			}
-		} catch (ConfigurationException e) {
-			LOGGER.warn("Error determining layer-specific extrema for "+getPropertyValue(LAYER_ID));
+		} catch (ConfigurationException e1) {
+			String layer;
+			try {
+				layer = getPropertyValue(LAYER_ID);
+			} catch (ConfigurationException e2) {
+				layer = "unknown layer";
+			}
+			LOGGER.warn("Error determining layer-specific extrema for "+layer);
 		}
 	}
 

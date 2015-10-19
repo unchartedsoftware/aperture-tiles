@@ -25,12 +25,14 @@ package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.factory.properties.StringProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -57,16 +59,14 @@ public class HBasePyramidIOFactory extends SharedInstanceFactory<PyramidIO> {
 	}
 
 	@Override
-	protected PyramidIO createInstance () {
+	protected PyramidIO createInstance () throws ConfigurationException {
 		try {
 			String quorum = getPropertyValue(HBASE_ZOOKEEPER_QUORUM);
 			String port = getPropertyValue(HBASE_ZOKEEPER_PORT);
 			String master = getPropertyValue(HBASE_MASTER);
 			return new HBasePyramidIO(quorum, port, master);
+		} catch (IOException e) {
+			throw new ConfigurationException("Exception creating HBase pyramid IO", e);
 		}
-		catch (Exception e) {
-			LOGGER.error("Error trying to create HBasePyramidIO", e);
-		}
-		return null;
 	}
 }
