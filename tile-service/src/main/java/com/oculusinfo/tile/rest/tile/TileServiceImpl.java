@@ -149,7 +149,7 @@ public class TileServiceImpl implements TileService {
 			return null;
 		}
 
-		data = tileCombiner.combine(data, index, serializer, coarseness, tileProperties);
+		data = tileCombiner.combine(data, index, coarseness, tileProperties);
 		data = tileTransformer.transform( data );
 		if ( data != null ) {
 			return renderer.render( data, config );
