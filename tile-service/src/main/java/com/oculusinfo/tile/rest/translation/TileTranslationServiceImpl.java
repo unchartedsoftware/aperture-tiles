@@ -29,7 +29,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.tile.rest.config.ConfigException;
 import com.oculusinfo.tile.rest.config.ConfigPropertiesService;
-import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -112,7 +111,7 @@ public class TileTranslationServiceImpl implements TileTranslationService {
 		JSONObject result = null;
 		String srcParam = sourceLang != null ? "&source=" + sourceLang : "";
 		try {
-			String urlStr = endpoint + "?key=" + key + "&q=" + URIUtil.encodeQuery(text) + "&target=" + targetLang + srcParam;
+			String urlStr = endpoint + "?key=" + key + "&q=" + text + "&target=" + targetLang + srcParam;
 			URL url = new URL( urlStr );
 
 			HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();

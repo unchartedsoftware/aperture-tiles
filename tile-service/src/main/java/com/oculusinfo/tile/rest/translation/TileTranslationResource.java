@@ -29,6 +29,7 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -47,12 +48,28 @@ public class TileTranslationResource extends ServerResource {
 	}
 
 
+	@Post("json")
+	public Representation translate(JsonRepresentation jsonRepresentation) throws ResourceException {
+		try {
+			// No alternate versions supported. But if we did:
+			String version = (String) getRequest().getAttributes().get("version");
+			if ( version == null ) {
+				version = LayerConfiguration.DEFAULT_VERSION;
+			}
+			JSONObject arguments = jsonRepresentation.getJsonObject();
+			return new JsonRepresentation( _service.getTranslation(arguments) );
+
+		} catch ( Exception e) {
+			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+				"Unable to translate text. Check parameters.", e);
+		}
+	}
     /**
      * GET request. Returns a JSON response from the translation service specified
      */
-	@Get 
+	@Get
 	public Representation translate() throws ResourceException {
-		// get the params from 
+		// get the params from
 		try {
 			// No alternate versions supported. But if we did:
 			String version = (String) getRequest().getAttributes().get("version");
