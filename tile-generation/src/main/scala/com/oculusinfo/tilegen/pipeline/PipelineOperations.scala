@@ -28,7 +28,6 @@
 package com.oculusinfo.tilegen.pipeline
 
 
-
 import java.io.OutputStream
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -40,13 +39,14 @@ import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCollectorAccumulable}
 import com.oculusinfo.tilegen.datasets.{CSVReader, SchemaTypeUtilities, TilingTask, TilingTaskParameters}
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
-import com.oculusinfo.tilegen.tiling.{HBaseTileIO, LocalTileIO, TileIO}
-import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import com.oculusinfo.tilegen.tiling._
+import com.oculusinfo.tilegen.util.{ExtendedNumeric, KeyValueArgumentSource}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataType, IntegerType, TimestampType}
 import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import org.joda.time.{DurationFieldType, Interval, PeriodType}
 
+import scala.reflect.ClassTag
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -544,6 +544,89 @@ object PipelineOperations {
 		tilingTask.doTiling(tileIO)
 
 		PipelineData(input.sqlContext, input.srdd, Option(tableName))
+	}
+
+	def heatMapBlurredImpl(xColSpec: String,
+	                       yColSpec: String,
+	                       tilingParams: TilingTaskParameters,
+	                       hbaseParameters: Option[HBaseParameters],
+	                       operation: OperationType = COUNT,
+	                       valueColSpec: Option[String] = None,
+	                       valueColType: Option[String] = None)
+	                      (input: PipelineData) = {
+		val tileIO = hbaseParameters match {
+			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
+			case None => new LocalTileIO("avro")
+		}
+		val properties = Map("oculus.binning.projection.type" -> "webmercator")
+
+		// Populate baseline args
+		val args = Map(
+			"oculus.binning.name" -> tilingParams.name,
+			"oculus.binning.description" -> tilingParams.description,
+			"oculus.binning.tileWidth" -> tilingParams.tileWidth.toString,
+			"oculus.binning.tileHeight" -> tilingParams.tileHeight.toString,
+			"oculus.binning.index.type" -> "cartesian",
+			"oculus.binning.index.field.0" -> xColSpec,
+			"oculus.binning.index.field.1" -> yColSpec)
+
+		val (valueProps, numeric) = operation match {
+			case SUM | MAX | MIN | MEAN =>
+				(Map("oculus.binning.value.type" -> "field",
+				     "oculus.binning.value.field" -> valueColSpec.get,
+				     "oculus.binning.value.valueType" -> valueColType.get,
+				     "oculus.binning.value.aggregation" -> operation.toString.toLowerCase,
+				     "oculus.binning.value.serializer" -> s"[${valueColType.get}]-a"),
+				 valueColType.get match {
+					 case "double-a" => ExtendedNumeric.ExtendedDouble
+					 case "float-a" => ExtendedNumeric.ExtendedFloat
+					 case "int-a" => ExtendedNumeric.ExtendedInt
+					 case "long-a" => ExtendedNumeric.ExtendedLong
+					 case "double-k" => ExtendedNumeric.ExtendedDouble
+					 case "float-k" => ExtendedNumeric.ExtendedFloat
+					 case "int-k" => ExtendedNumeric.ExtendedInt
+					 case "long-k" => ExtendedNumeric.ExtendedLong
+					 case _ => throw new IllegalArgumentException("Blurred tiling requires a numeric binning type")
+				 }
+				)
+			case _ =>
+				(Map("oculus.binning.value.type" -> "count",
+						 "oculus.binning.value.valueType" -> "int",
+						 "oculus.binning.value.serializer" -> "[int]-a"),
+				 ExtendedNumeric.ExtendedDouble)
+		}
+
+		// Parse bounds and level args
+		val levelsProps = createLevelsProps("oculus.binning", tilingParams.levels)
+
+		val tableName = PipelineOperations.getOrGenTableName(input, "heatmap_op")
+
+		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
+
+		def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]): PipelineData = {
+			val typedNumeric = numeric.asInstanceOf[ExtendedNumeric[PT]]
+			val tileAnalytics = task.getTileAnalytics
+			val dataAnalytics = task.getDataAnalytics
+			val sc = input.sqlContext.sparkContext
+
+			tileAnalytics.map(_.addGlobalAccumulator(sc))
+			dataAnalytics.map(_.addGlobalAccumulator(sc))
+
+			task.getLevels.foreach { levels =>
+				tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+				dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+				val kernel = StandardBinningFunctions.makeGaussianKernel(4, 3)
+
+				task.doParameterizedTiling(tileIO,
+					StandardBinningFunctions.locateIndexOverLevelsWithKernel(kernel, task.getIndexScheme, task.getTilePyramid, levels, task.getNumXBins, task.getNumYBins),
+				  StandardBinningFunctions.populateTileGaussian(kernel)(typedNumeric)
+				)
+			}
+
+			PipelineData(input.sqlContext, input.srdd, Option(tableName))
+		}
+
+		withValueType(tilingTask)
 	}
 
 	def geoSegmentTilingOp(x1ColSpec: String,

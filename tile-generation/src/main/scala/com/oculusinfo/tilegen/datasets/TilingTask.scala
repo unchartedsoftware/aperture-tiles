@@ -29,6 +29,7 @@ package com.oculusinfo.tilegen.datasets
 import java.lang.{Integer => JavaInt}
 import java.util.{ArrayList, Properties}
 
+
 import scala.collection.mutable.{Map => MutableMap}
 
 import com.oculusinfo.binning.metadata.PyramidMetaData
@@ -295,6 +296,33 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		}
 	}
 
+	def doParameterizedTiling (tileIO: TileIO,
+	                           locFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
+		                         popFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]): Unit = {
+		val binner = new UniversalBinner
+		val sc = sqlc.sparkContext
+
+		tileAnalytics.map(_.addGlobalAccumulator(sc))
+		dataAnalytics.map(_.addGlobalAccumulator(sc))
+
+		getLevels.map{levels =>
+			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
+
+			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
+				rdd => {
+					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
+					                                                         locFcn, popFcn,
+						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
+
+					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
+						tileAnalytics, dataAnalytics, getName, getDescription)
+				}
+
+			process(procFcn, None)
+		}
+	}
+
 	def doLineTiling (tileIO: TileIO): Unit = {
 		val binner = new UniversalBinner
 		val sc = sqlc.sparkContext
@@ -495,7 +523,6 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 		override def getDataAnalytics: Option[AnalysisDescription[_, DT]] = dataAnalytics
 	}
 }
-
 
 object StandardScalingFunctions {
 	def identityScale[T]: (Array[BinIndex], BinIndex, T) => T = (endpoints, bin, value) => value

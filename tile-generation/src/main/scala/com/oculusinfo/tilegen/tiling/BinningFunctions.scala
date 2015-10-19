@@ -25,12 +25,13 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import com.oculusinfo.tilegen.util.ExtendedNumeric.ExtendedDouble
 
 import scala.collection.mutable.{Map => MutableMap}
-
 import com.oculusinfo.binning.TilePyramid
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.tilegen.util.ExtendedNumeric
 
 
 
@@ -93,14 +94,193 @@ trait StandardPointBinningFunctions {
 		}
 	}
 
-
-
 	/**
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
 	def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
+
+  /**
+   * Returns a two dimensional array with diameter radius*2+1 and given then standard deviation
+   */
+  def makeGaussianKernel(radius : Int, sigma : Double) : Array[Array[Double]] = {
+    val dim = (radius * 2) + 1
+    val kernel = Array.ofDim[Double](dim, dim)
+    var sum = 0.0
+
+    for (u <- 0 until kernel.length) {
+      for (v <- 0 until kernel(0).length) {
+        val uc = u - (kernel.length - 1) / 2
+        val vc = v - (kernel(0).length - 1) / 2
+        // Calculate and save
+        val g = Math.exp(-(uc * uc + vc * vc) / (2 * sigma * sigma))
+        sum += g
+        kernel(u)(v) = g
+      }
+    }
+
+    // Normalize the kernel
+    for (u <- 0 until kernel.length - 1) {
+      for (v <- 0 until kernel(0).length - 1) {
+        kernel(u)(v) /= sum
+      }
+    }
+    kernel
+  }
+
+	/**
+	 * Simple function to spread an input point over several levels of tile pyramid, ignoring
+	 * points that are out of bounds.  Also needs to collect tiles that may overlap with the index
+	 * when computing effects from the kernel matrix applied.
+	 */
+	def locateIndexOverLevelsWithKernel[T](kernel: Array[Array[Double]], indexScheme: IndexScheme[T], pyramid: TilePyramid,
+	                                    levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
+			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
+
+		index => {
+			val (x, y) = indexScheme.toCartesian(index)
+
+			if (bounds.contains(x, y)) {
+				levels.flatMap{level =>
+					// base result if kernel does not affect other tiles
+					// Use universal bin coordinates
+					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+					val bin = pyramid.rootToBin(x, y, tile)
+					val uBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, bin)
+
+					var result = List((tile, Array(uBin)))
+
+					// now check to see if the kernel effects other tiles.  If so, add the new tiles and bins to the result
+
+					// check for tiles that are to the left
+					if ((bin.getX < kernel(0).length / 2) && (tile.getX > 0)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY, tile.getXBins, tile.getYBins )
+
+						result = result :+  (newTile, Array(uBin))
+
+						// now check for tiles above to the left
+						if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
+							val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY + 1, tile.getXBins, tile.getYBins )
+							result = result :+ (newTile, Array(uBin))
+						}
+
+						// and finally check for tiles below and to the left
+						if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
+							val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY - 1, tile.getXBins, tile.getYBins )
+							result = result :+ (newTile, Array(uBin))
+						}
+	        }
+
+					//check for tiles to the right
+	        if ((bin.getX > (tile.getXBins - kernel(0).length / 2)) && (tile.getX < (1 << tile.getLevel) - 1)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY, tile.getXBins, tile.getYBins )
+
+		        result = result :+ (newTile, Array(uBin))
+
+						// now check for tiles above and to the right
+		        if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
+			        val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY + 1, tile.getXBins, tile.getYBins )
+			        result = result :+ (newTile, Array(uBin))
+		        }
+
+						// and finally check for tiles below and to the right
+		        if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
+			        val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY - 1, tile.getXBins, tile.getYBins )
+			        result = result :+ (newTile, Array(uBin))
+		        }
+	        }
+
+					// check for tiles immediately above
+					// Note tile indices bellow have lower indices
+	        if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY + 1, tile.getXBins, tile.getYBins )
+		        result = result :+ (newTile, Array(uBin))
+	        }
+
+	        // check for tiles immediately below
+	        if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
+						val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY - 1, tile.getXBins, tile.getYBins )
+		        result = result :+ (newTile, Array(uBin))
+	        }
+
+	        result
+				}
+			} else {
+				Traversable()
+			}
+		}
+	}
+
+	def populateArrayTileGaussian[T : ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], Seq[T]) => MutableMap[BinIndex, Seq[T]] = {
+		val popFunction = populateTileGaussian[T](kernel)
+
+		(tile, bins, values) => {
+			var results: MutableMap[BinIndex, Seq[T]] = MutableMap()
+
+			// Calculate all the maps
+			for (value <- values) {
+				val map = popFunction(tile, bins, value)
+
+				// Aggregate the values into the results
+				map.foreach{ case (bin, value) => {
+					var values: Seq[T] = results.getOrElse[Seq[T]](bin, Seq[T]())
+
+					values = values :+ value
+					results.put(bin, values)
+				}}
+			}
+
+			results
+		}
+	}
+
+	/**
+	 * Simple population function that just takes input points and outputs them, as is, in the
+	 * correct coordinate system.
+	 */
+	//def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+		//(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
+	def populateTileGaussian[T: ExtendedNumeric ](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+		(tile, bins, value) => {
+
+            MutableMap(bins.flatMap{bin =>
+                // This just puts in the bin it's passed literally.
+                // You want, instead, to take the value, and spread it around several bins, as per the directions of the kernel
+            	val kernelDimX = kernel(0).length - 1 	// zero based
+            	val kernelDimY = kernel.length - 1		// zero based
+
+            	var result: List[(BinIndex, T)] = List()
+
+            	// j is the current local y position in the kernel; i is current local x position in the kernel.
+            	for ( j <- 0 to kernelDimY; i <- 0 to kernelDimX ) {
+            		// for each element in the kernel, determine if it is in the tile
+            		// first we must convert the kernel element position to global coordinates
+            		val currBinX = bin.getX + i - kernelDimX/2
+            		val currBinY = bin.getY + j - kernelDimY/2
+
+		            if (currBinX >= 0 && currBinY >= 0) {
+			            val tileBinIndex = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY))
+
+			            // if kernelX && kernelY fall inside the tile, get the kernel value at x,y and apply it to the bin
+			            if (tileBinIndex.getTile.compareTo(tile) == 0) {
+				            // compute value of bin after kernel applied in bin and convert bin to tile coordinates
+				            var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
+
+
+				            val sNumeric = implicitly[ExtendedNumeric[T]]
+
+				            val kernelVal = kernel(j)(i)
+				            val currvalue = sNumeric.toDouble(value) * kernelVal
+
+				            result = (currBin, sNumeric.fromDouble(currvalue)) :: result
+			            }
+		            }
+            	}
+              result
+            }: _*)
+        }
 
 }
 
