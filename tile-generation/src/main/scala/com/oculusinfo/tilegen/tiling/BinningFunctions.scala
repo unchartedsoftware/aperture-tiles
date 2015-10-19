@@ -121,8 +121,8 @@ trait StandardPointBinningFunctions {
     }
 
     // Normalize the kernel
-    for (u <- 0 until kernel.length - 1) {
-      for (v <- 0 until kernel(0).length - 1) {
+    for (u <- 0 until kernel.length) {
+      for (v <- 0 until kernel(0).length) {
         kernel(u)(v) /= sum
       }
     }
@@ -219,29 +219,75 @@ trait StandardPointBinningFunctions {
 		(tile, bins, values) => {
 			var results: MutableMap[BinIndex, Seq[T]] = MutableMap()
 
+      println("\n\nValue length: " + values.size + "")
+
 			// Calculate all the maps
 			for (value <- values) {
-				val map = popFunction(tile, bins, value)
+				val map = popFunction(tile, bins, value) // Returns a map of bin to bin values
 
+        println("Map size: " + map.size + "")
 				// Aggregate the values into the results
 				map.foreach{ case (bin, value) => {
-					var values: Seq[T] = results.getOrElse[Seq[T]](bin, Seq[T]())
+					var binvalues: Seq[T] = results.getOrElse[Seq[T]](bin, Seq[T]())
 
-					values = values :+ value
+          println("Bin size: " + map.size + "")
+          binvalues = binvalues :+ value
 					results.put(bin, values)
 				}}
 			}
 
-			results
+      println("Results size: " + results.size + "")
+      println("Values size: " + results.head._2.size + "\n\n")
+			results // Map of bin to sequence of values (size=#buckets)
 		}
 	}
+
+  def populateArrayTileGaussian2[T : ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], Seq[T]) => MutableMap[BinIndex, Seq[T]] = {
+    (tile, bins, values) => {
+
+      MutableMap(bins.flatMap{bin =>
+        // This just puts in the bin it's passed literally.
+        // You want, instead, to take the value, and spread it around several bins, as per the directions of the kernel
+        val kernelDimX = kernel(0).length - 1 	// zero based
+        val kernelDimY = kernel.length - 1		// zero based
+
+        var result: List[(BinIndex, Seq[T])] = List()
+
+        // j is the current local y position in the kernel; i is current local x position in the kernel.
+        for ( j <- 0 to kernelDimY; i <- 0 to kernelDimX ) {
+          // for each element in the kernel, determine if it is in the tile
+          // first we must convert the kernel element position to global coordinates
+          val currBinX = bin.getX + i - kernelDimX/2
+          val currBinY = bin.getY + j - kernelDimY/2
+
+          if (currBinX >= 0 && currBinY >= 0) {
+            val tileBinIndex = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY))
+
+            // if kernelX && kernelY fall inside the tile, get the kernel value at x,y and apply it to the bin
+            if (tileBinIndex.getTile.compareTo(tile) == 0) {
+              // compute value of bin after kernel applied in bin and convert bin to tile coordinates
+              var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
+              val sNumeric = implicitly[ExtendedNumeric[T]]
+              val kernelVal = kernel(j)(i)
+              var curValues:List[T] = List();
+
+              for (value <- values) {
+                curValues = curValues :+ sNumeric.fromDouble((sNumeric.toDouble(value) * kernelVal))
+              }
+
+              result = (currBin, curValues) :: result
+            }
+          }
+        }
+        result
+      }: _*)
+    }
+  }
 
 	/**
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
-	//def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
-		//(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
 	def populateTileGaussian[T: ExtendedNumeric ](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => {
 
