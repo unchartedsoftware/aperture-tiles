@@ -33,9 +33,11 @@ import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.metadata.PyramidMetaData;
 import com.oculusinfo.binning.util.AvroJSONConverter;
+import com.oculusinfo.binning.util.TileIOUtils;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.tile.rendering.LayerConfiguration;
 import com.oculusinfo.tile.rendering.TileDataImageRenderer;
+import com.oculusinfo.tile.rendering.transformations.combine.TileCombiner;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rest.layer.LayerService;
 import org.json.JSONException;
@@ -47,7 +49,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 
 
 @Singleton
@@ -61,54 +62,6 @@ public class TileServiceImpl implements TileService {
 	public TileServiceImpl( LayerService layerService ) {
 		_layerService = layerService;
 	}
-
-
-	private <T> TileData<T> tileDataForIndex(TileIndex index, String dataId, TileSerializer<T> serializer, PyramidIO pyramidIO, int coarseness, JSONObject tileProperties) throws IOException {
-		TileData<T> data = null;
-		if ( coarseness > 1 ) {
-			int coarsenessFactor = ( int ) Math.pow( 2, coarseness - 1 );
-
-			// Coarseness support:
-			// Find the appropriate tile data for the given level and coarseness
-			java.util.List<TileData<T>> tileDatas = null;
-			TileIndex scaleLevelIndex = null;
-
-			// need to get the tile data for the level of the base level minus the coarseness
-			for ( int coarsenessLevel = coarseness - 1; coarsenessLevel >= 0; --coarsenessLevel ) {
-				scaleLevelIndex = new TileIndex( index.getLevel() - coarsenessLevel,
-					( int ) Math.floor( index.getX() / coarsenessFactor ),
-					( int ) Math.floor( index.getY() / coarsenessFactor ) );
-
-				tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( scaleLevelIndex ), tileProperties );
-
-				if ( tileDatas.size() >= 1 ) {
-					//we got data for this level so use it
-					break;
-				}
-			}
-
-			// Missing tiles are commonplace and we didn't find any data up the tree either.  We don't want a big long error for that.
-			if ( tileDatas.size() < 1 ) {
-				LOGGER.info( "Missing tile " + index + " for layer data id " + dataId );
-				return null;
-			}
-
-			// We're using a scaled tile so wrap in a view class that will make the source data look like original tile we're looking for
-			data = SubTileDataView.fromSourceAbsolute( tileDatas.get( 0 ), index );
-		} else {
-			// No coarseness - use requested tile
-			java.util.List<TileData<T>> tileDatas;
-
-			tileDatas = pyramidIO.readTiles( dataId, serializer, Collections.singleton( index ), tileProperties );
-
-			if ( !tileDatas.isEmpty() ) {
-				data = tileDatas.get( 0 );
-			}
-		}
-
-		return data;
-	}
-
 
 	/* (non-Javadoc)
 	 * @see com.oculusinfo.tile.spi.TileService#getTile(int, double, double)
@@ -186,15 +139,17 @@ public class TileServiceImpl implements TileService {
 
 		@SuppressWarnings("unchecked")
 		TileTransformer<T> tileTransformer = config.produce(TileTransformer.class);
+		TileCombiner<T> tileCombiner = config.produce(TileCombiner.class);
 
 		JSONObject tileProperties = config.getPropertyValue(LayerConfiguration.FILTER_PROPS);
 
-		TileData<T> data = tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness, tileProperties);
+		TileData<T> data = TileIOUtils.tileDataForIndex(index, dataId, serializer, pyramidIO, coarseness, tileProperties);
 
 		if (data == null) {
 			return null;
 		}
 
+		data = tileCombiner.combine(data, index, serializer, coarseness, tileProperties);
 		data = tileTransformer.transform( data );
 		if ( data != null ) {
 			return renderer.render( data, config );

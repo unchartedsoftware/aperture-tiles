@@ -48,8 +48,6 @@ public class BinaryOperationTileView<T extends Number> implements TileData<List<
 	private TileData<List<T>> _tileData2 = null;
 	private BinaryOperator _op 			= null;
 
-	private final int _binCount;
-
 	private final Number _errorValue;
 
 	public BinaryOperationTileView(TileData<List<T>> tileData1, TileData<List<T>> tileData2, BinaryOperator.OPERATOR_TYPE op,
@@ -65,8 +63,6 @@ public class BinaryOperationTileView<T extends Number> implements TileData<List<
 			throw new IllegalArgumentException("Constructor for BinaryOperationTileBucketView: " +
 				"arguments are invalid. Tiles to compare are incompatible");
 		}
-
-		_binCount = _tileData1.getBin(0, 0).size();
 	}
 
 
@@ -98,7 +94,7 @@ public class BinaryOperationTileView<T extends Number> implements TileData<List<
 	@Override
 	public List<T> getBin (int x, int y) {
 		List<T> result = new ArrayList<>();
-		for (int i = 0; i < _binCount; i++) {
+		for (int i = 0; i < _tileData1.getBin(x, y).size(); i++) {
 			result.add((T) _op.calculate(_tileData1.getBin(x, y).get(i), _tileData2.getBin(x, y).get(i), _errorValue));
 		}
 		return result;

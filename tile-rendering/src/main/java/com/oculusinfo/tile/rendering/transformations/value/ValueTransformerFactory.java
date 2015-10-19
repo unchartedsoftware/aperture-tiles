@@ -100,7 +100,9 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 
 	@Override
 	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) throws ConfigurationException {
-		if (LAYER_MAXIMUM.equals(property)) {
+		if (!super.getPropertyValue(property).equals(property.getDefaultValue())) {
+			return super.getPropertyValue(property); // Give precedence to overrides in server config
+		} else if (LAYER_MAXIMUM.equals(property)) {
 			return property.getType().cast(_layerMaximum);
 		} else if (LAYER_MINIMUM.equals(property)) {
 			return property.getType().cast(_layerMinimum);

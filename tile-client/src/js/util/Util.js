@@ -168,12 +168,12 @@
             function log10(val) {
                 return Math.log(val) / Math.LN10;
             }
-            function checkLogInput( value ) {
-                return ( value === 0 ) ? 1 : Math.pow( 10, log10( value ) * percentage );
-            }
             //iterate over the inner labels
             if ( transform === "log10" ) {
-                val = checkLogInput( minMax.maximum );
+                var logMin = (minMax.minimum == 0) ? 0 : log10(minMax.minimum);
+                var logMax = (minMax.maximum == 0) ? 0 : log10(minMax.maximum);
+
+                val =  Math.pow(10, logMin + (logMax - logMin) * percentage);
             } else {
                 val = percentage * range + minMax.minimum;
             }
