@@ -24,15 +24,17 @@
  */
 package com.oculusinfo.binning.io.impl;
 
+import java.sql.SQLException;
+
 /**
  * A SQLite-based JDBC PyramidIO.
- * 
+ *
  * @author rcameron
  *
  */
 public class SQLitePyramidIO extends JDBCPyramidIO {
 
-	public SQLitePyramidIO(String dbPath) throws Exception {
+	public SQLitePyramidIO(String dbPath) throws SQLException, ClassNotFoundException {
 		super("org.sqlite.JDBC", "jdbc:sqlite:" + dbPath);
 	}
 }

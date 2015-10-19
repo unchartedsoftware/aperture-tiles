@@ -65,7 +65,7 @@ public class ConfigurableFactoryTests {
 			addProperty(STRING_PROP);
 		}
 		@Override
-		protected FactoryResult create () {
+		protected FactoryResult create () throws ConfigurationException {
 			FactoryResult result = new FactoryResult();
 			result._int = getPropertyValue(INT_PROP);
 			result._double = getPropertyValue(DOUBLE_PROP);

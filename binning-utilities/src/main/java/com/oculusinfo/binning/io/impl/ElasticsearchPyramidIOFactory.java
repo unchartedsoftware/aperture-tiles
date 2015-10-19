@@ -3,6 +3,7 @@ package com.oculusinfo.binning.io.impl;
 import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.SharedInstanceFactory;
 import com.oculusinfo.factory.properties.IntegerProperty;
 import com.oculusinfo.factory.properties.StringProperty;
@@ -64,27 +65,20 @@ public class ElasticsearchPyramidIOFactory extends SharedInstanceFactory<Pyramid
 	}
 
 	@Override
-	protected PyramidIO createInstance() {
-		try{
-			LOGGER.info("ES pyramid factory.");
+	protected PyramidIO createInstance() throws ConfigurationException {
+		LOGGER.info("ES pyramid factory.");
 
-			String clusterName = getPropertyValue(ES_CLUSTER_NAME);
-			String transportAddress = getPropertyValue(ES_TRANSPORT_ADDRESS);
-			int transportPort = getPropertyValue(ES_TRANSPORT_PORT);
+		String clusterName = getPropertyValue(ES_CLUSTER_NAME);
+		String transportAddress = getPropertyValue(ES_TRANSPORT_ADDRESS);
+		int transportPort = getPropertyValue(ES_TRANSPORT_PORT);
 
-			Integer numZoomLevels = getPropertyValue(NUM_ZOOM_LEVELS);
+		Integer numZoomLevels = getPropertyValue(NUM_ZOOM_LEVELS);
 
-			String elasticIndex = getPropertyValue(ES_INDEX);
-			String esFieldX = getPropertyValue(ES_FIELD_X);
-			String esFieldY = getPropertyValue(ES_FIELD_Y);
-			TilePyramid tilePyramid = getRoot().produce( TilePyramid.class );
+		String elasticIndex = getPropertyValue(ES_INDEX);
+		String esFieldX = getPropertyValue(ES_FIELD_X);
+		String esFieldY = getPropertyValue(ES_FIELD_Y);
+		TilePyramid tilePyramid = getRoot().produce(TilePyramid.class);
 
-			return new ElasticsearchPyramidIO(clusterName, elasticIndex, esFieldX, esFieldY, transportAddress, transportPort, tilePyramid, numZoomLevels );
-
-		}catch (Exception e){
-			LOGGER.error("Error creating ES pyramidio", e);
-		}
-
-		return null;
+		return new ElasticsearchPyramidIO(clusterName, elasticIndex, esFieldX, esFieldY, transportAddress, transportPort, tilePyramid, numZoomLevels);
 	}
 }

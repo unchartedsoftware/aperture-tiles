@@ -28,6 +28,7 @@ import java.util.List;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.IntegerProperty;
 
@@ -53,7 +54,7 @@ public class DummyPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	}
 
 	@Override
-	protected PyramidIO create() {
+	protected PyramidIO create() throws ConfigurationException {
 		double minX = getPropertyValue(MIN_X);
 		double maxX = getPropertyValue(MAX_X);
 		double minY = getPropertyValue(MIN_Y);

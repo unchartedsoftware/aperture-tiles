@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.oculusinfo.tile.rendering.LayerConfiguration.*;
@@ -184,26 +185,25 @@ public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<
 	// Extracts all the extrema
 	private List<Double> parseExtremum (LayerConfiguration parameter, StringProperty property, String propName,
 										String layer, Double def) {
-		String rawValue = parameter.getPropertyValue(property);
-		ArrayList<Double> values = null;
+		String rawValue = null;
 		// Convert string into json object
 		try {
+			rawValue = parameter.getPropertyValue(property);
 			JSONArray ex = new JSONArray(rawValue);
-			values = new ArrayList<>(ex.length());
+			List<Double> values = new ArrayList<>(ex.length());
 			for (int i = 0; i < ex.length(); i++) {
 				values.add(ex.getJSONObject(i).getDouble(propName));
 			}
 			return values;
+		} catch (ConfigurationException e) {
+			LOGGER.warn("Can not determine value for property "+propName+", defaulting to " + def);
+			return Arrays.asList(def);
 		} catch (NumberFormatException|NullPointerException e) {
 			LOGGER.warn("Bad " + propName + " value " + rawValue + " for " + layer + ", defaulting to " + def);
-			values.clear();
-			values.add(def);
-			return values;
+			return Arrays.asList(def);
 		} catch (JSONException e) {
-			LOGGER.warn("JSON parse exception", e);
-			values.clear();
-			values.add(def);
-			return values;
+			LOGGER.warn("JSON parse exception for property "+propName+", defaulting to "+def, e);
+			return Arrays.asList(def);
 		}
 	}
 }

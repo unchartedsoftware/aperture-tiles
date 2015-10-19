@@ -204,6 +204,16 @@ abstract public class ConfigurableFactory<T> {
 		_pathsByProperty.put( property, path );
 	}
 
+	/** Get the full name of a given property, including its path in our factory configuration */
+	public String getFullPropertyName (ConfigurationProperty<?> property) {
+		if (null == property) return null;
+		List<String> fullPath = new ArrayList<>();
+		if (null != _rootPath) fullPath.addAll(_rootPath);
+		if (null != _pathsByProperty.get(property)) fullPath.addAll(_pathsByProperty.get(property));
+		fullPath.add(property.getName());
+		return mkString(fullPath, ".");
+	}
+
 	/**
 	 * Add a property to the list of properties used by this factory
 	 *
@@ -266,22 +276,19 @@ abstract public class ConfigurableFactory<T> {
 	 * The behavior of this function is undefined if called before
 	 * readConfiguration (either version).
 	 */
-	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) throws ConfigurationException {
 		// if a value has not been configured for this property, return default
 		if ( !hasPropertyValue( property ) ) {
-			return getDefaultValue(property);
+			PT defaultValue = getDefaultValue(property);
+			LOGGER.warn("Property {} unset.  Using default {}.", getFullPropertyName(property), defaultValue);
+			return defaultValue;
 		}
 		try {
 			return property.unencodeJSON( new JSONNode( getPropertyNode( property ) , property.getName() ) );
 		} catch (JSONException e) {
-			// Must not have been there.  Ignore, leaving as default. 
-			LOGGER.info("Property {} from configuration {} not found. Using default", property, _configurationNode);
-		} catch (ConfigurationException e) {
-			// Error within configuration.
-			// Use default, but also warn about it.
-			LOGGER.warn("Error reading property {} from configuration {}", property, _configurationNode);
+			// Must not have been there.  Ignore, leaving as default.
+			throw new ConfigurationException("Error reading property "+getFullPropertyName(property)+" from configuration "+_configurationNode);
 		}
-		return getDefaultValue(property);
 	}
 
 	/**
@@ -296,9 +303,9 @@ abstract public class ConfigurableFactory<T> {
 
 	/**
 	 * Create the object provided by this factory.
-	 * @return The object 
+	 * @return The object
 	 */
-	protected abstract T create();
+	protected abstract T create() throws ConfigurationException;
 
 	/**
 	 * Get one of the goods managed by this factory.
@@ -542,7 +549,11 @@ abstract public class ConfigurableFactory<T> {
 		for ( ConfigurationProperty<?> prop : _properties ) {
 			sb.append( getFullPropertyString( prop, prop.getName() ) );
 			sb.append( ":" );
-			sb.append( getPropertyValue( prop ) );
+			try {
+				sb.append(getPropertyValue(prop));
+			} catch (ConfigurationException e) {
+				sb.append("<ERROR>");
+			}
 		}
 		for ( ConfigurableFactory<?> child: _children ) {
 			sb.append( child.getFactoryString() );
@@ -563,7 +574,7 @@ abstract public class ConfigurableFactory<T> {
 		return node;
 	}
 
-	private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException {
+	private void addPropertyUnderPath( JSONObject config, ConfigurationProperty<?> property ) throws JSONException, ConfigurationException {
 		// get the properties path
 		List<String> fullPath = getRootPath();
 		fullPath.addAll(_pathsByProperty.get( property ) );
@@ -572,7 +583,7 @@ abstract public class ConfigurableFactory<T> {
 		// current factories path
 		JSONObject node = addJSONPathAndReturnLeaf( config, fullPath );
 		// add the property to the leaf node of the path
-		node.put( property.getName(), getPropertyValue( property ) );
+		node.put(property.getName(), getPropertyValue(property));
 	}
 
 	private JSONObject generateConfigurationObj( JSONObject config ) {
@@ -585,7 +596,7 @@ abstract public class ConfigurableFactory<T> {
 				addJSONPathAndReturnLeaf( config, child.getRootPath() );
 				child.generateConfigurationObj( config );
 			}
-		} catch ( JSONException e ) {
+		} catch ( JSONException | ConfigurationException e ) {
 			LOGGER.warn( "Error occurred while generating configuration JSON", e );
 		}
 		return config;

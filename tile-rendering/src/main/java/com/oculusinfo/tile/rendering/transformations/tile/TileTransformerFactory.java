@@ -25,6 +25,7 @@ package com.oculusinfo.tile.rendering.transformations.tile;
 
 import java.util.List;
 
+import com.oculusinfo.factory.ConfigurationException;
 import org.json.JSONObject;
 
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -70,7 +71,7 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 	}
 
 	@Override
-	protected TileTransformer<?> create () {
+	protected TileTransformer<?> create () throws ConfigurationException {
 
 		String transformerTypes = getPropertyValue(TILE_TRANSFORMER_TYPE);
 

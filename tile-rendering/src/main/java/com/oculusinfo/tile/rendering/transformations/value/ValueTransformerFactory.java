@@ -25,6 +25,7 @@
 package com.oculusinfo.tile.rendering.transformations.value;
 
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.DoubleProperty;
 import com.oculusinfo.factory.properties.StringProperty;
@@ -98,7 +99,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 	}
 
 	@Override
-	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) {
+	public <PT> PT getPropertyValue (ConfigurationProperty<PT> property) throws ConfigurationException {
 		if (!super.getPropertyValue(property).equals(property.getDefaultValue())) {
 			return super.getPropertyValue(property); // Give precedence to overrides in server config
 		} else if (LAYER_MAXIMUM.equals(property)) {
@@ -110,7 +111,7 @@ public class ValueTransformerFactory extends ConfigurableFactory<ValueTransforme
 	}
 
 	@Override
-	protected ValueTransformer<?> create () {
+	protected ValueTransformer<?> create () throws ConfigurationException {
 		String name = getPropertyValue(TRANSFORM_NAME);
 		double layerMin = getPropertyValue(LAYER_MINIMUM);
 		double layerMax = getPropertyValue(LAYER_MAXIMUM);
