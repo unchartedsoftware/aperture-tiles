@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.tile.rendering.color.ColorRampFactory;
 import com.oculusinfo.tile.rendering.impl.NumberListHeatMapImageRenderer;
@@ -67,7 +68,7 @@ public class ImageRendererFactory extends ConfigurableFactory<TileDataImageRende
 
 
 	@Override
-	protected TileDataImageRenderer<?> create () {
+	protected TileDataImageRenderer<?> create () throws ConfigurationException {
 		String rendererType = getPropertyValue(RENDERER_TYPE);
 
 		rendererType = rendererType.toLowerCase();

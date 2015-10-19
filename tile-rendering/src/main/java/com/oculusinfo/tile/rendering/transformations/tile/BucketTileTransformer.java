@@ -99,7 +99,12 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 	 */
 	private List<Double> parseExtremum (LayerConfiguration parameter, StringProperty property, String propName,
 	                                          String layer, Double def) {
-		String rawValue = parameter.getPropertyValue(property);
+		String rawValue;
+		try {
+			rawValue = parameter.getPropertyValue(property);
+		} catch (ConfigurationException e) {
+			rawValue = null;
+		}
 		ArrayList<Double> values = null;
 
 		// If the is no extremum info available return the default.

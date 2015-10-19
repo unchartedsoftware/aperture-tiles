@@ -38,11 +38,10 @@ import java.util.Map;
  * part related to the factory's properties, or those properties used to create
  * the product, so extraneous properties or configuration details will cause
  * false cache misses.
- * 
+ *
  * @author nkronenfeld
  */
-public abstract class SharedInstanceFactory<T> extends
-	                                               ConfigurableFactory<T> {
+public abstract class SharedInstanceFactory<T> extends ConfigurableFactory<T> {
 	/*
 	 * The static mapping containing all instances ever made. This maps from
 	 * factory type to configuration to object. Configurations are kepts as
@@ -70,7 +69,7 @@ public abstract class SharedInstanceFactory<T> extends
 	}
 
 	@Override
-	final protected T create () {
+	final protected T create () throws ConfigurationException {
 		synchronized (_instances) {
 			if (!_instances.containsKey(this.getClass())) {
 				_instances.put(this.getClass(), new HashMap<String, Object>());
@@ -84,5 +83,5 @@ public abstract class SharedInstanceFactory<T> extends
 		}
 	}
 
-	abstract protected T createInstance ();
+	abstract protected T createInstance () throws ConfigurationException;
 }

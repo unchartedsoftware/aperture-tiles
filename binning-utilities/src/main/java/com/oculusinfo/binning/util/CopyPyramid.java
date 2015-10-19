@@ -146,7 +146,8 @@ public class CopyPyramid<T> {
 	public void copy (List<TileIndex> rootTiles) throws IOException {
 		_source.initializeForRead(_parameters._sourceId, _parameters._width, _parameters._height, null);
 		_destination.initializeForWrite(_parameters._destinationId);
-		_destination.writeMetaData(_parameters._destinationId, _source.readMetaData(_parameters._sourceId));
+		String metaData = _source.readMetaData(_parameters._sourceId);
+		if (null != metaData) _destination.writeMetaData(_parameters._destinationId, metaData);
 		List<TileIndex> toCopy = new ArrayList<>();
 		for (TileIndex root: rootTiles) {
 			toCopy = copyUp(root, toCopy);
@@ -290,7 +291,7 @@ public class CopyPyramid<T> {
 		}
 
 		@Override
-		protected CopyParameters create() {
+		protected CopyParameters create() throws ConfigurationException {
 			return new CopyParameters(
 			                          getPropertyValue(SOURCE_ID),
 			                          getPropertyValue(DESTINATION_ID),

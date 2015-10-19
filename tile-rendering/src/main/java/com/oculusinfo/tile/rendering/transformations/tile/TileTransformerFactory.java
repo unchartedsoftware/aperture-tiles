@@ -25,6 +25,7 @@ package com.oculusinfo.tile.rendering.transformations.tile;
 
 import java.util.List;
 
+import com.oculusinfo.factory.ConfigurationException;
 import org.json.JSONObject;
 
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -49,14 +50,11 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 		"Data to be passed to the tile transformer for read initialization",
 		null);
 
-
-
 	// There is no way to produce a Class<TileTransformer<?>> directly; the best one can do is fake it through erasure.
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static Class<TileTransformer<?>> getFactoryClass () {
 		return (Class) TileTransformer.class;
 	}
-
 
 
 	public TileTransformerFactory( ConfigurableFactory<?> parent,
@@ -73,7 +71,7 @@ public class TileTransformerFactory extends ConfigurableFactory<TileTransformer<
 	}
 
 	@Override
-	protected TileTransformer<?> create () {
+	protected TileTransformer<?> create () throws ConfigurationException {
 
 		String transformerTypes = getPropertyValue(TILE_TRANSFORMER_TYPE);
 

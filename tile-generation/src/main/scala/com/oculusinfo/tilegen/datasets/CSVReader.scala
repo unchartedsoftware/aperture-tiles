@@ -27,9 +27,10 @@ package com.oculusinfo.tilegen.datasets
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.TimeZone
+import java.util.regex.Pattern
 
 import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCollectorAccumulable}
-import com.oculusinfo.tilegen.util.KeyValueArgumentSource
+import com.oculusinfo.tilegen.util.{StringUtilities, KeyValueArgumentSource}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
@@ -37,7 +38,7 @@ import org.apache.spark.sql.types._
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
-import com.opencsv.CSVParser
+
 
 /**
  * A class that allows reading a schema file and a CSV file as a DataFrame.
@@ -139,16 +140,14 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 
 	private lazy val _parseUnfiltered: RDD[(String, Try[Row])] = {
 		val separator = _separator
-		val quotechar = _quotechar
+		val quoter = if (null == _quotechar || _quotechar.isEmpty) None else Some(_quotechar)
 		val parsers = _parsers
 		val indices = _indices
 		val N = _fields
 		val rowRDD:RDD[(String, Try[Row])] = data.map(record =>
 			(record, Try{
-				def getFields (line: String) = {
-					val parser = new CSVParser(separator.charAt(0),
-						Try(quotechar.charAt(0)).getOrElse(CSVParser.DEFAULT_QUOTE_CHARACTER))
-					parser.parseLine(line)
+				def getFields (line: String): Array[String] = {
+					StringUtilities.separateString(line, separator, quoter, None)
 				}
 
 				val fields = getFields(record)

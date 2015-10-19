@@ -277,7 +277,13 @@
      */
     ServerLayer.prototype.getLevelMinMax = function() {
         var minMax = this.levelMinMax;
-        if ( minMax.maximum instanceof Array ) {
+
+        if (this.valueTransform.layerMin && this.valueTransform.layerMin ) { // Give precedence to config override
+            return {
+                minimum: this.valueTransform.layerMin,
+                maximum: this.valueTransform.layerMax
+            }
+        } else if ( minMax.maximum instanceof Array ) {
             var data = this.tileTransform.data,
                 start = data.startBucket !== undefined ? data.startBucket : 0,
                 stop = data.endBucket !== undefined ? data.endBucket : minMax.maximum.length-1,

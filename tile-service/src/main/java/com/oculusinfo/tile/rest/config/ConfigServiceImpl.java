@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest.config;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.oculusinfo.tile.rest.layer.LayerServiceImpl;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ import java.util.regex.Pattern;
 public class ConfigServiceImpl implements ConfigService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
-    
+
     private ConfigPropertiesService _service;
 
 	@Inject
