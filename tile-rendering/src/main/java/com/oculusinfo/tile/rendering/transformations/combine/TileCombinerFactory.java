@@ -27,6 +27,7 @@ import com.oculusinfo.binning.TilePyramid;
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.JSONProperty;
 import com.oculusinfo.factory.properties.StringProperty;
 import com.oculusinfo.factory.providers.FactoryProvider;
@@ -82,7 +83,7 @@ public class TileCombinerFactory extends ConfigurableFactory<TileCombiner<?>> {
 	}
 
 	@Override
-	protected TileCombiner<?> create () {
+	protected TileCombiner<?> create () throws ConfigurationException {
 
 		String transformerTypes = getPropertyValue(TILE_COMBINER_TYPE);
 
