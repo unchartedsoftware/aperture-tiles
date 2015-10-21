@@ -27,6 +27,7 @@ package com.oculusinfo.binning.io.serialization;
 import java.util.List;
 
 import com.oculusinfo.binning.io.serialization.impl.PrimitiveAvroSerializerFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import org.apache.avro.file.CodecFactory;
 
 import com.oculusinfo.factory.ConfigurableFactory;
@@ -80,7 +81,7 @@ public class TileSerializerFactory
 		addProperty(DEFLATE_LEVEL);
 	}
 
-	public static <T> CodecFactory getCodecFactory (ConfigurableFactory<TileSerializer<T>> subFactory) {
+	public static <T> CodecFactory getCodecFactory (ConfigurableFactory<TileSerializer<T>> subFactory) throws ConfigurationException {
 		CodecType codecType = subFactory.getPropertyValue(CODEC_TYPE);
 		switch (codecType) {
 		case Snappy:

@@ -26,6 +26,7 @@ package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
 
 import org.slf4j.Logger;
@@ -62,33 +63,27 @@ public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 
 
 	@Override
-	protected PyramidIO create() {
-		try {
-			String rootpath = getPropertyValue(ROOT_PATH).trim();
-			String extension = getPropertyValue(EXTENSION);
-			PyramidSource source = null;
-			
-			if (rootpath.endsWith(".zip")) {
-				// currently only handle zip, can expand to others (tar, rar, etc...)
-				// We need a cache of zip sources - they are slow to read.
-				source = ZipResourcePyramidSource.getZipSource(rootpath, extension);					
-			} else if (rootpath.startsWith("file://")) {
-				// a file/directory on the file system
-				rootpath = rootpath.substring(7);
-				source = new FileSystemPyramidSource(rootpath, extension); 
-			} else if (rootpath.startsWith("res://")) {
-				// a file/directory within the webapp resources
-				rootpath = rootpath.substring(6);
-				source = new ResourcePyramidSource(rootpath, extension);
-			} else {
-				// no prefix / postfix supplied, default to file for legacy support
-				source = new FileSystemPyramidSource(rootpath, extension);
-			}
-			return new FileBasedPyramidIO(source);
+	protected PyramidIO create() throws ConfigurationException {
+		String rootpath = getPropertyValue(ROOT_PATH).trim();
+		String extension = getPropertyValue(EXTENSION);
+		PyramidSource source = null;
+
+		if (rootpath.endsWith(".zip")) {
+			// currently only handle zip, can expand to others (tar, rar, etc...)
+			// We need a cache of zip sources - they are slow to read.
+			source = ZipResourcePyramidSource.getZipSource(rootpath, extension);
+		} else if (rootpath.startsWith("file://")) {
+			// a file/directory on the file system
+			rootpath = rootpath.substring(7);
+			source = new FileSystemPyramidSource(rootpath, extension);
+		} else if (rootpath.startsWith("res://")) {
+			// a file/directory within the webapp resources
+			rootpath = rootpath.substring(6);
+			source = new ResourcePyramidSource(rootpath, extension);
+		} else {
+			// no prefix / postfix supplied, default to file for legacy support
+			source = new FileSystemPyramidSource(rootpath, extension);
 		}
-		catch (Exception e) {
-			LOGGER.error("Error trying to create FileBasedPyramidIO", e);
-		}
-		return null;
+		return new FileBasedPyramidIO(source);
 	}
 }

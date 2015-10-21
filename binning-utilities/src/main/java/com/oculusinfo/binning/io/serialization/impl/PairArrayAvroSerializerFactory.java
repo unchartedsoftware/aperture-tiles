@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.factory.ConfigurableFactory;
 
@@ -72,7 +73,7 @@ public class PairArrayAvroSerializerFactory<S, T>
 	}
 
 	@Override
-	protected TileSerializer<List<Pair<S, T>>> create () {
+	protected TileSerializer<List<Pair<S, T>>> create () throws ConfigurationException {
 		return new PairArrayAvroSerializer<S, T>(_keyType, _valueType, TileSerializerFactory.getCodecFactory(this));
 	}
 }

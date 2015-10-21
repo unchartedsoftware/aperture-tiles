@@ -40,7 +40,7 @@ public class ConfigServiceTests {
         newEnv.put(CONFIG_ENV_VAR, pathToProperties);
         setEnv(newEnv);
 
-        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
+        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI().getPath());
         String replaced = _configService.replaceProperties(configFile);
 
         assertTrue(replaced.contains("\"foo.zookeeper.quorum\": \"bar.test.local\""));
@@ -60,13 +60,13 @@ public class ConfigServiceTests {
         Map<String,String> newEnv = new HashMap<>();
         newEnv.put(CONFIG_ENV_VAR, "invalid/path/to.properties");
         setEnv(newEnv);
-        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
+        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI().getPath());
         _configService.replaceProperties(configFile);
     }
 
     @Test
     public void testReplaceProperties_envVarIsNull_usesDefaultReplacements() throws Exception {
-        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI());
+        File configFile = new File(this.getClass().getClassLoader().getResource("config-service-unit-test.json").toURI().getPath());
         String replaced = _configService.replaceProperties(configFile);
 
         // The default properties file only has one replacement that matches a key in the test json file

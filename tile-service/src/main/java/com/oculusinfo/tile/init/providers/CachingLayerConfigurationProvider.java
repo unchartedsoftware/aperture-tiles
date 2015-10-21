@@ -161,9 +161,13 @@ public class CachingLayerConfigurationProvider extends AbstractFactoryProvider<L
 
 		private void setupBasePyramidIO () {
 			if (!_baseInitialized) {
-				String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_ID);
-				_pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
-				_baseInitialized = true;
+				try {
+					String pyramidId = _parent.getPropertyValue(LayerConfiguration.LAYER_ID);
+					_pyramidIO.setupBasePyramidIO(pyramidId, _baseFactory);
+					_baseInitialized = true;
+				} catch (ConfigurationException e) {
+					LOGGER.warn("Error determining layer id", e);
+				}
 			}
 		}
 

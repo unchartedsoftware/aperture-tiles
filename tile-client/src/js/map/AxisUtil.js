@@ -180,13 +180,29 @@
     }
 
     /**
+     * Private: Formats a number in scientific notation rounding to nearest decimals.
+     *
+     * @param value    {number} the value.
+     * @param decimals {int}    the number of decimal places.
+     * @param allowStepDown {boolean} whether or not to step down units if < 1
+     * @returns {string}
+     */
+    function formatScientificNotation( value, decimals ) {
+        return value.toExponential(decimals);
+    }
+
+    /**
      * Private: Rounds a value to an floating point representation with specific decimal places.
      *
      * @param value    {number} the value.
      * @param decimals {int}    the number of decimal places.
      * @returns {string}
      */
-    function formatNumber( value, decimals ) {
+    function formatNumber( value, decimals, allowStepDown ) {
+        var truncValue = Math.pow( 10, -decimals );
+        if (allowStepDown && value < truncValue) {
+            return formatScientificNotation( value, decimals );
+        }
         return Util.roundToDecimals( value, decimals );
     }
 
@@ -202,7 +218,7 @@
     function formatThousand( value, decimals, allowStepDown ) {
         var truncValue = value / 1e3;
         if ( allowStepDown && Math.abs( truncValue ) < 1 ) {
-            return formatNumber( value, decimals );
+            return formatNumber( value, decimals, true );
         }
         return Util.roundToDecimals( truncValue, decimals ) + 'K';
     }
