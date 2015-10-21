@@ -551,6 +551,8 @@ object PipelineOperations {
 	                       tilingParams: TilingTaskParameters,
 	                       hbaseParameters: Option[HBaseParameters],
 	                       operation: OperationType = COUNT,
+                         kernelRadius: Int = 4,
+                         kernelSigma: Double = 3,
 	                       valueColSpec: Option[String] = None,
 	                       valueColType: Option[String] = None)
 	                      (input: PipelineData) = {
@@ -598,31 +600,17 @@ object PipelineOperations {
 
 		// Parse bounds and level args
 		val levelsProps = createLevelsProps("oculus.binning", tilingParams.levels)
-
 		val tableName = PipelineOperations.getOrGenTableName(input, "heatmap_op")
-
 		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
 
 		def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]): PipelineData = {
 			val typedNumeric = numeric.asInstanceOf[ExtendedNumeric[PT]]
-			val tileAnalytics = task.getTileAnalytics
-			val dataAnalytics = task.getDataAnalytics
-			val sc = input.sqlContext.sparkContext
+      val kernel = StandardBinningFunctions.makeGaussianKernel(kernelRadius, kernelSigma)
 
-			tileAnalytics.map(_.addGlobalAccumulator(sc))
-			dataAnalytics.map(_.addGlobalAccumulator(sc))
-
-			task.getLevels.foreach { levels =>
-				tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-				dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-				val kernel = StandardBinningFunctions.makeGaussianKernel(4, 3)
-
-				task.doParameterizedTiling(tileIO,
-					StandardBinningFunctions.locateIndexOverLevelsWithKernel(kernel, task.getIndexScheme, task.getTilePyramid, levels, task.getNumXBins, task.getNumYBins),
-				  StandardBinningFunctions.populateTileGaussian(kernel)(typedNumeric)
-				)
-			}
-
+      task.doParameterizedTiling(tileIO,
+        StandardBinningFunctions.locateIndexOverLevelsWithKernel(kernel, task.getIndexScheme, task.getTilePyramid, task.getNumXBins, task.getNumYBins),
+        StandardBinningFunctions.populateTileGaussian(kernel)(typedNumeric)
+      )
 			PipelineData(input.sqlContext, input.srdd, Option(tableName))
 		}
 
