@@ -137,11 +137,6 @@ object PipelineOperations {
 		val reader = new CSVReader(context, path, argumentSource)
 		val dataFrame = coalesce(context, reader.asDataFrame, partitions)
 
-		val accumulator = new ErrorCollectorAccumulable(ListBuffer(new ErrorCollector))
-
-		// add lines into error accumulator
-		reader.readErrors.foreach(r => accumulator.add(r))
-
 		val outStream: Option[OutputStream] = errorLog match {
 			case Some("stdout") => Some(System.out)
 			case Some("stderr") => Some(System.err)
@@ -150,7 +145,12 @@ object PipelineOperations {
 		}
 
 		if (outStream.isDefined) {
-			accumulator.value.foreach{ e =>
+      val accumulator = new ErrorCollectorAccumulable(ListBuffer(new ErrorCollector))
+
+      // add lines into error accumulator
+      reader.readErrors.foreach(r => accumulator.add(r))
+
+      accumulator.value.foreach{ e =>
 				for ((k,v) <- e.getError) printf("%s -> %s\n", k, v)
 				outStream.get.flush()
 			}
