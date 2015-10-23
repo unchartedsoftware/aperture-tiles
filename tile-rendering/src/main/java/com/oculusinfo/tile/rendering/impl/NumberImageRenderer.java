@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.*;
 
 /**
  * @author dgray
@@ -68,20 +69,20 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render( TileData<Number> data, LayerConfiguration config ) {
+	public BufferedImage render( TileData<Number> data, TileData<Number> alphaData, LayerConfiguration config ) {
 		BufferedImage bi;
 		try {
 			int outputWidth = config.getPropertyValue( LayerConfiguration.OUTPUT_WIDTH );
 			int outputHeight = config.getPropertyValue( LayerConfiguration.OUTPUT_HEIGHT );
-			int rangeMax = config.getPropertyValue( LayerConfiguration.RANGE_MAX );
-			int rangeMin = config.getPropertyValue( LayerConfiguration.RANGE_MIN );
+			double rangeMax = config.getPropertyValue( LayerConfiguration.RANGE_MAX );
+			double rangeMin = config.getPropertyValue( LayerConfiguration.RANGE_MIN );
 			String rangeMode = config.getPropertyValue( LayerConfiguration.RANGE_MODE );
 			String pixelShape = config.getPropertyValue( LayerConfiguration.PIXEL_SHAPE );
 
 			bi = new BufferedImage( outputWidth, outputHeight, BufferedImage.TYPE_INT_ARGB );
 
 			@SuppressWarnings( "unchecked" )
-			ValueTransformer<Number> t = config.produce( ValueTransformer.class );
+			ValueTransformer<Number> t = config.produce( "valueTransformer", ValueTransformer.class );
 			double scaledMax = ( double ) rangeMax / 100;
 			double scaledMin = ( double ) rangeMin / 100;
 

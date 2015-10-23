@@ -297,7 +297,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	}
 
 	def doParameterizedTiling (tileIO: TileIO,
-	                           locFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
+	                           locFcn: Traversable[Int] => Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
 		                         popFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]): Unit = {
 		val binner = new UniversalBinner
 		val sc = sqlc.sparkContext
@@ -312,7 +312,7 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-					                                                         locFcn, popFcn,
+					                                                         locFcn(levels), popFcn,
 						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,

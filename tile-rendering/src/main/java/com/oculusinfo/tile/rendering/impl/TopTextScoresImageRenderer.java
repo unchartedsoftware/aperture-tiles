@@ -112,7 +112,7 @@ public class TopTextScoresImageRenderer implements TileDataImageRenderer<List<Pa
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BufferedImage render(TileData<List<Pair<String, Double>>> data, LayerConfiguration config) {
+	public BufferedImage render(TileData<List<Pair<String, Double>>> data, TileData<List<Pair<String, Double>>> alphaData, LayerConfiguration config) {
 		BufferedImage bi;
 		String layerId = null;
 		TileIndex index = null;

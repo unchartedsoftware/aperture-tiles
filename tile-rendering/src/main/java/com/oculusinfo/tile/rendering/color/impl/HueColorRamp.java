@@ -34,26 +34,31 @@ import com.oculusinfo.tile.rendering.color.ColorRampParameter;
  * 		the hue gradient. Values outside the range (0, 1) are clamped.
  * "to": A value or string that represents a number to use as the end of the
  * 		hue gradient. Values outside the range (0, 1) are clamped.
- * 
- * 
+ *
+ *
  * @author cregnier
  *
  */
 public class HueColorRamp implements ColorRamp {
 	private double fromVal = 0.0;
 	private double toVal = 0.0;
-	
+
 	private final double clamp(double v, double min, double max) {
-		return (v > min)? ((v < max)? v : max): min;   
+		return (v > min)? ((v < max)? v : max): min;
 	}
-	
+
 	public HueColorRamp(double from, double to) {
 		fromVal = clamp(from, 0.0, 1.0);
 		toVal = clamp(to, 0.0, 1.0);
 	}
-	
+
 	@Override
-	public int getRGB(double scale) {
+		 public int getRGB(double scale) {
+		return hslToRGB((toVal - fromVal) * scale + fromVal, 1.0, 0.5);
+	}
+
+	@Override
+	public int getRGBA(double scale, double alphaValue) {
 		return hslToRGB((toVal - fromVal) * scale + fromVal, 1.0, 0.5);
 	}
 
@@ -65,7 +70,7 @@ public class HueColorRamp implements ColorRamp {
 		if (t < 0.6666667) return p + (q - p) * (0.66666667 - t) * 6;
 		return p;
 	}
-	
+
 	protected int hslToRGB(double h, double s, double l) {
 		double r, g, b;
 		if (s != 0) {
@@ -78,11 +83,11 @@ public class HueColorRamp implements ColorRamp {
 		else {
 			r = g = b = 1;
 		}
-		
+
 		int ir = (int)(r * 255);
 		int ig = (int)(g * 255);
 		int ib = (int)(b * 255);
-		
+
 		return (0xff << 24) | (ir << 16) | (ig << 8) | ib;
 	}
 }

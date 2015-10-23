@@ -61,7 +61,7 @@ public interface TileDataImageRenderer<T> {
 	 * @param config The layer configuration object.
 	 * @return The buffered image.
 	 */
-	public abstract BufferedImage render (TileData<T> data, LayerConfiguration config);
+	public abstract BufferedImage render (TileData<T> data, TileData<T> alphaData, LayerConfiguration config);
 
 	/**
 	 * Determine how many images are available to be rendered given a set of

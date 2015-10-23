@@ -25,12 +25,14 @@
 package com.oculusinfo.tile.rendering.transformations.tile;
 
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.impl.AverageTileBucketView;
 import com.oculusinfo.binning.impl.BinaryOperationTileView;
 
+import com.oculusinfo.binning.impl.DensityFilterTileView;
 import com.oculusinfo.binning.impl.UnaryOperationTileView;
 import com.oculusinfo.binning.util.BinaryOperator;
 import com.oculusinfo.binning.util.UnaryOperator;
@@ -55,6 +57,7 @@ public class AvgDivBucketTileTransformer<T extends Number> implements TileTransf
 	protected Integer _averageRange = 0;
 	protected Integer _startBucket = 0;
 	protected Integer _endBucket = 0;
+	protected Double _densityThreshold = 0.0;
 
 	public AvgDivBucketTileTransformer(JSONObject arguments){
 		if ( arguments != null ) {
@@ -62,6 +65,7 @@ public class AvgDivBucketTileTransformer<T extends Number> implements TileTransf
 			_averageRange = arguments.optInt("averageRange");
 			_startBucket = arguments.optInt("startBucket");
 			_endBucket = arguments.optInt("endBucket");
+			_densityThreshold = arguments.optDouble("densityThreshold");
 		} else {
 			LOGGER.warn("No arguments passed in to filterbucket transformer");
 		}
@@ -119,11 +123,21 @@ public class AvgDivBucketTileTransformer<T extends Number> implements TileTransf
 		}
 
 		// Divide average 1 by average 2 and apply log10 to the result.
-		AverageTileBucketView<T> numerator = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
+		AverageTileBucketView<T> numerator = null;
+
+		if (_densityThreshold > 0) {
+			// Add low pass filter around numerator
+			DensityFilterTileView<T> filter = new DensityFilterTileView<>(inputData,
+				Arrays.asList(Arrays.asList( _startBucket, _endBucket), Arrays.asList(startA, endA)), _densityThreshold, 0);
+			numerator = new AverageTileBucketView<>(filter, _startBucket, _endBucket);
+		} else {
+			numerator = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
+		}
+
 		AverageTileBucketView<T> denominator = new AverageTileBucketView<>(inputData, startA, endA);
 		BinaryOperationTileView<T> binaryOpView = new BinaryOperationTileView<>(
 			numerator, denominator, BinaryOperator.OPERATOR_TYPE.DIVIDE, 1.0);
-		return new UnaryOperationTileView<>(UnaryOperator.OPERATOR_TYPE.LOG_10, binaryOpView, -(Math.log10(_averageRange)));
+		return new UnaryOperationTileView<>(UnaryOperator.OPERATOR_TYPE.LOG_10, binaryOpView, 0);
 	}
 
 	@Override

@@ -32,13 +32,12 @@ import com.oculusinfo.binning.properties.TileIndexProperty;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.properties.IntegerProperty;
-import com.oculusinfo.factory.properties.JSONProperty;
-import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.properties.*;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.transformations.combine.TileCombiner;
 import com.oculusinfo.tile.rendering.transformations.combine.TileCombinerFactory;
+import com.oculusinfo.tile.rendering.transformations.tile.IdentityTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import org.slf4j.Logger;
@@ -70,6 +69,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
      */
 	public static final List<String> TILE_COMBINE_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileCombiner"));
 	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileTransform"));
+	public static final List<String> ALPHA_VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","alphaValueTransform" ) );
     public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
     public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
     public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
@@ -113,10 +113,10 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final StringProperty RANGE_MODE = new StringProperty("rangeMode",
 		"The mode for handling range extrema",
 		"clamp");
-	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
+	public static final DoubleProperty RANGE_MIN = new DoubleProperty("rangeMin",
 	    "The minimum value set to the lower bound of the color ramp spectrum",
 	    0);
-	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
+	public static final DoubleProperty RANGE_MAX = new DoubleProperty("rangeMax",
 	    "The maximum value set to the upper bound of the color ramp spectrum",
 	    100);
 	public static final TileIndexProperty TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
@@ -128,6 +128,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final StringProperty LEVEL_MAXIMUMS = new StringProperty("levelMaximums",
         "For server use only, on a tile-by-tile basis",
         null);
+	public static final BooleanProperty ALPHA_RAMP = new BooleanProperty("alphaRamp",
+		"In addition to using a colour ramp, an alpha ramp is applies based on bin density",
+		false);
 
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
 		Collections.unmodifiableSet(new HashSet<ConfigurationProperty<?>>(Arrays.asList(
@@ -137,6 +140,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         )));
 
 	private ValueTransformerFactory _transformFactory;
+	private ValueTransformerFactory _alphaTransformFactory;
 	private TileIndex _tileCoordinate;
 	private String _levelMinimum;
 	private String _levelMaximum;
@@ -175,12 +179,16 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
 		addProperty(RANGE_MODE, RENDERER_PATH);
+		addProperty(ALPHA_RAMP, RENDERER_PATH);
 		addProperty(TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);
 
-		_transformFactory = new ValueTransformerFactory( this, VALUE_TRANSFORM_PATH );
+		_transformFactory = new ValueTransformerFactory( "valueTransformer", this, VALUE_TRANSFORM_PATH );
 		addChildFactory( _transformFactory );
+
+		_alphaTransformFactory =  new ValueTransformerFactory( "alphaValueTransformer", this, ALPHA_VALUE_TRANSFORM_PATH );
+		addChildFactory( _alphaTransformFactory );
 
         addChildFactory( rendererFactoryProvider.createFactory(this, RENDERER_PATH) );
         addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );

@@ -32,7 +32,7 @@ import com.oculusinfo.tile.rendering.color.ColorRampParameter;
 /**
  * Creates a single flat colour with no gradients at all.
  * Always returns the initial colour.
- * 
+ *
  * @author cregnier
  *
  */
@@ -40,8 +40,8 @@ public class FlatColorRamp implements ColorRamp {
 
 	protected ColorRampParameter params;
 	private int col;
-	
-	
+
+
 	/**
 	 * Creates the ramp for the given colour and opacity.
      *
@@ -55,8 +55,13 @@ public class FlatColorRamp implements ColorRamp {
 	}
 
 	@Override
-	public int getRGB(double scale) {
+		 public int getRGB(double scale) {
 		return col;
 	}
-	
+
+	@Override
+	public int getRGBA(double scale, double alphaScale) {
+		return col;
+	}
+
 }

@@ -37,6 +37,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,7 @@ public class NumberStatisticImageRenderer implements TileDataImageRenderer<Numbe
 	 * @see TileDataImageRenderer#render(LayerConfiguration)
 	 */
 	@Override
-	public BufferedImage render(TileData<Number> data, LayerConfiguration config) {
+	public BufferedImage render(TileData<Number> data, TileData<Number> alphaData, LayerConfiguration config) {
 		BufferedImage bi;
 		String layerId = null;
 		TileIndex index = null;
