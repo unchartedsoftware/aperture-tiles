@@ -37,6 +37,7 @@ import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.util.Pair;
 import com.oculusinfo.tile.rendering.transformations.combine.TileCombiner;
 import com.oculusinfo.tile.rendering.transformations.combine.TileCombinerFactory;
+import com.oculusinfo.tile.rendering.transformations.tile.BucketTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.IdentityTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
@@ -238,6 +239,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 			if (null != tileTransformer) {
 				Pair<Double, Double> extrema = tileTransformer.getTransformedExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+
+				Pair<Double, Double> rawExtrema = tileTransformer.getRawExtrema(this);
+				_alphaTransformFactory.setExtrema(rawExtrema.getFirst(), rawExtrema.getSecond()/2);
 			}
 		} catch (ConfigurationException e1) {
 			String layer;

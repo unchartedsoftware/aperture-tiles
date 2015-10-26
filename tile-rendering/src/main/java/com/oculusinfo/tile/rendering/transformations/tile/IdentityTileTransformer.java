@@ -71,6 +71,11 @@ public class IdentityTileTransformer<T> implements TileTransformer<T> {
 
 	@Override
 	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
+		return getRawExtrema(config);
+	}
+
+	@Override
+	public Pair<Double, Double> getRawExtrema(LayerConfiguration config) throws ConfigurationException {
 		String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
 		double minimumValue = parseExtremum(config, LayerConfiguration.LEVEL_MINIMUMS, "minimum", layer, 0.0);
 		double maximumValue = parseExtremum(config, LayerConfiguration.LEVEL_MAXIMUMS, "maximum", layer, 1000.0);
