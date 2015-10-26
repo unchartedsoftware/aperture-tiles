@@ -25,6 +25,7 @@ package com.oculusinfo.binning.impl;
 
 import com.oculusinfo.binning.TileData;
 import com.oculusinfo.binning.TileIndex;
+import com.oculusinfo.factory.util.Pair;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,11 +40,11 @@ public class DensityFilterTileView<T extends Number> implements TileData<List<T>
 	private static final long serialVersionUID = 1234567890L;
 
 	private TileData<List<T>> _base = null;
-	private List<List<Integer>> _buckedRanges = null;
+	private List<Pair<Integer, Integer>> _buckedRanges = null;
 	private double _threshold = 0;
 	private Number _defaultValue = null;
 
-	public DensityFilterTileView (TileData<List<T>> base, List<List<Integer>> buckedRanges, double threshold, Number defaultValue) {
+	public DensityFilterTileView (TileData<List<T>> base, List<Pair<Integer, Integer>> buckedRanges, double threshold, Number defaultValue) {
 		_base = base;
 		_buckedRanges = buckedRanges;
 		_threshold = threshold;
@@ -70,9 +71,9 @@ public class DensityFilterTileView<T extends Number> implements TileData<List<T>
 		int binSize = binContents.size();
 		Boolean foundGreaterThan = false;
 
-		for (List<Integer> range : _buckedRanges) {
-			int start = range.get(0);
-			int end = range.get(1);
+		for (Pair<Integer, Integer> range : _buckedRanges) {
+			int start = range.getFirst();
+			int end = range.getSecond();
 			start = (start >= 0) ? start : 0;
 			end = (end < binSize) ? end : binSize;
 

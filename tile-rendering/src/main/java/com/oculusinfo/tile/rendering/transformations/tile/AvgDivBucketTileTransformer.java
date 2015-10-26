@@ -125,7 +125,7 @@ public class AvgDivBucketTileTransformer<T extends Number> extends BucketTileTra
 		if (_densityThreshold > 0) {
 			// Add low pass filter around numerator
 			DensityFilterTileView<T> filter = new DensityFilterTileView<>(inputData,
-				Arrays.asList(Arrays.asList( _startBucket, _endBucket), Arrays.asList(startA, endA)), _densityThreshold, 0);
+				Arrays.asList(new Pair<Integer, Integer>(_startBucket, _endBucket), new Pair<Integer, Integer>(startA, endA)), _densityThreshold, 0);
 			numerator = new AverageTileBucketView<>(filter, _startBucket, _endBucket);
 		} else {
 			numerator = new AverageTileBucketView<>(inputData, _startBucket, _endBucket);
