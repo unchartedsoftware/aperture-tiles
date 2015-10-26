@@ -28,6 +28,7 @@ import java.util.List;
 import com.oculusinfo.binning.io.serialization.TileSerializer;
 import com.oculusinfo.binning.io.serialization.TileSerializerFactory;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.providers.AbstractFactoryProvider;
 import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsRecord;
 import com.oculusinfo.tilegen.graph.analytics.GraphAnalyticsAvroSerializer;
@@ -44,7 +45,7 @@ public class GraphTileSerializationFactory extends ConfigurableFactory<TileSeria
 	}
 
 	@Override
-	protected TileSerializer<List<GraphAnalyticsRecord>> create () {
+	protected TileSerializer<List<GraphAnalyticsRecord>> create () throws ConfigurationException {
 		return new GraphAnalyticsAvroSerializer(TileSerializerFactory.getCodecFactory(this));
 	}
 

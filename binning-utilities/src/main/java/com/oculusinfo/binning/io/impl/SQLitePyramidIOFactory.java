@@ -26,11 +26,13 @@ package com.oculusinfo.binning.io.impl;
 
 import com.oculusinfo.binning.io.PyramidIO;
 import com.oculusinfo.factory.ConfigurableFactory;
+import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.properties.StringProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.List;
 
 
@@ -50,14 +52,12 @@ public class SQLitePyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	}
 
 	@Override
-	protected PyramidIO create() {
+	protected PyramidIO create() throws ConfigurationException {
 		try {
 			String rootPath = getPropertyValue(ROOT_PATH);
 			return new SQLitePyramidIO(rootPath);
+		} catch (ClassNotFoundException | SQLException e) {
+			throw new ConfigurationException("Error creating SQLite pyramid IO", e);
 		}
-		catch (Exception e) {
-			LOGGER.error("Error trying to create SQLitePyramidIO", e);
-		}
-		return null;
 	}
 }

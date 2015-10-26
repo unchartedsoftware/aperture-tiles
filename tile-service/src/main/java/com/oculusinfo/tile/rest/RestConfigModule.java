@@ -27,6 +27,7 @@ package com.oculusinfo.tile.rest;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.oculusinfo.tile.rest.config.ConfigResource;
+import com.oculusinfo.tile.rest.layer.KMLLayerResource;
 import com.oculusinfo.tile.rest.layer.LayerResource;
 import com.oculusinfo.tile.rest.layer.StateResource;
 import com.oculusinfo.tile.rest.legend.LegendResource;
@@ -67,8 +68,11 @@ public class RestConfigModule extends AbstractModule {
 
 		resourceBinder.addBinding( "/{version}/legend/{layer}" ).toInstance( LegendResource.class );
 		resourceBinder.addBinding( "/legend/{layer}" ).toInstance( LegendResource.class );
-		
+
 		resourceBinder.addBinding( "/{version}/translate" ).toInstance( TileTranslationResource.class );
 		resourceBinder.addBinding( "/translate" ).toInstance( TileTranslationResource.class );
+
+		resourceBinder.addBinding( "/{version}/layers/{layer}/kml/{kmlId}/{kmlFile}" ).toInstance( KMLLayerResource.class );
+		resourceBinder.addBinding( "/layers/{layer}/kml/{kmlId}/{kmlFile}" ).toInstance( KMLLayerResource.class );
 	}
 }

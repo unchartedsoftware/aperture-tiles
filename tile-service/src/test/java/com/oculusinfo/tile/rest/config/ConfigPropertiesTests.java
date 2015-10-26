@@ -35,7 +35,7 @@ public class ConfigPropertiesTests {
 
     @Test
     public void testGetProperties() throws Exception {
-        String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").getPath();
+        String pathToProperties = this.getClass().getClassLoader().getResource("config-service-unit-test.properties").toURI().getPath();
         Map<String,String> newEnv = new HashMap<>();
         newEnv.put(CONFIG_ENV_VAR, pathToProperties);
         setEnv(newEnv);

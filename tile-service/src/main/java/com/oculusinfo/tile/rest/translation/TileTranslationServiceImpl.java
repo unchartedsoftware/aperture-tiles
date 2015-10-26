@@ -25,6 +25,17 @@
 package com.oculusinfo.tile.rest.translation;
 
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.oculusinfo.tile.rest.config.ConfigException;
+import com.oculusinfo.tile.rest.config.ConfigPropertiesService;
+import org.apache.commons.lang.StringUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,34 +43,21 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Properties;
 
-import javax.net.ssl.HttpsURLConnection;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.oculusinfo.tile.rest.config.ConfigException;
-import com.oculusinfo.tile.rest.config.ConfigPropertiesService;
-
-import org.apache.commons.lang.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 
 /**
- * A service that will translate given text to a target language based on the parameters 
- * 	passed in.  Currently only supports the Google Translate Service. 
+ * A service that will translate given text to a target language based on the parameters
+ * 	passed in.  Currently only supports the Google Translate Service.
  *
  */
 @Singleton
 public class TileTranslationServiceImpl implements TileTranslationService {
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(TileTranslationServiceImpl.class);
-	
+
 	public static final String TRANSLATE_API_KEY = "translation.api.key";
 	public static final String TRANSLATE_API_ENDPOINT = "translation.api.endpoint";
-	
+
 	private ConfigPropertiesService _service;
 
 	@Inject
@@ -70,30 +68,34 @@ public class TileTranslationServiceImpl implements TileTranslationService {
     /* (non-Javadoc)
 	 * @see TileUtilsServiceImpl#getTranslationGoogle(JSONObject query)
 	 */
-	public JSONObject getTranslation( JSONObject query ) {   	
+	public JSONObject getTranslation( JSONObject query ) {
 		JSONObject result = null;
     	try {
     		// get the translation arguments from the query
     		String service = query.getString("service");
     		String text = query.getString("text");
         	String target = query.getString("target");
-        	
-    		// as we integrate more translation service we can add a more sophisticated selection mechanism        	
-        	if ( StringUtils.equalsIgnoreCase( service, "google" ) ) {	
+			String source = null;
+			if (query.has("source")) {
+				source = query.getString("source");
+			}
+
+    		// as we integrate more translation service we can add a more sophisticated selection mechanism
+        	if ( StringUtils.equalsIgnoreCase( service, "google" ) ) {
             	Properties properties = _service.getConfigProperties();
             	if ( properties != null ) {
 	        		String translationApiKey = properties.getProperty(TRANSLATE_API_KEY);
 	        		String translationApiEndpoint = properties.getProperty(TRANSLATE_API_ENDPOINT);
-	        		
+
 	        		if ( translationApiKey != null && translationApiEndpoint != null ) {
-	        			result = translateGoogle( text, target, translationApiKey, translationApiEndpoint );
+						result = translateGoogle( text, source, target, translationApiKey, translationApiEndpoint);
 	        		}
             	}
-            } 
+            }
         	if ( result == null ){
-            	JSONObject resultErr = new JSONObject();  
+            	JSONObject resultErr = new JSONObject();
             	resultErr.put("message", "Incorrect Translation Service Configuration");
-            	
+
             	result = new JSONObject();
             	result.put("error", resultErr);
             }
@@ -101,42 +103,38 @@ public class TileTranslationServiceImpl implements TileTranslationService {
     		LOGGER.error( "Incorrect Configuration for Translation API", e );
 		} catch ( ConfigException e ) {
 			LOGGER.error( "Error with internal configuration properties", e );
-		} 
+		}
 		return result;
 	}
-       
-	/*
-	 * Translates the given text using the Google Translate API
-	 */
-    private JSONObject translateGoogle( String text, String target, String key, String endpoint ) {
+
+	private JSONObject translateGoogle(String text,  String sourceLang, String targetLang, String key, String endpoint) {
 		JSONObject result = null;
+		String srcParam = sourceLang != null ? "&source=" + sourceLang : "";
 		try {
-			// assumes that the text has already been uri encoded
-            String urlStr = endpoint + "?key=" + key + "&q=" + text + "&target=" + target;
-            URL url = new URL( urlStr );
- 
-            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
-            StringBuilder reply = new StringBuilder();
-            InputStream stream;
-            if ( connection.getResponseCode() == 200 ) //success
-            {	
-                stream = connection.getInputStream();
-            } else {
-                stream = connection.getErrorStream();
-            }
- 
-            BufferedReader reader = new BufferedReader( new InputStreamReader( stream ) );
-            String line;
-            while (( line = reader.readLine() ) != null ) {
-            	reply.append(line);
-            }
-            result = new JSONObject( reply.toString() );
-        } catch ( IOException e ) {
-        	LOGGER.error( "Error reading response from Google Translation Service", e );
-        } catch (JSONException e) {
-        	LOGGER.error( "Error creating JSON Objects from Google Translation Service response", e );
+			String urlStr = endpoint + "?key=" + key + "&q=" + text + "&target=" + targetLang + srcParam;
+			URL url = new URL( urlStr );
+
+			HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+			InputStream stream;
+			if ( connection.getResponseCode() == 200 ) //success
+			{
+				stream = connection.getInputStream();
+			} else {
+				stream = connection.getErrorStream();
+			}
+			BufferedReader reader = new BufferedReader(new InputStreamReader( stream, "UTF-8" ) );
+			StringBuilder reply = new StringBuilder();
+			String line;
+			while (( line = reader.readLine() ) != null ) {
+				reply.append(line);
+			}
+			result = new JSONObject( reply.toString() );
+		} catch ( IOException e ) {
+			LOGGER.error( "Error reading response from Google Translation Service", e );
+		} catch (JSONException e) {
+			LOGGER.error( "Error creating JSON Objects from Google Translation Service response", e );
 		}
- 
-        return result;
-    }
+
+		return result;
+	}
 }

@@ -25,15 +25,19 @@
 package com.oculusinfo.tilegen.tiling
 
 
+import scala.collection.mutable.{Map => MutableMap}
 import scala.collection.mutable
 import scala.util.Try
-
 import org.scalatest.FunSuite
-
 import com.oculusinfo.binning.BinIndex
 import com.oculusinfo.binning.TileIndex
 import com.oculusinfo.binning.TileAndBinIndices
 import com.oculusinfo.tilegen.util.ExtendedNumeric
+import com.oculusinfo.binning.TilePyramid
+import com.oculusinfo.binning.impl.AOITilePyramid
+import org.apache.spark.SharedSparkContext
+import org.apache.spark.rdd.RDD
+
 
 
 
@@ -43,7 +47,96 @@ import com.oculusinfo.tilegen.util.ExtendedNumeric
 class StandardBinningFunctionsTestSuite extends FunSuite {
 	import StandardBinningFunctions._
 
+	test("Guassian tiling") {
+		val pyramid: TilePyramid = new AOITilePyramid(0.0, 0.0, 8.0, 8.0)
+		val index = new CartesianSchemaIndexScheme
 
+		// Use an arbitrary assymetric kernel for testing
+		val kernel = Array(
+			Array(0.02, 0.12, 0.26, 0.36, 0.46),
+			Array(0.13, 0.13, 0.35, 0.25, 0.15),
+			Array(0.24, 0.24, 0.44, 0.24, 0.24),
+			Array(0.35, 0.25, 0.33, 0.53, 0.13),
+			Array(0.46, 0.16, 0.22, 0.12, 0.00)
+		)
+		val levelsTested = List(0, 1)
+
+		// Create our locate function
+		val locateFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])] =
+			locateIndexOverLevelsWithKernel[Seq[Any]](kernel, index, pyramid, levelsTested, 8, 8)
+
+		// Create our populate function
+		val populateFcn: (TileIndex, Array[BinIndex], Double) => MutableMap[BinIndex, Double] =
+			populateTileGaussian[Double](kernel)
+
+		// Tests gaussian blurring for a single data point and given the expected number bins output for each level
+		// Uses a data value of 1 and looks for a correctly shifted version of the kernel
+		def testGaussianTiling (startingPoint : Seq[Any], expectedNumBins: List[Int]) = {
+			val testPoint = List((startingPoint, 1.0))
+
+			// Run our input data through our functions to get individual bin values
+			val output: Seq[(TileIndex, BinIndex, Double)] = testPoint.flatMap{case (index, value) =>
+				locateFcn(index)flatMap{case (tile, ubins) =>
+					populateFcn(tile, ubins, value).map{case (bin, value) => (tile, bin, value)}
+				}
+			}
+
+			// Group the values by level
+			val groupedOutput = output.groupBy(f => f._1.getLevel)
+
+			// Test the output for each level
+			groupedOutput.foreach{ case (level, binSequence) => {
+				// Using data values of 1.0, the output should just be a shifted copies of the kernel
+				val outputUBinIndex = binSequence.map{case (tile, bin, value) => (TileIndex.tileBinIndexToUniversalBinIndex(tile, bin), value)}
+
+				// Find bin coords of input point
+				val (x,y) = index.toCartesian(testPoint(0)._1)
+				val tile = pyramid.rootToTile(x, y, level, 8, 8) //x, y, level, xBins, yBins
+				val bin = TileIndex.tileBinIndexToUniversalBinIndex(tile, pyramid.rootToBin(x, y, tile))
+
+				// Find the universal bin index offset of the kernel matrix top left
+				val (kDimX, kDimY) = (kernel(0).length, kernel.length)
+				val (kOffsetX, kOffsetY) = (bin.getX - kDimX/2, bin.getY - kDimY/2) // Offset of kernel matrix in tile
+
+				// Check to see that we have the expected number of bins
+				assert(outputUBinIndex.length == expectedNumBins(level))
+
+				outputUBinIndex.foreach(binData => {
+					val binIndex = binData._1
+					val (binKIndexX,binKIndexY)  = (binIndex.getX - kOffsetX, binIndex.getY - kOffsetY)
+
+					// All bins that were output should map to somewhere in the kernel space
+					// and the value should match the corresponding kernel value
+					assert(binKIndexX >= 0 && binKIndexX < kDimX && binKIndexY >= 0 && binKIndexY < kDimY)
+					assert(kernel(binKIndexY)(binKIndexX) == binData._2)
+				})
+			}}
+		}
+
+		// Create some data with which to test them
+		// One point firmly in bin (3, 3) of tile (0, 0, 0, 8, 8)
+		testGaussianTiling(Seq[Any](3.5, 3.5), List(25, 25))
+
+		// Test edge cases for starting points on edges and corners
+		// and where kernel crosses tile boundaries in different directions
+		// Edges
+		testGaussianTiling(Seq[Any](0.5, 3.5), List(15, 20))
+		testGaussianTiling(Seq[Any](3.5, 0.5), List(15, 20))
+		testGaussianTiling(Seq[Any](7.5, 3.5), List(15, 15))
+		testGaussianTiling(Seq[Any](3.5, 7.5), List(15, 15))
+		// Corners
+		testGaussianTiling(Seq[Any](0.5, 0.5), List(9, 16))
+		testGaussianTiling(Seq[Any](0.5, 7.5), List(9, 12))
+		testGaussianTiling(Seq[Any](7.5, 0.5), List(9, 12))
+		testGaussianTiling(Seq[Any](7.5, 7.5), List(9, 9))
+		// Inner tile boundary crossings
+		testGaussianTiling(Seq[Any](3.8, 3.8), List(25, 25))
+		testGaussianTiling(Seq[Any](4.2, 3.8), List(25, 25))
+		testGaussianTiling(Seq[Any](3.8, 4.2), List(25, 25))
+		testGaussianTiling(Seq[Any](4.2, 4.2), List(25, 25))
+
+		println("success")
+	}
 
 	test("for vs while") {
 		def time (f: () => Unit): Double = {
