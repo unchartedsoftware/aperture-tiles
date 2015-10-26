@@ -35,10 +35,7 @@ import com.oculusinfo.factory.ConfigurationProperty;
 import com.oculusinfo.factory.properties.*;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.util.Pair;
-import com.oculusinfo.tile.rendering.transformations.combine.TileCombiner;
 import com.oculusinfo.tile.rendering.transformations.combine.TileCombinerFactory;
-import com.oculusinfo.tile.rendering.transformations.tile.BucketTileTransformer;
-import com.oculusinfo.tile.rendering.transformations.tile.IdentityTileTransformer;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
 import org.slf4j.Logger;
@@ -114,10 +111,10 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final StringProperty RANGE_MODE = new StringProperty("rangeMode",
 		"The mode for handling range extrema",
 		"clamp");
-	public static final DoubleProperty RANGE_MIN = new DoubleProperty("rangeMin",
+	public static final IntegerProperty RANGE_MIN = new IntegerProperty("rangeMin",
 	    "The minimum value set to the lower bound of the color ramp spectrum",
 	    0);
-	public static final DoubleProperty RANGE_MAX = new DoubleProperty("rangeMax",
+	public static final IntegerProperty RANGE_MAX = new IntegerProperty("rangeMax",
 	    "The maximum value set to the upper bound of the color ramp spectrum",
 	    100);
 	public static final TileIndexProperty TILE_COORDINATE = new TileIndexProperty("tileCoordinate",
@@ -186,7 +183,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(LEVEL_MAXIMUMS);
 
 		_transformFactory = new ValueTransformerFactory( "valueTransformer", this, VALUE_TRANSFORM_PATH );
-		addChildFactory( _transformFactory );
+		addChildFactory(_transformFactory);
 
 		_alphaTransformFactory =  new ValueTransformerFactory( "alphaValueTransformer", this, ALPHA_VALUE_TRANSFORM_PATH );
 		addChildFactory( _alphaTransformFactory );

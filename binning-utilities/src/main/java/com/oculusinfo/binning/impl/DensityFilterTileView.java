@@ -43,7 +43,6 @@ public class DensityFilterTileView<T extends Number> implements TileData<List<T>
 	private double _threshold = 0;
 	private Number _defaultValue = null;
 
-
 	public DensityFilterTileView (TileData<List<T>> base, List<List<Integer>> buckedRanges, double threshold, Number defaultValue) {
 		_base = base;
 		_buckedRanges = buckedRanges;

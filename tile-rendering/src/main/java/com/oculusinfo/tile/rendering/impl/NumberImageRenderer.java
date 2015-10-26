@@ -74,8 +74,8 @@ public class NumberImageRenderer implements TileDataImageRenderer<Number> {
 		try {
 			int outputWidth = config.getPropertyValue( LayerConfiguration.OUTPUT_WIDTH );
 			int outputHeight = config.getPropertyValue( LayerConfiguration.OUTPUT_HEIGHT );
-			double rangeMax = config.getPropertyValue( LayerConfiguration.RANGE_MAX );
-			double rangeMin = config.getPropertyValue( LayerConfiguration.RANGE_MIN );
+			int rangeMax = config.getPropertyValue( LayerConfiguration.RANGE_MAX );
+			int rangeMin = config.getPropertyValue( LayerConfiguration.RANGE_MIN );
 			String rangeMode = config.getPropertyValue( LayerConfiguration.RANGE_MODE );
 			String pixelShape = config.getPropertyValue( LayerConfiguration.PIXEL_SHAPE );
 
