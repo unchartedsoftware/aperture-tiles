@@ -32,6 +32,7 @@ import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{Map => MutableMap}
+import scala.reflect.ClassTag
 
 import org.apache.spark.sql.catalyst.expressions.{Expression}
 import org.apache.spark.sql._
@@ -452,6 +453,50 @@ object SchemaTypeUtilities {
 	}
 
 
+	/**
+	 * Append a new column of primitives to the data.
+	 * The data type of the column must be one of those types listed by _dataTypesOfClasses
+	 * @param dataFrame The data to append to
+	 * @param newColumn The column of primitives to append
+	 * @param newColumnName The name of the new column
+	 * @return The data frame with the new column added
+	 */
+	def zip[T: ClassTag] (dataFrame: DataFrame,
+		                    newColumn: RDD[T],
+		                    newColumnName: String): DataFrame = {
+		// Append the new column to the data
+		val dfWithNewColumn = dataFrame.rdd.zip(newColumn).map{ case (row, rddElement) =>
+			Row((row.toSeq :+ rddElement):_*)
+		}
+		// Append the new column to the schema
+		val sparkSqlDataType = _dataTypesOfClasses(scala.reflect.classTag[T].runtimeClass)
+		val newSchema = structSchema((dataFrame.schema.fields.toSeq :+ schemaField(newColumnName, sparkSqlDataType)):_*)
+
+		// Combine the data with the schema
+		dataFrame.sqlContext.createDataFrame(dfWithNewColumn, newSchema)
+	}
+
+	/**
+	 * Remove the specified columns from the data frame
+	 * @param base The existing DataFrame
+	 * @param columnNames The names of the columns to remove from the DataFrame
+	 * @return A new DataFrame with the named added value.
+	 */
+	def removeColumns(base: DataFrame, columnNames: Set[String]): DataFrame = {
+
+		val schemaFields = base.schema.fields
+		var columnFilter: Seq[Column] = Seq()
+
+		// Iterate the fields in the schema and construct a filter
+		// containing only the fields that are NOT in the set of
+		// field names to remove
+		for (field <- schemaFields)
+			if (!columnNames.contains(field.name))
+					columnFilter = columnFilter :+ new Column(field.name)
+
+		// Select only the columns specified in the filter
+		base.select(columnFilter: _*)
+	}
 
 	private val conversions: MutableMap[(DataType, DataType), Any => Any] = MutableMap()
 	private def addConverter (from: DataType, to: DataType, conversion: Any => Any): Unit = {

@@ -125,6 +125,8 @@ class CSVReader (val sqlc: SQLContext, data: RDD[String], configuration: KeyValu
 	 */
 	def asDataFrame = _parsed
 
+	def getUnfilteredRdd = _parseUnfiltered
+
 	def schema = _schema
 
 	def readErrors	= _parseErrors

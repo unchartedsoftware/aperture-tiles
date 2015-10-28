@@ -480,7 +480,20 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	{
 		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
 			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
-			val allFieldsEscaped = allFields.map(v => if(v.forall(_.isDigit)) { v } else { "`" + v + "`"	})
+
+			// Note: Backtick escape characters will break fields with nested arrays.
+			// E.g. `a.b[0].c[0]` will break,
+			// but a.b[0].c[0] or `a.b`[0].`c`[0] will work.
+			//
+			// Note that "[" and "]" charaters are valid field name characters, so we just can't
+			// tokenize around those characters. For now, just deal with the known problematic
+			// case that required the backtick characters in the first place - names that start
+			// with underscores.
+			val allFieldsEscaped = allFields.map(v =>
+				if (v.forall(_.isDigit)) { v }
+				else if ( v.length > 0 && v.charAt(0) == '_' ) { "`" + v + "`"  } // escape field names that start with underscore
+				else { v }
+			)
 
 			val selectStmt =
 				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)
