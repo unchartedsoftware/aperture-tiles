@@ -7,6 +7,8 @@ layout: section
 Aperture Tiles <span class="tagline">tile-based visual analytics for big data</span>
 =======================================================
 
+<h6 class="attribution">Aperture Tiles is powered by <a href="http://uncharted.software/salt/">Salt</a>, an open <br> source library for scalable, analytic layered tiles.</h6>
+
 Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore datasets containing billions of data points (or more). 
  
 Business and government leaders, operators and analysts today have more data than ever at hand to make smart, informed decisions. This information comes from various places, including social media, sensor data, financial transactions, cyber and open-source data. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.

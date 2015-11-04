@@ -603,7 +603,6 @@ hr {
 		}
 	}
 }
-}
 
 .copyright {
 	margin-top: 0;
@@ -611,4 +610,20 @@ hr {
 
 figure {
 	margin: 0;
+}
+
+.attribution {
+	font-size: 15px;
+	font-style: italic;
+	text-align: center;
+	margin: 25px auto;
+	color: $color-sub-h1;
+	a {
+		font-style: normal;
+		font-weight: bold;
+		color: $color-h1;
+		&:hover {
+			color: #4e443c;
+		}
+	}
 }
