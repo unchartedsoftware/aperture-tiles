@@ -228,7 +228,6 @@
         carousel.activate();
         // add to carousel array
         map.carousels = map.carousels || [];
-        map.carousels = map.carousels || [];
         map.carousels.push( carousel );
         // add it to carousel map
         map.carouselsById = map.carouselsById || {};
