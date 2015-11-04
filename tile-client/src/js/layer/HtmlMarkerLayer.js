@@ -78,6 +78,7 @@
 			addMarkerToLayer( this, marker );
 		}, this );
 		this.setZIndex( this.zIndex );
+		PubSub.publish( this.getChannel(), { field: 'activate', value: true } );
 	};
 
 	/**
@@ -91,12 +92,13 @@
 			this.map.olMap.removeLayer( this.olLayer );
 			this.olLayer.destroy();
 			this.olLayer = null;
+			PubSub.publish( this.getChannel(), { field: 'deactivate', value: true } );
 		}
 	};
 
 	HtmlMarkerLayer.prototype.addMarker = function( marker ) {
 		if ( this.olLayer ) {
-            // add marker
+			// add marker
 			addMarkerToLayer( this, marker );
 		}
 		this.markers.push( marker );
@@ -121,6 +123,12 @@
 		}
 	};
 
+	HtmlMarkerLayer.prototype.disableMarkers = function() {
+		this.markers.forEach( function( marker ) {
+			marker.disable();
+		});
+	};
+
 	HtmlMarkerLayer.prototype.removeMarker = function( marker ) {
 		if ( this.olLayer ) {
 			removeMarkerFromLayer( marker );
@@ -129,6 +137,7 @@
 
 	HtmlMarkerLayer.prototype.clearMarkers = function() {
 		if ( this.olLayer ) {
+			this.disableMarkers();
 			this.olLayer.clearMarkers();
 		}
 		this.markers = [];
