@@ -77,6 +77,16 @@ object PipelineDebugOperations {
     data
   }
 
+  /**
+   * Print out the RDD DAG of the input pipeline data
+   * @param prefix A prefix to print first to make it clear in the logs where we are
+   */
+  def printInputDAGOp (prefix: String)(data: PipelineData): PipelineData = {
+    println(prefix)
+    println(data.srdd.rdd.toDebugString)
+    data
+  }
+
   // Sample usage code
 //  def pipeline () = {
 //    val stage1 = PipelineStage
