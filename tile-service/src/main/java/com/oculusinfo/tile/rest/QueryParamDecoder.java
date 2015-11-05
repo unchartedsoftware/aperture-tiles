@@ -62,7 +62,6 @@ public class QueryParamDecoder {
      *  </pre>
      */
     static public JSONObject decode( String params ) {
-
 		if ( params == null ) {
             return null;
         }
@@ -70,39 +69,43 @@ public class QueryParamDecoder {
         try {
 			params = URLDecoder.decode(params, "UTF-8");
 			List<String> paramArray = Arrays.asList( params.split( "&" ) );
-
 			for ( String param : paramArray ) {
                 // break param into key value pair
                 List<String> keyValue = Arrays.asList( param.split( "=" ) );
                 String key = keyValue.get( 0 );
-                List<String> value =  Arrays.asList( keyValue.get( 1 ).split(",") );
-                if ( value.size() == 0 ) {
-                    value.add( keyValue.get( 1 ) );
-                }
-                // split key into array of sub paths
-                List<String> paramPath = Arrays.asList( key.split( "\\." ) );
-                JSONObject node = query;
-                for ( int i=0; i<paramPath.size(); i++ ) {
-                    String subpath = paramPath.get( i );
-                    if ( i != paramPath.size()-1 ) {
-                        if ( !node.has( subpath ) ) {
-                            node.put( subpath, new JSONObject() );
-                        }
-                        node = node.getJSONObject( subpath );
-                    } else {
-                        if ( value.size() == 1 ) {
-                            // single value
-                            node.put( subpath, value.get( 0 ) );
-                        } else {
-                            // array value
-                            JSONArray valueArray = new JSONArray();
-                            for ( String val : value ) {
-                                valueArray.put( val );
-                            }
-                            node.put( subpath, valueArray );
-                        }
-                    }
-                }
+				try {
+					String paramValue = keyValue.get( 1 );
+					List<String> value =  Arrays.asList( paramValue.split(",") );
+					if ( value.size() == 0 ) {
+						value.add( keyValue.get( 1 ) );
+					}
+					// split key into array of sub paths
+					List<String> paramPath = Arrays.asList( key.split( "\\." ) );
+					JSONObject node = query;
+					for ( int i=0; i<paramPath.size(); i++ ) {
+						String subpath = paramPath.get( i );
+						if ( i != paramPath.size()-1 ) {
+							if ( !node.has( subpath ) ) {
+								node.put( subpath, new JSONObject() );
+							}
+							node = node.getJSONObject( subpath );
+						} else {
+							if ( value.size() == 1 ) {
+								// single value
+								node.put( subpath, value.get( 0 ) );
+							} else {
+								// array value
+								JSONArray valueArray = new JSONArray();
+								for ( String val : value ) {
+									valueArray.put( val );
+								}
+								node.put( subpath, valueArray );
+							}
+						}
+					}
+				} catch ( Exception e ) {
+					// ignore and move onto next
+				}
             }
         } catch ( Exception e ) {
             e.printStackTrace();
