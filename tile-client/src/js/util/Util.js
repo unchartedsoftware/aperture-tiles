@@ -170,9 +170,8 @@
             }
             //iterate over the inner labels
             if ( transform === "log10" ) {
-                var logMin = (minMax.minimum == 0) ? 0 : log10(minMax.minimum);
-                var logMax = (minMax.maximum == 0) ? 0 : log10(minMax.maximum);
-
+                var logMin = (minMax.minimum === 0) ? 0 : log10(minMax.minimum);
+                var logMax = (minMax.maximum === 0) ? 0 : log10(minMax.maximum);
                 val =  Math.pow(10, logMin + (logMax - logMin) * percentage);
             } else {
                 val = percentage * range + minMax.minimum;

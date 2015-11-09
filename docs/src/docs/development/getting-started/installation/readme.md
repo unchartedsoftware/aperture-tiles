@@ -92,7 +92,7 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 			<td style="vertical-align: text-top" class="description">
 				A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
 				<ul class="table">
-					<li><a href="http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
+					<li><a href="http://www.cloudera.com/content/www/en-us/downloads/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
 					<li><a href="http://hadoop.apache.org/">Apache</a></li>
 					<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
 					<li><a href="http://hortonworks.com/">HortonWorks</a></li>
@@ -258,7 +258,7 @@ The packaged distributions of Aperture Tiles require only a subset of the [prere
 
 1. Install [Apache Spark](http://spark.incubator.apache.org/).
 2. If you want to understand how Aperture Tiles works with particularly large datasets, install your preferred flavor of [Hadoop](http://hadoop.apache.org/):
-	- [Cloudera](http://www.cloudera.com/content/cloudera/en/products-and-services/cdh.html) v4.6 (*recommended*)
+	- [Cloudera](http://www.cloudera.com/content/www/en-us/downloads/cdh.html) v4.6 (*recommended*)
 	- [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
 	- [MapR](http://www.mapr.com/products/apache-hadoop)
 	- [HortonWorks](http://hortonworks.com/)

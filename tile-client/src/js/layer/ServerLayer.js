@@ -282,7 +282,7 @@
             return {
                 minimum: this.valueTransform.layerMin,
                 maximum: this.valueTransform.layerMax
-            }
+            };
         } else if ( minMax.maximum instanceof Array ) {
             var data = this.tileTransform.data,
                 start = data.startBucket !== undefined ? data.startBucket : 0,

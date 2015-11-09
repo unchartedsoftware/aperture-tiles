@@ -47,12 +47,6 @@
 		this.source = spec.source;
 		this.id = spec.id;
 		this.kml = spec.kml || [];
-
-	    // If KML data is time filterable initialize to most recent
-	    if ( this.source.facets && this.source.facets.indexOf("time") !== -1 ) {
-	    	this.kmlDate = this.source.meta.meta.rangeMax;
-	    	this.updateKMLData(false);
-	    }
 	}
 
 	KMLLayer.prototype = Object.create(Layer.prototype);
@@ -204,15 +198,13 @@
 		PubSub.publish( this.getChannel(), { field: 'enabled', value: enabled } );
 	};
 
-	KMLLayer.prototype.setTileTransformRange = function (start, end) {
+	KMLLayer.prototype.setTileTransformRange = function( start ) {
 		var kmlDate = start;
-
 		if (kmlDate >= this.source.meta.meta.rangeMax) {
 			kmlDate = this.source.meta.meta.rangeMax;
 		} else if (kmlDate <= this.source.meta.meta.rangeMin) {
 			kmlDate = this.source.meta.meta.rangeMin;
 		}
-
 		if ( kmlDate !== this.kmlDate ) {
 			this.kmlDate = kmlDate;
 			this.updateKMLData( true );
@@ -227,36 +219,35 @@
 		}
 	};
 
-  KMLLayer.prototype.updateKMLData = function (updateView) {
-    var self = this;
-    var date = this.kmlDate;
+    KMLLayer.prototype.updateKMLData = function (updateView) {
+	    var self = this;
+	    var date = this.kmlDate;
+	    if (updateView) {
+	        this.deactivate();
+	    }
+	    this.kml.forEach( function( kml, kmlIndex ) {
+	        if (kml.files) {
+		        // Find closest month before
+		        var smallestFile = null;
+		        var minDiff;
 
-    if (updateView)
-      this.deactivate();
+		        kml.files.forEach(function (file) {
+		            if (!smallestFile || Math.abs(file.date - date) < minDiff) {
+		                minDiff = Math.abs(file.date - date);
+		                smallestFile = file;
+		            }
+		        });
+		        self.name = self.source.name + " (" + moment(smallestFile.date).format("MMM YYYY") + ")";
 
-    this.kml.forEach( function( kml, kmlIndex ) {
-      if (kml.files) {
-        // Find closest month before
-        var smallestFile = null;
-        var minDiff;
-
-        kml.files.forEach(function (file) {
-          if (!smallestFile || Math.abs(file.date - date) < minDiff) {
-            minDiff = Math.abs(file.date - date);
-            smallestFile = file;
-          }
-        });
-        self.name = self.source.name + " (" + moment(smallestFile.date).format("MMM YYYY") + ")";
-
-        if (smallestFile) {
-          kml.url = "rest/layers/" + self.id + "/kml/" + kmlIndex + "/" + smallestFile.fileName;
-        }
-      }
-    });
-
-    if (updateView)
-      this.activate();
-  };
+		        if (smallestFile) {
+		            kml.url = "rest/layers/" + self.id + "/kml/" + kmlIndex + "/" + smallestFile.fileName;
+		        }
+	        }
+	    });
+	    if (updateView) {
+			this.activate();
+		}
+    };
 
 	module.exports = KMLLayer;
 }());
