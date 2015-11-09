@@ -74,7 +74,7 @@ object TilingTaskParametersFactory {
 	val TILE_HEIGHT_PROPERTY = new IntegerProperty("tileHeight", "The height of created tiles, in bins", 256)
 	val PARTITIONS_PROPERTY = new IntegerProperty("consolidationPartitions", "The number of partitions into which to consolidate data when performing reduce operations", 0)
 	val TILE_TYPE_PROPERTY = new StringProperty("tileType", "The type of tile storage to use when creating tiles.	If unspecified, a heuristic will be used that is ideal for tiles whose bin values are the size of doubles.	If tiles have bins significantly larger than doubles, sparse is recommended.", "unspecified", Array("unspecified", "dense", "sparse"))
-val FILTER_TO_REGION = new BooleanProperty("filterToRegion", "Filters out data outside of valid level 0 tile", false)
+	val FILTER_TO_REGION = new BooleanProperty("filterToRegion", "Filters out data outside of valid level 0 tile", false)
 }
 class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
@@ -89,7 +89,7 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 	addProperty(TILE_HEIGHT_PROPERTY)
 	addProperty(PARTITIONS_PROPERTY)
 	addProperty(TILE_TYPE_PROPERTY)
-  addProperty(FILTER_TO_REGION)
+	addProperty(FILTER_TO_REGION)
 
 	private def parseLevels (levelsDescriptions: Seq[String]): Seq[Seq[Int]] = {
 		levelsDescriptions.map(levelSet =>

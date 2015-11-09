@@ -1058,15 +1058,15 @@ object PipelineOperations {
 	}
 
 	def heatMapBlurredImpl(xColSpec: String,
-	                       yColSpec: String,
-	                       tilingParams: TilingTaskParameters,
-	                       hbaseParameters: Option[HBaseParameters],
-	                       operation: OperationType = COUNT,
-                         kernelRadius: Int = 4,
-                         kernelSigma: Double = 3,
-	                       valueColSpec: Option[String] = None,
-	                       valueColType: Option[String] = None)
-	                      (input: PipelineData) = {
+												 yColSpec: String,
+												 tilingParams: TilingTaskParameters,
+												 hbaseParameters: Option[HBaseParameters],
+												 operation: OperationType = COUNT,
+												 kernelRadius: Int = 4,
+												 kernelSigma: Double = 3,
+												 valueColSpec: Option[String] = None,
+												 valueColType: Option[String] = None)
+												(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
 			case None => new LocalTileIO("avro")
@@ -1116,12 +1116,12 @@ object PipelineOperations {
 
 		def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]): PipelineData = {
 			val typedNumeric = numeric.asInstanceOf[ExtendedNumeric[PT]]
-      val kernel = StandardBinningFunctions.makeGaussianKernel(kernelRadius, kernelSigma)
+			val kernel = StandardBinningFunctions.makeGaussianKernel(kernelRadius, kernelSigma)
 
-      task.doParameterizedTiling(tileIO,
-        StandardBinningFunctions.locateIndexOverLevelsWithKernel(kernel, task.getIndexScheme, task.getTilePyramid, task.getNumXBins, task.getNumYBins),
-        StandardBinningFunctions.populateTileGaussian(kernel)(typedNumeric)
-      )
+			task.doParameterizedTiling(tileIO,
+				StandardBinningFunctions.locateIndexOverLevelsWithKernel(kernel, task.getIndexScheme, task.getTilePyramid, task.getNumXBins, task.getNumYBins),
+				StandardBinningFunctions.populateTileGaussian(kernel)(typedNumeric)
+			)
 			PipelineData(input.sqlContext, input.srdd, Option(tableName))
 		}
 
@@ -1137,10 +1137,10 @@ object PipelineOperations {
 												 operation: OperationType = COUNT,
 												 valueColSpec: Option[String] = None,
 												 valueColType: Option[String] = None,
-                         lineType: Option[LineDrawingType] = Some(LineDrawingType.Lines),
-                         minimumSegmentLength: Option[Int] = Some(4),
-                         maximumSegmentLength: Option[Int] = Some(1024),
-                         maximumLeaderLength: Option[Int] = Some(1024))
+												 lineType: Option[LineDrawingType] = Some(LineDrawingType.Lines),
+												 minimumSegmentLength: Option[Int] = Some(4),
+												 maximumSegmentLength: Option[Int] = Some(1024),
+												 maximumLeaderLength: Option[Int] = Some(1024))
 												(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
@@ -1149,7 +1149,7 @@ object PipelineOperations {
 		val properties = Map("oculus.binning.projection.type" -> "webmercator")
 
 		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType,
-                        lineType, minimumSegmentLength, maximumSegmentLength, maximumLeaderLength,
+												lineType, minimumSegmentLength, maximumSegmentLength, maximumLeaderLength,
 												tilingParams, tileIO, properties)(input)
 	}
 
@@ -1160,10 +1160,10 @@ object PipelineOperations {
 																	operation: OperationType,
 																	valueColSpec: Option[String],
 																	valueColType: Option[String],
-                                  lineType: Option[LineDrawingType] = Some(LineDrawingType.Lines),
-                                  minimumSegmentLength: Option[Int] = Some(4),
-                                  maximumSegmentLength: Option[Int] = Some(1024),
-                                  maximumLeaderLength: Option[Int] = Some(1024),
+																	lineType: Option[LineDrawingType] = Some(LineDrawingType.Lines),
+																	minimumSegmentLength: Option[Int] = Some(4),
+																	maximumSegmentLength: Option[Int] = Some(1024),
+																	maximumLeaderLength: Option[Int] = Some(1024),
 																	taskParameters: TilingTaskParameters,
 																	tileIO: TileIO,
 																	properties: Map[String, String])
@@ -1200,41 +1200,40 @@ object PipelineOperations {
 
 		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
 
-    def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]): PipelineData = {
-      val (locateFcn, populateFcn): (Traversable[Int] => Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
-        (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
-        lineType match {
-          case LineDrawingType.LeaderLines => {
-            (
-              StandardBinningFunctions.locateLineLeaders(task.getIndexScheme, task.getTilePyramid,
-                minimumSegmentLength, maximumLeaderLength.getOrElse(1024),
-                task.getNumXBins, task.getNumYBins),
-              StandardBinningFunctions.populateTileWithLineLeaders(maximumLeaderLength.getOrElse(1024),
-                StandardScalingFunctions.identityScale)
-              )
-          }
-          case LineDrawingType.Arcs => {
-            (
-              StandardBinningFunctions.locateArcs(task.getIndexScheme, task.getTilePyramid,
-                minimumSegmentLength, maximumLeaderLength,
-                task.getNumXBins, task.getNumYBins),
-              StandardBinningFunctions.populateTileWithArcs(maximumLeaderLength,
-                StandardScalingFunctions.identityScale)
-              )
-          }
-          case LineDrawingType.Lines | _ => {
-            (
-              StandardBinningFunctions.locateLine(task.getIndexScheme, task.getTilePyramid,
-                minimumSegmentLength, maximumSegmentLength, task.getNumXBins, task.getNumYBins),
-              StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
-              )
-          }
-        }
-      task.doParameterizedTiling(tileIO, locateFcn, populateFcn)
-      PipelineData(input.sqlContext, input.srdd, Option(tableName))
-    }
-
-    withValueType(tilingTask)
+		def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]): PipelineData = {
+		  val (locateFcn, populateFcn): (Traversable[Int] => Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
+				(TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
+				lineType match {
+				  case LineDrawingType.LeaderLines => {
+						(
+						  StandardBinningFunctions.locateLineLeaders(task.getIndexScheme, task.getTilePyramid,
+								minimumSegmentLength, maximumLeaderLength.getOrElse(1024),
+								task.getNumXBins, task.getNumYBins),
+						  StandardBinningFunctions.populateTileWithLineLeaders(maximumLeaderLength.getOrElse(1024),
+								StandardScalingFunctions.identityScale)
+						  )
+				  }
+				  case LineDrawingType.Arcs => {
+						(
+						  StandardBinningFunctions.locateArcs(task.getIndexScheme, task.getTilePyramid,
+								minimumSegmentLength, maximumLeaderLength,
+								task.getNumXBins, task.getNumYBins),
+						  StandardBinningFunctions.populateTileWithArcs(maximumLeaderLength,
+								StandardScalingFunctions.identityScale)
+						  )
+				  }
+				  case LineDrawingType.Lines | _ => {
+						(
+						  StandardBinningFunctions.locateLine(task.getIndexScheme, task.getTilePyramid,
+								minimumSegmentLength, maximumSegmentLength, task.getNumXBins, task.getNumYBins),
+						  StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
+						  )
+				  }
+				}
+		  task.doParameterizedTiling(tileIO, locateFcn, populateFcn)
+		  PipelineData(input.sqlContext, input.srdd, Option(tableName))
+		}
+		withValueType(tilingTask)
 
 		PipelineData(input.sqlContext, input.srdd, Option(tableName))
 	}
