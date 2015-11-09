@@ -388,8 +388,6 @@ abstract class KeyValueArgumentSource {
 	                      default: Option[Seq[Double]] = Some(Seq[Double]())): Seq[Double] =
 		getNumericPropSeq[Double](key, description, default)
 
-
-
 	/**
 	 * Just like {@link #getString}, except it returns a Boolean
 	 */

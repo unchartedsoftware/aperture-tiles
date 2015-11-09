@@ -256,7 +256,7 @@ class RDDBinnerTestSuite extends FunSuite with SharedSparkContext with TileAsser
 			new NumericSumBinningAnalytic[Int, JavaInt](),
 			None,
 			Some(tileAnalytic),
-			StandardBinningFunctions.locateIndexOverLevels(indexer, pyramid, List(0, 1), 4, 4),
+			StandardBinningFunctions.locateIndexOverLevels(indexer, pyramid, 4, 4)(List(0, 1)),
 			StandardBinningFunctions.populateTileIdentity,
 			new BinningParameters(true, 4, 4)
 		).collect

@@ -50,10 +50,6 @@ import com.oculusinfo.tilegen.util.OptionsFactoryMixin
  * @param consolidationPartitions The number of partitions into which to consolidate data when performign reduce operations
  * @param tileType The type of tile in which to store our data (dense or sparse).	Unspecified for automatic,
  *								 tile-by-tile heuristic choice
- * @param minimumSegmentLength The minimum length segments must be (in bins) before they are drawn.
- * @param maximumSegmentLength The maximum length segments can be (in bins) before they are no longer drawn.
- * @param maximumLeaderLength The maximum length of leader to draw on segments
- * @param lineType The method of line drawing to use.
  */
 case class TilingTaskParameters (name: String,
 																 description: String,
@@ -63,13 +59,8 @@ case class TilingTaskParameters (name: String,
 																 tileHeight: Int,
 																 consolidationPartitions: Option[Int],
 																 tileType: Option[StorageType],
-																 minimumSegmentLength: Option[Int] = None,
-																 maximumSegmentLength: Option[Int] = None,
-																 maximumLeaderLength: Option[Int] = None,
-																 filterToRegion: Boolean = false,
-																 lineType: LineDrawingType = LineDrawingType.Lines)
+																 filterToRegion: Boolean = false)
 {
-	def getDefiniteMaximumLeaderLength: Int = maximumLeaderLength.getOrElse(TilingTaskParametersFactory.MAXIMUM_LEADER_LENGTH.getDefaultValue)
 }
 
 
@@ -83,11 +74,7 @@ object TilingTaskParametersFactory {
 	val TILE_HEIGHT_PROPERTY = new IntegerProperty("tileHeight", "The height of created tiles, in bins", 256)
 	val PARTITIONS_PROPERTY = new IntegerProperty("consolidationPartitions", "The number of partitions into which to consolidate data when performing reduce operations", 0)
 	val TILE_TYPE_PROPERTY = new StringProperty("tileType", "The type of tile storage to use when creating tiles.	If unspecified, a heuristic will be used that is ideal for tiles whose bin values are the size of doubles.	If tiles have bins significantly larger than doubles, sparse is recommended.", "unspecified", Array("unspecified", "dense", "sparse"))
-	val MINIMUM_SEGMENT_LENGTH = new IntegerProperty("minimumSegmentLength", "The minimum length of a segment (in bins) before it is drawn", 4)
-	val MAXIMUM_SEGMENT_LENGTH = new IntegerProperty("maximumSegmentLength", "The maximum length of a segment (in bins) before it is no longer drawn", 1024)
-	val MAXIMUM_LEADER_LENGTH = new IntegerProperty("maximumLeaderLength", "The maximum number of bins to draw at each end of a segment.	Bins farther than this distance from both endpoints will be ignored.", 1024)
-	val FILTER_TO_REGION = new BooleanProperty("filterToRegion", "Filters out data outside of valid level 0 tile", false)
-	val LINE_DRAWING_METHOD = new EnumProperty[LineDrawingType]("lineType", "The line type to use", classOf[LineDrawingType], LineDrawingType.Lines)
+val FILTER_TO_REGION = new BooleanProperty("filterToRegion", "Filters out data outside of valid level 0 tile", false)
 }
 class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaList[String])
 		extends ConfigurableFactory[TilingTaskParameters](classOf[TilingTaskParameters], parent, path, true)
@@ -102,10 +89,6 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 	addProperty(TILE_HEIGHT_PROPERTY)
 	addProperty(PARTITIONS_PROPERTY)
 	addProperty(TILE_TYPE_PROPERTY)
-	addProperty(MINIMUM_SEGMENT_LENGTH)
-	addProperty(MAXIMUM_SEGMENT_LENGTH)
-	addProperty(MAXIMUM_LEADER_LENGTH)
-	addProperty(LINE_DRAWING_METHOD)
   addProperty(FILTER_TO_REGION)
 
 	private def parseLevels (levelsDescriptions: Seq[String]): Seq[Seq[Int]] = {
@@ -136,11 +119,7 @@ class TilingTaskParametersFactory (parent: ConfigurableFactory[_], path: JavaLis
 														 getPropertyValue(TILE_HEIGHT_PROPERTY),
 														 optionalGet(PARTITIONS_PROPERTY).map(_.intValue()),
 														 tileType,
-														 optionalGet(MINIMUM_SEGMENT_LENGTH).map(_.intValue()),
-														 optionalGet(MAXIMUM_SEGMENT_LENGTH).map(_.intValue()),
-														 optionalGet(MAXIMUM_LEADER_LENGTH).map(_.intValue()),
-														 getPropertyValue(FILTER_TO_REGION),
-														 getPropertyValue(LINE_DRAWING_METHOD)
+														 getPropertyValue(FILTER_TO_REGION)
 		)
 	}
 }

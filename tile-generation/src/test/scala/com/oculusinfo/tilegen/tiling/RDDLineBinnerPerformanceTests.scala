@@ -102,7 +102,7 @@ object RDDLineBinnerPerformanceTests {
 		val (locateFcn, populateFcn) = {
 			val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => value
 
-			(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, levels, Some(minLength), Some(maxLength))(_),
+			(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, Some(minLength), Some(maxLength))(levels)(_),
 			 StandardBinningFunctions.populateTileWithLineSegments(valueScaler)(_, _, _))
 		}
 

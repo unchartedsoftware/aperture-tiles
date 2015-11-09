@@ -34,10 +34,10 @@ import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.{Calendar, Date, GregorianCalendar}
 
-import com.oculusinfo.binning.TileIndex
+import com.oculusinfo.binning.{BinIndex, TileIndex}
 import com.oculusinfo.binning.impl.WebMercatorTilePyramid
 import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCollectorAccumulable}
-import com.oculusinfo.tilegen.datasets.{CSVReader, SchemaTypeUtilities, TilingTask, TilingTaskParameters}
+import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling._
 import com.oculusinfo.tilegen.util.{ExtendedNumeric, KeyValueArgumentSource}
@@ -47,7 +47,7 @@ import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import org.joda.time.{DurationFieldType, Interval, PeriodType}
 
 import scala.reflect.ClassTag
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{Map => MutableMap, ListBuffer}
 
 /**
  * Provides operations that can be bound into a TilePipeline
@@ -625,7 +625,11 @@ object PipelineOperations {
 												 hbaseParameters: Option[HBaseParameters],
 												 operation: OperationType = COUNT,
 												 valueColSpec: Option[String] = None,
-												 valueColType: Option[String] = None)
+												 valueColType: Option[String] = None,
+                         lineType: Option[LineDrawingType] = Some(LineDrawingType.Lines),
+                         minimumSegmentLength: Option[Int] = Some(4),
+                         maximumSegmentLength: Option[Int] = Some(1024),
+                         maximumLeaderLength: Option[Int] = Some(1024))
 												(input: PipelineData) = {
 		val tileIO = hbaseParameters match {
 			case Some(p) => new HBaseTileIO(p.zookeeperQuorum, p.zookeeperPort, p.hbaseMaster)
@@ -634,6 +638,7 @@ object PipelineOperations {
 		val properties = Map("oculus.binning.projection.type" -> "webmercator")
 
 		segmentTilingOpImpl(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, operation, valueColSpec, valueColType,
+                        lineType, minimumSegmentLength, maximumSegmentLength, maximumLeaderLength,
 												tilingParams, tileIO, properties)(input)
 	}
 
@@ -644,6 +649,10 @@ object PipelineOperations {
 																	operation: OperationType,
 																	valueColSpec: Option[String],
 																	valueColType: Option[String],
+                                  lineType: Option[LineDrawingType] = Some(LineDrawingType.Lines),
+                                  minimumSegmentLength: Option[Int] = Some(4),
+                                  maximumSegmentLength: Option[Int] = Some(1024),
+                                  maximumLeaderLength: Option[Int] = Some(1024),
 																	taskParameters: TilingTaskParameters,
 																	tileIO: TileIO,
 																	properties: Map[String, String])
@@ -658,15 +667,7 @@ object PipelineOperations {
 			"oculus.binning.index.field.0" -> x1ColSpec,
 			"oculus.binning.index.field.1" -> y1ColSpec,
 			"oculus.binning.index.field.2" -> x2ColSpec,
-			"oculus.binning.index.field.3" -> y2ColSpec,
-			"oculus.binning.lineType" -> taskParameters.lineType.toString
-		) ++ taskParameters.minimumSegmentLength.map(len =>
-			Map("oculus.binning.minimumSegmentLength" -> len.toString)
-		).getOrElse(Map[String, String]()) ++ taskParameters.maximumSegmentLength.map(len =>
-			Map("oculus.binning.maximumSegmentLength" -> len.toString)
-		).getOrElse(Map[String, String]()) ++ taskParameters.maximumLeaderLength.map(len =>
-			Map("oculus.binning.maximumLeaderLength" -> len.toString)
-		).getOrElse(Map[String, String]())
+			"oculus.binning.index.field.3" -> y2ColSpec)
 
 		val valueProps = operation match {
 			case SUM | MAX | MIN | MEAN =>
@@ -687,7 +688,42 @@ object PipelineOperations {
 		val tableName = PipelineOperations.getOrGenTableName(input, "heatmap_op")
 
 		val tilingTask = TilingTask(input.sqlContext, tableName, args ++ levelsProps ++ valueProps ++ properties)
-		tilingTask.doLineTiling(tileIO)
+
+    def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]): PipelineData = {
+      val (locateFcn, populateFcn): (Traversable[Int] => Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
+        (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
+        lineType match {
+          case LineDrawingType.LeaderLines => {
+            (
+              StandardBinningFunctions.locateLineLeaders(task.getIndexScheme, task.getTilePyramid,
+                minimumSegmentLength, maximumLeaderLength.getOrElse(1024),
+                task.getNumXBins, task.getNumYBins),
+              StandardBinningFunctions.populateTileWithLineLeaders(maximumLeaderLength.getOrElse(1024),
+                StandardScalingFunctions.identityScale)
+              )
+          }
+          case LineDrawingType.Arcs => {
+            (
+              StandardBinningFunctions.locateArcs(task.getIndexScheme, task.getTilePyramid,
+                minimumSegmentLength, maximumLeaderLength,
+                task.getNumXBins, task.getNumYBins),
+              StandardBinningFunctions.populateTileWithArcs(maximumLeaderLength,
+                StandardScalingFunctions.identityScale)
+              )
+          }
+          case LineDrawingType.Lines | _ => {
+            (
+              StandardBinningFunctions.locateLine(task.getIndexScheme, task.getTilePyramid,
+                minimumSegmentLength, maximumSegmentLength, task.getNumXBins, task.getNumYBins),
+              StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
+              )
+          }
+        }
+      task.doParameterizedTiling(tileIO, locateFcn, populateFcn)
+      PipelineData(input.sqlContext, input.srdd, Option(tableName))
+    }
+
+    withValueType(tilingTask)
 
 		PipelineData(input.sqlContext, input.srdd, Option(tableName))
 	}
