@@ -338,6 +338,7 @@
         if ( this.olLayer ) {
             this.setLevelMinMax();
             this.olLayer.redraw();
+            this.setZIndex(this.zIndex);
             // If we're using the TileManager we need to force it into a refresh. There is no nice way to
             // do this as of 2.13.1, so we fake the expiry of the move/zoom timeout.
             if ( this.olLayer.map && this.olLayer.map.tileManager ) {
