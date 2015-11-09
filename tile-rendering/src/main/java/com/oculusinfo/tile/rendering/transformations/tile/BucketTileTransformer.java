@@ -85,19 +85,16 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 			minimumValue = _minVals.get(_startBucket);
 			maximumValue = _maxVals.get(_startBucket);
 		} else {
-			if (_endBucket <= _minVals.size()) {
-				for (int i = _startBucket; i < _endBucket; i++) {
-					Double val = _minVals.get(i);
-					if (val < minimumValue) {
-						minimumValue = val;
-					}
-					val = _maxVals.get(i);
-					if (val > maximumValue) {
-						maximumValue = val;
-					}
+			_endBucket = (_endBucket <= _minVals.size()) ? _endBucket : _minVals.size();
+			for (int i = _startBucket; i < _endBucket; i++) {
+				Double val = _minVals.get(i);
+				if (val < minimumValue) {
+					minimumValue = val;
 				}
-			} else {
-				minimumValue = maximumValue = 0;
+				val = _maxVals.get(i);
+				if (val > maximumValue) {
+					maximumValue = val;
+				}
 			}
 		}
 		return new Pair<>(minimumValue, maximumValue);
