@@ -34,10 +34,11 @@
      * @class HtmlMarker
      * @classdesc A HtmlMarker object that is pinned to an HtmlMarkerLayer.
      */
-    function HtmlMarker( x, y, html ) {
+    function HtmlMarker( x, y, html, dimension ) {
         this.x = x;
         this.y = y;
         this.html = html;
+        this.dimension = dimension;
         this.icon = new OpenLayers.Icon(
             null,
             new OpenLayers.Size( 2, 2 ),
@@ -56,13 +57,20 @@
                 lonlat = this.map.olMap.getLonLatFromViewPortPx( viewportPx );
             this.olMarker = new OpenLayers.Marker( lonlat, this.icon.clone() );
             this.layer.olLayer.addMarker( this.olMarker );
-			// get marker elem
+            // get marker elem
             var $parent = $( this.olMarker.icon.imageDiv );
             // hide icon element
-			$parent.children().css( 'display', 'none' );
+            $parent.children().css( 'display', 'none' );
             this.$elem = $( this.html );
+            this.$container = $parent.parent();
+            this.$olContainer = this.$container.parent();
+            if (this.dimension) {
+                // If the marker is restricted to move in one direction register move handlers
+                this.updatePosition = this.updatePosition.bind(this);
+                this.map.olMap.events.register( 'move', this.map.olMap, this.updatePosition );
+            }
             // add marker
-			$parent.append( this.html );
+            $parent.append( this.html );
         },
 
         /**
@@ -73,10 +81,20 @@
         deactivate: function() {
             if ( this.olMarker && this.layer.olLayer ) {
                 this.layer.olLayer.removeMarker( this.olMarker );
+                this.map.olMap.events.unregister( 'move', this.map.olMap, this.updatePosition );
                 this.olMarker.destroy();
                 this.olMarker = null;
                 this.$elem = null;
             }
+        },
+
+        /**
+         * Removes event listeners on marker when i
+         * @memberof HtmlMarker
+         * @publice
+         */
+        disable: function () {
+            this.map.olMap.events.unregister( 'move', this.map.olMap, this.updatePosition );
         },
 
         /**
@@ -93,8 +111,20 @@
                 lonlat = this.map.olMap.getLonLatFromViewPortPx( viewportPx ),
                 px = this.map.olMap.getLayerPxFromLonLat( lonlat );
             this.olMarker.moveTo( px );
-        }
+        },
 
+        /**
+         * Called on map move to fix marker along a configured axis
+         * @memberof HtmlMarker
+         */
+        updatePosition: function () {
+            var $container = this.$olContainer,
+                offset = $container.position();
+            if ( this.dimension === "x" ) {
+                // Set the marker y position
+                this.$elem.parent().css( 'top', -offset.top + "px" );
+            }
+        }
     };
 
     module.exports = HtmlMarker;
