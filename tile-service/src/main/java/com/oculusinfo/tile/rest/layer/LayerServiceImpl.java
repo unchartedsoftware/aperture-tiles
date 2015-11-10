@@ -353,10 +353,11 @@ public class LayerServiceImpl implements LayerService {
 						File kmlFile = kmlFiles[j];
 
 						// Extract month and year from file name. For now always expect file to be named
-						// MM-yyyy*
+						// MM-yyyy* Force timezon to avoid offsetting to previous month
 						String dateText = kmlFile.getName().substring(0,7);
-						DateFormat format = new SimpleDateFormat("MM-yyyy");
-						long dateTime = format.parse(dateText).getTime();
+						DateFormat format = new SimpleDateFormat("dd-MM-yyyy", Locale.CANADA);
+						format.setTimeZone(TimeZone.getTimeZone("Canada/Eastern"));
+						long dateTime = format.parse("01-" + dateText).getTime();
 
 						JSONObject urlObject = new JSONObject();
 
