@@ -257,28 +257,11 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * @param tileIO An object that knows how to save tiles.
 	 */
 	def doTiling (tileIO: TileIO): Unit = {
-		val binner = new UniversalBinner
-		val sc = sqlc.sparkContext
-
-		tileAnalytics.map(_.addGlobalAccumulator(sc))
-		dataAnalytics.map(_.addGlobalAccumulator(sc))
-		getLevels.map{levels =>
-			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-
-			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
-				rdd => {
-					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-																																	 StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, getNumXBins, getNumYBins)(levels),
-																																	 StandardBinningFunctions.populateTileIdentity,
-																																	 BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
-
-					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-															tileAnalytics, dataAnalytics, getName, getDescription)
-				}
-
-			process(procFcn, None)
-		}
+		doParameterizedTiling(
+			tileIO,
+			StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, getNumXBins, getNumYBins),
+			StandardBinningFunctions.populateTileIdentity
+		)
 	}
 
 	def doParameterizedTiling (tileIO: TileIO,
