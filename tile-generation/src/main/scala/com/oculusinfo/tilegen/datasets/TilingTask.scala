@@ -218,21 +218,6 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	/** Get the type of tile storage to create when this task creates tiles */
 	def getTileType = config.tileType
 
-	/** Get the minimum bin length of drawn segments, for line tiling */
-	def getMinimumSegmentLength = config.minimumSegmentLength
-
-	/** Get the maximum bin length of drawn segments, for line tiling */
-	def getMaximumSegmentLength = config.maximumSegmentLength
-
-	/** Get the maximum number of bins to draw on the ends of segments, for line tiling */
-	def getMaximumLeaderLength = config.maximumLeaderLength
-
-	/** Get the maximum number of bins to draw on the ends of segments, disallowing the ability not to specify. */
-	def getDefiniteMaximumLeaderLength = config.getDefiniteMaximumLeaderLength
-
-	/** The type of line to draw for when doing line tiling */
-	def lineType = config.lineType
-
 	/** Get the scheme used to determine axis values for our tiles */
 	def getIndexScheme = indexer.indexScheme
 
@@ -272,33 +257,16 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	 * @param tileIO An object that knows how to save tiles.
 	 */
 	def doTiling (tileIO: TileIO): Unit = {
-		val binner = new UniversalBinner
-		val sc = sqlc.sparkContext
-
-		tileAnalytics.map(_.addGlobalAccumulator(sc))
-		dataAnalytics.map(_.addGlobalAccumulator(sc))
-		getLevels.map{levels =>
-			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-
-			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
-				rdd => {
-					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-																																	 StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, levels, getNumXBins, getNumYBins),
-																																	 StandardBinningFunctions.populateTileIdentity,
-																																	 BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
-
-					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-															tileAnalytics, dataAnalytics, getName, getDescription)
-				}
-
-			process(procFcn, None)
-		}
+		doParameterizedTiling(
+			tileIO,
+			StandardBinningFunctions.locateIndexOverLevels(getIndexScheme, getTilePyramid, getNumXBins, getNumYBins),
+			StandardBinningFunctions.populateTileIdentity
+		)
 	}
 
 	def doParameterizedTiling (tileIO: TileIO,
-	                           locFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
-		                         popFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]): Unit = {
+														 locFcn: Traversable[Int] => Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
+														 popFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]): Unit = {
 		val binner = new UniversalBinner
 		val sc = sqlc.sparkContext
 
@@ -312,71 +280,12 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit =
 				rdd => {
 					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-					                                                         locFcn, popFcn,
+																																	 locFcn(levels), popFcn,
 						BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
 
 					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
 						tileAnalytics, dataAnalytics, getName, getDescription)
 				}
-
-			process(procFcn, None)
-		}
-	}
-
-	def doLineTiling (tileIO: TileIO): Unit = {
-		val binner = new UniversalBinner
-		val sc = sqlc.sparkContext
-
-		// Hard code for now, we'll get them later.
-		val leaderBins = 1024
-		val scaler: (Array[BinIndex], BinIndex, PT) => PT = (endpoints, bin, value) => value
-		tileAnalytics.map(_.addGlobalAccumulator(sc))
-		dataAnalytics.map(_.addGlobalAccumulator(sc))
-
-		getLevels.map{levels =>
-			tileAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-			dataAnalytics.map(analytic => levels.map(level => analytic.addLevelAccumulator(sc, level)))
-
-			val procFcn: RDD[(Seq[Any], PT, Option[DT])] => Unit = {
-				rdd => {
-					val (locateFcn, populateFcn): (Seq[Any] => Traversable[(TileIndex, Array[BinIndex])],
-																				 (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT]) =
-						lineType match {
-							case LineDrawingType.Lines => {
-								(
-									StandardBinningFunctions.locateLine(getIndexScheme, getTilePyramid, levels,
-																											getMinimumSegmentLength, getMaximumSegmentLength, getNumXBins, getNumYBins),
-									StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
-								)
-							}
-							case LineDrawingType.LeaderLines => {
-								(
-									StandardBinningFunctions.locateLineLeaders(getIndexScheme, getTilePyramid, levels,
-																														 getMinimumSegmentLength, getDefiniteMaximumLeaderLength,
-																														 getNumXBins, getNumYBins),
-									StandardBinningFunctions.populateTileWithLineLeaders(getDefiniteMaximumLeaderLength,
-																																			 StandardScalingFunctions.identityScale)
-								)
-							}
-							case LineDrawingType.Arcs => {
-								(
-									StandardBinningFunctions.locateArcs(getIndexScheme, getTilePyramid, levels,
-																											getMinimumSegmentLength, getMaximumLeaderLength,
-																											getNumXBins, getNumYBins),
-									StandardBinningFunctions.populateTileWithArcs(getMaximumLeaderLength,
-																																StandardScalingFunctions.identityScale)
-								)
-							}
-						}
-
-					val tiles = binner.processData[Seq[Any], PT, AT, DT, BT](rdd, getBinningAnalytic, tileAnalytics, dataAnalytics,
-																																	 locateFcn, populateFcn,
-																																	 BinningParameters(true, getNumXBins, getNumYBins, getConsolidationPartitions, getConsolidationPartitions, None))
-
-					tileIO.writeTileSet(getTilePyramid, getName, tiles, getTileSerializer,
-															tileAnalytics, dataAnalytics, getName, getDescription)
-				}
-			}
 
 			process(procFcn, None)
 		}

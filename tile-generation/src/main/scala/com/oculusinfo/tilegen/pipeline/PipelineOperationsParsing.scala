@@ -27,7 +27,8 @@
 package com.oculusinfo.tilegen.pipeline
 
 import com.oculusinfo.binning.util.JsonUtilities
-import com.oculusinfo.tilegen.datasets.{TilingTaskParameters, TilingTaskParametersFactory}
+import com.oculusinfo.factory.properties.IntegerProperty
+import com.oculusinfo.tilegen.datasets.{LineDrawingType, TilingTaskParameters, TilingTaskParametersFactory}
 import com.oculusinfo.tilegen.pipeline.PipelineOperations._
 import com.oculusinfo.tilegen.util.KeyValueArgumentSource
 import grizzled.slf4j.Logging
@@ -341,7 +342,8 @@ object PipelineOperationsParsing extends Logging {
 		val argParser = KeyValuePassthrough(args)
 		val params = parseSegmentTilingOpImpl(args, argParser)
 		geoSegmentTilingOp(params._1, params._2, params._3, params._4, params._5,
-											 params._6, params._7, params._8, params._9)(_)
+											 params._6, params._7, params._8, params._9, params._10,
+											 params._11, params._12, params._13)(_)
 		}
 
 		private def parseSegmentTilingOpImpl(args: Map[String, String], argParser: KeyValueArgumentSource) = {
@@ -352,6 +354,12 @@ object PipelineOperationsParsing extends Logging {
 			val operationType = argParser.getString("ops.aggregationType", "")
 			val valueColSpec = argParser.getStringOption("ops.valueColumn", "", None)
 			val valueColType = argParser.getStringOption("ops.valueType", "", None)
+			val lineType = argParser.getStringOption("ops.lineType", "The line type to use", None)
+      val lineTypeEnum = LineDrawingType.valueOf(lineType.getOrElse(LineDrawingType.Lines.toString))
+			val minimumSegmentLength = argParser.getIntOption("", "The minimum length of a segment (in bins) before it is drawn", Some(4))
+			val maximumSegmentLength = argParser.getIntOption("", "The maximum length of a segment (in bins) before it is no longer drawn", Some(1024))
+			val maximumLeaderLength = argParser.getIntOption("", "The maximum number of bins to draw at each end of a segment.	Bins farther than this distance from both endpoints will be ignored.", Some(1024))
+
 			val parsedArgs = List(argParser.getStringOption("hbase.zookeeper.quorum", "Zookeeper quorum addresses", None),
 														argParser.getStringOption("hbase.zookeeper.port", "Zookeeper port", None),
 														argParser.getStringOption("hbase.master", "HBase master address", None))
@@ -362,12 +370,11 @@ object PipelineOperationsParsing extends Logging {
 			}
 
 			val operationEnum = OperationType.withName(operationType.toUpperCase)
-
 			val taskParametersFactory = new TilingTaskParametersFactory(null, List("ops"))
 			taskParametersFactory.readConfiguration(JsonUtilities.mapToJSON(args))
 			val taskParameters = taskParametersFactory.produce(classOf[TilingTaskParameters])
 
-			(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType)
+			(x1ColSpec, y1ColSpec, x2ColSpec, y2ColSpec, taskParameters, hbaseArgs, operationEnum, valueColSpec, valueColType, Some(lineTypeEnum), minimumSegmentLength, maximumSegmentLength, maximumLeaderLength)
 		}
 
 	}

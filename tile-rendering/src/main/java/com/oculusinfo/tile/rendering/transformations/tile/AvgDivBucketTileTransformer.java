@@ -25,6 +25,7 @@
 package com.oculusinfo.tile.rendering.transformations.tile;
 
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.oculusinfo.binning.TileData;
@@ -49,19 +50,16 @@ import org.json.JSONObject;
  * 	of another range of buckets centered on val V.  The numerator range can be varied externally, while the denominator
  * 	range is fixed.  Log10 of the final result is returned.
  */
-public class AvgDivBucketTileTransformer<T extends Number> implements TileTransformer<List<T>> {
+public class AvgDivBucketTileTransformer<T extends Number> extends BucketTileTransformer<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger( AvgDivBucketTileTransformer.class );
 
 	protected Integer _averageRange = 0;
-	protected Integer _startBucket = 0;
-	protected Integer _endBucket = 0;
 
 	public AvgDivBucketTileTransformer(JSONObject arguments){
+		super(arguments);
 		if ( arguments != null ) {
 			// get the start and end time range
 			_averageRange = arguments.optInt("averageRange");
-			_startBucket = arguments.optInt("startBucket");
-			_endBucket = arguments.optInt("endBucket");
 		} else {
 			LOGGER.warn("No arguments passed in to filterbucket transformer");
 		}

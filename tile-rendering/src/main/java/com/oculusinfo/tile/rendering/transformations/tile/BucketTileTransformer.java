@@ -63,6 +63,11 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 
 	@Override
 	public Pair<Double, Double> getTransformedExtrema(LayerConfiguration config) throws ConfigurationException {
+		return getRawExtrema(config);
+	}
+
+	@Override
+	public Pair<Double, Double> getRawExtrema(LayerConfiguration config) throws ConfigurationException {
 		// Parse the mins and maxes for the buckets out of the supplied JSON.
 		if (_minVals == null) {
 			String layer = config.getPropertyValue(LayerConfiguration.LAYER_ID);
@@ -80,6 +85,7 @@ public abstract class BucketTileTransformer<T> implements TileTransformer<List<T
 			minimumValue = _minVals.get(_startBucket);
 			maximumValue = _maxVals.get(_startBucket);
 		} else {
+			_endBucket = (_endBucket <= _minVals.size()) ? _endBucket : _minVals.size();
 			for (int i = _startBucket; i < _endBucket; i++) {
 				Double val = _minVals.get(i);
 				if (val < minimumValue) {

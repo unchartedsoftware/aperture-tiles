@@ -45,22 +45,12 @@ import org.json.JSONObject;
  *  	as the ten most recent tweets for that bucketed time frame.
  *
  */
-public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<List<T>> {
+public class FilterTopicByBucketTileTransformer<T> extends BucketTileTransformer<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger( FilterTopicByBucketTileTransformer.class );
 
-	private Integer _startBucket = null;
-	private Integer _endBucket = null;
-
 	public FilterTopicByBucketTileTransformer(JSONObject arguments){
-		if ( arguments != null ) {
-			// get the start and end time range
-			_startBucket = arguments.optInt("startBucket");
-			_endBucket = arguments.optInt("endBucket");
-		} else {
-			LOGGER.warn("No arguements passed in to filterkeywordbucket transformer");
-		}
+		super(arguments);
 	}
-
 
 	@Override
 	public JSONObject transform (JSONObject inputJSON) throws JSONException {
@@ -68,7 +58,6 @@ public class FilterTopicByBucketTileTransformer<T> implements TileTransformer<Li
 		if (inputJSON.has("meta")) {
 			resultJSON.put("meta", filterKeywordMetadata( inputJSON.getJSONObject("meta") ));
 		}
-
 		return resultJSON;
 	}
 

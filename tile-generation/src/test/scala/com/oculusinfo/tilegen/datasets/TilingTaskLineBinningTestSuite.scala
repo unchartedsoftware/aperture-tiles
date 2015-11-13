@@ -29,13 +29,17 @@ import java.lang.{Integer => JavaInt, Double => JavaDouble}
 import java.io.{FileWriter, File}
 import java.util.Properties
 
+import com.oculusinfo.tilegen.pipeline.PipelineData
+
 import scala.collection.JavaConverters._
+import scala.collection.mutable.{Map => MutableMap}
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
 import com.oculusinfo.binning.impl.DenseTileData
-import com.oculusinfo.binning.{TileData, TileIndex}
+import com.oculusinfo.binning.{BinIndex, TileData, TileIndex}
 import com.oculusinfo.tilegen.binning.{OnDemandBinningPyramidIO, OnDemandAccumulatorPyramidIO}
-import com.oculusinfo.tilegen.tiling.TestTileIO
+import com.oculusinfo.tilegen.tiling.{StandardBinningFunctions, TestTileIO}
 import com.oculusinfo.tilegen.util.PropertiesWrapper
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.{SparkContext, SharedSparkContext}
@@ -53,7 +57,8 @@ class TilingTaskLineBinningTestSuite extends FunSuite with SharedSparkContext wi
 
 	def testAoILine[A <: Product : TypeTag](rawData: Seq[A], level: Int,
 	                                        expected: Map[TileIndex, Option[TileData[JavaDouble]]],
-	                                        propertyOverrides: Map[String, String] = Map[String, String]()): Unit = {
+	                                        propertyOverrides: Map[String, String] = Map[String, String](),
+                                          minimumSegmentLength:Some[Int] = Some(2), maximumSegmentLength:Some[Int] = Some(8)): Unit = {
 		val pyramidId = "segmentTest"
 		val tileIO = new TestTileIO
 		try {
@@ -73,8 +78,6 @@ class TilingTaskLineBinningTestSuite extends FunSuite with SharedSparkContext wi
 			props.setProperty("oculus.binning.index.field.3", "y2")
 			props.setProperty("oculus.binning.levels.0", level.toString)
 			props.setProperty("oculus.binning.name", pyramidId)
-			props.setProperty("oculus.binning.minimumSegmentLength", "2")
-			props.setProperty("oculus.binning.maximumSegmentLength", "8")
 			props.setProperty("oculus.binning.lineType", "Lines")
 			props.setProperty("oculus.binning.tileWidth", "4")
 			props.setProperty("oculus.binning.tileHeight", "4")
@@ -84,7 +87,14 @@ class TilingTaskLineBinningTestSuite extends FunSuite with SharedSparkContext wi
 
 			val task = TilingTask(sqlc, pyramidId, props)
 
-			task.doLineTiling(tileIO)
+      def withValueType[PT: ClassTag] (task: TilingTask[PT, _, _, _]) = {
+        val locateFcn = StandardBinningFunctions.locateLine(task.getIndexScheme, task.getTilePyramid,
+          minimumSegmentLength, maximumSegmentLength, task.getNumXBins, task.getNumYBins)
+        val populateFcn: (TileIndex, Array[BinIndex], PT) => MutableMap[BinIndex, PT] = StandardBinningFunctions.populateTileWithLineSegments(StandardScalingFunctions.identityScale)
+
+        task.doParameterizedTiling(tileIO, locateFcn, populateFcn)
+      }
+      withValueType(task)
 
 			// Make sure only the expected tiles were created
 			val allGenerated = tileIO.getPyramid(pyramidId)
@@ -226,7 +236,9 @@ class TilingTaskLineBinningTestSuite extends FunSuite with SharedSparkContext wi
 					List(1.0, 1.0, 1.0, 1.0,  1.0, 1.0, 1.0, 0.0,  1.0, 1.0, 0.0, 0.0,  1.0, 0.0, 0.0, 0.0)
 				)
 			),
-			Map("oculus.binning.minimumSegmentLength" -> "4", "oculus.binning.maximumSegmentLength" -> "8")
+			Map(),
+      Some(4),
+      Some(8)
 		)
 	}
 

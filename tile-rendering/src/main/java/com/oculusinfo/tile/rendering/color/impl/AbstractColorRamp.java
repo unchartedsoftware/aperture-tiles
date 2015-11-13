@@ -55,21 +55,27 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	}
 
 
-	
-	
+
+
 	public int getRGB(double scale) {
 		return smoothBetweenFixedPoints(reds, greens, blues, alphas,
-		                                (this.isInverted ? 1-scale : scale));
+		                                (this.isInverted ? 1-scale : scale), 1.0);
 	}
-	
+
+	public int getRGBA(double scale, double alphaScale) {
+		return smoothBetweenFixedPoints(reds, greens, blues, alphas,
+			(this.isInverted ? 1-scale : scale),
+			(this.isInverted ? 1-alphaScale : alphaScale));
+	}
+
 	public static double luminosity(int r, int g, int b) {
 		return (r*0.2126f + g*0.7152f + b*0.0722f)/0xFF;
 	}
-	
+
 	public static double luminosity(int color) {
 		return luminosity((color&0xFF0000)>>16, (color&0xFF00)>>8, color&0xFF);
 	}
-	
+
 	public static double getGreenForRBL(double r, double b, double l) {
 		return (l-r*0.2126f-b*0.0722f)/0.7152f;
 	}
@@ -77,7 +83,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	public static double getRedForGBL(double g, double b, double l) {
 		return (l-g*0.7152f-b*0.0722f)/0.2126f;
 	}
-	
+
 	public static double valueFromFixedPoints(List<FixedPoint> values, double scale) {
 		FixedPoint start = values.get(0);
 		if (scale<start.getScale()) return start.getValue();
@@ -90,13 +96,13 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		}
 		return start.getValue();
 	}
-	
+
 	public static int smoothBetweenFixedPoints(List<FixedPoint> reds, List<FixedPoint> greens,
-	                                           List<FixedPoint> blues, List<FixedPoint> alphas, double scale) {
+	                                           List<FixedPoint> blues, List<FixedPoint> alphas, double scale, double alphaScale) {
 		int r = (int)(valueFromFixedPoints(reds,scale) * 255);
 		int b = (int)(valueFromFixedPoints(blues,scale) * 255);
 		int g = 0;
-		int a = (int)(valueFromFixedPoints(alphas, scale) * 255);
+		int a = (int)(valueFromFixedPoints(alphas, scale)*alphaScale * 255);
 		if(greens.size() > 0){
 			g = (int)(valueFromFixedPoints(greens,scale) * 255);
 		} else {
@@ -114,14 +120,14 @@ public abstract class AbstractColorRamp implements ColorRamp {
 	//---------------------------------------------
 	// Parsing helpers
 	//---------------------------------------------
-	
+
 	/**
 	 * Converts a list of items into a {@link FixedPoint}.
 	 * Uses the first element in the list as the scale, and the second element
 	 * as the value.
 	 * If the list doesn't have enough items, or the elements are not numbers,
 	 * then it treats them as 0.
-	 * 
+	 *
 	 * @param list
 	 * 	A list of numbers.
 	 * @return
@@ -136,7 +142,7 @@ public abstract class AbstractColorRamp implements ColorRamp {
 			//the scale should be the first item
 			scale = JsonUtilities.getNumber(list.get(0)).doubleValue();
 		}
-		
+
 		if (numItems >= 2) {
 			//the value should be the second item
 			value = JsonUtilities.getNumber(list.get(1)).doubleValue();
@@ -144,17 +150,17 @@ public abstract class AbstractColorRamp implements ColorRamp {
 
 		return new FixedPoint(scale, value);
 	}
-	
+
 	/**
 	 * Converts a map into a {@link FixedPoint}.
 	 * The map should contain a key labelled 'scale' or '0' for scale,
 	 * and 'value' or '1' for value.
 	 * If anything is missing, then it's considered 0.
-	 * 
+	 *
 	 * @param map
 	 * 	A string->object map to pull objects from.
 	 * @return
-	 * 	Returns a {@link FixedPoint} constructed from the elements of the map. 
+	 * 	Returns a {@link FixedPoint} constructed from the elements of the map.
 	 */
 	protected static FixedPoint getFixedPointFromMap(Map<?, ?> map) {
 		double scale = 0;
@@ -172,10 +178,10 @@ public abstract class AbstractColorRamp implements ColorRamp {
 		else if (map.containsKey("1")) {
 			value = JsonUtilities.getNumber(map.get("1")).doubleValue();
 		}
-		
+
 		return new FixedPoint(scale, value);
 	}
-	
+
 	protected static List<FixedPoint> getFixedPointList(List<?> list) {
 		int numPoints = list.size();
 		List<FixedPoint> pointList = new ArrayList<FixedPoint>(numPoints);
@@ -196,8 +202,8 @@ public abstract class AbstractColorRamp implements ColorRamp {
 				pointList.add(point);
 			}
 		}
-		
+
 		return pointList;
 	}
-		
-}	
+
+}

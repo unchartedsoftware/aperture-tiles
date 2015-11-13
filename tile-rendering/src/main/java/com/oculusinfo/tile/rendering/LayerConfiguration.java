@@ -32,12 +32,9 @@ import com.oculusinfo.binning.properties.TileIndexProperty;
 import com.oculusinfo.factory.ConfigurableFactory;
 import com.oculusinfo.factory.ConfigurationException;
 import com.oculusinfo.factory.ConfigurationProperty;
-import com.oculusinfo.factory.properties.IntegerProperty;
-import com.oculusinfo.factory.properties.JSONProperty;
-import com.oculusinfo.factory.properties.StringProperty;
+import com.oculusinfo.factory.properties.*;
 import com.oculusinfo.factory.providers.FactoryProvider;
 import com.oculusinfo.factory.util.Pair;
-import com.oculusinfo.tile.rendering.transformations.combine.TileCombiner;
 import com.oculusinfo.tile.rendering.transformations.combine.TileCombinerFactory;
 import com.oculusinfo.tile.rendering.transformations.tile.TileTransformer;
 import com.oculusinfo.tile.rendering.transformations.value.ValueTransformerFactory;
@@ -70,6 +67,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
      */
 	public static final List<String> TILE_COMBINE_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileCombiner"));
 	public static final List<String> TILE_TRANSFORM_PATH = Collections.unmodifiableList(Arrays.asList("public", "tileTransform"));
+	public static final List<String> ALPHA_VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","alphaValueTransform" ) );
     public static final List<String> VALUE_TRANSFORM_PATH = Collections.unmodifiableList( Arrays.asList( "public","valueTransform" ) );
     public static final List<String> FILTER_PATH = Collections.unmodifiableList( Arrays.asList( "public", "filter" ) );
     public static final List<String> TILE_PYRAMID_PATH = Collections.unmodifiableList( Arrays.asList( "public", "pyramid" ) );
@@ -128,6 +126,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 	public static final StringProperty LEVEL_MAXIMUMS = new StringProperty("levelMaximums",
         "For server use only, on a tile-by-tile basis",
         null);
+	public static final BooleanProperty ALPHA_RAMP = new BooleanProperty("alphaRamp",
+		"In addition to using a colour ramp, an alpha ramp is applies based on bin density",
+		false);
 
 	private static Set<ConfigurationProperty<?>> LOCAL_PROPERTIES =
 		Collections.unmodifiableSet(new HashSet<ConfigurationProperty<?>>(Arrays.asList(
@@ -137,6 +138,7 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
         )));
 
 	private ValueTransformerFactory _transformFactory;
+	private ValueTransformerFactory _alphaTransformFactory;
 	private TileIndex _tileCoordinate;
 	private String _levelMinimum;
 	private String _levelMaximum;
@@ -175,12 +177,16 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 		addProperty(RANGE_MIN, RENDERER_PATH);
 		addProperty(RANGE_MAX, RENDERER_PATH);
 		addProperty(RANGE_MODE, RENDERER_PATH);
+		addProperty(ALPHA_RAMP, RENDERER_PATH);
 		addProperty(TILE_COORDINATE);
 		addProperty(LEVEL_MINIMUMS);
 		addProperty(LEVEL_MAXIMUMS);
 
-		_transformFactory = new ValueTransformerFactory( this, VALUE_TRANSFORM_PATH );
-		addChildFactory( _transformFactory );
+		_transformFactory = new ValueTransformerFactory( "valueTransformer", this, VALUE_TRANSFORM_PATH );
+		addChildFactory(_transformFactory);
+
+		_alphaTransformFactory =  new ValueTransformerFactory( "alphaValueTransformer", this, ALPHA_VALUE_TRANSFORM_PATH );
+		addChildFactory( _alphaTransformFactory );
 
         addChildFactory( rendererFactoryProvider.createFactory(this, RENDERER_PATH) );
         addChildFactory( pyramidIOFactoryProvider.createFactory(this, PYRAMID_IO_PATH) );
@@ -230,6 +236,9 @@ public class LayerConfiguration extends ConfigurableFactory<LayerConfiguration> 
 			if (null != tileTransformer) {
 				Pair<Double, Double> extrema = tileTransformer.getTransformedExtrema(this);
 				_transformFactory.setExtrema(extrema.getFirst(), extrema.getSecond());
+
+				Pair<Double, Double> rawExtrema = tileTransformer.getRawExtrema(this);
+				_alphaTransformFactory.setExtrema(rawExtrema.getFirst(), rawExtrema.getSecond()/2);
 			}
 		} catch (ConfigurationException e1) {
 			String layer;

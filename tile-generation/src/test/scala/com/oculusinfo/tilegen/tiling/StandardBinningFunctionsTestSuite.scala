@@ -63,7 +63,7 @@ class StandardBinningFunctionsTestSuite extends FunSuite {
 
 		// Create our locate function
 		val locateFcn: Seq[Any] => Traversable[(TileIndex, Array[BinIndex])] =
-			locateIndexOverLevelsWithKernel[Seq[Any]](kernel, index, pyramid, levelsTested, 8, 8)
+			locateIndexOverLevelsWithKernel[Seq[Any]](kernel, index, pyramid, 8, 8)(levelsTested)
 
 		// Create our populate function
 		val populateFcn: (TileIndex, Array[BinIndex], Double) => MutableMap[BinIndex, Double] =

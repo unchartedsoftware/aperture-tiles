@@ -56,42 +56,43 @@ trait StandardPointBinningFunctions {
 	 * Simple function to spread an input point over several levels of tile pyramid.
 	 */
 	def locateIndexOverLevels[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
-	                             levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] =
-		index => {
-			val (x, y) = indexScheme.toCartesian(index)
-			levels.map{level =>
-				val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
-				val bin = pyramid.rootToBin(x, y, tile)
-				(tile, Array(bin))
-			}
-		}
-
-
+	                             xBins: Int = 256, yBins: Int = 256)
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] =
+		levels => {
+      index => {
+        val (x, y) = indexScheme.toCartesian(index)
+        levels.map{level =>
+          val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+          val bin = pyramid.rootToBin(x, y, tile)
+          (tile, Array(bin))
+        }
+      }
+    }
 
 	/**
 	 * Simple function to spread an input point over several levels of tile pyramid, ignoring
 	 * points that are out of bounds
 	 */
 	def locateBoundedIndexOverLevels[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
-	                                    levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+	                                    xBins: Int = 256, yBins: Int = 256)
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
 		                                bounds.getMaxX, bounds.getMaxY)
-
-		index => {
-			val (x, y) = indexScheme.toCartesian(index)
-			if (minX <= x && x < maxX && minY <= y && y < maxY) {
-				levels.map{level =>
-					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
-					val bin = pyramid.rootToBin(x, y, tile)
-					(tile, Array(bin))
-				}
-			} else {
-				Traversable()
-			}
-		}
+    levels => {
+      index => {
+        val (x, y) = indexScheme.toCartesian(index)
+        if (minX <= x && x < maxX && minY <= y && y < maxY) {
+          levels.map{level =>
+            val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+            val bin = pyramid.rootToBin(x, y, tile)
+            (tile, Array(bin))
+          }
+        } else {
+          Traversable()
+        }
+      }
+    }
 	}
 
 	/**
@@ -121,8 +122,8 @@ trait StandardPointBinningFunctions {
     }
 
     // Normalize the kernel
-    for (u <- 0 until kernel.length - 1) {
-      for (v <- 0 until kernel(0).length - 1) {
+    for (u <- 0 until kernel.length) {
+      for (v <- 0 until kernel(0).length) {
         kernel(u)(v) /= sum
       }
     }
@@ -135,156 +136,140 @@ trait StandardPointBinningFunctions {
 	 * when computing effects from the kernel matrix applied.
 	 */
 	def locateIndexOverLevelsWithKernel[T](kernel: Array[Array[Double]], indexScheme: IndexScheme[T], pyramid: TilePyramid,
-	                                    levels: Traversable[Int], xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+                                         xBins: Int = 256, yBins: Int = 256)
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 
-		index => {
-			val (x, y) = indexScheme.toCartesian(index)
+    levels => {
+      index => {
+        val (x, y) = indexScheme.toCartesian(index)
 
-			if (bounds.contains(x, y)) {
-				levels.flatMap{level =>
-					// base result if kernel does not affect other tiles
-					// Use universal bin coordinates
-					val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
-					val bin = pyramid.rootToBin(x, y, tile)
-					val uBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, bin)
+        if (bounds.contains(x, y)) {
+          levels.flatMap{level =>
+            // base result if kernel does not affect other tiles
+            // Use universal bin coordinates
+            val tile = pyramid.rootToTile(x, y, level, xBins, yBins)
+            val bin = pyramid.rootToBin(x, y, tile)
+            val uBin = TileIndex.tileBinIndexToUniversalBinIndex(tile, bin)
 
-					var result = List((tile, Array(uBin)))
+            var result = List((tile, Array(uBin)))
 
-					// now check to see if the kernel effects other tiles.  If so, add the new tiles and bins to the result
+            // now check to see if the kernel effects other tiles.  If so, add the new tiles and bins to the result
 
-					// check for tiles that are to the left
-					if ((bin.getX < kernel(0).length / 2) && (tile.getX > 0)) {
-						val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY, tile.getXBins, tile.getYBins )
+            // check for tiles that are to the left
+            if ((bin.getX < kernel(0).length / 2) && (tile.getX > 0)) {
+              val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY, tile.getXBins, tile.getYBins )
 
-						result = result :+  (newTile, Array(uBin))
+              result = result :+  (newTile, Array(uBin))
 
-						// now check for tiles above to the left
-						if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
-							val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY + 1, tile.getXBins, tile.getYBins )
-							result = result :+ (newTile, Array(uBin))
-						}
+              // now check for tiles above to the left
+              if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
+                val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY + 1, tile.getXBins, tile.getYBins )
+                result = result :+ (newTile, Array(uBin))
+              }
 
-						// and finally check for tiles below and to the left
-						if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
-							val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY - 1, tile.getXBins, tile.getYBins )
-							result = result :+ (newTile, Array(uBin))
-						}
-	        }
+              // and finally check for tiles below and to the left
+              if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
+                val newTile = new TileIndex(tile.getLevel, tile.getX - 1, tile.getY - 1, tile.getXBins, tile.getYBins )
+                result = result :+ (newTile, Array(uBin))
+              }
+            }
 
-					//check for tiles to the right
-	        if ((bin.getX > (tile.getXBins - kernel(0).length / 2)) && (tile.getX < (1 << tile.getLevel) - 1)) {
-						val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY, tile.getXBins, tile.getYBins )
+            //check for tiles to the right
+            if ((bin.getX > (tile.getXBins - kernel(0).length / 2)) && (tile.getX < (1 << tile.getLevel) - 1)) {
+              val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY, tile.getXBins, tile.getYBins )
 
-		        result = result :+ (newTile, Array(uBin))
+              result = result :+ (newTile, Array(uBin))
 
-						// now check for tiles above and to the right
-		        if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
-			        val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY + 1, tile.getXBins, tile.getYBins )
-			        result = result :+ (newTile, Array(uBin))
-		        }
+              // now check for tiles above and to the right
+              if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
+                val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY + 1, tile.getXBins, tile.getYBins )
+                result = result :+ (newTile, Array(uBin))
+              }
 
-						// and finally check for tiles below and to the right
-		        if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
-			        val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY - 1, tile.getXBins, tile.getYBins )
-			        result = result :+ (newTile, Array(uBin))
-		        }
-	        }
+              // and finally check for tiles below and to the right
+              if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
+                val newTile = new TileIndex(tile.getLevel, tile.getX + 1, tile.getY - 1, tile.getXBins, tile.getYBins )
+                result = result :+ (newTile, Array(uBin))
+              }
+            }
 
-					// check for tiles immediately above
-					// Note tile indices bellow have lower indices
-	        if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
-						val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY + 1, tile.getXBins, tile.getYBins )
-		        result = result :+ (newTile, Array(uBin))
-	        }
+            // check for tiles immediately above
+            // Note tile indices bellow have lower indices
+            if ((bin.getY < kernel.length / 2) && (tile.getY < (1 << tile.getLevel) - 1)) {
+              val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY + 1, tile.getXBins, tile.getYBins )
+              result = result :+ (newTile, Array(uBin))
+            }
 
-	        // check for tiles immediately below
-	        if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
-						val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY - 1, tile.getXBins, tile.getYBins )
-		        result = result :+ (newTile, Array(uBin))
-	        }
+            // check for tiles immediately below
+            if ((bin.getY > (tile.getYBins - kernel(0).length / 2)) && (tile.getY > 0)) {
+              val newTile = new TileIndex(tile.getLevel, tile.getX, tile.getY - 1, tile.getXBins, tile.getYBins )
+              result = result :+ (newTile, Array(uBin))
+            }
 
-	        result
-				}
-			} else {
-				Traversable()
-			}
-		}
+            result
+          }
+        } else {
+          Traversable()
+        }
+      }
+    }
 	}
 
 	def populateArrayTileGaussian[T : ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], Seq[T]) => MutableMap[BinIndex, Seq[T]] = {
-		val popFunction = populateTileGaussian[T](kernel)
+    populateTileGaussian[Seq[T]](kernel, (values: Seq[T], kernelVal: Double) => {
+      val sNumeric = implicitly[ExtendedNumeric[T]]
+      var curValues:List[T] = List();
 
-		(tile, bins, values) => {
-			var results: MutableMap[BinIndex, Seq[T]] = MutableMap()
-
-			// Calculate all the maps
-			for (value <- values) {
-				val map = popFunction(tile, bins, value)
-
-				// Aggregate the values into the results
-				map.foreach{ case (bin, value) => {
-					var values: Seq[T] = results.getOrElse[Seq[T]](bin, Seq[T]())
-
-					values = values :+ value
-					results.put(bin, values)
-				}}
-			}
-
-			results
-		}
+      for (value <- values) {
+        curValues = curValues :+ sNumeric.fromDouble((sNumeric.toDouble(value) * kernelVal))
+      }
+      curValues
+    })
 	}
+
+  def populateTileGaussian[T : ExtendedNumeric](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] = {
+    populateTileGaussian[T](kernel, (value: T, kernelVal: Double) => {
+      val sNumeric = implicitly[ExtendedNumeric[T]]
+      sNumeric.fromDouble(sNumeric.toDouble(value) * kernelVal)
+    })
+  }
 
 	/**
 	 * Simple population function that just takes input points and outputs them, as is, in the
 	 * correct coordinate system.
 	 */
-	//def populateTileIdentity[T]: (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
-		//(tile, bins, value) => MutableMap(bins.map(bin => (TileIndex.universalBinIndexToTileBinIndex(tile, bin).getBin, value)): _*)
-	def populateTileGaussian[T: ExtendedNumeric ](kernel: Array[Array[Double]]): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
+  private def populateTileGaussian[T](kernel: Array[Array[Double]], valueFunction: (T, Double) => T): (TileIndex, Array[BinIndex], T) => MutableMap[BinIndex, T] =
 		(tile, bins, value) => {
+      MutableMap(bins.flatMap{bin =>
+          // This just puts in the bin it's passed literally.
+          // You want, instead, to take the value, and spread it around several bins, as per the directions of the kernel
+        val kernelDimX = kernel(0).length - 1 	// zero based
+        val kernelDimY = kernel.length - 1		// zero based
+        var result: List[(BinIndex, T)] = List()
 
-            MutableMap(bins.flatMap{bin =>
-                // This just puts in the bin it's passed literally.
-                // You want, instead, to take the value, and spread it around several bins, as per the directions of the kernel
-            	val kernelDimX = kernel(0).length - 1 	// zero based
-            	val kernelDimY = kernel.length - 1		// zero based
+        // j is the current local y position in the kernel; i is current local x position in the kernel.
+        for ( j <- 0 to kernelDimY; i <- 0 to kernelDimX ) {
+          // for each element in the kernel, determine if it is in the tile
+          // first we must convert the kernel element position to global coordinates
+          val currBinX = bin.getX + i - kernelDimX/2
+          val currBinY = bin.getY + j - kernelDimY/2
 
-            	var result: List[(BinIndex, T)] = List()
+          if (currBinX >= 0 && currBinY >= 0) {
+            val tileBinIndex = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY))
 
-            	// j is the current local y position in the kernel; i is current local x position in the kernel.
-            	for ( j <- 0 to kernelDimY; i <- 0 to kernelDimX ) {
-            		// for each element in the kernel, determine if it is in the tile
-            		// first we must convert the kernel element position to global coordinates
-            		val currBinX = bin.getX + i - kernelDimX/2
-            		val currBinY = bin.getY + j - kernelDimY/2
-
-		            if (currBinX >= 0 && currBinY >= 0) {
-			            val tileBinIndex = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY))
-
-			            // if kernelX && kernelY fall inside the tile, get the kernel value at x,y and apply it to the bin
-			            if (tileBinIndex.getTile.compareTo(tile) == 0) {
-				            // compute value of bin after kernel applied in bin and convert bin to tile coordinates
-				            var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
-
-
-				            val sNumeric = implicitly[ExtendedNumeric[T]]
-
-				            val kernelVal = kernel(j)(i)
-				            val currvalue = sNumeric.toDouble(value) * kernelVal
-
-				            result = (currBin, sNumeric.fromDouble(currvalue)) :: result
-			            }
-		            }
-            	}
-              result
-            }: _*)
+            // if kernelX && kernelY fall inside the tile, get the kernel value at x,y and apply it to the bin
+            if (tileBinIndex.getTile.compareTo(tile) == 0) {
+              // compute value of bin after kernel applied in bin and convert bin to tile coordinates
+              var currBin = TileIndex.universalBinIndexToTileBinIndex(tile, new BinIndex(currBinX, currBinY)).getBin
+              result = (currBin, valueFunction(value, kernel(j)(i))) :: result
+            }
+          }
         }
-
+        result
+      }: _*)
+    }
 }
-
-
 
 /**
  * A repository of standard index location and tile population functions for line inputs,
@@ -296,7 +281,6 @@ trait StandardLinearBinningFunctions {
 	 *
 	 * @param indexScheme The scheme for interpretting input indices
 	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
-	 * @param levels The levels at which to tile
 	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None
 	 *                to have no minimum segment length
 	 * @param maxBins The maximum length of a segment, in bins, above which it is not drawn, or None
@@ -306,21 +290,22 @@ trait StandardLinearBinningFunctions {
 	 * @return a traversable over the tiles this line crosses, each associated with the overall
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
-	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	def locateLine[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
 	                  minBins: Option[Int], maxBins: Option[Int],
 	                  xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] = {
-		val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
-			if (minBins.map(_ <= length).getOrElse(true) &&
-				    maxBins.map(_ > length).getOrElse(true)) {
-				// Fill in somewhere around here.
-				linearTiles(firstBin, lastBin, sampleTile).map(tile => (tile, Array(firstBin, lastBin)))
-			} else {
-				Traversable()
-			}
-		}
-
-		locateLineInternal(indexScheme, pyramid, levels, spread, xBins, yBins)
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] = {
+    val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
+      if (minBins.map(_ <= length).getOrElse(true) &&
+        maxBins.map(_ > length).getOrElse(true)) {
+        // Fill in somewhere around here.
+        linearTiles(firstBin, lastBin, sampleTile).map(tile => (tile, Array(firstBin, lastBin)))
+      } else {
+        Traversable()
+      }
+    }
+    levels => {
+      locateLineInternal(indexScheme, pyramid, spread, xBins, yBins)(levels)
+    }
 	}
 
 	/**
@@ -330,7 +315,6 @@ trait StandardLinearBinningFunctions {
 	 *
 	 * @param indexScheme The scheme for interpretting input indices
 	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
-	 * @param levels The levels at which to tile
 	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None
 	 *                to have no minimum segment length
 	 * @param leaderBins The length of the line leader to draw on each end.
@@ -339,9 +323,9 @@ trait StandardLinearBinningFunctions {
 	 * @return a traversable over the tiles this line crosses, each associated with the overall
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
-	def locateLineLeaders[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	def locateLineLeaders[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
 	                         minBins: Option[Int], leaderBins: Int, xBins: Int = 256, yBins: Int = 256)
-			:T => Traversable[(TileIndex, Array[BinIndex])] = {
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
 			if (minBins.map(_ <= length).getOrElse(true)) {
 				closeLinearTiles(firstBin, lastBin, sampleTile, leaderBins).map(tile => (tile, Array(firstBin, lastBin)))
@@ -349,42 +333,44 @@ trait StandardLinearBinningFunctions {
 				Traversable()
 			}
 		}
-
-		locateLineInternal(indexScheme, pyramid, levels, spread, xBins, yBins)
+    levels => {
+      locateLineInternal(indexScheme, pyramid, spread, xBins, yBins)(levels)
+    }
 	}
 
-	private def locateLineInternal[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	private def locateLineInternal[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
 	                                  spread: (Long, BinIndex, BinIndex, TileIndex) => Traversable[(TileIndex, Array[BinIndex])],
 	                                  xBins: Int = 256, yBins: Int = 256)
-			: T => Traversable[(TileIndex, Array[BinIndex])] = {
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
 		                                bounds.getMaxX, bounds.getMaxY)
+    levels => {
+      index => {
+        val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
+        if (minX <= x1 && x1 <= maxX &&
+          minY <= y1 && y1 <= maxY &&
+          minX <= x2 && x2 <= maxX &&
+          minY < y2 && y2 <= maxY) {
+          levels.flatMap{level =>
+            val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
+            val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
+            val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
 
-		index => {
-			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
-			if (minX <= x1 && x1 <= maxX &&
-				    minY <= y1 && y1 <= maxY &&
-				    minX <= x2 && x2 <= maxX &&
-				    minY < y2 && y2 <= maxY) {
-				levels.flatMap{level =>
-					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
-					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
-					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+            val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
+            val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
+            val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
-					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
-					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
-					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+            val length = (math.abs(uniBin1.getX - uniBin2.getX) max
+              math.abs(uniBin1.getY - uniBin2.getY))
 
-					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
-						              math.abs(uniBin1.getY - uniBin2.getY))
-
-					spread(length, uniBin1, uniBin2, tile1)
-				}
-			} else {
-				Traversable()
-			}
-		}
+            spread(length, uniBin1, uniBin2, tile1)
+          }
+        } else {
+          Traversable()
+        }
+      }
+    }
 	}
 
 
@@ -695,7 +681,6 @@ trait StandardArcBinningFunctions {
 	 *
 	 * @param indexScheme The scheme for interpretting input indices
 	 * @param pyramid The tile pyramid for projecting interpretted indices into tile space.
-	 * @param levels The levels at which to tile
 	 * @param minBins The minimum length of a segment, in bins, below which it is not drawn, or None
 	 *                to have no minimum segment length
 	 * @param distance The length of the segment leader to draw on each end.
@@ -704,9 +689,9 @@ trait StandardArcBinningFunctions {
 	 * @return a traversable over the tiles this line crosses, each associated with the overall
 	 *         endpoints of this line, in universal bin coordinates.
 	 */
-	def locateArcs[T](indexScheme: IndexScheme[T], pyramid: TilePyramid, levels: Traversable[Int],
+	def locateArcs[T](indexScheme: IndexScheme[T], pyramid: TilePyramid,
 	                  minBins: Option[Int], distance: Option[Int], xBins: Int = 256, yBins: Int = 256)
-			:T => Traversable[(TileIndex, Array[BinIndex])] = {
+			: Traversable[Int] => T => Traversable[(TileIndex, Array[BinIndex])] = {
 		val spread: (Long, BinIndex, BinIndex, TileIndex) => TraversableOnce[(TileIndex, Array[BinIndex])] = (length, firstBin, lastBin, sampleTile) => {
 			if (minBins.map(_ <= length).getOrElse(true)) {
 				arcTiles(firstBin, lastBin, sampleTile, distance).map(tile => (tile, Array(firstBin, lastBin)))
@@ -718,31 +703,32 @@ trait StandardArcBinningFunctions {
 		val bounds = pyramid.getTileBounds(new TileIndex(0, 0, 0))
 		val (minX, minY, maxX, maxY) = (bounds.getMinX, bounds.getMinY,
 		                                bounds.getMaxX, bounds.getMaxY)
+    levels => {
+      index => {
+        val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
+        if (minX <= x1 && x1 <= maxX &&
+          minY <= y1 && y1 <= maxY &&
+          minX <= x2 && x2 <= maxX &&
+          minY < y2 && y2 <= maxY) {
+          levels.flatMap{level =>
+            val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
+            val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
+            val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
 
-		index => {
-			val (x1, y1, x2, y2) = indexScheme.toCartesianEndpoints(index)
-			if (minX <= x1 && x1 <= maxX &&
-				    minY <= y1 && y1 <= maxY &&
-				    minX <= x2 && x2 <= maxX &&
-				    minY < y2 && y2 <= maxY) {
-				levels.flatMap{level =>
-					val tile1 = pyramid.rootToTile(x1, y1, level, xBins, yBins)
-					val tileBin1 = pyramid.rootToBin(x1, y1, tile1)
-					val uniBin1 = TileIndex.tileBinIndexToUniversalBinIndex(tile1, tileBin1)
+            val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
+            val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
+            val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
 
-					val tile2 = pyramid.rootToTile(x2, y2, level, xBins, yBins)
-					val tileBin2 = pyramid.rootToBin(x2, y2, tile2)
-					val uniBin2 = TileIndex.tileBinIndexToUniversalBinIndex(tile2, tileBin2)
+            val length = (math.abs(uniBin1.getX - uniBin2.getX) max
+              math.abs(uniBin1.getY - uniBin2.getY))
 
-					val length = (math.abs(uniBin1.getX - uniBin2.getX) max
-						              math.abs(uniBin1.getY - uniBin2.getY))
-
-					spread(length, uniBin1, uniBin2, tile1)
-				}
-			} else {
-				Traversable()
-			}
-		}
+            spread(length, uniBin1, uniBin2, tile1)
+          }
+        } else {
+          Traversable()
+        }
+      }
+    }
 	}
 
 

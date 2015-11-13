@@ -271,7 +271,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 			if (wholeLine) {
 				val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => value
 
-				(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, List(1), Some(1), Some(maxLength))(_),
+				(StandardBinningFunctions.locateLine(new SegmentIndexScheme, pyramid, Some(1), Some(maxLength))(List(1))(_),
 				 StandardBinningFunctions.populateTileWithLineSegments(valueScaler)(_, _, _))
 			} else {
 				val valueScaler: (Array[BinIndex], BinIndex, Double) => Double = (endpoints, bin, value) => {
@@ -283,7 +283,7 @@ class RDDLineBinnerTestSuite extends FunSuite with SharedSparkContext {
 					value*scale
 				}
 
-				(StandardBinningFunctions.locateLineLeaders(new SegmentIndexScheme, pyramid, List(1), None, maxLength)(_),
+				(StandardBinningFunctions.locateLineLeaders(new SegmentIndexScheme, pyramid, None, maxLength)(List(1))(_),
 				 StandardBinningFunctions.populateTileWithLineLeaders(maxLength, valueScaler)(_, _, _))
 			}
 		val tiles = binner.processData[Segment, Double, Double, Double, JavaDouble](data,

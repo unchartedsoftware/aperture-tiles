@@ -52,7 +52,7 @@ import static com.oculusinfo.tile.rendering.LayerConfiguration.*;
  *
  */
 
-public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<List<T>> {
+public class FilterVarsDoubleArrayTileTransformer<T> extends BucketTileTransformer<T> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FilterVarsDoubleArrayTileTransformer.class);
 
 	private List<Integer> _variables = new ArrayList<>();
@@ -60,6 +60,7 @@ public class FilterVarsDoubleArrayTileTransformer<T> implements TileTransformer<
 	private List<Double> _maxVals = null;
 
 	public FilterVarsDoubleArrayTileTransformer(JSONObject variables){
+		super(variables);
 		// Get the JSONArray out of the variables JSONObject
 		try {
 			if (variables == null) {

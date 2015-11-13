@@ -149,10 +149,12 @@ public class TileServiceImpl implements TileService {
 			return null;
 		}
 
-		data = tileCombiner.combine(data, index, coarseness, tileProperties);
-		data = tileTransformer.transform( data );
+		TileData<T> modifiedData = tileCombiner.combine(data, index, coarseness, tileProperties);
+		modifiedData = tileTransformer.transform( modifiedData );
+
+		Boolean applyAlphaRamp = config.getPropertyValue( LayerConfiguration.ALPHA_RAMP );
 		if ( data != null ) {
-			return renderer.render( data, config );
+			return renderer.render( modifiedData, applyAlphaRamp ? data : null, config );
 		}
 		return null;
 	}
