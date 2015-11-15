@@ -133,6 +133,8 @@ dependencies {
 	assemblyJarReq project (":factory-utilities")
 	assemblyJarReq "org.json:json:20090211"
 	assemblyJarReq "org.clapper:grizzled-slf4j_2.10:1.0.2"
+	assemblyJarReq "joda-time:joda-time:2.8.1"
+	assemblyJarReq "org.joda:joda-convert:1.7"
 	addHBaseDependencies("assemblyJarReq")
 }
 
