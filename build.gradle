@@ -1,7 +1,7 @@
 // This is the top level build file for the aperture tiles core projects.  Definitions / tasks that
 // are shared between sub-projects need to go in here, but care should be taken not to needlessly
 // pollute the global namespace.  The 'settings.gradle' file that is also in this directory defines
-// the sub-projects that will be built by this file, and 'properies.gradle' contains default property
+// the sub-projects that will be built by this file, and 'properties.gradle' contains default property
 // values.
 
 // Task that reads the "buildType" string property from the command line and writes the the cloudera versions
@@ -49,7 +49,7 @@ init.dependsOn setBuildVersions
 // This only needs to be run when a new version of gradle is used, and the produced files should be checked into
 // source control when its done.
 task wrapper(type: Wrapper) {
-	gradleVersion = '2.4'
+	gradleVersion = '2.8'
 }
 
 // If we don't explicitly tell modules to inherit from the project settings, those without scala/java code will
@@ -102,58 +102,40 @@ subprojects {
 
 	// A shared function that adds hbase dependencies to the supplied project based on the build type.
 	// We can't use the DSL in this context, so we have to go through the lower level DependencyManager APIs.
-	// The reason this needs special handling is that HBase went from being a single jar in earlier version,
-	// to multiple jars in later.  CDH5.x picks up the new split HBase jar, while CDH4.x needs the
-	// unified jar.
 	ext.addHBaseDependencies = { config ->
 		if (config == null || config == "") {
 			config = "compile"
 		}
-
-		// Anything that starts with cdh5 gets the split HBase jars, others assumed to get old-style unified jar
-		if ( buildType =~ /cdh5\w*/) {
-			logger.info("Matched CDH5x cloudera version - using new-style jars")
-			getDependencies().add(config, "org.apache.hbase:hbase-common:$hbaseVersion", {
-				exclude group: "asm", module: "asm"
-				exclude group: "org.slf4j", module: "slf4j-api"
-				exclude group: "org.slf4j", module: "slf4j-log4j12"
-				exclude group: "org.jboss.netty", module: "netty"
-				exclude group: "io.netty", module: "netty"
-			})
-			getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
-				exclude group: "asm", module: "asm"
-				exclude group: "org.slf4j", module: "slf4j-api"
-				exclude group: "org.slf4j", module: "slf4j-log4j12"
-				exclude group: "org.jboss.netty", module: "netty"
-				exclude group: "io.netty", module: "netty"
-			})
-			getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
-				exclude group: "asm", module: "asm"
-				exclude group: "org.slf4j", module: "slf4j-api"
-				exclude group: "org.slf4j", module: "slf4j-log4j12"
-				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
-				exclude group: "org.jboss.netty", module: "netty"
-				exclude group: "io.netty", module: "netty"
-			})
-			getDependencies().add(config, "org.apache.htrace:htrace-core:$htraceVersion", {
-				exclude group: "asm", module: "asm"
-				exclude group: "org.slf4j", module: "slf4j-api"
-				exclude group: "org.slf4j", module: "slf4j-log4j12"
-				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
-				exclude group: "org.jboss.netty", module: "netty"
-				exclude group: "io.netty", module: "netty"
-			})
-		} else {
-			logger.info("Did not match CDH5x cloudera version - using old style monolithic jar")
-			getDependencies().add(config, "org.apache.hbase:hbase:$hbaseVersion", {
-				exclude group: "asm", module: "asm"
-				exclude group: "org.slf4j", module: "slf4j-api"
-				exclude group: "org.slf4j", module: "slf4j-log4j12"
-				exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
-				exclude group: "org.jboss.netty", module: "netty"
-				exclude group: "io.netty", module: "netty"
-			})
-		}
+		getDependencies().add(config, "org.apache.hbase:hbase-common:$hbaseVersion", {
+			exclude group: "asm", module: "asm"
+			exclude group: "org.slf4j", module: "slf4j-api"
+			exclude group: "org.slf4j", module: "slf4j-log4j12"
+			exclude group: "org.jboss.netty", module: "netty"
+			exclude group: "io.netty", module: "netty"
+		})
+		getDependencies().add(config, "org.apache.hbase:hbase-client:$hbaseVersion", {
+			exclude group: "asm", module: "asm"
+			exclude group: "org.slf4j", module: "slf4j-api"
+			exclude group: "org.slf4j", module: "slf4j-log4j12"
+			exclude group: "org.jboss.netty", module: "netty"
+			exclude group: "io.netty", module: "netty"
+		})
+		getDependencies().add(config, "org.apache.hbase:hbase-server:$hbaseVersion", {
+			exclude group: "asm", module: "asm"
+			exclude group: "org.slf4j", module: "slf4j-api"
+			exclude group: "org.slf4j", module: "slf4j-log4j12"
+			exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+			exclude group: "org.jboss.netty", module: "netty"
+			exclude group: "io.netty", module: "netty"
+		})
+		getDependencies().add(config, "org.apache.htrace:htrace-core:$htraceVersion", {
+			exclude group: "asm", module: "asm"
+			exclude group: "org.slf4j", module: "slf4j-api"
+			exclude group: "org.slf4j", module: "slf4j-log4j12"
+			exclude group: "org.mortbay.jetty", module: "servlet-api-2.5"
+			exclude group: "org.jboss.netty", module: "netty"
+			exclude group: "io.netty", module: "netty"
+		})
 	}
 
 	// Once evaluation is done (each build file has been loaded and processed, but
