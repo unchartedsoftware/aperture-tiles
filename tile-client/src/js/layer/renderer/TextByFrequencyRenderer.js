@@ -126,6 +126,7 @@
             maxFontSize = 24,
             spacing = 20,
             textKey = this.spec.text.textKey,
+            colorFunction = this.spec.text.colorFunction,
             frequency = this.spec.frequency,
             countKey = frequency.countKey,
             invertOrder = frequency.invertOrder,
@@ -145,11 +146,13 @@
             visibility,
             index,
             height,
+            barColor,
+            termColor,
             i = 0,
-			j = 0;
+            j = 0;
 
-		var $label = $('<div class="count-summary"></div>');
-		$html = $html.append( $label );
+        var $label = $('<div class="count-summary"></div>');
+        $html = $html.append( $label );
 
         // if zoom level max is in meta, use it, otherwise calc it from tile
         if ( levelMinMax.maximum ) {
@@ -160,7 +163,7 @@
             });
         }
 
-		values = values.slice( 0, numEntries );
+	      values = values.slice( 0, numEntries );
         values.forEach ( function( value ) {
             entries.push( value );
             counts = RendererUtil.getAttributeValue( value, countKey );
@@ -179,25 +182,32 @@
                     type: "log"
                 });
 
-			// create container 'entry' for chart and hashtag
-			var html_string = '';
-            html_string += '<div class="text-by-frequency-entry" style="'
-                // ensure constant spacing independent of height
-                  + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
-                  + 'height:' + height + 'px"></div>';
-			var $entry = $(html_string);
+            var textColor = null;
+            if (colorFunction) {
+                var colorCounts = RendererUtil.getAttributeValue( value, "indexedCount" );
+                textColor = colorFunction(colorCounts);
+            }
 
-			$entry.mouseover(function() {
-				$label.show(); // show label
-				$label.text( value.count );
-			});
-			$entry.mouseout(function() {
-				$label.hide(); // hide label
-			});
+			      // create container 'entry' for chart and hashtag
+            var html_string = '';
+                html_string += '<div class="text-by-frequency-entry" style="'
+                    // ensure constant spacing independent of height
+                      + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
+                      + 'height:' + height + 'px"></div>';
+			      var $entry = $(html_string);
+
+            $entry.mouseover(function() {
+                $label.show(); // show label
+                $label.text( value.count );
+            });
+            $entry.mouseout(function() {
+                $label.hide(); // hide label
+            });
 
             // create chart
-			var $chart = $('<div class="text-by-frequency-left"></div>');
-            counts.forEach ( function( count ) {
+			      var $chart = $('<div class="text-by-frequency-left"></div>');
+
+            counts.forEach ( function( count, countIndex ) {
                 // if invertOrder is true, invert the order of iteration
                 index = ( invertOrder ) ? chartSize - j - 1 : j;
                 // get the percent relative to the highest count in the tile
@@ -208,31 +218,40 @@
                 percentLabel = Math.round( relativePercent / 10 ) * 10;
                 // set minimum bar length
                 relativePercent = Math.max( relativePercent, 20 );
+                // If color funciton is provided get the color
+                var barColor = null;
+                if (colorFunction) {
+                    var colorCounts = value.indexedFrequencies[countIndex];
+                    barColor = colorFunction(colorCounts);
+                }
                 // create bar
-				var bar_string = '';
-                bar_string += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
-                    + 'visibility:'+visibility+';'
-                    + 'height:'+relativePercent+'%;'
-                    + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
-                    + 'top:'+(100-relativePercent)+'%;"></div>';
-				var $chartBar = $(bar_string);
-				$chart.append($chartBar);
-				j += 1;
+                var bar_string = '';
+                        bar_string += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
+                            + 'visibility:'+visibility+';'
+                            + 'height:'+relativePercent+'%;'
+                            + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
+                            + (barColor ? 'background-color:' + barColor + ';' : '')
+                            + 'top:'+(100-relativePercent)+'%;"></div>';
+                var $chartBar = $(bar_string);
+                $chart.append($chartBar);
+                j += 1;
             });
-			$entry.append( $chart );
-            // create tag label
-			var $labelTag = $('<div class="text-by-frequency-right"></div>');
-			var label_string = '';
-            label_string += '<div class="text-by-frequency-label" style="' +
-                'font-size:'+height+'px;' +
-                'line-height:'+height+'px;' +
-                'height:'+height+'px">'+text+'</div>';
-			var $labelText = $(label_string);
-			$labelTag.append( $labelText );
-			$entry.append( $labelTag );
 
-			$html.append($entry);
-			i += 1;
+			      $entry.append( $chart );
+            // create tag label
+			      var $labelTag = $('<div class="text-by-frequency-right"></div>');
+			      var label_string = '';
+                label_string += '<div class="text-by-frequency-label" style="' +
+                    'font-size:'+height+'px;' +
+                    'line-height:'+height+'px;' +
+                    (textColor ? 'color:' + textColor + ';' : '') +
+                    'height:'+height+'px">'+text+'</div>';
+            var $labelText = $(label_string);
+            $labelTag.append( $labelText );
+            $entry.append( $labelTag );
+
+            $html.append($entry);
+            i += 1;
         });
 
         return {

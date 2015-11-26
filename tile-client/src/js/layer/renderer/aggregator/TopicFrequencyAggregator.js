@@ -77,8 +77,28 @@
                             });
                         }
                         score = bucket[i].score;
-                        total = ( typeof score === "number" ) ? score : score.total;
+                        total = ( typeof score === "number" || score instanceof Array ) ? score : score.total;
                         topicIndex = indexByTopic[ topic ];
+
+                        if (total instanceof Array) {
+                            // Calculate total aggregate and indexed aggregate
+                            if (!topics[ topicIndex ].indexedCount) {
+                                topics[topicIndex].indexedCount = new Array(total.length).fill(0);
+                                topics[topicIndex].indexedFrequencies = new Array(bucketCount);
+                            }
+                            if (!topics[topicIndex].indexedFrequencies[index]) {
+                                topics[topicIndex].indexedFrequencies[index] = new Array(total.length).fill(0);
+                            }
+
+                            var summedTotal = 0;
+                            total.forEach(function (val, valIndex) {
+                                summedTotal += val;
+                                topics[topicIndex].indexedCount[valIndex] += val;
+                                topics[topicIndex].indexedFrequencies[index][valIndex] += val;
+                            });
+                            total = summedTotal;
+                        }
+
                         topics[ topicIndex ].count += total;
                         topics[ topicIndex ].frequencies[ index ] = total;
                     }

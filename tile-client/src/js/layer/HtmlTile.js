@@ -239,11 +239,13 @@
             tileData.forEach( function( datum ) {
                 if ( datum.tile ) {
                     // only aggregate the data if it hasn't already been aggregated
-                    if ( !datum.tile.meta.aggregated ) {
+                    if ( !datum.tile.meta.aggregated || datum.tile.meta.aggregationType !== aggregator ) {
+                        var rawData = datum.tile.meta.map ? datum.tile.meta.map.bins : datum.tile.meta.raw;
                         datum.tile.meta = {
-                            raw: datum.tile.meta.map.bins,
-                            aggregated: aggregator.aggregate( datum.tile.meta.map.bins )
+                            raw: rawData,
+                            aggregated: aggregator.aggregate( rawData )
                         };
+                        datum.tile.meta.aggregationType = aggregator;
                     }
                     // check if requested range is outside of available range
                     if ( datum.tile.meta.aggregated.length === 0 ) {
