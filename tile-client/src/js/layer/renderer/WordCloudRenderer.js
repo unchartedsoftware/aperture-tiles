@@ -143,7 +143,7 @@
     /**
      * Returns the word cloud words containing font size and x and y coordinates
      */
-    createWordCloud = function( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize ) {
+    createWordCloud = function( wordCounts, min, max, sizeFunction, minFontSize, maxFontSize, colorFunction ) {
         var boundingBox = {
                 width: 256 - HORIZONTAL_OFFSET * 2,
                 height: 256 - VERTICAL_OFFSET * 2,
@@ -153,7 +153,7 @@
             cloud = [],
             percent,
             i, word, count, dim,
-            fontSize, pos;
+            fontSize, fontColor, pos;
         // sort words by frequency
         wordCounts.sort( function( a, b ) {
             return b.count - a.count;
@@ -172,6 +172,10 @@
             percent = ((fontSize-minFontSize) / (maxFontSize-minFontSize))*100;
             // get dimensions of word
             dim = getWordDimensions( word, fontSize );
+            // If defined, calculate the font color
+            if (colorFunction) {
+                fontColor = colorFunction(wordCounts[i].entry.counts);
+            }
             // starting spiral position
             pos = {
                 radius : 1,
@@ -193,6 +197,7 @@
                         word: word,
                         entry: wordCounts[i].entry,
                         fontSize: fontSize,
+                        fontColor: fontColor,
                         percentLabel: Math.round( percent / 10 ) * 10, // round to nearest 10
                         x:pos.x,
                         y:pos.y,
@@ -252,6 +257,7 @@
             numEntries = Math.min( values.length, text.maxWords || MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
             sizeFunction = text.sizeFunction || SIZE_FUNCTION,
+            colorFunction = text.colorFunction,
             minFontSize = text.minFontSize || MIN_FONT_SIZE,
             maxFontSize = text.maxFontSize || MAX_FONT_SIZE,
             min = Number.MAX_VALUE,
@@ -293,35 +299,37 @@
             max,
             sizeFunction,
             minFontSize,
-            maxFontSize );
+            maxFontSize,
+            colorFunction );
 
 		var $label = $('<div class="count-summary"></div>');
 		$html = $html.append( $label );
 
-        cloud.forEach( function( word ) {
+    cloud.forEach( function( word ) {
 			entries.push( word.entry );
             var $wordLabel = $('<div class="word-cloud-label word-cloud-label-'+word.percentLabel+'" style="'
                     + 'font-size:'+word.fontSize+'px;'
+                    + ((word.fontColor) ? 'color:' + word.fontColor + ';' : '')
                     + 'left:'+(128+word.x-(word.width/2))+'px;'
                     + 'top:'+(128+word.y-(word.height/2))+'px;'
                     + 'width:'+word.width+'px;'
                     + 'height:'+word.height+'px;">'+word.word+'</div>');
 			$wordLabel.mouseover(function() {
 				$label.show(); // show label
-				$label.text( word.entry.count );
+				$label.text( RendererUtil.getAttributeValue( word.entry, countKey ) );
 			});
 			$wordLabel.mouseout(function() {
 				$label.hide(); // hide label
 			});
 			// add it to the group
 			$html = $html.append( $wordLabel );
-        });
+    });
 
-        return {
-            html: $html,
-            entries: entries
-        };
+    return {
+        html: $html,
+        entries: entries
     };
+  };
 
-    module.exports = WordCloudRenderer;
+  module.exports = WordCloudRenderer;
 }());
