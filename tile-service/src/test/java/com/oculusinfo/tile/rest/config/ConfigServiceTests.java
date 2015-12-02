@@ -85,7 +85,7 @@ public class ConfigServiceTests {
         replacements.put("some.animal", "cow");
         replacements.put("some.object", "moon");
 
-        String replaced = _configService.replaceTokens(text, replacements);
+        String replaced = _configService.replaceTokens(text, replacements, ConfigServiceImpl.PROPERTIES_FILE_REPLACEMENT_REGEX, false);
         assertEquals("The cow jumped over the moon", replaced);
     }
 

@@ -29,7 +29,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -38,27 +41,40 @@ import org.slf4j.LoggerFactory;
 
 
 public class ConfigPropertiesServiceImpl implements ConfigPropertiesService {
-	
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigPropertiesService.class);
+
+	private static final String ENV_VAR_REPLACEMENT_REGEX = "\\%\\{(.+?)\\}";
 
     public static final String CONFIG_ENV_VAR = "TILE_CONFIG_PROPERTIES";
     public static final String DEFAULT_CONFIG_PROPERTIES = "default-config.properties";
-    
+
 	public Properties getConfigProperties() throws ConfigException {
 		String pathToProperties = getPathToProperties();
 	    if (StringUtils.isEmpty(pathToProperties)) {
 	        return null;
 	    }
-	
+
 	    try (InputStream input = new FileInputStream(pathToProperties)) {
+			// Load properties
 	        Properties properties = new Properties();
 	        properties.load(input);
-	        return properties;
+
+			// Build a new properties object, replacing any environment variables that were in the properties file.
+			Properties replacedProperties = new Properties();
+			Map<String, String> environmentVariables = System.getenv();
+			for (String propertyName : properties.stringPropertyNames()) {
+				String propertyValue = properties.getProperty(propertyName);
+				String newPropertyValue = replaceTokens(propertyValue, environmentVariables, ENV_VAR_REPLACEMENT_REGEX, true);
+				replacedProperties.setProperty(propertyName, newPropertyValue);
+			}
+
+	        return replacedProperties;
 	    } catch (IOException e) {
             throw new ConfigException(String.format("Unable to read properties file %s", pathToProperties), e);
         }
 	}
-	
+
 	protected String getPathToProperties() throws ConfigException {
         String pathToProperties;
         String configEnvVar = System.getenv(CONFIG_ENV_VAR);
@@ -71,7 +87,7 @@ public class ConfigPropertiesServiceImpl implements ConfigPropertiesService {
         }
         return pathToProperties;
     }
-	
+
 	protected String getPathToPropertiesFromClasspath() {
         String path = null;
         URL resource = this.getClass().getClassLoader().getResource(DEFAULT_CONFIG_PROPERTIES);
@@ -80,5 +96,29 @@ public class ConfigPropertiesServiceImpl implements ConfigPropertiesService {
         }
         return path;
     }
+	// http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string
+	protected String replaceTokens(String text,
+								   Map<String, String> replacements,
+								   String regex,
+								   boolean replaceIfNotDefined) {
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(text);
+		StringBuffer buffer = new StringBuffer();
+		while (matcher.find()) {
+			String matchedKey = matcher.group(1);
+			String replacement = replacements.get(matchedKey);
+			if (replacement != null) {
+				LOGGER.info("Replacing {} with {}", matchedKey, replacement);
+				matcher.appendReplacement(buffer, "");
+				buffer.append(replacement);
+			}
+			else if (replaceIfNotDefined) {
+				LOGGER.info("Replacing {} with empty string", matchedKey);
+				matcher.appendReplacement(buffer, "");
+			}
+		}
+		matcher.appendTail(buffer);
+		return buffer.toString();
+	}
 
 }
