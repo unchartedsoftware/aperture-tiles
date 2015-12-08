@@ -62,7 +62,8 @@
                     topic,
                     score,
                     total,
-                    i;
+                    i, j,
+                    val;
                 if ( bucket ) {
                     for ( i=0; i<bucket.length; i++ ) {
                         topic = bucket[i].topic;
@@ -91,11 +92,13 @@
                             }
 
                             var summedTotal = 0;
-                            total.forEach(function (val, valIndex) {
+
+                            for (j = 0; j < total.length; j++) {
+                                val = total[j];
                                 summedTotal += val;
-                                topics[topicIndex].indexedCount[valIndex] += val;
-                                topics[topicIndex].indexedFrequencies[index][valIndex] += val;
-                            });
+                                topics[topicIndex].indexedCount[j] += val;
+                                topics[topicIndex].indexedFrequencies[index][j] += val;
+                            }
                             total = summedTotal;
                         }
 
