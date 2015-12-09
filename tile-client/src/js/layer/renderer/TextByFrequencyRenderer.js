@@ -30,29 +30,8 @@
     var Renderer = require('./Renderer'),
         RendererUtil = require('./RendererUtil'),
         MAX_WORDS_DISPLAYED = 8,
-        injectCss,
         getYOffset,
         getHighestCount;
-
-    injectCss = function( spec ) {
-        var i;
-        if ( spec.text.themes ) {
-            for (i = 0; i < spec.text.themes.length; i++) {
-                spec.text.themes[i].injectTheme({
-                    selector: ".text-by-frequency-label",
-                    parentSelector: ".text-by-frequency-entry"
-                });
-            }
-        }
-        if ( spec.frequency.themes ) {
-            for (i = 0; i < spec.frequency.themes.length; i++) {
-                spec.frequency.themes[i].injectTheme({
-                    selector: ".text-by-frequency-bar",
-                    parentSelector: ".text-by-frequency-entry"
-                });
-            }
-        }
-    };
 
     /**
      * Utility function for positioning the labels
@@ -102,14 +81,44 @@
         spec.rootKey = spec.rootKey || "tile.meta.aggregated";
         spec.frequency.invertOrder = spec.frequency.invertOrder || false;
         Renderer.call( this, spec );
-        injectCss( this.spec );
+        this.injectCss( this.spec );
     }
 
     TextByFrequencyRenderer.prototype = Object.create( Renderer.prototype );
 
-	TextByFrequencyRenderer.prototype.getEntrySelector = function() {
-		return ".text-by-frequency-label";
-	};
+    TextByFrequencyRenderer.prototype.getEntrySelector = function() {
+        return ".text-by-frequency-label";
+    };
+
+    TextByFrequencyRenderer.prototype.injectCss = function( spec ) {
+        var i;
+        if ( spec.text.themes ) {
+          for (i = 0; i < spec.text.themes.length; i++) {
+              spec.text.themes[i].injectTheme({
+                  selector: ".text-by-frequency-label",
+                  parentSelector: ".text-by-frequency-entry"
+              });
+          }
+        }
+        if ( spec.frequency.themes ) {
+          for (i = 0; i < spec.frequency.themes.length; i++) {
+              spec.frequency.themes[i].injectTheme({
+                  selector: ".text-by-frequency-bar",
+                  parentSelector: ".text-by-frequency-entry"
+              });
+          }
+        }
+    };
+
+    TextByFrequencyRenderer.prototype.getBarStyleClass = function (value, countIndex, relativePercent) {
+        // class percent in increments of 10
+        var percentLabel = Math.round( relativePercent / 10 ) * 10;
+        return 'text-by-frequency-bar text-by-frequency-bar-' + percentLabel;
+    };
+
+    TextByFrequencyRenderer.prototype.getTextStyleClass = function () {
+        return 'text-by-frequency-label';
+    };
 
     /**
      * Implementation specific rendering function.
@@ -121,19 +130,18 @@
      * @returns {{html: string, entries: Array}} The html to render and an array of all rendered data entries.
      */
     TextByFrequencyRenderer.prototype.render = function( data ) {
-
-        var minFontSize = 14,
+        var self = this,
+            minFontSize = 14,
             maxFontSize = 24,
             spacing = 20,
             textKey = this.spec.text.textKey,
-            colorFunction = this.spec.text.colorFunction,
             frequency = this.spec.frequency,
             countKey = frequency.countKey,
             invertOrder = frequency.invertOrder,
             values = RendererUtil.getAttributeValue( data, this.spec.rootKey ),
             numEntries = Math.min( values.length, MAX_WORDS_DISPLAYED ),
             levelMinMax = this.parent.getLevelMinMax(),
-            percentLabel,
+            barStyleClass,
             $html = $("<div></div>"),
             entries = [],
             min = 0,
@@ -146,8 +154,6 @@
             visibility,
             index,
             height,
-            barColor,
-            termColor,
             i = 0,
             j = 0;
 
@@ -182,16 +188,11 @@
                     type: "log"
                 });
 
-            var textColor = null;
-            if (colorFunction) {
-                var colorCounts = RendererUtil.getAttributeValue( value, "indexedCount" );
-                textColor = colorFunction(colorCounts);
-            }
-
 			      // create container 'entry' for chart and hashtag
             var html_string = '';
-                html_string += '<div class="text-by-frequency-entry" style="'
-                    // ensure constant spacing independent of height
+                html_string += '<div class="text-by-frequency-entry" '
+                      + 'style="'
+                      // ensure constant spacing independent of height
                       + 'top:' + ( getYOffset( i, numEntries, spacing ) + ( maxFontSize - height ) ) + 'px;'
                       + 'height:' + height + 'px"></div>';
 			      var $entry = $(html_string);
@@ -214,23 +215,18 @@
                 relativePercent = ( count / highestCount ) * 100;
                 // if percent === 0, hide bar
                 visibility = ( relativePercent > 0 ) ? '' : 'hidden';
-                // class percent in increments of 10
-                percentLabel = Math.round( relativePercent / 10 ) * 10;
+                // Get the style class of the bar
+                barStyleClass = self.getBarStyleClass(value, countIndex, relativePercent);
                 // set minimum bar length
                 relativePercent = Math.max( relativePercent, 20 );
-                // If color funciton is provided get the color
-                var barColor = null;
-                if (colorFunction) {
-                    var colorCounts = value.indexedFrequencies[countIndex];
-                    barColor = colorFunction(colorCounts);
-                }
                 // create bar
                 var bar_string = '';
-                        bar_string += '<div class="text-by-frequency-bar text-by-frequency-bar-'+percentLabel+'" style="'
+                        bar_string += '<div '
+                            + 'class="' + barStyleClass + '" '
+                            + 'style="'
                             + 'visibility:'+visibility+';'
                             + 'height:'+relativePercent+'%;'
                             + 'width:'+ Math.floor( (105+chartSize)/chartSize ) +'px;'
-                            + (barColor ? 'background-color:' + barColor + ';' : '')
                             + 'top:'+(100-relativePercent)+'%;"></div>';
                 var $chartBar = $(bar_string);
                 $chart.append($chartBar);
@@ -241,10 +237,9 @@
             // create tag label
 			      var $labelTag = $('<div class="text-by-frequency-right"></div>');
 			      var label_string = '';
-                label_string += '<div class="text-by-frequency-label" style="' +
+                label_string += '<div class="' + self.getTextStyleClass(value) + '" style="' +
                     'font-size:'+height+'px;' +
                     'line-height:'+height+'px;' +
-                    (textColor ? 'color:' + textColor + ';' : '') +
                     'height:'+height+'px">'+text+'</div>';
             var $labelText = $(label_string);
             $labelTag.append( $labelText );
