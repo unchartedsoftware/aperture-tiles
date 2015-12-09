@@ -42,7 +42,7 @@ import com.oculusinfo.tilegen.datasets.ErrorAccumulator.{ErrorCollector, ErrorCo
 import com.oculusinfo.tilegen.datasets._
 import com.oculusinfo.tilegen.datasets.SchemaTypeUtilities._
 import com.oculusinfo.tilegen.tiling._
-import com.oculusinfo.tilegen.util.{ExtendedNumeric, KeyValueArgumentSource}
+import com.oculusinfo.tilegen.util.{ExtendedNumeric, KeyValueArgumentSource, HdfsFileManager, HdfsSession, HdfsFile}
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
@@ -52,7 +52,7 @@ import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.TaskContext
 import org.apache.spark.sql.{Column, DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DataType, IntegerType, TimestampType}
+import org.apache.spark.sql.types.{StructType, DataType, IntegerType, TimestampType}
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.{Map => MutableMap, ListBuffer}
@@ -125,14 +125,24 @@ object PipelineOperations {
 	 *
 	 * @param records An RDD containing lines of text (JSON records).
 	 * @param partitions Number of partitions to load data into.
+	 * @param schema The schema to use for reading in the data.
+	 * @param schemaInferSamplingRatio Sampling ratio used to infer the data schema. Used if schema is not present.
 	 * @param data Used for the SQL context only. There should be no data at this stage.
 	 * @return PipelineData with a schema RDD populated from the CSV file.
 	 */
-	def loadJsonDataOp(records: RDD[String], partitions: Option[Int])(data: PipelineData): PipelineData = {
+	def loadJsonDataOp(records: RDD[String],
+		                 partitions: Option[Int],
+		                 schema: Option[StructType],
+		                 schemaInferSamplingRatio: Option[Double])(data: PipelineData): PipelineData = {
 		if (logger.isDebugEnabled)
 			logger.debug("loadJsonDataOp: Enter with " + records.count + " strings in RDD")
 		val context = data.sqlContext
-		val jsonRdd = context.jsonRDD(records)
+		val jsonRdd = if (schema != None)
+				context.jsonRDD(records, schema.get)
+			else if (schemaInferSamplingRatio != None)
+				context.jsonRDD(records, schemaInferSamplingRatio.get)
+			else
+				context.jsonRDD(records)
 		val dataFrame = coalesce(context, jsonRdd, partitions)
 		PipelineData(context, dataFrame)
 	}
@@ -375,71 +385,77 @@ object PipelineOperations {
 	}
 
 	/**
-	 * Write date-specific data to HDFS.
+	 * Get the field index for the specified field name.
+	 * Only applies to the first level of columns, not nested columns.
 	 *
-	 * Only the content of the first column of each record will be appended to the text file,
-	 * newline-separated, and compressed using Gzip.
-	 *
-	 * @param hdfsUri The URI to HDFS
-	 * @param path The destination base directory to write the data
-	 * @param dayDataFrame The day-specific data to write.
-	 * @param dayOfMonth The day-of-month
-	 * @param month The month
-	 * @param year The year
+	 * @param input The data
+	 * @param name The name of the field
+	 * @return The index of the field.
+	 * @throws Exception If field doesn't exist
 	 */
-	def writeDateSpecificDataToHdfs(hdfsUri: String, path: String, partitions: Option[Int] = None)
-		(dayDataFrame: DataFrame,
-			dayOfMonth: Int,
-			month: Int,
-			year: Int) : Unit = {
+	def getFieldIndexByName(input: PipelineData, name: String) : Integer = {
+		var fieldIndex = -1
+		var loopIndex = 0
+		while ((fieldIndex == -1) && (loopIndex < input.srdd.schema.fieldNames.length)) {
+			if (input.srdd.schema.fieldNames(loopIndex) == name)
+				fieldIndex = loopIndex
+			loopIndex += 1
+		}
+		if (fieldIndex == -1)
+			throw new Exception("Could not find field index. Field " + name + " does not exist in schema: " +
+				input.srdd.schema.fieldNames.mkString(","))
+		fieldIndex
+	}
 
-		val fname = "writeDaySpecificDataToHdfs: "
-		val dateDir = path + "/" + year + "/" + month + "/" + dayOfMonth
+	/**
+	 * Writes data by date-specific directories
+	 * @param dayOfMonthColName The name of the day-of-month column in the input DataFrame
+	 * @param monthColName The name of the month column in the input DataFrame
+	 * @param yearColName The name of the year column in the input DataFrame
+	 * @param writeFieldName The column to write.
+	 * @param hdfsUri The HDFS URI
+	 * @param destination The base desination directory
+	 * @param input The pipeline data
+	 * @return
+	 */
+	def writeDataByDateToHdfsOp(dayOfMonthColName: String,
+		monthColName: String,
+		yearColName: String,
+		writeFieldName: String,
+		hdfsUri: String,
+		destination: String)
+		(input: PipelineData) : PipelineData = {
 
-		// Coalesce the data to be written to avoid writing lots of small files
-		val coalescedDayDataFrame = coalesce(dayDataFrame.sqlContext, dayDataFrame, partitions)
-		logger.debug(fname + "Coalesced data to " + partitions + " partitions")
+		// Because we'll be operating on rows, need to find what these columns are by index rather than by name
+		val sc = input.sqlContext.sparkContext
+		val dayOfMonthColIndex = sc.broadcast(getFieldIndexByName(input, dayOfMonthColName))
+		val monthColIndex = sc.broadcast(getFieldIndexByName(input, monthColName))
+		val yearColIndex = sc.broadcast(getFieldIndexByName(input, yearColName))
+		val writeFieldColIndex = sc.broadcast(getFieldIndexByName(input, writeFieldName))
 
-		// Write all of the records to HDFS, using partition-specific files to ensure
-		// every writer can get a lease.
-		coalescedDayDataFrame.foreachPartition { partitionRecords =>
+		input.srdd.foreachPartition(partition => {
+			// Create a session for each partition, so that we can keep files open for the duration of the session
+			var session : HdfsSession = null
+			try {
+				session = HdfsFileManager.getSession(None, hdfsUri)
 
-			val taskLogger = Logger(this.getClass.getName)
+				// Write each row to the appropriate file
+				partition.foreach(row => {
+					val dateDir = destination + "/" + row(yearColIndex.value) +
+						"/" + (row.getInt(monthColIndex.value) + 1).toString +
+						"/" + row(dayOfMonthColIndex.value)
+					val fileName = dateDir + "/part-" + TaskContext.get().partitionId() + session.codec.getDefaultExtension()
+					val file = session.getFile(fileName)
+					file.writer.write(row(writeFieldColIndex.value).asInstanceOf[String])
+					file.writer.newLine()
+				})
+			} finally {
+				HdfsFileManager.endSession(session)
+			} // try
+		}) //foreachPartition
 
-			// Connect to HDFS file system
-			taskLogger.debug(fname + "Attempting to connect to HDFS at URI: " + hdfsUri)
-			val uri = new URI(hdfsUri)
-			val configuration = new Configuration()
-			val hdfs = FileSystem.get(uri, configuration)
-			val codecFactory = new CompressionCodecFactory(configuration)
-			taskLogger.debug(fname + "Successfully connected to HDFS at URI: " + hdfsUri)
-
-			// Create an HDFS compressed writer for this partition
-			val codec = codecFactory.getCodecByClassName(classOf[GzipCodec].getName)
-			val fileName = dateDir + "/part-" + TaskContext.get().partitionId() + codec.getDefaultExtension()
-			val pathObj = new Path(fileName)
-			val dataOs =
-				if (hdfs.exists(pathObj)) {
-					taskLogger.debug(fname + "File: " + fileName + " already exists. Append to it.")
-					hdfs.append(pathObj)
-				}
-				else {
-					taskLogger.debug(fname + "File: " + fileName + " does not exist. Create a new file")
-					hdfs.create(pathObj, false /*throw if file exists*/)
-				}
-			val os = codec.createOutputStream(dataOs)
-			val writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"))
-
-			// Write all the records for this partition and close the file
-			var counter = 0
-			partitionRecords.foreach( record => {
-				counter += 1
-				val content = record(0).asInstanceOf[String] + "\n"
-				writer.write(content)
-			})
-			writer.close()
-			taskLogger.debug(fname + "Finished writing " + counter + " records to file: " + fileName)
-		} // foreachpartition
+		// Return the original input
+		input
 	}
 
 	/**
@@ -616,12 +632,20 @@ object PipelineOperations {
 			return ""
 
 		// Otherwise, do a more thorough inspection on the string
-		val jsonObject = new JSONObject(jsonString)
-		val isNull = purgeNullFieldsFromJsonObject(jsonObject)
-		if (isNull)
-			""
-		else
-			jsonObject.toString
+		try {
+			val jsonObject = new JSONObject(jsonString)
+			val isNull = purgeNullFieldsFromJsonObject(jsonObject)
+			if (isNull)
+				""
+			else
+				jsonObject.toString
+		} catch {
+			case ex : Exception => {
+				logger.warn("Exception caught when parsing JSON: " + ex.toString)
+				logger.warn("Problematic JSON string: " + jsonString)
+				""
+			}
+		}
 	}
 
 	/**
@@ -737,11 +761,34 @@ object PipelineOperations {
 	def parseDateOp (stringDateCol: String, dateCol: String, format: String)(input: PipelineData): PipelineData = {
 		val formatter = new SimpleDateFormat(format);
 		val fieldExtractor: Array[Any] => Any = row => {
-			val date = formatter.parse(row(0).toString)
-			new Timestamp(date.getTime)
+			try {
+				val date = formatter.parse(row(0).toString)
+				new Timestamp(date.getTime)
+			}
+			catch {
+				case ex : Exception => {
+					logger.warn("Exception caught when parsing date: " + ex.toString)
+					null
+				}
+			}
 		}
 		val output = SchemaTypeUtilities.addColumn(input.srdd, dateCol, TimestampType, fieldExtractor, stringDateCol)
-		PipelineData(input.sqlContext, output)
+		val filteredOutput = output.filter(new Column(dateCol).isNotNull)
+		PipelineData(input.sqlContext, filteredOutput)
+	}
+
+	/**
+	 * Filter out rows that are null in any of the specified columns
+	 * @param colList List containing the column names on which to filter
+	 */
+	def nullValueFilterOp(colList: List[String])(input: PipelineData): PipelineData = {
+		var filterExpression = ""
+		colList.foreach(colName => {
+			if (!filterExpression.isEmpty)
+				filterExpression = filterExpression + " AND "
+			filterExpression = filterExpression + "(" + colName + " is not null)"
+		})
+		new PipelineData(input.sqlContext, input.srdd.filter(filterExpression))
 	}
 
 	/**

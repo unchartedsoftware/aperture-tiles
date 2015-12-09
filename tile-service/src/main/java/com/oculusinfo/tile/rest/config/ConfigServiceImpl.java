@@ -49,6 +49,9 @@ public class ConfigServiceImpl implements ConfigService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LayerServiceImpl.class);
 
+	public static final String PROPERTIES_FILE_REPLACEMENT_REGEX = "\\$\\{(.+?)\\}";
+	public static final String ENV_VAR_REPLACEMENT_REGEX = "\\%\\{(.+?)\\}";
+
     private ConfigPropertiesService _service;
 
 	@Inject
@@ -62,12 +65,20 @@ public class ConfigServiceImpl implements ConfigService {
             LOGGER.info("Processing configFile {}", configFile);
             Map<String, String> replacements = buildReplacements();
             String configFileContent = new String(Files.readAllBytes(Paths.get(configFile.getPath())), StandardCharsets.UTF_8);
-            if (replacements != null) {
-                return replaceTokens(configFileContent, replacements);
+
+			// Do configuration file replacements
+			String replacedContent = configFileContent;
+			if (replacements != null) {
+                replacedContent = replaceTokens(configFileContent, replacements, PROPERTIES_FILE_REPLACEMENT_REGEX, false);
             } else {
                 LOGGER.warn("No config properties found, using file as is {}", configFile.getAbsolutePath());
-                return configFileContent;
             }
+
+			// Do environment variable replacements
+			// Replace undefined environment variables with empty string
+			// (Windows doesn't allow you to set empty environment variables - it just deletes them)
+			return replaceTokens(replacedContent, System.getenv(), ENV_VAR_REPLACEMENT_REGEX, true);
+
         } catch (IOException e) {
             throw new ConfigException(String.format("Unable to read config file %s", configFile), e);
         }
@@ -103,8 +114,11 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     // http://stackoverflow.com/questions/959731/how-to-replace-a-set-of-tokens-in-a-java-string
-    protected String replaceTokens(String text, Map<String, String> replacements) {
-        Pattern pattern = Pattern.compile("\\$\\{(.+?)\\}");
+    protected String replaceTokens(String text,
+								   Map<String, String> replacements,
+								   String regex,
+								   boolean replaceIfNotDefined) {
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
         StringBuffer buffer = new StringBuffer();
         while (matcher.find()) {
@@ -115,6 +129,10 @@ public class ConfigServiceImpl implements ConfigService {
                 matcher.appendReplacement(buffer, "");
                 buffer.append(replacement);
             }
+			else if (replaceIfNotDefined) {
+				LOGGER.info("Replacing {} with empty string", matchedKey);
+				matcher.appendReplacement(buffer, "");
+			}
         }
         matcher.appendTail(buffer);
         return buffer.toString();
