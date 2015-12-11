@@ -95,9 +95,9 @@ object PipelineOperations {
 		PipelineData(rdd.sqlContext, rdd, tableName)
 	}
 
-	private def coalesce (sqlc: SQLContext, dataFrame: DataFrame, partitions: Option[Int]): DataFrame = {
+	def coalesce (sqlc: SQLContext, dataFrame: DataFrame, partitions: Option[Int]): DataFrame = {
 		partitions.map{n =>
-			val baseRDD = dataFrame.queryExecution.toRdd
+			val baseRDD = dataFrame.rdd
 			val curPartitions = baseRDD.partitions.size
 			// if we're increasing the number of partitions, just repartition as per normal
 			// If we're reducing them, copy data and coalesce, so as to avoid a shuffle.
