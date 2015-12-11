@@ -120,6 +120,27 @@ object TilingTask {
 		// Construct the tiling task, with all needed tags
 		withValueTags(valuer)
 	}
+
+	/**
+	 * Appropriately backtick-escape a Spark SQL field name.
+	 *
+	 * Note: Backtick escape characters will break fields with nested arrays.
+	 * E.g. `a.b[0].c[0]` will break,
+	 * but a.b[0].c[0] or `a.b`[0].`c`[0] will work.
+	 *
+	 * Note that "[" and "]" charaters are valid field name characters, so we just can't
+	 * tokenize around those characters. For now, just deal with the known problematic
+	 * case that required the backtick characters in the first place - names that start
+	 * with underscores.
+	 *
+	 * @param fieldName The name of the field to escape
+	 * @return The appropriately-escaped field name
+	 */
+	def backtickEscapeFieldName(fieldName: String): String = {
+		if (fieldName.forall(_.isDigit)) fieldName
+		else if (fieldName.length > 0 && fieldName.charAt(0) == '_') "`" + fieldName + "`" // escape field names that start with underscore
+		else fieldName
+	}
 }
 /**
  * A TilingTask encapsulates all the information needed to construct a tile pyramid
@@ -295,8 +316,11 @@ abstract class TilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	private lazy val axisBounds = getAxisBounds()
 
 	private def getAxisBounds(): (Double, Double, Double, Double) = {
+
 		val selectStmt =
-			indexer.fields.flatMap(field => List("min(`" + field + "`)", "max(`" + field + "`)"))
+			indexer.fields.flatMap(unescapedField => {
+				val field = TilingTask.backtickEscapeFieldName(unescapedField)
+				List("min(" + field + ")", "max(" + field + ")") })
 				.mkString("SELECT ", ", ", " FROM " + table)
 		val bounds = sqlc.sql(selectStmt).take(1)(0)
 		if (bounds.toSeq.map(_ == null).reduce(_ || _))
@@ -389,20 +413,7 @@ class StaticTilingTask[PT: ClassTag, DT: ClassTag, AT: ClassTag, BT]
 	{
 		protected def getData: RDD[(Seq[Any], PT, Option[DT])] = {
 			val allFields = indexer.fields ++ valuer.fields ++ dataAnalyticFields
-
-			// Note: Backtick escape characters will break fields with nested arrays.
-			// E.g. `a.b[0].c[0]` will break,
-			// but a.b[0].c[0] or `a.b`[0].`c`[0] will work.
-			//
-			// Note that "[" and "]" charaters are valid field name characters, so we just can't
-			// tokenize around those characters. For now, just deal with the known problematic
-			// case that required the backtick characters in the first place - names that start
-			// with underscores.
-			val allFieldsEscaped = allFields.map(v =>
-				if (v.forall(_.isDigit)) { v }
-				else if ( v.length > 0 && v.charAt(0) == '_' ) { "`" + v + "`"  } // escape field names that start with underscore
-				else { v }
-			)
+			val allFieldsEscaped = allFields.map(v => TilingTask.backtickEscapeFieldName(v))
 
 			val selectStmt =
 				allFieldsEscaped.mkString("SELECT ", ", ", " FROM "+table)

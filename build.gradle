@@ -15,6 +15,18 @@ task setBuildVersions {
 	// Aperture tiles requires, at a minimum, Spark 1.3.0 and HBase 1.0
 	switch (buildType) {
 	// No cloudera version before 5.4.0 meets our minimum requirements
+		case "cdh5.4.7":
+			logger.info "Valid build type found - using $buildType"
+			project.ext { // apply project scope to vars, otherwise local to task
+				hadoopCommonVersion = "2.6.0-cdh5.4.7"
+				hadoopCoreVersion = "2.6.0-mr1-cdh5.4.7"
+				hbaseVersion = "1.0.0-cdh5.4.7"
+				htraceVersion = "3.1.0-incubating"
+				sparkVersion = "1.3.0-cdh5.4.7"
+				dependencyScalaVersion = "2.10"
+				scalaVersion = "2.10.3"
+			}
+			break
 		case "cdh5.4.1":
 			logger.info "Valid build type found - using $buildType"
 			project.ext { // apply project scope to vars, otherwise local to task
