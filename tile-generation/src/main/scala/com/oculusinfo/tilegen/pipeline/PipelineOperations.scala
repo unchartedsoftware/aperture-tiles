@@ -423,7 +423,8 @@ object PipelineOperations {
 		yearColName: String,
 		writeFieldName: String,
 		hdfsUri: String,
-		destination: String)
+		destination: String,
+		partitions: Option[Int] = None)
 		(input: PipelineData) : PipelineData = {
 
 		// Because we'll be operating on rows, need to find what these columns are by index rather than by name
@@ -433,7 +434,10 @@ object PipelineOperations {
 		val yearColIndex = sc.broadcast(getFieldIndexByName(input, yearColName))
 		val writeFieldColIndex = sc.broadcast(getFieldIndexByName(input, writeFieldName))
 
-		input.srdd.foreachPartition(partition => {
+		// Coalesce the data to avoid writing a lot of small files
+		val coalescedDataFrame = coalesce(input.sqlContext, input.srdd, partitions)
+
+		coalescedDataFrame.foreachPartition(partition => {
 			// Create a session for each partition, so that we can keep files open for the duration of the session
 			var session : HdfsSession = null
 			try {
@@ -454,8 +458,8 @@ object PipelineOperations {
 			} // try
 		}) //foreachPartition
 
-		// Return the original input
-		input
+		// Return the coalesced input
+		new PipelineData(input.sqlContext, coalescedDataFrame)
 	}
 
 	/**
