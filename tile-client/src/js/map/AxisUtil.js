@@ -480,6 +480,10 @@
                 return formatNumber( value, 2 );
             }
 
+            if (units.scale === "log10") {
+                value = Math.pow(10, value);
+            }
+
             switch ( units.type ) {
 
                 case 'degrees':

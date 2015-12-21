@@ -569,6 +569,7 @@
         this.units.type = ( spec.units.type !== undefined ) ? spec.units.type.toLowerCase() : 'decimal';
         this.units.decimals = spec.units.decimals || 2;
         this.units.stepDown = ( spec.units.stepDown !== undefined ) ? spec.units.stepDown : true;
+        this.units.scale = spec.units.scale || 'linear';
 
         // generate more attributes
         this.isXAxis = ( this.position === 'top' || this.position === 'bottom' );
