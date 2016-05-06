@@ -117,10 +117,10 @@ subprojects {
 	// Shared group and version info.  We keep build variant types in the version names so that we get
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
-	version = "0.6-SNAPSHOT-$buildType"
+	version = "0.6.1-$buildType"
 
 	// Aperture JS version - shared between a few places
-	project.ext.apertureJsVersion = "1.1.0-SNAPSHOT"
+	project.ext.apertureJsVersion = "1.0.9.1"
 
 	// Maven repos to check for artifacts
 	repositories {
