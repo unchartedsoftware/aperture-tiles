@@ -78,10 +78,10 @@ var appStart = function() {
         map = new tiles.Map( "map", {
             pyramid : {
                 type : "AreaOfInterest",
-                minX: 1417392000000,
-				maxX: 1426377600000,
-				minY: -2,
-				maxY: 2
+                minX: -2,
+                maxX: 2,
+                minY: -2,
+                maxY: 2
             }
         });
         map.add( axis0 );
