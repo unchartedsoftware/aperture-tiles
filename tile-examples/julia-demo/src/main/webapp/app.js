@@ -54,13 +54,11 @@ var appStart = function() {
             position: 'bottom',
             enabled: true,
             intervals: {
-                type: 'fixed',
-                increment: 86400000,
-                scaleByZoom: false,
-                minPixelWidth: 80
+                increment: 20,
+                pivot: 0
             },
             units: {
-                type: 'time'
+                type: 'decimal'
             }
         });
 
