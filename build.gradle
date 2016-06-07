@@ -90,9 +90,6 @@ subprojects {
 	group = "com.oculusinfo"
 	version = "0.7-SNAPSHOT-$buildType"
 
-	// Aperture JS version - shared between a few places
-	project.ext.apertureJsVersion = "1.1.0-SNAPSHOT"
-
 	// Maven repos to check for artifacts
 	repositories {
 		mavenLocal()
