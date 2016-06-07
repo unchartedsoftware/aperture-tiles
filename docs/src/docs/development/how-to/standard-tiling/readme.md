@@ -16,12 +16,12 @@ Standard tiling jobs can be executed with the [CSVBinner](#csvbinner), which is 
 
 For information on creating custom tiling jobs that ingest data that is not character delimited or contains non-numeric fields, see the [Run Custom Tiling Jobs](../../advanced/custom-tiling/) topic.
 
-## <a name="csvbinner"></a> CSVBinner ##
+## CSVBinner ##
 
 The CSVBinner ingests numeric, character-separated (e.g., CSV) tabular data. To define the tile set you want to create, you must pass two types of properties files to the CSVBinner:
 
-- A [base properties](#base-properties) file, which describes the general characteristics of the data
-- [Tiling properties](#tiling-properties) files, each of which describes the specific attributes you want to tile
+- A [base properties](#base-properties-files) file, which describes the general characteristics of the data
+- [Tiling properties](#tiling-properties-files) files, each of which describes the specific attributes you want to tile
 
 During the tiling job, the CSVBinner writes a set of Avro tile data files to the location of your choice (HBase or local file system).
 
@@ -257,7 +257,7 @@ The tiling properties files define the tiling job parameters for each layer in y
 
 Additional properties are described in the advanced [Standard Tiling](../../advanced/standard-tiling/) topic.
 
-### <a name="projection"></a> Projection ###
+### Projection ###
 
 The projection properties define the area on which your data points are plotted.
 
@@ -403,7 +403,7 @@ The index properties specify the fields used to locate the binning value on the 
 
 **NOTE**: An additional index scheme (*segment*) is available for tiling node and edge graph data. See the [Graph Tiling](../../advanced/graph-tiling/) topic for more information.
 
-### <a name="value"></a> Value ###
+### Value ###
 
 The value properties specify the field to use as the binning value and how multiple values in the same bin should be combined.
 

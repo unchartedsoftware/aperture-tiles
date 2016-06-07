@@ -40,13 +40,13 @@
       path: tile-pyramid
       bookmarks:
         - label: Tile Pyramid Hierarchy
-          anchor: pyramid-hierarchy
+          anchor: tile-pyramid-hierarchy
 
         - label: Tile Generation Process
-          anchor: tile-gen-process
+          anchor: tile-generation-process
 
         - label: Tiling Job Prerequisites
-          anchor: prerequisites
+          anchor: tiling-job-prerequisites
 
         - label: spark-submit
           anchor: spark-submit
@@ -63,10 +63,10 @@
           anchor: csvbinner
 
         - label: Base Properties File
-          anchor: base-properties
+          anchor: base-properties-files
 
         - label: Tiling Properties Files
-          anchor: tiling-properties
+          anchor: tiling-properties-files
 
     - label: Test Tiling Job Output
       path: test-output
@@ -80,10 +80,10 @@
       path: tile-server
       bookmarks:
         - label: Web XML
-          anchor: webxml
+          anchor: web-xml
 
         - label: Tile Properties
-          anchor: tileproperties
+          anchor: tile-properties
 
         - label: Layers
           anchor: layers
@@ -95,7 +95,7 @@
           anchor: application-javascript
 
         - label: Client-Side Rendering
-          anchor: clientside
+          anchor: client-side-rendering
 
     - label: Deploy the Application
       path: deploy
@@ -122,10 +122,10 @@
       path: graph-tiling
       bookmarks:
         - label: Convert GraphML to CSV
-          anchor: convert-graphml
+          anchor: converting-graphml-data-to-csv-data
 
         - label: Hierarchical Clustering
-          anchor: clustering
+          anchor: hierarchical-clustering
 
         - label: Graph Layout
           anchor: graph-layout
@@ -140,10 +140,10 @@
       path: custom-tiling
       bookmarks:
         - label: Custom Tiling Jobs
-          anchor: custom-tiling
+          anchor: custom-tiling-jobs
 
         - label: Define Data Structure
-          anchor: define-data-structure
+          anchor: defining-your-data-structure
 
         - label: Bin Data
           anchor: binning-your-data
@@ -179,7 +179,7 @@
           anchor: request-specific-layer
 
         - label: Store a Configuration State
-          anchor: store-configuration-state
+          anchor: store-a-configuration-state
 
         - label: Get a Configuration State
           anchor: get-configuration-state

@@ -7,9 +7,10 @@ permalink: docs/development/api/layer/
 layout: chapter
 ---
 
-# Layer Service #
+Layer Service
+=============
 
-## <a name="configuration"></a> Configuration ##
+## Configuration ##
 
 All server configurations adhere to the following general format:
 
@@ -50,7 +51,7 @@ The minimal required fields are:
 ]
 ```
 
-## <a name="request-all-layers"></a> Request All Layers ##
+## Request All Layers ##
 
 Return an object containing an array of:
 
@@ -132,7 +133,7 @@ Example response:
 }
 ```
 
-## <a name="request-specific-layer"></a> Request Specific Layer ##
+## Request Specific Layer ##
 
 Returns the requested layer information. Layer information returned is the **public** node of the server-side configuration JSON. The layer IDs and metadata are appended to the returned JSON under **id** and **meta** attributes, respectively.
 
@@ -200,7 +201,7 @@ Example response:
 }
 ```
 
-## <a name="store-configuration-state"></a> Store a Configuration State ##
+## Store a Configuration State ##
 
 Store a configuration state on the server that can be accessed at a later time. Returns the SHA-256 hash of the state. This SHA-256 hash can be used later as a 'state' query parameter. Hashes are deterministic and cachable.
 
@@ -359,7 +360,7 @@ Example response:
 }
 ```
 
-## <a name="get-configuration-states"></a> Get Configuration States ##
+## Get Configuration States ##
 
 Returns all configured states stored on the server for a particular layer, including the default state.
 

@@ -7,9 +7,10 @@ permalink: docs/development/api/tile/
 layout: chapter
 ---
 
-# Tile Service #
+Tile Service
+============
 
-## <a name="get-tile"></a> Get Tile ##
+## Get Tile ##
 
 Returns a tile for a given layer at the specified level and index.
 

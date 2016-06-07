@@ -12,7 +12,7 @@ This page is designed for analysts who want to understand how to navigate the Ap
 
 **NOTE**: Fully functional example Aperture Tiles applications are available on the the [Demos](../../demos/) page. Copies of some of these demos are also available for your use in the Aperture Tiles source code (in [tile-examples/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples)).
 
-## <a name="twitter-data"></a> Twitter Latin American Topic Summarization Data ##
+## Twitter Latin American Topic Summarization Data ##
 
 The example Twitter Topics application described in this guide explores a heatmap of 66,996,907 Twitter messages originating in South American between February and April, 2014. Tiles at every zoom level contain a carousel that summarizes and overlays the top words used in the tweets in that region.
 

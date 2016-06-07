@@ -7,9 +7,10 @@ permalink: docs/development/api/legend/
 layout: chapter
 ---
 
-# Legend Service #
+Legend Service
+==============
 
-## <a name="get-encoded-image-key"></a> Get Encoded Image Key ##
+## Get Encoded Image Key ##
 
 Returns an image describing the values that a tile can take, with a specified orientation, width, and height.
 

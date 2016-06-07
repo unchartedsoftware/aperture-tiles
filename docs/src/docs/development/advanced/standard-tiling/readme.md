@@ -16,7 +16,7 @@ The following sections describe advanced properties available for [standard tili
 - [Field Scaling](#field-scaling)
 - [Consolidation Partitions](#consolidation-partitions)
 
-## <a name="source-data-format"></a> Source Data Format ##
+## Source Data Format ##
 
 The **oculus.<wbr>binning.<wbr>parsing.<wbr>&lt;field&gt;.<wbr>fieldType** property indicates the type of values stored in a column that the CSVBinner will parse. Possible types include:
 
@@ -143,7 +143,7 @@ oculus.binning.parsing.&lt;field&gt;.propertyValueSeparator=,
 
 In this case, a field value of `id=123;name=foo;description=bar` would yield the value *foo*.
 
-## <a name="field-scaling"></a> Field Scaling ##
+## Field Scaling ##
 
 The following properties enable you modify the values of a field before it is used for binning:
 

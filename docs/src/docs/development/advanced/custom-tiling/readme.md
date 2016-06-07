@@ -12,16 +12,16 @@ Custom Tiling Jobs
 
 The following sections describe how to generate a tile pyramid from your raw data by creating your own custom generation code.
 
-## <a name="custom-tiling"></a> Custom Tiling Jobs ##
+## Custom Tiling Jobs ##
 
 If your source data is not character delimited or if it contains non-numeric fields, you may need to create custom code to parse it and create a tile pyramid. Creating custom tile generation code involves:
 
-- [Defining Your Data Structure](#define-data-structure) by specifying how to:
-	- Structure your source data while it is:
-		- Processed by the tiling job
-		- Written to the Avro tile set
-	- Combine multiple records that fall in the same tile bin
-	- Read and write to the tile set
+- [Defining Your Data Structure](#defining-your-data-structure) by specifying how to:
+    - Structure your source data while it is:
+        - Processed by the tiling job
+        - Written to the Avro tile set
+    - Combine multiple records that fall in the same tile bin
+    - Read and write to the tile set
 - [Binning Your Data](#binning-your-data) by specifying how to:
     - Parse your source data
     - Transform the parsed data into the Avro tile set
@@ -34,25 +34,25 @@ For an example of custom code written for tile generation, see the Twitter Topic
 - Heatmap of Twitter messages by location
 - Word cloud and bar chart overlays of the top words mentioned in tweets for each tile and bin
 
-## <a name="define-data-structure"></a> Defining Your Data Structure ##
+## Defining Your Data Structure ##
 
 The following custom modules are required to determine how your data should be structured, aggregated and written:
 
 - [Binning Analytic](#binning-analytic): defines how to process and aggregate your source data 
 - [Serializer](#serializer): defines how to read and write your source data to the tile set
 
-### <a name="binning-analytic"></a> Binning Analytic ###
+### Binning Analytic ###
 
 The Binning Analytic is used throughout the tiling process. It should define:
 
 - Two [data types](#data-types) used during the tiling job:
-	1. Processing type
-	2. Binning type
-- The method of [aggregation](#data-aggregation) for joining individual data records in a bin
+    1. Processing type
+    2. Binning type
+- The method of [aggregation](#data-aggregation-and-record-creation) for joining individual data records in a bin
  
 For an example of a custom Bin Analytic, see the [TwitterTopicBinningAnalytic.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinningAnalytic.scala) file in [tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>tilegen/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen).
 
-#### <a name="data-types"></a> Data Types ####
+#### Data Types ####
 
 During a tiling job, the Binning Analytic uses two types of data:
 
@@ -90,7 +90,7 @@ The **finish** function:
 
 While the remaining topics are eventually discarded, they are necessary during processing. For example, a topic that is recorded as the 11th most used topic on several different machines is likely to be in the top 10 once all the data is aggregated together.
 
-#### <a name="data-aggregation"></a> Data Aggregation and Record Creation ####
+#### Data Aggregation and Record Creation ####
 
 The Binning Analytic defines how data is aggregated. For example, lines 42-47 of [TwitterTopicBinningAnalytic.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinningAnalytic.scala) compare two maps and creates a new map that contains:
 
@@ -106,7 +106,7 @@ def aggregate (a: Map[String, TwitterDemoTopicRecord],
 }
 ```
 
-##### <a name="custom-aggregation"></a> Custom Aggregation Methods #####
+##### Custom Aggregation Methods #####
 
 Lines 85-93 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) (found in the [same folder](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen) as the Binning Analytic) are used to calculate the minimum and maximum values and write them to the metadata by level. 
 
@@ -124,7 +124,7 @@ val maxAnalysis:
 
 Standard Bin Analytics are available in the [Analytics.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/analytics/Analytics.scala) file in [tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr>analytics/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/analytics).
 
-### <a name="serializer"></a> Serializer ###
+### Serializer ###
 
 The Serializer determines how to read and write to the tile set. The Tile Server requires the following supporting classes to use the Serializer:
 
@@ -134,7 +134,7 @@ The Serializer determines how to read and write to the tile set. The Tile Server
 
 See the following sections for examples of each custom Serializer component.
 
-#### <a name="serializer-class"></a> Serializer ####
+#### Serializer Class ####
 
 The Serializer implements the [com.<wbr>oculusinfo.<wbr>binning.<wbr>io.<wbr>serialization.<wbr>TileSerializer](https://github.com/unchartedsoftware/aperture-tiles/blob/master/binning-utilities/src/main/java/com/oculusinfo/binning/io/serialization/TileSerializer.java) interface. To read and write the Avro tiles that are most commonly used, it should inherit from:
 
@@ -159,20 +159,20 @@ For records that aren't list types, inherit from the [GenericAvroSerializer.java
 
 The definition of the Avro schema can be based on the template in the [doubleData.avsc](https://github.com/unchartedsoftware/aperture-tiles/blob/master/binning-utilities/src/main/resources/doubleData.avsc) file ([binning-utilities/<wbr>src/<wbr>main/<wbr>resources/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/binning-utilities/src/main/resources)), where the **name** is set to *recordType*.
 
-#### <a name="serialization-factory"></a> Serialization Factory ####
+#### Serialization Factory ####
 
 The Serialization Factory gets configuration information (e.g., the Avro compression codec) and hands back the serializer of choice when needed. It also produces the factory and can be injected by Guice.
 
 For an example Serialization Factory, see the [TwitterTileSerializationFactory.java](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterTileSerializationFactory.java) in [tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>init/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init).
 
-#### <a name="serialization-factory-module"></a> Serialization Factory Module ####
+#### Serialization Factory Module ####
 
 The Factory Module tells Guice which factory providers to use to create serialization factories.
 
 For an example Serialization Factory, see the [TwitterSerializationFactoryModule.java](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init/TwitterSerializationFactoryModule.java) file in 
 [tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>init/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/java/com/oculusinfo/twitter/init).
 
-## <a name="binning-your-data"></a> Binning Your Data ##
+## Binning Your Data ##
 
 There are three steps in binning your data:
 
@@ -182,7 +182,7 @@ There are three steps in binning your data:
 
 For an example of a custom Binner, see the [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) file in [tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>tilegen/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen).
 
-### <a name="parsing-data"></a> Parsing your Data ###
+### Parsing your Data ###
 
 The Binner expects your data as pairs of **(index, record)**, where:
 
@@ -224,7 +224,7 @@ val data = rawDataWithTopics.mapPartitions(i =>
 data.cache
 ```
 
-### <a name="binning"></a> Binning ###
+### Binning ###
 
 Lines 191 - 199 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) transform the data into tiles:
 

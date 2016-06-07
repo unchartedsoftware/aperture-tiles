@@ -13,11 +13,11 @@ Testing Tiling Job Output
 The Aperture Tiles source code contains two utilities for testing the output of tiling jobs. Both utilities are Java applications that can help you quickly identify problems with your tiling job before you deploy your application.
 
 - [Bin Visualizer](#bin-visualizer): Renders basic representations of individual Avro tiles in your tile pyramid.
-- [JSON Tile Visualizer](#json-visualizer): Generates a list of data or bin values that appear in individual Avro tiles in your tile pyramid.
+- [JSON Tile Visualizer](#json-tile-visualizer): Generates a list of data or bin values that appear in individual Avro tiles in your tile pyramid.
 
 If you notice any inconsistencies with the tiled data, you should review your tiling job parameters, fix any errors and run the job again.
 
-## <a name="bin-visualizer"></a> Bin Visualizer ##
+## Bin Visualizer ##
 
 The [BinVisualizer.java](https://github.com/unchartedsoftware/aperture-tiles/blob/master/binning-utilities/src/main/java/com/oculusinfo/binning/visualization/BinVisualizer.java) file in [binning-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>binning/<wbr>visualization/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/binning-utilities/src/main/java/com/oculusinfo/binning/visualization) allows you to preview tiling job output before you configure your application.
 
@@ -101,7 +101,7 @@ The [BinVisualizer.java](https://github.com/unchartedsoftware/aperture-tiles/blo
 
 <img src="../../../../img/bin-visualizer.png" class="screenshot" alt="Bin Visualizer" />
 
-## <a name="json-visualizer"></a> JSON Tile Visualizer ##
+## JSON Tile Visualizer ##
 
 **NOTE**: The JSON Tile Visualizer currently only supports heatmap layers.
 

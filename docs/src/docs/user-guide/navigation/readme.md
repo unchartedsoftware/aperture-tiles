@@ -10,7 +10,7 @@ layout: chapter
 
 The Aperture Tiles user interface works much like a modern web-based map system. Your source data is projected on a set of tiles in an x/y cross-plot or a geographic map. In either case, your data is aggregated at several zoom levels so you can view the data at a high level or drill down to see more detailed distribution.
 
-## <a name="zoom"></a> Zoom ##
+## Zoom ##
 
 <h6 class="procedure">To zoom in on an area you want to investigate</h6>
 
@@ -22,7 +22,7 @@ The Aperture Tiles user interface works much like a modern web-based map system.
 - Click the **Zoom Out** ![Zoom Out](../../../img/zoom-out.png) button in the upper right corner of the map, OR
 - Use the scroll button on your mouse to quickly zoom in or out
 
-### <a name="zoom-to-city"></a> Zoom to City ###
+### Zoom to City ###
 
 <h6 class="procedure">To quickly zoom to a major city in South America</h6>
 
@@ -38,7 +38,7 @@ The map is redrawn to show the selected city with a zoom factor of five.
 
 **NOTE**: This is customized control that requires specialized code not available in the standard Aperture Tiles template or base libraries.
 
-## <a name="explore"></a> Explore ##
+## Explore ##
 
 <h6 class="procedure">To view other areas of the map</h6>
 

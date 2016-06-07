@@ -19,13 +19,13 @@ At the end of this guide, you will have an example Aperture Tiles application th
 
 <img src="../../../../img/julia-set.png" class="screenshot" alt="Aperture Tiles Julia Set Project" />
 
-## <a name="prerequisites"></a> Prerequisites ##
+## Prerequisites ##
 
 Before beginning this Quick Start example, install the prerequisites described in the [Packaged Distribution](../installation/#packaged-distributions) section of the [Installation](../installation/) topic.
 
 Once you have installed all the prerequisites, you can generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
-### <a name="julia-set-data-generation"></a> Julia Set Data Generation ###
+### Julia Set Data Generation ###
 
 <h6 class="procedure">To use the Tile Generator utility to create the Julia set data</h6>
 
@@ -43,7 +43,7 @@ Once you have installed all the prerequisites, you can generate the [Julia set d
 
 **NOTE**: For typical Aperture Tiles projects, these steps are unnecessary. You will instead begin with your own custom dataset.
 
-## <a name="tile-generation"></a> Tile Generation ##
+## Tile Generation ##
 
 The first step in building any Aperture Tiles project is to create a set of [Avro](http://avro.apache.org/) tiles that aggregate your source data across the plot/map and its various zoom levels.
 
@@ -52,7 +52,7 @@ For delimited numeric data sources like the Julia set, we use the CSVBinner tool
 - [Base properties file](#base-property-file-configuration), which describes the general characteristics of your data
 - [Tiling properties files](#tiling-property-file-configuration), each of which describes a specific attribute you want to plot and the number of zoom levels
 
-### <a name="base-property-file-configuration"></a> Base Property File Configuration ###
+### Base Property File Configuration ###
 
 A preconfigured base properties file is available in the Tile Generator utility. You only need to edit this file if you intend to save your Avro tiles to HBase. Otherwise, you can skip ahead to the [execution](#execution) of the tile generation job.
 
@@ -131,11 +131,12 @@ After you edit the properties files, you can use the Tile Generator utility to c
     .CSVBinner --master local[2] --driver-memory 1G lib/tile-generation-assembly.jar 
     -d examples/julia-base.bd examples/julia-tiling.bd
     ```
-2. Check your output location (*julia.x.y.v*) for six subfolders, each corresponding to a zoom level (0, being the highest, through 5, being the lowest). Across all the folders, you should have a total of 1,365 Avro tile files.
 
-## <a name="tile-server-configuration"></a> Tile Server Configuration ##
+2.  Check your output location (*julia.x.y.v*) for six subfolders, each corresponding to a zoom level (0 through 5 from highest to lowest). Across all the folders, you should have a total of 1,365 Avro tile files.
 
-The Tile Server renders your generated tiles as layers in your Aperture Tiles visualization and passes them to the client. For this example, a preconfigured example server application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)).
+## Tile Server Configuration ##
+
+The Tile Server renders your generated tiles as layers in your Aperture Tiles visualization and passes them to the client. For this example, a preconfigured example server application is part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)).
 
 <h6 class="procedure">To make tiles on the local file system available to Tile Quick Start Application</h6>
 
@@ -193,13 +194,13 @@ For this example, you only need to edit the layer properties file if you saved y
 
 For information on additional layer properties, see the *Layers* section of the [Tile Server](../../how-to/tile-server/#layers) topic.
 
-## <a name="tile-client-application"></a> Tile Client Application ##
+## Tile Client Application ##
 
 For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
-For information on map properties (e.g., for boundaries and axes), see the *Maps* section of the [Tile Client](../../how-to/tile-client/#maps) topic. 
+For information on map properties (e.g., for boundaries and axes), see the *Maps* section of the [Tile Client](../../how-to/tile-client/#map) topic.
 
-## <a name="deployment"></a> Deployment ##
+## Deployment ##
 
 <h6 class="procedure">To deploy your application</h6>
 

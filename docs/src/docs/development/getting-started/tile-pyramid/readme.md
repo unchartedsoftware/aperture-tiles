@@ -12,7 +12,7 @@ Understanding the Tile Pyramid
 
 Using a distributed framework built on the [Apache Spark](https://spark.apache.org/) engine, Aperture Tiles enables you to create a set of data tiles that summarize and aggregate your large-scale data at various levels in a interactive, pyramid-style visualization.
 
-## <a name="pyramid-hierarchy"></a> Tile Pyramid Hierarchy ##
+## Tile Pyramid Hierarchy ##
 
 At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to *4<sup>z</sup>* tiles, where *z* is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row-wise across the base map or plot, starting at the lower left. 
 
@@ -20,7 +20,7 @@ Each tile summarizes the data in the region of the base map/plot to which it cor
 
 <img src="../../../../img/tile-pyramid-hierarchy.png" class="screenshot" alt="Tile Pyramid" />
 
-## <a name="tile-gen-process"></a> Tile Generation Process ##
+## Tile Generation Process ##
 
 The process of generating a set of Avro tiles from your raw source data is called a tiling job. The tiles created by a job can be served and browsed in any modern Web browser.
 
@@ -95,7 +95,7 @@ As shown in the following diagram, the tile generation process has five main sta
 
 Before you run a tiling job, make sure you meet all of the prerequisites listed in the following section.
 
-## <a name="prerequisites"></a> Tiling Job Prerequisites ##
+## Tiling Job Prerequisites ##
 
 Aperture Tiles uses a distributed framework built on the Apache Spark engine to generate Avro tiles. Before you run a tiling job, you must install and configure the following prerequisites:
 
@@ -118,7 +118,7 @@ Perform one of the following actions:
 - [Download](http://spark.apache.org/downloads.html) the correct version directly.
 - If no version is listed for your flavor of Hadoop, [build](http://spark.apache.org/docs/latest/building-with-maven.html) Spark to support it.
 
-## <a name="spark-submit"></a> spark-submit ##
+## spark-submit ##
 
 The Aperture Tiles source code relies on the standard [spark-submit](http://spark.apache.org/docs/1.3.0/submitting-applications.html) script to build your tiles. The script simplifies the process of running Spark jobs by including all the necessary libraries and setting various parameters.
 

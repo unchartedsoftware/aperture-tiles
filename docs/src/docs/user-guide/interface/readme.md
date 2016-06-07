@@ -13,12 +13,12 @@ The user interface for a typical Aperture Tiles project contains the following c
 - [Map](#map)
     - [Axes](#axes)
 - [Layers](#layers)
-	- [Heatmap](#heatmap)
-	- [Tile Carousel](#carousel)
-	- [Controls](#controls)
+    - [Heatmap](#heatmap-layer)
+    - [Tile Carousel](#tile-carousel)
+    - [Controls](#controls)
 - [Description](#description)
 
-## <a name="map"></a> Map ##
+## Map ##
 
 The map is the base layer upon which your data is projected. Aperture Tiles supports geographic and cross-plot maps. At each zoom level, the map is automatically scaled to show more or less detail.
 
@@ -32,19 +32,19 @@ The map for the Twitter Topics application is a Google Maps layer that supports 
 
 Just like [layers](#layers), the base map can be configured or toggled using the [Controls](#controls) dialog.
 
-### <a name="axes"></a> Axes ###
+### Axes ###
 
 The x and y axes are labeled to describe the units in your base map. Click either axis to show or hide its units.
 
 <img src="../../../img/axis.png" class="screenshot" alt="Axis" />
 
-## <a name="layers"></a> Layers ##
+## Layers ##
 
 In addition to the map (base layer), Aperture Tiles supports various overlays that summarize your data. These layers can be toggled and configured to enable exploration and customization of any subset of data.
 
-Aperture Tiles supports both [heatmap](#heatmap) layers and [tile-based data summary](#carousel) layers. Layers can be configured or toggled using the [Controls](#controls) dialog.
+Aperture Tiles supports both [heatmap](#heatmap-layer) layers and [tile-based data summary](#tile-carousel) layers. Layers can be configured or toggled using the [Controls](#controls) dialog.
 
-### <a name="heatmap"></a> Heatmap Layer ###
+### Heatmap Layer ###
 
 A typical Aperture Tiles project has a heatmap layer showing the concentration of the source data. The heatmap layer in the Twitter Topics application shows the concentration of Twitter messages across South America.
 
@@ -56,7 +56,7 @@ The color of the data points on this layer indicate the concentration of tweets 
 
 While the heatmap in this application shows an aggregation of the individual tweets in a region, other Aperture Tiles applications can be configured to incorporate layers that show only the minimum or maximum value on tile.
 
-### <a name="carousel"></a> Tile Carousel ###
+### Tile Carousel ###
 
 Each tile in the Twitter Topics application contains a carousel with multiple views that summarize the data contained in each region. As they are highly specific to the source data, each tile carousel implementation generally requires custom coding.
 
@@ -97,7 +97,7 @@ Clicking on a particular topic on any of the carousel pages refreshes the map to
 
 <img src="../../../img/carousel-detail.png" class="screenshot" alt="Tile Carousel Topic Detail" />
 
-### <a name="controls"></a> Controls ###
+### Controls ###
 
 The Controls panel is an expandable dialog with configurable settings that let you:
 
@@ -111,7 +111,7 @@ You can also use the Controls to change the color scheme (ramp) of your heatmap 
 
 <img src="../../../img/controls-settings.png" class="screenshot" alt="Layer Settings" />
 
-## <a name="description"></a> Description ##
+## Description ##
 
 The Description panel is an expandable dialog that briefly defines the source data and its representation in the Aperture Tiles application.
 

@@ -14,20 +14,20 @@ Once you have copied an existing Aperture Tiles application as a template, you s
 
 The Tile Server in your new template relies on the following configuration files:
 
-- [Web XML](#webxml), which defines which modules Guice will use.
-- [Tile Properties](#tileproperties), which specifies constants used by Guice during initialization, including the location of your Spark installation, and the location of some server configuration files.
+- [Web XML](#web-xml), which defines which modules Guice will use.
+- [Tile Properties](#tile-properties), which specifies constants used by Guice during initialization, including the location of your Spark installation, and the location of some server configuration files.
 - [Layers](#layers), which defines the individual layers of data that can be overlaid on your base map. The layers file also indicates whether rendering should be performed by the server or the client.
 
 The remainder of the configuration, which includes instantiation of the map, its base features and axis configuration, should be handled in the [Application JavaScript](../tile-client/#application-javascript) (*/src/main/webapp/js/***app.js**).
 
-## <a name="webxml"></a> Web XML ##
+## Web XML ##
 
 Edit the client **web.xml** file in *new-project/src/main/webapp/WEB-INF/*:
 
 1. If you performed a custom tile generation, edit the guice-modules parameter to pass in any custom modules you created (e.g., your custom Tile Serialization Factory).
 2. If required, uncomment the relevant Spark lines in the guice-modules to enable live tiling or drill-through to raw data.
-		
-## <a name="tileproperties"></a> Tile Properties ##
+
+## Tile Properties ##
 
 Edit the client **tile.properties** file in *new-project/src/main/resources/*. This file specifies parameters for use by Guice, such as the location of your layer and annotation directories. Additional Spark parameters are available for on-demand tile generation and data drill down:
 
@@ -36,13 +36,13 @@ Edit the client **tile.properties** file in *new-project/src/main/resources/*. T
 - The home directory of Spark
 - Any JARs you want to add to the Spark context
 
-## <a name="layers"></a> Layers #
+## Layers ##
 
 The layers file describes the tile layers to be made available to the server and client application. Parameters in the layers file are split into two sections: those in the public node are accessible from the client, while those under the private note are not.
 
 Layer file examples can be found in in the Julia example at [tile-examples\julia-demo\src\main\resources\layers](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/julia-demo/src/main/resources/layers) and the Twitter Topics example at [tile-examples\twitter-topics\twitter-topics-client\src\main\resources\layers](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-client/src/main/resources/layers).
 
-### <a name="layer-id"></a> ID ###
+### ID ###
 
 The ID parameter uniquely identifies the layer.
 
@@ -65,7 +65,7 @@ The ID parameter uniquely identifies the layer.
 
 Parameters in the **public** node section of the **layers.json** file are accessible from the client.
 
-#### <a name="layer-pyramid"></a> Pyramid ####
+#### Pyramid ####
 
 The pyramid parameters describe the extent of the data in the layer. The values that you provide in this section must match the values in your data source and in your map configuration.
 
@@ -206,7 +206,7 @@ The **valueTransform** defines the **type** of transformation that can be applie
 
 Parameters in the **private** node section of the **layers.json** file are not accessible from the client.
 
-#### <a name="layer-data"></a> Data ####
+#### Data ####
 
 The data parameters specify the location of the tiles that you created. If you are using HBase, separate parameters are required.
 

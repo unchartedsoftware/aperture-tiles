@@ -12,22 +12,22 @@ Graph Tiling Jobs
 
 In addition to [heatmap layers](../../how-to/standard-tiling/) of individual data points, Aperture Tiles supports visualizations of graph datasets that contain edge and node information. Graph visualizations illustrate the relationships between nodes and communities across multiple zoom levels. The process of generating the [tile pyramid](../../getting-started/tile-pyramid/) that represents this type of layer is a graph tiling job.
 
-Graph tiling jobs comprise several configuration and generation phases as described in the [Graph Tiling Process](#process) section.
+Graph tiling jobs comprise several configuration and generation phases as described in the [Graph Tiling Process](#graph-tiling-process) section.
 
 **NOTE**: The graph tiling capabilities of Aperture Tiles are under ongoing development and considered experimental.
 
-## <a name="process"></a> Graph Tiling Process ##
+## Graph Tiling Process ##
 
-Aperture Tiles requires graph data to be in a comma- or tab-delimited format (CSV). If your data is in a GraphML format, the first step in the graph tiling process is to [convert the GraphML data to a CSV format](#convert-graphml).
+Aperture Tiles requires graph data to be in a comma- or tab-delimited format (CSV). If your data is in a GraphML format, the first step in the graph tiling process is to [convert the GraphML data to a CSV format](#converting-graphml-data-to-csv-data).
 
 Once your source data is in a valid delimited format, you can choose to apply either of the following optional layout styles before proceeding with the tile generation:
 
-1. [Hierarchical Clustering](#clustering): Hierarchically group nodes into communities using Louvain detection based on modularity-maximization.
+1. [Hierarchical Clustering](#hierarchical-clustering): Hierarchically group nodes into communities using Louvain detection based on modularity-maximization.
 2. [Graph Layout](#graph-layout): Compute node locations using a force-directed algorithm.
 
 Once your data is prepared, you can execute your tile generation job using [standard](#tile-generation) or [customized](#graph-analytics) methods.
 
-## <a name="convert-graphml"></a> Converting GraphML Data to CSV Data ##
+## Converting GraphML Data to CSV Data ##
 
 Aperture Tiles requires graph data to be in comma- or tab-delimited format (CSV). GraphML data can be converted to CSV using the following tools in [com.oculusinfo.tilegen.graph.util](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/java/com/oculusinfo/tilegen/graph/util):
 
@@ -385,7 +385,7 @@ Using the brain connectomics dataset as an example:
 - Graph community *X* at hierarchy level 2 contains 100 communities (from hierarchy 1)
 - If the child community with the highest weighted degree has ID *0* and metadata *rh-rostralmiddlefrontal*, community *X* at hierarchy 2 will be labeled with the same ID and metadata.
 
-## <a name="graph-layout"></a> Graph Layout ##
+## Graph Layout ##
 
 Node positions can be computed using a hierarchical force-directed algorithm with the following tools in [com.oculusinfo.tilegen.graph.util](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/util):
 
@@ -623,7 +623,7 @@ spark-submit --class com.oculusinfo.tilegen.graph.util.ClusteredGraphLayoutApp
 -eWeight true -g 0 -spark local -sparkhome /opt/spark -user <username>
 ```
 
-## <a name="tile-generation"></a> Tile Generation ##
+## Tile Generation ##
 
 Once a graph dataset has been converted to CSV format and the nodes have been positioned (using raw positions for geo-located data or using the hierarchical force-directed algorithm), tile generation can be performed. Standard heatmaps of nodes and edges can be generated using the [CSVGraphBinner](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/examples/apps/CSVGraphBinner.scala) application in [com.oculusinfo.tilegen.examples.apps](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/examples/apps)
 
@@ -793,7 +793,7 @@ oculus.binning.graph.data=edges
 oculus.binning.graph.edges.type=all
 ```
 
-## <a name="graph-analytics"></a> Graph Analytics ##
+## Graph Analytics ##
 
 You can also create custom analytics of key communities at each hierarchy for client-side rendering to display labels, metadata and add interactive features as desired. Custom analytics can be created using the [GraphAnalyticsBinner](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/analytics/GraphAnalyticsBinner.scala) in [com.oculusinfo.tilegen.graph.analytics](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/analytics).
 

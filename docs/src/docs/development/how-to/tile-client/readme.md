@@ -14,11 +14,11 @@ Once you have customized your Tile Server, you should customize the Tile Client,
 
 **NOTE**: The Tile Client can also be configured to receive tiles as JSON data from the Server and then render them directly.
 
-## <a name="application-javascript"></a> Application JavaScript ##
+## Application JavaScript ##
 
 The application JavaScript file (*/src/main/webapp/js/***app.js**) should request layers from the server and return an array of layer configuration objects. Among the objects it should instantiate are the map, its baselayer and axis configurations.
 
-### <a name="maps"></a> Map ###
+### Map ###
 
 The map describes the base map upon which your source data is projected:
 
@@ -37,7 +37,7 @@ pyramid: {
 
 **NOTE**: Your layer and map pyramid configurations must match each other.
 
-### <a name="geo-baselayer"></a> BaseLayer ###
+### BaseLayer ###
 
 The BaseLayer parameters use map provider APIs to determine what features to include on the base map. In the following example, the Google Maps API (OpenLayers.Layer.Google) is used to define the style of the base map.
 
@@ -96,7 +96,7 @@ The next example shows a TMS layer configuration (standard OpenLayers.Layer.TMS)
 }
 ```
 
-### <a name="cross-axisconfig"></a> Axes ###
+### Axes ###
 
 The AxisConfig parameters determine how the X and Y axes are drawn in your cross-plot map.
 

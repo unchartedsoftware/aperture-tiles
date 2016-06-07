@@ -11,4 +11,4 @@ layout: image
 
 ---
 
-[< Back](./#tile-gen-process)
+[< Back](./#tile-generation-process)

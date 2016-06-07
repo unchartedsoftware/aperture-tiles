@@ -1,4 +1,5 @@
-# Building Aperture Sites with Jekyll
+Building Aperture Sites with Jekyll
+===================================
 
 **NOTE**: This topic describes how to build the Aperture Tiles website. To view the Aperture Tiles website content, visit <http://aperturetiles.com> or see the [src/](src/) folder.
 
@@ -16,7 +17,7 @@ Note that the latest versions of the pre-built Aperture websites are available f
 - Aperture Tiles: [http://aperturetiles.com/](http://aperturetiles.com/)
 - Influent: [http://community.influent.org/](http://community.influent.org/)
 
-## Prerequisites
+## Prerequisites ##
 
 Before you attempt to build an Aperture site, you should install the following prerequisites. Note that while other versions of the third-party tools below may work, only the listed versions have been tested with the latest site build.
 
@@ -27,7 +28,7 @@ Before you attempt to build an Aperture site, you should install the following p
 	- **Site Generator**: [Jekyll](http://jekyllrb.com/) (version 2.5.3)
 	- **Syntax Highlighter**: [Rouge](https://github.com/jneen/rouge) (version 1.7.7)
 
-## Building the Site
+## Building the Site ##
 
 To build an Aperture site, run the following command in its source docs folder, [docs/src/](docs/src/), which contains a *_config.yml* file:
 
@@ -41,14 +42,14 @@ To test the site before deploying it, you can run the following command, which w
 
     jekyll serve
 
-## Aperture Website Configuration
+## Aperture Website Configuration ##
 
 This section describes how the Aperture websites are configured for the Jekyll conversion.
 
 - Markdown Files
 - Jekyll Resources
 
-### Markdown Files
+### Markdown Files ###
 
 Each Markdown file (*.md) covers a single topic representing a page on the Aperture website. There should only be one Markdown file per folder. Each file should be named **readme.md** so that it is natively displayed in the GitHub repository when viewing the corresponding folder.
 
@@ -108,7 +109,7 @@ layout      (Required)
 
 ![](src/img/resources/SiteComponents.png)
 
-### Jekyll Resources
+### Jekyll Resources ###
 
 In addition to getting page-specific variables from the Markdown files, Jekyll also gets global variables and assets from the following locations:
 

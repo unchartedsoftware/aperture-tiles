@@ -14,7 +14,7 @@ The following installation instructions are intended for developers who want to 
 
 For developers who want to quickly install a pre-configured example Aperture Tiles application with minimal modification, a set of [packaged distributions](#packaged-distributions) are available as an alternative.
 
-## <a name="supported-platforms"></a> Supported Platforms ##
+## Supported Platforms ##
 
 Aperture Tiles is compatible with Linux and OS X.
 
@@ -26,7 +26,7 @@ Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or 
 	1. **Spark release**: 1.3.0
 	2. **Package type**: Pre-built for CDH4
 
-## <a name="prerequisites"></a> Prerequisites ##
+## Prerequisites ##
 
 Aperture Tiles requires the following third-party tools:
 
@@ -101,9 +101,9 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 
 <img src="../../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
-## <a name="complete-install"></a> Complete Install ##
+## Complete Install ##
 
-### <a name="source-code"></a> Source Code ###
+### Source Code ###
 
 The source code repository for Aperture Tiles is available on [GitHub](https://github.com/unchartedsoftware/).
 
@@ -121,14 +121,14 @@ The source code repository for Aperture Tiles is available on [GitHub](https://g
     git checkout master
     ```
 
-### <a name="building-project"></a> Building the Project ###
+### Building the Project ###
 
 Once you have cloned the Aperture Tiles repository, you can build the project.
 
-1. [Specify your Hadoop/HBase version](#hbase-version) (if applicable)
-2. [Compile Aperture Tiles](#compiling)
+1. [Specify your Hadoop/HBase version](#specifying-your-hadoophbase-version) (if applicable)
+2. [Compile Aperture Tiles](#compiling-the-aperture-tiles-projects)
 
-#### <a name="hbase-version"></a> Specifying Your Hadoop/HBase Version ####
+#### Specifying Your Hadoop/HBase Version ####
 
 **NOTE**: If you plan to run Apache Spark only in standalone mode on single machine, you can skip this step.
 
@@ -137,7 +137,7 @@ Prior to building the project, you must specify which version of Hadoop and/or H
 1. Review the *Deployment Variants* section of the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in [aperture-tiles/](https://github.com/unchartedsoftware/aperture-tiles/tree/master) to check for valid settings for your version.
 2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
 
-#### <a name="compiling"></a> Compiling the Aperture Tiles Projects ####
+#### Compiling the Aperture Tiles Projects ####
 
 Aperture Tiles builds with [Gradle](https://gradle.org/). 
 
@@ -169,7 +169,7 @@ Aperture Tiles builds with [Gradle](https://gradle.org/).
 
 This will compile all the project components and install .jar files for each project into a local Gradle repository on your build machine.
 
-##### <a name="project-structure"></a> Project Structure #####
+##### Project Structure #####
 
 Aperture Tiles is made up of the following sub-projects:
 
@@ -267,6 +267,6 @@ The Aperture Tiles packaged distributions enable you to create a sample Aperture
 2.  Extract the contents of each file to your local machine.
 3.  See the [Quick Start](../quick-start/) topic for information on configuring each packaged distribution.
 
-## <a name="next-steps"></a> Next Steps ##
+## Next Steps ##
 
 For a guide on quickly configuring and deploying an example Aperture application, see the [Quick Start](../quick-start) topic.

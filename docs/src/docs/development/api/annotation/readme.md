@@ -7,13 +7,14 @@ permalink: docs/development/api/annotation/
 layout: chapter
 ---
 
-# Annotation Service #
+Annotation Service
+==================
 
 The Aperture Tiles Annotation Service REST API is based on the Aperture Tiles Binning API. Annotations are submitted into tiles and aggregated through a given range of levels based on bin-index. Annotations can be written, modified and removed in real time.
 
-## <a name="data-types"></a> Data Types ##
+## Data Types ##
 
-### <a name="annotation"></a> Annotation ###
+### Annotation ###
 
 A single annotation received from a GET request or submitted in a write, modify or remove POST request.
 
@@ -80,7 +81,7 @@ Example:
 }
 ```
 
-### <a name="annotation-tile"></a> Annotation Tile ###
+### Annotation Tile ###
 
 A collection of annotations from a single GET request. Contains all annotations (aggregated by bin-key) that pass through the current filter configuration.
 
@@ -136,7 +137,7 @@ Example:
 }
 ```
 
-### <a name="annotation-certificate"></a> Annotation Certificate ###
+### Annotation Certificate ###
 
 An Annotation Certificate is comprised of the UUID and timestamp from a successful POST request. The certificate is used during remove and modify operations to ensure client-server coherency in the event of live editing conflicts. When a certificate in a supplied annotation does not match that held by the server, the request is ignored and an error status is returned to the client.
 
@@ -165,7 +166,7 @@ Example:
     timestamp: "1401830862"
 ```
 
-## <a name="web-services"></a> Web Services ##
+## Web Services ##
 
 Web service paths are relative to a common base URL. For example, assuming the hostname *localhost* and port *8080*, the URLs of the various services would be:
 
@@ -178,7 +179,7 @@ Web service paths are relative to a common base URL. For example, assuming the h
 - `https://localhost:8080/{version}/layer`
 - `https://localhost:8080/layer`
 
-### <a name="read-annotation-tile"></a> Read Annotation Tile ###
+### Read Annotation Tile ###
 
 Returns an Annotation Tile for a specified filter configuration UUID, annotation layer, level and tile x and y.
 
@@ -290,7 +291,7 @@ Example response:
 }
 ```
 
-### <a name="write-annotation"></a> Write Annotation ###
+### Write Annotation ###
 
 Submits a new annotation to be written to the server. Upon success, a certificate containing the UUID and timestamp is returned to the client.
 
@@ -439,7 +440,7 @@ Example response:
 }
 ```
 
-### <a name="modify-annotation"></a> Modify Annotation ###
+### Modify Annotation ###
 
 Submits a modify request to the server. If the certificate in the annotation state is valid, the operation is processed and a new certificate is returned.
 
@@ -592,7 +593,7 @@ Example response:
 }
 ```
 
-### <a name="remove-annotation"></a> Remove Annotation ###
+### Remove Annotation ###
 
 Submits a removal request to the server. If the certificate is valid, the operation will be processed and a success status will be returned.
 
