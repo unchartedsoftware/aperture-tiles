@@ -9,7 +9,7 @@ $literal-color: #0000FF;
 $generic-change-color: #000000;
 
 .highlight  { 
-	@extend code-block;
+    @extend code-block;
 }
 .highlight .hll { background-color: #ffffcc }
 .highlight .c { color: $comment-color; font-style: italic } /* Comment */

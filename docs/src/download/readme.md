@@ -25,14 +25,15 @@ The following pre-built distribution can be used to quickly generate and display
 	<br/><br/><a href="http://assets.oculusinfo.com/tiles/downloads/tile-quickstart-0.6.war" class="download-link">Tile Quick Start Application</a>
 
 <div class="git">
-	<h2>Interested in Learning More?</h2>
+    <h2>Interested in Learning More?</h2>
 
-	<ul>
-		<li><a href="../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.
-		<li><a href="../docs/development/getting-started/quick-start/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
-		<ul>
-			<li><a href="../docs/development/getting-started/quick-start/">Quick Start</a>: Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
-		</ul>
-		<li><a href="../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.
-	</ul>
+    <ul>
+        <li><a href="../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.</li>
+        <li><a href="../docs/development/getting-started/quick-start/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
+            <ul>
+                <li><a href="../docs/development/getting-started/quick-start/">Quick Start</a>: Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.</li>
+            </ul>
+        </li>
+        <li><a href="../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.</li>
+    </ul>
 </div>

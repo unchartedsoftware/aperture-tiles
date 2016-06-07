@@ -3,26 +3,26 @@ layout: default
 ---
 
 {% comment %} Get filename of TOC constructor {% endcomment %}
-		{% capture tocFile %}{{ page.section | slugify }}-{{ page.subsection | slugify }}.html{% endcapture %}
+        {% capture tocFile %}{{ page.section | slugify }}-{{ page.subsection | slugify }}.html{% endcapture %}
 
 <nav>
-	{% include submenu.html %}
+    {% include submenu.html %}
 </nav>
 <div id="content">
-	<div class="content-context">
-		<nav>
-			{% include tocs/{{ tocFile }} %}
-		</nav>
-		<footer>
-			{% include footer.html %}
-		</footer>
-	</div>
-	<div class="content-body">
-		<article>
-			<div class="edit right">
-				<a href="https://github.com/unchartedsoftware/{{site.product | slugify}}/edit/master/docs/src/{{page.permalink}}readme.md"><i class="fa fa-pencil"></i> &nbsp;Edit this page</a>
-			</div>
-			{{ content }}
-		</article>
-	</div>
+    <div class="content-context">
+        <nav>
+            {% include tocs/{{ tocFile }} %}
+        </nav>
+        <footer>
+            {% include footer.html %}
+        </footer>
+    </div>
+    <div class="content-body">
+        <article>
+            <div class="edit right">
+                <a href="https://github.com/unchartedsoftware/{{site.product | slugify}}/edit/master/docs/src/{{page.permalink}}readme.md"><i class="fa fa-pencil"></i> &nbsp;Edit this page</a>
+            </div>
+            {{ content }}
+        </article>
+    </div>
 </div>

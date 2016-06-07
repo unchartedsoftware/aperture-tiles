@@ -23,9 +23,9 @@ If your source data is not character delimited or if it contains non-numeric fie
 	- Combine multiple records that fall in the same tile bin
 	- Read and write to the tile set
 - [Binning Your Data](#binning-your-data) by specifying how to:
-	- Parse your source data
-	- Transform the parsed data into the Avro tile set
-	- Store the Avro tile set to your preferred location
+    - Parse your source data
+    - Transform the parsed data into the Avro tile set
+    - Store the Avro tile set to your preferred location
 
 Once you have created the required components for each process, you can run your custom binner to create the Avro tile set you will use in your application.
 
@@ -68,7 +68,7 @@ A code example is shown in line 40 of [TwitterTopicBinningAnalytic.scala](https:
 
 ```scala
 extends BinningAnalytic[Map[String, TwitterDemoTopicRecord], 
-					    JavaList[TwitterDemoTopicRecord]]
+                        JavaList[TwitterDemoTopicRecord]]
 ```
 
 The processing type is a *map* that adds all similar Twitter message topic records together, while the binning type is a *list* that contains only the topics with the highest counts.
@@ -79,7 +79,7 @@ The Binning Analytic should also describe how to convert the processing type int
 
 ```scala
 def finish (value: Map[String, TwitterDemoTopicRecord]): JavaList[TwitterDemoTopicRecord] =
-	value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
+    value.values.toList.sortBy(-_.getCountMonthly()).slice(0, 10).asJava
 ```
 
 The **finish** function:
@@ -99,10 +99,10 @@ The Binning Analytic defines how data is aggregated. For example, lines 42-47 of
 
 ```scala
 def aggregate (a: Map[String, TwitterDemoTopicRecord],
-	           b: Map[String, TwitterDemoTopicRecord]): Map[String, TwitterDemoTopicRecord] = {
-	a ++ b.map{case (k, v) =>
-		k -> a.get(k).map(TwitterDemoTopicRecord.addRecords(_, v)).getOrElse(v)
-	}
+               b: Map[String, TwitterDemoTopicRecord]): Map[String, TwitterDemoTopicRecord] = {
+    a ++ b.map{case (k, v) =>
+        k -> a.get(k).map(TwitterDemoTopicRecord.addRecords(_, v)).getOrElse(v)
+    }
 }
 ```
 
@@ -112,14 +112,14 @@ Lines 85-93 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/a
 
 ```scala
 val minAnalysis:
-		AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
-							List[TwitterDemoTopicRecord]] =
-	new TwitterTopicListAnalysis(new TwitterMinRecordAnalytic)
+        AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+                            List[TwitterDemoTopicRecord]] =
+    new TwitterTopicListAnalysis(new TwitterMinRecordAnalytic)
 
 val maxAnalysis:
-		AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
-							List[TwitterDemoTopicRecord]] =
-	new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
+        AnalysisDescription[TileData[JavaList[TwitterDemoTopicRecord]],
+                            List[TwitterDemoTopicRecord]] =
+    new TwitterTopicListAnalysis(new TwitterMaxRecordAnalytic)
 ```
 
 Standard Bin Analytics are available in the [Analytics.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/analytics/Analytics.scala) file in [tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/<wbr>analytics/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/analytics).
@@ -207,19 +207,19 @@ Lines 149 - 164 in [TwitterTopicBinner.scala](https://github.com/unchartedsoftwa
 
 ```scala
 val data = rawDataWithTopics.mapPartitions(i =>
-	{
-		val recordParser = new TwitterTopicRecordParser(endTimeSecs)
-		i.flatMap(line =>
-			{
-				try {
-					recordParser.getRecordsByTopic(line)
-				} catch {
-					// Just ignore bad records, there aren't many
-					case _: Throwable => Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])]()
-				}
-			}
-		)
-	}
+    {
+        val recordParser = new TwitterTopicRecordParser(endTimeSecs)
+        i.flatMap(line =>
+            {
+                try {
+                    recordParser.getRecordsByTopic(line)
+                } catch {
+                    // Just ignore bad records, there aren't many
+                    case _: Throwable => Seq[((Double, Double), Map[String, TwitterDemoTopicRecord])]()
+                }
+            }
+        )
+    }
 ).map(record => (record._1, record._2, dataAnalytics.map(_.convert(record))))
 data.cache
 ```
@@ -230,168 +230,164 @@ Lines 191 - 199 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftwa
 
 ```scala
 val tiles = binner.processDataByLevel(data,
-				                      new CartesianIndexScheme,
-				                      new TwitterTopicBinningAnalytic,
-				                      tileAnalytics,
-				                      dataAnalytics,
-				                      tilePyramid,
-				                      levelSet,
-				                      xBins=1,
-				                      yBins=1)
+                                      new CartesianIndexScheme,
+                                      new TwitterTopicBinningAnalytic,
+                                      tileAnalytics,
+                                      dataAnalytics,
+                                      tilePyramid,
+                                      levelSet,
+                                      xBins=1,
+                                      yBins=1)
 ```
 
 **processDataByLevel** is defined on line 231 in the [RDDBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala) file in [tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling). It accepts the following properties:
 
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<tr>
-				<th scope="col" width="25%">Property</th>
-				<th scope="col" width="10%">Required?</th>
-				<th scope="col" width="65%">Description</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="property">data</td>
-				<td class="description">Yes</td>
-				<td class="description">Distributed collection of (index, record) pairs as described above.</td>
-			</tr>
-			<tr>
-				<td class="property">indexScheme</td>
-				<td class="description">Yes</td>
-				<td class="description">Converts the index to a set of x/y coordinates that can be plotted. When using a CartesianIndexScheme, the coordinates are taken as given.</dd>
-			</tr>
-			<tr>
-				<td class="property">binAnalytic</td>
-				<td class="description">Yes</td>
-				<td class="description">Binning Analytic that, as described above, defines how to aggregate two records, convert them into the form written and determine the extrema of the dataset.</dd>
-			</tr>
-			<tr>
-				<td class="property">tileAnalytics</td>
-				<td class="description">No</td>
-				<td class="description">Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</dd>
-			</tr>
-			<tr>
-				<td class="property">dataAnalytics</td>
-				<td class="description">No</td>
-				<td class="description">Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</dd>
-			</tr>
-			<tr>
-				<td class="property">tileScheme</td>
-				<td class="description">Yes</td>
-				<td class="description">
-					Projection used to transform from the raw data index into tiles and bins. Two types are predefined:
-					<ul>
-						<li><a href="https://github.com/unchartedsoftware/aperture-tiles/blob/develop/binning-utilities/src/main/java/com/oculusinfo/binning/impl/AOITilePyramid.java">binning-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>binning/<wbr>impl/<wbr>AOITilePyramid</a>, which is a linear transformation into an arbitrarily sized space</li>
-						<li><a href="https://github.com/unchartedsoftware/aperture-tiles/blob/develop/binning-utilities/src/main/java/com/oculusinfo/binning/impl/WebMercatorTilePyramid.java">binning-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>binning/<wbr>impl/<wbr>WebMercatorTilePyramid</a>, which is a standard geographical projection</li>
-					</ul>
-				</dd>
-			</tr>
-			<tr>
-				<td class="property">levels</td>
-				<td class="description">Yes</td>
-				<td class="description">Specifies which levels to process at the same time. It is generally recommended you process levels 1-9 together, then run additional levels	one	at a time afterward. This typically makes effective use of system resources.</dd>
-			</tr>
-			<tr>
-				<td class="property">xBins</td>
-				<td class="description">No</td>
-				<td class="description">Number of bins on the x-axis. Defaults to 256</dd>
-			</tr>
-			<tr>
-				<td class="property">yBins</td>
-				<td class="description">No</td>
-				<td class="description">Number of bins on the y-axis. Defaults to 256</dd>
-			</tr>
-			<tr>
-				<td class="property">consolidationPartitions</td>
-				<td class="description">No</td>
-				<td class="description">Number of reducers to use when aggregating data records into bins and tiles. Alter if you encounter problems with the tiling job due to lack of resources. Defaults to the same number of partitions as the original dataset.</dd>
-			</tr>
-			<tr>
-				<td class="property">tileType</td>
-				<td class="description">No</td>
-				<td class="description">Specifies how data should be stored: <em>sparse</em> or <em>dense</em>. If not specified, a heuristic will use the optimal type for a double-valued tile. For significantly larger-valued types, <em>sparse</em> is recommended.</dd>
-			</tr>
-		</tbody>
-	</table>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:25%;">Property</th>
+            <th scope="col" style="width:10%;">Required?</th>
+            <th scope="col" style="width:65%;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="property">data</td>
+            <td class="description">Yes</td>
+            <td class="description">Distributed collection of (index, record) pairs as described above.</td>
+        </tr>
+        <tr>
+            <td class="property">indexScheme</td>
+            <td class="description">Yes</td>
+            <td class="description">Converts the index to a set of x/y coordinates that can be plotted. When using a CartesianIndexScheme, the coordinates are taken as given.</td>
+        </tr>
+        <tr>
+            <td class="property">binAnalytic</td>
+            <td class="description">Yes</td>
+            <td class="description">Binning Analytic that, as described above, defines how to aggregate two records, convert them into the form written and determine the extrema of the dataset.</td>
+        </tr>
+        <tr>
+            <td class="property">tileAnalytics</td>
+            <td class="description">No</td>
+            <td class="description">Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</td>
+        </tr>
+        <tr>
+            <td class="property">dataAnalytics</td>
+            <td class="description">No</td>
+            <td class="description">Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</td>
+        </tr>
+        <tr>
+            <td class="property">tileScheme</td>
+            <td class="description">Yes</td>
+            <td class="description">
+                Projection used to transform from the raw data index into tiles and bins. Two types are predefined:
+                <ul>
+                    <li><a href="https://github.com/unchartedsoftware/aperture-tiles/blob/develop/binning-utilities/src/main/java/com/oculusinfo/binning/impl/AOITilePyramid.java">binning-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>binning/<wbr>impl/<wbr>AOITilePyramid</a>, which is a linear transformation into an arbitrarily sized space</li>
+                    <li><a href="https://github.com/unchartedsoftware/aperture-tiles/blob/develop/binning-utilities/src/main/java/com/oculusinfo/binning/impl/WebMercatorTilePyramid.java">binning-utilities/<wbr>src/<wbr>main/<wbr>java/<wbr>com/<wbr>oculusinfo/<wbr>binning/<wbr>impl/<wbr>WebMercatorTilePyramid</a>, which is a standard geographical projection</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="property">levels</td>
+            <td class="description">Yes</td>
+            <td class="description">Specifies which levels to process at the same time. It is generally recommended you process levels 1-9 together, then run additional levels one at a time afterward. This typically makes effective use of system resources.</td>
+        </tr>
+        <tr>
+            <td class="property">xBins</td>
+            <td class="description">No</td>
+            <td class="description">Number of bins on the x-axis. Defaults to 256</td>
+        </tr>
+        <tr>
+            <td class="property">yBins</td>
+            <td class="description">No</td>
+            <td class="description">Number of bins on the y-axis. Defaults to 256</td>
+        </tr>
+        <tr>
+            <td class="property">consolidationPartitions</td>
+            <td class="description">No</td>
+            <td class="description">Number of reducers to use when aggregating data records into bins and tiles. Alter if you encounter problems with the tiling job due to lack of resources. Defaults to the same number of partitions as the original dataset.</td>
+        </tr>
+        <tr>
+            <td class="property">tileType</td>
+            <td class="description">No</td>
+            <td class="description">Specifies how data should be stored: <em>sparse</em> or <em>dense</em>. If not specified, a heuristic will use the optimal type for a double-valued tile. For significantly larger-valued types, <em>sparse</em> is recommended.</td>
+        </tr>
+    </tbody>
+</table>
 
-### <a name="writing-tiles"></a> Writing Tiles ###
+### Writing Tiles ###
 
-Lines 200 - 207 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) specify how to write the tiles created from your transformed data.
+Lines 199 - 206 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) specify how to write the tiles created from your transformed data.
 
 ```scala
 tileIO.writeTileSet(tilePyramid,
-				    pyramidId,
-				    tiles,
-				    new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec()),
-				    tileAnalytics,
-				    dataAnalytics,
-				    pyramidName,
-				    pyramidDescription)
+                    pyramidId,
+                    tiles,
+                    new TwitterTopicAvroSerializer(CodecFactory.bzip2Codec()),
+                    tileAnalytics,
+                    dataAnalytics,
+                    pyramidName,
+                    pyramidDescription)
 ```
 
 **tileIO.writeTileSet** is defined on line 173 in the [RDDBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/RDDBinner.scala) file in [tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling).
 
 It accepts the following properties:
 
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<tr>
-				<th scope="col" width="25%">Property</th>
-				<th scope="col" width="10%">Required?</th>
-				<th scope="col" width="65%">Description</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="property">tileScheme</td>
-				<td class="description">Yes</td>
-				<td class="description">Type of projection built from the set of bins and levels. Must match the tileScheme specified in binner.processDataByLevel.</td>
-			</tr>
-			<tr>
-				<td class="property">writeLocation</td>
-				<td class="description">Yes</td>
-				<td class="description">
-					ID to apply to the tile set when writing it. Value will vary depending on where you write your tile set:
-					<ul>
-						<li>For the local filesystem: the base directory into which to write the tiles.
-						<li>For HBase: the name of the table to write.
-					</ul>
-				</td>
-			</tr>
-			<tr>
-				<td class="property">tiles</td>
-				<td class="description">Yes</td>
-				<td class="description">Binned dataset produced by binner.processDataByLevel.</td>
-			</tr>
-			<tr>
-				<td class="property">serializer</td>
-				<td class="description">Yes</td>
-				<td class="description">Serializer that determines how to read and write to the tile set.</td>
-			</tr>
-			<tr>
-				<td class="property">tileAnalytics</td>
-				<td class="description">No</td>
-				<td class="description">Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</td>
-			</tr>
-			<tr>
-				<td class="property">dataAnalytics</td>
-				<td class="description">No</td>
-				<td class="description">Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</td>
-			</tr>
-			<tr>
-				<td class="property">name</td>
-				<td class="description">Yes</td>
-				<td class="description">Name of the finished pyramid. Stored in the tile metadata.</td>
-			</tr>
-			<tr>
-				<td class="property">description</td>
-				<td class="description">Yes</td>
-				<td class="description">Description of the finished pyramid. Stored in the tile metadata.</td>
-			</tr>
-		</tbody>
-	</table>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:25%;">Property</th>
+            <th scope="col" style="width:10%;">Required?</th>
+            <th scope="col" style="width:65%;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="property">tileScheme</td>
+            <td class="description">Yes</td>
+            <td class="description">Type of projection built from the set of bins and levels. Must match the tileScheme specified in binner.processDataByLevel.</td>
+        </tr>
+        <tr>
+            <td class="property">writeLocation</td>
+            <td class="description">Yes</td>
+            <td class="description">
+                ID to apply to the tile set when writing it. Value will vary depending on where you write your tile set:
+                <ul>
+                    <li>For the local filesystem: the base directory into which to write the tiles.</li>
+                    <li>For HBase: the name of the table to write.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td class="property">tiles</td>
+            <td class="description">Yes</td>
+            <td class="description">Binned dataset produced by binner.processDataByLevel.</td>
+        </tr>
+        <tr>
+            <td class="property">serializer</td>
+            <td class="description">Yes</td>
+            <td class="description">Serializer that determines how to read and write to the tile set.</td>
+        </tr>
+        <tr>
+            <td class="property">tileAnalytics</td>
+            <td class="description">No</td>
+            <td class="description">Analytics used to perform custom aggregations on tile data (e.g., get the minimum and maximum values) and write them to the metadata by level.</td>
+        </tr>
+        <tr>
+            <td class="property">dataAnalytics</td>
+            <td class="description">No</td>
+            <td class="description">Analytics used to perform custom aggregations on raw data that would otherwise be lost by the processing type (e.g., recording the maximum individual value) and write them to the metadata by level.</td>
+        </tr>
+        <tr>
+            <td class="property">name</td>
+            <td class="description">Yes</td>
+            <td class="description">Name of the finished pyramid. Stored in the tile metadata.</td>
+        </tr>
+        <tr>
+            <td class="property">description</td>
+            <td class="description">Yes</td>
+            <td class="description">Description of the finished pyramid. Stored in the tile metadata.</td>
+        </tr>
+    </tbody>
+</table>

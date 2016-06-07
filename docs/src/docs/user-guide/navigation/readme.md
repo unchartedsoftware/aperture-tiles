@@ -15,7 +15,7 @@ The Aperture Tiles user interface works much like a modern web-based map system.
 <h6 class="procedure">To zoom in on an area you want to investigate</h6>
 
 - Double click on the region, OR 
-- Click the **Zoom In** ![Zoom In](../../../img/zoom-in.png) button in the upper right corner of the map.  
+- Click the **Zoom In** ![Zoom In](../../../img/zoom-in.png) button in the upper right corner of the map.
 
 <h6 class="procedure">To zoom out</h6>
 
@@ -28,11 +28,11 @@ The Aperture Tiles user interface works much like a modern web-based map system.
 
 1. Click the **Description** control in the upper right corner of the map.
 
-	<img src="../../../img/description.png" class="screenshot" alt="Description" />
+    <img src="../../../img/description.png" class="screenshot" alt="Description" />
 
 2. Select the appropriate city from the **Zoom to City** drop-down list in the project description.
 
-	<img src="../../../img/zoom-to-city.png" class="screenshot" alt="Zoom to City" />
+    <img src="../../../img/zoom-to-city.png" class="screenshot" alt="Zoom to City" />
 
 The map is redrawn to show the selected city with a zoom factor of five.
 
@@ -45,15 +45,16 @@ The map is redrawn to show the selected city with a zoom factor of five.
 - Click and drag in the direction you want to move. You can overscroll from the left side of the map to the right and vice versa.
 
 <div class="git">
-	<h2>Interested in Learning More?</h2>
+    <h2>Interested in Learning More?</h2>
 
-	<ul>
-		<li><a href="../../../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.
-		<li><a href="../../development/getting-started/quick-start/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
-		<ul>
-			<li><a href="../../development/getting-started/quick-start/">Quick Start</a>: Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.
-		</ul>
-		<li><a href="../../../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.
-		<li><a href="../../../download/">Download</a>: For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.
-	</ul>
+    <ul>
+        <li><a href="../../../tour/">Tour</a>: Take our tour to learn more about Aperture Tiles.</li>
+        <li><a href="../../development/getting-started/quick-start/">Documentation</a>: Learn how to install, implement and test your Aperture Tiles applications.
+            <ul>
+                <li><a href="../../development/getting-started/quick-start/">Quick Start</a>: Our Julia dataset provides an example of the process for generating tiles and visualizing them using Aperture Tiles.</li>
+            </ul>
+        </li>
+        <li><a href="../../../demos/">Live Examples</a>: See our demos page to explore live examples of the capabilities of Aperture Tiles.</li>
+        <li><a href="../../../download/">Download</a>: For details on downloading pre-packaged versions or acquiring the Aperture Tiles source code visit our download page.</li>
+    </ul>
 </div>

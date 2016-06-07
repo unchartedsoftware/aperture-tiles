@@ -30,78 +30,74 @@ Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or 
 
 Aperture Tiles requires the following third-party tools:
 
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<tr>
-				<th scope="col" width="20%">Component</th>
-				<th scope="col" width="30%">Required</th>
-				<th scope="col" width="50%">Notes</th>
-			</tr>
-		</thead>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Languages</td>
-			<td style="vertical-align: text-top" class="description">
-				<a href="http://www.scala-lang.org/">Scala</a> v2.10.3
-				<br><a href="http://www.java.com/">Java</a> (JDK v1.7+)
-			</td>
-			<td style="vertical-align: text-top" class="description"></td>
-		</tr>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
-			<td style="vertical-align: text-top" class="description">
-				<a href="http://spark.incubator.apache.org/">Apache Spark</a>
-				<br>v1.3
-			</td>
-			<td style="vertical-align: text-top" class="description">
-				Specify the version of Hadoop with which Spark will be working (if applicable).
-				<p>Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</p>
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Build Automation</td>
-			<td style="vertical-align: text-top" class="description">
-				<a href="http://nodejs.org/">Node.js</a>
-			</td>
-			<td style="vertical-align: text-top" class="description">
-				The Node.js Windows installer has a known issue where it fails to install the following directory. To work around this issue, create the directory manually.
-				<p><code>C:\Users\&lt;UserName&gt;\AppData\Roaming\npm</code></p>
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Web Server</td>
-			<td style="vertical-align: text-top" class="description"><a href="http://tomcat.apache.org/">Apache Tomcat</a> or <a href="http://www.eclipse.org/jetty/">Jetty</a></td>
-			<td style="vertical-align: text-top" class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</td>
-		</tr>
-	</table>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:20%;">Component</th>
+            <th scope="col" style="width:30%;">Required</th>
+            <th scope="col" style="width:50%;">Notes</th>
+        </tr>
+    </thead>
+    <tr>
+        <td style="vertical-align: text-top" class="description">Languages</td>
+        <td style="vertical-align: text-top" class="description">
+            <a href="http://www.scala-lang.org/">Scala</a> v2.10.3
+            <br><a href="http://www.java.com/">Java</a> (JDK v1.7+)
+        </td>
+        <td style="vertical-align: text-top" class="description"></td>
+    </tr>
+    <tr>
+        <td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
+        <td style="vertical-align: text-top" class="description">
+            <a href="http://spark.incubator.apache.org/">Apache Spark</a>
+            <br>v1.3
+        </td>
+        <td style="vertical-align: text-top" class="description">
+            Specify the version of Hadoop with which Spark will be working (if applicable).
+            <p>Spark may cause class path issues if you compile from source code. We recommend using a pre-built Spark package.</p>
+        </td>
+    </tr>
+    <tr>
+        <td style="vertical-align: text-top" class="description">Build Automation</td>
+        <td style="vertical-align: text-top" class="description">
+            <a href="http://nodejs.org/">Node.js</a>
+        </td>
+        <td style="vertical-align: text-top" class="description">
+            The Node.js Windows installer has a known issue where it fails to install the following directory. To work around this issue, create the directory manually.
+            <p><code>C:\Users\&lt;UserName&gt;\AppData\Roaming\npm</code></p>
+        </td>
+    </tr>
+    <tr>
+        <td style="vertical-align: text-top" class="description">Web Server</td>
+        <td style="vertical-align: text-top" class="description"><a href="http://tomcat.apache.org/">Apache Tomcat</a> or <a href="http://www.eclipse.org/jetty/">Jetty</a></td>
+        <td style="vertical-align: text-top" class="description">The Tile Server and Tile Client, built using the <a href="http://restlet.org/">Restlet</a> web framework, require a servlet-compatible web server.</td>
+    </tr>
+</table>
 
 If you intend to work with datasets that cannot fit in the memory of a single machine or if you wish to avoid wait times, we recommend you also install the following tools to enable Aperture Tiles to work with particularly large datasets.
 
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<tr>
-				<th scope="col" width="20%">Component</th>
-				<th scope="col" width="30%">Required</th>
-				<th scope="col" width="50%">Notes</th>
-			</tr>
-		</thead>
-		<tr>
-			<td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
-			<td style="vertical-align: text-top" class="description">
-				A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
-				<ul class="table">
-					<li><a href="http://www.cloudera.com/content/www/en-us/downloads/cdh.html">Cloudera</a> v4.6 (<em>recommended)</em></li>
-					<li><a href="http://hadoop.apache.org/">Apache</a></li>
-					<li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
-					<li><a href="http://hortonworks.com/">HortonWorks</a></li>
-				</ul>
-			</td>
-			<td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.3 if the installation is older.</td>
-		</tr>
-	</table>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:20%;">Component</th>
+            <th scope="col" style="width:30%;">Required</th>
+            <th scope="col" style="width:50%;">Notes</th>
+        </tr>
+    </thead>
+    <tr>
+        <td style="vertical-align: text-top" class="description">Cluster Computing Framework</td>
+        <td style="vertical-align: text-top" class="description">
+            A <a href="http://hadoop.apache.org/">Hadoop</a> distribution:
+            <ul class="table">
+                <li><a href="http://www.cloudera.com/content/www/en-us/downloads/cdh.html">Cloudera</a> v5.4.7 (<em>recommended)</em></li>
+                <li><a href="http://hadoop.apache.org/">Apache</a></li>
+                <li><a href="http://www.mapr.com/products/apache-hadoop">MapR</a></li>
+                <li><a href="http://hortonworks.com/">HortonWorks</a></li>
+            </ul>
+        </td>
+        <td style="vertical-align: text-top" class="description">Some Hadoop distributions automatically install Apache Spark. Upgrade to v1.3 if the installation is older.</td>
+    </tr>
+</table>
 
 <img src="../../../../img/architecture.png" class="screenshot" alt="Aperture Tiles Architecture Diagram"/>
 
@@ -115,15 +111,15 @@ The source code repository for Aperture Tiles is available on [GitHub](https://g
 
 1. Execute the following command to clone the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
 
-	```bash
-	git clone https://github.com/unchartedsoftware/aperture-tiles.git
-	```
+    ```bash
+    git clone https://github.com/unchartedsoftware/aperture-tiles.git
+    ```
 
 2. Check out the *master* branch to work with the most recent stable release:
 
-	```bash
-	git checkout master
-	```
+    ```bash
+    git checkout master
+    ```
 
 ### <a name="building-project"></a> Building the Project ###
 
@@ -147,31 +143,29 @@ Aperture Tiles builds with [Gradle](https://gradle.org/).
 
 <h6 class="procedure">To install Gradle and build Aperture Tiles</h6>
 
-- Execute the following command in your root Aperture Tiles directory:
+-   Execute the following command in your root Aperture Tiles directory:
 
-	```bash
-	gradlew install -PbuildType=<buildType>
-	``` 
+    ```bash
+    gradlew install -PbuildType=<buildType>
+    ``` 
 
-	Where:
+    Where:
 
-	<div class="props">
-		<table class="summaryTable" width="100%">
-			<thead>
-				<tr>
-					<th scope="col" width="25%">Sub-Project</th>
-					<th scope="col" width="75%">Description</th>
-				</tr>
-			</thead>
-			<tr>
-				<td class="property">buildType</td>
-				<td class="description">
-					A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).
-					<p>If you do not specify a <strong>buildType</strong>, the default value (<em>cdh4.6.0</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
-				</td>
-			</tr>
-		</table>
-	</div>
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:25%;">Sub-Project</th>
+                <th scope="col" style="width:75%;">Description</th>
+            </tr>
+        </thead>
+        <tr>
+            <td class="property">buildType</td>
+            <td class="description">
+                A case in the <strong>build.gradle</strong> file that specifies which versions of Hadoop/HBase and Spark you are using (e.g., <em>cdh5.1.2</em>).
+                <p>If you do not specify a <strong>buildType</strong>, the default value (<em>cdh5.4.7</em>) in <em>aperture-tiles/</em><strong>gradle.properties</strong> is used.</p>
+            </td>
+        </tr>
+    </table>
 
 This will compile all the project components and install .jar files for each project into a local Gradle repository on your build machine.
 
@@ -179,74 +173,72 @@ This will compile all the project components and install .jar files for each pro
 
 Aperture Tiles is made up of the following sub-projects:
 
-<div class="props">
-	<table class="summaryTable" width="100%">
-		<thead>
-			<tr>
-				<th scope="col" width="25%">Sub-Project</th>
-				<th scope="col" width="75%">Description</th>
-			</tr>
-		</thead>
-		<tr>
-			<td class="property">math-utilities</td>
-			<td class="description">Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.</td>
-		</tr>
-		<tr>
-			<td class="property">geometric-utilities</td>
-			<td class="description">Advanced math utilities for processing geometry and geographic problems.</td>
-		</tr>
-		<tr>
-			<td class="property">binning-utilities</td>
-			<td class="description">Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</td>
-		</tr>
-		<tr>
-			<td class="property">factory-utilities</td>
-			<td class="description">Factory system to allow construction and configuration of generic objects.</td>
-		</tr>
-		<tr>
-			<td class="property">tile-generation</td>
-			<td class="description">Spark-based tools to generate tile pyramids from raw data.</td>
-		</tr>
-		<tr>
-			<td class="property">tile-rendering</td>
-			<td class="description">Library that handles turning tile data into useful output formats, generally graphical.</td>
-		</tr>
-		<tr>
-			<td class="property">tile-service</td>
-			<td class="description">Web service to serve tiles from tile pyramids to web clients.</td>
-		</tr>
-		<tr>
-			<td class="property">spark-tile-utilities</td>
-			<td class="description">Optional services for allowing the tile server to communicate directly with Spark.</td>
-		</tr>
-		<tr>
-			<td class="property">annotation-service</td>
-			<td class="description">Optional services for adding annotations to Aperture Tiles visualizations.</td>
-		</tr>
-		<tr>
-			<td class="property">tile-client</td>
-			<td class="description">Simple web client to display tiles from tile pyramids.</td>
-		</tr>
-		<tr>
-			<td class="property">tile-packaging</td>
-			<td class="description">Packaged assembly of the tile generation service for the <a href="../quick-start/">Quick Start</a> example on this site.</td>
-		</tr>
-		<tr>
-			<td class="property">tile-examples</td>
-			<td class="description">Example applications.</td>
-		</tr>
-		<tr>
-			<td class="property">gradle</td>
-			<td class="description">Gradle build system support.</td>
-		</tr>
-		<tr>
-			<td class="property">docs</td>
-			<td class="description">Source files for the documentation on this website.</td>
-		</tr>
-	</table>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:25%;">Sub-Project</th>
+            <th scope="col" style="width:75%;">Description</th>
+        </tr>
+    </thead>
+    <tr>
+        <td class="property">math-utilities</td>
+        <td class="description">Basic, underlying Java utilities (for angles, linear algebra and statistics) to aid in processing data.</td>
+    </tr>
+    <tr>
+        <td class="property">geometric-utilities</td>
+        <td class="description">Advanced math utilities for processing geometry and geographic problems.</td>
+    </tr>
+    <tr>
+        <td class="property">binning-utilities</td>
+        <td class="description">Basic substrate of tiling, bin data structures, bin processing and basic bin storage classes.</td>
+    </tr>
+    <tr>
+        <td class="property">factory-utilities</td>
+        <td class="description">Factory system to allow construction and configuration of generic objects.</td>
+    </tr>
+    <tr>
+        <td class="property">tile-generation</td>
+        <td class="description">Spark-based tools to generate tile pyramids from raw data.</td>
+    </tr>
+    <tr>
+        <td class="property">tile-rendering</td>
+        <td class="description">Library that handles turning tile data into useful output formats, generally graphical.</td>
+    </tr>
+    <tr>
+        <td class="property">tile-service</td>
+        <td class="description">Web service to serve tiles from tile pyramids to web clients.</td>
+    </tr>
+    <tr>
+        <td class="property">spark-tile-utilities</td>
+        <td class="description">Optional services for allowing the tile server to communicate directly with Spark.</td>
+    </tr>
+    <tr>
+        <td class="property">annotation-service</td>
+        <td class="description">Optional services for adding annotations to Aperture Tiles visualizations.</td>
+    </tr>
+    <tr>
+        <td class="property">tile-client</td>
+        <td class="description">Simple web client to display tiles from tile pyramids.</td>
+    </tr>
+    <tr>
+        <td class="property">tile-packaging</td>
+        <td class="description">Packaged assembly of the tile generation service for the <a href="../quick-start/">Quick Start</a> example on this site.</td>
+    </tr>
+    <tr>
+        <td class="property">tile-examples</td>
+        <td class="description">Example applications.</td>
+    </tr>
+    <tr>
+        <td class="property">gradle</td>
+        <td class="description">Gradle build system support.</td>
+    </tr>
+    <tr>
+        <td class="property">docs</td>
+        <td class="description">Source files for the documentation on this website.</td>
+    </tr>
+</table>
 
-## <a name="packaged-distributions"></a> Packaged Distributions ##
+## Packaged Distributions ##
 
 The Aperture Tiles packaged distributions are intended for use with the [Quick Start](../quick-start/) example workflow. These distributions require a subset of the complete installation [prerequisites](#prerequisites).
 
@@ -269,11 +261,11 @@ The Aperture Tiles packaged distributions enable you to create a sample Aperture
 
 <h6 class="procedure">To download the packaged distributions</h6>
 
-1. Download and save the following files:
-	- [Tile Generator](../../../../download/#tile-generator): Creates the Julia set data and generates a set of tiles
-	- [Tile Quick Start Application](../../../../download/#tile-quick-start-application): Serves as an example application that you can quickly deploy after minimal modification
-2. Extract the contents of each file to your local machine.
-3. See the [Quick Start](../quick-start/) topic for information on configuring each packaged distribution.
+1.  Download and save the following files:
+    -   [Tile Generator](../../../../download/#tile-generator): Creates the Julia set data and generates a set of tiles
+    -   [Tile Quick Start Application](../../../../download/#tile-quick-start-application): Serves as an example application that you can quickly deploy after minimal modification
+2.  Extract the contents of each file to your local machine.
+3.  See the [Quick Start](../quick-start/) topic for information on configuring each packaged distribution.
 
 ## <a name="next-steps"></a> Next Steps ##
 

@@ -3,18 +3,18 @@ layout: default
 ---
 
 <div id="content">
-	<div class="content-context">
-		<aside>
-			{% include_relative sidebar.html %}
-			<br>
-		</aside>
-		<footer>
-			<a href="http://uncharted.software/" class="copyright">&#169;2013-{{ site.time | date: '%Y'}} Uncharted Software Inc.</a>
-		</footer>
-	</div>
-	<div class="content-body">
-		<article>
-			{{ content }}
-		</article>
-	</div>
+    <div class="content-context">
+        <aside>
+            {% include_relative sidebar.html %}
+            <br>
+        </aside>
+        <footer>
+            <a href="http://uncharted.software/" class="copyright">&#169;2013-{{ site.time | date: '%Y'}} Uncharted Software Inc.</a>
+        </footer>
+    </div>
+    <div class="content-body">
+        <article>
+            {{ content }}
+        </article>
+    </div>
 </div>

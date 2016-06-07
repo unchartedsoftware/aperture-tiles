@@ -42,89 +42,85 @@ Aperture Tiles requires graph data to be in comma- or tab-delimited format (CSV)
 
 - Use the following command line syntax:
 
-	```bash
-	java GraphParseApp –in source.graphml -out output.csv -longIDs true 
-	–nAttr nAttr1, nAttr2 -eAttr eAttr1, eAttr2 -nCoordAttr NO
-	```
+    ```bash
+    java GraphParseApp –in source.graphml -out output.csv -longIDs true 
+    –nAttr nAttr1, nAttr2 -eAttr eAttr1, eAttr2 -nCoordAttr NO
+    ```
 
-	Where:
+    Where:
 
-	<div class="props">
-		<nav>
-			<table class="summaryTable" width="100%">
-				<thead>
-					<th scope="col" width="20%">Argument</th>
-					<th scope="col" width="10%">Required?</th>
-					<th scope="col" width="70%">Description</th>
-				</thead>
-				<tbody>
-					<tr>
-						<td class="property">-in</td>
-						<td class="description">Yes</td>
-						<td class="description">Path and filename of GraphML input file.</td>
-					</tr>
-					<tr>
-						<td class="property">-out</td>
-						<td class="description">Yes</td>
-						<td class="description">Path and filename of tab-delimited output file.</td>
-					</tr>
-					<tr>
-						<td class="property">-longIDs</td>
-						<td class="description">No</td>
-						<td class="description">Indicates whether nodes should be assigned a unique long ID (<em>true</em>) regardless of the ID format in the original file. This ID convention is needed for data processing with Spark's GraphX library. Defaults to <em>false</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-nAttr</td>
-						<td class="description">No</td>
-						<td class="description">List of node attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> node attributes.</td>
-					</tr>
-					<tr>
-						<td class="property">-eAttr</td>
-						<td class="description">No</td>
-						<td class="description">List of edge attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> edge attributes.</td>
-					</tr>
-					<tr>
-						<td class="property">-nCoordAttr</td>
-						<td class="description">No</td>
-						<td class="description">Node attributes to use for node co-ordinates. Enter as a list of attribute ID tags separated by commas. Defaults to <em>NO</em>, which indicates no co-ordinate data should be associated with nodes.</td>
-					</tr>
-				</tbody>
-			</table>
-		</nav>
-	</div>
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:20%;">Argument</th>
+                <th scope="col" style="width:10%;">Required?</th>
+                <th scope="col" style="width:70%;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="property">-in</td>
+                <td class="description">Yes</td>
+                <td class="description">Path and filename of GraphML input file.</td>
+            </tr>
+            <tr>
+                <td class="property">-out</td>
+                <td class="description">Yes</td>
+                <td class="description">Path and filename of tab-delimited output file.</td>
+            </tr>
+            <tr>
+                <td class="property">-longIDs</td>
+                <td class="description">No</td>
+                <td class="description">Indicates whether nodes should be assigned a unique long ID (<em>true</em>) regardless of the ID format in the original file. This ID convention is needed for data processing with Spark's GraphX library. Defaults to <em>false</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-nAttr</td>
+                <td class="description">No</td>
+                <td class="description">List of node attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> node attributes.</td>
+            </tr>
+            <tr>
+                <td class="property">-eAttr</td>
+                <td class="description">No</td>
+                <td class="description">List of edge attributes to parse. Enter as a list of attribute ID tags separated by commas. Defaults to <em>all</em> edge attributes.</td>
+            </tr>
+            <tr>
+                <td class="property">-nCoordAttr</td>
+                <td class="description">No</td>
+                <td class="description">Node attributes to use for node co-ordinates. Enter as a list of attribute ID tags separated by commas. Defaults to <em>NO</em>, which indicates no co-ordinate data should be associated with nodes.</td>
+            </tr>
+        </tbody>
+    </table>
 
 #### Output ####
 
 The GraphParseApp outputs a file that contains tab-delimited data. The first column denotes whether each record is a *node* or an *edge* object.
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="50%">Node object columns</th>
-				<th scope="col" width="50%">Edge object columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description">
-						<ul>
-							<li>Long ID identifier</li>
-							<li>Original string name</li>
-							<li>Any additional node attributes in the source file or just those passed in with the <strong>-nAttr</strong> argument</li>
-						</ul>
-					</td>
-					<td class="description">
-						<ul>
-							<li>ID of the source node</li>
-							<li>ID of the destination node</li>
-							<li>Any additional edge attributes in the source file or just those passed in with the <strong>-eAttr</strong> argument</li>
-						</ul>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:50%;">Node object columns</th>
+            <th scope="col" style="width:50%;">Edge object columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">
+                <ul>
+                    <li>Long ID identifier</li>
+                    <li>Original string name</li>
+                    <li>Any additional node attributes in the source file or just those passed in with the <strong>-nAttr</strong> argument</li>
+                </ul>
+            </td>
+            <td class="description">
+                <ul>
+                    <li>ID of the source node</li>
+                    <li>ID of the destination node</li>
+                    <li>Any additional edge attributes in the source file or just those passed in with the <strong>-eAttr</strong> argument</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 GraphParseApp also creates a README file containing column labels for all node and edge records in the CSV file.
 
@@ -159,38 +155,41 @@ java GraphParseApp –in <graphML file> -out <output CSV file> -longIDs true
 
 GraphParseApp then outputs a file containing records for all of your nodes with the following format:
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" colspan="5">Node columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="16.67%">node</td>
-					<td class="description" width="16.67%">0</td>
-					<td class="description" width="16.67%">n0</td>
-					<td class="description" width="16.67%">rh</td>
-					<td class="description" width="16.67%">rostralmiddlefrontal</td>
-					<td class="description" width="16.67%">10</td>
-				</tr>
-			</tbody>
-			<thead>
-				<th scope="col" colspan="5">Edge columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="16.67%">edge</td>
-					<td class="description" width="16.67%">361054</td>
-					<td class="description" width="16.67%">364322</td>
-					<td class="description" width="16.67%">19</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="6">Node columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">node</td>
+            <td class="description">0</td>
+            <td class="description">n0</td>
+            <td class="description">rh</td>
+            <td class="description">rostralmiddlefrontal</td>
+            <td class="description">10</td>
+        </tr>
+    </tbody>
+</table>
 
-## <a name="clustering"></a> Hierarchical Clustering ##
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="4">Edge columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">edge</td>
+            <td class="description">361054</td>
+            <td class="description">364322</td>
+            <td class="description">19</td>
+        </tr>
+    </tbody>
+</table>
+
+## Hierarchical Clustering ##
 
 CSV datasets can be hierarchically clustered using the [GraphClusterApp](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/cluster/GraphClusterApp.scala) Scala application in [com.oculusinfo.tilegen.graph.cluster](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/graph/cluster). GraphClusterApp groups nodes into communities using Louvain community detection based on modularity-maximization.
 
@@ -204,117 +203,117 @@ GraphClusterApp's implementation of the Louvain clustering algorithm uses Sotera
 
 <h6 class="procedure">To execute the GraphClusterApp and hierarchically cluster your data</h6>
 
-- Use the following command line syntax:
+-   Use the following command line syntax:
 
-	```bash
-	spark-submit --class com.oculusinfo.tilegen.graph.cluster.GraphClusterApp 
-	<tile-generation-assembly.jar> -source <hdfs source location> -output 
-	<hdfs output location> -onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 
-	-eWeight 3 -spark local -sparkhome /opt/spark -user <username> 
-	```
+    ```bash
+    spark-submit --class com.oculusinfo.tilegen.graph.cluster.GraphClusterApp 
+    <tile-generation-assembly.jar> -source <hdfs source location> -output 
+    <hdfs output location> -onlyEdges false -nID 1 -nAttr 2 -eSrcID 1 -eDstID 2 
+    -eWeight 3 -spark local -sparkhome /opt/spark -user <username> 
+    ```
 
-	Where: 
+    Where: 
 
-	<div class="props">
-		<nav>
-			<table class="summaryTable" width="100%">
-				<thead>
-					<th scope="col" width="20%">Argument</th>
-					<th scope="col" width="14%">Required?</th>
-					<th scope="col" width="66%">Description</th>
-				</thead>
-				<tbody>
-					<tr>
-						<td class="property">-source</td>
-						<td class="description">Yes</td>
-						<td class="description">HDFS location of the input data.</td>
-					</tr>
-					<tr>
-						<td class="property">-output</td>
-						<td class="description">Yes</td>
-						<td class="description">HDFS location to which to save clustered results.</td>
-					</tr>
-					<tr>
-						<td class="property">-onlyEdges</td>
-						<td class="description">No</td>
-						<td class="description">Indicates whether the source data contains only edges (*true*). Defaults to *false*.</td>
-					</tr>
-					<tr>
-						<td class="property">-parts</td>
-						<td class="description">No</td>
-						<td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
-					</tr>
-					<tr>
-						<td class="property">-p</td>
-						<td class="description">No</td>
-						<td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
-					</tr>
-					<tr>
-						<td class="property">-d</td>
-						<td class="description">No</td>
-						<td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
-					</tr>
-					<tr>
-						<td class="property">-progMin</td>
-						<td class="description">No</td>
-						<td class="description">Percent of nodes that must change communities for the algorithm to consider progress relative to total vertices in a level. Defaults to <em>0.15</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-progCount</td>
-						<td class="description">No</td>
-						<td class="description">Number of times the algorithm can fail to make progress before exiting. Defaults to <em>1</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-nID</td>
-						<td class="description">When <strong>&#8209;onlyEdges</strong> = <em>false</em></td>
-						<td class="description">Number of the column in the raw data that contains the node IDs. Note that IDs must be of type <em>long</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-nAttr</td>
-						<td class="description">No</td>
-						<td class="description">Column numbers in the raw data that contain additional node metadata that should be parsed and saved with cluster results. Individual attribute tags should be separated by commas.</td>
-					</tr>
-					<tr>
-						<td class="property">-eSrcID</td>
-						<td class="description">Yes</td>
-						<td class="description">Number of the column in the raw data that contains the edge source IDs. Note that IDs must be of type <em>long</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-eDstID</td>
-						<td class="description">Yes</td>
-						<td class="description">Number of the column in the raw data that contains the edge destination IDs. Note that IDs must be of type <em>long</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-eWeight</td>
-						<td class="description">No</td>
-						<td class="description">Number of the column in the raw data that contains the edge weights. Defaults to <em>-1</em>, meaning that no edge weighting is used.</td>
-					</tr>
-					<tr>
-						<td class="property">-spark</td>
-						<td class="description">Yes</td>
-						<td class="description">Spark master location.</td>
-					</tr>
-					<tr>
-						<td class="property">-sparkhome</td>
-						<td class="description">Yes</td>
-						<td class="description">Spark HOME location.</td>
-					</tr>
-					<tr>
-						<td class="property">-user</td>
-						<td class="description">No</td>
-						<td class="description">Spark/Hadoop username associated with the Spark job.</td>
-					</tr>
-				</tbody>
-			</table>
-		</nav>
-	</div>
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:20%;">Argument</th>
+                <th scope="col" style="width:14%;">Required?</th>
+                <th scope="col" style="width:66%;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="property">-source</td>
+                <td class="description">Yes</td>
+                <td class="description">HDFS location of the input data.</td>
+            </tr>
+            <tr>
+                <td class="property">-output</td>
+                <td class="description">Yes</td>
+                <td class="description">HDFS location to which to save clustered results.</td>
+            </tr>
+            <tr>
+                <td class="property">-onlyEdges</td>
+                <td class="description">No</td>
+                <td class="description">Indicates whether the source data contains only edges (*true*). Defaults to *false*.</td>
+            </tr>
+            <tr>
+                <td class="property">-parts</td>
+                <td class="description">No</td>
+                <td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
+            </tr>
+            <tr>
+                <td class="property">-p</td>
+                <td class="description">No</td>
+                <td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
+            </tr>
+            <tr>
+                <td class="property">-d</td>
+                <td class="description">No</td>
+                <td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
+            </tr>
+            <tr>
+                <td class="property">-progMin</td>
+                <td class="description">No</td>
+                <td class="description">Percent of nodes that must change communities for the algorithm to consider progress relative to total vertices in a level. Defaults to <em>0.15</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-progCount</td>
+                <td class="description">No</td>
+                <td class="description">Number of times the algorithm can fail to make progress before exiting. Defaults to <em>1</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-nID</td>
+                <td class="description">When <strong>&#8209;onlyEdges</strong> = <em>false</em></td>
+                <td class="description">Number of the column in the raw data that contains the node IDs. Note that IDs must be of type <em>long</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-nAttr</td>
+                <td class="description">No</td>
+                <td class="description">Column numbers in the raw data that contain additional node metadata that should be parsed and saved with cluster results. Individual attribute tags should be separated by commas.</td>
+            </tr>
+            <tr>
+                <td class="property">-eSrcID</td>
+                <td class="description">Yes</td>
+                <td class="description">Number of the column in the raw data that contains the edge source IDs. Note that IDs must be of type <em>long</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-eDstID</td>
+                <td class="description">Yes</td>
+                <td class="description">Number of the column in the raw data that contains the edge destination IDs. Note that IDs must be of type <em>long</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-eWeight</td>
+                <td class="description">No</td>
+                <td class="description">Number of the column in the raw data that contains the edge weights. Defaults to <em>-1</em>, meaning that no edge weighting is used.</td>
+            </tr>
+            <tr>
+                <td class="property">-spark</td>
+                <td class="description">Yes</td>
+                <td class="description">Spark master location.</td>
+            </tr>
+            <tr>
+                <td class="property">-sparkhome</td>
+                <td class="description">Yes</td>
+                <td class="description">Spark HOME location.</td>
+            </tr>
+            <tr>
+                <td class="property">-user</td>
+                <td class="description">No</td>
+                <td class="description">Spark/Hadoop username associated with the Spark job.</td>
+            </tr>
+        </tbody>
+    </table>
 
 #### Input ####
 
 GraphClusterApp accepts two types of graph data formats:
 
-- **Node and edge tab-delimited data**, where the first column contains the keyword *node* or *edge*
-- **Edge-only tab-delimited data** with different columns for source ID, destination ID and edge weight (*optional*). <p class="list-paragraph">In this case, all nodes will be inferred internally from the parsed edges, but no node attributes or metadata will be associated with the clustered nodes or communities.</p>
+-   **Node and edge tab-delimited data**, where the first column contains the keyword *node* or *edge*
+-   **Edge-only tab-delimited data** with different columns for source ID, destination ID and edge weight (*optional*). 
+
+    <p class="list-paragraph">In this case, all nodes will be inferred internally from the parsed edges, but no node attributes or metadata will be associated with the clustered nodes or communities.</p>
 
 **NOTE**: GraphClusterApp requires that node IDs and edge weights are of type *long*.
 
@@ -324,36 +323,39 @@ Clustered results are stored sub-directories in the **-output** HDFS location. E
 
 Within each hierarchical level, clustered data is stored in the following tab-delimited format for nodes/communities and edges:
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" colspan="5">Node columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="16.67%">node</td>
-					<td class="description" width="16.67%">ID</td>
-					<td class="description" width="16.67%">parent ID</td>
-					<td class="description" width="16.67%">number of internal nodes</td>
-					<td class="description" width="16.67%">node degree</td>
-					<td class="description" width="16.67%">metadata (<em>optional</em>)</td>
-				</tr>
-			</tbody>
-			<thead>
-				<th scope="col" colspan="5">Edge columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="16.67%">edge</td>
-					<td class="description" width="16.67%">srcID</td>
-					<td class="description" width="16.67%">dstID</td>
-					<td class="description" width="16.67%">edge weight</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="6">Node columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">node</td>
+            <td class="description">ID</td>
+            <td class="description">parent ID</td>
+            <td class="description">number of internal nodes</td>
+            <td class="description">node degree</td>
+            <td class="description">metadata (<em>optional</em>)</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="4">Edge columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">edge</td>
+            <td class="description">srcID</td>
+            <td class="description">dstID</td>
+            <td class="description">edge weight</td>
+        </tr>
+    </tbody>
+</table>
 
 The modularity (*q-value*) is also saved for each hierarchical level in a *_qvalues* sub-directory.
 
@@ -370,13 +372,13 @@ spark-submit --class com.oculusinfo.tilegen.graph.cluster.GraphClusterApp
 
 In this case, the source dataset contains both nodes and edges (**-onlyEdges** *false*) with the following columns:
 
-- For nodes:
-	- Column 1 contains the node IDs (**-nID** *1*)
-	- Column 2 contains node metadata (**-nAttr** *2*)
-- For edges
-	- Column 1 contains source IDs (**-eSrcID** *1*)
-	- Column 2 contains destination IDs (**-eDstID** *2*)
-	- Column 3 contains the edge weights (**-eWeight** *3*)
+-   For nodes:
+    -   Column 1 contains the node IDs (**-nID** *1*)
+    -   Column 2 contains node metadata (**-nAttr** *2*)
+-   For edges
+    -   Column 1 contains source IDs (**-eSrcID** *1*)
+    -   Column 2 contains destination IDs (**-eDstID** *2*)
+    -   Column 3 contains the edge weights (**-eWeight** *3*)
 
 Using the brain connectomics dataset as an example:
 
@@ -398,106 +400,104 @@ The hierarchic force-directed algorithm runs in a distributed manner using Spark
 
 <h6 class="procedure">To execute the ClusterGraphLayoutApp and position your node/community data</h6>
 
-- User the following command line syntax:
+-   User the following command line syntax:
 
-	```bash
-	spark-submit --class com.oculusinfo.tilegen.graph.util.ClusteredGraphLayoutApp 
-	<tile-generation-assembly.jar> -source <hdfs source location> -output 
-	<hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 
-	-border 2 -eWeight true -g 0 -spark local -sparkhome /opt/spark
-	-user <username>
-	```
+    ```bash
+    spark-submit --class com.oculusinfo.tilegen.graph.util.ClusteredGraphLayoutApp 
+    <tile-generation-assembly.jar> -source <hdfs source location> -output 
+    <hdfs output location> -i 1000 -maxLevel 4 -layoutLength 256 -nArea 45 
+    -border 2 -eWeight true -g 0 -spark local -sparkhome /opt/spark
+    -user <username>
+    ```
 
-	Where:
+    Where:
 
-	<div class="props">
-		<nav>
-			<table class="summaryTable" width="100%">
-				<thead>
-					<th scope="col" width="21%">Argument</th>
-					<th scope="col" width="10%">Required?</th>
-					<th scope="col" width="69%">Description</th>
-				</thead>
-				<tbody>
-					<tr>
-						<td class="property">-source</td>
-						<td class="description">Yes</td>
-						<td class="description">HDFS location of the clustered input graph data.</td>
-					</tr>
-					<tr>
-						<td class="property">-output</td>
-						<td class="description">Yes</td>
-						<td class="description">HDFS location to which to save graph layout results.</td>
-					</tr>
-					<tr>
-						<td class="property">-parts</td>
-						<td class="description">No</td>
-						<td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
-					</tr>
-					<tr>
-						<td class="property">-p</td>
-						<td class="description">No</td>
-						<td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
-					</tr>
-					<tr>
-						<td class="property">-d</td>
-						<td class="description">No</td>
-						<td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
-					</tr>
-					<tr>
-						<td class="property">-i</td>
-						<td class="description">No</td>
-						<td class="description">Maximum number of iterations for the force-directed algorithm. Defaults to <em>500</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-maxLevel</td>
-						<td class="description">No</td>
-						<td class="description">Highest cluster hierarchic level to use for determining the graph layout. Defaults to <em>0</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-border</td>
-						<td class="description">No</td>
-						<td class="description">Percent of the parent bounding box to leave as whitespace between neighbouring communities during initial layout. Defaults to <em>2</em> percent.</td>
-					</tr>
-					<tr>
-						<td class="property">-layoutLength</td>
-						<td class="description">No</td>
-						<td class="description">Desired width/height of the total graph layout region. Defaults to <em>256.0</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-nArea</td>
-						<td class="description">No</td>
-						<td class="description">Area of all node circles with a given parent community. Controls the amount of whitespace in the graph layout. Defaults to <em>30</em> percent.</td>
-					</tr>
-					<tr>
-						<td class="property">-eWeight</td>
-						<td class="description">No</td>
-						<td class="description">Indicates whether to use edge weights to scale force-directed attraction forces (<em>true</em>). Defaults to <em>false</em>.</td>
-					</tr>
-					<tr>
-						<td class="property">-g</td>
-						<td class="description">No</td>
-						<td class="description">Amount of gravitational force to use for force-directed layout to prevent outer nodes from spreading out too far. Defaults to <em>0</em> (no gravity).</td>
-					</tr>
-					<tr>
-						<td class="property">-spark</td>
-						<td class="description">Yes</td>
-						<td class="description">Spark master location.</td>
-					</tr>
-					<tr>
-						<td class="property">-sparkhome</td>
-						<td class="description">Yes</td>
-						<td class="description">Spark HOME location.</td>
-					</tr>
-					<tr>
-						<td class="property">-user</td>
-						<td class="description">No</td>
-						<td class="description">Spark/Hadoop username associated with the Spark job.</td>
-					</tr>
-				</tbody>
-			</table>
-		</nav>
-	</div>
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:21%;">Argument</th>
+                <th scope="col" style="width:10%;">Required?</th>
+                <th scope="col" style="width:69%;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="property">-source</td>
+                <td class="description">Yes</td>
+                <td class="description">HDFS location of the clustered input graph data.</td>
+            </tr>
+            <tr>
+                <td class="property">-output</td>
+                <td class="description">Yes</td>
+                <td class="description">HDFS location to which to save graph layout results.</td>
+            </tr>
+            <tr>
+                <td class="property">-parts</td>
+                <td class="description">No</td>
+                <td class="description">Number of partitions into which to break up the source dataset. Defaults to value chosen automatically by Spark.</td>
+            </tr>
+            <tr>
+                <td class="property">-p</td>
+                <td class="description">No</td>
+                <td class="description">Amount of parallelism for Spark-based data processing of source data. Defaults to value chosen automatically by Spark.</td>
+            </tr>
+            <tr>
+                <td class="property">-d</td>
+                <td class="description">No</td>
+                <td class="description">Source dataset delimiter. Defaults to tab-delimited.</td>
+            </tr>
+            <tr>
+                <td class="property">-i</td>
+                <td class="description">No</td>
+                <td class="description">Maximum number of iterations for the force-directed algorithm. Defaults to <em>500</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-maxLevel</td>
+                <td class="description">No</td>
+                <td class="description">Highest cluster hierarchic level to use for determining the graph layout. Defaults to <em>0</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-border</td>
+                <td class="description">No</td>
+                <td class="description">Percent of the parent bounding box to leave as whitespace between neighbouring communities during initial layout. Defaults to <em>2</em> percent.</td>
+            </tr>
+            <tr>
+                <td class="property">-layoutLength</td>
+                <td class="description">No</td>
+                <td class="description">Desired width/height of the total graph layout region. Defaults to <em>256.0</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-nArea</td>
+                <td class="description">No</td>
+                <td class="description">Area of all node circles with a given parent community. Controls the amount of whitespace in the graph layout. Defaults to <em>30</em> percent.</td>
+            </tr>
+            <tr>
+                <td class="property">-eWeight</td>
+                <td class="description">No</td>
+                <td class="description">Indicates whether to use edge weights to scale force-directed attraction forces (<em>true</em>). Defaults to <em>false</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">-g</td>
+                <td class="description">No</td>
+                <td class="description">Amount of gravitational force to use for force-directed layout to prevent outer nodes from spreading out too far. Defaults to <em>0</em> (no gravity).</td>
+            </tr>
+            <tr>
+                <td class="property">-spark</td>
+                <td class="description">Yes</td>
+                <td class="description">Spark master location.</td>
+            </tr>
+            <tr>
+                <td class="property">-sparkhome</td>
+                <td class="description">Yes</td>
+                <td class="description">Spark HOME location.</td>
+            </tr>
+            <tr>
+                <td class="property">-user</td>
+                <td class="description">No</td>
+                <td class="description">Spark/Hadoop username associated with the Spark job.</td>
+            </tr>
+        </tbody>
+    </table>
 
 #### Input ####
 
@@ -507,78 +507,84 @@ The *source* location should correspond to the root directory of hierarchically 
 
 ClusterGraphLayoutApp requires the source clustered graph data to be a tab-delimited format analogous to that used by the Louvain Clustering application:
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" colspan="5">Node columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="16.67%">node</td>
-					<td class="description" width="16.67%">ID</td>
-					<td class="description" width="16.67%">parent ID</td>
-					<td class="description" width="16.67%">number of internal nodes</td>
-					<td class="description" width="16.67%">node degree</td>
-					<td class="description" width="16.67%">metadata (<em>optional</em>)</td>
-				</tr>
-			</tbody>
-			<thead>
-				<th scope="col" colspan="5">Edge columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="16.67%">edge</td>
-					<td class="description" width="16.67%">srcID</td>
-					<td class="description" width="16.67%">dstID</td>
-					<td class="description" width="16.67%">edge weight</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="6">Node columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">node</td>
+            <td class="description">ID</td>
+            <td class="description">parent ID</td>
+            <td class="description">number of internal nodes</td>
+            <td class="description">node degree</td>
+            <td class="description">metadata (<em>optional</em>)</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="4">Edge columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">edge</td>
+            <td class="description">srcID</td>
+            <td class="description">dstID</td>
+            <td class="description">edge weight</td>
+        </tr>
+    </tbody>
+</table>
 
 #### Output ####
 
 Graph layout results are stored separately for each hierarchical level. Each level has the following tab-delimited format:
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" colspan="10">Node columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="10%">node</td>
-					<td class="description" width="10%">ID</td>
-					<td class="description" width="10%">XY coords</td>
-					<td class="description" width="10%">radius</td>
-					<td class="description" width="10%">parent ID</td>
-					<td class="description" width="10%">parent XY coords</td>
-					<td class="description" width="10%">parent XY radius</td>
-					<td class="description" width="10%">num internal nodes</td>
-					<td class="description" width="10%">degree</td>
-					<td class="description" width="10%">metadata (<em>optional</em>)</td>
-				</tr>
-			</tbody>
-			<thead>
-				<th scope="col" colspan="10">Edge columns</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="description" width="10%">edge</td>
-					<td class="description" width="10%">srcID</td>
-					<td class="description" width="10%">src XY coords</td>
-					<td class="description" width="10%">dstID</td>
-					<td class="description" width="10%">dest XY coords</td>
-					<td class="description" width="10%">edge weight</td>
-					<td class="description" width="10%">isInter<wbr>Community<wbr>Edge</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="10">Node columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">node</td>
+            <td class="description">ID</td>
+            <td class="description">XY coords</td>
+            <td class="description">radius</td>
+            <td class="description">parent ID</td>
+            <td class="description">parent XY coords</td>
+            <td class="description">parent XY radius</td>
+            <td class="description">num internal nodes</td>
+            <td class="description">degree</td>
+            <td class="description">metadata (<em>optional</em>)</td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" colspan="7">Edge columns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="description">edge</td>
+            <td class="description">srcID</td>
+            <td class="description">src XY coords</td>
+            <td class="description">dstID</td>
+            <td class="description">dest XY coords</td>
+            <td class="description">edge weight</td>
+            <td class="description">isInter<wbr>Community<wbr>Edge</td>
+        </tr>
+    </tbody>
+</table>
 
 **NOTE**: The final edge column will be *0* for intra-community edges (both endpoints have the same parent community) or *1* for inter-community edges.
 
@@ -595,11 +601,11 @@ Consider a graph dataset clustered up to hierarchy 4. The expected directory str
 
 ```text
 ../<hdfs source location>
-						/level_4/
-						/level_3/
-						/level_2/
-						/level_1/
-						/level_0/
+                        /level_4/
+                        /level_3/
+                        /level_2/
+                        /level_1/
+                        /level_0/
 ```
 
 The following command line syntax defines a layout for the clustered graph dataset with:
@@ -806,108 +812,102 @@ A list of BD file parameters for parsing each of these stats is given below.
 
 The following parameters specify the column number of key graph community/node attributes:
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="20%">Argument</th>
-				<th scope="col" width="80%">Description</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="property">oculus.binning.graph.x.index</td>
-					<td class="description">x-axis coordinate</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.y.index</td>
-					<td class="description">y-axis coordinate</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.id.index</td>
-					<td class="description">Long ID</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.r.index</td>
-					<td class="description">Radius</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.numnodes.index</td>
-					<td class="description">Number of nodes</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.degree.index</td>
-					<td class="description">Degree</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.metadata.index</td>
-					<td class="description">Metadata</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.parentID.index</td>
-					<td class="description">Long ID of the parent community</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:20%;">Argument</th>
+            <th scope="col" style="width:80%;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="property">oculus.binning.graph.x.index</td>
+            <td class="description">x-axis coordinate</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.y.index</td>
+            <td class="description">y-axis coordinate</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.id.index</td>
+            <td class="description">Long ID</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.r.index</td>
+            <td class="description">Radius</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.numnodes.index</td>
+            <td class="description">Number of nodes</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.degree.index</td>
+            <td class="description">Degree</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.metadata.index</td>
+            <td class="description">Metadata</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.parentID.index</td>
+            <td class="description">Long ID of the parent community</td>
+        </tr>
+    </tbody>
+</table>
 
 The following parameters specify the column number of key parent community attributes:
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="20%">Argument</th>
-				<th scope="col" width="80%">Description</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="property">oculus.binning.graph.parentID.index</td>
-					<td class="description">Long ID</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.parentR.index</td>
-					<td class="description">Radius</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.parentX.index</td>
-					<td class="description">x-axis coordinate</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.parentY.index</td>
-					<td class="description">y-axis coordinate</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:20%;">Argument</th>
+            <th scope="col" style="width:80%;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="property">oculus.binning.graph.parentID.index</td>
+            <td class="description">Long ID</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.parentR.index</td>
+            <td class="description">Radius</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.parentX.index</td>
+            <td class="description">x-axis coordinate</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.parentY.index</td>
+            <td class="description">y-axis coordinate</td>
+        </tr>
+    </tbody>
+</table>
 
 It is possible to save stats on the 10 highest weighted edges incident on a given community using the following parameters. **NOTE**: If these parameters are excluded, no edge analytics information will be saved for each GraphAnalyticsRecord.
 
-<div class="props">
-	<nav>
-		<table class="summaryTable" width="100%">
-			<thead>
-				<th scope="col" width="20%">Argument</th>
-				<th scope="col" width="80%">Description</th>
-			</thead>
-			<tbody>
-				<tr>
-					<td class="property">oculus.binning.graph.edge.srcID.index</td>
-					<td class="description">Source ID of each graph edge</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.edges.dstID.index</td>
-					<td class="description">Destination ID of each graph edge</td>
-				</tr>
-				<tr>
-					<td class="property">oculus.binning.graph.edges.weight.index</td>
-					<td class="description">Weight of each graph edge. Defaults to <em>1</em> (unweighted).</td>
-				</tr>
-			</tbody>
-		</table>
-	</nav>
-</div>
+<table class="summaryTable" style="width:100%;">
+    <thead>
+        <tr>
+            <th scope="col" style="width:20%;">Argument</th>
+            <th scope="col" style="width:80%;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="property">oculus.binning.graph.edge.srcID.index</td>
+            <td class="description">Source ID of each graph edge</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.edges.dstID.index</td>
+            <td class="description">Destination ID of each graph edge</td>
+        </tr>
+        <tr>
+            <td class="property">oculus.binning.graph.edges.weight.index</td>
+            <td class="description">Weight of each graph edge. Defaults to <em>1</em> (unweighted).</td>
+        </tr>
+    </tbody>
+</table>
 
 The number of communities to store per record can be tuned using the **oculus.<wbr>binning.<wbr>graph.<wbr>maxcommunities** parameter (set to 25 by default).
 

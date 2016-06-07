@@ -14,14 +14,14 @@ layout: chapter
 All server configurations adhere to the following general format:
 
 ```json
-[ 
-	{
-		id: "...",
-		public: {
-		}
-		private :{
-		}	
-	}
+[
+    {
+        id: "...",
+        public: {
+        }
+        private :{
+        }
+    }
 ]
 ```
 
@@ -31,22 +31,22 @@ The minimal required fields are:
 
 ```json
 [ 
-	{
-		id: "...",
-		public: {
-			pyramid: {
-				type: "...."
-			}
-		}
-		private :{
-			data : {
-               	id: "...",
-               	pyramidio : {
-					...
+    {
+        id: "...",
+        public: {
+            pyramid: {
+                type: "...."
+            }
+        }
+        private :{
+            data : {
+                id: "...",
+                pyramidio : {
+                    ...
                 }
             }
-		}	
-	}
+        }   
+    }
 ]
 ```
 
@@ -60,39 +60,39 @@ Return an object containing an array of:
 Layer information returned is the **public** node of the server-side configuration JSON. The layer IDs and metadata are appended to the returned JSON under the **id** and **meta** attributes, respectively.
 
 <div class="props">
-	<h3 class="sectionTitle">Method Summary</h3>
-	<table class="summaryTable">
-		<thead>
-			<tr>
-				<th scope="col">Attributes</th>
-				<th scope="col">Description</th>
-			</tr>
-		</thead>
+    <h3 class="sectionTitle">Method Summary</h3>
+    <table class="summaryTable">
+        <thead>
+            <tr>
+                <th scope="col">Attributes</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
 
-		<tbody>
-			<tr class='item0'>
-				<td class="attributes">URL</td>
-				<td class="nameDescription">
-					<div class="description">/{version}/layers
-						<br>/layers</div>
-				</td>
-			</tr>
+        <tbody>
+            <tr class='item0'>
+                <td class="attributes">URL</td>
+                <td class="nameDescription">
+                    <div class="description">/{version}/layers
+                        <br>/layers</div>
+                </td>
+            </tr>
 
-			<tr class='item1'>
-				<td class="attributes">Method</td>
-				<td class="nameDescription">
-					<div class="description">`GET`</div>
-				</td>
-			</tr>
+            <tr class='item1'>
+                <td class="attributes">Method</td>
+                <td class="nameDescription">
+                    <div class="description">`GET`</div>
+                </td>
+            </tr>
 
-			<tr class='item2'>
-				<td class="attributes">Params</td>
-				<td class="nameDescription">
-					<div class="description">None</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+            <tr class='item2'>
+                <td class="attributes">Params</td>
+                <td class="nameDescription">
+                    <div class="description">None</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 Example request:
@@ -105,30 +105,30 @@ Example response:
 
 ```json
 {
-	layers: [
-		{
-			id: "instagram-heatmap",
-        	pyramid: {
-            	type: "WebMercator"
-			}
-			meta: { … },
-			renderer : {
-				ramp: "spectral",
-				coarseness: 2
-			},
-			valueTransform: {
-				type: "log10"
-			}
-		},
-		{
-			id: "instagram-keyword-heatmap",
-        	pyramid: {
-            	type: "WebMercator"
-        	},
-			meta: { … }
-		}
-	],
-	version: "v1.0"
+    layers: [
+        {
+            id: "instagram-heatmap",
+            pyramid: {
+                type: "WebMercator"
+            }
+            meta: { … },
+            renderer : {
+                ramp: "spectral",
+                coarseness: 2
+            },
+            valueTransform: {
+                type: "log10"
+            }
+        },
+        {
+            id: "instagram-keyword-heatmap",
+            pyramid: {
+                type: "WebMercator"
+            },
+            meta: { … }
+        }
+    ],
+    version: "v1.0"
 }
 ```
 
@@ -137,39 +137,39 @@ Example response:
 Returns the requested layer information. Layer information returned is the **public** node of the server-side configuration JSON. The layer IDs and metadata are appended to the returned JSON under **id** and **meta** attributes, respectively.
 
 <div class="props">
-	<h3 class="sectionTitle">Method Summary</h3>
-	<table class="summaryTable">
-		<thead>
-			<tr>
-				<th scope="col">Attributes</th>
-				<th scope="col">Description</th>
-			</tr>
-		</thead>
+    <h3 class="sectionTitle">Method Summary</h3>
+    <table class="summaryTable">
+        <thead>
+            <tr>
+                <th scope="col">Attributes</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
 
-		<tbody>
-			<tr class='item0'>
-				<td class="attributes">URL</td>
-				<td class="nameDescription">
-					<div class="description">/{version}/layers/{layerId}
-						<br>/layers/{layerId}</div>
-				</td>
-			</tr>
+        <tbody>
+            <tr class='item0'>
+                <td class="attributes">URL</td>
+                <td class="nameDescription">
+                    <div class="description">/{version}/layers/{layerId}
+                        <br>/layers/{layerId}</div>
+                </td>
+            </tr>
 
-			<tr class='item1'>
-				<td class="attributes">Method</td>
-				<td class="nameDescription">
-					<div class="description">`GET`</div>
-				</td>
-			</tr>
+            <tr class='item1'>
+                <td class="attributes">Method</td>
+                <td class="nameDescription">
+                    <div class="description">`GET`</div>
+                </td>
+            </tr>
 
-			<tr class='item2'>
-				<td class="attributes">Params</td>
-				<td class="nameDescription">
-					<div class="description">None</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+            <tr class='item2'>
+                <td class="attributes">Params</td>
+                <td class="nameDescription">
+                    <div class="description">None</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 Example request:
@@ -182,21 +182,21 @@ Example response:
 
 ```json
 {
-	layer: {
-		id: "instagram-heatmap",
-		pyramid: {
-			type: "WebMercator"
-		 }
-		meta: { … },
-		renderer : {
-			ramp: "spectral",
-			coarseness: 2
-		},
-		valueTransform: {
-			type: "log10"
-		}
-	},
-	version: "v1.0"
+    layer: {
+        id: "instagram-heatmap",
+        pyramid: {
+            type: "WebMercator"
+         }
+        meta: { … },
+        renderer : {
+            ramp: "spectral",
+            coarseness: 2
+        },
+        valueTransform: {
+            type: "log10"
+        }
+    },
+    version: "v1.0"
 }
 ```
 
@@ -205,39 +205,39 @@ Example response:
 Store a configuration state on the server that can be accessed at a later time. Returns the SHA-256 hash of the state. This SHA-256 hash can be used later as a 'state' query parameter. Hashes are deterministic and cachable.
 
 <div class="props">
-	<h3 class="sectionTitle">Method Summary</h3>
-	<table class="summaryTable">
-		<thead>
-			<tr>
-				<th scope="col">Attributes</th>
-				<th scope="col">Description</th>
-			</tr>
-		</thead>
+    <h3 class="sectionTitle">Method Summary</h3>
+    <table class="summaryTable">
+        <thead>
+            <tr>
+                <th scope="col">Attributes</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
 
-		<tbody>
-			<tr class='item0'>
-				<td class="attributes">URL</td>
-				<td class="nameDescription">
-					<div class="description">/{version}/layers/{layerId}/states
-						<br>layers/{layerId}/states</div>
-				</td>
-			</tr>
+        <tbody>
+            <tr class='item0'>
+                <td class="attributes">URL</td>
+                <td class="nameDescription">
+                    <div class="description">/{version}/layers/{layerId}/states
+                        <br>layers/{layerId}/states</div>
+                </td>
+            </tr>
 
-			<tr class='item1'>
-				<td class="attributes">Method</td>
-				<td class="nameDescription">
-					<div class="description">`POST`</div>
-				</td>
-			</tr>
+            <tr class='item1'>
+                <td class="attributes">Method</td>
+                <td class="nameDescription">
+                    <div class="description">`POST`</div>
+                </td>
+            </tr>
 
-			<tr class='item2'>
-				<td class="attributes">Params</td>
-				<td class="nameDescription">
-					<div class="description">None</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+            <tr class='item2'>
+                <td class="attributes">Params</td>
+                <td class="nameDescription">
+                    <div class="description">None</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 Example request:
@@ -248,11 +248,11 @@ POST http://localhost:8080/instagram/rest/v1.0//layer/instagram-heatmap/states
 
 ```json
 {
-	tileTransform: {
-		data: {
-			vars: [ … ]
-		}
-	}
+    tileTransform: {
+        data: {
+            vars: [ … ]
+        }
+    }
 }
 ```
 
@@ -260,50 +260,49 @@ Example response:
 
 ```json
 {
-	version: "v1.0",
-	state: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    version: "v1.0",
+    state: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 }
-
 ```
 
-## <a name="get-configuration-state"></a> Get Configuration State ##
+## Get Configuration State ##
 
 Returns a specified configured state stored on the server for a particular layer.
 
 <div class="props">
-	<h3 class="sectionTitle">Method Summary</h3>
-	<table class="summaryTable">
-		<thead>
-			<tr>
-				<th scope="col">Attributes</th>
-				<th scope="col">Description</th>
-			</tr>
-		</thead>
+    <h3 class="sectionTitle">Method Summary</h3>
+    <table class="summaryTable">
+        <thead>
+            <tr>
+                <th scope="col">Attributes</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
 
-		<tbody>
-			<tr class='item0'>
-				<td class="attributes">URL</td>
-				<td class="nameDescription">
-					<div class="description">/{version}/layers/{layerId}/states/{stateId}
-						<br>layers/{layerId}/states/{stateId}</div>
-				</td>
-			</tr>
+        <tbody>
+            <tr class='item0'>
+                <td class="attributes">URL</td>
+                <td class="nameDescription">
+                    <div class="description">/{version}/layers/{layerId}/states/{stateId}
+                        <br>layers/{layerId}/states/{stateId}</div>
+                </td>
+            </tr>
 
-			<tr class='item1'>
-				<td class="attributes">HTTP Method</td>
-				<td class="nameDescription">
-					<div class="description">`GET`</div>
-				</td>
-			</tr>
+            <tr class='item1'>
+                <td class="attributes">HTTP Method</td>
+                <td class="nameDescription">
+                    <div class="description">`GET`</div>
+                </td>
+            </tr>
 
-			<tr class='item2'>
-				<td class="attributes">Params</td>
-				<td class="nameDescription">
-					<div class="description">None</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+            <tr class='item2'>
+                <td class="attributes">Params</td>
+                <td class="nameDescription">
+                    <div class="description">None</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 Example request:
@@ -316,25 +315,25 @@ Example response:
 
 ```json
 {  
-   state:{  
-      tileTransform:{  
+   state:{
+      tileTransform:{
          type:"identity"
       },
-      pyramid:{  
+      pyramid:{
          maxY:0,
          maxX:0,
          type:"WebMercator",
          minX:0,
          minY:0
       },
-      valueTransform:{  
+      valueTransform:{
          min:5e-324,
          max:1.7976931348623157e+308,
          layerMax:0,
          layerMin:0,
          type:"linear"
       },
-      renderer:{  
+      renderer:{
          to:"0x000000",
          halign:0.5,
          from-alpha:-1,
@@ -347,11 +346,11 @@ Example response:
          rangeMin:0,
          opacity:1,
          rangeMax:100,
-         components:[  
+         components:[
 
          ],
          valign:0.5,
-         gradients:[  
+         gradients:[
 
          ]
       }
@@ -365,39 +364,39 @@ Example response:
 Returns all configured states stored on the server for a particular layer, including the default state.
 
 <div class="props">
-	<h3 class="sectionTitle">Method Summary</h3>
-	<table class="summaryTable">
-		<thead>
-			<tr>
-				<th scope="col">Attributes</th>
-				<th scope="col">Description</th>
-			</tr>
-		</thead>
+    <h3 class="sectionTitle">Method Summary</h3>
+    <table class="summaryTable">
+        <thead>
+            <tr>
+                <th scope="col">Attributes</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
 
-		<tbody>
-			<tr class='item0'>
-				<td class="attributes">URL</td>
-				<td class="nameDescription">
-					<div class="description">/{version}/layers/{layerId}/states
-						<br>layers/{layerId}/states</div>
-				</td>
-			</tr>
+        <tbody>
+            <tr class='item0'>
+                <td class="attributes">URL</td>
+                <td class="nameDescription">
+                    <div class="description">/{version}/layers/{layerId}/states
+                        <br>layers/{layerId}/states</div>
+                </td>
+            </tr>
 
-			<tr class='item1'>
-				<td class="attributes">HTTP Method</td>
-				<td class="nameDescription">
-					<div class="description">`GET`</div>
-				</td>
-			</tr>
+            <tr class='item1'>
+                <td class="attributes">HTTP Method</td>
+                <td class="nameDescription">
+                    <div class="description">`GET`</div>
+                </td>
+            </tr>
 
-			<tr class='item2'>
-				<td class="attributes">Params</td>
-				<td class="nameDescription">
-					<div class="description">None</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+            <tr class='item2'>
+                <td class="attributes">Params</td>
+                <td class="nameDescription">
+                    <div class="description">None</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 Example request:
@@ -410,87 +409,87 @@ Example response:
 
 ```json
 {  
-	states:{
-	   default:{  
-	      tileTransform:{  
-	         type:"identity"
-	      },
-	      pyramid:{  
-	         maxY:0,
-	         maxX:0,
-	         type:"WebMercator",
-	         minX:0,
-	         minY:0
-	      },
-	      valueTransform:{  
-	         min:5e-324,
-	         max:1.7976931348623157e+308,
-	         layerMax:0,
-	         layerMin:0,
-	         type:"linear"
-	      },
-	      renderer:{  
-	         to:"0x000000",
-	         halign:0.5,
-	         from-alpha:-1,
-	         theme:"dark",
-	         to-alpha:-1,
-	         from:"0xffffff",
-	         type:"heatmap",
-	         ramp:"spectral",
-	         coarseness:1,
-	         rangeMin:0,
-	         opacity:1,
-	         rangeMax:100,
-	         components:[  
+    states:{
+       default:{
+          tileTransform:{
+             type:"identity"
+          },
+          pyramid:{
+             maxY:0,
+             maxX:0,
+             type:"WebMercator",
+             minX:0,
+             minY:0
+          },
+          valueTransform:{
+             min:5e-324,
+             max:1.7976931348623157e+308,
+             layerMax:0,
+             layerMin:0,
+             type:"linear"
+          },
+          renderer:{
+             to:"0x000000",
+             halign:0.5,
+             from-alpha:-1,
+             theme:"dark",
+             to-alpha:-1,
+             from:"0xffffff",
+             type:"heatmap",
+             ramp:"spectral",
+             coarseness:1,
+             rangeMin:0,
+             opacity:1,
+             rangeMax:100,
+             components:[
 
-	         ],
-	         valign:0.5,
-	         gradients:[  
+             ],
+             valign:0.5,
+             gradients:[
 
-	         ]
-	      }
-	   },
-	   e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031:{  
-	      tileTransform:{  
-	         type:"identity"
-	      },
-	      pyramid:{  
-	         maxY:0,
-	         maxX:0,
-	         type:"WebMercator",
-	         minX:0,
-	         minY:0
-	      },
-	      valueTransform:{  
-	         min:5e-324,
-	         max:1.7976931348623157e+308,
-	         layerMax:0,
-	         layerMin:0,
-	         type:"linear"
-	      },
-	      renderer:{  
-	         to:"0x000000",
-	         halign:0.5,
-	         from-alpha:-1,
-	         theme:"dark",
-	         to-alpha:-1,
-	         from:"0xffffff",
-	         type:"heatmap",
-	         ramp:"hot",
-	         coarseness:1,
-	         rangeMin:0,
-	         opacity:1,
-	         rangeMax:100,
-	         components:[  
+             ]
+          }
+       },
+       e5f8e8aa55e008aeb9a3bbf40d93da4a5630112cf280e2f7e12245e219044031:{  
+          tileTransform:{
+             type:"identity"
+          },
+          pyramid:{
+             maxY:0,
+             maxX:0,
+             type:"WebMercator",
+             minX:0,
+             minY:0
+          },
+          valueTransform:{
+             min:5e-324,
+             max:1.7976931348623157e+308,
+             layerMax:0,
+             layerMin:0,
+             type:"linear"
+          },
+          renderer:{
+             to:"0x000000",
+             halign:0.5,
+             from-alpha:-1,
+             theme:"dark",
+             to-alpha:-1,
+             from:"0xffffff",
+             type:"heatmap",
+             ramp:"hot",
+             coarseness:1,
+             rangeMin:0,
+             opacity:1,
+             rangeMax:100,
+             components:[
 
-	         ],
-	         valign:0.5,
-	         gradients:[  
+             ],
+             valign:0.5,
+             gradients:[
 
-	         ]
-	      }
-	   }
+             ]
+          }
+       }
    },
    version:"v1.0"
 }

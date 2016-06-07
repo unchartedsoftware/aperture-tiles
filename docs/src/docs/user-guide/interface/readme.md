@@ -11,7 +11,7 @@ layout: chapter
 The user interface for a typical Aperture Tiles project contains the following components:
 
 - [Map](#map)
-	- [Axes](#axes)
+    - [Axes](#axes)
 - [Layers](#layers)
 	- [Heatmap](#heatmap)
 	- [Tile Carousel](#carousel)
@@ -63,25 +63,25 @@ Each tile in the Twitter Topics application contains a carousel with multiple vi
 The Twitter Topics carousels let you cycle through the following pages:
 
 <table>
-	<thead>
-		<tr>
-			<th>Word Cloud</th>
-			<th>Topic List</th>
-			<th>Blank Page</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td><img src="../../../img/carousel-cloud-small.png" class="table" alt="Tile Carousel Word Cloud" /></td>
-			<td><img src="../../../img/carousel-list-small.png" class="table" alt="Tile Carousel Topic List" /></td>
-			<td><img src="../../../img/carousel-blank-small.png" class="table" alt="Tile Carousel Topic List" /></td>
-		</tr>
-		<tr>
-			<td class="description">Top 10 topics mentioned in tweets. The larger the word, the more times it was used.</td>
-			<td class="description">Histograms showing usage of the top 8 topics over the last 24 hours.</td>
-			<td class="description">Hide the carousel display for a single tile.</td>
-		</tr>
-	<tbody>
+    <thead>
+        <tr>
+            <th>Word Cloud</th>
+            <th>Topic List</th>
+            <th>Blank Page</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><img src="../../../img/carousel-cloud-small.png" class="table" alt="Tile Carousel Word Cloud" /></td>
+            <td><img src="../../../img/carousel-list-small.png" class="table" alt="Tile Carousel Topic List" /></td>
+            <td><img src="../../../img/carousel-blank-small.png" class="table" alt="Tile Carousel Topic List" /></td>
+        </tr>
+        <tr>
+            <td class="description">Top 10 topics mentioned in tweets. The larger the word, the more times it was used.</td>
+            <td class="description">Histograms showing usage of the top 8 topics over the last 24 hours.</td>
+            <td class="description">Hide the carousel display for a single tile.</td>
+        </tr>
+    </tbody>
 </table>
 
 Each carousel page also includes a **Translate** button that translates topics to English.
@@ -92,8 +92,8 @@ Clicking on a particular topic on any of the carousel pages refreshes the map to
 
 - Highlight instances of the topic in other tiles to illustrate other locations in which the topic is popular.
 - Display a detailed overview of the topic usage, which includes:
-	- A total count and expanded histograms of its usage in the past month, week and 24 hours.
-	- The most recent tweets in which it appeared.
+    - A total count and expanded histograms of its usage in the past month, week and 24 hours.
+    - The most recent tweets in which it appeared.
 
 <img src="../../../img/carousel-detail.png" class="screenshot" alt="Tile Carousel Topic Detail" />
 

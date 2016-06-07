@@ -60,63 +60,67 @@ A preconfigured base properties file is available in the Tile Generator utility.
 
 <h6 class="procedure">To edit the base properties file</h6>
 
-1. Open the **julia-base.bd** file in the Tile Generator *examples/* folder.
-2. Edit the **oculus.binning.source.location** property to specify the location of your Julia set data:
-    - For the local system: */data/julia*
-    - For HDFS: *hdfs://hadoop.example.com/data/julia*
-3. Edit the following general output properties:
-    <div class="props">
-        <table class="summaryTable" width="100%">
-            <thead>
-                <th scope="col" width="20%">Property</th>
-                <th scope="col" width="80%">Description</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="property">oculus.tileio.type</td>
-                    <td class="description">Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</td>
-                </tr>
-                <tr>
-                    <td class="property">oculus.binning.name</td>
-                    <td class="description">Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-4. If you are using Hadoop/HDFS and HBase, edit the following HBase connection details:
-    <div class="props">
-        <table class="summaryTable" width="100%">
-            <thead>
-                <th scope="col" width="20%">Property</th>
-                <th scope="col" width="80%">Description</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="property">hbase.zookeeper.quorum</td>
-                    <td class="description">Zookeeper quorum location needed to connect to HBase.</td>
-                </tr>
-                <tr>
-                    <td class="property">hbase.zookeeper.port</td>
-                    <td class="description">Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</td>
-                </tr>
-                <tr>
-                    <td class="property">hbase.master</td>
-                    <td class="description">Location of the HBase master to which to save the tiles.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-5. Save the **julia-base.bd** file.
+1.  Open the **julia-base.bd** file in the Tile Generator *examples/* folder.
+2.  Edit the **oculus.binning.source.location** property to specify the location of your Julia set data:
+    -   For the local system: */data/julia*
+    -   For HDFS: *hdfs://hadoop.example.com/data/julia*
+3.  Edit the following general output properties:
 
-### <a name="tiling-property-file-configuration"></a> Tiling Property File Configuration ###
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:20%;">Property</th>
+                <th scope="col" style="width:80%;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="property">oculus.tileio.type</td>
+                <td class="description">Specify whether the tiles should be saved locally (<em>file</em>) or to HBase (<em>hbase</em>). Local tile IO is supported only for standalone Spark installations.</td>
+            </tr>
+            <tr>
+                <td class="property">oculus.binning.name</td>
+                <td class="description">Specify the name of the output tile set. If you are writing to a file system, use a relative path instead of an absolute path. Use <em>julia</em> for this example.</td>
+            </tr>
+        </tbody>
+    </table>
 
-The Tile Generator utility also contains a tiling properties file (**julia-tiling.bd** in *examples/*). This file should not need to be edited.
+4.  If you are using Hadoop/HDFS and HBase, edit the following HBase connection details:
 
-**NOTE**: For a typical Aperture Tiles project, you will need to edit this file to define the layout of the map/plot on which to project your data. For more information on these properties, see the [Standard Tiling Jobs](../../how-to/standard-tiling/) topic..
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:20%;">Property</th>
+                <th scope="col" style="width:80%;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="property">hbase.zookeeper.quorum</td>
+                <td class="description">Zookeeper quorum location needed to connect to HBase.</td>
+            </tr>
+            <tr>
+                <td class="property">hbase.zookeeper.port</td>
+                <td class="description">Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">hbase.master</td>
+                <td class="description">Location of the HBase master to which to save the tiles.</td>
+            </tr>
+        </tbody>
+    </table>
 
-### <a name="execution"></a> Execution ###
+5.  Save the **julia-base.bd** file.
 
-After you have edited the properties files, you can use the Tile Generator utility to create the Avro tile set.
+### Tiling Property File Configuration ###
+
+The Tile Generator utility also contains a tiling properties file (**julia-tiling.bd** in *examples/*). You do not need to edit it.
+
+**NOTE**: For a typical Aperture Tiles project, you will edit the properties file to define the layout of the map/plot on which to project your data. For more information on these properties, see the [Standard Tiling Jobs](../../how-to/standard-tiling/) topic.
+
+### Execution ###
+
+After you edit the properties files, you can use the Tile Generator utility to create the Avro tile set.
 
 <h6 class="procedure">To execute the tile generation job</h6>
 
@@ -148,42 +152,44 @@ For this example, you only need to edit the layer properties file if you saved y
 
 <h6 class="procedure">To edit the layer properties</h6>
 
-1. Access the *WEB-INF/classes/layers/***julia-layer.json** file.
-2. Make sure the **id** property under the *private* node matches the name given to the HBase table containing your Avro tiles (*julia.x.y.v*).
-3. Clear the existing attributes under the **pyramidio** node and add the following HBase connection details:
-    <div class="props">
-        <table class="summaryTable" width="100%">
-            <thead>
-                <th scope="col" width="20%">Property</th>
-                <th scope="col" width="80%">Value</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="property">type</td>
-                    <td class="value">hbase</td>
-                </tr>
-                <tr>
-                    <td class="property">hbase.zookeeper.quorum</td>
-                    <td class="description">Zookeeper quorum location needed to connect to HBase. For example:
-                        <ul>
-                            <li><em>my-zk-server1.example.com</em></li>
-                            <li><em>my-zk-server2.example.com</em></li>
-                            <li><em>my-zk-server3.example.com</em></li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="property">hbase.zookeeper.port</td>
-                    <td class="description">Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</td>
-                </tr>
-                <tr>
-                    <td class="property">hbase.master</td>
-                    <td class="description">Location of the HBase master in which the tiles are saved (e.g., <em>my-hbase-master.example.com:60000</em>)</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-4. Save the file.
+1.  Access the *WEB-INF/classes/layers/***julia-layer.json** file.
+2.  Make sure the **id** property under the *private* node matches the name given to the HBase table containing your tiles (*julia.x.y.v*).
+3.  Clear the existing attributes under the **pyramidio** node and add the following HBase connection details:
+
+    <table class="summaryTable" style="width:100%;">
+        <thead>
+            <tr>
+                <th scope="col" style="width:20%;">Property</th>
+                <th scope="col" style="width:80%;">Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="property">type</td>
+                <td class="value">hbase</td>
+            </tr>
+            <tr>
+                <td class="property">hbase.zookeeper.quorum</td>
+                <td class="description">Zookeeper quorum location needed to connect to HBase. For example:
+                    <ul>
+                        <li><em>my-zk-server1.example.com</em></li>
+                        <li><em>my-zk-server2.example.com</em></li>
+                        <li><em>my-zk-server3.example.com</em></li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td class="property">hbase.zookeeper.port</td>
+                <td class="description">Port through which to connect to zookeeper. Typically defaults to <em>2181</em>.</td>
+            </tr>
+            <tr>
+                <td class="property">hbase.master</td>
+                <td class="description">Location of the HBase master in which the tiles are saved (e.g., <em>my-hbase-master.example.com:60000</em>)</td>
+            </tr>
+        </tbody>
+    </table>
+
+4.  Save the file.
 
 For information on additional layer properties, see the *Layers* section of the [Tile Server](../../how-to/tile-server/#layers) topic.
 

@@ -41,474 +41,474 @@ $map-border: #987;
 @import "code-block";
 
 body {
-	font-family: $family-standard;
-	font-size: 100%;
-	line-height: 1.4em;
-	background: $site-bg-color;
-	background-image: $site-bg-img;
-	margin: 0;
-	padding: 15px 0 0;
-	color: $color-body;
+    font-family: $family-standard;
+    font-size: 100%;
+    line-height: 1.4em;
+    background: $site-bg-color;
+    background-image: $site-bg-img;
+    margin: 0;
+    padding: 15px 0 0;
+    color: $color-body;
 }
 
 ul {
-	padding-left: 30px;
-	margin-top: 6px;
-	&.table {
-		margin: 0;
-		padding-left: 26.25px;
-	}
+    padding-left: 30px;
+    margin-top: 6px;
+    &.table {
+        margin: 0;
+        padding-left: 26.25px;
+    }
 }​
 
 ol {
-	padding-left: 30px;
-	margin-top: 6px;
+    padding-left: 30px;
+    margin-top: 6px;
 }​
 
 li {
-	margin: 0 0 6px 0;
-	&.toc-item {
-		margin: 0 0 3px 0;
-	}
+    margin: 0 0 6px 0;
+    &.toc-item {
+        margin: 0 0 3px 0;
+    }
 }
 
 .methodDetail {
-	margin: 0;
-	padding-left: 0;
+    margin: 0;
+    padding-left: 0;
 }
 
 #MethodDetail {
-	margin: 0;
-	padding-left: 0;
+    margin: 0;
+    padding-left: 0;
 }
 
 @mixin heading($font-size, $margin-bottom, $color) {
-	color: $color;
-	font-family: $family-standard;
-	font-size: $font-size;
-	font-weight: normal;
-	margin-bottom: $margin-bottom;
+    color: $color;
+    font-family: $family-standard;
+    font-size: $font-size;
+    font-weight: normal;
+    margin-bottom: $margin-bottom;
 }
 
 h1 {
-	@include heading(32px,25px,$color-h1);
-	padding-top: 30px;
-	.tagline {
-		font-size: 18px;
-		color: $color-tagline;
-	}
+    @include heading(32px,25px,$color-h1);
+    padding-top: 30px;
+    .tagline {
+        font-size: 18px;
+        color: $color-tagline;
+    }
 }
 h2 {
-	@include heading(24px,10px,$color-sub-h1);
-	margin-top: 30px;
-	border-bottom-color: $txt-block-border;
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
-	line-height: 33px;
-	&.sectionTitle {
-		font-size: 22px;
-		color: $color-api-section-title;
-		margin-top: 10px;
-		padding: 0 10px 10px 0;
-	}
+    @include heading(24px,10px,$color-sub-h1);
+    margin-top: 30px;
+    border-bottom-color: $txt-block-border;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    line-height: 33px;
+    &.sectionTitle {
+        font-size: 22px;
+        color: $color-api-section-title;
+        margin-top: 10px;
+        padding: 0 10px 10px 0;
+    }
 }
 
 h3 {
-	@include heading(21.33px,9px,$color-sub-h1);
-	&.context-info-title {
-		color: $color-api-sidebar-link;
-		&:hover {
-			color: $color-api-sidebar-link-hover;
-		}
-	}
-	&.sectionTitle {
-		font-size: 20px;
-		color: $color-api-section-title;
-		margin-top: 10px;
-		padding: 0 10px 10px 0;
-	}
+    @include heading(21.33px,9px,$color-sub-h1);
+    &.context-info-title {
+        color: $color-api-sidebar-link;
+        &:hover {
+            color: $color-api-sidebar-link-hover;
+        }
+    }
+    &.sectionTitle {
+        font-size: 20px;
+        color: $color-api-section-title;
+        margin-top: 10px;
+        padding: 0 10px 10px 0;
+    }
 }
 
 h4 {
-	@include heading(18.66px,0px,$color-sub-h1);
+    @include heading(18.66px,0px,$color-sub-h1);
 }
 
 h5 {
-	@include heading(16px,0px,$color-sub-h1);
+    @include heading(16px,0px,$color-sub-h1);
 }
 
 h6 {
-	@include heading(14.66px,0px,$color-sub-h1);
-	&.fine {
-		margin-top: 0;
-	}
-	&.procedure {
-		font-style: italic;
-		margin-top: 16px;
-	}
+    @include heading(14.66px,0px,$color-sub-h1);
+    &.fine {
+        margin-top: 0;
+    }
+    &.procedure {
+        font-style: italic;
+        margin-top: 16px;
+    }
 }
 
 a {
-	text-decoration: none;
-	&:link,&:active,&:visited {
-		color: $color-body-link;
-	}
-	&:hover,&:focus {
-		color: $color-body-link-hover;
-	}
-	&.download-link {
-		background-image: url("../img/resources/download.png"); 
-		background-position: left; 
-		background-repeat: no-repeat; 
-		padding: 6px 0px 6px 30px;
-	}
-	&.context-info-title {
-		color: $color-api-sidebar-link;
-		&:hover {
-			color: $color-api-sidebar-link-hover;
-		}
-	}
-	&:hover.context-info-title {
-		color: $color-api-sidebar-link-hover;
-	}
+    text-decoration: none;
+    &:link,&:active,&:visited {
+        color: $color-body-link;
+    }
+    &:hover,&:focus {
+        color: $color-body-link-hover;
+    }
+    &.download-link {
+        background-image: url("../img/resources/download.png"); 
+        background-position: left; 
+        background-repeat: no-repeat; 
+        padding: 6px 0px 6px 30px;
+    }
+    &.context-info-title {
+        color: $color-api-sidebar-link;
+        &:hover {
+            color: $color-api-sidebar-link-hover;
+        }
+    }
+    &:hover.context-info-title {
+        color: $color-api-sidebar-link-hover;
+    }
 }
 
 img {
-	border-style: none;
-	&.home-image {
-		margin: 20px 0 4px;
-		border: 1px solid $img-border;
-	}
-	&.context-logo {
-		margin: 20px 0 4px;
-		max-width: 236px;
-	}
-	&.screenshot {
-		margin: 20px auto 4px;
-		display: block;
-	}
-	&.procedure-screenshot {
-		margin: 6px auto 6px;
-		display: block;
-	}
-	&.table {
-		margin: 0px auto 4px;
-		display: block;
-	}
-	&.vid-thumbnail {
-		@extend .screenshot;
-		border: 1px solid $img-border;
-	}
-	&.thumbs {
-		position: relative;
-		width: 120px;
-		height: 100px;
-		border: 1px solid $img-border;
-		border-radius: 2px;
-		cursor: pointer;
-		&:hover{
-			border: 1px solid $img-hover-border;
-		}
-	}
+    border-style: none;
+    &.home-image {
+        margin: 20px 0 4px;
+        border: 1px solid $img-border;
+    }
+    &.context-logo {
+        margin: 20px 0 4px;
+        max-width: 236px;
+    }
+    &.screenshot {
+        margin: 20px auto 4px;
+        display: block;
+    }
+    &.procedure-screenshot {
+        margin: 6px auto 6px;
+        display: block;
+    }
+    &.table {
+        margin: 0px auto 4px;
+        display: block;
+    }
+    &.vid-thumbnail {
+        @extend .screenshot;
+        border: 1px solid $img-border;
+    }
+    &.thumbs {
+        position: relative;
+        width: 120px;
+        height: 100px;
+        border: 1px solid $img-border;
+        border-radius: 2px;
+        cursor: pointer;
+        &:hover{
+            border: 1px solid $img-hover-border;
+        }
+    }
 }
 
 code{
-	font-family: $family-code;
-	font-size: 0.9em;
-	&.example {
-		@extend code-block;
-		display: block;
-	}
+    font-family: $family-code;
+    font-size: 0.9em;
+    &.example {
+        @extend code-block;
+        display: block;
+    }
 }
 
 pre {
-	margin: 10px 0 10px 0;
-	&.code {
-		@extend code-block;
-	}
+    margin: 10px 0 10px 0;
+    &.code {
+        @extend code-block;
+    }
 }
 
 #content-strip {
-	position: relative;
-	max-width: 1000px; 
-	margin: 0 auto;
+    position: relative;
+    max-width: 1000px; 
+    margin: 0 auto;
 }
 
 .toc-header {
-	font-size: 16px;
-	font-weight: bold;
-	margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 5px 0;
 }
 
 .toc {
-	margin: 20px 0 10px 0;
-	padding: 5px 30px 5px 0px;
-	position: static;
+    margin: 20px 0 10px 0;
+    padding: 5px 30px 5px 0px;
+    position: static;
 }
 
 #header {
-	position: absolute;
-	background: $header-bg-color;
-	left: 0px;
-	right: 0px;
-	top: 0px;
-	height: 60px;
-	z-index: -1;
+    position: absolute;
+    background: $header-bg-color;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    height: 60px;
+    z-index: -1;
 }
 
 #header-logo {
-	position: absolute;
+    position: absolute;
 }
 
 #header-menu {
-	position: absolute;
-	right: 0px;
-	font-family: $family-standard;
-	font-size: 14px;
-	margin: 5px 0 20px;
-	a {
-		color: $color-main-nav;
-		line-height: 28px;
-		padding: 5px 6px 15px 6px;
-		text-decoration: none;
-		text-transform: uppercase;
-		&.selected {
-			border-bottom: 3px solid $color-main-nav;
-		}
-		&:hover {
-			color: $color-main-nav-hover;
-		}
-	}
+    position: absolute;
+    right: 0px;
+    font-family: $family-standard;
+    font-size: 14px;
+    margin: 5px 0 20px;
+    a {
+        color: $color-main-nav;
+        line-height: 28px;
+        padding: 5px 6px 15px 6px;
+        text-decoration: none;
+        text-transform: uppercase;
+        &.selected {
+            border-bottom: 3px solid $color-main-nav;
+        }
+        &:hover {
+            color: $color-main-nav-hover;
+        }
+    }
 }
 
 #submenu {
-	height: 60px;
-	margin-bottom: 40px;
-	.selected {
-		background-color: $submenu-bg-selected;
-		color: white;
-	}
+    height: 60px;
+    margin-bottom: 40px;
+    .selected {
+        background-color: $submenu-bg-selected;
+        color: white;
+    }
 }
 
 .submenu-item {
-	cursor: pointer;
-	float: left;
-	&:link, &:active, &:visited {
-		color: $color-body;
-	}
-	&:hover {
-		color: $color-main-nav-hover;
-	}
+    cursor: pointer;
+    float: left;
+    &:link, &:active, &:visited {
+        color: $color-body;
+    }
+    &:hover {
+        color: $color-main-nav-hover;
+    }
 }
 
 .submenu-item-background {
-	background: $submenu-bg-color;
-	border-radius: 50%;
-	-webkit-border-radius: 50%;
-	color: $color-submenu-nav-num;
-	float: left;
-	margin-right: 15px;
-	padding: 16px;
+    background: $submenu-bg-color;
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    color: $color-submenu-nav-num;
+    float: left;
+    margin-right: 15px;
+    padding: 16px;
 }
 
 .submenu-item-label {
-	float: left;
-	font-size: 17px;
-	font-weight: bold;
-	margin: 15px 15px 0 0;
-	text-transform: uppercase;
-	white-space: nowrap;
+    float: left;
+    font-size: 17px;
+    font-weight: bold;
+    margin: 15px 15px 0 0;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .submenu-item-number {
-	font-family: $family-standard;
-	font-size: 15px;
-	font-weight: bold;
-	height: 20px;
-	width: 20px;
-	text-align: center;
+    font-family: $family-standard;
+    font-size: 15px;
+    font-weight: bold;
+    height: 20px;
+    width: 20px;
+    text-align: center;
 }
 
 #map {
-	background-color: $map-bg;
-	border: 1px solid $map-border;
+    background-color: $map-bg;
+    border: 1px solid $map-border;
 }
 
 #all {
-	position: absolute;
-	width: 1000px;
-	top: 70px;
-	bottom: 0px;
-	padding-top: 10px;
+    position: absolute;
+    width: 1000px;
+    top: 70px;
+    bottom: 0px;
+    padding-top: 10px;
 }
 
 #content {
-	position: relative;
-	font-size: 18px;
-	line-height: 1.4em;
-	padding-bottom: 10px;
+    position: relative;
+    font-size: 18px;
+    line-height: 1.4em;
+    padding-bottom: 10px;
 }
 
 .content-context {
-	padding-left: 20px;
-	position: absolute;
-	width: 280px;
-	font-size: 14px;
-	margin-top: -20px;
+    padding-left: 20px;
+    position: absolute;
+    width: 280px;
+    font-size: 14px;
+    margin-top: -20px;
 }
 
 .uncharted-footer
 {
-	padding-top: 28px;
-	max-width: 150px;
+    padding-top: 28px;
+    max-width: 150px;
 }
 
 .footer-padding {
-	padding-bottom: 20px;
+    padding-bottom: 20px;
 }
 
 .toc-body {
-	line-height: 23px;
-	margin: 0 0 3px;
+    line-height: 23px;
+    margin: 0 0 3px;
 }​
 
 .context-info {
-	background: $context-info-bg;
-	border: solid 1px $txt-block-border;
-	border-radius: 5px;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
-	left: -10px;
-	margin-bottom: 10px;
-	overflow: hidden;
-	padding: 10px 15px 25px 15px;
-	position: relative;
+    background: $context-info-bg;
+    border: solid 1px $txt-block-border;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    left: -10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    padding: 10px 15px 25px 15px;
+    position: relative;
 }
 
 #map {
-	background-color: $map-bg;
-	border: 1px solid $map-border;
+    background-color: $map-bg;
+    border: 1px solid $map-border;
 }
 
 .content-body {
-	text-align: justify;
-	padding: 0 30px;
-	margin: 41px 0 0 310px;
-	font-size: 16px;
-	background: $content-body-bg-color;
-	border: 1px solid $txt-block-border;
-	line-height: 1.4em;
+    text-align: justify;
+    padding: 0 30px;
+    margin: 41px 0 0 310px;
+    font-size: 16px;
+    background: $content-body-bg-color;
+    border: 1px solid $txt-block-border;
+    line-height: 1.4em;
 }
 
 .content-image {
-	text-align: center;
-	padding: 0 30px;
-	margin: 41px;
-	font-size: 16px;
-	background: $content-body-bg-color;
-	border: 1px solid $txt-block-border;
-	line-height: 1.4em;
-	display: inline-block;
+    text-align: center;
+    padding: 0 30px;
+    margin: 41px;
+    font-size: 16px;
+    background: $content-body-bg-color;
+    border: 1px solid $txt-block-border;
+    line-height: 1.4em;
+    display: inline-block;
 }
 
 .git {
-	display: none;
+    display: none;
 }
 
 .content-example {
-	font-size: 18px;
-	margin-left: 200px;
-	padding-left: 30px;
-	text-align: justify;
+    font-size: 18px;
+    margin-left: 200px;
+    padding-left: 30px;
+    text-align: justify;
 }
 
 #infoTxt {
-	font-size: 16px;
-	line-height: 1.2em;
+    font-size: 16px;
+    line-height: 1.2em;
 }
 
 .disclaimer {
-	color: $color-disclaimer;
+    color: $color-disclaimer;
 }
 
 sup,
 sub {
-	height: 0;
-	line-height: 1;
-	position: relative;
-	vertical-align: baseline;
+    height: 0;
+    line-height: 1;
+    position: relative;
+    vertical-align: baseline;
 }
 
 sup {
-	bottom: 1ex;
+    bottom: 1ex;
 }
 
 sub {
-	top: .5ex;
+    top: .5ex;
 }
 
 .props {
-	@extend code-block;
-	font-family: $family-standard;
+    @extend code-block;
+    font-family: $family-standard;
 }
 
 .innerProps {
 }
 
 dl {
-	&.detailList {
-		margin: 7px 0 0 0;
-		padding: 0 28px 0 0;
-	}
+    &.detailList {
+        margin: 7px 0 0 0;
+        padding: 0 28px 0 0;
+    }
 
-	&.detailList dt {
-		font-weight: bold;
-		font-family: $family-code;
-		color: #420;
-	}
+    &.detailList dt {
+        font-weight: bold;
+        font-family: $family-code;
+        color: #420;
+    }
 
-	&.detailList dt.heading {
-		font-family: $family-standard;
-		font-size: 14px;
-		color: #6A1;
-		margin: 6px 0;
-	}
+    &.detailList dt.heading {
+        font-family: $family-standard;
+        font-size: 14px;
+        color: #6A1;
+        margin: 6px 0;
+    }
 
-	&.inheritsList dd + dt {
-		margin-top: 10px;
-	}
+    &.inheritsList dd + dt {
+        margin-top: 10px;
+    }
 
-	&.inheritsList dd {
-		display: inline;
-	}
+    &.inheritsList dd {
+        display: inline;
+    }
 }
 
 dt {
-	font-size: 14px;
-	margin: 14px 0 0;
+    font-size: 14px;
+    margin: 14px 0 0;
 }
 
 dd {
-	font-size: 14px;
-	padding: 0 0 0 28px;
-	margin: 0 0 14px;
+    font-size: 14px;
+    padding: 0 0 0 28px;
+    margin: 0 0 14px;
 }
 
 .light {
-	color: #666;
+    color: #666;
 }
 
 .fixedFont {
-	font-family: $family-code;
+    font-family: $family-code;
 }
 
 th {
-	color: rgb(102, 170, 17);
-	font-size: 14px;
-	font-weight: normal;
-	line-height: 19.6px;
-	padding: 10px;
-	margin: 0;
+    color: rgb(102, 170, 17);
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 19.6px;
+    padding: 10px;
+    margin: 0;
 }
 
 table.summaryTable {
@@ -528,102 +528,102 @@ table.summaryTable {
 }
 
 td {
-	&.attributes {
-		@include table-cell(normal,normal,left);
-	}
-	&.property {
-		@include table-cell(bold,normal,left);
-	}
-	&.value {
-		@include table-cell(normal,italic,left);
-	}
-	&.description {
-		@include table-cell(normal,normal,left);
-	}
-	&.caption {
-		font-size: 14px;
-		font-weight: bold;
-		text-align: center;
-	}
-	&.nameDescription {
-		vertical-align: text-top;
-	}
+    &.attributes {
+        @include table-cell(normal,normal,left);
+    }
+    &.property {
+        @include table-cell(bold,normal,left);
+    }
+    &.value {
+        @include table-cell(normal,italic,left);
+    }
+    &.description {
+        @include table-cell(normal,normal,left);
+    }
+    &.caption {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+    }
+    &.nameDescription {
+        vertical-align: text-top;
+    }
 }
 
 div.description {
-	padding: 0 10px 10px 10px;
-	font-size: 14px;
-	line-height: 19.6px;
+    padding: 0 10px 10px 10px;
+    font-size: 14px;
+    line-height: 19.6px;
 }
 
 .version {
-	display: block;
-	text-align: center;
-	font-size: 14px;
+    display: block;
+    text-align: center;
+    font-size: 14px;
 }
 
 .fine-print {
-	font-size: 14px;
-	margin-top: 0;
+    font-size: 14px;
+    margin-top: 0;
 }
 
 .procedure-text {
-	padding-left: 13px;
+    padding-left: 13px;
 }
 
 .list-paragraph {
-	margin: 6px 0;
+    margin: 6px 0;
 }
 
 .list-paragraph-2 {
-	padding-left: 40px;
-	margin: 6px 0;
+    padding-left: 40px;
+    margin: 6px 0;
 }
 
 hr {
-	border-style: solid;
-	border-top-width: 1px;
-	border-bottom-width: 0;
-	border-color: $txt-block-border;
-	margin: 18px 0 15px 0;
+    border-style: solid;
+    border-top-width: 1px;
+    border-bottom-width: 0;
+    border-color: $txt-block-border;
+    margin: 18px 0 15px 0;
 }
 
 .right {
-	float: right;
+    float: right;
 }
 
 .edit {
-	font-size: 14px;
-	padding-top: 30px;
-	margin-bottom: 25px;
-	a {
-		color: #777;
-		&:hover {
-			color: $color-body-link-hover;
-		}
-	}
+    font-size: 14px;
+    padding-top: 30px;
+    margin-bottom: 25px;
+    a {
+        color: #777;
+        &:hover {
+            color: $color-body-link-hover;
+        }
+    }
 }
 
 .copyright {
-	margin-top: 0;
+    margin-top: 0;
 }
 
 figure {
-	margin: 0;
+    margin: 0;
 }
 
 .attribution {
-	font-size: 15px;
-	font-style: italic;
-	text-align: center;
-	margin: 25px auto;
-	color: $color-sub-h1;
-	a {
-		font-style: normal;
-		font-weight: bold;
-		color: $color-h1;
-		&:hover {
-			color: #4e443c;
-		}
-	}
+    font-size: 15px;
+    font-style: italic;
+    text-align: center;
+    margin: 25px auto;
+    color: $color-sub-h1;
+    a {
+        font-style: normal;
+        font-weight: bold;
+        color: $color-h1;
+        &:hover {
+            color: #4e443c;
+        }
+    }
 }
