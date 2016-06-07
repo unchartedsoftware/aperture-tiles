@@ -15,4 +15,4 @@ exclude: ["img/resources/SiteComponents.png","sidebar.html","*/sidebar.html"]
 
 # Variables
 product: Aperture Tiles
-version: 0.6.0
+version: 0.7.0
