@@ -9,9 +9,9 @@ Aperture Tiles <span class="tagline">tile-based visual analytics for big data</s
 
 <h6 class="attribution">Aperture Tiles is powered by <a href="http://uncharted.software/salt/">Salt</a>, an open <br> source library for scalable, analytic layered tiles.</h6>
 
-Aperture Tiles provides the ability to create browser-based, interactive tools any analyst can use to explore datasets containing billions of data points (or more). 
+Aperture Tiles provides the ability to create interactive, browser-based tools to explore datasets containing billions of data points or more.
  
-Business and government leaders, operators and analysts today have more data than ever at hand to make smart, informed decisions. This information comes from various places, including social media, sensor data, financial transactions, cyber and open-source data. However making sense of such massive amounts of data is an extremely challenging task. As a result data is often not used to its full potential.
+To make informed decisions, business and government leaders, operators and analysts increasingly rely on more data than ever. This information can come from various sources, including social media, sensor data, financial transactions, cyber and open-source data. Making sense of such massive amounts of data is extremely challenging. As a result, data is often not used to its full potential.
  
 Aperture Tiles uses a pyramid of tiles to structure, analyze, visualize and interact with a user interface similar to web-based geographic map applications. This approach allows analysts to easily see and navigate all of the data without losing detail, and seamlessly "zoom in" to a more localized portion of that data.
  
@@ -33,7 +33,7 @@ With widespread use, map interactions have become familiar and make exploration 
 
 ### Tile-Based Visual Analytics ###
 
-Tile-based visual analytics (TBVA) is a technique that divides the data into evenly sized hierarchical tiles, and then calculates and applies an analytic to the data contained in each tile. For example, if examining a large Twitter dataset, the data would be divided into equally sized tiles across the geographic area.  Then, an analytic is applied to each tile, such as the top five Twitter hashtags for the bounded region. As the user zooms into the map, Aperture Tiles presents a new layer of tiles that each contain a smaller portion of the full dataset.  In each new zoom layer, the analytic applied to each tile becomes more localized.
+Tile-based visual analytics (TBVA) is a technique that divides the data into evenly sized hierarchical tiles, and then calculates and applies an analytic to the data contained in each tile. For example, if examining a large Twitter dataset, the data would be divided into equally sized tiles across the geographic area. Then, an analytic is applied to each tile, such as the top five Twitter hashtags for the bounded region. As the user zooms into the map, Aperture Tiles presents a new layer of tiles that each contain a smaller portion of the full dataset. In each new zoom layer, the analytic applied to each tile becomes more localized.
 
 ### Extensible and Open Source ###
 
@@ -41,7 +41,7 @@ The Aperture Tiles services and API are designed to be extensible, allowing a br
 
 Aperture Tile generation service builds on the [Apache Spark](http://spark.incubator.apache.org/) and [Hadoop](http://hadoop.apache.org/) cluster computing systems, providing the ability to scale up to billions (or more) data points. Tile sets involving billions of tiles are efficiently handled using [Apache HBase](http://hbase.apache.org/) for distributed data storage.
 
-Aperture Tiles is under ongoing development and is freely available for download under [The MIT License](http://www.opensource.org/licenses/MIT) open source licensing. Unlike GNU General Public License (GPL), MIT freely permits distribution of derivative work under proprietary license, without requiring the release of source code.
+Aperture Tiles is freely available for download under [The MIT License](http://www.opensource.org/licenses/MIT) open source licensing. Unlike GNU General Public License (GPL), MIT freely permits distribution of derivative work under proprietary license, without requiring the release of source code.
 
 ### Interested in Learning More? ###
 

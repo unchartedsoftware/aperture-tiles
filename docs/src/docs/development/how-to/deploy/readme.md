@@ -23,7 +23,7 @@ Once you have finished customizing the Tile Server and Tile Client, you can depl
 <h6 class="procedure">To deploy your application</h6>
 
 1. Copy the **new-project.war** to the *webapps/* directory of your web server (e.g., Apache Tomcat or Jetty).
-2. Restart the server, if necessary
+2. If necessary, restart the server.
 3. Access your application in web browser at <em>http://localhost:8080/new-project</em>.
 
 ## Next Steps ##

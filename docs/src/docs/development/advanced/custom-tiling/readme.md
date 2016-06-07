@@ -180,7 +180,7 @@ There are three steps in binning your data:
 2. Running the Binner to transform the data into tiles
 3. Writing the tiles
 
-For an example of a custom Binner, see the [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) file in [tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>tilegen/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen).
+For an example of a custom Binner, see the [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) file in [tile-examples/<wbr>twitter-topics/<wbr>twitter-topics-utilities/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>twitter/<wbr>tilegen/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/).
 
 ### Parsing your Data ###
 
@@ -189,7 +189,7 @@ The Binner expects your data as pairs of **(index, record)**, where:
 - **index** is an object indicating where in space the record lies
 - **record** is a data record of the processing type your Binning Analytic defines
 
-Several predefined index types are defined in the [IndexingScheme.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/IndexingScheme.scala) file in [tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/IndexingScheme.scala).
+Several predefined index types are defined in the [IndexingScheme.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/IndexingScheme.scala) file in [tile-generation/<wbr>src/<wbr>main/<wbr>scala/<wbr>com/<wbr>oculusinfo/<wbr>tilegen/<wbr>tiling/](https://github.com/unchartedsoftware/aperture-tiles/tree/master/tile-generation/src/main/scala/com/oculusinfo/tilegen/tiling/).
 
 - Cartesian: the index type is a pair of doubles.
 - IPv4: the index type is an array of 4 bytes: the 4 values in an IPv4 address.
@@ -226,7 +226,7 @@ data.cache
 
 ### Binning ###
 
-Lines 191 - 199 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) transform the data into tiles:
+Lines 190 - 198 of [TwitterTopicBinner.scala](https://github.com/unchartedsoftware/aperture-tiles/blob/master/tile-examples/twitter-topics/twitter-topics-utilities/src/main/scala/com/oculusinfo/twitter/tilegen/TwitterTopicBinner.scala) transform the data into tiles:
 
 ```scala
 val tiles = binner.processDataByLevel(data,

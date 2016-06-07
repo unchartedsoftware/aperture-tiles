@@ -14,7 +14,7 @@ In addition to [heatmap layers](../../how-to/standard-tiling/) of individual dat
 
 Graph tiling jobs comprise several configuration and generation phases as described in the [Graph Tiling Process](#graph-tiling-process) section.
 
-**NOTE**: The graph tiling capabilities of Aperture Tiles are under ongoing development and considered experimental.
+**NOTE**: The graph tiling capabilities of Aperture Tiles are considered experimental.
 
 ## Graph Tiling Process ##
 

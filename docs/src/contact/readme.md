@@ -6,7 +6,9 @@ permalink: contact/
 
 # Overview #
 
-Aperture Tiles is an active open source product developed and managed by Uncharted under DARPA's XDATA program.  For more information about the product, or for assistance in creating custom tile-based visual analytics with your organization's big data and integrating with your enterprise systems, please contact us at:
+Aperture Tiles is an open source product developed and managed by Uncharted under DARPA's XDATA program. Aperture Tiles is powered by <a href="http://uncharted.software/salt/">Salt</a>, an open <br> source library for scalable, analytic layered tiles.
+
+For more information, or for assistance in creating custom tile-based visual analytics with your organization's big data and integrating with your enterprise systems, please contact us at:
  
 <info@uncharted.software>
  

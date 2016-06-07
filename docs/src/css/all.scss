@@ -512,19 +512,22 @@ th {
 }
 
 table.summaryTable {
-	left: -10px;
-	position: relative;
-	border-spacing: 0;
+    @extend code-block;
+    font-family: $family-standard;
+    position: relative;
+    border-spacing: 0;
+    width: 100%;
+    padding: 5px;
 }
 
 @mixin table-cell($font-weight, $font-style, $text-align) {
-		padding: 0 10px 10px 10px;
-		font-size: 14px;
-		line-height: 19.6px;
-		vertical-align: top;
-		font-weight: $font-weight;
-		font-style: $font-style;
-		text-align: $text-align;
+        padding: 5px;
+        font-size: 14px;
+        line-height: 19.6px;
+        vertical-align: top;
+        font-weight: $font-weight;
+        font-style: $font-style;
+        text-align: $text-align;
 }
 
 td {

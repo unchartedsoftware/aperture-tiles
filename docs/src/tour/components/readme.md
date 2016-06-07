@@ -15,7 +15,7 @@ Aperture Tiles implements a data flow that breaks the visualization process into
 
 ## Distributed Tile Generation ##
 
-The Aperture Tiles generation analytic leverages cluster computing with [Apache Spark](http://spark.incubator.apache.org/) to rapidly compute tiles from terabytes of "big data" (investigations are ongoing to work with petabyte-sized datasets). The tile generation analytic transforms raw data into Avro data tile files with metadata descriptor files, summarizing all tile content. Avro data files allow for language neutrality and support multiple summaries per bin, allowing a flexible and extensible analytic. Finished tiles are stored in HBase to allow efficient scalability to billions of tiles.
+The Aperture Tiles generation analytic leverages cluster computing with [Apache Spark](http://spark.incubator.apache.org/) to rapidly compute tiles from terabytes of "big data". The tile generation analytic transforms raw data into Avro data tile files with metadata descriptor files, summarizing all tile content. Avro data files allow for language neutrality and support multiple summaries per bin, allowing a flexible and extensible analytic. Finished tiles are stored in HBase to allow efficient scalability to billions of tiles.
 
 ### Tile Set Size and Resolution ###
 

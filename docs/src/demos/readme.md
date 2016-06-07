@@ -19,8 +19,7 @@ The following demos illustrate the utility of tile-based visual analytics and th
 
 ## Tile-Based Metrics of NYC Taxi Trip Data ##
 
-This demo, which was presented at [Strata and Hadoop World 2014](http://strataconf.com/stratany2014), enables the exploration of data for 187 million NYC taxi trips taken between Jan 1, 2013 - Jan 3, 2014. 
-Trip data is displayed over a variety of metrics (both on a [Google Maps](https://maps.google.com) base layer and in cross-plot form) with the goal of answering the following questions:
+This demo, which was presented at [Strata and Hadoop World 2014](http://strataconf.com/stratany2014), enables the exploration of data for 187 million NYC taxi trips taken between Jan 1, 2013 - Jan 3, 2014. Trip data is displayed over a variety of metrics (both on a [Google Maps](https://maps.google.com) base layer and in cross-plot form) with the goal of answering the following questions:
 
 - Where is the best place to catch a cab?
 - How can a cab driver make the most money?
