@@ -22,9 +22,9 @@ Compatibility for Windows is available through [Cygwin](https://cygwin.com/) or 
 
 <h6 class="procedure">To use Aperture Tiles with Apache Spark in standalone mode in Windows</h6>
 
-- [Download](https://spark.apache.org/downloads.html) and install a pre-built version of Apache Spark with the following properties:
-	1. **Spark release**: 1.3.0
-	2. **Package type**: Pre-built for CDH4
+-   [Download](https://spark.apache.org/downloads.html) and install a pre-built version of Apache Spark with the following properties:
+    1.  **Spark release**: 1.3.0
+    2.  **Package type**: Pre-built for Hadoop 2.4
 
 ## Prerequisites ##
 
@@ -107,15 +107,15 @@ If you intend to work with datasets that cannot fit in the memory of a single ma
 
 The source code repository for Aperture Tiles is available on [GitHub](https://github.com/unchartedsoftware/).
 
-<h6 class="procedure">To work with the Aperture Tiles source code</h6>
+<h6 class="procedure">To work with the most recent stable release of the Aperture Tiles source code</h6>
 
-1. Execute the following command to clone the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
+1.  Clone the Aperture Tiles repository to an *aperture-tiles/* directory in your Git project folder:
 
     ```bash
     git clone https://github.com/unchartedsoftware/aperture-tiles.git
     ```
 
-2. Check out the *master* branch to work with the most recent stable release:
+2.  Check out the *master* branch:
 
     ```bash
     git checkout master
@@ -135,7 +135,7 @@ Once you have cloned the Aperture Tiles repository, you can build the project.
 Prior to building the project, you must specify which version of Hadoop and/or HBase you have installed (if applicable): 
 
 1. Review the *Deployment Variants* section of the [build.gradle](https://github.com/unchartedsoftware/aperture-tiles/blob/master/build.gradle) file in [aperture-tiles/](https://github.com/unchartedsoftware/aperture-tiles/tree/master) to check for valid settings for your version.
-2. If your version is not included, you must build a new case for it. See the comments in the file for more details.
+2. If your version is not included, build a new case for it. See the comments in the file for more details.
 
 #### Compiling the Aperture Tiles Projects ####
 
@@ -248,12 +248,12 @@ The packaged distributions of Aperture Tiles require only a subset of the [prere
 
 <h6 class="procedure">To install the prerequisites for the packaged distributions</h6>
 
-1. Install [Apache Spark](http://spark.incubator.apache.org/).
-2. If you want to understand how Aperture Tiles works with particularly large datasets, install your preferred flavor of [Hadoop](http://hadoop.apache.org/):
-	- [Cloudera](http://www.cloudera.com/content/www/en-us/downloads/cdh.html) v4.6 (*recommended*)
-	- [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
-	- [MapR](http://www.mapr.com/products/apache-hadoop)
-	- [HortonWorks](http://hortonworks.com/)
+1.  Install [Apache Spark](http://spark.incubator.apache.org/).
+2.  If you want to understand how Aperture Tiles works with particularly large datasets, install your preferred flavor of [Hadoop](http://hadoop.apache.org/):
+    -   [Cloudera](http://www.cloudera.com/content/www/en-us/downloads/cdh.html) v5.4.7 (*recommended*)
+    -   [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
+    -   [MapR](http://www.mapr.com/products/apache-hadoop)
+    -   [HortonWorks](http://hortonworks.com/)
 
 ### Download the Distributions ###
 

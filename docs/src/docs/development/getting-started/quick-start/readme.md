@@ -23,13 +23,13 @@ At the end of this guide, you will have an example Aperture Tiles application th
 
 Before beginning this Quick Start example, install the prerequisites described in the [Packaged Distribution](../installation/#packaged-distributions) section of the [Installation](../installation/) topic.
 
-Once you have installed all the prerequisites, you can generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
+Once you install all the prerequisites, you can generate the [Julia set data](#julia-set-data-generation), from which you will later create a set of tiles that will be used in your Aperture Tiles project.
 
 ### Julia Set Data Generation ###
 
 <h6 class="procedure">To use the Tile Generator utility to create the Julia set data</h6>
 
-1. Execute the standard [spark-submit](http://spark.apache.org/docs/1.3.0/submitting-applications.html) script using the following command, changing the **output** URI to specify where you want to save the data (HDFS or local file system):
+1. Execute the standard [spark-submit](http://spark.apache.org/docs/1.3.0/submitting-applications.html) script, changing the **output** URI to specify where you want to save the data (HDFS or local file system):
 
     ```bash
     $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.datagen
@@ -47,16 +47,16 @@ Once you have installed all the prerequisites, you can generate the [Julia set d
 
 The first step in building any Aperture Tiles project is to create a set of [Avro](http://avro.apache.org/) tiles that aggregate your source data across the plot/map and its various zoom levels.
 
-For delimited numeric data sources like the Julia set, we use the CSVBinner tool to create these tiles. The CSVBinner tool requires two types of input:
+To create tiles for delimited numeric data sources like the Julia set, we use the CSVBinner tool. The CSVBinner tool requires two types of input:
 
 - [Base properties file](#base-property-file-configuration), which describes the general characteristics of your data
 - [Tiling properties files](#tiling-property-file-configuration), each of which describes a specific attribute you want to plot and the number of zoom levels
 
 ### Base Property File Configuration ###
 
-A preconfigured base properties file is available in the Tile Generator utility. You only need to edit this file if you intend to save your Avro tiles to HBase. Otherwise, you can skip ahead to the [execution](#execution) of the tile generation job.
+A preconfigured base properties file is available in the Tile Generator utility. You only need to edit this file if you want to save your tiles to HBase. Otherwise, skip ahead to the [execution](#execution) of the tile generation job.
 
-**NOTE**: For a typical Aperture Tiles project, you will need to edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Standard Tiling Jobs](../../how-to/standard-tiling/) topic.
+**NOTE**: For a typical Aperture Tiles project, you will edit the additional properties files to define the types of fields in your source data. For more information on these properties, see the [Standard Tiling Jobs](../../how-to/standard-tiling/) topic.
 
 <h6 class="procedure">To edit the base properties file</h6>
 
@@ -124,7 +124,7 @@ After you edit the properties files, you can use the Tile Generator utility to c
 
 <h6 class="procedure">To execute the tile generation job</h6>
 
-1. Execute the standard **spark-submit** script again, invoking the CSVBinner and using the *-d* switch to pass your edited base properties file. Tiling properties files can be passed in without a switch.
+1.  Execute the standard **spark-submit** script again, invoking the CSVBinner and using the *-d* switch to pass your edited base properties file. Tiling properties files can be passed in without a switch.
 
     ```bash
     $SPARK_HOME/bin/spark-submit --class com.oculusinfo.tilegen.examples.apps
@@ -143,13 +143,13 @@ The Tile Server renders your generated tiles as layers in your Aperture Tiles vi
 1. Zip the *julia.x.y.v* directory produced during the Tile Generation stage.
 2. Copy the ZIP file to the *WEB-INF/classes/* directory of the Tile Quick Start Application.
 
-**NOTE**: For typical Aperture Tiles projects, you will need to edit the */WEB-INF/***web.xml** and *WEB-INF/classes/***tile.properties** files in the Tile Server. For more information on editing these files, see the [Tile Server](../../how-to/tile-server/) topic.
+**NOTE**: For typical Aperture Tiles projects, you will edit the */WEB-INF/***web.xml** and *WEB-INF/classes/***tile.properties** files in the Tile Server. For more information on editing these files, see the [Tile Server](../../how-to/tile-server/) topic.
 
 ### Layer Properties ###
 
-Layer properties (within the **tile-quickstart.war** at *WEB-INF/classes/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot. 
+Layer properties (within the **tile-quickstart.war** at *WEB-INF/classes/layers/***julia-layer.json**) specify the layers that can be overlaid on your base map or plot.
 
-For this example, you only need to edit the layer properties file if you saved your Avro tiles to HBase. Otherwise, you can skip ahead to the configuration of the [Tile Client Application](#tile-client-application). 
+For this example, you only need to edit the layer properties file if you saved your tiles to HBase. Otherwise, skip ahead to the configuration of the [Tile Client Application](#tile-client-application).
 
 <h6 class="procedure">To edit the layer properties</h6>
 
@@ -196,7 +196,7 @@ For information on additional layer properties, see the *Layers* section of the 
 
 ## Tile Client Application ##
 
-For this example, a preconfigured example client application has been provided as part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
+For this example, a preconfigured example client application is part of the Tile Quick Start Application ([tile-quickstart.war](../../../../download/#tile-quick-start-application)). The client displays the base map or plot and any layers passed in from the server.
 
 For information on map properties (e.g., for boundaries and axes), see the *Maps* section of the [Tile Client](../../how-to/tile-client/#map) topic.
 
@@ -205,7 +205,7 @@ For information on map properties (e.g., for boundaries and axes), see the *Maps
 <h6 class="procedure">To deploy your application</h6>
 
 1. Copy the **tile-quickstart.war** to the *webapps/* directory of your web server (e.g., Apache Tomcat or Jetty).
-2. Restart the server, if necessary
+2. If necessary, restart the server.
 3. Access your application in web browser at <em>http://localhost:8080/julia-demo</em>.
 
 The Julia set application data is plotted on an X/Y chart with six layers of zoom available.

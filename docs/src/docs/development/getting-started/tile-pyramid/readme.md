@@ -16,13 +16,13 @@ Using a distributed framework built on the [Apache Spark](https://spark.apache.o
 
 At the highest level in the tile set pyramid (level 0), a single tile summarizes all of your data. On each lower level, there are up to *4<sup>z</sup>* tiles, where *z* is the zoom level (with lower numbers indicating higher levels). At each level, the tiles are laid out row-wise across the base map or plot, starting at the lower left. 
 
-Each tile summarizes the data in the region of the base map/plot to which it corresponds. Tiles are [Avro](http://avro.apache.org/) record objects partitioned into a variable number of bins (typically 256 x 256 for heatmaps). Each bin contains an aggregation of all the data points in the tile partition it represents.
+Each tile summarizes the data in the region of the base map/plot to which it corresponds. Tiles are serialized objects partitioned into a variable number of bins (typically 256 x 256 for heatmaps). Each bin contains an aggregation of all the data points in the tile partition it represents.
 
 <img src="../../../../img/tile-pyramid-hierarchy.png" class="screenshot" alt="Tile Pyramid" />
 
 ## Tile Generation Process ##
 
-The process of generating a set of Avro tiles from your raw source data is called a tiling job. The tiles created by a job can be served and browsed in any modern Web browser.
+The process of generating a set of tiles from your raw source data is called a tiling job. The tiles created by a job can be served and browsed in any modern Web browser.
 
 As shown in the following diagram, the tile generation process has five main stages:
 
@@ -97,14 +97,14 @@ Before you run a tiling job, make sure you meet all of the prerequisites listed 
 
 ## Tiling Job Prerequisites ##
 
-Aperture Tiles uses a distributed framework built on the Apache Spark engine to generate Avro tiles. Before you run a tiling job, you must install and configure the following prerequisites:
+Aperture Tiles uses a distributed framework built on the Apache Spark engine to generate tiles. Before you run a tiling job, you must install and configure the following prerequisites:
 
 - [Scala](http://www.scala-lang.org/) v2.10.3
 - [Apache Spark](http://spark.incubator.apache.org/) v1.3
 
 If you intend to work with datasets that cannot fit in the memory of a single machine or if you wish to avoid wait times, we recommend you also install your preferred [Hadoop](http://hadoop.apache.org/) distribution to enable Aperture Tiles to work with particularly large datasets:
 
-- [Cloudera](http://hadoop.apache.org/) v4.6 (*recommended*)
+- [Cloudera](http://hadoop.apache.org/) v5.4.7 (*recommended*)
 - [Apache](http://hadoop.apache.org/docs/r1.2.1/index.html)
 - [MapR](http://www.mapr.com/products/apache-hadoop)
 - [HortonWorks](http://hortonworks.com/)

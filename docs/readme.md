@@ -3,7 +3,7 @@ Building Aperture Sites with Jekyll
 
 **NOTE**: This topic describes how to build the Aperture Tiles website. To view the Aperture Tiles website content, visit <http://aperturetiles.com> or see the [src/](src/) folder.
 
-Uncharted Software's Aperture websites (Aperture JS, Aperture Tiles and Influent) contain detailed documentation for both developers and end users. Each site is built using [Jekyll](http://jekyllrb.com/), a static website generator. All of the website content is written in Markdown (*.md), a plain text formatting syntax, and stored separately from the website layout (HTML) and styles (Sass/CSS). Jekyll generates the sites by parsing the Markdown contents, converting them to HTML and inserting them into the appropriate layout.
+Uncharted Software's Aperture websites (Aperture Tiles and Influent) contain detailed documentation for both developers and end users. Each site is built using [Jekyll](http://jekyllrb.com/), a static website generator. All of the website content is written in Markdown (*.md), a plain text formatting syntax, and stored separately from the website layout (HTML) and styles (Sass/CSS). Jekyll generates the sites by parsing the Markdown contents, converting them to HTML and inserting them into the appropriate layout.
 
 You can use Jekyll to build the website source files if you want to:
 
@@ -13,7 +13,6 @@ You can use Jekyll to build the website source files if you want to:
 
 Note that the latest versions of the pre-built Aperture websites are available for browsing at the following locations:
 
-- Aperture JS: [http://aperturejs.com/](http://aperturejs.com/)
 - Aperture Tiles: [http://aperturetiles.com/](http://aperturetiles.com/)
 - Influent: [http://community.influent.org/](http://community.influent.org/)
 
@@ -21,12 +20,10 @@ Note that the latest versions of the pre-built Aperture websites are available f
 
 Before you attempt to build an Aperture site, you should install the following prerequisites. Note that while other versions of the third-party tools below may work, only the listed versions have been tested with the latest site build.
 
-- **Operating System**: Linux, Unix or Mac OS X. (Windows support with [Cygwin](https://www.cygwin.com/) version 1.7.33)
-- **Language**:	[Ruby](https://www.ruby-lang.org/) (version 1.9.3) 
-	- **Package Manager**: [RubyGems](https://rubygems.org/) (version 1.8.29)
+- **Language**: [Ruby](https://www.ruby-lang.org/) (version 2.1.5) 
+    - **Package Manager**: [RubyGems](https://rubygems.org/) (version 2.2.2)
 - **Gems**:
-	- **Site Generator**: [Jekyll](http://jekyllrb.com/) (version 2.5.3)
-	- **Syntax Highlighter**: [Rouge](https://github.com/jneen/rouge) (version 1.7.7)
+    - **Site Generator**: [Jekyll](http://jekyllrb.com/) (version 3.1.6)
 
 ## Building the Site ##
 
