@@ -20,3 +20,4 @@ out/*
 test.output
 .DS_Store
 *.war
+classes
