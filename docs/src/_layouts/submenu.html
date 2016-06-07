@@ -3,20 +3,20 @@ layout: default
 ---
 
 <nav>
-	{% include submenu.html %}
+    {% include submenu.html %}
 </nav>
 <div id="content">
-	<div class="content-context">
-		<aside>
-			{% include_relative sidebar.html %}
-		</aside>
-		<footer>
-			{% include footer.html %}
-		</footer>
-	</div>
-	<div class="content-body">
-		<article>
-			{{ content }}
-		</article>
-	</div>
+    <div class="content-context">
+        <aside>
+            {% include_relative sidebar.html %}
+        </aside>
+        <footer>
+            {% include footer.html %}
+        </footer>
+    </div>
+    <div class="content-body">
+        <article>
+            {{ content }}
+        </article>
+    </div>
 </div>

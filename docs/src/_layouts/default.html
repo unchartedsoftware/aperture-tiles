@@ -1,26 +1,24 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		{% include head.html %}
-	</head>
-	<body>
-		<div id="header"></div>
-		<div id="content-strip">
-			<div id="header-logo">
-				<a href="{{ site.baseurl }}/">
-					<img src="{{site.baseurl}}/img/resources/{{ site.product | slugify }}.png" alt="{{site.product}} logo"/>
-				</a>
-			</div>
-			<nav>
-				<div id="header-menu">
-					{% for menuItem in site.data.menuItems.main %}
-						<a href="{{site.baseurl}}/{{ menuItem.path }}"{% if page.section == menuItem.label %} class="selected"{% endif %}>{{ menuItem.label }}</a>
-					{% endfor %}
-				</div>
-			</nav>
-			<div id="all">
-				{{ content | replace: '<li><p>', '<li>' }}
-			</div>
-		</div>
-	</body>
+    <head>
+        {% include head.html %}
+    </head>
+    <body>
+        <div id="header"></div>
+        <div id="content-strip">
+            <div id="header-logo">
+                <a href="{{ site.baseurl }}/">
+                    <img src="{{site.baseurl}}/img/resources/{{ site.product | slugify }}.png" alt="{{site.product}} logo"/>
+                </a>
+            </div>
+            <nav id="header-menu">
+                {% for menuItem in site.data.menuItems.main %}
+                    <a href="{{site.baseurl}}/{{ menuItem.path }}"{% if page.section == menuItem.label %} class="selected"{% endif %}>{{ menuItem.label }}</a>
+                {% endfor %}
+            </nav>
+            <div id="all">
+                {{ content | replace: '<li><p>', '<li>' }}
+            </div>
+        </div>
+    </body>
 </html>

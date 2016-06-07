@@ -1,18 +1,12 @@
 # Conversion
-markdown: redcarpet
-
-redcarpet:
-  extensions: ["no_intra_emphasis", "fenced_code_blocks", "tables"]
+markdown: kramdown
 
 highlighter: rouge
 
-# Uncomment if using alternative renderer
-# rdiscount:
-#  extensions:
-#    - autolink
-
-# kramdown:
-#  input: GFM
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  auto_ids: true
 
 # Serving
 destination: ../_site/
@@ -21,4 +15,4 @@ exclude: ["img/resources/SiteComponents.png","sidebar.html","*/sidebar.html"]
 
 # Variables
 product: Aperture Tiles
-version: 0.6.0
+version: 0.7.0

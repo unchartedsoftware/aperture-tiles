@@ -1,21 +1,21 @@
 <div class="toc">
-	{% for chapter in site.data.userGuideTopics %}
-		<div class="toc-header"><i class="fa fa-{{ chapter.faIcon }}"></i> &nbsp; {{ chapter.label }}</div>
-		<{{ chapter.listType }} class="toc-body">
-			{% for topic in chapter.topics %}
-				<li class="toc-item">
-					{% if topic.label != page.topic %}
-						<a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}">{{topic.label}}</a>
-					{% else %}
-						{{topic.label}}
-						<ul class="toc-body">
-							{% for bookmark in topic.bookmarks %}
-								<li class="toc-item"><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
-							{% endfor %}
-						</ul>
-					{% endif %}
-				</li>
-			{% endfor %}
-		</{{ chapter.listType }}>
-	{% endfor %}
+    {% for chapter in site.data.userGuideTopics %}
+        <div class="toc-header"><i class="fa fa-{{ chapter.faIcon }}"></i> &nbsp; {{ chapter.label }}</div>
+        <{{ chapter.listType }} class="toc-body">
+            {% for topic in chapter.topics %}
+                <li class="toc-item">
+                    {% if topic.label != page.topic %}
+                        <a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}">{{topic.label}}</a>
+                    {% else %}
+                        {{topic.label}}
+                        <ul class="toc-body">
+                            {% for bookmark in topic.bookmarks %}
+                                <li class="toc-item"><a href="{{site.baseurl}}/{{page.section | slugify}}/{{page.subsection | slugify}}/{% if topic.path != NULL %}{{topic.path}}/{% endif %}#{{bookmark.anchor}}">{{bookmark.label}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </{{ chapter.listType }}>
+    {% endfor %}
 </div>
