@@ -42,23 +42,23 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Abstract class that is used by certain pyramidIO to access the tile data encapsulated within.
- * 	Contains a basic implementation for a read-only Pyramid tile with child classes providing the 
+ * 	Contains a basic implementation for a read-only Pyramid tile with child classes providing the
  * 	stream data to the tile source and/or provide its own implementation for read/write of tile data.
- *  
+ *
  */
 public abstract class PyramidSourceStream implements PyramidSource {
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-	
+
 	protected abstract InputStream getSourceTileStream(String basePath, TileIndex tile) throws IOException;
 	protected abstract InputStream getSourceMetaDataStream (String basePath) throws IOException;
-	
+
 	public void initializeForWrite (String basePath) throws IOException {
 		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
 	}
 
 	public <T> void writeTiles (String basePath, TileSerializer<T> serializer,
 	                            Iterable<TileData<T>> data) throws IOException {
-    	
+
 		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
 	}
 
@@ -81,7 +81,7 @@ public abstract class PyramidSourceStream implements PyramidSource {
 				LOGGER.info("no tile data found for " + tile.toString() );
 				continue;
 			}
-            
+
 			TileData<T> data = serializer.deserialize(tile, stream);
 			results.add(data);
 			stream.close();
@@ -97,6 +97,10 @@ public abstract class PyramidSourceStream implements PyramidSource {
 
 	public String readMetaData (String basePath) throws IOException {
 		InputStream stream = getSourceMetaDataStream(basePath);
+		if (stream == null)  {
+			return null;
+		}
+
 		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 		String rawMetaData = "";
 		String line;
@@ -106,7 +110,7 @@ public abstract class PyramidSourceStream implements PyramidSource {
 		reader.close();
 		return rawMetaData;
 	}
-	
+
 	public void removeTiles (String id, Iterable<TileIndex> tiles ) throws IOException {
 		throw new UnsupportedOperationException("This is a read-only PyramidIO implementation.");
 	}

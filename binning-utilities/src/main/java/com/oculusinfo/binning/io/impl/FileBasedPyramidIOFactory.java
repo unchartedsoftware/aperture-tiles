@@ -39,7 +39,7 @@ import java.util.List;
  * Extends a ConfigurableFactory for file system based (zip, resource, or directory) PyramidIO types.
  * 	This class will be injected with a PyramidSource object that will provide the necesarry tile access depending
  *  on the particular type of file system tile used.
- *  
+ *
  */
 public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FileBasedPyramidIOFactory.class);
@@ -53,10 +53,10 @@ public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 	public static StringProperty EXTENSION              = new StringProperty("extension",
 		   "The file extension which the serializer should expect to find on individual tiles.",
 		   "avro");
-	
+
 	public FileBasedPyramidIOFactory (ConfigurableFactory<?> parent, List<String> path) {
 		super(NAME, PyramidIO.class, parent, path);
-		
+
 		addProperty(ROOT_PATH);
 		addProperty(EXTENSION);
 	}
@@ -64,6 +64,12 @@ public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 
 	@Override
 	protected PyramidIO create() throws ConfigurationException {
+
+		String prop = getPropertyValue(ROOT_PATH);
+		if (prop == null) {
+			LOGGER.error(this.getExplicitConfiguration().toString());
+		}
+
 		String rootpath = getPropertyValue(ROOT_PATH).trim();
 		String extension = getPropertyValue(EXTENSION);
 		PyramidSource source = null;
@@ -80,6 +86,10 @@ public class FileBasedPyramidIOFactory extends ConfigurableFactory<PyramidIO> {
 			// a file/directory within the webapp resources
 			rootpath = rootpath.substring(6);
 			source = new ResourcePyramidSource(rootpath, extension);
+		} else if (rootpath.startsWith("http://")) {
+			// a file/directory within the webapp resources
+			rootpath = rootpath.substring(7);
+			source = new UrlPyramidSource(rootpath, extension);
 		} else {
 			// no prefix / postfix supplied, default to file for legacy support
 			source = new FileSystemPyramidSource(rootpath, extension);

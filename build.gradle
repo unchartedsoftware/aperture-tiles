@@ -88,7 +88,7 @@ subprojects {
 	// Shared group and version info.  We keep build variant types in the version names so that we get
 	// a set of JARs for each build type written back into the maven repo.
 	group = "com.oculusinfo"
-	version = "0.7-$buildType"
+	version = "0.7.1-$buildType-SNAPSHOT"
 
 	// Maven repos to check for artifacts
 	repositories {
