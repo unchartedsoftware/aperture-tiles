@@ -57,7 +57,7 @@ public class MachineTranslation {
 	public String translateText(String sourceText, String sourceLangID, String targetLangID) {
 
 		String translatedText = "";
-		String googleTranslateKey = "AIzaSyCPcre8-V1F7u7twADzZpkTPd8v2AXdPSA";	//Oculus' key for Google Translate API
+		String googleTranslateKey = "";	// key for Google Translate API
 		
 		if (sourceText.isEmpty() || sourceLangID == targetLangID) {
 			// just return original text string if sourceText is empty or if source and target language IDs are the same
